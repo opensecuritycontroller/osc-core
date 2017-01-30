@@ -1,0 +1,10 @@
+#!/usr/bin/python
+
+# Verifies the firewall is ready to receive packets
+# This is verified by determining if a policy has been loaded
+# Usage: check-ngfw-traffic-status
+# Just a wrapper
+
+import sys
+from sg.scripts.check_ngfw_traffic_status import run
+sys.exit(run())

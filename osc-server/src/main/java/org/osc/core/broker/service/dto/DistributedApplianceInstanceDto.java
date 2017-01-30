@@ -1,0 +1,374 @@
+package org.osc.core.broker.service.dto;
+
+import java.util.Date;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+
+import io.swagger.annotations.ApiModelProperty;
+
+@XmlRootElement(name = "distributedApplianceInstance")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class DistributedApplianceInstanceDto extends BaseDto {
+
+    @ApiModelProperty(required = true, readOnly = true)
+    private Long virtualsystemId;
+
+    @ApiModelProperty(value = "The Manager Connector Id", required = true, readOnly = true)
+    private Long mcId;
+
+    @ApiModelProperty(value = "The Virtualization Connector Id", required = true, readOnly = true)
+    private Long vcId;
+
+    @ApiModelProperty(value = "The Distributed Appliance Instance Name", required = true, readOnly = true)
+    private String name;
+
+    @ApiModelProperty(
+            value = "The public Ip address of the instance. This value can be empty till we receive the first callback from the instance.",
+            readOnly = true)
+    private String ipAddress;
+
+    @ApiModelProperty(required = true, readOnly = true)
+    private String applianceModel;
+
+    @ApiModelProperty(required = true, readOnly = true)
+    private String swVersion;
+
+    @ApiModelProperty(required = true, readOnly = true)
+    private String distributedApplianceName;
+
+    @ApiModelProperty(required = true, readOnly = true)
+    private String applianceManagerConnectorName;
+
+    @ApiModelProperty(required = true, readOnly = true)
+    private String virtualConnectorName;
+
+    @ApiModelProperty(
+            value = "The Agent version information.  This value can be empty till we receive the first callback from the instance.",
+            readOnly = true)
+    private String agentVersionStr;
+
+    @ApiModelProperty(
+            value = "The Agent type information.  This value can be Agent or Agentless.",
+            readOnly = true)
+    private String agentTypeStr;
+
+    @ApiModelProperty(readOnly = true)
+    private String hostname;
+
+    @ApiModelProperty(
+            value = "The last time a callback was made from the appliance. This value can be empty till we receive the first callback from the instance.",
+            readOnly = true)
+    private Date lastStatus;
+
+    @ApiModelProperty(value = "Indicates whether the instance is authenticated with its manager.",
+            required = true,
+            readOnly = true)
+    private Boolean discovered;
+
+    @ApiModelProperty(value = "Indicates whether the instance is ready to inspect and handle traffic.",
+            required = true,
+            readOnly = true)
+    private Boolean inspectionReady;
+
+    @ApiModelProperty(value = "The Id of the corresponding server instance on openstack.(Openstack Only)",
+            readOnly = true)
+    private String osVmId;
+
+    @ApiModelProperty(
+            value = "The Hypervisor Host name where the server instance is running on openstack.(Openstack Only)",
+            readOnly = true)
+    private String osHostname;
+
+    @ApiModelProperty(
+            value = "The Inspection port Id of the corresponding server instance in openstack.(Openstack Only)",
+            readOnly = true)
+    private String osInspectionIngressPortId;
+
+    @ApiModelProperty(
+            value = "The Inspection port Mac Address of the corresponding server instance in openstack.(Openstack Only)",
+            readOnly = true)
+    private String osInspectionIngressMacAddress;
+
+    @ApiModelProperty(
+            value = "The Inspection port Id of the corresponding server instance in openstack.(Openstack Only)",
+            readOnly = true)
+    private String osInspectionEgressPortId;
+
+    @ApiModelProperty(
+            value = "The Inspection port Mac Address of the corresponding server instance in openstack.(Openstack Only)",
+            readOnly = true)
+    private String osInspectionEgressMacAddress;
+
+    @ApiModelProperty(
+            value = "The Ip address of the management port of this instance. This could be the same as the ip address of the instance or differnt in case of NAT environments",
+            readOnly = true)
+    private String mgmtIpAddress;
+
+    @ApiModelProperty(value = "The management port subnet prefix length.", readOnly = true)
+    private String mgmtSubnetPrefixLength;
+
+    @ApiModelProperty(value = "The management port gateway.", readOnly = true)
+    private String mgmtGateway;
+
+    public DistributedApplianceInstanceDto() {
+
+    }
+
+    public DistributedApplianceInstanceDto(DistributedApplianceInstance dai) {
+        setId(dai.getId());
+
+        this.virtualsystemId = dai.getVirtualSystem().getId();
+        setVcId(dai.getVirtualSystem().getVirtualizationConnector().getId());
+        setMcId(dai.getVirtualSystem().getDistributedAppliance().getApplianceManagerConnector().getId());
+        this.name = dai.getName();
+        this.agentTypeStr = dai.getAgentType().toString();
+        this.ipAddress = dai.getIpAddress();
+
+        this.applianceModel = dai.getVirtualSystem().getDistributedAppliance().getAppliance().getModel();
+        this.swVersion = dai.getVirtualSystem().getDistributedAppliance().getApplianceVersion();
+
+        this.distributedApplianceName = dai.getVirtualSystem().getDistributedAppliance().getName();
+        this.applianceManagerConnectorName = dai.getVirtualSystem().getDistributedAppliance()
+                .getApplianceManagerConnector().getName();
+        this.virtualConnectorName = dai.getVirtualSystem().getVirtualizationConnector().getName();
+        this.agentVersionStr = dai.getAgentVersionStr();
+        this.hostname = dai.getHostName();
+        this.lastStatus = dai.getLastStatus();
+        this.discovered = dai.getDiscovered();
+        this.inspectionReady = dai.getInspectionReady();
+
+        this.osVmId = dai.getOsServerId();
+        this.osHostname = dai.getOsHostName();
+        this.osInspectionIngressPortId = dai.getInspectionOsIngressPortId();
+        this.osInspectionIngressMacAddress = dai.getInspectionIngressMacAddress();
+        this.osInspectionEgressPortId = dai.getInspectionOsEgressPortId();
+        this.osInspectionEgressMacAddress = dai.getInspectionEgressMacAddress();
+
+        this.mgmtIpAddress = dai.getMgmtIpAddress();
+        this.mgmtSubnetPrefixLength = dai.getMgmtSubnetPrefixLength();
+        this.mgmtGateway = dai.getMgmtGateway();
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getIpAddress() {
+        return this.ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    public String getApplianceModel() {
+        return this.applianceModel;
+    }
+
+    public void setApplianceModel(String applianceModel) {
+        this.applianceModel = applianceModel;
+    }
+
+    public String getSwVersion() {
+        return this.swVersion;
+    }
+
+    public void setSwVersion(String swVersion) {
+        this.swVersion = swVersion;
+    }
+
+    public String getDistributedApplianceName() {
+        return this.distributedApplianceName;
+    }
+
+    public void setDistributedApplianceName(String distributedApplianceName) {
+        this.distributedApplianceName = distributedApplianceName;
+    }
+
+    public String getApplianceManagerConnectorName() {
+        return this.applianceManagerConnectorName;
+    }
+
+    public void setApplianceManagerConnectorName(String applianceManagerConnectorName) {
+        this.applianceManagerConnectorName = applianceManagerConnectorName;
+    }
+
+    public String getVirtualConnectorName() {
+        return this.virtualConnectorName;
+    }
+
+    public void setVirtualConnectorName(String virtualConnectorName) {
+        this.virtualConnectorName = virtualConnectorName;
+    }
+
+    public String getAgentVersionStr() {
+        return this.agentVersionStr;
+    }
+
+    public void setAgentVersionStr(String agentVersionStr) {
+        this.agentVersionStr = agentVersionStr;
+    }
+
+    public String getAgentTypeStr() {
+        return this.agentTypeStr;
+    }
+
+    public void setAgentTypeStr(String agentTypeStr) {
+        this.agentTypeStr = agentTypeStr;
+    }
+
+    public String getHostname() {
+        return this.hostname;
+    }
+
+    public void setHostname(String nsxHostname) {
+        this.hostname = nsxHostname;
+    }
+
+    public Date getLastStatus() {
+        return this.lastStatus;
+    }
+
+    public void setLastStatus(Date lastStatus) {
+        this.lastStatus = lastStatus;
+    }
+
+    public Boolean getDiscovered() {
+        return this.discovered;
+    }
+
+    public void setDiscovered(Boolean discovered) {
+        this.discovered = discovered;
+    }
+
+    public Boolean getInspectionReady() {
+        return this.inspectionReady;
+    }
+
+    public void setInspectionReady(Boolean inspectionReady) {
+        this.inspectionReady = inspectionReady;
+    }
+
+    public String getOsVmId() {
+        return this.osVmId;
+    }
+
+    public void setOsVmId(String osVmId) {
+        this.osVmId = osVmId;
+    }
+
+    public String getOsHostname() {
+        return this.osHostname;
+    }
+
+    public void setOsHostname(String osHostname) {
+        this.osHostname = osHostname;
+    }
+
+    public String getOsInspectionIngressPortId() {
+        return this.osInspectionIngressPortId;
+    }
+
+    public void setOsInspectionIngressPortId(String osInspectionPortId) {
+        this.osInspectionIngressPortId = osInspectionPortId;
+    }
+
+    public String getOsInspectionIngressMacAddress() {
+        return this.osInspectionIngressMacAddress;
+    }
+
+    public void setOsInspectionIngressMacAddress(String osInspectionMacAddress) {
+        this.osInspectionIngressMacAddress = osInspectionMacAddress;
+    }
+
+    public String getOsInspectionEgressPortId() {
+        return this.osInspectionEgressPortId;
+    }
+
+    public void setOsInspectionEgressPortId(String osInspectionEgressPortId) {
+        this.osInspectionEgressPortId = osInspectionEgressPortId;
+    }
+
+    public String getOsInspectionEgressMacAddress() {
+        return this.osInspectionEgressMacAddress;
+    }
+
+    public void setOsInspectionEgressMacAddress(String osInspectionEgressMacAddress) {
+        this.osInspectionEgressMacAddress = osInspectionEgressMacAddress;
+    }
+
+    public Long getVirtualsystemId() {
+        return this.virtualsystemId;
+    }
+
+    public void setVirtualsystemId(Long virtualsystemId) {
+        this.virtualsystemId = virtualsystemId;
+    }
+
+
+    @Override
+    public String toString() {
+        return "DistributedApplianceInstanceDto [virtualsystemId=" + this.virtualsystemId + ", mcId=" + this.mcId
+                + ", vcId=" + this.vcId + ", name=" + this.name + ", ipAddress=" + this.ipAddress + ", applianceModel="
+                + this.applianceModel + ", swVersion=" + this.swVersion + ", distributedApplianceName="
+                + this.distributedApplianceName + ", applianceManagerConnectorName="
+                + this.applianceManagerConnectorName + ", virtualConnectorName=" + this.virtualConnectorName
+                + ", agentVersionStr=" + this.agentVersionStr + ", hostname=" + this.hostname + ", lastStatus="
+                + this.lastStatus + ", discovered=" + this.discovered + ", inspectionReady=" + this.inspectionReady
+                + ", osVmId=" + this.osVmId + ", osHostname=" + this.osHostname + ", osInspectionIngressPortId="
+                + this.osInspectionIngressPortId + ", osInspectionIngressMacAddress="
+                + this.osInspectionIngressMacAddress + ", osInspectionEgressPortId=" + this.osInspectionEgressPortId
+                + ", osInspectionEgressMacAddress=" + this.osInspectionEgressMacAddress + ", mgmtIpAddress="
+                + this.mgmtIpAddress + ", mgmtSubnetPrefixLength=" + this.mgmtSubnetPrefixLength + ", mgmtGateway="
+                + this.mgmtGateway + "]";
+    }
+
+    public Long getMcId() {
+        return this.mcId;
+    }
+
+    public void setMcId(Long mcId) {
+        this.mcId = mcId;
+    }
+
+    public Long getVcId() {
+        return this.vcId;
+    }
+
+    public void setVcId(Long vcId) {
+        this.vcId = vcId;
+    }
+
+    public String getMgmtSubnetPrefixLength() {
+        return this.mgmtSubnetPrefixLength;
+    }
+
+    public void setMgmtSubnetPrefixLength(String mgmtSubnetPrefixLength) {
+        this.mgmtSubnetPrefixLength = mgmtSubnetPrefixLength;
+    }
+
+    public String getMgmtGateway() {
+        return this.mgmtGateway;
+    }
+
+    public void setMgmtGateway(String mgmtGateway) {
+        this.mgmtGateway = mgmtGateway;
+    }
+
+    public String getMgmtIpAddress() {
+        return this.mgmtIpAddress;
+    }
+
+    public void setMgmtIpAddress(String mgmtIpAddress) {
+        this.mgmtIpAddress = mgmtIpAddress;
+    }
+
+}

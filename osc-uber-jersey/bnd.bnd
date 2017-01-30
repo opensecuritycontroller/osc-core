@@ -1,0 +1,40 @@
+#
+# Create bundle to allow jersey 1.x to be extracted from uber-bundle
+#
+-include target/depend.bnd
+
+-nouses:	true
+
+Include-Resource:\
+  @${jersey-bundle.dep},\
+  @${jsr250-api.dep},\
+  @${jsr311-api.dep}
+
+Import-Package:\
+  !com.sun.grizzly.*,\
+  !com.sun.net.httpserver,\
+  !com.sun.syndication.*,\
+  !com.sun.xml.bind.v2.*,\
+  !com.sun.xml.fastinfoset.stax,\
+  !javax.ejb,\
+  !javax.enterprise.*,\
+  !javax.interceptor,\
+  !javax.persistence,\
+  !javax.servlet.jsp.*,\
+  !org.codehaus.jackson.*,\
+  !org.codehaus.jettison.*,\
+  !org.jdom.*,\
+  !org.objectweb.asm,\
+  *
+
+# exporting javax.ws.rs with version=1.1.0 (instead of 1.1.1)
+#  is workaround to stop jackson binding to wrong version
+#  as it imports version="[1.1.1,2.0)"
+-exportcontents:\
+  com.sun.jersey.api.*;version=${Bundle-Version},\
+  com.sun.jersey.client.*;version=${Bundle-Version},\
+  com.sun.jersey.core.*;version=${Bundle-Version},\
+  com.sun.jersey.spi.*;version=${Bundle-Version},\
+  javax.ws.rs.*;version=1.1.0
+
+# end

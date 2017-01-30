@@ -1,0 +1,121 @@
+Building ISC image
+==================
+
+x. File Layout
+
+  root/*   - copied verbatim to disk
+  src/*    - Modified by makefiles while copying to disk
+
+  mlos.packages     - list of packages retrieved from MLOS
+  centos-6.packages - list of packages retrieved from CentOS
+  postinstall       - script run at end of installation
+                      place any post processing  to be done here
+
+x. Networking:
+ 
+ root/etc/sysconfig/network
+     
+     - basically turns on IPv4 but not IPv6
+     
+ root/etc/sysconfig/network-scripts/ifcfg-eth0
+
+     - default ifcfg-eth0 (dhcp)
+     - most likely will be overwritten on first boot.
+
+
+x. Startup SysVInit
+
+  see: http://en.wikipedia.org/wiki/Init for a description of runlevels
+       MLOS is Redhat/CentOS based and starts at runlevel 3
+
+  Taken from: http://www.linuxplanet.com/linuxplanet/tutorials/7019/2
+
+  Once init knows the runlevel, it passes control to a master script that
+  will run the rest of the boot scripts. Its exact location varies, but look
+  for something with a name like /etc/init.d/rc. The master rc script's job
+  is to start whatever services are appropriate for the runlevel, looking in
+  directories named /etc/rc.runlevel.d. So if you're booting into runlevel 2,
+  rc looks for scripts in /etc/rc2.d.
+
+  The files in /etc/rc2.d are symbolic links with names like K09apache2@ and
+  S20postfix. The scripts they reference live in /etc/init.d: The "S" in
+  S20postfix means the script will be run with the argument "start" when
+  entering that runlevel. A "K" (kill) means the script will be run with the
+  argument "stop". Most init scripts can take a few other arguments, such as
+  "restart", useful if you ever need to run them by hand or via the service
+  command.
+
+
+  The "20" indicates how early the script will be run. Startup scripts are run
+  in numerical order, so S10sysklogd will be run very early in the boot process,
+  S99acpi-support near the end.
+
+  One of the last scripts to run is S99rc.local. All it does is look for a file
+  called /etc/rc.local and run it. rc.local is a great place to put special
+  commands you want on your own personal system.
+
+  The following are in /etc/init.d and the installer creates the symbolic links
+  to the rc[2-5].d directories as well
+
+  
+ root/etc/init.d/securityBroker
+
+    - Numeric order 85 (late in the start process)
+    - Call vmidc.sh with the --start, --stop or --status options
+
+ root/etc/init.d/firstconfig
+
+    - Numeric order 06 (early in the process)
+    - Runs only one time, writes file /etc/firstconfig on first boot
+    - Mounts cdrom and configures networking from ovf-env.xml file
+
+
+x. Sudo
+
+  root/etc/sudoers.d/admin
+
+    - gives admin sudo to all commands with no password
+    - may want to limit in future
+
+x. filesystem
+
+ root/etc/crypttab
+    
+    - creates a swap partition that is encrypted
+
+ root/etc/fstab
+
+    - Mounts all devices
+       - /dev/mapper/root  (the encrypted root partition)
+       - /dev/mapper/swap  (the envrypted swap partition)
+       - /dev/sda1         (boot partition)
+   - Uses fixed UUIDs
+
+x. Grub
+
+ root/usr/local/share/initrd/etc/rc.local
+   
+   - Used in initrd (grub boot file)
+   - adds /dev/sda4 as a encrypted file system
+   
+ root/boot/grub/grub.conf
+
+   - Mainly to add logo to grub boot screen
+
+ root/boot/grub/device.map
+
+   - Used to create initrd
+
+x. Branding
+  
+   Both these files are run thru sed changing the word VERSION to the 
+    current buildNumber
+
+ src/etc/system-release
+
+   - Displayed early in boot process
+   - Welcome to "XXXXX" XXXXX is taken from this file
+
+ src/etc/issue
+
+   - Logon screen

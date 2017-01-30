@@ -1,0 +1,207 @@
+package org.osc.core.broker.view;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
+import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
+import org.osc.core.broker.service.mc.SyncManagerConnectorService;
+import org.osc.core.broker.service.policy.ListManagerConnectoryPolicyService;
+import org.osc.core.broker.service.policy.PolicyDto;
+import org.osc.core.broker.service.request.BaseIdRequest;
+import org.osc.core.broker.service.request.BaseRequest;
+import org.osc.core.broker.service.request.SyncApplianceManagerConnectorRequest;
+import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.response.SyncApplianceManagerConnectorResponse;
+import org.osc.core.broker.view.util.ToolbarButtons;
+import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.broker.window.add.AddManagerConnectorWindow;
+import org.osc.core.broker.window.delete.DeleteManagerConnectorWindow;
+import org.osc.core.broker.window.update.UpdateManagerConnectorWindow;
+
+import com.vaadin.data.util.BeanContainer;
+import com.vaadin.data.util.BeanItem;
+import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.CustomTable;
+import com.vaadin.ui.CustomTable.ColumnGenerator;
+import com.vaadin.ui.Notification;
+
+public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnectorDto, PolicyDto> {
+    private static final String MC_HELP_GUID = "GUID-14BF1C4E-4729-437A-BF60-A53EED74009C.html";
+    private static final String POLICY_HELP_GUID = "GUID-14BF1C4E-4729-437A-BF60-A53EED74009C.html";
+
+    private static final long serialVersionUID = 1L;
+
+    private static final Logger log = Logger.getLogger(ManagerConnectorView.class);
+
+    public ManagerConnectorView() {
+
+        createView("Manager Connector", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT,
+                ToolbarButtons.DELETE, ToolbarButtons.CONFORM), "Policies", null);
+    }
+
+    @Override
+    public void buttonClicked(ClickEvent event) throws Exception {
+        if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
+            log.debug("Redirecting to Add Manager Connector Window");
+            ViewUtil.addWindow(new AddManagerConnectorWindow(this));
+        }
+        if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
+            log.debug("Redirecting to Update Manager Connector Window");
+            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this));
+        }
+        if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
+            log.debug("Redirecting to Delete Manager Connector Window");
+            ViewUtil.addWindow(new DeleteManagerConnectorWindow(this));
+        }
+        if (event.getButton().getId().equals(ToolbarButtons.CONFORM.getId())) {
+            conformManagerConnector(getParentItemId());
+        }
+    }
+
+    public void conformManagerConnector(Long mcId) {
+        log.info("Syncing MC " + mcId.toString());
+        SyncApplianceManagerConnectorRequest request = new SyncApplianceManagerConnectorRequest();
+        request.setId(mcId);
+        SyncManagerConnectorService service = new SyncManagerConnectorService();
+
+        try {
+            SyncApplianceManagerConnectorResponse response = service.dispatch(request);
+            ViewUtil.showJobNotification(response.getJobId());
+
+        } catch (Exception e) {
+            ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
+        }
+    }
+
+    @SuppressWarnings("serial")
+    @Override
+    public void initParentTable() {
+        this.parentContainer = new BeanContainer<Long, ApplianceManagerConnectorDto>(ApplianceManagerConnectorDto.class);
+        this.parentTable.setContainerDataSource(this.parentContainer);
+        this.parentTable.setVisibleColumns("name", "managerType", "ipAddress", "lastJobStatus");
+
+        this.parentTable.addGeneratedColumn("lastJobStatus", new ColumnGenerator() {
+            @Override
+            public Object generateCell(CustomTable source, Object itemId, Object columnId) {
+                ApplianceManagerConnectorDto managerConnectorDto = ManagerConnectorView.this.parentContainer.getItem(
+                        itemId).getBean();
+                return ViewUtil.generateJobLink(managerConnectorDto.getLastJobStatus(),
+                        managerConnectorDto.getLastJobState(), managerConnectorDto.getLastJobId());
+            }
+        });
+
+        this.parentTable.addGeneratedColumn("ipAddress", new ColumnGenerator() {
+            @Override
+            public Object generateCell(CustomTable source, Object itemId, Object columnId) {
+                ApplianceManagerConnectorDto managerConnectorDto = ManagerConnectorView.this.parentContainer.getItem(
+                        itemId).getBean();
+
+                try {
+                    return ViewUtil.generateMgrLink(
+                            managerConnectorDto.getIpAddress(),
+                            ManagerApiFactory.createApplianceManagerApi(managerConnectorDto.getManagerType()).getManagerUrl(
+                                    managerConnectorDto.getIpAddress()));
+                } catch (Exception e) {
+                    return ViewUtil.generateMgrLink("http://", managerConnectorDto.getIpAddress(), "", "");
+                }
+
+            }
+        });
+
+        // Customizing column header names
+        this.parentTable.setColumnHeader("name", "Name");
+        this.parentTable.setColumnHeader("managerType", "Type");
+        this.parentTable.setColumnHeader("ipAddress", "Host");
+        this.parentTable.setColumnHeader("lastJobStatus", "Last Job Status");
+    }
+
+    @Override
+    public void populateParentTable() {
+
+        BaseRequest<BaseDto> listRequest = new BaseRequest<>();
+        ListResponse<ApplianceManagerConnectorDto> res;
+        ListApplianceManagerConnectorService listService = new ListApplianceManagerConnectorService();
+        try {
+            res = listService.dispatch(listRequest);
+            List<ApplianceManagerConnectorDto> listResponse = res.getList();
+            this.parentContainer.removeAllItems();
+            // Creating table with list of vendors
+            for (ApplianceManagerConnectorDto mcm : listResponse) {
+                this.parentContainer.addItem(mcm.getId(), mcm);
+            }
+
+        } catch (Exception e) {
+            log.error("Fail to populate Manager Connector table", e);
+            ViewUtil.iscNotification("Fail to populate Manager Connector table (" + e.getMessage() + ")",
+                    Notification.Type.ERROR_MESSAGE);
+        }
+
+    }
+
+    @Override
+    public void initChildTable() {
+        this.childContainer = new BeanContainer<Long, PolicyDto>(PolicyDto.class);
+        this.childTable.setContainerDataSource(this.childContainer);
+        this.childTable.setVisibleColumns("policyName", "mgrDomainName");
+
+        this.childTable.setColumnHeader("policyName", "Name");
+        this.childTable.setColumnHeader("mgrDomainName", "Domain");
+    }
+
+    @Override
+    public void populateChildTable(BeanItem<ApplianceManagerConnectorDto> parentItem) {
+        this.childContainer.removeAllItems();
+        if (parentItem != null) {
+            try {
+                BaseIdRequest listRequest = new BaseIdRequest();
+                listRequest.setId(getParentItemId());
+                ListManagerConnectoryPolicyService listService = new ListManagerConnectoryPolicyService();
+                ListResponse<PolicyDto> res = listService.dispatch(listRequest);
+
+                for (PolicyDto policy : res.getList()) {
+                    this.childContainer.addItem(policy.getId(), policy);
+                }
+
+            } catch (Exception e) {
+                log.error("Fail to populate Policy Table", e);
+                ViewUtil.iscNotification("Fail to populate Policy table (" + e.getMessage() + ")",
+                        Notification.Type.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    @Override
+    protected String getParentHelpGuid() {
+        return MC_HELP_GUID;
+    }
+
+    @Override
+    protected String getChildHelpGuid() {
+        return POLICY_HELP_GUID;
+    }
+
+    @Override
+    public void enter(ViewChangeListener.ViewChangeEvent event) {
+        super.enter(event);
+        String parameters = event.getParameters();
+        if (!StringUtils.isEmpty(parameters)) {
+            Map<String, String> paramMap = ViewUtil.stringToMap(parameters);
+            try {
+                Long mcId = Long.parseLong(paramMap.get(ViewUtil.MC_ID_PARAM_KEY));
+                log.info("Entered MC View with Id:" + mcId);
+                this.parentTable.select(mcId);
+                this.parentTable.setCurrentPageFirstItemIndex(getParentContainer().indexOfId(mcId));
+            } catch (NumberFormatException ne) {
+                log.warn("Invalid Parameters for MC View. " + parameters);
+            }
+        }
+    }
+
+}

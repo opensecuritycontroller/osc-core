@@ -1,0 +1,2 @@
+swap    /dev/sda2   /dev/urandom   swap
+swap    /dev/hda2   /dev/urandom   swap

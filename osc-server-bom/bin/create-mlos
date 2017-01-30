@@ -1,0 +1,89 @@
+BUILDDIR=/srv/chroot/mlos2 
+apt-get install schroot yum rpm
+
+######################################################################
+#
+# Build the MLOS env for install
+#
+mkdir -p $BUILDDIR-bootstrap/proc
+mkdir -p $BUILDDIR-bootstrap/sys
+mkdir -p $BUILDDIR-bootstrap/mnt/sysimage
+mount --bind /proc $BUILDDIR-bootstrap/proc
+mount --bind /sys $BUILDDIR-bootstrap/sys
+
+mkdir -p -m 755 $BUILDDIR
+mkdir -p -m 755 $BUILDDIR/dev
+mkdir -p -m 755 $BUILDDIR/proc
+mkdir -p -m 755 $BUILDDIR/sys
+mkdir -p -m 755 $BUILDDIR/mnt
+mount --bind /proc $BUILDDIR/proc
+mount --bind /sys $BUILDDIR/sys
+mount --bind /dev $BUILDDIR/dev
+
+umask 000
+
+rpmdb --root $BUILDDIR-bootstrap --initdb
+wget --quiet -O $BUILDDIR-bootstrap/RPM-GPG-KEY-MLOS.pub http://mlos.corp.nai.org/mlos/mlosrepo/KEYS/2/RPM-GPG-KEY-MLOS.pub
+rpm --root=$BUILDDIR-bootstrap --import $BUILDDIR-bootstrap/RPM-GPG-KEY-MLOS.pub
+yum -y -q -c mlos.yum.conf --installroot=$BUILDDIR-bootstrap install yum
+
+mkdir -p $BUILDDIR-bootstrap/var/www/
+mount --bind /var/www $BUILDDIR-bootstrap/var/www/
+mount --bind $BUILDDIR $BUILDDIR-bootstrap/mnt/sysimage
+cp mlos.yum.conf $BUILDDIR-bootstrap/
+cp /etc/resolv.conf $BUILDDIR-bootstrap/etc/
+
+chroot $BUILDDIR-bootstrap rpmdb --root /mnt/sysimage --initdb
+chroot $BUILDDIR-bootstrap rpm --root=/mnt/sysimage --import /RPM-GPG-KEY-MLOS.pub
+chroot $BUILDDIR-bootstrap yum -y -q -c mlos.yum.conf --installroot=/mnt/sysimage install yum MAKEDEV grub kpartx parted e2fsprogs coreutils bash sudo yum-mlos man vim-enhanced wget file zip unzip make cryptsetup tar ant java-1.7.0-openjdk java-1.7.0-openjdk-devel gcc xz-devel
+chroot $BUILDDIR-bootstrap echo -e "%_excludedocs 1\n%_install_langs en_US\n" > /mnt/sysimage/etc/rpm/macros
+
+umount $BUILDDIR-bootstrap/proc
+umount $BUILDDIR-bootstrap/sys
+umount $BUILDDIR-bootstrap/mnt/sysimage
+umount $BUILDDIR-bootstrap/var/www
+
+rm -r $BUILDDIR-bootstrap
+
+#chroot $BUILDDIR MAKEDEV /dev/null
+#chroot $BUILDDIR MAKEDEV /dev/zero
+#chroot $BUILDDIR MAKEDEV /dev/console
+#chroot $BUILDDIR MAKEDEV /dev/tty
+#chroot $BUILDDIR MAKEDEV /dev/loop
+ln -s /proc/mounts $BUILDDIR/etc/mtab
+
+find $BUILDDIR/var/lib/rpm -type f -exec chmod 644 {} \;
+find $BUILDDIR/var/lib/yum -type f -exec chmod 644 {} \;
+find $BUILDDIR/var/lib/yum -type d -exec chmod 755 {} \;
+
+#
+# 
+#
+install -o root -g root -m 644 /etc/resolv.conf $BUILDDIR/etc/
+install -o root -g root -m 600 /etc/sudoers $BUILDDIR/etc/
+getent passwd > $BUILDDIR/etc/passwd
+getent group > $BUILDDIR/etc/group
+getent shadow > $BUILDDIR/etc/shadow
+umount $BUILDDIR/proc
+umount $BUILDDIR/sys
+umount $BUILDDIR/dev
+
+cat > /etc/schroot/chroot.d/mlos2.conf << EOF
+[mlos2]
+description=MLOS 2
+directory=$BUILDDIR
+type=directory
+root-groups=sudo
+users=jenkins
+groups=vmidc
+EOF
+
+cat >> /etc/schroot/default/fstab << EOF
+/var/lib/jenkins/ /var/lib/jenkins/ none rw,bind        0       0
+EOF
+
+cat > $BUILDIR/etc/sudoers.d/jenkins << EOF
+jenkins   ALL=NOPASSWD: ALL
+EOF
+
+apt-get purge rpm yum

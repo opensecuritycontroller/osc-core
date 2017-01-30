@@ -1,0 +1,73 @@
+package org.osc.core.broker.service.tasks.conformance.virtualsystem;
+
+import java.util.Set;
+
+import org.apache.log4j.Logger;
+import org.hibernate.Session;
+import org.osc.core.broker.job.TaskInput;
+import org.osc.core.broker.job.TaskOutput;
+import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
+import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
+import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.util.ServerUtil;
+import org.osc.sdk.sdn.api.DeploymentSpecApi;
+
+import com.mcafee.vmidc.server.Server;
+
+public class RegisterDeploymentSpecTask extends TransactionalTask {
+    private static final Logger LOG = Logger.getLogger(RegisterDeploymentSpecTask.class);
+    public static final String ALL_MINOR_VERSIONS = ".*";
+
+    private VirtualSystem vs;
+    private VmwareSoftwareVersion version;
+
+    public RegisterDeploymentSpecTask(VirtualSystem vs,
+            VmwareSoftwareVersion version) {
+        this.vs = vs;
+        this.version = version;
+        this.name = getName();
+    }
+
+    @TaskInput
+    public String svcId;
+    @TaskOutput
+    public String deploymentSpecId;
+
+    @Override
+    public void executeTransaction(Session session) throws Exception {
+        LOG.debug("Start executing RegisterDeploymentSpec task for svcId: " + this.svcId);
+
+        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+        this.deploymentSpecId = createDeploymentSpec(this.version);
+        this.vs.getNsxDeploymentSpecIds().put(this.version, this.deploymentSpecId);
+        EntityManager.update(session, this.vs);
+    }
+
+    private String createDeploymentSpec(VmwareSoftwareVersion softwareVersion)
+            throws Exception {
+        DeploymentSpecApi deploymentSpecApi = VMwareSdnApiFactory.createDeploymentSpecApi(this.vs);
+        VersionedDeploymentSpec deploymentSpec = new VersionedDeploymentSpec();
+        deploymentSpec.setOvfUrl(generateOvfUrl(this.vs.getApplianceSoftwareVersion().getImageUrl()));
+        deploymentSpec.setHostVersion(softwareVersion + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
+        return deploymentSpecApi.createDeploymentSpec(this.vs.getNsxServiceId(), deploymentSpec);
+    }
+
+    @Override
+    public String getName() {
+        return "Register Deployment Specification '" + this.version.toString() +
+                RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS + "'";
+    }
+
+    @Override
+    public Set<LockObjectReference> getObjects() {
+        return LockObjectReference.getObjectReferences(this.vs);
+    }
+
+    public static String generateOvfUrl(String imageName) {
+        return "https://" + ServerUtil.getServerIP() + ":" + Server.getApiPort() + "/ovf/" + imageName;
+    }
+}

@@ -1,0 +1,100 @@
+package org.osc.core.server.installer.impl;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import org.osc.core.server.installer.Artifact;
+import org.osc.core.server.installer.InstallableUnit;
+import org.osc.core.server.installer.State;
+import org.osgi.framework.Bundle;
+import org.osgi.util.promise.Promise;
+
+class InstallableUnitImpl implements InstallableUnit {
+
+    private final DeploymentInstaller installer;
+    private final File originFile;
+    private final String name;
+    private final String symbolicName;
+    private final String type;
+    private final Collection<Artifact> artifacts;
+
+    private State state;
+    private String errorMessage = null;
+
+    InstallableUnitImpl(DeploymentInstaller installer, File originFile, String name, String symbolicName, String type, Collection<Artifact> artifacts) {
+        this.installer = installer;
+        this.originFile = originFile;
+        this.name = name;
+        this.symbolicName = symbolicName;
+        this.artifacts = artifacts;
+        this.type = type;
+    }
+
+    @Override
+    public File getOrigin() {
+        return this.originFile;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
+    @Override
+    public String getSymbolicName() {
+        return this.symbolicName;
+    }
+
+    @Override
+    public Collection<Artifact> getArtifacts() {
+        return Collections.unmodifiableCollection(this.artifacts);
+    }
+
+    @Override
+    public State getState() {
+        return this.state;
+    }
+
+    @Override
+    public Promise<List<Bundle>> install() {
+        if (!this.state.equals(State.RESOLVED)) {
+            throw new IllegalStateException(String.format("Cannot install unit %s: not in the %s state", this.symbolicName, State.RESOLVED));
+        }
+        return this.installer.putInstallJob(this);
+    }
+
+    @Override
+    public Promise<List<Bundle>> uninstall() {
+        return this.installer.putUninstallJob(this);
+    }
+
+    /**
+     * Set the state, return true if the state changed.
+     */
+    boolean setState(State state) {
+        if (state == null) {
+            throw new IllegalArgumentException("null state not permitted!");
+        }
+        State oldState = this.state;
+
+        this.state = state;
+        return !this.state.equals(oldState);
+    }
+
+    void setErrorMessage(String message) {
+        this.errorMessage = message;
+    }
+
+    @Override
+    public String getErrorMessage() {
+        return this.errorMessage;
+    }
+
+    @Override
+    public String getType() {
+        return this.type;
+    }
+
+}

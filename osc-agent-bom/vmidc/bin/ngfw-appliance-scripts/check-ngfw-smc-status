@@ -1,0 +1,10 @@
+#!/usr/bin/python
+
+# Verifies the firewall has had initial contact with the SMC
+# This is verified by determining if the certificates exist
+# Usage: check-ngfw-smc-status
+# Just a wrapper
+
+import sys
+from sg.scripts.check_ngfw_smc_status import run
+sys.exit(run())

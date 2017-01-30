@@ -1,0 +1,177 @@
+package org.osc.core.broker.window.add;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.service.appliance.ImportApplianceSoftwareVersionService;
+import org.osc.core.broker.service.appliance.ImportFileRequest;
+import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.view.common.VmidcMessages;
+import org.osc.core.broker.view.common.VmidcMessages_;
+import org.osc.core.broker.view.maintenance.ApplianceUploader;
+import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.broker.window.CRUDBaseWindow;
+import org.osc.core.broker.window.ProgressIndicatorWindow;
+import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.util.ArchiveUtil;
+import org.osc.core.util.ServerUtil;
+
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.Upload.SucceededEvent;
+import com.vaadin.ui.Upload.SucceededListener;
+
+public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCancelButtonModel> {
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
+    private static final Logger log = Logger.getLogger(ImportApplianceSoftwareVersionWindow.class);
+
+    private ApplianceUploader uploader = null;
+
+    public ImportApplianceSoftwareVersionWindow() throws Exception {
+        createWindow("Auto Import Appliance Software Version");
+    }
+
+    @Override
+    public void populateForm() {
+        this.form.setMargin(true);
+        this.form.setSizeUndefined();
+
+        this.uploader = new ApplianceUploader();
+        this.uploader.setSizeFull();
+        this.uploader.getUpload().addSucceededListener(getUploadSucceededListener());
+
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.addComponent(this.uploader);
+        layout.setCaption(VmidcMessages.getString(VmidcMessages_.UPLOAD_APPLIANCE_CAPTION));
+
+        this.form.addComponent(layout);
+    }
+
+    @SuppressWarnings("serial")
+    private SucceededListener getUploadSucceededListener() {
+        return new SucceededListener() {
+
+            @Override
+            public void uploadSucceeded(SucceededEvent event) {
+                log.info("Upload Successful! Analyzing Uploaded Image.....");
+                final ProgressIndicatorWindow progressIndicatorWindow = new ProgressIndicatorWindow();
+
+                progressIndicatorWindow.setWidth("200px");
+                progressIndicatorWindow.setHeight("100px");
+                progressIndicatorWindow.setCaption("Processing image ...");
+
+                UI.getCurrent().addWindow(progressIndicatorWindow);
+                progressIndicatorWindow.bringToFront();
+
+                Runnable serviceCall = uploadValidationService(progressIndicatorWindow, event);
+
+                ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
+                exec.schedule(serviceCall, 1, TimeUnit.MILLISECONDS);
+            }
+        };
+    }
+
+    private Runnable uploadValidationService(final ProgressIndicatorWindow progressIndicatorWindow,
+            final SucceededEvent event) {
+
+        return new Runnable() {
+            @Override
+            public void run() {
+
+                // Make service calls in the UI thread, since the calls will update the UI components
+                UI.getCurrent().access(new Runnable() {
+
+                    @Override
+                    public void run() {
+
+                        String zipfile = ImportApplianceSoftwareVersionWindow.this.uploader.getUploadPath()
+                                + event.getFilename();
+                        try {
+                            // Do the unzip only if there is enough disc space
+                            if (!ServerUtil.isEnoughSpace()) {
+                                throw new VmidcException(VmidcMessages.getString("upload.appliance.nospace"));
+                            }
+
+                            if (!FilenameUtils.getExtension(event.getFilename()).equals("zip")) {
+                                throw new VmidcException(VmidcMessages
+                                        .getString(VmidcMessages_.UPLOAD_APPLIANCE_FAILED));
+                            }
+
+                            ArchiveUtil.unzip(zipfile,
+                                    ImportApplianceSoftwareVersionWindow.this.uploader.getUploadPath());
+                            // After extraction, we don't need the zip file. Delete the zip file
+                            log.info("Delete temporary uploaded zip file after extraction " + zipfile);
+                            new File(zipfile).delete();
+
+                            addApplianceImage();
+
+                            ViewUtil.iscNotification(
+                                    VmidcMessages.getString(VmidcMessages_.UPLOAD_APPLIANCE_SUCCESSFUL), null,
+                                    Notification.Type.TRAY_NOTIFICATION);
+
+                            close();
+
+                        } catch (Exception e) {
+
+                            log.error("Failed to process uploaded zip file", e);
+                            try {
+                                FileUtils.deleteDirectory(new File(ImportApplianceSoftwareVersionWindow.this.uploader
+                                        .getUploadPath()));
+                            } catch (IOException ex) {
+                                log.error("Failed to cleanup the tmp directory", ex);
+                            }
+
+                            ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
+
+                        } finally {
+                            log.info("Deleting file " + zipfile);
+                            new File(zipfile).delete();
+                            progressIndicatorWindow.close();
+                        }
+                    }
+                });
+            }
+
+        };
+    }
+
+    private void addApplianceImage() throws Exception {
+        // creating add request with user entered data
+        ImportFileRequest addRequest = new ImportFileRequest(this.uploader.getUploadPath());
+
+        ImportApplianceSoftwareVersionService addService = new ImportApplianceSoftwareVersionService();
+        addService.dispatch(addRequest);
+
+    }
+
+    @Override
+    public boolean validateForm() {
+        return true;
+    }
+
+    @Override
+    public void submitForm() {
+        try {
+            if (validateForm()) {
+                this.uploader.getUpload().submitUpload();
+            }
+
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
+        }
+
+    }
+}

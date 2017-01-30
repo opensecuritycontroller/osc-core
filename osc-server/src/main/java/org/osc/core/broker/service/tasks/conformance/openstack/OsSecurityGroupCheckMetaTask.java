@@ -1,0 +1,148 @@
+package org.osc.core.broker.service.tasks.conformance.openstack;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.log4j.Logger;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Session;
+import org.jclouds.openstack.neutron.v2.domain.Rule;
+import org.jclouds.openstack.neutron.v2.domain.RuleDirection;
+import org.jclouds.openstack.neutron.v2.domain.RuleEthertype;
+import org.jclouds.openstack.neutron.v2.domain.SecurityGroup;
+import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
+import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
+import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
+import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+
+public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
+
+    private static final Logger log = Logger.getLogger(OsSecurityGroupCheckMetaTask.class);
+
+    private DeploymentSpec ds;
+    private TaskGraph tg;
+
+    public OsSecurityGroupCheckMetaTask(DeploymentSpec ds) {
+        this.ds = ds;
+        this.name = getName();
+    }
+
+    @Override
+    public void executeTransaction(Session session) throws Exception {
+        this.tg = new TaskGraph();
+
+        DeploymentSpec ds = (DeploymentSpec) session.get(DeploymentSpec.class, this.ds.getId(),
+                new LockOptions().setLockMode(LockMode.PESSIMISTIC_WRITE));
+
+        log.info(
+                "Checking if VS" + ds.getVirtualSystem().getName() + " has the corresponding Openstack Security Group");
+
+        Endpoint endPoint = new Endpoint(ds);
+        try (JCloudNeutron neutron = new JCloudNeutron(endPoint)) {
+            // Check if the VS have ds or dds with os security group reference
+            OsSecurityGroupReference sgReference = null;
+            List<DeploymentSpec> dss = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(
+                    session, ds.getVirtualSystem(), ds.getTenantId(), ds.getRegion());
+            for (DeploymentSpec depSpec : dss) {
+                if (depSpec.getOsSecurityGroupReference() != null) {
+                    sgReference = depSpec.getOsSecurityGroupReference();
+                    break;
+                }
+            }
+
+            // If DS or DDS both have no os security group reference, create OS SG
+            if (sgReference == null) {
+                this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
+            } else {
+                DeploymentSpec existingDs = null;
+                for (Iterator<DeploymentSpec> iterator = sgReference.getDeploymentSpecs().iterator(); iterator
+                        .hasNext();) {
+                    existingDs = iterator.next();
+                    // For a given tenant, region and VS there will be only one SG
+                    if (existingDs.getRegion().equals(this.ds.getRegion())
+                            && existingDs.getTenantName().equals(this.ds.getTenantName())
+                            && existingDs.getVirtualSystem().getName().equals(this.ds.getVirtualSystem().getName())) {
+                        SecurityGroup sg = neutron.getSecurityGroupById(ds.getRegion(), sgReference.getSgRefId());
+                        if (sg == null) {
+                            // remove the ds from the collection, delete the stale os sg reference from the database and create a new OS SG
+                            iterator.remove();
+                            EntityManager.delete(session, sgReference);
+                            this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
+                        } else {
+                            syncSGRules(sg, neutron);
+                            sgReference.setSgRefName(sg.getName());
+                            EntityManager.update(session, sgReference);
+                            ds.setOsSecurityGroupReference(sgReference);
+                            EntityManager.update(session, ds);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void syncSGRules(SecurityGroup sg, JCloudNeutron neutron) throws Exception {
+        final ImmutableList<Rule> rules = sg.getRules();
+        List<Rule> expectedList = new ArrayList<>();
+        expectedList.add(
+                Rule.createBuilder(RuleDirection.INGRESS, "").ethertype(RuleEthertype.IPV4).protocol(null).build());
+        expectedList
+                .add(Rule.createBuilder(RuleDirection.EGRESS, "").ethertype(RuleEthertype.IPV4).protocol(null).build());
+        expectedList.add(
+                Rule.createBuilder(RuleDirection.INGRESS, "").ethertype(RuleEthertype.IPV6).protocol(null).build());
+        expectedList
+                .add(Rule.createBuilder(RuleDirection.EGRESS, "").ethertype(RuleEthertype.IPV6).protocol(null).build());
+
+        ImmutableList.<Rule>builder().addAll(expectedList);
+
+        // Filter the missing rules from the expected SG rules
+        Collection<Rule> missingRules = Collections2.filter(expectedList, new Predicate<Rule>() {
+
+            @Override
+            public boolean apply(Rule expRule) {
+                for (Rule osRule : rules) {
+                    if (osRule.getDirection().equals(expRule.getDirection())
+                            && osRule.getEthertype().equals(expRule.getEthertype()) && osRule.getProtocol() == null) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+        });
+        if (!missingRules.isEmpty()) {
+            neutron.addSecurityGroupRules(sg, this.ds.getRegion(), missingRules);
+        }
+    }
+
+    @Override
+    public TaskGraph getTaskGraph() {
+        return this.tg;
+    }
+
+    @Override
+    public Set<LockObjectReference> getObjects() {
+        return LockObjectReference.getObjectReferences(this.ds);
+    }
+
+    @Override
+    public String getName() {
+        return String.format(
+                "Checking if Openstack Security Group exists for Virtual System '%s' in tenant '%s' for region '%s'",
+                this.ds.getVirtualSystem().getName(), this.ds.getTenantName(), this.ds.getRegion());
+    }
+
+}

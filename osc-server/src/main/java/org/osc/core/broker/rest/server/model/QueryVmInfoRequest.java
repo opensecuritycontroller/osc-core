@@ -1,0 +1,52 @@
+package org.osc.core.broker.rest.server.model;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.osc.core.broker.service.request.Request;
+import org.osc.sdk.controller.FlowInfo;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+@ApiModel(description = "Contains a list of IP and/or MAC and/or VM-UUID and/or a map of unique-request-identifier key "
+        + "and flow value")
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+public class QueryVmInfoRequest implements Request {
+
+    public String applianceInstanceName;
+
+    @ApiModelProperty(value = "List of IP Addresses for which VM information is queried")
+    @XmlElement(name = "ipAddress")
+    public List<String> ipAddress = new ArrayList<String>();
+
+    @ApiModelProperty(value = "List of MAC Addresses for which VM information is queried")
+    @XmlElement(name = "macAddress")
+    public List<String> macAddress = new ArrayList<String>();
+
+    @ApiModelProperty(value = "List of VM UUID for which VM information is queried")
+    @XmlElement(name = "vmUuid")
+    public List<String> vmUuid = new ArrayList<String>();
+
+    @ApiModelProperty(
+            value = "A map of string key and FlowInfo (5-tuple + timestamp) value for which VM information is queried. "
+                    + "Key value must be a unique. FlowInfo structure comrise of 6 elements:<br>"
+                    + "<p>sourceIpAddress, sourcePort, destinationIpAddress, destinationPort, protocolId and flowTimestamp</p>"
+            )
+    @XmlElement(name = "flow")
+    public HashMap<String, FlowInfo> flow = new HashMap<>();
+
+    @Override
+    public String toString() {
+        return "QueryVmInfoRequest [applianceInstanceName=" + applianceInstanceName + ", ipAddress=" + ipAddress
+                + ", macAddress=" + macAddress + ", vmUuid=" + vmUuid + ", flow=" + flow + "]";
+    }
+
+}

@@ -1,0 +1,280 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.osc.core</groupId>
+	<artifactId>osc-root</artifactId>
+	<version>1.0</version>
+	<packaging>pom</packaging>
+	<name>org.osc.core:osc-root</name>
+	<description>OSC Parent Project</description>
+	<properties>
+		<jclouds.version>2.0.0</jclouds.version>
+		<powermock.version>1.6.5</powermock.version>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>jboss</id>
+			<name>JBoss</name>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<url>http://repository.jboss.org/nexus/content/groups/public/</url>
+		</repository>
+	</repositories>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.osgi</groupId>
+				<artifactId>osgi.annotation</artifactId>
+				<version>6.0.1</version>
+				<scope>provided</scope>
+			</dependency>
+			<!-- Testing Dependencies -->
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.12</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.powermock</groupId>
+				<artifactId>powermock-module-junit4</artifactId>
+				<version>${powermock.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.powermock</groupId>
+				<artifactId>powermock-core</artifactId>
+				<version>${powermock.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.powermock</groupId>
+				<artifactId>powermock-api-mockito</artifactId>
+				<version>${powermock.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-core</artifactId>
+				<version>1.10.19</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>pl.pragmatists</groupId>
+				<artifactId>JUnitParams</artifactId>
+				<version>1.0.1</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+			    <groupId>org.assertj</groupId>
+			    <artifactId>assertj-core</artifactId>
+			    <version>2.5.0</version>
+			    <scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+    <modules>
+        <module>IscSdnControllerPlugin</module>
+        <module>IscMgrPlugin</module>
+        <module>OscVMwareSdnPlugin</module>
+
+        <module>NsxVMwareSdnPlugin</module>
+        <module>NscSdnControllerPlugin</module>
+        <module>NsmMgrPlugin</module>
+        <module>SmcMgrPlugin</module>
+        <module>IsmMgrPlugin</module>
+        
+        <module>osc-tools</module>
+        <module>osc-common</module>
+        <module>osc-agent</module>
+        <module>osc-server</module>
+
+        <module>osc-uber</module>
+        <module>osc-uber-jersey</module>
+        <module>osc-control</module>
+        <module>osc-installer</module>
+        <module>osc-installer-test</module>
+        <module>osc-installer-simple</module>
+        <module>osc-resolver</module>
+        <module>osc-export</module>
+    </modules>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<id>prodVer</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<exec outputproperty="productVersion" executable="cat">
+									<arg value="../version.txt" />
+								</exec>
+								<exec outputproperty="buildNumber" dir="../." executable="sh">
+									<arg value="-c" />
+									<arg value="svnversion -nc | cut -d ':' -f 2 | tr -d -c 0-9" />
+								</exec>
+								<echo>Version: ${productVersion}</echo>
+								<echo>Committed Revision: ${buildNumber}</echo>
+							</target>
+							<exportAntProperties>true</exportAntProperties>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- This plugin is used to integrate CheckStyle into the build process -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>2.15</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.puppycrawl.tools</groupId>
+						<artifactId>checkstyle</artifactId>
+						<version>6.7</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<configLocation>ISC_checks.xml</configLocation>
+							<!-- Turning the fail-on-violation flag on -->
+							<failOnViolation>true</failOnViolation>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- This plugin is used to integrate Findbugs into the build process -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>3.0.1</version>
+				<configuration>
+					<effort>Max</effort>
+					<threshold>High</threshold>
+					<xmlOutput>true</xmlOutput>
+					<!-- Turning the fail-on-error flag on -->
+					<failOnError>true</failOnError>
+					<omitVisitors>DefaultEncodingDetector</omitVisitors>
+					<argLine>-Xmx1024m</argLine>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-antrun-plugin
+										</artifactId>
+										<versionRange>
+											[1.7,)
+										</versionRange>
+										<goals>
+											<goal>run</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+				<!-- This plugin configuration adds OSGi metadata to
+				     the manifests of projects that use it. It also
+				     generates Declarative Services metadata if needed -->
+				<plugin>
+					<groupId>biz.aQute.bnd</groupId>
+					<artifactId>bnd-maven-plugin</artifactId>
+					<version>3.3.0</version>
+					<configuration>
+					</configuration>
+					<executions>
+						<execution>
+							<phase>process-classes</phase>
+							<goals>
+								<goal>bnd-process</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<!-- This configuration is necessary to ensure that the
+				     manifest generated by the bnd-maven-plugin is used -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<configuration>
+						<archive>
+							<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+						</archive>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>3.0.1</version>
+				<configuration>
+					<effort>Max</effort>
+					<threshold>High</threshold>
+					<omitVisitors>DefaultEncodingDetector</omitVisitors>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>2.15</version>
+				<configuration>
+					<configLocation>ISC_checks.xml</configLocation>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>checkstyle</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+		</plugins>
+	</reporting>
+</project>

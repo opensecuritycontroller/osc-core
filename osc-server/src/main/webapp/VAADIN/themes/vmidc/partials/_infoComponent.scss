@@ -1,0 +1,35 @@
+.vmidc {
+    .page-info-component {
+        margin: -16px 0px 12px 0px;
+    }
+    
+    .page-info-component-window {
+        padding: 0 10px 10px;
+    }
+    
+    .page-info-component-common {
+        font-family: $default-font-family;
+        font-size: $default-font-size; 
+        
+        .page-info-title-layout { 
+            padding : 3px 12px;
+            height: 24px;
+            border: 1px solid #aaa;
+            margin-top: 12px;
+/*          background: linear-gradient(#f2f2f2, #dfdfdf 70%, #cdcdcd) repeat scroll 0 0 #f2f2f2; */
+            background-color: #eee;
+        }
+        
+        .page-info-title-layout .v-button-link{
+        	margin-top: -5px;
+        }
+    
+        .page-info-content-label {
+            padding: 5px 12px;
+            border: 1px solid #aaa;
+            border-top: none;
+        }
+        
+        
+    }
+}

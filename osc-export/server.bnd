@@ -1,0 +1,65 @@
+# server.bnd - included into server*.bndrun
+# DON'T RESOLVE server.bnd; resolve server*.bndrun instead
+
+-standalone:\
+    target/index.xml;name=export-index
+
+-runee: JavaSE-1.8
+-runfw: org.apache.felix.framework;version='[5.4.0,5.4.0]'
+
+-runrequires: \
+	osgi.identity;filter:='(osgi.identity=osc-uber)',\
+	osgi.identity;filter:='(osgi.identity=osc-installer)',\
+	osgi.identity;filter:='(osgi.identity=osc-installer-simple)',\
+	osgi.identity;filter:='(osgi.identity=osc-resolver)',\
+	osgi.identity;filter:='(osgi.identity=org.apache.felix.configadmin)',\
+	osgi.identity;filter:='(osgi.identity=org.apache.felix.scr)',\
+	osgi.identity;filter:='(osgi.identity=org.apache.felix.fileinstall)',\
+	osgi.identity;filter:='(osgi.identity=jclouds-core)',\
+	osgi.identity;filter:='(osgi.identity=openstack-glance)',\
+	osgi.identity;filter:='(osgi.identity=openstack-keystone)',\
+	osgi.identity;filter:='(osgi.identity=openstack-neutron)',\
+	osgi.identity;filter:='(osgi.identity=openstack-nova)',\
+	osgi.identity;filter:='(osgi.identity=slf4j.simple)',\
+	osgi.identity;filter:='(osgi.identity=org.apache.felix.metatype)',\
+	osgi.identity;filter:='(&(osgi.identity=org.apache.felix.resolver)(version>=1.10.1))',\
+	${hk2}
+
+# These initial requirement are NOT needed by the server, but are to work-around a startup ordering issue
+# with the jersey 2.x client used by the plugins
+# http://stackoverflow.com/questions/25740556/error-while-using-jersey-client-in-osgi-no-generator-was-provided
+hk2:\
+    osgi.identity;filter:='(osgi.identity=org.glassfish.hk2.api)',\
+    osgi.identity;filter:='(osgi.identity=org.glassfish.hk2.locator)',\
+    osgi.identity;filter:='(osgi.identity=org.glassfish.hk2.utils)',\
+    osgi.identity;filter:='(osgi.identity=org.glassfish.hk2.osgi-resource-locator)'
+
+-runblacklist:\
+    osgi.identity;filter:='(osgi.identity=com.sun.jersey.bundle)',\
+    osgi.identity;filter:='(osgi.identity=javax.ws.rs.jsr311-api)'
+
+
+# set bootdelegation to allow gson to access sun.misc.Unsafe without importing it
+# Multiple HTTP instances are configured using config admin
+# Disable default HTTP instance and configure fileinstall watch directories
+-runproperties: \
+    org.osgi.framework.bootdelegation=sun.*,\
+    org.apache.felix.http.enable=false,\
+    felix.fileinstall.dir='./config,./mgr_plugins,./sdn_ctrl_plugins'
+
+-runsystempackages:\
+    sun.misc,\
+    sun.rmi.transport,\
+    javax.security.jacc,\
+	javax.xml.namespace; version=1.0,\
+    javax.xml.stream;version=1.0,\
+    javax.xml.stream.events;version=1.0,\
+    javax.xml.stream.util;version=1.0,\
+    javax.transaction;version=1.1,\
+    javax.transaction.xa;version=1.1
+	
+-runpath:\
+    org.apache.geronimo.specs.geronimo-jta_1.1_spec;version=1.1.1
+    
+#end
+

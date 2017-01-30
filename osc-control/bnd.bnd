@@ -1,0 +1,28 @@
+# vmiDCControl
+
+# include minimal contents for stand-alone jar
+# also avoids refering to jar by name
+-conditionalpackage:\
+    com.google.common.base,\
+    javax.ws.rs.*,\
+    org.apache.commons.cli.*,\
+    org.apache.commons.io.*,\
+    org.apache.log4j.*,\
+    org.osc.core.broker.rest.server.model,\
+    org.osc.core.rest.client.*,\
+    org.osc.core.util
+
+# jersey-bundle contains META-INF/services
+# so include it explicitly
+-includeresource:\
+    @jersey-bundle-1.12.jar
+
+# dependencies embedded by -conditionalpackage
+xxx:\
+    @jsr311-api-1.1.1.jar,\
+    @commons-cli-1.2.jar,\
+    @commons-io-1.3.2.jar,\
+    @guava-17.0.jar,\
+    @log4j-1.2.17.jar
+
+#

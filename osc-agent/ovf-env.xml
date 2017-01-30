@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Environment
+     xmlns="http://schemas.dmtf.org/ovf/environment/1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:oe="http://schemas.dmtf.org/ovf/environment/1"
+     xmlns:ve="http://www.vmware.com/schema/ovfenv"
+     oe:id=""
+     ve:vCenterId="vm-56">
+   <PlatformSection>
+      <Kind>VMware ESXi</Kind>
+      <Version>5.5.0</Version>
+      <Vendor>VMware, Inc.</Vendor>
+      <Locale>en</Locale>
+   </PlatformSection>
+   <PropertySection>
+         <Property oe:key="agentName" oe:value="serviceinstance-5"/>
+         <Property oe:key="management.DNS" oe:value=","/>
+         <Property oe:key="management.gateway" oe:value="10.71.86.252"/>
+         <Property oe:key="management.ip0" oe:value="10.71.86.149"/>
+         <Property oe:key="management.netmask0" oe:value="255.255.255.0"/>
+         <Property oe:key="virtualSystemId" oe:value="87"/>
+         <Property oe:key="vmidcIp" oe:value="10.70.141.56"/>
+   </PropertySection>
+   <ve:EthernetAdapterSection>
+      <ve:Adapter ve:mac="00:50:56:af:b6:e1" ve:network="dvPortGroup" ve:unitNumber="7"/>
+   </ve:EthernetAdapterSection>
+</Environment>

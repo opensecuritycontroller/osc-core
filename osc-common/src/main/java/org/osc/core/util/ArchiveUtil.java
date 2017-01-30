@@ -1,0 +1,112 @@
+package org.osc.core.util;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.log4j.Logger;
+
+public class ArchiveUtil {
+
+    private static final Logger log = Logger.getLogger(ArchiveUtil.class);
+
+    /**
+     * @param inputDir   Input Directory name
+     * @param outputFile Desired output file name
+     * @return returns created zip file
+     * @throws IOException
+     */
+    public static File archive(String inputDir, String outputFile) throws IOException {
+        try (FileOutputStream out = new FileOutputStream(outputFile);
+             ZipOutputStream zos = new ZipOutputStream(out)) {
+            addToArchive(new File(inputDir), zos);
+            return new File(outputFile);
+        }
+    }
+
+    /**
+     * @param inputDir Input Directory
+     * @param zos      Zip Output Stream
+     * @throws IOException
+     */
+    private static void addToArchive(File inputDir, ZipOutputStream zos) throws IOException {
+        File[] fileList = FileUtil.getFileListFromDirectory(inputDir.getPath());
+        byte[] buffer = new byte[1024];
+
+        for (File element : fileList) {
+
+            if (element.isDirectory()) {
+                zos.putNextEntry(new ZipEntry(element.getName()));
+                addToArchive(element, zos);
+                continue;
+            }
+
+            try (FileInputStream fis = new FileInputStream(element.getPath())) {
+                log.info("Adding: " + element.getPath() + " to log bundle");
+                zos.putNextEntry(new ZipEntry(element.getPath()));
+                int len;
+                while ((len = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, len);
+                }
+                zos.closeEntry();
+            }
+        }
+    }
+
+    /**
+     * @param inputFile   ZIP file
+     * @param destination directory to extract
+     * @throws IOException
+     */
+    public static void unzip(String inputFile, String destination) throws IOException {
+        log.info("Extracting " + inputFile + " into " + destination);
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(inputFile))) {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                String fileName = zipEntry.getName();
+                log.info("Extracting " + fileName);
+                File file = new File(destination + File.separator + fileName);
+                // create folder as needed
+                file.getParentFile().mkdirs();
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    int length;
+                    byte[] buffer = new byte[1024];
+                    while ((length = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, length);
+                    }
+                }
+                zipEntry = zis.getNextEntry();
+            }
+            zis.closeEntry();
+            log.info("Extraction successful! " + inputFile);
+        }
+    }
+
+    /**
+     * Returns the files included within the zip file
+     *
+     * @param inputFile the zip file
+     * @return the list of files within the zip file
+     * @throws IOException
+     */
+    public static List<String> peekFileNames(String inputFile) throws IOException {
+        List<String> files = new ArrayList<>();
+        try (FileInputStream inputStream = new FileInputStream(inputFile);
+             ZipInputStream zis = new ZipInputStream(inputStream)) {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                files.add(zipEntry.getName());
+                zipEntry = zis.getNextEntry();
+            }
+            zis.closeEntry();
+        }
+        return files;
+    }
+
+}

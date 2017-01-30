@@ -1,0 +1,31 @@
+# CentOS 6
+[centos-base]
+name=CentOS-6 - Base
+baseurl=http://ftp.linux.ncsu.edu/pub/CentOS/6/os/$basearch/
+gpgcheck=1
+gpgkey=http://ftp.linux.ncsu.edu/pub/CentOS/RPM-GPG-KEY-CentOS-6
+enabled=1
+
+# released updates
+[centos-updates]
+name=CentOS-$releasever - Updates
+baseurl=http://ftp.linux.ncsu.edu/pub/CentOS/6/updates/$basearch/
+gpgcheck=1
+gpgkey=http://ftp.linux.ncsu.edu/pub/CentOS/RPM-GPG-KEY-CentOS-6
+enabled=1
+
+# additional packages that may be useful
+[centos-extras]
+name=CentOS-$releasever - Extras
+baseurl=http://ftp.linux.ncsu.edu/pub/CentOS/6/extras/$basearch/
+gpgcheck=1
+gpgkey=http://ftp.linux.ncsu.edu/CentOS/RPM-GPG-KEY-CentOS-6
+enabled=1
+
+# additional packages that extend functionality of existing packages
+[centos-plus]
+name=CentOS-$releasever - Plus
+baseurl=http://ftp.linux.ncsu.edu/pub/CentOS/6/centosplus/$basearch/
+gpgcheck=1
+enabled=1
+gpgkey=http://ftp.linux.ncsu.edu/pub/CentOS/RPM-GPG-KEY-CentOS-6
