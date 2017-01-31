@@ -327,14 +327,15 @@
 						<configuration>
 							<target>
 								<!-- copy bundled plugins -->
-								<copy todir="${basedir}/mgr_plugins"
-									file="${basedir}/../SmcMgrPlugin/target/SmcMgrPlugin.bar" />
-								<copy todir="${basedir}/mgr_plugins"
-									file="${basedir}/../NsmMgrPlugin/target/NsmMgrPlugin.bar" />
-								<copy todir="${basedir}/sdn_ctrl_plugins"
-									file="${basedir}/../NscSdnControllerPlugin/target/NscSdnControllerPlugin.bar" />
-								<copy todir="${basedir}/sdn_ctrl_plugins"
-									file="${basedir}/../NsxVMwareSdnPlugin/target/VMwareNsxPlugin.bar" />
+                                <!-- TODO emanoel: we should change this to use the maven dependencies plugin to perform this copy. This should avoid having this path here. -->
+								<copy tofile="${basedir}/mgr_plugins/SmcMgrPlugin.bar"
+									file="${user.home}/.m2/repository/com/forcepoint/osc/security-mgr-smc-plugin/1.0/security-mgr-smc-plugin-1.0.bar" />
+								<copy tofile="${basedir}/mgr_plugins/NsmMgrPlugin.bar"
+									file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" />
+								<copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
+									file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" />
+								<copy tofile="${basedir}/sdn_ctrl_plugins/VMwareNsxPlugin.bar"
+									file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" />
 
 								<!-- webapp -->
 								<copy todir="${basedir}/webapp">
@@ -348,11 +349,11 @@
 									src="${basedir}/../osc-server/techdoc/WebHelp.zip" />
 
 								<copy todir="${basedir}/webapp/SDK">
-									<fileset dir="${basedir}/../IscSdnControllerPlugin/target">
-										<include name="**/*.jar" />
+									<fileset dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.0/">
+										<include name="**/*-sources.jar" />
 									</fileset>
-									<fileset dir="${basedir}/../IscMgrPlugin/target">
-										<include name="**/*.jar" />
+									<fileset dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/1.0/">
+										<include name="**/*-sources.jar" />
 									</fileset>
 								</copy>
 
