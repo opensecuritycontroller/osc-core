@@ -76,33 +76,57 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+    <profiles>
+        <profile>
+            <id>default</id>
+            <modules>
+                <module>IscSdnControllerPlugin</module>
+                <module>IscMgrPlugin</module>
+                <module>OscVMwareSdnPlugin</module>
 
-    <modules>
-        <module>IscSdnControllerPlugin</module>
-        <module>IscMgrPlugin</module>
-        <module>OscVMwareSdnPlugin</module>
+                <module>NsxVMwareSdnPlugin</module>
+                <module>NscSdnControllerPlugin</module>
+                <module>NsmMgrPlugin</module>
+                <module>SmcMgrPlugin</module>
+                <module>IsmMgrPlugin</module>
+                
+                <module>osc-tools</module>
+                <module>osc-common</module>
+                <module>osc-agent</module>
+                <module>osc-server</module>
 
-        <module>NsxVMwareSdnPlugin</module>
-        <module>NscSdnControllerPlugin</module>
-        <module>NsmMgrPlugin</module>
-        <module>SmcMgrPlugin</module>
-        <module>IsmMgrPlugin</module>
-        
-        <module>osc-tools</module>
-        <module>osc-common</module>
-        <module>osc-agent</module>
-        <module>osc-server</module>
+                <module>osc-uber</module>
+                <module>osc-uber-jersey</module>
+                <module>osc-control</module>
+                <module>osc-installer</module>
+                <module>osc-installer-test</module>
+                <module>osc-installer-simple</module>
+                <module>osc-resolver</module>
+                <module>osc-export</module>
+            </modules>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>useGit</id>
+            <modules>
+                <module>osc-tools</module>
+                <module>osc-common</module>
+                <module>osc-agent</module>
+                <module>osc-server</module>
 
-        <module>osc-uber</module>
-        <module>osc-uber-jersey</module>
-        <module>osc-control</module>
-        <module>osc-installer</module>
-        <module>osc-installer-test</module>
-        <module>osc-installer-simple</module>
-        <module>osc-resolver</module>
-        <module>osc-export</module>
-    </modules>
-
+                <module>osc-uber</module>
+                <module>osc-uber-jersey</module>
+                <module>osc-control</module>
+                <module>osc-installer</module>
+                <module>osc-installer-test</module>
+                <module>osc-installer-simple</module>
+                <module>osc-resolver</module>
+                <module>osc-export</module>
+            </modules>
+        </profile>
+    </profiles>
 	<build>
 		<plugins>
 			<plugin>
