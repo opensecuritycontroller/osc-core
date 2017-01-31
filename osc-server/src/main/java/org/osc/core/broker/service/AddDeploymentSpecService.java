@@ -48,7 +48,7 @@ public class AddDeploymentSpecService extends
 
             commitChanges(true);
 
-            // Lock the ds with a write lock and allow it to be unlocked at the end of the job.
+            // Lock the deployment spec with a write lock and allow it to be unlocked at the end of the job.
             unlockTask.addUnlockTask(LockUtil.tryLockDSOnly(ds));
             Job job = ConformService.startDsConformanceJob(session, ds, unlockTask);
 
