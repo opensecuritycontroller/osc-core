@@ -78,6 +78,9 @@
 	</dependencyManagement>
     <profiles>
         <profile>
+            <properties>
+                <repoVersionCmd>svnversion -nc | cut -d ':' -f 2 | tr -d -c 0-9</repoVersionCmd>
+            </properties>
             <id>default</id>
             <modules>
                 <module>IscSdnControllerPlugin</module>
@@ -110,6 +113,9 @@
         </profile>
         <profile>
             <id>useGit</id>
+            <properties>
+                <repoVersionCmd>git describe | cut -d '-' -f 2-3</repoVersionCmd>
+            </properties>
             <modules>
                 <module>osc-tools</module>
                 <module>osc-common</module>
@@ -146,7 +152,7 @@
 								</exec>
 								<exec outputproperty="buildNumber" dir="../." executable="sh">
 									<arg value="-c" />
-									<arg value="svnversion -nc | cut -d ':' -f 2 | tr -d -c 0-9" />
+                                    <arg value="${repoVersionCmd}" />
 								</exec>
 								<echo>Version: ${productVersion}</echo>
 								<echo>Committed Revision: ${buildNumber}</echo>

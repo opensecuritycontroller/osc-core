@@ -1,4 +1,7 @@
-<project name="vmidcDeployMgr" default="build" basedir=".">
+<project name="vmidcDeployMgr" default="build" basedir="." 
+    xmlns:if="ant:if"
+    xmlns:unless="ant:unless"
+>
 	<description>a vmidc deploy tool</description>
 
 	<property name="build-all-images" value="false" />
@@ -19,7 +22,7 @@
 		</exec>
 	</target>
 
-	<target name="ovfOnly" depends="svnVersion,prodVersion" description="Runs ovfBuild and cleans up on error">
+	<target name="ovfOnly" depends="repoVersion,prodVersion" description="Runs ovfBuild and cleans up on error">
 		<waitfor maxwait="20" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
 			<not>
 				<available file="/tmp/build_marker"/>
@@ -40,18 +43,19 @@
 		<delete file="/tmp/build_marker"/>
 	</target>
 
-	<target name="ovfCopy" depends="svnVersion,prodVersion" description="Copy result files to build dir">
+	<target name="ovfCopy" depends="repoVersion,prodVersion" description="Copy result files to build dir">
 		<delete includeemptydirs="true">
 		    <fileset dir="." includes="Build*/**"/>
 		</delete>
 		<mkdir dir="Build${buildNumber}" />
 		<copy file="target/serverUpgradeBundle.zip" tofile="Build${buildNumber}/serverUpgradeBundle-${buildNumber}.zip" />
 		<copy file="osc-agent-bom/vmidc.tar" tofile="Build${buildNumber}/vmidc-${buildNumber}.tar" />
-		<copy file="IsmMgrPlugin/target/SampleMgrPlugin.bar" todir="Build${buildNumber}/" />
-		<copy file="NsmMgrPlugin/target/NsmMgrPlugin.bar" todir="Build${buildNumber}/" />
-		<copy file="SmcMgrPlugin/target/SmcMgrPlugin.bar" todir="Build${buildNumber}/" />
-		<copy file="NscSdnControllerPlugin/target/NscSdnControllerPlugin.bar" todir="Build${buildNumber}/" />
-        <copy file="NsxVMwareSdnPlugin/target/VMwareNsxPlugin.bar" todir="Build${buildNumber}/" />
+        
+		<copy file="${user.home}/.m2/repository/org/osc/plugin/security-mgr-sample-plugin/1.0/security-mgr-sample-plugin-1.0.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" />
+		<copy file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />
+		<copy file="${user.home}/.m2/repository/com/forcepoint/osc/security-mgr-smc-plugin/1.0/security-mgr-smc-plugin-1.0.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" />
+		<copy file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" tofile="Build${buildNumber}/NscSdnControllerPlugin.bar" />
+        <copy file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" tofile="Build${buildNumber}/VMwareNsxPlugin.bar" />
 		<move file="osc-server-bom/OSC_disk-0.vmdk" tofile="Build${buildNumber}/OSC_disk-0.vmdk" />
 		<move file="osc-server-bom/OSC_disk-0.qcow2" tofile="Build${buildNumber}/OSC_disk-0.qcow2" quiet="true" failonerror="false" />
 		<move file="osc-server-bom/OSC_disk-0-raw.img" tofile="Build${buildNumber}/OSC_disk-0-raw.img" quiet="true" failonerror="false" />
@@ -63,11 +67,12 @@
 		</zip>
 	</target>
 
-	<target name="svnVersion">
+	<target name="repoVersion">
 		<exec outputproperty="buildNumber" dir="."
             executable="sh" failonerror="true" >
 			<arg value="-c" />
-			<arg value="svnversion -nc | cut -d ':' -f 2 | tr -d -c 0-9"/>
+			<arg value="svnversion -nc | cut -d ':' -f 2 | tr -d -c 0-9" unless:true="${useGit}" />
+            <arg value="git describe | cut -d '-' -f 2-3" if:true="${useGit}" />
 		</exec>
 		<echo>Committed Revision: ${buildNumber}</echo>
 	</target>
