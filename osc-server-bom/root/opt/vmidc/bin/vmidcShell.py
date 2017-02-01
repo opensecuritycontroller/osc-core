@@ -36,6 +36,8 @@ import socket
 import subprocess
 import sys
 import tempfile
+from osc_pbkdf2_key import pbkdf2_operations,PBKDF2_KEY_INFO_VMIDC_FILE_PATH 
+
 
 from cmd import Cmd
 
@@ -45,6 +47,7 @@ IPREGEX="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9
 IPCIDRREGEX="^(((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(?:2[0-4]|1[0-9]|[0-9]))|dhcp)$"
 DOMAINREGEX="^[^\s]+$"
 HOSTNAMEREGEX="^[^\s]+$"
+
 
 #MMDDhhmm[[CC]YY][.ss]]
 TIMEREGEX="^(1[0-2]|0[1-9])(3[0-1]|[12][0-9]|0[1-9])(2[0-4]|1[0-9]|0[1-9])(60|[1-5][0-9]|0[1-9])(20[0-9][0-9])(\.60|[1-5][0-9]|0[1-9])?$"
@@ -644,7 +647,7 @@ class ShowPrompt(ExtendedCmd):
   def do_vmware(self, args):
     """Show VMWare status"""
     subprocess.call(["/usr/bin/vmware-checkvm"])
-
+  
 class CliPrompt(ExtendedCmd):
   """Base prompt
   """
@@ -657,9 +660,16 @@ class CliPrompt(ExtendedCmd):
     pass
 
   def do_enable(self,args):
-    password = getpass.getpass("Password:")
-    if password == "abc12345":
-      subprocess.call(["/usr/bin/sudo", "/bin/bash"])
+    if os.path.isfile(PBKDF2_KEY_INFO_VMIDC_FILE_PATH):
+       password = getpass.getpass("Password:")
+       dk = pbkdf.pbkdf2_generate_keyhash(password)
+       if pbkdf.compare_key_with_default(dk):
+          subprocess.call(["/usr/bin/sudo", "/bin/bash"])
+       else:
+          sys.stdout.write("Invalid password \n")
+    else:
+       sys.stdout.write("Login disabled \n")
+	
 
   def do_exit(self, args):
     """Exit CLI"""
@@ -720,6 +730,7 @@ class CliPrompt(ExtendedCmd):
   def emptyline(self):
     pass
 
+
 if __name__ == '__main__':
 
   # Read history file and write the file on exit
@@ -730,8 +741,10 @@ if __name__ == '__main__':
     pass
 
   atexit.register(readline.write_history_file, hfile)
-
+ 
   signal.signal(signal.SIGINT, handler)
+  pbkdf = pbkdf2_operations()
+  pbkdf.get_osc_cli_master_key()
   prompt = CliPrompt()
   prompt.prompt = socket.gethostname() + '> '
   prompt.cmdloop()

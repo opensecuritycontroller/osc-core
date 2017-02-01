@@ -15,8 +15,9 @@
 
 makedir=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 blddir=$(realpath $(makedir)/..)/build
+bindir=$(realpath $(makedir)/..)/bin
 
-export buildNumber blddir
+export buildNumber blddir bindir
 
 dowithbindmount= \
      mount -o loop boot.img $(blddir)/boot && \
@@ -43,6 +44,7 @@ make-image: version-info
         else
 		$(dowithbindmount) $(MAKE) --no-print-directory -f makefiles/packages.mk
         endif
+	cd ./root/opt/vmidc/bin && python osc_pbkdf2_key.py $(bindir)
 	find root -type f -exec touch {} \;
         ifeq ($(image-os), centos)
 		$(dowithbindmount) $(MAKE) --no-print-directory -f makefiles/install_centos.mk
