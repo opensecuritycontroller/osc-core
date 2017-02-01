@@ -199,7 +199,7 @@ public class ServerUtil {
                 new File(filename).delete();
             } else {
                 log.info("Pid: " + filePid + " Does not match current Pid: " + getCurrentPid()
-                        + " Assuming upgrade, Not deleting pid file:" + filename);
+                + " Assuming upgrade, Not deleting pid file:" + filename);
             }
         }
     }
@@ -473,7 +473,7 @@ public class ServerUtil {
             throw new IOException("Failed to validate file: " + upgradeFile.getName() + ".");
         }
 
-        final String mainJar = "vmiDCControl.jar";
+        final String mainJar = "osc-control.jar";
         final String tmpUpgrade = "/tmp/serverUpgradeBundle";
         final String jarFilePath = tmpUpgrade + "/opt/vmidc/bin/" + mainJar;
 
@@ -751,7 +751,7 @@ public class ServerUtil {
                 Thread.sleep(500);
                 oldPid = listener.getProcessId();
                 if (oldPid == null) {
-                   break;
+                    break;
                 }
             }
         } catch (Exception e) {
