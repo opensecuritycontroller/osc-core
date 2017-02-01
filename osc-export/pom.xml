@@ -401,7 +401,7 @@
 										<exclude name="opt/vmidc/bin/vmiDCDB.*" />
 									</fileset>
 									<zipfileset dir="${basedir}/../osc-control/target"
-										includes="vmiDCControl-upgrade.jar" fullpath="opt/vmidc/bin/osc-server.jar" />
+										includes="osc-control-upgrade.jar" fullpath="opt/vmidc/bin/osc-server.jar" />
 									<fileset dir="${basedir}/../osc-server-bom/Sources">
 										<include name="server-jre-8u112-linux-x64.tar.gz" />
 									</fileset>
