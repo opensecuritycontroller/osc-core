@@ -19,6 +19,7 @@
 			<arg value="clean" />
 			<arg value="install" />
 			<arg value="-Dmaven.test.skip=true" />
+            <arg value="-PuseGit" if:true="${useGit}"/>
 		</exec>
 	</target>
 
