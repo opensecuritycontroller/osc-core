@@ -118,9 +118,12 @@ class OsSvaServerCreateTask extends TransactionalTask {
         VirtualizationConnector vc = vs.getVirtualizationConnector();
         Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
         JCloudNova nova = new JCloudNova(endPoint);
+        SdnControllerApi controller = null;
         try {
-
             this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
+            if (vc.isControllerDefined()){
+                controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
+            }
 
             String applianceName = this.dai.getName();
             String imageRefId = getImageRefIdByRegion(vs, ds.getRegion());
@@ -134,18 +137,26 @@ class OsSvaServerCreateTask extends TransactionalTask {
 
             ApplianceSoftwareVersion applianceSoftwareVersion = this.dai.getVirtualSystem()
                     .getApplianceSoftwareVersion();
+            CreatedServerDetails createdServer = null;
 
-            CreatedServerDetails createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
-                    imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
-                    ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),
-                    sgReference.getSgRefName());
+            //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
+            if (controller != null &&  controller.getName().equals("Nuage")) {
+                createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
+                        imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
+                        ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),
+                        null);
+            } else {
+                createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
+                        imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
+                        ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),
+                        sgReference.getSgRefName());
+            }
             this.dai.updateDaiOpenstackSvaInfo(createdServer);
             // Add new server ID to VM notification listener for this DS
             OsDeploymentSpecNotificationRunner.addSVAIdToListener(this.dai.getDeploymentSpec().getId(),
                     createdServer.getServerId());
 
             if (vc.isControllerDefined()) {
-                SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
                 try {
                     DefaultNetworkPort ingressPort = new DefaultNetworkPort(createdServer.getIngressInspectionPortId(),
                             createdServer.getIngressInspectionMacAddr());

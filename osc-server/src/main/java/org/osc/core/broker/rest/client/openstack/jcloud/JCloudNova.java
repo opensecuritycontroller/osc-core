@@ -142,7 +142,10 @@ public class JCloudNova extends BaseJCloudApi {
                 options.writeFileToPath(file.getContent(), file.getName());
             }
             options.novaNetworks(neutronNetworks);
-            options.securityGroupNames(sgName);
+
+            if (sgName!=null) {
+                options.securityGroupNames(sgName);
+	        }
 
             if (availabilityZone != null) {
                 options.availabilityZone(availabilityZone);

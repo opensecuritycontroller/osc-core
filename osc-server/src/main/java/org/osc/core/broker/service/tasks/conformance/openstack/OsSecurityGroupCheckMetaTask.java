@@ -16,13 +16,17 @@ import org.jclouds.openstack.neutron.v2.domain.RuleEthertype;
 import org.jclouds.openstack.neutron.v2.domain.SecurityGroup;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
+import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.sdk.controller.api.SdnControllerApi;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -43,12 +47,16 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
     @Override
     public void executeTransaction(Session session) throws Exception {
         this.tg = new TaskGraph();
-
         DeploymentSpec ds = (DeploymentSpec) session.get(DeploymentSpec.class, this.ds.getId(),
                 new LockOptions().setLockMode(LockMode.PESSIMISTIC_WRITE));
-
+        VirtualSystem vs = ds.getVirtualSystem();
         log.info(
-                "Checking if VS" + ds.getVirtualSystem().getName() + " has the corresponding Openstack Security Group");
+                "Checking if VS" + vs.getName() + " has the corresponding Openstack Security Group");
+        VirtualizationConnector vc = vs.getVirtualizationConnector();
+        SdnControllerApi controller = null;
+        if (vc.isControllerDefined()) {
+            controller = SdnControllerApiFactory.createNetworkControllerApi(vs);
+        }
 
         Endpoint endPoint = new Endpoint(ds);
         try (JCloudNeutron neutron = new JCloudNeutron(endPoint)) {
@@ -63,9 +71,13 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                 }
             }
 
+            boolean isNuageController = controller != null && controller.getName().equals("Nuage");
             // If DS or DDS both have no os security group reference, create OS SG
             if (sgReference == null) {
-                this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
+                //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
+                if (!isNuageController) {
+                    this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
+                }
             } else {
                 DeploymentSpec existingDs = null;
                 for (Iterator<DeploymentSpec> iterator = sgReference.getDeploymentSpecs().iterator(); iterator
@@ -80,7 +92,10 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                             // remove the ds from the collection, delete the stale os sg reference from the database and create a new OS SG
                             iterator.remove();
                             EntityManager.delete(session, sgReference);
-                            this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
+                            //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
+                            if (!isNuageController) {
+                                this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
+                            }
                         } else {
                             syncSGRules(sg, neutron);
                             sgReference.setSgRefName(sg.getName());
