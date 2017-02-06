@@ -123,7 +123,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         when(this.imageMetaData.getVirtualizationVersionString()).thenReturn(VmwareSoftwareVersion.VMWARE_V5_5.toString());
         when(this.imageMetaData.getSoftwareVersion()).thenReturn(SOFTWARE_VERSION);
         when(this.imageMetaData.getImageName()).thenReturn(OVF_IMAGE_NAME);
-        when(this.imageMetaData.getMinIscVersion()).thenReturn(new Version(9L, 9L, 9L));
+        when(this.imageMetaData.getMinIscVersion()).thenReturn(new Version(9L, 9L, "9-abc"));
         when(this.imageMetaData.getMinCpus()).thenReturn(4);
         when(this.imageMetaData.getMemoryInMb()).thenReturn(4);
         when(this.imageMetaData.getDiskSizeInGb()).thenReturn(4);
