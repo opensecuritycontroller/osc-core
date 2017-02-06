@@ -72,8 +72,7 @@
 		<exec outputproperty="buildNumber" dir="."
             executable="sh" failonerror="true" >
 			<arg value="-c" />
-			<arg value="svnversion -nc | cut -d ':' -f 2 | tr -d -c 0-9" unless:true="${useGit}" />
-            <arg value="git describe | cut -d '-' -f 2-3" if:true="${useGit}" />
+            <arg value="git describe | cut -d '-' -f 2-3" />
 		</exec>
 		<echo>Committed Revision: ${buildNumber}</echo>
 	</target>
