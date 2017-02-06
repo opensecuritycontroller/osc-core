@@ -83,15 +83,15 @@
             </properties>
             <id>default</id>
             <modules>
-                <module>IscSdnControllerPlugin</module>
-                <module>IscMgrPlugin</module>
-                <module>OscVMwareSdnPlugin</module>
+                <module>../sdn-controller-api</module>
+                <module>../security-mgr-api</module>
+                <module>../vmware-nsx-api</module>
 
-                <module>NsxVMwareSdnPlugin</module>
-                <module>NscSdnControllerPlugin</module>
-                <module>NsmMgrPlugin</module>
-                <module>SmcMgrPlugin</module>
-                <module>IsmMgrPlugin</module>
+                <module>../vmware-nsx-plugin</module>
+                <module>../sdn-controller-nsc-plugin</module>
+                <module>../security-mgr-nsm-plugin</module>
+                <module>../security-mgr-smc-plugin</module>
+                <module>../security-mgr-sample-plugin</module>
                 
                 <module>osc-tools</module>
                 <module>osc-common</module>
