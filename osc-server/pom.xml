@@ -537,7 +537,6 @@
 						<argLine>-Xmx512m ${surefireArgLine}</argLine>
 						<excludes>
 							<exclude>**/JobEngineTest.java</exclude>
-							<exclude>**/JobQueuerTest.java</exclude>
 							<exclude>**/SanityTest.java</exclude>
 						</excludes>
 					</configuration>
