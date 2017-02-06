@@ -51,6 +51,10 @@ public class VersionUtil {
             return this.build;
         }
 
+        public Long getBuildNumber() {
+            return Long.parseLong(this.build.split("-")[0]);
+        }
+        
         public void setBuild(String build) {
             this.build = build;
         }
@@ -117,7 +121,9 @@ public class VersionUtil {
                 return getMinor().compareTo(other.getMinor());
             }
             if (!getBuild().equals(other.getBuild())) {
-                return getBuild().compareTo(other.getBuild());
+            	long buildNumber = getBuildNumber();
+            	long otherBuildNumber = other.getBuildNumber();
+            	return (int)(buildNumber - otherBuildNumber);
             }
             return 0;
         }

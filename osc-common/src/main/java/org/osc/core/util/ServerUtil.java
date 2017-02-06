@@ -565,14 +565,14 @@ public class ServerUtil {
                 Version version = VersionUtil.getVersion(manifest);
                 Long major = version.getMajor();
                 Long minor = version.getMinor();
-                String build = version.getBuild();
+                Long build = version.getBuildNumber();
 
                 log.info("version of NEW jar: major= " + major + ", minor= " + minor + ", build= " + build);
 
                 Version existingBuildVer = VersionUtil.getVersion();
                 Long existingMajor = existingBuildVer.getMajor();
                 Long existingMinor = existingBuildVer.getMinor();
-                String existingBuild = existingBuildVer.getBuild();
+                Long existingBuild = existingBuildVer.getBuildNumber();
 
                 log.info("version of existing jar: major= " + existingMajor + ", minor= " + minor + ", build= "
                         + existingBuild);
@@ -594,7 +594,7 @@ public class ServerUtil {
 
                     } else if (minor.equals(existingMinor)) {
 
-                        if (build.compareTo(existingBuild) < 0) {
+                        if (build < existingBuild) {
                             isValidVer = false;
                         }
                     }

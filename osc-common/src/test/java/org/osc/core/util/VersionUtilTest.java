@@ -35,44 +35,44 @@ public class VersionUtilTest {
 
     @Test
     public void testCompareVersion() {
-        // 1.1.1000
-        Version currentVersion = new Version(1L, 1L, 1000L);
+        // 1.1.11-abc
+        Version currentVersion = new Version(1L, 1L, "11-abc");
 
-        // 1.1.1000
-        Version otherVersion = new Version(1L, 1L, 1000L);
+        // 1.1.11-abc
+        Version otherVersion = new Version(1L, 1L, "11-abc");
         assertTrue(currentVersion.compareTo(otherVersion) == 0);
         assertTrue(currentVersion.compareTo(otherVersion) == -(otherVersion.compareTo(currentVersion)));
 
-        // 1.2.2000
-        otherVersion = new Version(1L, 2L, 2000L);
+        // 1.2.11-abc
+        otherVersion = new Version(1L, 2L, "11-abc");
         assertTrue(currentVersion.compareTo(otherVersion) < 0);
 
-        // 1.0.2000
-        otherVersion = new Version(1L, 0L, 2000L);
+        // 1.0.11-abc
+        otherVersion = new Version(1L, 0L, "11-abc");
         assertTrue(currentVersion.compareTo(otherVersion) > 0);
 
-        // 1.1.2000
-        otherVersion = new Version(1L, 1L, 2000L);
+        // 1.1.12-abc
+        otherVersion = new Version(1L, 1L, "12-abc");
         assertTrue(currentVersion.compareTo(otherVersion) < 0);
 
-        // 2.1.2000
-        otherVersion = new Version(2L, 1L, 2000L);
+        // 2.1.11-abc
+        otherVersion = new Version(2L, 1L, "11-abc");
         assertTrue(currentVersion.compareTo(otherVersion) < 0);
 
-        // 1.1.3000
-        otherVersion = new Version(1L, 1L, 3000L);
+        // 1.1.13-abc
+        otherVersion = new Version(1L, 1L, "13-abc");
         assertTrue(currentVersion.compareTo(otherVersion) < 0);
 
-        // 1.1.999
-        otherVersion = new Version(1L, 1L, 999L);
+        // 1.1.9-abc
+        otherVersion = new Version(1L, 1L, "9-abc");
         assertTrue(currentVersion.compareTo(otherVersion) > 0);
 
         currentVersion.setVersionStr(VersionUtil.DEBUG_VERSION_STRING);
-        // 9.9.9000
-        otherVersion = new Version(9L, 9L, 9000L);
+        // 9.9.11-abc
+        otherVersion = new Version(9L, 9L, "11-abc");
         assertTrue(currentVersion.compareTo(otherVersion) > 0);
 
-        // 9.9.9000
+        // 9.9.11-abc
         otherVersion.setVersionStr(VersionUtil.DEBUG_VERSION_STRING);
         assertTrue(currentVersion.compareTo(otherVersion) == 0);
         assertTrue(currentVersion.compareTo(otherVersion) == -(otherVersion.compareTo(currentVersion)));
@@ -95,7 +95,7 @@ public class VersionUtilTest {
         Version version = VersionUtil.getVersion();
 
         // Assert.
-        Assert.assertTrue(11 == version.getBuild());
+        Assert.assertTrue("11" == version.getBuild());
         Assert.assertEquals("1476885882", version.getBuildTime());
         Assert.assertTrue(1 == version.getMajor());
         Assert.assertTrue(2 == version.getMinor());
