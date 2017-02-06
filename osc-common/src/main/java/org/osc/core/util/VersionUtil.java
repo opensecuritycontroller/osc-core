@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.Manifest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 public class VersionUtil {
@@ -16,7 +17,7 @@ public class VersionUtil {
     public static class Version implements Comparable<Version> {
         private Long major;
         private Long minor;
-        private Long build;
+        private String build;
         private String buildTime;
         private String versionStr;
 
@@ -24,7 +25,7 @@ public class VersionUtil {
 
         }
 
-        public Version(Long major, Long minor, Long build) {
+        public Version(Long major, Long minor, String build) {
             this.major = major;
             this.minor = minor;
             this.build = build;
@@ -46,11 +47,11 @@ public class VersionUtil {
             this.minor = minor;
         }
 
-        public Long getBuild() {
+        public String getBuild() {
             return this.build;
         }
 
-        public void setBuild(Long build) {
+        public void setBuild(String build) {
             this.build = build;
         }
 
@@ -142,18 +143,19 @@ public class VersionUtil {
         Long major = Long.valueOf(versionStr.substring(0, dot));
         Long minor = Long.valueOf(versionStr.substring(dot + 1));
         String buildStr = manifest.getMainAttributes().getValue("Implementation-Build");
-        Long buildNo = 0L;
-        if (buildStr != null && !buildStr.isEmpty()) {
-            buildNo = Long.valueOf(buildStr);
+
+        if (StringUtils.isBlank(buildStr)) {
+        	throw new IllegalArgumentException("The provided build string should not be null or empty.");
         }
+        
         String buildTime = manifest.getMainAttributes().getValue("Build-Time");
 
         version.setMajor(major);
         version.setMinor(minor);
-        version.setBuild(buildNo);
+        version.setBuild(buildStr);
         version.setBuildTime(buildTime);
 
-        versionStr += " (Build:" + buildNo.toString() + ", " + version.getBuildTime() + ")";
+        versionStr += " (Build:" + buildStr + ", " + version.getBuildTime() + ")";
 
         version.setVersionStr(versionStr);
         return version;
