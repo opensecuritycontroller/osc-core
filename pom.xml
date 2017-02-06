@@ -10,6 +10,7 @@
 	<properties>
 		<jclouds.version>2.0.0</jclouds.version>
 		<powermock.version>1.6.5</powermock.version>
+        <repoVersionCmd>git describe | cut -d '-' -f 2-3</repoVersionCmd>
 	</properties>
 
 	<repositories>
@@ -78,9 +79,6 @@
 	</dependencyManagement>
     <profiles>
         <profile>
-            <properties>
-                <repoVersionCmd>svnversion -nc | cut -d ':' -f 2 | tr -d -c 0-9</repoVersionCmd>
-            </properties>
             <id>default</id>
             <modules>
                 <module>../sdn-controller-api</module>
@@ -113,9 +111,6 @@
         </profile>
         <profile>
             <id>useGit</id>
-            <properties>
-                <repoVersionCmd>git describe | cut -d '-' -f 2-3</repoVersionCmd>
-            </properties>
             <modules>
                 <module>osc-tools</module>
                 <module>osc-common</module>
