@@ -2,6 +2,7 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -9,6 +10,14 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
+import org.osc.sdk.controller.DefaultInspectionPort;
+import org.osc.sdk.controller.DefaultNetworkPort;
+import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.element.NetworkElement;
+import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.manager.api.ManagerDeviceApi;
+import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
+import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -31,17 +40,8 @@ import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
-import org.osc.sdk.controller.DefaultInspectionPort;
-import org.osc.sdk.controller.DefaultNetworkPort;
-import org.osc.sdk.controller.api.SdnControllerApi;
-import org.osc.sdk.controller.element.NetworkElement;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
-import org.osc.sdk.manager.api.ManagerDeviceApi;
-import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
-import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
 
 import com.google.common.collect.ImmutableMap;
-import com.sun.jersey.core.util.Base64;
 
 /**
  * Creates SVA for given dai
@@ -171,7 +171,6 @@ class OsSvaServerCreateTask extends TransactionalTask {
                         egressPort.setParentId(domainId);
                     }
                     controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
-
                 } finally {
                     controller.close();
                 }
@@ -225,7 +224,7 @@ class OsSvaServerCreateTask extends TransactionalTask {
                     configString.append(configProperty.getKey() + "=" + configProperty.getValue() + "\n");
                 }
             }
-            return new ApplianceBootstrapInformation("/tmp/vmidcAgent.conf", Base64.encode(configString.toString()));
+            return new ApplianceBootstrapInformation("/tmp/vmidcAgent.conf", Base64.getEncoder().encode(configString.toString().getBytes()));
         } else {
             return deviceApi
                     .getBootstrapinfo(new ApplianceBootStrap(applianceName, ImmutableMap.copyOf(bootstrapProperties)));
