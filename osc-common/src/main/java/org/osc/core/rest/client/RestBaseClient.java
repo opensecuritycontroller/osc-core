@@ -112,7 +112,7 @@ public abstract class RestBaseClient {
     }
 
     protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps) {
-        this.initRestBaseClient(host,port, userName, password, isHttps, false);
+        this.initRestBaseClient(host, port, userName, password, isHttps, false);
     }
 
     /**
@@ -142,7 +142,7 @@ public abstract class RestBaseClient {
                 this.client = configureHttpsClient();
             }
         } else {
-            this.client = new configureDefaultClient();
+            this.client = configureDefaultClient();
         }
 
         client.property(ClientProperties.CONNECT_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
@@ -158,16 +158,10 @@ public abstract class RestBaseClient {
         }
     }
 
-    private Client configureHttpsForceAllClient() {
-        SSLContext ctx = new SslContextProvider().getAcceptAllSSLContext();
-        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
-
-        ClientConfig config = new DefaultClientConfig();
-
-        config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
-                new HTTPSProperties((hostname, session) -> true, ctx));
-
-        return config;
+    private Client configureDefaultClient() {
+        return ClientBuilder.newBuilder()
+                .hostnameVerifier((s, sslSession) -> true)
+                .build();
     }
 
     private Client configureHttpsClient() {
@@ -181,10 +175,11 @@ public abstract class RestBaseClient {
                 .build();
     }
 
-    private Client configureDefaultClient() {
-        return ClientBuilder.newBuilder()
-                .hostnameVerifier((s, sslSession) -> true)
-                .build();
+    private Client configureHttpsForceAllClient() {
+        // :TODO emanoel: Agent Removal - remove below method.
+        SSLContext ctx = new SslContextProvider().getAcceptAllSSLContext();
+        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+        return configureDefaultClient();
     }
 
     public <T> List<T> getResources(String resourcePath, final Class<T> clazz) throws Exception {

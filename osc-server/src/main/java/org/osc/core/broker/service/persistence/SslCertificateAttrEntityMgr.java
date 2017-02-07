@@ -123,8 +123,6 @@ public class SslCertificateAttrEntityMgr extends EntityManager<SslCertificateAtt
     public boolean removeAlias(String alias) throws Exception {
         Optional<SslCertificateAttr> foundObject = Optional.ofNullable(this.findByFieldName("alias", alias));
 
-        boolean isInTruststore = X509TrustManagerFactory.getInstance().exists(alias);
-
         if (foundObject.isPresent()) {
             delete(foundObject.get().getId());
             X509TrustManagerFactory.getInstance().removeEntry(alias);
@@ -132,8 +130,7 @@ public class SslCertificateAttrEntityMgr extends EntityManager<SslCertificateAtt
             X509TrustManagerFactory.getInstance().removeEntry(alias);
         }
 
-        boolean isRemovedFromTruststore = X509TrustManagerFactory.getInstance().exists(alias);
-        return isInTruststore && !isRemovedFromTruststore;
+        return !X509TrustManagerFactory.getInstance().exists(alias);
     }
 
     private void removeCertificateEntry(SslCertificateAttr certificateEntry) throws Exception {

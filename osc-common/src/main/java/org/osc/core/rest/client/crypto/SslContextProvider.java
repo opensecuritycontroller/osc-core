@@ -5,6 +5,8 @@ import org.apache.log4j.Logger;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 public class SslContextProvider {
@@ -17,14 +19,23 @@ public class SslContextProvider {
      * @return SSLContext
      */
     public SSLContext getSSLContext() {
-        SSLContext ctx = null;
+        SSLContext ctx;
+        TrustManager[] trustManager;
+
         try {
-            TrustManager[] trustManager = new TrustManager[]{X509TrustManagerFactory.getInstance()};
+            trustManager = new TrustManager[]{X509TrustManagerFactory.getInstance()};
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot instantiate X509TrustManagerFactory", e);
+        }
+
+        try {
             ctx = SSLContext.getInstance("TLSv1.2");
             ctx.init(null, trustManager, new SecureRandom());
-        } catch (Exception e) {
-            LOG.error("Encountering security exception", e);
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            LOG.error("Encountering security exception in SSL context", e);
+            throw new RuntimeException("Internal error with SSL context", e);
         }
+
         return ctx;
     }
 

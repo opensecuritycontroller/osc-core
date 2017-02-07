@@ -27,13 +27,14 @@ public class ListSslCertificatesService extends ServiceDispatcher<BaseRequest<Ba
         return new ListResponse<>(certificateInfoList);
     }
 
+    /**
+     * Checks if given alias exists in list
+     * @param sslEntriesList - fetched entries list
+     * @param alias - search item
+     * @return bool - exists
+     */
     private boolean isConnected(List<SslCertificateAttrDto> sslEntriesList, String alias) {
-        for (SslCertificateAttrDto attribute : sslEntriesList) {
-            if (attribute.getAlias() != null && attribute.getAlias().contains(alias)) {
-                return true;
-            }
-        }
-        return false;
+        return sslEntriesList.stream().anyMatch(attribute -> attribute.getAlias() != null && attribute.getAlias().contains(alias));
     }
 
 }

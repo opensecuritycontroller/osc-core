@@ -36,7 +36,7 @@ public class VmidcAgentStreamingApiTest extends JerseyTest {
     @Before
     public void prepareRestEndpoint() throws Exception {
         this.vmidcAgentStreamingApi = new VmidcAgentStreamingApi(this.localhost, this.port, login,
-                password, false);
+                password, false, false);
     }
 
     @Test

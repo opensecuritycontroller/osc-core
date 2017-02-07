@@ -1,5 +1,11 @@
 package org.osc.core.server.control;
 
+import java.io.FileInputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -10,6 +16,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.model.ServerStatusResponse;
+import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
 import org.osc.core.rest.client.VmidcServerRestClient;
 import org.osc.core.rest.client.crypto.SslCertificateResolver;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
@@ -19,12 +26,6 @@ import org.osc.core.util.LogUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.util.VersionUtil;
-
-import java.io.FileInputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
 
 public class ServerControl {
     private static final Logger log = Logger.getLogger(ServerControl.class);
@@ -286,7 +287,7 @@ public class ServerControl {
 
     private static ServerStatusResponse getSslCertificates(VmidcServerRestClient restClient, RestClientException e) throws Exception {
 
-        if (null == e) {
+        if (e == null) {
             throw new IllegalArgumentException("Rest client exception is empty");
         }
 
@@ -298,7 +299,7 @@ public class ServerControl {
 
         log.info("Trying to fetch SSL certificate from server");
 
-        String internalAlias = "internal";
+        String internalAlias = SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS;
         sslCertificateResolver.fetchCertificatesFromURL(new URL(e.getResourcePath()), internalAlias);
 
         if (sslCertificateResolver.getCertificateResolverModels().isEmpty()) {

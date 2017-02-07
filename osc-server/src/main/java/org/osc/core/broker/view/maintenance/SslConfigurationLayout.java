@@ -1,10 +1,12 @@
 package org.osc.core.broker.view.maintenance;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-
+import com.vaadin.data.Item;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
+import com.vaadin.ui.VerticalLayout;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.DeleteSslCertificateService;
 import org.osc.core.broker.service.ListSslCertificatesService;
@@ -21,19 +23,17 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 
-import com.vaadin.data.Item;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.VerticalLayout;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 public class SslConfigurationLayout extends FormLayout {
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(SslConfigurationLayout.class);
     private final int CERT_MONTHLY_THRESHOLD = 3;
+    public static final String INTERNAL_CERTIFICATE_ALIAS = "internal";
 
     private Table sslConfigTable;
     private VmidcWindow<OkCancelButtonModel> deleteWindow;
@@ -147,7 +147,7 @@ public class SslConfigurationLayout extends FormLayout {
         deleteArchiveButton.setData(certificateModel);
         deleteArchiveButton.addClickListener(this.removeButtonListener);
 
-        if (certificateModel.getAlias().contains("internal")) {
+        if (certificateModel.getAlias().contains(SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS)) {
             deleteArchiveButton.setEnabled(false);
         }
 
@@ -170,7 +170,7 @@ public class SslConfigurationLayout extends FormLayout {
                         VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_TITLE),
                         VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_CONTENT, certificateModel.getAlias()));
             }
-            SslConfigurationLayout.this.deleteWindow.getComponentModel().getOkButton().setData(alias);
+            SslConfigurationLayout.this.deleteWindow.getComponentModel().getOkButton().setData(certificateModel.getAlias());
             SslConfigurationLayout.this.deleteWindow.getComponentModel().setOkClickedListener(SslConfigurationLayout.this.acceptRemoveButtonListener);
             ViewUtil.addWindow(SslConfigurationLayout.this.deleteWindow);
         }
