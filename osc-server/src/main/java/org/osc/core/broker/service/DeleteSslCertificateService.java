@@ -6,6 +6,7 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
 
 public class DeleteSslCertificateService extends ServiceDispatcher<DeleteSslEntryRequest, EmptySuccessResponse> {
 
@@ -13,14 +14,14 @@ public class DeleteSslCertificateService extends ServiceDispatcher<DeleteSslEntr
 
     @Override
     protected EmptySuccessResponse exec(DeleteSslEntryRequest request, Session session) throws Exception {
-        if (request.getAlias().contains("internal")) {
+        if (request.getAlias().contains(SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS)) {
             throw new VmidcBrokerValidationException("Cannot remove internal certificate");
         }
 
         try {
             SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(session);
             boolean succeed = certificateAttrEntityMgr.removeAlias(request.getAlias());
-            log.info("Deleting alias: " + request.getAlias() + " from trust store status: " + succeed);
+            log.info("Deleted alias: " + request.getAlias() + " from trust store status: " + succeed);
             if (!succeed) {
                 throw new VmidcBrokerValidationException("Cannot remove entry: " + request.getAlias() + " from trust store");
             }
