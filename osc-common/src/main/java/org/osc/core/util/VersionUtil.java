@@ -6,7 +6,6 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.Manifest;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 public class VersionUtil {
@@ -150,7 +149,7 @@ public class VersionUtil {
         Long minor = Long.valueOf(versionStr.substring(dot + 1));
         String buildStr = manifest.getMainAttributes().getValue("Implementation-Build");
 
-        if (StringUtils.isBlank(buildStr)) {
+        if (buildStr == null || buildStr.isEmpty()) {
         	throw new IllegalArgumentException("The provided build string should not be null or empty.");
         }
         
