@@ -1,19 +1,19 @@
 package org.osc.core.broker.view.maintenance;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-
+import com.vaadin.data.Item;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
+import com.vaadin.ui.VerticalLayout;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.DeleteSslCertificateService;
+import org.osc.core.broker.service.ListSslCertificatesService;
 import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
-import org.osc.core.broker.service.response.CommonResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.vc.ListSslAttributesService;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -23,20 +23,17 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 
-import com.vaadin.data.Item;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.VerticalLayout;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 public class SslConfigurationLayout extends FormLayout {
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(SslConfigurationLayout.class);
     private final int CERT_MONTHLY_THRESHOLD = 3;
-    private List<SslCertificateAttrDto> persistenceSslData;
+    public static final String INTERNAL_CERTIFICATE_ALIAS = "internal";
 
     private Table sslConfigTable;
     private VmidcWindow<OkCancelButtonModel> deleteWindow;
@@ -81,23 +78,23 @@ public class SslConfigurationLayout extends FormLayout {
         addComponent(sslConfigTablePanel);
     }
 
-    private List<SslCertificateAttrDto> getPersistenceSslData() {
+    private List<CertificateBasicInfoModel> getPersistenceSslData() {
 
-        List<SslCertificateAttrDto> sslCertificateAttrDtos = new ArrayList<>();
+        List<CertificateBasicInfoModel> basicInfoModels = new ArrayList<>();
 
         BaseRequest<BaseDto> listRequest = new BaseRequest<>();
-        ListResponse<SslCertificateAttrDto> res;
-        ListSslAttributesService listService = new ListSslAttributesService();
+        ListResponse<CertificateBasicInfoModel> res;
+        ListSslCertificatesService listService = new ListSslCertificatesService();
 
         try {
             res = listService.dispatch(listRequest);
-            sslCertificateAttrDtos = res.getList();
+            basicInfoModels = res.getList();
         } catch (Exception e) {
             log.error("Failed to get information from SSL attributes table", e);
             ViewUtil.iscNotification("Failed to get information from SSL attributes table (" + e.getMessage() + ")", Notification.Type.ERROR_MESSAGE);
         }
 
-        return sslCertificateAttrDtos;
+        return basicInfoModels;
     }
 
     private void colorizeValidUntilRows() {
@@ -120,18 +117,17 @@ public class SslConfigurationLayout extends FormLayout {
     }
 
     private void buildSslConfigurationTable() {
-        this.persistenceSslData = getPersistenceSslData();
+        List<CertificateBasicInfoModel> persistenceSslData = getPersistenceSslData();
         this.sslConfigTable.removeAllItems();
         try {
-            List<CertificateBasicInfoModel> certificateInfoList = X509TrustManagerFactory.getInstance().getCertificateInfoList();
-            for (CertificateBasicInfoModel info : certificateInfoList) {
+            for (CertificateBasicInfoModel info : persistenceSslData) {
                 this.sslConfigTable.addItem(new Object[]{
                         info.getAlias(),
                         info.getSha1Fingerprint(),
                         info.getValidFrom(),
                         info.getValidTo(),
                         info.getAlgorithmType(),
-                        createDeleteEntry(info.getAlias())
+                        createDeleteEntry(info)
                 }, info.getAlias().toLowerCase());
             }
         } catch (Exception e) {
@@ -144,53 +140,44 @@ public class SslConfigurationLayout extends FormLayout {
         colorizeValidUntilRows();
     }
 
-    private Button createDeleteEntry(String alias) {
-        String removeBtnLabel = (isConnected(alias)) ? "Force delete" : "Delete";
+    @SuppressWarnings("serial")
+    private Button createDeleteEntry(CertificateBasicInfoModel certificateModel) {
+        String removeBtnLabel = (certificateModel.isConnected()) ? "Force delete" : "Delete";
         final Button deleteArchiveButton = new Button(removeBtnLabel);
-        deleteArchiveButton.setData(alias);
+        deleteArchiveButton.setData(certificateModel);
         deleteArchiveButton.addClickListener(this.removeButtonListener);
+
+        if (certificateModel.getAlias().contains(SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS)) {
+            deleteArchiveButton.setEnabled(false);
+        }
+
         return deleteArchiveButton;
     }
 
     private Button.ClickListener removeButtonListener = new Button.ClickListener() {
-        /**
-         *
-         */
+
         private static final long serialVersionUID = 5173505013809394877L;
 
         @Override
         public void buttonClick(Button.ClickEvent event) {
-            final String alias = (String) event.getButton().getData();
-            if(isConnected(alias)){
+            final CertificateBasicInfoModel certificateModel = (CertificateBasicInfoModel) event.getButton().getData();
+            if (certificateModel.isConnected()) {
                 SslConfigurationLayout.this.deleteWindow = WindowUtil.createAlertWindow(
                         VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FORCE_REMOVE_DIALOG_TITLE),
-                        VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FORCE_REMOVE_DIALOG_CONTENT, alias));
+                        VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FORCE_REMOVE_DIALOG_CONTENT, certificateModel.getAlias()));
             } else {
                 SslConfigurationLayout.this.deleteWindow = WindowUtil.createAlertWindow(
                         VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_TITLE),
-                        VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_CONTENT, alias));
+                        VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_CONTENT, certificateModel.getAlias()));
             }
-            SslConfigurationLayout.this.deleteWindow.getComponentModel().getOkButton().setData(alias);
-            SslConfigurationLayout.this.deleteWindow.getComponentModel().setOkClickedListener(SslConfigurationLayout.this.acceptRemoveButtonListener);
+            SslConfigurationLayout.this.deleteWindow.getComponentModel().getOkButton().setData(certificateModel.getAlias());
+            SslConfigurationLayout.this.deleteWindow.getComponentModel().setOkClickedListener(acceptRemoveButtonListener);
             ViewUtil.addWindow(SslConfigurationLayout.this.deleteWindow);
         }
     };
 
-    private boolean isConnected(String alias){
-        boolean isConnected = false;
-        for (SslCertificateAttrDto attribute : this.persistenceSslData) {
-            if (attribute.getAlias() != null && attribute.getAlias().contains(alias)) {
-                isConnected = true;
-                break;
-            }
-        }
-        return isConnected;
-    }
-
     private Button.ClickListener acceptRemoveButtonListener = new Button.ClickListener() {
-        /**
-         *
-         */
+
         private static final long serialVersionUID = 2512910250970666944L;
 
         @Override
@@ -203,8 +190,8 @@ public class SslConfigurationLayout extends FormLayout {
             DeleteSslCertificateService deleteService = new DeleteSslCertificateService();
 
             try {
-                CommonResponse res = deleteService.dispatch(deleteRequest);
-                succeed = res.isSuccess();
+                deleteService.dispatch(deleteRequest);
+                succeed = true;
             } catch (Exception e) {
                 succeed = false;
                 log.error("Failed to remove SSL alias from truststore", e);

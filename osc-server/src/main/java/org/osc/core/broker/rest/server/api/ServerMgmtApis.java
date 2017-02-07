@@ -23,10 +23,10 @@ import org.osc.core.broker.service.request.AddSslEntryRequest;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
-import org.osc.core.broker.service.response.CommonResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
+import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 import org.osc.core.util.LocalHostAuthFilter;
 import org.osc.core.util.PKIUtil;
 import org.osc.core.util.ServerUtil;
@@ -145,15 +145,15 @@ public class ServerMgmtApis {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)})
     @Path("/sslcertificates")
-    @ResourceFilters({ VmidcAuthFilter.class })
+    @ResourceFilters({VmidcAuthFilter.class})
     @GET
-    public JResponse<List<SslCertificateDto>> getSslCertificatesList(@Context HttpHeaders headers) {
+    public JResponse<List<CertificateBasicInfoModel>> getSslCertificatesList(@Context HttpHeaders headers) {
 
         logger.info("Listing ssl certificates from trust store");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<SslCertificateDto> response = (ListResponse<SslCertificateDto>) ApiUtil
+        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) ApiUtil
                 .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
 
         return JResponse.ok(response.getList()).build();
@@ -162,11 +162,11 @@ public class ServerMgmtApis {
     /**
      * Add a SSL certificate entry
      */
-    @ApiOperation(value = "Add SSL certificate", response = CommonResponse.class)
+    @ApiOperation(value = "Add SSL certificate")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)})
     @Path("/sslcertificate")
-    @ResourceFilters({ VmidcAuthFilter.class })
+    @ResourceFilters({VmidcAuthFilter.class})
     @POST
     public Response addSslCertificate(@Context HttpHeaders headers, @ApiParam(required = true) SslCertificateDto sslEntry) {
         logger.info("Adding new SSL certificate to truststore");
@@ -185,7 +185,7 @@ public class ServerMgmtApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)
     })
     @Path("/sslcertificate/{alias}")
-    @ResourceFilters({ VmidcAuthFilter.class })
+    @ResourceFilters({VmidcAuthFilter.class})
     @DELETE
     public Response deleteSslCertificate(@Context HttpHeaders headers, @ApiParam(value = "SSL certificate alias") @PathParam("alias") String alias) {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);

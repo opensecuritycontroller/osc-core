@@ -164,10 +164,10 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                     VMwareSdnApi vmwareSdnApi = SdnControllerApiFactory.createVMwareSdnApi(vc);
                     vmwareSdnApi.checkStatus(new VMwareSdnConnector(vc));
                 } catch (HttpException exception) {
-                	if(exception.getSatus() == null){
+                    if (exception.getSatus() == null && sslCertificateResolver.checkExceptionTypeForSSL(exception)) {
                         URL url = new URL(exception.getResourcePath());
-                		sslCertificateResolver.fetchCertificatesFromURL(url, "nsx");
-                	}
+                        sslCertificateResolver.fetchCertificatesFromURL(url, "nsx");
+                    }
                     log.warn("Rest Exception encountered when trying to add NSX info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
                     errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
@@ -179,7 +179,9 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                 try {
                     new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(), request.getDto().getProviderPassword());
                 } catch (RemoteException remoteException) {
-                    sslCertificateResolver.fetchCertificatesFromURL(VimUtils.getServiceURL(request.getDto().getProviderIP()), "vmware");
+                    if (sslCertificateResolver.checkExceptionTypeForSSL(remoteException)) {
+                        sslCertificateResolver.fetchCertificatesFromURL(VimUtils.getServiceURL(request.getDto().getProviderIP()), "vmware");
+                    }
                     log.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
                     errorTypeException = new ErrorTypeException(remoteException, ErrorType.PROVIDER_EXCEPTION);
@@ -214,7 +216,8 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                 } catch (Exception e) {
                     VirtualizationConnectorDto vcDto = request.getDto();
                     boolean isHttps = VirtualizationConnector.isHttps(vcDto.getProviderAttributes());
-                    if (isHttps && StringUtils.isNotEmpty(request.getDto().getControllerIP())) {
+                    if (isHttps && StringUtils.isNotEmpty(request.getDto().getControllerIP()) &&
+                            sslCertificateResolver.checkExceptionTypeForSSL(e)) {
                         URI uri = new URI("https", request.getDto().getControllerIP(), null, null);
                         sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstack");
                     }
@@ -237,7 +240,7 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                 } catch (Exception exception) {
                     VirtualizationConnectorDto vcDto = request.getDto();
                     boolean isHttps = VirtualizationConnector.isHttps(vcDto.getProviderAttributes());
-                    if (isHttps) {
+                    if (isHttps && sslCertificateResolver.checkExceptionTypeForSSL(exception)) {
                         URI uri = new URI("https", vcDto.getProviderIP(), null, null);
                         sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstackkeystone");
                     }
@@ -267,8 +270,11 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                         errorTypeException = new ErrorTypeException(shutdownException, ErrorType.RABBITMQ_EXCEPTION);
                     }
                 } catch (Throwable e) {
-                    URI uri = new URI("https", null, rabbitClient.getServerIP(), rabbitClient.getPort(), null, null, null);
-                    sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "rabbitmq");
+                    if (sslCertificateResolver.checkExceptionTypeForSSL(e)) {
+                        URI uri = new URI("https", null, rabbitClient.getServerIP(), rabbitClient.getPort(), null, null, null);
+                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "rabbitmq");
+                    }
+
                     log.warn("Exception encountered when trying to connect to RabbitMQ, allowing user to either ignore or correct issue");
                     errorTypeException = new ErrorTypeException(e, ErrorType.RABBITMQ_EXCEPTION);
                 }

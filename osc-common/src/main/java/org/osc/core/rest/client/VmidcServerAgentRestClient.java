@@ -15,6 +15,6 @@ public class VmidcServerAgentRestClient extends RestBaseClient {
             vmiDCServer += ":8090";
         }
 
-        initRestBaseClient(vmiDCServer, 0, loginName, password, true);
+        initRestBaseClient(vmiDCServer, 0, loginName, password, true, true);
     }
 }

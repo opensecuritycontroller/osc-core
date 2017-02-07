@@ -118,8 +118,8 @@ public abstract class RestBaseClient {
         this.client.setReadTimeout(readTimeout);
     }
 
-    protected void initRestBaseClient(String host, String userName, String password, boolean isHttps) {
-        initRestBaseClient(host, 0, userName, password, isHttps);
+    protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps) {
+        this.initRestBaseClient(host,port, userName, password, isHttps, false);
     }
 
     /**
@@ -134,15 +134,20 @@ public abstract class RestBaseClient {
      * @param userName username to use. null if we dont want to use basic auth
      * @param password password to use. null if we dont want to use basic auth
      * @param isHttps whether http or https
+     * @param forceAcceptAll force accept all SSL certificates
      */
-    protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps) {
+    protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps, boolean forceAcceptAll) {
 
         this.host = host;
         String urlPrefix = (isHttps ? "https" : "http") + "://" + host + (port > 0 ? ":" + port : "");
         String restBaseUrl = urlPrefix + this.urlBase;
 
         if (isHttps) {
-            this.clientCfg = configureHttpsClient();
+            if(forceAcceptAll) {
+                this.clientCfg = configureHttpsForceAllClient();
+            } else {
+                this.clientCfg = configureHttpsClient();
+            }
         } else {
             this.clientCfg = new DefaultClientConfig();
         }
@@ -157,6 +162,19 @@ public abstract class RestBaseClient {
             this.client.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(userName, password));
         }
         this.webResource = this.client.resource(restBaseUrl);
+    }
+
+    private ClientConfig configureHttpsForceAllClient() {
+        // : TODO emanoel: Agent Removal - remove below method.
+        SSLContext ctx = new SslContextProvider().getAcceptAllSSLContext();
+        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+
+        ClientConfig config = new DefaultClientConfig();
+
+        config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
+                new HTTPSProperties((hostname, session) -> true, ctx));
+
+        return config;
     }
 
     private ClientConfig configureHttpsClient() {
@@ -255,7 +273,7 @@ public abstract class RestBaseClient {
     }
 
     public <T> T getResource(String resourcePath, final Class<T> clazz, MultivaluedMap<String, String> params,
-            MultivaluedMap<String, String> headers) throws Exception {
+                             MultivaluedMap<String, String> headers) throws Exception {
 
         ClientResponse res = null;
         try {
@@ -304,7 +322,7 @@ public abstract class RestBaseClient {
 
     @SuppressWarnings("unchecked")
     public <I, O> O postResource(String resourcePath, Class<O> resClazz, final I input,
-            MultivaluedMap<String, String> params, MultivaluedMap<String, String> headers) throws Exception {
+                                 MultivaluedMap<String, String> params, MultivaluedMap<String, String> headers) throws Exception {
 
         ClientResponse res = null;
 
@@ -464,7 +482,7 @@ public abstract class RestBaseClient {
     }
 
     private Builder getRequestBuilder(String resourcePath, MultivaluedMap<String, String> params,
-            MultivaluedMap<String, String> headers) {
+                                      MultivaluedMap<String, String> headers) {
         WebResource localWebResource = this.webResource.path(resourcePath);
         return getRequestBuilder(localWebResource, params, headers);
     }
@@ -480,7 +498,7 @@ public abstract class RestBaseClient {
     }
 
     private Builder getRequestBuilder(WebResource localWebResource, MultivaluedMap<String, String> params,
-            MultivaluedMap<String, String> headers) {
+                                      MultivaluedMap<String, String> headers) {
         if (params != null) {
             localWebResource = localWebResource.queryParams(params);
         }
@@ -520,7 +538,7 @@ public abstract class RestBaseClient {
      * @return the RestClientException
      */
     private RestClientException createRestClientException(String method, String resourcePath, Object input,
-            ClientResponse clientResponse, Exception ex) {
+                                                          ClientResponse clientResponse, Exception ex) {
 
         if (input != null) {
             if (this.mediaType.contains("xml")) {
@@ -546,7 +564,7 @@ public abstract class RestBaseClient {
         }
         if (status != null
                 && (status == ClientResponse.Status.UNAUTHORIZED.getStatusCode() || status == ClientResponse.Status.FORBIDDEN
-                        .getStatusCode())) {
+                .getStatusCode())) {
             exceptionMessage = VmidcCommonMessages.getString(VmidcCommonMessages_.EXCEPTION_AUTH);
         } else if (ex.getCause() instanceof SocketTimeoutException || ex.getCause() instanceof ConnectException
                 || ex.getCause() instanceof NoRouteToHostException) {
