@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * Exception handler for invalid input
  */
 @Provider
-public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
+public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException>, BaseExceptionMapperUtil {
 
 
     @Context
@@ -24,7 +24,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
     public Response toResponse(final ConstraintViolationException exception) {
         return Response
                 .status(400)
-                .type(headers.getAcceptableMediaTypes()!=null && !headers.getAcceptableMediaTypes().isEmpty()  ? headers.getAcceptableMediaTypes().get(0) : MediaType.APPLICATION_JSON_TYPE)
+                .type(getMediaType(headers, MediaType.APPLICATION_JSON_TYPE))
                 .entity(new ErrorCodeDto(ErrorCodeDto.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE,mapErrorCode(exception)))
                 .build();
     }

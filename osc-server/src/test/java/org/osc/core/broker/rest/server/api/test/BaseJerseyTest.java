@@ -1,6 +1,7 @@
 package org.osc.core.broker.rest.server.api.test;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.hibernate.Session;
@@ -46,6 +47,7 @@ public class BaseJerseyTest extends JerseyTest {
                 .register(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class)
                 .register(ConstraintViolationExceptionMapper.class)
                 .register(JsonProcessingExceptionMapper.class)
+                .property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true)
                 .packages("org.osc.core.broker.rest.server.exception");
     }
 

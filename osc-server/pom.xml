@@ -313,9 +313,15 @@
 			<version>2.25</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>org.glassfish.jersey.test-framework.providers</groupId>
 			<artifactId>jersey-test-framework-provider-grizzly2</artifactId>
+			<version>2.25</version>
+			<scope>test</scope>
+		</dependency>-->
+		<dependency>
+			<groupId>org.glassfish.jersey.test-framework.providers</groupId>
+			<artifactId>jersey-test-framework-provider-jetty</artifactId>
 			<version>2.25</version>
 			<scope>test</scope>
 		</dependency>

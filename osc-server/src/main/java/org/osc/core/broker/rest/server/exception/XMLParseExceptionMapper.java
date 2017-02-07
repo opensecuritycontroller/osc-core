@@ -13,7 +13,7 @@ import java.util.Arrays;
  * Exception handler for invalid json deserialization
  */
 @Provider
-public class XMLParseExceptionMapper implements ExceptionMapper<XMLParseException> {
+public class XMLParseExceptionMapper implements ExceptionMapper<XMLParseException>, BaseExceptionMapperUtil {
 
     @Context
     private HttpHeaders headers;
@@ -22,7 +22,7 @@ public class XMLParseExceptionMapper implements ExceptionMapper<XMLParseExceptio
     public Response toResponse(final XMLParseException exception) {
         return Response
                 .status(Response.Status.BAD_REQUEST)
-                .type(headers.getAcceptableMediaTypes()!=null && !headers.getAcceptableMediaTypes().isEmpty()  ? headers.getAcceptableMediaTypes().get(0) : MediaType.APPLICATION_XML_TYPE)
+                .type(getMediaType(headers,MediaType.APPLICATION_XML_TYPE))
                 .entity(new ErrorCodeDto(ErrorCodeDto.REMOTE_EXCEPTION_ERROR_CODE, Arrays.asList(
                     "Value "+ exception.getMessage() + " is invalid"
                 )))

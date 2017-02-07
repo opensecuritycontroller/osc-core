@@ -1,6 +1,7 @@
 package org.osc.core.broker.util.api;
 
-import org.jvnet.hk2.annotations.Service;
+import org.osc.core.broker.rest.server.exception.OscBadRequestException;
+import org.osc.core.broker.rest.server.exception.OscInternalServerErrorException;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -38,16 +39,13 @@ public class ApiUtilImpl implements ApiUtil {
             return service.dispatch(request);
         } catch (VmidcBrokerInvalidEntryException | VmidcBrokerInvalidRequestException
                 | VmidcBrokerValidationException expectedException) {
-            throw new VmidcRestServerException(Response.status(Response.Status.BAD_REQUEST), expectedException.getMessage(),
-                    VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+            throw new OscBadRequestException(expectedException.getMessage(), VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
         } catch (RestClientException | RemoteException remoteException) {
-            throw new VmidcRestServerException(Response.status(Response.Status.BAD_REQUEST), remoteException.getMessage(),
-                    VmidcRestServerException.REMOTE_EXCEPTION_ERROR_CODE);
+            throw new OscBadRequestException(remoteException.getMessage(), VmidcRestServerException.REMOTE_EXCEPTION_ERROR_CODE);
         } catch (VmidcException generalVmidcException) {
-            throw new VmidcRestServerException(Response.status(Response.Status.INTERNAL_SERVER_ERROR),
-                    generalVmidcException.getMessage(), VmidcRestServerException.VMIDC_EXCEPTION_ERROR_CODE);
+            throw new OscInternalServerErrorException(generalVmidcException.getMessage(), VmidcRestServerException.VMIDC_EXCEPTION_ERROR_CODE);
         } catch (Exception e) {
-            throw new VmidcRestServerException(Response.status(Response.Status.INTERNAL_SERVER_ERROR), e.getMessage());
+            throw new OscInternalServerErrorException(VmidcRestServerException.VMIDC_EXCEPTION_ERROR_CODE);
         }
     }
 

@@ -89,7 +89,7 @@ public class AlertApisTest extends BaseJerseyTest {
         response.close();
 
         // Assert.
-        assertThat(response.getStatus()).isEqualTo(404);
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
@@ -107,7 +107,7 @@ public class AlertApisTest extends BaseJerseyTest {
         response.close();
 
         // Assert.
-        assertThat(response.getStatus()).isEqualTo(404);
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
 

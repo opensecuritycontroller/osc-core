@@ -15,7 +15,7 @@ import java.util.Arrays;
  * Exception handler for invalid json deserialization
  */
 @Provider
-public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProcessingException> {
+public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProcessingException>, BaseExceptionMapperUtil {
 
     @Context
     private HttpHeaders headers;
@@ -24,7 +24,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
     public Response toResponse(final JsonProcessingException exception) {
         return Response
                 .status(Response.Status.BAD_REQUEST)
-                .type(headers.getAcceptableMediaTypes()!=null && !headers.getAcceptableMediaTypes().isEmpty()  ? headers.getAcceptableMediaTypes().get(0) : MediaType.APPLICATION_JSON_TYPE)
+                .type(getMediaType(headers, MediaType.APPLICATION_JSON_TYPE))
                 .entity(new ErrorCodeDto(ErrorCodeDto.REMOTE_EXCEPTION_ERROR_CODE, Arrays.asList(
                     "Value "+((InvalidFormatException) exception).getValue() + " is invalid"
                 )))
