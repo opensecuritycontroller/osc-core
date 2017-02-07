@@ -17,8 +17,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.DeleteApplianceService;
@@ -39,9 +39,6 @@ import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
 
-import com.sun.jersey.api.JResponse;
-import com.sun.jersey.spi.container.ResourceFilters;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -50,10 +47,10 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
 @Api(tags = "Operations for Security Functions Catalog", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/catalog")
-@ResourceFilters({ VmidcAuthFilter.class })
+@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/catalog")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@OscAuth
 public class ApplianceApis {
 
     private static final Logger logger = Logger.getLogger(ApplianceApis.class);
@@ -65,7 +62,7 @@ public class ApplianceApis {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @GET
-    public JResponse<List<ApplianceDto>> getAppliance(@Context HttpHeaders headers) {
+    public List<ApplianceDto> getAppliance(@Context HttpHeaders headers) {
 
         logger.info("Listing Appliances");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -74,7 +71,7 @@ public class ApplianceApis {
         ListResponse<ApplianceDto> response = (ListResponse<ApplianceDto>) ApiUtil
                 .getListResponse(new ListApplianceService(), new BaseRequest<BaseDto>(true));
 
-        return JResponse.ok(response.getList()).build();
+        return response.getList();
     }
 
     @ApiOperation(value = "Retrieves a Software Function Model",
@@ -84,9 +81,9 @@ public class ApplianceApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{applianceId}")
     @GET
-    public JResponse<ApplianceDto> getAppliance(@Context HttpHeaders headers,
-            @ApiParam(value = "Id of the Appliance Model",
-                    required = true) @PathParam("applianceId") Long applianceId) {
+    public ApplianceDto getAppliance(@Context HttpHeaders headers,
+                                     @ApiParam(value = "Id of the Appliance Model",
+                                             required = true) @PathParam("applianceId") Long applianceId) {
 
         logger.info("Getting Appliance " + applianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -95,7 +92,7 @@ public class ApplianceApis {
         getDtoRequest.setEntityId(applianceId);
         getDtoRequest.setEntityName("Appliance");
         GetDtoFromEntityService<ApplianceDto> getDtoService = new GetDtoFromEntityService<ApplianceDto>();
-        return JResponse.ok(ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto()).build();
+        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Deletes a Security Function Model",
@@ -119,9 +116,9 @@ public class ApplianceApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{applianceId}/versions")
     @GET
-    public JResponse<List<ApplianceSoftwareVersionDto>> getApplianceSoftwareVersions(@Context HttpHeaders headers,
-            @ApiParam(value = "Id of the Appliance Model",
-                    required = true) @PathParam("applianceId") Long applianceId) {
+    public List<ApplianceSoftwareVersionDto> getApplianceSoftwareVersions(@Context HttpHeaders headers,
+                                                                          @ApiParam(value = "Id of the Appliance Model",
+                                                                                  required = true) @PathParam("applianceId") Long applianceId) {
 
         logger.info("Listing Appliance Software Versions for appliance " + applianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -132,7 +129,7 @@ public class ApplianceApis {
             ListResponse<ApplianceSoftwareVersionDto> response = asvListService
                     .dispatch(new ListApplianceSoftwareVersionRequest(applianceId));
 
-            return JResponse.ok(response.getList()).build();
+            return response.getList();
         } catch (Exception e) {
             throw new VmidcRestServerException(Response.status(Status.INTERNAL_SERVER_ERROR), e.getMessage());
         }
@@ -145,10 +142,10 @@ public class ApplianceApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{applianceId}/versions/{ApplianceSoftwareVersionId}")
     @GET
-    public JResponse<ApplianceSoftwareVersionDto> getApplianceSoftwareVersion(@Context HttpHeaders headers,
-            @ApiParam(value = "Id of the Appliance Model", required = true) @PathParam("applianceId") Long applianceId,
-            @ApiParam(value = "Id of the Appliance Software Version",
-                    required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
+    public ApplianceSoftwareVersionDto getApplianceSoftwareVersion(@Context HttpHeaders headers,
+                                                                   @ApiParam(value = "Id of the Appliance Model", required = true) @PathParam("applianceId") Long applianceId,
+                                                                   @ApiParam(value = "Id of the Appliance Software Version",
+                                                                           required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
 
         logger.info(
                 "getting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
@@ -160,7 +157,7 @@ public class ApplianceApis {
         getDtoRequest.setParentId(applianceId);
 
         GetDtoFromEntityService<ApplianceSoftwareVersionDto> getDtoService = new GetDtoFromEntityService<ApplianceSoftwareVersionDto>();
-        return JResponse.ok(ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto()).build();
+        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Deletes a Security Function Software Version",
@@ -170,9 +167,9 @@ public class ApplianceApis {
     @Path("/{applianceId}/versions/{ApplianceSoftwareVersionId}")
     @DELETE
     public Response deleteApplianceSoftwareVersion(@Context HttpHeaders headers,
-            @ApiParam(value = "Id of the Appliance Model", required = true) @PathParam("applianceId") Long applianceId,
-            @ApiParam(value = "Id of the Appliance Software Version",
-                    required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
+                                                   @ApiParam(value = "Id of the Appliance Model", required = true) @PathParam("applianceId") Long applianceId,
+                                                   @ApiParam(value = "Id of the Appliance Software Version",
+                                                           required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
         logger.info(
                 "Deleting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -189,9 +186,9 @@ public class ApplianceApis {
     @POST
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response uploadAsvFile(@Context HttpHeaders headers,
-            @ApiParam(value = "The imported Appliance Image file name",
-                    required = true) @PathParam("fileName") String fileName,
-            @ApiParam(required = true) InputStream uploadedInputStream) {
+                                  @ApiParam(value = "The imported Appliance Image file name",
+                                          required = true) @PathParam("fileName") String fileName,
+                                  @ApiParam(required = true) InputStream uploadedInputStream) {
         logger.info("Started uploading file " + fileName);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         return ApiUtil.getResponseForBaseRequest(new UploadApplianceVersionFileService(),

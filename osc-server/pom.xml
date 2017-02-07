@@ -121,12 +121,12 @@
 			<artifactId>osc-installer</artifactId>
 			<version>1.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
 			<version>6.0.0</version>
-		
+
 		</dependency>
 
 		<!-- Vaadin Dependencies -->
@@ -252,14 +252,21 @@
 			<artifactId>openstack-neutron</artifactId>
 			<version>${jclouds.version}</version>
 		</dependency>
+		<!--TODO: bsulich exclusion will be deleted when replacing jcloud with openstack4j-->
 		<dependency>
 			<groupId>org.apache.jclouds</groupId>
 			<artifactId>jclouds-core</artifactId>
 			<version>${jclouds.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>javax.ws.rs</groupId>
+					<artifactId>jsr311-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-		<!-- Enable Logging for jclouds https://jclouds.apache.org/reference/logging/ 
-			<dependency> <groupId>org.apache.jclouds.driver</groupId> <artifactId>jclouds-slf4j</artifactId> 
-			<version>${jclouds.version}</version> </dependency> <dependency> <groupId>ch.qos.logback</groupId> 
+		<!-- Enable Logging for jclouds https://jclouds.apache.org/reference/logging/
+			<dependency> <groupId>org.apache.jclouds.driver</groupId> <artifactId>jclouds-slf4j</artifactId>
+			<version>${jclouds.version}</version> </dependency> <dependency> <groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId> <version>1.0.13</version> </dependency> -->
 
 		<!-- Rabbitmq Client -->
@@ -268,7 +275,7 @@
 			<artifactId>amqp-client</artifactId>
 			<version>3.4.4</version>
 		</dependency>
-		
+
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -487,7 +494,7 @@
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.7.7.201606060606</version>
 				<executions>
-					<!-- Prepares the property pointing to the JaCoCo runtime agent which 
+					<!-- Prepares the property pointing to the JaCoCo runtime agent which
 						is passed as VM argument when Maven the Surefire plugin is executed. -->
 					<execution>
 						<id>pre-unit-test</id>
@@ -497,12 +504,12 @@
 						<configuration>
 							<!-- Sets the path to the file which contains the execution data. -->
 							<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-							<!-- Sets the name of the property containing the settings for JaCoCo 
+							<!-- Sets the name of the property containing the settings for JaCoCo
 								runtime agent. -->
 							<propertyName>surefireArgLine</propertyName>
 						</configuration>
 					</execution>
-					<!-- Ensures that the code coverage report for unit tests is created 
+					<!-- Ensures that the code coverage report for unit tests is created
 						after unit tests have been run. -->
 					<execution>
 						<id>post-unit-test</id>
