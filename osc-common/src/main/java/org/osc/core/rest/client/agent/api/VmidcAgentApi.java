@@ -27,9 +27,14 @@ public class VmidcAgentApi extends RestBaseClient {
 
     public VmidcAgentApi(String agentServer, int port, String loginName, String password)
             throws Exception {
-        super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_XML);
+        this(agentServer,port,loginName,password,true);
+    }
 
-        initRestBaseClient(agentServer, port, loginName, password, true);
+    protected VmidcAgentApi(String agentServer, int port, String loginName, String password, boolean isHttps)
+            throws Exception {
+        super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_JSON);
+
+        initRestBaseClient(agentServer, port, loginName, password, isHttps);
     }
 
     public File downloadLogFile() throws Exception {

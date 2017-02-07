@@ -21,7 +21,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
@@ -125,7 +125,7 @@ public class Server {
 
             PasswordUtil.initPasswordFromDb(AgentAuthFilter.VMIDC_AGENT_LOGIN);
             PasswordUtil.initPasswordFromDb(NsxAuthFilter.VMIDC_NSX_LOGIN);
-            PasswordUtil.initPasswordFromDb(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
+            PasswordUtil.initPasswordFromDb(OscAuthFilter.OSC_DEFAULT_LOGIN);
 
             JobEngine.getEngine().addJobCompletionListener(new AlertGenerator());
 
@@ -300,7 +300,7 @@ public class Server {
     public static String loadServerProp(String propName, String defaultValue) {
         Properties properties = new Properties();
         try {
-	  properties = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
+            properties = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
         } catch (IOException e) {
             log.error("Failed to open to the properties file - properties file was not loaded", e);
         }
@@ -311,11 +311,11 @@ public class Server {
     public static void saveServerProp(String propName, String value) {
         Properties prop;
 
-	try {
+        try {
             prop = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
         } catch (IOException e) {
             log.error("Failed to open to the properties file - properties file was not loaded", e);
-	  return;
+            return;
         }
 
         // Write to the properties file

@@ -8,7 +8,7 @@ public class VmidcServerAgentRestClient extends RestBaseClient {
 
     public VmidcServerAgentRestClient(String vmiDCServer, String loginName, String password) {
 
-        super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_XML);
+        super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_JSON);
 
         // If IP address does include port, we'll default.
         if (!vmiDCServer.contains(":")) {

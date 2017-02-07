@@ -22,7 +22,7 @@ import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -63,11 +63,11 @@ public class DatabaseUtils {
 
     private static void createDefaultUsers(Session session) {
         EntityManager<User> userEmgr = new EntityManager<User>(User.class, session);
-        User adminUser = userEmgr.findByFieldName("loginName", VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
+        User adminUser = userEmgr.findByFieldName("loginName", OscAuthFilter.OSC_DEFAULT_LOGIN);
         if (adminUser == null) {
             User user = new User();
-            user.setLoginName(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
-            user.setPassword(EncryptionUtil.encrypt(VmidcAuthFilter.VMIDC_DEFAULT_PASS));
+            user.setLoginName(OscAuthFilter.OSC_DEFAULT_LOGIN);
+            user.setPassword(EncryptionUtil.encrypt(OscAuthFilter.OSC_DEFAULT_PASS));
             user.setRole(RoleType.ADMIN);
             EntityManager.create(session, user);
         }

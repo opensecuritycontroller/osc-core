@@ -1,41 +1,23 @@
 package org.osc.core.util;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Context;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.osc.core.rest.annotations.LocalHostAuth;
 
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
-import com.sun.jersey.spi.container.ContainerResponseFilter;
-import com.sun.jersey.spi.container.ResourceFilter;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.ext.Provider;
+import java.io.IOException;
 
 /**
  * Auth filter which makes sure the request is coming from the same machine where the request is being processed
  * (localhost or 127.0.0.1)
  */
-public class LocalHostAuthFilter implements ResourceFilter, ContainerRequestFilter {
-
-    @Context
-    HttpServletRequest request;
-    @Context
-    HttpServletResponse response;
-
+@Provider
+@LocalHostAuth
+public class LocalHostAuthFilter implements ContainerRequestFilter
+{
     @Override
-    public ContainerRequest filter(ContainerRequest req) {
-
-        AuthUtil.authenticateLocalRequest(this.request);
-
-        return req;
+    public void filter(ContainerRequestContext containerRequestContext) throws IOException {
+        AuthUtil.authenticateLocalRequest((ContainerRequest) containerRequestContext);
     }
-
-    @Override
-    public ContainerRequestFilter getRequestFilter() {
-        return this;
-    }
-
-    @Override
-    public ContainerResponseFilter getResponseFilter() {
-        return null;
-    }
-
 }
