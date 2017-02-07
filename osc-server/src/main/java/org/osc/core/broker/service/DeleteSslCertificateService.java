@@ -2,24 +2,32 @@ package org.osc.core.broker.service;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
-import org.osc.core.broker.service.response.CommonResponse;
+import org.osc.core.broker.service.response.EmptySuccessResponse;
 
-public class DeleteSslCertificateService extends ServiceDispatcher<DeleteSslEntryRequest, CommonResponse> {
+public class DeleteSslCertificateService extends ServiceDispatcher<DeleteSslEntryRequest, EmptySuccessResponse> {
 
     private static final Logger log = Logger.getLogger(DeleteSslCertificateService.class);
 
     @Override
-    protected CommonResponse exec(DeleteSslEntryRequest request, Session session) throws Exception {
-        boolean succeed = true;
+    protected EmptySuccessResponse exec(DeleteSslEntryRequest request, Session session) throws Exception {
+        if (request.getAlias().contains("internal")) {
+            throw new VmidcBrokerValidationException("Cannot remove internal certificate");
+        }
+
         try {
             SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(session);
-            certificateAttrEntityMgr.removeAlias(request.getAlias());
+            boolean succeed = certificateAttrEntityMgr.removeAlias(request.getAlias());
+            log.info("Deleting alias: " + request.getAlias() + " from trust store status: " + succeed);
+            if (!succeed) {
+                throw new VmidcBrokerValidationException("Cannot remove entry: " + request.getAlias() + " from trust store");
+            }
         } catch (Exception e) {
-            log.error("Cannot remove entry from trust store", e);
-            succeed = false;
+            throw new VmidcBrokerValidationException("Cannot remove entry: " + request.getAlias() + " from trust store");
         }
-        return new CommonResponse(succeed);
+
+        return new EmptySuccessResponse();
     }
 }

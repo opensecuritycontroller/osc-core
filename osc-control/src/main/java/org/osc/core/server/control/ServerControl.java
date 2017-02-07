@@ -1,11 +1,5 @@
 package org.osc.core.server.control;
 
-import java.io.FileInputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -25,6 +19,12 @@ import org.osc.core.util.LogUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.util.VersionUtil;
+
+import java.io.FileInputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 public class ServerControl {
     private static final Logger log = Logger.getLogger(ServerControl.class);
@@ -273,28 +273,44 @@ public class ServerControl {
         try {
             res = restClient.getResource("status", ServerStatusResponse.class);
         } catch (RestClientException e) {
-
-            if(e.isCredentialError() || e.isConnectException()) {
+            if (e.isCredentialError() || e.isConnectException()) {
                 throw e;
             }
 
-            log.warn("Failed to connect to running server. Assuming SSL certificates are not set: " + e);
-            String internalAlias = "internal";
-            SslCertificateResolver sslCertificateResolver = new SslCertificateResolver();
-            sslCertificateResolver.fetchCertificatesFromURL(new URL(e.getResourcePath()), internalAlias);
-            if (!sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
-                X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
-                for(CertificateResolverModel model : sslCertificateResolver.getCertificateResolverModels()) {
-                    trustManagerFactory.addEntry(model.getCertificate(), internalAlias);
-                    log.info("Added new certificate with alias: " + internalAlias + " and SHA1: " + model.getSha1());
-                }
-                log.warn("Retrying checking connection after updating truststore");
-                res = restClient.getResource("status", ServerStatusResponse.class);
-            } else {
-                throw e;
-            }
+            log.warn("Failed to connect to running server.", e);
+            res = getSslCertificates(restClient, e);
         }
         return res;
+    }
+
+    private static ServerStatusResponse getSslCertificates(VmidcServerRestClient restClient, RestClientException e) throws Exception {
+
+        if (null == e) {
+            throw new IllegalArgumentException("Rest client exception is empty");
+        }
+
+        SslCertificateResolver sslCertificateResolver = new SslCertificateResolver();
+
+        if (!sslCertificateResolver.checkExceptionTypeForSSL(e)) {
+            throw e;
+        }
+
+        log.info("Trying to fetch SSL certificate from server");
+
+        String internalAlias = "internal";
+        sslCertificateResolver.fetchCertificatesFromURL(new URL(e.getResourcePath()), internalAlias);
+
+        if (sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
+            throw e;
+        }
+
+        X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
+        for (CertificateResolverModel model : sslCertificateResolver.getCertificateResolverModels()) {
+            trustManagerFactory.addEntry(model.getCertificate(), internalAlias);
+            log.info("Added new certificate with alias: " + internalAlias + " and SHA1: " + model.getSha1());
+        }
+        log.warn("Retrying connection with server");
+        return restClient.getResource("status", ServerStatusResponse.class);
     }
 
 }

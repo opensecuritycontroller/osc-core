@@ -1,12 +1,11 @@
 package org.osc.core.rest.client.agent.api;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
-import javax.ws.rs.core.MediaType;
-
 import org.apache.commons.io.IOUtils;
 import org.osc.core.rest.client.RestBaseClient;
+
+import javax.ws.rs.core.MediaType;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 public class VmidcAgentStreamingApi extends RestBaseClient {
 
@@ -16,7 +15,7 @@ public class VmidcAgentStreamingApi extends RestBaseClient {
 
         super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_OCTET_STREAM);
 
-        initRestBaseClient(agentServer, port, loginName, password, true);
+        initRestBaseClient(agentServer, port, loginName, password, true, true);
     }
 
     public void updateMgrFile(byte[] mgrFile, String mgrFileName) throws Exception {
