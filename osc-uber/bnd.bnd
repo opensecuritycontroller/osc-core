@@ -83,7 +83,10 @@ Require-Capability: \
     @${vaadin-slf4j-jdk14.dep},\
     @${vaadin-themes.dep},\
     @${validation-api.dep},\
-    @${vijava.dep},\
+    @${httpclient.dep},\
+    @${commons-codec.dep},\
+    @${commons-logging.dep},\
+    @${yavijava.dep},\
     @${security-mgr-api.dep},\
     @${sdn-controller-api.dep},\
     @${vmware-nsx-api.dep},\
@@ -331,6 +334,10 @@ exclude-other:\
   !weblogic.jdbc.jts,\
   !weblogic.jdbc.vendor.oracle,\
   !weblogic.websocket,\
-  !weblogic.websocket.annotation
+  !weblogic.websocket.annotation,\
+  !org.apache.avalon.*,\
+  !org.apache.http.*,\
+  !org.apache.log.*,\
+  !org.apache.log4j.*
 
 #end
