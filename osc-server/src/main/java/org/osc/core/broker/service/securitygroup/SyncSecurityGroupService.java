@@ -1,10 +1,10 @@
 package org.osc.core.broker.service.securitygroup;
 
 import org.hibernate.Session;
+import org.osc.core.broker.di.OSC;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.server.api.ApiUtil;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -51,7 +51,7 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
 
         // For service calls makes sure the VC's match
         if (this.securityGroup.getVirtualizationConnector() != this.vc) {
-            throw ApiUtil.createParentChildMismatchException(request.getParentId(), "Security Group");
+            throw OSC.get().apiUtil().createParentChildMismatchException(request.getParentId(), "Security Group");
         }
 
         if(!this.vc.isOpenstack()) {

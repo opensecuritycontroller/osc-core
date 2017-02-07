@@ -5,9 +5,12 @@ import java.util.Map;
 
 import org.osc.core.broker.util.ValidateUtil;
 
+import javax.validation.constraints.NotNull;
+
 
 public class BaseDto {
 
+    @NotNull(message = "id is required")
     private Long id;
     private Long parentId;
 

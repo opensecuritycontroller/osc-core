@@ -3,6 +3,7 @@ package org.osc.core.broker.rest.server.api;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -16,8 +17,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.di.OSC;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.broker.util.session.SessionUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -30,7 +34,6 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -46,6 +49,9 @@ import io.swagger.annotations.Authorization;
 @OscAuth
 public class AlertApis {
 
+    SessionUtil sessionUtil = OSC.get().sessionUtil();
+    ApiUtil apiUtil = OSC.get().apiUtil();
+
     private static final Logger logger = Logger.getLogger(AlertApis.class);
 
     @ApiOperation(value = "Lists all Alerts", response = AlertDto.class, responseContainer = "Set")
@@ -53,14 +59,11 @@ public class AlertApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @GET
     public List<AlertDto> getAlerts(@Context HttpHeaders headers) {
+        logger.info("Listing Allerts");
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
-        logger.info("Listing Alerts");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-
-        @SuppressWarnings("unchecked")
-        ListResponse<AlertDto> response = (ListResponse<AlertDto>) ApiUtil.getListResponse(new ListAlertService(),
+        ListResponse<AlertDto> response =  (ListResponse<AlertDto>) apiUtil.getListResponse(new ListAlertService(),
                 new BaseRequest<>(true));
-
         return response.getList();
     }
 
@@ -72,14 +75,14 @@ public class AlertApis {
     public AlertDto getAlert(@Context HttpHeaders headers, @PathParam("alertId") Long alertId) {
 
         logger.info("getting Alert " + alertId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(alertId);
         getDtoRequest.setEntityName("Alert");
 
         GetDtoFromEntityService<AlertDto> getDtoService = new GetDtoFromEntityService<AlertDto>();
-        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     //TODO: Future. Allow multi update/delete of alerts
@@ -95,16 +98,16 @@ public class AlertApis {
     @Path("/{alertId}")
     @PUT
     public Response updateAlert(@Context HttpHeaders headers, @PathParam("alertId") Long alertId,
-                                @ApiParam(required = true) AlertDto alertDto) {
+                                @Valid @ApiParam(required = true) AlertDto alertDto) {
 
         logger.info("Updating Alert " + alertId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        ApiUtil.setIdOrThrow(alertDto, alertId, "Alert");
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        apiUtil.setIdOrThrow(alertDto, alertId, "Alert");
 
         AlertRequest alertRequest = createAcknowledgeRequest(alertId, alertDto);
         AcknowledgeAlertService service = new AcknowledgeAlertService();
 
-        return ApiUtil.getResponseForBaseRequest(service, alertRequest);
+        return apiUtil.getResponseForBaseRequest(service, alertRequest);
     }
 
     /**
@@ -121,13 +124,13 @@ public class AlertApis {
     public Response deleteAlert(@Context HttpHeaders headers, @PathParam("alertId") Long alertId) {
 
         logger.info("Deleting the Alert " + alertId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         AlertRequest alertRequest = createDeleteRequest(alertId);
 
         DeleteAlertService deleteService = new DeleteAlertService();
 
-        return ApiUtil.getResponseForBaseRequest(deleteService, alertRequest);
+        return apiUtil.getResponseForBaseRequest(deleteService, alertRequest);
     }
 
     private AlertRequest createDeleteRequest(Long alertId) {

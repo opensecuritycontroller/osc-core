@@ -68,6 +68,9 @@ public class OscRestServlet extends ResourceConfig {
         register(LocalHostAuthFilter.class);
         register(OscAuthFilter.class);
 
+        //Exception mappers
+        packages("org.osc.core.broker.rest.server.exception");
+
         //Properties
         property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true);
     }

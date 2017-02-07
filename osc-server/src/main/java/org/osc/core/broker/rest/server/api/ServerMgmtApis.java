@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response.Status;
 
 import io.swagger.annotations.ApiParam;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.di.OSC;
 import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.broker.service.AddSslCertificateService;
 import org.osc.core.broker.service.DeleteSslCertificateService;
@@ -30,7 +31,8 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.CommonResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.broker.util.session.SessionUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.model.ServerStatusResponse;
@@ -56,6 +58,9 @@ import io.swagger.annotations.Authorization;
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 public class ServerMgmtApis {
     private static final Logger logger = Logger.getLogger(ServerMgmtApis.class);
+
+    SessionUtil sessionUtil = OSC.get().sessionUtil();
+    ApiUtil apiUtil = OSC.get().apiUtil();
 
     @ApiOperation(value = "Get server status",
             notes = "Returns server status information",
@@ -151,10 +156,10 @@ public class ServerMgmtApis {
     public List<SslCertificateDto> getSslCertificatesList(@Context HttpHeaders headers) {
 
         logger.info("Listing ssl certificates from trust store");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<SslCertificateDto> response = (ListResponse<SslCertificateDto>) ApiUtil
+        ListResponse<SslCertificateDto> response = (ListResponse<SslCertificateDto>) apiUtil
                 .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
 
         return response.getList();
@@ -171,9 +176,9 @@ public class ServerMgmtApis {
     @POST
     public Response addSslCertificate(@Context HttpHeaders headers, @ApiParam(required = true) SslCertificateDto sslEntry) {
         logger.info("Adding new SSL certificate to truststore");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
         AddSslEntryRequest addSslEntryRequest = new AddSslEntryRequest(sslEntry.getAlias(), sslEntry.getCertificate());
-        return ApiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
+        return apiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
     }
 
     /**
@@ -190,7 +195,7 @@ public class ServerMgmtApis {
     @DELETE
     public Response deleteSslCertificate(@Context HttpHeaders headers, @ApiParam(value = "SSL certificate alias") @PathParam("alias") String alias) {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        return apiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
     }
 }

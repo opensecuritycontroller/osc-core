@@ -14,6 +14,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.di.OSC;
+import org.osc.core.broker.di.OSCProductionFactory;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
@@ -86,6 +88,8 @@ public class Server {
     public static void startServer() throws Exception {
         LogUtil.initLog4j();
         loadServerProps();
+
+        OSC.setFactory(new OSCProductionFactory());
 
         try {
             log.warn("\n");

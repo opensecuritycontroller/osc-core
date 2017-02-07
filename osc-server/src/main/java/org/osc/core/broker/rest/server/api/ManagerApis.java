@@ -14,7 +14,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.di.OSC;
 import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.broker.util.session.SessionUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
@@ -35,7 +38,6 @@ import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.service.request.UpdateDaiConsolePasswordRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.sdk.manager.element.MgrChangeNotification;
 import org.osc.sdk.manager.element.MgrChangeNotification.ChangeType;
 import org.osc.sdk.manager.element.MgrChangeNotification.MgrObjectType;
@@ -56,6 +58,9 @@ public class ManagerApis {
 
     private static final Logger log = Logger.getLogger(ManagerApis.class);
 
+    SessionUtil sessionUtil = OSC.get().sessionUtil();
+    ApiUtil apiUtil = OSC.get().apiUtil();
+
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
                     + "request is reported by and responds to the notification accordingly",
@@ -67,7 +72,7 @@ public class ManagerApis {
     public Response postNotification(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
                                      @ApiParam(required = true) Notification notification) {
         log.info("postNotification(): " + notification);
-        return ManagerApis.triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
+        return ManagerApis.triggerMcSync(sessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
     }
 
     @ApiOperation(value = "Propagate a Manager File to Appliance Instances",
@@ -88,7 +93,7 @@ public class ManagerApis {
                                      @ApiParam(value = "The File to propogate", required = true) MgrFile mgrFile) {
 
         log.info("Propagate MgrFile for vsName: " + virtualSystemName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         PropagateVSMgrFileRequest request = new PropagateVSMgrFileRequest();
         request.setVsName(virtualSystemName);
@@ -96,7 +101,7 @@ public class ManagerApis {
         request.setMgrFile(mgrFile.getMgrFile());
         request.setMgrFileName(mgrFile.getMgrFileName());
 
-        return ApiUtil.getResponse(new PropagateVSMgrFileService(), request);
+        return apiUtil.getResponse(new PropagateVSMgrFileService(), request);
     }
 
     @ApiOperation(value = "Query Virtual Machine information",
@@ -113,9 +118,9 @@ public class ManagerApis {
                                 @ApiParam(required = true) QueryVmInfoRequest queryVmInfo) {
 
         log.info("Query VM info request: " + queryVmInfo);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
+        return apiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
     }
 
     @Path("/updateApplianceConsolePassword/vs/{virtualSystemName}")
@@ -125,14 +130,14 @@ public class ManagerApis {
                                                    UpdateApplianceConsolePasswordRequest uacpr) {
 
         log.info("Update appliance(s) console password for vsName: " + virtualSystemName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         UpdateDaiConsolePasswordRequest request = new UpdateDaiConsolePasswordRequest();
         request.setVsName(virtualSystemName);
         request.setDaiList(uacpr.applianceInstance);
         request.setNewPassword(uacpr.newPassword);
 
-        return ApiUtil.getResponse(new UpdateApplianceConsolePasswordService(), request);
+        return apiUtil.getResponse(new UpdateApplianceConsolePasswordService(), request);
     }
 
     @Path("/tagVm")
@@ -140,9 +145,9 @@ public class ManagerApis {
     public Response tagVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
 
         log.info("Tag VM info request: " + tagVmRequest);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponse(new TagVmService(), tagVmRequest);
+        return apiUtil.getResponse(new TagVmService(), tagVmRequest);
     }
 
     @Path("/untagVm")
@@ -150,9 +155,9 @@ public class ManagerApis {
     public Response unquarantineVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
 
         log.info("UnTag VM info request: " + tagVmRequest);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponse(new UnTagVmService(), tagVmRequest);
+        return apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
     }
 
     public static Response triggerMcSync(String username, String ipAddress, Notification notification) {
@@ -190,8 +195,8 @@ public class ManagerApis {
     }
 
     public static BaseJobResponse triggerMcSyncService(String username, String ipAddress,
-            MgrChangeNotification notification) throws Exception {
-        SessionUtil.setUser(username);
+                                                       MgrChangeNotification notification) throws Exception {
+        OSC.get().sessionUtil().setUser(username);
 
         MCChangeNotificationRequest request = new MCChangeNotificationRequest();
         request.mgrIpAddress = ipAddress;

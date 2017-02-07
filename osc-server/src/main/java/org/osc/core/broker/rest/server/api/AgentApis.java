@@ -11,13 +11,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.di.OSC;
 import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.broker.util.session.SessionUtil;
 import org.osc.core.rest.annotations.AgentAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.AgentRegisterService;
 import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 import org.osc.core.broker.service.response.AgentRegisterServiceResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.rest.client.agent.model.input.AgentRegisterRequest;
 import org.osc.core.rest.client.agent.model.output.AgentRegisterResponse;
 
@@ -37,6 +39,9 @@ public class AgentApis {
 
     private static final Logger log = Logger.getLogger(AgentApis.class);
 
+    SessionUtil sessionUtil = OSC.get().sessionUtil();
+    ApiUtil apiUtil = OSC.get().apiUtil();
+
     @ApiOperation(value = "Agent register callback. Agents are expected to callback every 3 minutes to report back"
             + " health status information and ability to inspect traffic.", response = AgentRegisterResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -46,9 +51,9 @@ public class AgentApis {
     public Response registerAgent(@Context HttpHeaders headers, @ApiParam(required = true) AgentRegisterRequest request) {
 
         log.info("registerAgent: " + request);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
-        AgentRegisterServiceResponse serviceResponse = ApiUtil.submitRequestToService(new AgentRegisterService(),
+        AgentRegisterServiceResponse serviceResponse = apiUtil.submitRequestToService(new AgentRegisterService(),
                 new AgentRegisterServiceRequest(request));
 
         AgentRegisterResponse response = new AgentRegisterResponse(serviceResponse.getApplianceName(),

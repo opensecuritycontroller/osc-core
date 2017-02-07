@@ -8,6 +8,7 @@ import javax.ws.rs.core.HttpHeaders;
 
 import com.vaadin.ui.UI;
 
+@Deprecated
 public class SessionUtil {
     private static final ThreadLocal<String> local = new ThreadLocal<String>();
 

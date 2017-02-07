@@ -9,12 +9,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.di.OSC;
 import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.ListJobService;
 import org.osc.core.broker.service.ListTaskService;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
@@ -52,7 +52,7 @@ public class JobApis {
         logger.info("Listing job records");
 
         try {
-            ListResponse<JobRecordDto> res = new ListJobService().dispatch(null);
+            ListResponse<JobRecordDto> res = OSC.get().listJobService().dispatch(null);
             return res.getList();
         } catch (Exception e) {
             throw new VmidcRestServerException(Response.status(Status.INTERNAL_SERVER_ERROR), e.getMessage());
@@ -72,8 +72,10 @@ public class JobApis {
             GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
             getDtoRequest.setEntityId(jobId);
             getDtoRequest.setEntityName("JobRecord");
-            GetDtoFromEntityService<JobRecordDto> getDtoService = new GetDtoFromEntityService<JobRecordDto>();
-            BaseDtoResponse<JobRecordDto> res = getDtoService.dispatch(getDtoRequest);
+
+            GetDtoFromEntityService<JobRecordDto> getDtoService = OSC.get().dtoFromEntityService();
+
+            BaseDtoResponse<JobRecordDto> res = OSC.get().apiUtil().submitBaseRequestToService(getDtoService, getDtoRequest);
             JobRecordDto jrd = res.getDto();
 
             jrd.setTaskCount(JobEntityManager.getTaskCount(jobId));

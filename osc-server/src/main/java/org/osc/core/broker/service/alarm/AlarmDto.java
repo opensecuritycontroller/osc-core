@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -18,32 +21,47 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.util.ValidateUtil;
 
 import io.swagger.annotations.ApiModelProperty;
+import org.osc.core.broker.validator.annotations.CustomAlarmDto;
+import org.osc.core.broker.validator.annotations.Email;
+import org.osc.core.broker.validator.annotations.Regex;
 
 @XmlRootElement(name = "alarm")
 @XmlAccessorType(XmlAccessType.FIELD)
+@CustomAlarmDto
 public class AlarmDto extends BaseDto {
 
     private static final Logger log = Logger.getLogger(AlarmDto.class);
 
     @ApiModelProperty(required = true)
+    @NotNull(message = "alarm.enabledAlarm is required")
     private boolean enabledAlarm;
 
     @ApiModelProperty(required = true)
+    @NotNull(message = "alarm.name is required")
+    @Size(max = 155,message = "alarm.name is too big")
     private String name;
 
     @ApiModelProperty(required = true)
+    @NotNull(message = "alarm.eventType is required")
     private EventType eventType;
 
     @ApiModelProperty(required = true)
+    @NotNull(message = "alarm.regexMatch is required")
+    @Regex(message = "alarm.regexMatch is invalid")
+    @Size(max = 155,message = "alarm.regexMatch is too big")
     private String regexMatch;
 
     @ApiModelProperty(required = true)
+    @NotNull(message = "alarm.severity is required")
     private Severity severity;
 
     @ApiModelProperty(required = true)
+    @NotNull(message = "alarm.alarmAction is required")
     private AlarmAction alarmAction;
 
     @ApiModelProperty(value = "If Alarm action is email, then this field is required.")
+    @Size(max = 155,message = "alarm.receipientEmail is too big")
+    @Email(message = "alarm.receipientEmail is invalid" )
     private String receipientEmail;
 
     public boolean isEnabledAlarm() {

@@ -17,7 +17,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.di.OSC;
 import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.broker.util.session.SessionUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
@@ -37,7 +40,6 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.request.ListApplianceSoftwareVersionRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -55,6 +57,9 @@ public class ApplianceApis {
 
     private static final Logger logger = Logger.getLogger(ApplianceApis.class);
 
+    SessionUtil sessionUtil = OSC.get().sessionUtil();
+    ApiUtil apiUtil = OSC.get().apiUtil();
+
     @ApiOperation(value = "Lists All Software Function Models",
             notes = "Lists all the Software Function Models",
             response = ApplianceDto.class,
@@ -65,11 +70,11 @@ public class ApplianceApis {
     public List<ApplianceDto> getAppliance(@Context HttpHeaders headers) {
 
         logger.info("Listing Appliances");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<ApplianceDto> response = (ListResponse<ApplianceDto>) ApiUtil
-                .getListResponse(new ListApplianceService(), new BaseRequest<BaseDto>(true));
+        ListResponse<ApplianceDto> response = (ListResponse<ApplianceDto>) apiUtil
+                .getListResponse(new ListApplianceService(), new BaseRequest<>(true));
 
         return response.getList();
     }
@@ -86,13 +91,13 @@ public class ApplianceApis {
                                              required = true) @PathParam("applianceId") Long applianceId) {
 
         logger.info("Getting Appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(applianceId);
         getDtoRequest.setEntityName("Appliance");
         GetDtoFromEntityService<ApplianceDto> getDtoService = new GetDtoFromEntityService<ApplianceDto>();
-        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Deletes a Security Function Model",
@@ -104,8 +109,8 @@ public class ApplianceApis {
     public Response deleteAppliance(@Context HttpHeaders headers, @ApiParam(value = "Id of the Appliance Model",
             required = true) @PathParam("applianceId") Long applianceId) {
         logger.info("Deleting Appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new DeleteApplianceService(), new BaseIdRequest(applianceId));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        return apiUtil.getResponseForBaseRequest(new DeleteApplianceService(), new BaseIdRequest(applianceId));
     }
 
     @ApiOperation(value = "Lists Software Function Software Versions",
@@ -121,7 +126,7 @@ public class ApplianceApis {
                                                                                   required = true) @PathParam("applianceId") Long applianceId) {
 
         logger.info("Listing Appliance Software Versions for appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         try {
             ListApplianceSoftwareVersionService asvListService = new ListApplianceSoftwareVersionService();
@@ -149,7 +154,7 @@ public class ApplianceApis {
 
         logger.info(
                 "getting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityName("ApplianceSoftwareVersion");
@@ -157,7 +162,7 @@ public class ApplianceApis {
         getDtoRequest.setParentId(applianceId);
 
         GetDtoFromEntityService<ApplianceSoftwareVersionDto> getDtoService = new GetDtoFromEntityService<ApplianceSoftwareVersionDto>();
-        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Deletes a Security Function Software Version",
@@ -172,8 +177,8 @@ public class ApplianceApis {
                                                            required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
         logger.info(
                 "Deleting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new DeleteApplianceSoftwareVersionService(),
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        return apiUtil.getResponseForBaseRequest(new DeleteApplianceSoftwareVersionService(),
                 new BaseIdRequest(applianceSoftwareVersionId, applianceId));
     }
 
@@ -190,8 +195,8 @@ public class ApplianceApis {
                                           required = true) @PathParam("fileName") String fileName,
                                   @ApiParam(required = true) InputStream uploadedInputStream) {
         logger.info("Started uploading file " + fileName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new UploadApplianceVersionFileService(),
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        return apiUtil.getResponseForBaseRequest(new UploadApplianceVersionFileService(),
                 new UploadRequest(fileName, uploadedInputStream));
     }
 

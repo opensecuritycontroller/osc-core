@@ -4,6 +4,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -23,18 +26,24 @@ import io.swagger.annotations.ApiModelProperty;
 public class AlertDto extends BaseDto {
 
     @ApiModelProperty(required=true)
+    @NotNull(message = "alert.name is required")
+    @Size(max = 155,message = "alert.name is too big")
     private String name;
 
+    @Valid
     private LockObjectReference object;
 
     @ApiModelProperty(required=true)
+    @NotNull(message = "alert.severity is required")
     private Severity severity;
 
     @ApiModelProperty(required=true)
+    @NotNull(message = "alert.eventType is required")
     private EventType eventType;
 
     @ApiModelProperty(required=true)
     @XmlElement(name = "status")
+    @NotNull(message = "alert.status is required")
     private AcknowledgementStatus status;
 
     private String message;

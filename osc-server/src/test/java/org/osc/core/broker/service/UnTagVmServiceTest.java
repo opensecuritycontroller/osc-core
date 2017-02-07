@@ -1,14 +1,22 @@
 package org.osc.core.broker.service;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
+import org.osc.core.broker.di.OSC;
+import org.osc.core.broker.di.OSCTestFactory;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
 public class UnTagVmServiceTest extends BaseTagVmServiceTest {
 
     @InjectMocks
     UnTagVmService unTagVmService;
+
+    @BeforeClass
+    public static void configure(){
+        OSC.setFactory(new OSCTestFactory());
+    }
 
     @Test
     public void testExec_WithRequestWithoutVmUuid_ThrowsValidationException() throws Exception {

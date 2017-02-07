@@ -3,6 +3,8 @@ package org.osc.core.broker.job.lock;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -54,12 +56,16 @@ public class LockObjectReference {
     }
 
     @ApiModelProperty(required = true)
+    @NotNull(message = "objectReference.id is required")
     private Long id;
 
     @ApiModelProperty(required = true)
+    @NotNull(message = "objectReference.name is required")
+    @Size(max = 155,message = "objectReference.name is too big")
     private String name;
 
     @ApiModelProperty(required = true)
+    @NotNull(message = "objectReference.type is required")
     private ObjectType type;
 
     LockObjectReference() {

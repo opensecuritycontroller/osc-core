@@ -18,6 +18,7 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
 import org.osc.core.rest.client.exception.RestClientException;
 
+@Deprecated
 public class ApiUtil {
 
     /**

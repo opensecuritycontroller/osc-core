@@ -15,7 +15,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.di.OSC;
 import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.broker.util.session.SessionUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.AddDistributedApplianceService;
@@ -33,7 +36,6 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -53,6 +55,9 @@ public class DistributedApplianceApis {
 
     private static final Logger logger = Logger.getLogger(DistributedApplianceApis.class);
 
+    SessionUtil sessionUtil = OSC.get().sessionUtil();
+    ApiUtil apiUtil = OSC.get().apiUtil();
+
     @ApiOperation(value = "Lists All Distributed Appliances",
             notes = "Lists all the Distributed Appliances",
             response = DistributedApplianceDto.class,
@@ -63,10 +68,10 @@ public class DistributedApplianceApis {
     public List<DistributedApplianceDto> getDistributedAppliance(@Context HttpHeaders headers) {
 
         logger.info("Listing Distributed Appliances");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<DistributedApplianceDto> response = (ListResponse<DistributedApplianceDto>) ApiUtil
+        ListResponse<DistributedApplianceDto> response = (ListResponse<DistributedApplianceDto>) apiUtil
                 .getListResponse(new ListDistributedApplianceService(), new BaseRequest<BaseDto>(true));
         return response.getList();
     }
@@ -83,13 +88,13 @@ public class DistributedApplianceApis {
                                                                    required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
 
         logger.info("Getting Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(distributedApplianceId);
         getDtoRequest.setEntityName("DistributedAppliance");
         GetDtoFromEntityService<DistributedApplianceDto> getDtoService = new GetDtoFromEntityService<DistributedApplianceDto>();
-        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Creates an Distributed Appliance",
@@ -101,9 +106,8 @@ public class DistributedApplianceApis {
     public Response createAppliance(@Context HttpHeaders headers,
                                     @ApiParam(required = true) DistributedApplianceDto daDto) {
         logger.info("Creating Distributed Appliance...");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new AddDistributedApplianceService(),
-                new BaseRequest<DistributedApplianceDto>(daDto));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        return apiUtil.getResponseForBaseRequest(new AddDistributedApplianceService(), new BaseRequest<>(daDto));
     }
 
     @ApiOperation(value = "Updates a Distributed Appliance",
@@ -118,10 +122,9 @@ public class DistributedApplianceApis {
                                                        required = true) @PathParam("distributedApplianceId") Long distributedApplianceId,
                                                @ApiParam(required = true) DistributedApplianceDto daDto) {
         logger.info("Updating Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        ApiUtil.setIdOrThrow(daDto, distributedApplianceId, "DistributedAppliance");
-        return ApiUtil.getResponseForBaseRequest(new UpdateDistributedApplianceService(),
-                new BaseRequest<DistributedApplianceDto>(daDto));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        apiUtil.setIdOrThrow(daDto, distributedApplianceId, "DistributedAppliance");
+        return apiUtil.getResponseForBaseRequest(new UpdateDistributedApplianceService(), new BaseRequest<>(daDto));
     }
 
     @ApiOperation(value = "Deletes a Distributed Appliance",
@@ -135,8 +138,8 @@ public class DistributedApplianceApis {
                                                @ApiParam(value = "The Id of the Distributed Appliance Appliance",
                                                        required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Deleting Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new DeleteDistributedApplianceService(),
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        return apiUtil.getResponseForBaseRequest(new DeleteDistributedApplianceService(),
                 new BaseDeleteRequest(distributedApplianceId, false)); // false as this is not force delete
     }
 
@@ -150,8 +153,8 @@ public class DistributedApplianceApis {
                                                     @ApiParam(value = "The Id of the Distributed Appliance",
                                                             required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Deleting Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new DeleteDistributedApplianceService(),
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        return apiUtil.getResponseForBaseRequest(new DeleteDistributedApplianceService(),
                 new BaseDeleteRequest(distributedApplianceId, true));
     }
 
@@ -167,8 +170,8 @@ public class DistributedApplianceApis {
                                              @ApiParam(value = "The Id of the Distributed Appliance",
                                                      required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Sync Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new ConformService(), new ConformRequest(distributedApplianceId));
+        sessionUtil.setUser(sessionUtil.getUsername(headers));
+        return apiUtil.getResponseForBaseRequest(new ConformService(), new ConformRequest(distributedApplianceId));
     }
 
 }

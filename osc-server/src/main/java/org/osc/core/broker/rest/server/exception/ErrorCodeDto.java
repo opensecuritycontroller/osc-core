@@ -6,6 +6,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ErrorCodeDto {
@@ -20,16 +23,33 @@ public class ErrorCodeDto {
             + "5000 is returned for general errors<br/>")
     private Long errorCode;
 
+    @Deprecated
     @ApiModelProperty(required = true)
     private String errorMessage;
 
+    @ApiModelProperty(required = true)
+    private List<String> errorMessages = new ArrayList<>();
     @SuppressWarnings("unused")
     private ErrorCodeDto() {
     }
 
+    @Deprecated
     public ErrorCodeDto(Long errorCode, String errorMessage) {
         this.errorCode = errorCode;
         this.errorMessage = errorMessage;
+    }
+
+    public ErrorCodeDto(Long errorCode, List<String> errorMessages) {
+        this.errorCode = errorCode;
+        this.errorMessages = errorMessages;
+    }
+
+    public List<String> getErrorMessages() {
+        return errorMessages;
+    }
+
+    public void setErrorMessages(List<String> errorMessages) {
+        this.errorMessages = errorMessages;
     }
 
     public Long getErrorCode() {

@@ -7,13 +7,14 @@ import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
+import org.osc.core.broker.di.OSC;
 import org.osc.core.broker.service.exceptions.VmidcDbConcurrencyException;
 import org.osc.core.broker.service.exceptions.VmidcDbConstraintViolationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.Response;
-import org.osc.core.broker.util.SessionUtil;
+
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.ServerUtil;
@@ -30,8 +31,8 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
     // generalized method to dispatch incoming requests to the appropriate
     // service handler
     public O dispatch(I request) throws Exception {
-        log.info("Service dispatch " + this.getClass().getSimpleName() + ". User: " + SessionUtil.getCurrentUser()
-        + ", Request: " + request);
+        log.info("Service dispatch " + this.getClass().getSimpleName() + ". User: " + OSC.get().sessionUtil().getCurrentUser()
+                + ", Request: " + request);
 
         if (Server.isInMaintenance()) {
             log.warn("Incoming request (pid:" + ServerUtil.getCurrentPid() + ") while server is in maintenance mode.");
@@ -112,7 +113,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
     protected abstract O exec(I request, Session session) throws Exception;
 
     private void handleException(Session session, Exception e) throws VmidcDbConstraintViolationException,
-    VmidcDbConcurrencyException, Exception {
+            VmidcDbConcurrencyException, Exception {
         if(e instanceof SslCertificatesExtendedException){
             throw e;
         }else if (e instanceof VmidcException) {
