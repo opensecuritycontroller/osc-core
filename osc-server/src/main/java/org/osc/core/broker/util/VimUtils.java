@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.vmware.vim25.ws.Client;
 import com.vmware.vim25.InvalidProperty;
 import com.vmware.vim25.ManagedObjectReference;
 import com.vmware.vim25.RuntimeFault;
@@ -24,7 +25,6 @@ import com.vmware.vim25.mo.ManagedEntity;
 import com.vmware.vim25.mo.ServiceInstance;
 import com.vmware.vim25.mo.VirtualMachine;
 import com.vmware.vim25.mo.util.MorUtil;
-import com.vmware.vim25.ws.WSClient;
 
 public class VimUtils {
 
@@ -61,7 +61,7 @@ public class VimUtils {
             log.info("Connecting to vCenter...");
 
             this.serviceInstance = new ServiceInstance(VimUtils.getServiceURL(this.hostname), this.username, this.password, false);
-            WSClient wsc = this.serviceInstance.getServerConnection().getVimService().getWsc();
+            Client wsc = this.serviceInstance.getServerConnection().getVimService().getWsc();
             wsc.setConnectTimeout(DEFAULT_CONNECTION_TIMEOUT);
             wsc.setReadTimeout(DEFAULT_READ_TIMEOUT);
 
