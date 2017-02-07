@@ -33,13 +33,13 @@ public class PasswordChangePropagateToDaiTask extends TransactionalTask {
         this.dai = (DistributedApplianceInstance) session.get(DistributedApplianceInstance.class, this.dai.getId());
 
         VmidcAgentApi agentApi = new VmidcAgentApi(this.dai.getIpAddress(), 8090, AgentAuthFilter.VMIDC_AGENT_LOGIN,
-                EncryptionUtil.decrypt(this.dai.getPassword()));
+                EncryptionUtil.decryptAESCTR(this.dai.getPassword()));
 
-        agentApi.updateVmidcServerPassowrd(EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS));
+        agentApi.updateVmidcServerPassowrd(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
 
         // If we're successful changing agent password, persist it (if different).
-        if (!this.dai.getPassword().equals(EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS))) {
-            this.dai.setPassword(EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS));
+        if (!this.dai.getPassword().equals(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS))) {
+            this.dai.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
             EntityManager.update(session, this.dai);
         }
     }

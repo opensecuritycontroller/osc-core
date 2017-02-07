@@ -299,19 +299,19 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
     }
 
     public String getCurrentConsolePassword() {
-        return EncryptionUtil.decrypt(this.currentConsolePassword);
+        return EncryptionUtil.decryptAESCTR(this.currentConsolePassword);
     }
 
     public void setCurrentConsolePassword(String currentConsolePassword) {
-        this.currentConsolePassword = EncryptionUtil.encrypt(currentConsolePassword);
+        this.currentConsolePassword = EncryptionUtil.encryptAESCTR(currentConsolePassword);
     }
 
     public String getNewConsolePassword() {
-        return EncryptionUtil.decrypt(this.newConsolePassword);
+        return EncryptionUtil.decryptAESCTR(this.newConsolePassword);
     }
 
     public void setNewConsolePassword(String newConsolePassword) {
-        this.newConsolePassword = EncryptionUtil.encrypt(newConsolePassword);
+        this.newConsolePassword = EncryptionUtil.encryptAESCTR(newConsolePassword);
     }
 
     public Boolean getDiscovered() {

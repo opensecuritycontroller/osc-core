@@ -78,7 +78,7 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
                     .get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER));
         }
         if (this.baseVCWindow.providerAttributes.get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD) != null) {
-            this.rabbitMQUserPassword.setValue(EncryptionUtil.decrypt(this.baseVCWindow.providerAttributes
+            this.rabbitMQUserPassword.setValue(EncryptionUtil.decryptAESCTR(this.baseVCWindow.providerAttributes
                     .get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)));
         }
         if (this.baseVCWindow.providerAttributes.get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT) != null) {
@@ -121,7 +121,7 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
             this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER,
                     this.rabbitMQUserName.getValue().toString());
             this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                    EncryptionUtil.encrypt(this.rabbitMQUserPassword.getValue().toString()));
+                    EncryptionUtil.encryptAESCTR(this.rabbitMQUserPassword.getValue().toString()));
             this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT,
                     this.rabbitMQPort.getValue().toString());
             close();

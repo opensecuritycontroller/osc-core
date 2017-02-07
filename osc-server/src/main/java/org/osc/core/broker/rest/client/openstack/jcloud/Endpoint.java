@@ -30,7 +30,7 @@ public class Endpoint {
         this.endPointIP = vc.getProviderIpAddress();
         this.tenant = vc.getProviderAdminTenantName();
         this.user = vc.getProviderUsername();
-        this.password = EncryptionUtil.decrypt(vc.getProviderPassword());
+        this.password = EncryptionUtil.decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
         this.sslContext = vc.getSslContext();
     }
@@ -43,7 +43,7 @@ public class Endpoint {
         this.endPointIP = vc.getProviderIpAddress();
         this.tenant = tenant;
         this.user = vc.getProviderUsername();
-        this.password = EncryptionUtil.decrypt(vc.getProviderPassword());
+        this.password = EncryptionUtil.decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
     }
 

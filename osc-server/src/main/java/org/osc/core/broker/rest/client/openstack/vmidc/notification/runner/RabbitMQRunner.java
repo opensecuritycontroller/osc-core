@@ -135,7 +135,7 @@ public class RabbitMQRunner implements BroadcastListener {
                         || !client.getUser().equals(
                                 vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER))
                         || !client.getPassword().equals(
-                                EncryptionUtil.decrypt(vc.getProviderAttributes().get(
+                                EncryptionUtil.decryptAESCTR(vc.getProviderAttributes().get(
                                         VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)))
                         || client.getPort() != Integer.parseInt(vc.getProviderAttributes().get(
                                 VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT))) {

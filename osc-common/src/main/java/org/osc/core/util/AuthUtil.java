@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import java.util.Collection;
 import java.util.Map;
 
 public class AuthUtil {
@@ -53,25 +52,21 @@ public class AuthUtil {
             String loginName = credentials[0];
             String password = credentials[1];
 
-            if (!(containsString(loginName, usernamePasswordMap.keySet(), true)
-                    && containsString(password, usernamePasswordMap.values(), false))) {
+            if (!validateUserAndPassword(loginName, password, usernamePasswordMap)) {
                 log.warn("Authentication of " + request.getRequestURI() + " failed because of invalid credentials");
                 throw wae;
             }
         }
     }
 
-    private static boolean containsString(String stringToSearch, Collection<String> strings, boolean ignoreCase) {
-        if (!ignoreCase) {
-            return strings.contains(stringToSearch);
-        } else {
-            for (String string : strings) {
-                if (string.equalsIgnoreCase(stringToSearch)) {
-                    return true;
-                }
+    private static boolean validateUserAndPassword(String loginName, String password, Map<String, String> usernamePasswordMap) {
+        for (Map.Entry<String, String> userAndPasword : usernamePasswordMap.entrySet()) {
+            if (userAndPasword.getKey().equalsIgnoreCase(loginName) && EncryptionUtil.validateAESCTR(password, userAndPasword.getValue())) {
+                return true;
             }
             return false;
         }
+        return false;
     }
 
     public static void authenticateLocalRequest(HttpServletRequest request) {

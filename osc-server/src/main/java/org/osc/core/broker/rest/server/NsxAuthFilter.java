@@ -13,7 +13,7 @@ import com.sun.jersey.spi.container.ResourceFilter;
 
 public class NsxAuthFilter implements ResourceFilter, ContainerRequestFilter {
     public static final String VMIDC_NSX_LOGIN = "nsx";
-    public static String VMIDC_NSX_PASS = "admin123";
+    public static String VMIDC_NSX_PASS = "";
 
     @Context
     private HttpServletRequest request;

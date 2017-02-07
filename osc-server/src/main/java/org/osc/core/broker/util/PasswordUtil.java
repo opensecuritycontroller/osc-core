@@ -20,11 +20,11 @@ public class PasswordUtil {
             EntityManager<User> emgr = new EntityManager<User>(User.class, session);
             user = emgr.findByFieldName("loginName", loginName);
             if (user.getLoginName().equals(AgentAuthFilter.VMIDC_AGENT_LOGIN)) {
-                AgentAuthFilter.VMIDC_AGENT_PASS = EncryptionUtil.decrypt(user.getPassword());
+                AgentAuthFilter.VMIDC_AGENT_PASS = user.getPassword();
             } else if (user.getLoginName().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
-                NsxAuthFilter.VMIDC_NSX_PASS = EncryptionUtil.decrypt(user.getPassword());
+                NsxAuthFilter.VMIDC_NSX_PASS = user.getPassword();
             } else if (user.getLoginName().equals(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN)) {
-                VmidcAuthFilter.VMIDC_DEFAULT_PASS = EncryptionUtil.decrypt(user.getPassword());
+                VmidcAuthFilter.VMIDC_DEFAULT_PASS = user.getPassword();
             }
 
         } finally {

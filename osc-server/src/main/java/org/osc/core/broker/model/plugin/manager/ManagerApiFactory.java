@@ -211,7 +211,7 @@ public class ManagerApiFactory {
     private static ApplianceManagerConnector getDecryptedApplianceManagerConnector(ApplianceManagerConnector mc) {
         ApplianceManagerConnector shallowClone = new ApplianceManagerConnector(mc);
         if (!StringUtils.isEmpty(shallowClone.getPassword())) {
-            shallowClone.setPassword(EncryptionUtil.decrypt(shallowClone.getPassword()));
+            shallowClone.setPassword(EncryptionUtil.decryptAESCTR(shallowClone.getPassword()));
         }
         return shallowClone;
     }

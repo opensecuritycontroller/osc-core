@@ -326,7 +326,7 @@ public class AgentApis {
     @Consumes(MediaType.APPLICATION_XML)
     public Response updateServerPassword(AgentUpdateVmidcPasswordRequest agentUpdateVmidcPasswordRequest) {
         Server.setVmidcServerPassword(agentUpdateVmidcPasswordRequest.getVmidcServerPassword());
-        AgentAuthFilter.AGENT_DEFAULT_PASS = EncryptionUtil.decrypt(Server.getVmidcServerPassword());
+        AgentAuthFilter.AGENT_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(Server.getVmidcServerPassword());
         /*
          * Need to immediately persist the vmidcPassword to the properties file
          */

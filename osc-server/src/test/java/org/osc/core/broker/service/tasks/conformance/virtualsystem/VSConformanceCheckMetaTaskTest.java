@@ -44,9 +44,9 @@ public class VSConformanceCheckMetaTaskTest {
     private static String DEFAULT_SERVICE_IP = getDefaultServerIp();
     private static String DEFAULT_SERVICEMANAGER_NAME = "DEFAULT_MANAGER_NAME";
     private static String DEFAULT_SERVICEMANAGER_URL = CreateNsxServiceManagerTask.buildRestCallbackUrl();
-    private static String DEFAULT_SERVICEMANAGER_PASSWORD = EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS);
+    private static String DEFAULT_SERVICEMANAGER_PASSWORD = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
 
-    private static String DEFAULT_SERVICE_PASSWORD = EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS);
+    private static String DEFAULT_SERVICE_PASSWORD = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
 
     private VirtualSystem vs;
 

@@ -216,7 +216,7 @@ class OsSvaServerCreateTask extends TransactionalTask {
             configString.append(
                     VirtualizationEnvironmentProperties.VMIDC_USER + "=" + AgentAuthFilter.VMIDC_AGENT_LOGIN + "\n");
             configString.append(VirtualizationEnvironmentProperties.VMIDC_PASSWORD + "="
-                    + EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS) + "\n");
+                    + EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS) + "\n");
             configString.append(VirtualizationEnvironmentProperties.VIRTUAL_SYSTEM_ID + "=" + vs.getId() + "\n");
             configString.append(VirtualizationEnvironmentProperties.APPLIANCE_NAME + "=" + applianceName + "\n");
 

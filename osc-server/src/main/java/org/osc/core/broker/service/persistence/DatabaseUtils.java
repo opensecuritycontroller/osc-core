@@ -34,6 +34,7 @@ public class DatabaseUtils {
     private static final String DEFAULT_JOB_FAILURE_ALARM_NAME = "Default Job Failure Alarm";
     private static final String DEFAULT_SYSTEM_FAILURE_ALARM_NAME = "Default System Failure Alarm";
     private static final String DEFAULT_DAI_FAILURE_ALARM_NAME = "Default Appliance Instance Failure Alarm";
+    public static final String DEFAULT_PASSWORD = "admin123";
 
     public static void createDefaultDB() {
 
@@ -67,7 +68,7 @@ public class DatabaseUtils {
         if (adminUser == null) {
             User user = new User();
             user.setLoginName(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
-            user.setPassword(EncryptionUtil.encrypt(VmidcAuthFilter.VMIDC_DEFAULT_PASS));
+            user.setPassword(EncryptionUtil.encryptAESCTR(VmidcAuthFilter.VMIDC_DEFAULT_PASS));
             user.setRole(RoleType.ADMIN);
             EntityManager.create(session, user);
         }
@@ -75,7 +76,7 @@ public class DatabaseUtils {
         if (agentUser == null) {
             User user = new User();
             user.setLoginName(AgentAuthFilter.VMIDC_AGENT_LOGIN);
-            user.setPassword(EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS));
+            user.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
             user.setRole(RoleType.SYSTEM_AGENT);
             EntityManager.create(session, user);
         }
@@ -83,7 +84,7 @@ public class DatabaseUtils {
         if (nsxUser == null) {
             User user = new User();
             user.setLoginName(NsxAuthFilter.VMIDC_NSX_LOGIN);
-            user.setPassword(EncryptionUtil.encrypt(NsxAuthFilter.VMIDC_NSX_PASS));
+            user.setPassword(EncryptionUtil.encryptAESCTR(NsxAuthFilter.VMIDC_NSX_PASS));
             user.setRole(RoleType.SYSTEM_NSX);
             EntityManager.create(session, user);
         }

@@ -19,7 +19,7 @@ public class UserEntityMgr {
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
         user.setLoginName(dto.getLoginName());
-        user.setPassword(EncryptionUtil.encrypt(dto.getPassword()));
+        user.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
         user.setEmail(dto.getEmail());
         //default value for phone
         user.setPhone("");
@@ -32,7 +32,7 @@ public class UserEntityMgr {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setLoginName(user.getLoginName());
-        dto.setPassword(EncryptionUtil.decrypt(user.getPassword()));
+        dto.setPassword(EncryptionUtil.decryptAESCTR(user.getPassword()));
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
 

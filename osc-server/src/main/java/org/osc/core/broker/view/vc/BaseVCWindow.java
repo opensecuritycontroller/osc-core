@@ -529,7 +529,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, DEFAULT_HTTPS);
             this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, DEFAULT_RABBITMQ_USER);
             this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                    EncryptionUtil.encrypt(DEFAULT_RABBITMQ_USER_PASSWORD));
+                    EncryptionUtil.encryptAESCTR(DEFAULT_RABBITMQ_USER_PASSWORD));
             this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, DEFAULT_RABBITMQ_PORT);
         }
     }

@@ -35,7 +35,7 @@ public class DistributedApplianceEntityMgr {
         da.setId(dto.getId());
         da.setAppliance(a);
         da.setName(dto.getName());
-        da.setMgrSecretKey(EncryptionUtil.encrypt(dto.getSecretKey()));
+        da.setMgrSecretKey(EncryptionUtil.encryptAESCTR(dto.getSecretKey()));
         da.setApplianceVersion(dto.getApplianceSoftwareVersionName());
     }
 
@@ -51,7 +51,7 @@ public class DistributedApplianceEntityMgr {
             dto.setLastJobState(da.getLastJob().getState());
             dto.setLastJobId(da.getLastJob().getId());
         }
-        dto.setSecretKey(EncryptionUtil.decrypt(da.getMgrSecretKey()));
+        dto.setSecretKey(EncryptionUtil.decryptAESCTR(da.getMgrSecretKey()));
         dto.setApplianceId(da.getAppliance().getId());
         dto.setApplianceModel(da.getAppliance().getModel());
         dto.setApplianceSoftwareVersionName(da.getApplianceVersion());

@@ -73,7 +73,7 @@ public class Register {
              * Match which ever password is set - NsxEnv XML file or overridden value
              */
             if (Server.getVmidcServerPassword() != null) {
-                AgentAuthFilter.AGENT_DEFAULT_PASS = EncryptionUtil.decrypt(Server.getVmidcServerPassword());
+                AgentAuthFilter.AGENT_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(Server.getVmidcServerPassword());
             }
 
             AgentRegisterResponse registrationResponse = registerAgent(Server.getVmidcServerIp(),
@@ -133,7 +133,7 @@ public class Register {
         boolean inspectionReady = Server.applianceUtils.isInspectionReady();
 
         VmidcServerAgentRestClient client = new VmidcServerAgentRestClient(vmidcServerIp, vmidcUser,
-                EncryptionUtil.decrypt(vmidcPassword));
+                EncryptionUtil.decryptAESCTR(vmidcPassword));
 
         AgentRegisterRequest input = new AgentRegisterRequest();
         input.setApplianceIp(applianceIp);
@@ -207,7 +207,7 @@ public class Register {
     }
 
     private static int authenticateAppliance(AgentRegisterResponse registrationResponse, boolean deinstall) {
-        String decrypted = EncryptionUtil.decrypt(registrationResponse.getSharedSecretKey());
+        String decrypted = EncryptionUtil.decryptAESCTR(registrationResponse.getSharedSecretKey());
         return Server.applianceUtils.authenticateAppliance(registrationResponse.getApplianceName(),
                 registrationResponse.getMgrIp(), decrypted, null, deinstall);
     }

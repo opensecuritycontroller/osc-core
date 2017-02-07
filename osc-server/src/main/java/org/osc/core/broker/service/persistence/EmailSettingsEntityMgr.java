@@ -18,7 +18,7 @@ public class EmailSettingsEntityMgr {
         emailSettings.setMailServer(dto.getMailServer());
         emailSettings.setPort(Integer.valueOf(dto.getPort()));
         emailSettings.setEmailId(dto.getEmailId());
-        emailSettings.setPassword(EncryptionUtil.encrypt(dto.getPassword()));
+        emailSettings.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
     }
 
     public static void fromEntity(EmailSettings emailSettings, EmailSettingsDto dto) {
@@ -27,6 +27,6 @@ public class EmailSettingsEntityMgr {
         dto.setMailServer(emailSettings.getMailServer());
         dto.setPort(emailSettings.getPort().toString());
         dto.setEmailId(emailSettings.getEmailId());
-        dto.setPassword(EncryptionUtil.decrypt(emailSettings.getPassword()));
+        dto.setPassword(EncryptionUtil.decryptAESCTR(emailSettings.getPassword()));
     }
 }

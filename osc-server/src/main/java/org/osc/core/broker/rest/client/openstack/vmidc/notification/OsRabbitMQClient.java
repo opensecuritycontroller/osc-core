@@ -55,7 +55,7 @@ public class OsRabbitMQClient extends RabbitMQClient {
                 Integer.parseInt(
                         this.vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT)),
                 vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER),
-                EncryptionUtil.decrypt(
+                EncryptionUtil.decryptAESCTR(
                         vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)),
                 NOVA_EXCHANGE, QUEUE_NAME, ROUTING_KEY);
     }

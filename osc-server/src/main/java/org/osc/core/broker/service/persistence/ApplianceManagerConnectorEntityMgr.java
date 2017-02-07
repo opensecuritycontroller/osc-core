@@ -35,7 +35,7 @@ public class ApplianceManagerConnectorEntityMgr {
         mc.setServiceType(ManagerApiFactory.createApplianceManagerApi(dto.getManagerType()).getServiceName());
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
-        mc.setPassword(EncryptionUtil.encrypt(dto.getPassword()));
+        mc.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
         mc.setApiKey(dto.getApiKey());
         mc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
     }
@@ -48,7 +48,7 @@ public class ApplianceManagerConnectorEntityMgr {
         dto.setManagerType(mc.getManagerType());
         dto.setIpAddress(mc.getIpAddress());
         dto.setUsername(mc.getUsername());
-        dto.setPassword(EncryptionUtil.decrypt(mc.getPassword()));
+        dto.setPassword(EncryptionUtil.decryptAESCTR(mc.getPassword()));
         if (mc.getLastJob() != null) {
             dto.setLastJobStatus(mc.getLastJob().getStatus());
             dto.setLastJobState(mc.getLastJob().getState());

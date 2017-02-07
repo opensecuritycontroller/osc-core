@@ -42,7 +42,7 @@ public class VirtualizationConnectorEntityMgr {
         if (dto.isControllerDefined()) {
             vc.setControllerIpAddress(dto.getControllerIP());
             vc.setControllerUsername(dto.getControllerUser());
-            vc.setControllerPassword(EncryptionUtil.encrypt(dto.getControllerPassword()));
+            vc.setControllerPassword(EncryptionUtil.encryptAESCTR(dto.getControllerPassword()));
         } else {
             vc.setControllerIpAddress(null);
             vc.setControllerUsername(null);
@@ -51,7 +51,7 @@ public class VirtualizationConnectorEntityMgr {
 
         vc.setProviderIpAddress(dto.getProviderIP());
         vc.setProviderUsername(dto.getProviderUser());
-        vc.setProviderPassword(EncryptionUtil.encrypt(dto.getProviderPassword()));
+        vc.setProviderPassword(EncryptionUtil.encryptAESCTR(dto.getProviderPassword()));
         vc.setAdminTenantName(dto.getAdminTenantName());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
         vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
@@ -69,11 +69,11 @@ public class VirtualizationConnectorEntityMgr {
         dto.setControllerType(vc.getControllerType());
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
-        dto.setControllerPassword(EncryptionUtil.decrypt(vc.getControllerPassword()));
+        dto.setControllerPassword(EncryptionUtil.decryptAESCTR(vc.getControllerPassword()));
 
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
-        dto.setProviderPassword(EncryptionUtil.decrypt(vc.getProviderPassword()));
+        dto.setProviderPassword(EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
         dto.setAdminTenantName(vc.getProviderAdminTenantName());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet());

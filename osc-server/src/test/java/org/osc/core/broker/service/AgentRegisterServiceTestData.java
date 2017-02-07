@@ -310,7 +310,7 @@ class AgentRegisterServiceTestData {
         DistributedApplianceInstance dai =  new DistributedApplianceInstance(vs, agentType);
         dai.setId(daiId);
         dai.setName(daiName);
-        dai.setPassword(EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS));
+        dai.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
         dai.setIpAddress(daiIp);
         dai.setMgmtGateway("MGMT_GATEWAY");
         dai.setNsxAgentId(nsxAgentId);
