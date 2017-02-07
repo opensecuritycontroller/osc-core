@@ -111,8 +111,8 @@ public abstract class RestBaseClient {
         client.property(ClientProperties.READ_TIMEOUT, readTimeout);
     }
 
-    protected void initRestBaseClient(String host, String userName, String password, boolean isHttps) {
-        initRestBaseClient(host, 0, userName, password, isHttps);
+    protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps) {
+        this.initRestBaseClient(host,port, userName, password, isHttps, false);
     }
 
     /**
@@ -127,17 +127,22 @@ public abstract class RestBaseClient {
      * @param userName username to use. null if we dont want to use basic auth
      * @param password password to use. null if we dont want to use basic auth
      * @param isHttps whether http or https
+     * @param forceAcceptAll force accept all SSL certificates
      */
-    protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps) {
+    protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps, boolean forceAcceptAll) {
 
         this.host = host;
         String urlPrefix = (isHttps ? "https" : "http") + "://" + host + (port > 0 ? ":" + port : "");
         String restBaseUrl = urlPrefix + this.urlBase;
 
         if (isHttps) {
-            this.client = configureHttpsClient();
+            if(forceAcceptAll) {
+                this.client = configureHttpsForceAllClient();
+            } else {
+                this.client = configureHttpsClient();
+            }
         } else {
-            this.client = configureDefaultClient();
+            this.client = new configureDefaultClient();
         }
 
         client.property(ClientProperties.CONNECT_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
@@ -151,6 +156,18 @@ public abstract class RestBaseClient {
         if (userName != null && password != null) {
             this.client.register(HttpAuthenticationFeature.basic(userName, password));
         }
+    }
+
+    private Client configureHttpsForceAllClient() {
+        SSLContext ctx = new SslContextProvider().getAcceptAllSSLContext();
+        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+
+        ClientConfig config = new DefaultClientConfig();
+
+        config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
+                new HTTPSProperties((hostname, session) -> true, ctx));
+
+        return config;
     }
 
     private Client configureHttpsClient() {

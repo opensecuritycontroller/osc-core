@@ -29,7 +29,6 @@ import org.osc.core.broker.service.dto.SslCertificateDto;
 import org.osc.core.broker.service.request.AddSslEntryRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
-import org.osc.core.broker.service.response.CommonResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.rest.annotations.OscAuth;
@@ -39,6 +38,8 @@ import org.osc.core.broker.service.BackupService;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.rest.annotations.LocalHostAuth;
+import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
+import org.osc.core.util.LocalHostAuthFilter;
 import org.osc.core.util.PKIUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
@@ -148,13 +149,13 @@ public class ServerMgmtApis {
     @Path("/sslcertificates")
     @OscAuth
     @GET
-    public List<SslCertificateDto> getSslCertificatesList(@Context HttpHeaders headers) {
+    public List<CertificateBasicInfoModel> getSslCertificatesList(@Context HttpHeaders headers) {
 
         logger.info("Listing ssl certificates from trust store");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<SslCertificateDto> response = (ListResponse<SslCertificateDto>) ApiUtil
+        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) ApiUtil
                 .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
 
         return response.getList();
@@ -163,7 +164,7 @@ public class ServerMgmtApis {
     /**
      * Add a SSL certificate entry
      */
-    @ApiOperation(value = "Add SSL certificate", response = CommonResponse.class)
+    @ApiOperation(value = "Add SSL certificate")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)})
     @Path("/sslcertificate")

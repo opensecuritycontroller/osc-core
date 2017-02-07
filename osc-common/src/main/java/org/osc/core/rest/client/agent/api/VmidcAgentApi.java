@@ -1,11 +1,5 @@
 package org.osc.core.rest.client.agent.api;
 
-import java.io.File;
-import java.net.URI;
-
-import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
 import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.rest.client.agent.model.input.AgentSetInterfaceEndpointMapRequest;
 import org.osc.core.rest.client.agent.model.input.AgentUpdateConsolePasswordRequest;
@@ -20,21 +14,24 @@ import org.osc.core.rest.client.agent.model.output.AgentSupportBundle;
 import org.osc.core.rest.client.agent.model.output.AgentUpgradeResponse;
 import org.osc.core.util.PKIUtil;
 
+import javax.ws.rs.core.MediaType;
+import java.io.File;
+import java.net.URI;
+
 public class VmidcAgentApi extends RestBaseClient {
 
     private static final String VMIDC_SERVER_REST_URL_BASE = "/api/agent/v1";
-    Logger log = Logger.getLogger(VmidcAgentApi.class);
 
     public VmidcAgentApi(String agentServer, int port, String loginName, String password)
             throws Exception {
-        this(agentServer, port, loginName, password,true);
+        this(agentServer, port, loginName, password,true,true);
     }
 
     protected VmidcAgentApi(String agentServer, int port, String loginName, String password, boolean isHttps)
             throws Exception {
         super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_JSON);
 
-        initRestBaseClient(agentServer, port, loginName, password, isHttps);
+        initRestBaseClient(agentServer, port, loginName, password, isHttps, true);
     }
 
     public File downloadLogFile() throws Exception {
