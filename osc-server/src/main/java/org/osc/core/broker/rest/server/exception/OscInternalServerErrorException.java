@@ -15,7 +15,7 @@ public class OscInternalServerErrorException extends InternalServerErrorExceptio
     }
 
     public OscInternalServerErrorException(Long errorCode){
-        this.errorCodeDto = new ErrorCodeDto(errorCode, "Something went wrong");
+        this.errorCodeDto = new ErrorCodeDto(errorCode, Arrays.asList("Something went wrong"));
     }
 
     public ErrorCodeDto getErrorCodeDto() {

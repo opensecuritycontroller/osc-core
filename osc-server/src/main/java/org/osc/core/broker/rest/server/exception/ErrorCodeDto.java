@@ -23,20 +23,10 @@ public class ErrorCodeDto {
             + "5000 is returned for general errors<br/>")
     private Long errorCode;
 
-    @Deprecated
-    @ApiModelProperty(required = true)
-    private String errorMessage;
-
     @ApiModelProperty(required = true)
     private List<String> errorMessages = new ArrayList<>();
     @SuppressWarnings("unused")
     private ErrorCodeDto() {
-    }
-
-    @Deprecated
-    public ErrorCodeDto(Long errorCode, String errorMessage) {
-        this.errorCode = errorCode;
-        this.errorMessage = errorMessage;
     }
 
     public ErrorCodeDto(Long errorCode, List<String> errorMessages) {
@@ -52,11 +42,4 @@ public class ErrorCodeDto {
         this.errorMessages = errorMessages;
     }
 
-    public Long getErrorCode() {
-        return this.errorCode;
-    }
-
-    public String getErrorMessage() {
-        return this.errorMessage;
-    }
 }

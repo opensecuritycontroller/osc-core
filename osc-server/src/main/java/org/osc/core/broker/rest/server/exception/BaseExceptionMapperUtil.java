@@ -9,9 +9,16 @@ import javax.ws.rs.core.MediaType;
 public interface BaseExceptionMapperUtil {
 
     default MediaType getMediaType(HttpHeaders headers, MediaType defaultType){
+        MediaType mediaType =null;
         if (headers.getMediaType()!=null){
-            return headers.getMediaType();
+            if(MediaType.APPLICATION_JSON_TYPE.equals(headers.getMediaType()) || MediaType.APPLICATION_XML_TYPE.equals(headers.getMediaType())){
+                return headers.getMediaType();
+            }
+        } else if (headers.getAcceptableMediaTypes()!=null && !headers.getAcceptableMediaTypes().isEmpty()){
+            if(MediaType.APPLICATION_JSON_TYPE.equals(headers.getMediaType()) || MediaType.APPLICATION_XML_TYPE.equals(headers.getMediaType())) {
+                return headers.getAcceptableMediaTypes().get(0);
+            }
         }
-        return headers.getAcceptableMediaTypes()!=null && !headers.getAcceptableMediaTypes().isEmpty()  ? headers.getAcceptableMediaTypes().get(0) : defaultType;
+        return defaultType;
     }
 }

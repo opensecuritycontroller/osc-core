@@ -33,8 +33,8 @@ import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.service.request.UpdateDaiConsolePasswordRequest;
 
 @Path(OscRestServlet.MGR_NSM_API_PATH_PREFIX)
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Consumes({ MediaType.APPLICATION_JSON })
+@Produces({ MediaType.APPLICATION_JSON })
 @OscAuth
 public class NsmMgrApis {
 

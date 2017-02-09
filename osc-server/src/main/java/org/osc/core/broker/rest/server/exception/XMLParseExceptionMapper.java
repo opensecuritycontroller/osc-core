@@ -23,7 +23,7 @@ public class XMLParseExceptionMapper implements ExceptionMapper<XMLParseExceptio
         return Response
                 .status(Response.Status.BAD_REQUEST)
                 .type(getMediaType(headers,MediaType.APPLICATION_XML_TYPE))
-                .entity(new ErrorCodeDto(ErrorCodeDto.REMOTE_EXCEPTION_ERROR_CODE, Arrays.asList(
+                .entity(new ErrorCodeDto(ErrorCodeDto.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE, Arrays.asList(
                     "Value "+ exception.getMessage() + " is invalid"
                 )))
                 .build();

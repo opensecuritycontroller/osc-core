@@ -92,8 +92,8 @@ public class NsxApis {
 
     @Path("/agents")
     @PUT
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public Response putAgents(@Context HttpHeaders headers, @Context HttpServletRequest request,
                               FabricAgents fabricAgents) throws Exception {
 
@@ -120,7 +120,7 @@ public class NsxApis {
 
     @Path("/agents/{agentIds}")
     @DELETE
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes({ MediaType.APPLICATION_JSON })
     public Response deleteAgents(@Context HttpHeaders headers, @Context HttpServletRequest request,
                                  @PathParam("agentIds") String agentIds) {
 
@@ -146,8 +146,8 @@ public class NsxApis {
 
     @Path("/si/serviceinstance")
     @POST
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public Response postServiceInstance(ServiceInstance serviceInstance) {
         log.info("postServiceInstance(): " + serviceInstance.toString());
         return Response.status(Status.OK).entity(new ServiceInstanceResponse()).build();
@@ -155,7 +155,7 @@ public class NsxApis {
 
     @Path("/si/serviceinstance/{serviceInstanceId}")
     @DELETE
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes({ MediaType.APPLICATION_JSON })
     public Response deleteServiceInstance(@PathParam("serviceInstanceId") String serviceInstanceId) {
         log.info("deleteServiceInstance(): " + serviceInstanceId);
         return Response.status(Status.OK).entity(new ServiceInstanceResponse()).build();
@@ -163,7 +163,7 @@ public class NsxApis {
 
     @Path("/si/serviceinstance/{serviceInstanceId}")
     @PUT
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes({ MediaType.APPLICATION_JSON })
     public Response putServiceInstance(@PathParam("serviceInstanceId") String serviceInstanceId) {
         log.info("putServiceInstance(): " + serviceInstanceId);
         return Response.status(Status.OK).entity(new ServiceInstanceResponse()).build();
@@ -171,8 +171,8 @@ public class NsxApis {
 
     @Path("/si/serviceprofile/")
     @POST
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     public Response postServiceProfile(ServiceProfile serviceProfile) {
         log.info("postServiceProfile(): " + serviceProfile);
         return Response.status(Status.OK).entity(new ServiceProfileResponse()).build();
@@ -180,7 +180,7 @@ public class NsxApis {
 
     @Path("/si/serviceprofile/{serviceProfileId}")
     @DELETE
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes({ MediaType.APPLICATION_JSON })
     public Response deleteServiceProfile(@PathParam("serviceProfileId") String serviceProfileId) {
         log.info("deleteServiceProfile(): " + serviceProfileId);
         return Response.status(Status.OK).entity(new ServiceProfileResponse()).build();
@@ -188,7 +188,7 @@ public class NsxApis {
 
     @Path("/si/serviceprofile/{serviceProfileId}")
     @PUT
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes({ MediaType.APPLICATION_JSON })
     public Response putServiceProfile(@Context HttpHeaders headers,
                                       @PathParam("serviceProfileId") String serviceProfileId, ServiceProfile serviceProfile) {
 
@@ -214,7 +214,7 @@ public class NsxApis {
 
     @Path("/si/serviceprofile/{serviceProfileId}/containerset")
     @PUT
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Consumes({ MediaType.APPLICATION_JSON })
     public Response putServiceProfileContainerset(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
                                                   @PathParam("serviceProfileId") String serviceProfileId, ContainerSet containerSet) {
 

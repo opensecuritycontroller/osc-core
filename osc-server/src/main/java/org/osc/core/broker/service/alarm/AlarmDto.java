@@ -60,8 +60,8 @@ public class AlarmDto extends BaseDto {
     private AlarmAction alarmAction;
 
     @ApiModelProperty(value = "If Alarm action is email, then this field is required.")
-    @Size(max = 155,message = "alarm.receipientEmail is too big")
-    @Email(message = "alarm.receipientEmail is invalid" )
+    @Size(max = 155,message = "alarm.recipientEmail is too big")
+    @Email(message = "alarm.recipientEmail is invalid" )
     private String receipientEmail;
 
     public boolean isEnabledAlarm() {

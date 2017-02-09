@@ -7,6 +7,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.util.Arrays;
 
 @Provider
 public class BadRequestExceptionMapper implements ExceptionMapper<BadRequestException>, BaseExceptionMapperUtil {
@@ -26,7 +27,7 @@ public class BadRequestExceptionMapper implements ExceptionMapper<BadRequestExce
         if(e instanceof OscBadRequestException){
             return ((OscBadRequestException) e).getErrorCodeDto();
         }
-        return new ErrorCodeDto(4000L, "Bad request");
+        return new ErrorCodeDto(4000L, Arrays.asList("Bad request"));
     }
 
 }

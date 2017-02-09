@@ -7,6 +7,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.util.Arrays;
 
 @Provider
 public class InternalServerErrorExceptionMapper implements ExceptionMapper<InternalServerErrorException>, BaseExceptionMapperUtil {
@@ -17,7 +18,7 @@ public class InternalServerErrorExceptionMapper implements ExceptionMapper<Inter
     @Override
     public Response toResponse(InternalServerErrorException e) {
         return Response
-                .status(Response.Status.BAD_REQUEST)
+                .status(Response.Status.INTERNAL_SERVER_ERROR)
                 .type(getMediaType(headers, MediaType.APPLICATION_JSON_TYPE))
                 .entity(getErrorCodeDto(e))
                 .build();
@@ -27,6 +28,6 @@ public class InternalServerErrorExceptionMapper implements ExceptionMapper<Inter
         if(e instanceof OscInternalServerErrorException){
             return ((OscInternalServerErrorException) e).getErrorCodeDto();
         }
-        return new ErrorCodeDto(5000L, "Something went wrong");
+        return new ErrorCodeDto(ErrorCodeDto.VMIDC_EXCEPTION_ERROR_CODE, Arrays.asList("Something went wrong"));
     }
 }

@@ -25,7 +25,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
         return Response
                 .status(Response.Status.BAD_REQUEST)
                 .type(getMediaType(headers, MediaType.APPLICATION_JSON_TYPE))
-                .entity(new ErrorCodeDto(ErrorCodeDto.REMOTE_EXCEPTION_ERROR_CODE, Arrays.asList(
+                .entity(new ErrorCodeDto(ErrorCodeDto.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE, Arrays.asList(
                     "Value "+((InvalidFormatException) exception).getValue() + " is invalid"
                 )))
                 .build();

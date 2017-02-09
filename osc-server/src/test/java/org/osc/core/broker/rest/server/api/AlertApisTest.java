@@ -46,68 +46,99 @@ public class AlertApisTest extends BaseJerseyTest {
     @Test
     public void testGetAlertsReturnsOK() {
         // Assume.
-        List<AlertDto> list = new ArrayList<>();
-        list.add(new AlertDto());
-        expectedResponseList.setList(list);
+        Response response = null;
+        try {
+            List<AlertDto> list = new ArrayList<>();
+            list.add(new AlertDto());
+            expectedResponseList.setList(list);
 
-        // Act.
-        Response response = target("/api/server/v1/alerts").request().get();
-        final List<AlertDto> alertDtos = response.readEntity(new GenericType<List<AlertDto>>(){});
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alerts").request().get();
+            final List<AlertDto> alertDtos = response.readEntity(new GenericType<List<AlertDto>>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(alertDtos.size()).isEqualTo(1);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(200);
+            assertThat(alertDtos.size()).isEqualTo(1);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testGetAlertReturnsOK() {
         // Assume.
-        expectedResponse.setDto(getAlertDto());
+        Response response = null;
+        try {
+            expectedResponse.setDto(getAlertDto());
 
-        // Act.
-        Response response = target("/api/server/v1/alerts/1").request().get();
-        final AlertDto alertDto = response.readEntity(new GenericType<AlertDto>(){});
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alerts/1").request().get();
+            final AlertDto alertDto = response.readEntity(new GenericType<AlertDto>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(200);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(200);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testGetAlert_withBadParam_ReturnsErrorCode() {
         // Assume.
-        expectedResponse.setDto(getAlertDto());
+        Response response = null;
+        try {
+            expectedResponse.setDto(getAlertDto());
 
-        // Act.
-        Response response = target("/api/server/v1/alerts/a").request()
-                .header(HttpHeaders.CONTENT_TYPE,MediaType.APPLICATION_JSON)
-                .get();
+            // Act.
+            response = target("/api/server/v1/alerts/a").request()
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                    .get();
 
-        ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
-        });
-        response.close();
+            ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
+
     }
 
     @Test
     public void testGetAlert_withBadQueryParam_ReturnsErrorCode() {
         // Assume.
-        expectedResponse.setDto(getAlertDto());
+        Response response = null;
+        try {
+            expectedResponse.setDto(getAlertDto());
 
-        // Act.
-        Response response = target("/api/server/v1/alerts/1?a=2").request()
-                .header(HttpHeaders.CONTENT_TYPE,MediaType.APPLICATION_JSON)
-                .get();
+            // Act.
+            response = target("/api/server/v1/alerts/1?a=2").request()
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                    .get();
 
-        ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
-        });
-        response.close();
+            ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
 

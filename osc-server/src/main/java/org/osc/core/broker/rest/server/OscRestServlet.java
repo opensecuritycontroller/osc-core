@@ -17,6 +17,13 @@ import org.osc.core.broker.rest.server.api.VirtualSystemApis;
 import org.osc.core.broker.rest.server.api.VirtualizationConnectorApis;
 import org.osc.core.broker.rest.server.api.proprietary.NsmMgrApis;
 import org.osc.core.broker.rest.server.api.proprietary.NsxApis;
+import org.osc.core.broker.rest.server.exception.BadRequestExceptionMapper;
+import org.osc.core.broker.rest.server.exception.ConstraintViolationExceptionMapper;
+import org.osc.core.broker.rest.server.exception.InternalServerErrorExceptionMapper;
+import org.osc.core.broker.rest.server.exception.JsonProcessingExceptionMapper;
+import org.osc.core.broker.rest.server.exception.NotFoundExceptionMapper;
+import org.osc.core.broker.rest.server.exception.PathParamExceptionMapper;
+import org.osc.core.broker.rest.server.exception.XMLParseExceptionMapper;
 import org.osc.core.util.LocalHostAuthFilter;
 
 import javax.ws.rs.ApplicationPath;
@@ -69,10 +76,16 @@ public class OscRestServlet extends ResourceConfig {
         register(OscAuthFilter.class);
 
         //Exception mappers
-        packages("org.osc.core.broker.rest.server.exception");
+        register(BadRequestExceptionMapper.class);
+        register(ConstraintViolationExceptionMapper.class);
+        register(InternalServerErrorExceptionMapper.class);
+        register(JsonProcessingExceptionMapper.class);
+        register(NotFoundExceptionMapper.class);
+        register(PathParamExceptionMapper.class);
+        register(XMLParseExceptionMapper.class);
 
-        //Properties
-        property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true);
+        //Properties Validation
+        property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, false);
     }
 
 }

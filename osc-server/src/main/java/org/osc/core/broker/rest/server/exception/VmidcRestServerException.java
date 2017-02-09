@@ -3,6 +3,7 @@ package org.osc.core.broker.rest.server.exception;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import java.util.Arrays;
 
 @SuppressWarnings("serial")
 public class VmidcRestServerException extends WebApplicationException {
@@ -17,7 +18,7 @@ public class VmidcRestServerException extends WebApplicationException {
 
     public VmidcRestServerException(ResponseBuilder response, String message, Long errorCode) {
         super(new Exception(message),
-                response.entity(new ErrorCodeDto(errorCode, message)).type(MediaType.APPLICATION_JSON).build());
+                response.entity(new ErrorCodeDto(errorCode, Arrays.asList(message))).type(MediaType.APPLICATION_JSON).build());
     }
 
 }

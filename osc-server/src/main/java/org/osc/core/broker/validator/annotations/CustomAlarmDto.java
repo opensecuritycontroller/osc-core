@@ -16,7 +16,7 @@ import static java.lang.annotation.ElementType.TYPE;
 @Target({TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CustomAlarmDto {
-    String message() default "If Alarm action is email, then this field is required";
+    String message() default "If Alarm action is email, then alarm.recipientEmail is required";
 
     Class<?>[] groups() default {};
 

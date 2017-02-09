@@ -48,214 +48,298 @@ public class AlarmApisTest extends BaseJerseyTest {
     @Test
     public void testGetAlarms_expectListOfAlarmsAndStatusOk() {
         // Assume.
-        List<AlarmDto> list = new ArrayList<>();
-        list.add(new AlarmDto());
-        expectedResponseList.setList(list);
+        Response response = null;
+        try {
+            List<AlarmDto> list = new ArrayList<>();
+            list.add(new AlarmDto());
+            expectedResponseList.setList(list);
 
-        // Act.
-        Response response = target("/api/server/v1/alarms").request().get();
-        final List<AlarmDto> alarmDtos = response.readEntity(new GenericType<List<AlarmDto>>() {
-        });
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms").request().get();
+            final List<AlarmDto> alarmDtos = response.readEntity(new GenericType<List<AlarmDto>>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(alarmDtos.size()).isEqualTo(1);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(200);
+            assertThat(alarmDtos.size()).isEqualTo(1);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testPostAlarm_withGoodRequest_expectStatusAccepted() {
         // Assume.
-        AlarmDto alarm = getAlarmDto();
+        Response response = null;
+        try {
+            AlarmDto alarm = getAlarmDto();
 
-        Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
+            Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
 
-        // Act.
-        Response response = target("/api/server/v1/alarms").request().post(alarmEntity);
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms").request().post(alarmEntity);
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(202);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(202);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testPutAlarm_withGoodRequest_expectStatusAccepted() {
         // Assume.
-        AlarmDto alarm = getAlarmDto();
+        Response response = null;
+        try {
+            AlarmDto alarm = getAlarmDto();
 
-        Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
+            Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
 
-        // Act.
-        Response response = target("/api/server/v1/alarms/2")
-                .request()
-                .put(alarmEntity);
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms/2")
+                    .request()
+                    .put(alarmEntity);
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(202);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(202);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testPutAlarm_withBadPathParam_expectErrorCode() {
         // Assume.
-        AlarmDto alarm = new AlarmDto();
+        Response response = null;
+        try {
+            AlarmDto alarm = new AlarmDto();
 
-        Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
-        String badParam = "textButShouldBeNumber";
+            Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
+            String badParam = "textButShouldBeNumber";
 
-        // Act.
-        Response response = target("/api/server/v1/alarms/"+ badParam)
-                .request()
-                .put(alarmEntity);
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms/" + badParam)
+                    .request()
+                    .put(alarmEntity);
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testPostAlarms_withBadRegex_expectErrorCode() {
         // Assume.
-        AlarmDto alarm = getAlarmDto();
-        alarm.setRegexMatch("\\");
+        Response response = null;
+        try {
+            AlarmDto alarm = getAlarmDto();
+            alarm.setRegexMatch("\\");
 
-        Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
+            Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
 
-        // Act.
-        Response response = target("/api/server/v1/alarms").request().post(alarmEntity);
-        ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
-        });
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms").request().post(alarmEntity);
+            ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(400);
-        assertThat(error.getErrorMessages().size()).isEqualTo(1);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(400);
+            assertThat(error.getErrorMessages().size()).isEqualTo(1);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testPostAlarms_withBadEmail_expectErrorCode() {
         // Assume.
-        AlarmDto alarm = getAlarmDto();
-        alarm.setReceipientEmail("email@email");
+        Response response = null;
+        try {
+            AlarmDto alarm = getAlarmDto();
+            alarm.setReceipientEmail("email@email");
 
-        Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
+            Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
 
-        // Act.
-        Response response = target("/api/server/v1/alarms").request().post(alarmEntity);
-        ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
-        });
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms").request().post(alarmEntity);
+            ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(400);
-        assertThat(error.getErrorMessages().size()).isEqualTo(1);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(400);
+            assertThat(error.getErrorMessages().size()).isEqualTo(1);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testDeleteAlarm_withGoodRequest_expectStatusAccepted() {
         // Assume.
-        String goodParam = "2";
+        Response response = null;
+        try {
+            String goodParam = "2";
 
-        // Act.
-        Response response = target("/api/server/v1/alarms/"+goodParam)
-                .request()
-                .delete();
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms/" + goodParam)
+                    .request()
+                    .delete();
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(202);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(202);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testDeleteAlarm_withBadPathParam_expectErrorCode() {
         // Assume.
-        String badParam = "textButShouldBeNumber";
+        Response response = null;
+        try {
+            String badParam = "textButShouldBeNumber";
 
-        // Act.
-        Response response = target("/api/server/v1/alarms/"+badParam)
-                .request()
-                .delete();
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms/" + badParam)
+                    .request()
+                    .delete();
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(404);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testPutAlarm_withBadRequest_expectErrorCode() {
         // Assume.
-        AlarmDto alarm = new AlarmDto();
+        Response response = null;
+        try {
+            AlarmDto alarm = new AlarmDto();
 
-        Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
+            Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
 
-        // Act.
-        Response response = target("/api/server/v1/alarms/2")
-                .request()
-                .put(alarmEntity);
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms/2")
+                    .request()
+                    .put(alarmEntity);
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(400);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(400);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testPostAlarms_withBadRequest_expectErrorCode() {
         // Assume.
-        AlarmDto alarm = new AlarmDto();
+        Response response = null;
+        try {
+            AlarmDto alarm = new AlarmDto();
 
-        Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
+            Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
 
-        // Act.
-        Response response = target("/api/server/v1/alarms").request().post(alarmEntity);
-        ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
-        });
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms").request().post(alarmEntity);
+            ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(400);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(400);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
 
     @Test
     public void testPostAlarms_withAlarmActionEmail_expectErrorCode() {
         // Assume.
-        AlarmDto alarm = getAlarmDto();
-        alarm.setAlarmAction(AlarmAction.EMAIL);
-        alarm.setReceipientEmail(null);
+        Response response = null;
+        try {
+            AlarmDto alarm = getAlarmDto();
+            alarm.setAlarmAction(AlarmAction.EMAIL);
+            alarm.setReceipientEmail(null);
 
-        Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
+            Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
 
-        // Act.
-        Response response = target("/api/server/v1/alarms").request().post(alarmEntity);
-        ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
-        });
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms").request().post(alarmEntity);
+            ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(400);
-        assertThat(error.getErrorMessages().size()).isEqualTo(1);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(400);
+            assertThat(error.getErrorMessages().size()).isEqualTo(1);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Test
     public void testPostAlarms_withToBigNameEmailAndRegex_expectErrorCode() {
         // Assume.
-        AlarmDto alarm = getAlarmDto();
-        alarm.setName(getString155()+"1");
-        alarm.setRegexMatch(getString155()+"1");
-        alarm.setReceipientEmail(getString155()+"1");
+        Response response = null;
+        try {
+            AlarmDto alarm = getAlarmDto();
+            alarm.setName(getString155() + "1");
+            alarm.setRegexMatch(getString155() + "1");
+            alarm.setReceipientEmail(getString155() + "1");
 
 
-        Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
+            Entity<AlarmDto> alarmEntity = Entity.entity(alarm, MediaType.APPLICATION_JSON);
 
-        // Act.
-        Response response = target("/api/server/v1/alarms").request().post(alarmEntity);
-        ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
-        });
-        response.close();
+            // Act.
+            response = target("/api/server/v1/alarms").request().post(alarmEntity);
+            ErrorCodeDto error = response.readEntity(new GenericType<ErrorCodeDto>() {
+            });
+            response.close();
 
-        // Assert.
-        assertThat(response.getStatus()).isEqualTo(400);
-        assertThat(error.getErrorMessages().size()).isEqualTo(4);
+            // Assert.
+            assertThat(response.getStatus()).isEqualTo(400);
+            assertThat(error.getErrorMessages().size()).isEqualTo(4);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
 
     }
 

@@ -1,3 +1,4 @@
+/*
 package org.osc.core.broker.rest.server.api;
 
 import org.glassfish.jersey.server.ResourceConfig;
@@ -139,3 +140,4 @@ public class JobApisTest extends BaseJerseyTest {
         }
     }
 }
+*/

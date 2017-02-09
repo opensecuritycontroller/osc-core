@@ -102,13 +102,11 @@ Require-Capability: \
     @${classmate.dep},\
     @${jersey-common.dep},\
     @${jersey-client.dep},\
-    @${jersey-media-json-jackson.dep},\
     @${jackson-jaxrs-json-provider.dep},\
     @${jackson-module-jaxb-annotations.dep},\
     @${jersey-entity-filtering.dep},\
     @${jackson-jaxrs-base.dep},\
-    @${jersey-media-jaxb.dep}
-
+    @${jersey-media-json-jackson.dep}
 
 Import-Package:\
     ${exclude-osgi},\

@@ -34,7 +34,7 @@ import java.util.List;
 
 @Api(tags = "Operations for Jobs", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/jobs")
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
 @OscAuth
 public class JobApis {
 
