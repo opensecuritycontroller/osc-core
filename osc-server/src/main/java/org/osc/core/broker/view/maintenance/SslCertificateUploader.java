@@ -1,5 +1,20 @@
 package org.osc.core.broker.view.maintenance;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Date;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.view.common.StyleConstants;
+import org.osc.core.broker.view.common.VmidcMessages;
+import org.osc.core.broker.view.common.VmidcMessages_;
+import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.broker.window.UploadInfoWindow;
+import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.Label;
@@ -13,20 +28,6 @@ import com.vaadin.ui.Upload.StartedListener;
 import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.broker.view.common.StyleConstants;
-import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
-import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.broker.window.UploadInfoWindow;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Date;
 
 public class SslCertificateUploader extends CustomComponent implements Receiver, FailedListener, SucceededListener {
     private static final Logger log = Logger.getLogger(SslCertificateUploader.class);
@@ -79,7 +80,6 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
         return null;
     }
 
-    @SuppressWarnings("serial")
     private void createUpload() {
         this.upload = new Upload();
         this.upload.setButtonCaption(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_UPLOAD));
@@ -124,8 +124,8 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
             repaintUpload();
         }
 
-        if(uploadNotifier != null){
-            uploadNotifier.finishedUpload(succeeded);
+        if(this.uploadNotifier != null){
+            this.uploadNotifier.finishedUpload(succeeded);
         }
     }
 
