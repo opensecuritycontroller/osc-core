@@ -2,8 +2,6 @@ package org.osc.core.broker.rest.server.api.test;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.validation.ValidationConfig;
-import org.glassfish.jersey.server.validation.internal.InjectingConstraintValidatorFactory;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.hibernate.Session;
@@ -14,17 +12,10 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.ServiceMocker;
 import org.osc.core.broker.util.api.ApiUtil;
 
-import javax.validation.ParameterNameProvider;
-import javax.validation.Validation;
-import javax.ws.rs.container.ResourceContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.ext.ContextResolver;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -54,7 +45,6 @@ public class BaseJerseyTest extends JerseyTest {
         return new ResourceConfig()
                 .register(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class)
                 .property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true)
-                .register(ValidationConfigurationContextResolver.class)
                 .property(ServerProperties.BV_FEATURE_DISABLE, false)
                 .packages("org.osc.core.broker.rest.server.exception");
     }
@@ -76,45 +66,12 @@ public class BaseJerseyTest extends JerseyTest {
     protected void callRealMethods(ApiUtil apiUtil) throws Exception {
         when(apiUtil.submitBaseRequestToService(any(), any())).thenCallRealMethod();
         when(apiUtil.submitRequestToService(any(), any())).thenCallRealMethod();
+        when(apiUtil.getListResponse(any(), any())).thenCallRealMethod();
+        when(apiUtil.createIdMismatchException(any(), any())).thenCallRealMethod();
+        when(apiUtil.getResponseForBaseRequest(any(), any())).thenCallRealMethod();
+
+        doCallRealMethod().when(apiUtil).setIdOrThrow(any(),any(),any());
     }
 
-    public static class ValidationConfigurationContextResolver implements ContextResolver<ValidationConfig> {
-
-        @Context
-        private ResourceContext resourceContext;
-
-        @Override
-        public ValidationConfig getContext(final Class<?> type) {
-            return new ValidationConfig()
-                    .constraintValidatorFactory(resourceContext.getResource(InjectingConstraintValidatorFactory.class))
-                    .parameterNameProvider(new CustomParameterNameProvider());
-        }
-
-        /**
-         * See ContactCardTest#testAddInvalidContact.
-         */
-        private class CustomParameterNameProvider implements ParameterNameProvider {
-
-            private final ParameterNameProvider nameProvider;
-
-            public CustomParameterNameProvider() {
-                nameProvider = Validation.byDefaultProvider().configure().getDefaultParameterNameProvider();
-            }
-
-            @Override
-            public List<String> getParameterNames(final Constructor<?> constructor) {
-                return nameProvider.getParameterNames(constructor);
-            }
-
-            @Override
-            public List<String> getParameterNames(final Method method) {
-                // See ContactCardTest#testAddInvalidContact.
-                if ("addContact".equals(method.getName())) {
-                    return Arrays.asList("contact");
-                }
-                return nameProvider.getParameterNames(method);
-            }
-        }
-    }
 }
 

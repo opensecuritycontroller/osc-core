@@ -2,6 +2,9 @@ package org.osc.core.broker.di;
 
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListJobService;
+import org.osc.core.broker.service.alert.AcknowledgeAlertService;
+import org.osc.core.broker.service.alert.DeleteAlertService;
+import org.osc.core.broker.service.alert.ListAlertService;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.broker.util.api.ApiUtilImpl;
 import org.osc.core.broker.util.session.SessionUtil;
@@ -14,6 +17,9 @@ public class OSCTestFactory implements OSCFactory {
     private ApiUtil apiUtil;
 
     private ListJobService listJobService;
+    private ListAlertService listAlertService;
+    private AcknowledgeAlertService acknowledgeAlertService;
+    private DeleteAlertService deleteAlertService;
     private GetDtoFromEntityService dtoFromEntityService;
 
     public OSCTestFactory() {
@@ -21,6 +27,11 @@ public class OSCTestFactory implements OSCFactory {
         apiUtil = mock(ApiUtilImpl.class);
 
         listJobService = mock(ListJobService.class);
+
+        listAlertService = mock(ListAlertService.class);
+        acknowledgeAlertService = mock(AcknowledgeAlertService.class);
+        deleteAlertService = mock(DeleteAlertService.class);
+
         dtoFromEntityService = mock(GetDtoFromEntityService.class);
     }
 
@@ -37,6 +48,21 @@ public class OSCTestFactory implements OSCFactory {
     @Override
     public ListJobService listJobService() {
         return listJobService;
+    }
+
+    @Override
+    public ListAlertService listAlertService() {
+        return listAlertService;
+    }
+
+    @Override
+    public AcknowledgeAlertService acknowledgeAlertService() {
+        return acknowledgeAlertService;
+    }
+
+    @Override
+    public DeleteAlertService deleteAlertService() {
+        return deleteAlertService;
     }
 
     @Override

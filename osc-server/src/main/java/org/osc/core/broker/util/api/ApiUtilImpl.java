@@ -2,6 +2,7 @@ package org.osc.core.broker.util.api;
 
 import org.osc.core.broker.rest.server.exception.OscBadRequestException;
 import org.osc.core.broker.rest.server.exception.OscInternalServerErrorException;
+import org.osc.core.broker.rest.server.exception.OscNotFoundException;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -36,9 +37,10 @@ public class ApiUtilImpl implements ApiUtil {
             T service, R request) {
         try {
             return service.dispatch(request);
-        } catch (VmidcBrokerInvalidEntryException | VmidcBrokerInvalidRequestException
-                | VmidcBrokerValidationException expectedException) {
+        } catch (VmidcBrokerInvalidEntryException | VmidcBrokerInvalidRequestException expectedException) {
             throw new OscBadRequestException(expectedException.getMessage(), VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+        } catch (VmidcBrokerValidationException validationException){
+            throw new OscNotFoundException(validationException.getMessage(), VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
         } catch (RestClientException | RemoteException remoteException) {
             throw new OscBadRequestException(remoteException.getMessage(), VmidcRestServerException.REMOTE_EXCEPTION_ERROR_CODE);
         } catch (VmidcException generalVmidcException) {

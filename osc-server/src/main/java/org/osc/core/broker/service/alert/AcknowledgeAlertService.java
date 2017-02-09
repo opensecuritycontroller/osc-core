@@ -39,7 +39,7 @@ public class AcknowledgeAlertService extends ServiceDispatcher<AlertRequest, Emp
             BaseDto.checkForNullId(dto);
             Alert alert = emgr.findByPrimaryKey(dto.getId());
             // Do not update an alert if the request is to acknowledge an already acknowledged alert
-            if (!((alert.getStatus().equals(AcknowledgementStatus.ACKNOWLEDGED) && request.isAcknowledge()))) {
+            if (!((AcknowledgementStatus.ACKNOWLEDGED.equals(alert.getStatus()) && request.isAcknowledge()))) {
                 validate(dto, alert);
                 AlertEntityMgr.toEntity(alert, dto);
                 emgr.update(alert);

@@ -1,4 +1,3 @@
-/*
 package org.osc.core.broker.rest.server.api;
 
 import org.glassfish.jersey.server.ResourceConfig;
@@ -48,7 +47,8 @@ public class JobApisTest extends BaseJerseyTest {
 
         // Act.
         Response response = target(JOBS_URL).request().get();
-        final List<JobRecordDto> jobDtos = response.readEntity(new GenericType<List<JobRecordDto>>() { });
+        final List<JobRecordDto> jobDtos = response.readEntity(new GenericType<List<JobRecordDto>>() {
+        });
 
         // Assert.
         assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
@@ -63,7 +63,7 @@ public class JobApisTest extends BaseJerseyTest {
         JobRecordDto expectedDto = new JobRecordDto();
         expectedDto.setName("TEST_JOB_DTO");
         expectedDto.setId(jobId);
-        BaseDtoResponse<JobRecordDto> dtoResponse =  new BaseDtoResponse<>();
+        BaseDtoResponse<JobRecordDto> dtoResponse = new BaseDtoResponse<>();
         dtoResponse.setDto(expectedDto);
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
@@ -72,7 +72,7 @@ public class JobApisTest extends BaseJerseyTest {
 
         GetDtoFromEntityRequestMatcher t = new GetDtoFromEntityRequestMatcher(getDtoRequest);
         when(OSC.get().apiUtil().submitBaseRequestToService(any(GetDtoFromEntityService.class),
-                                                            argThat(new GetDtoFromEntityRequestMatcher(getDtoRequest))))
+                argThat(new GetDtoFromEntityRequestMatcher(getDtoRequest))))
                 .thenReturn(dtoResponse);
 
         // Act.
@@ -129,15 +129,14 @@ public class JobApisTest extends BaseJerseyTest {
 
         @Override
         public boolean matches(Object o) {
-            if(!(o instanceof GetDtoFromEntityRequest)) {
+            if (!(o instanceof GetDtoFromEntityRequest)) {
                 return false;
             }
 
             GetDtoFromEntityRequest actual = (GetDtoFromEntityRequest) o;
 
             return actual.getEntityId() == this.expected.getEntityId() &&
-                   actual.getEntityName() == this.expected.getEntityName();
+                    actual.getEntityName() == this.expected.getEntityName();
         }
     }
 }
-*/

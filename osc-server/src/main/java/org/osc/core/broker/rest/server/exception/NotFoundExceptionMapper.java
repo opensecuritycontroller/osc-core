@@ -19,11 +19,18 @@ public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundExceptio
     private HttpHeaders headers;
 
     @Override
-    public Response toResponse(NotFoundException notFoundException) {
+    public Response toResponse(NotFoundException e) {
         return Response
                 .status(Response.Status.NOT_FOUND)
                 .type(getMediaType(headers, MediaType.APPLICATION_JSON_TYPE))
-                .entity(new ErrorCodeDto(ErrorCodeDto.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE, Arrays.asList("Not found")))
+                .entity(getErrorCodeDto(e))
                 .build();
+    }
+
+    private Object getErrorCodeDto(NotFoundException e) {
+        if(e instanceof OscNotFoundException){
+            return ((OscNotFoundException) e).getErrorCodeDto();
+        }
+        return new ErrorCodeDto(4000L, Arrays.asList("Not found"));
     }
 }

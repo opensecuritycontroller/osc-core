@@ -68,7 +68,6 @@ public class JobApis {
     @Path("/{jobId}")
     public Response getJob(@PathParam("jobId") Long jobId) {
 
-        try {
             GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
             getDtoRequest.setEntityId(jobId);
             getDtoRequest.setEntityName("JobRecord");
@@ -82,12 +81,6 @@ public class JobApis {
             jrd.setTaskCompleted(JobEntityManager.getCompletedTaskCount(jobId));
 
             return Response.status(Status.OK).entity(jrd).build();
-
-        } catch (Exception e) {
-
-            logger.error("Failed to load job id " + jobId, e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
     }
 
     @ApiOperation(value = "Retrieves Job's tasks",

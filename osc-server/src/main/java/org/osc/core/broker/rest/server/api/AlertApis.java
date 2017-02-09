@@ -30,7 +30,6 @@ import org.osc.core.broker.service.alert.AcknowledgeAlertService;
 import org.osc.core.broker.service.alert.AlertDto;
 import org.osc.core.broker.service.alert.AlertRequest;
 import org.osc.core.broker.service.alert.DeleteAlertService;
-import org.osc.core.broker.service.alert.ListAlertService;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseResponse;
@@ -63,7 +62,7 @@ public class AlertApis {
         logger.info("Listing Allerts");
         sessionUtil.setUser(sessionUtil.getUsername(headers));
 
-        ListResponse<AlertDto> response =  (ListResponse<AlertDto>) apiUtil.getListResponse(new ListAlertService(),
+        ListResponse<AlertDto> response =  (ListResponse<AlertDto>) apiUtil.getListResponse(OSC.get().listAlertService(),
                 new BaseRequest<>(true));
         return response.getList();
     }
@@ -82,7 +81,7 @@ public class AlertApis {
         getDtoRequest.setEntityId(alertId);
         getDtoRequest.setEntityName("Alert");
 
-        GetDtoFromEntityService<AlertDto> getDtoService = new GetDtoFromEntityService<AlertDto>();
+        GetDtoFromEntityService<AlertDto> getDtoService = OSC.get().dtoFromEntityService();
         return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
@@ -106,7 +105,7 @@ public class AlertApis {
         apiUtil.setIdOrThrow(alertDto, alertId, "Alert");
 
         AlertRequest alertRequest = createAcknowledgeRequest(alertId, alertDto);
-        AcknowledgeAlertService service = new AcknowledgeAlertService();
+        AcknowledgeAlertService service = OSC.get().acknowledgeAlertService();
 
         return apiUtil.getResponseForBaseRequest(service, alertRequest);
     }
@@ -129,7 +128,7 @@ public class AlertApis {
 
         AlertRequest alertRequest = createDeleteRequest(alertId);
 
-        DeleteAlertService deleteService = new DeleteAlertService();
+        DeleteAlertService deleteService = OSC.get().deleteAlertService();
 
         return apiUtil.getResponseForBaseRequest(deleteService, alertRequest);
     }

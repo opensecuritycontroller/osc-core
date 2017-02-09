@@ -68,7 +68,7 @@ public class LockObjectReference {
     @NotNull(message = "objectReference.type is required")
     private ObjectType type;
 
-    LockObjectReference() {
+    public LockObjectReference() {
     }
 
     public LockObjectReference(DistributedAppliance da) {
@@ -220,6 +220,18 @@ public class LockObjectReference {
             return false;
         }
         return true;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setType(ObjectType type) {
+        this.type = type;
     }
 
     @Override

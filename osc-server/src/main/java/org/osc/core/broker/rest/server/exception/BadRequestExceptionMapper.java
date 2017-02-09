@@ -23,6 +23,7 @@ public class BadRequestExceptionMapper implements ExceptionMapper<BadRequestExce
                 .entity(getErrorCodeDto(e))
                 .build();
     }
+
     private Object getErrorCodeDto(BadRequestException e) {
         if(e instanceof OscBadRequestException){
             return ((OscBadRequestException) e).getErrorCodeDto();

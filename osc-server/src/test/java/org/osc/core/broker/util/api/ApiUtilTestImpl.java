@@ -97,7 +97,7 @@ public class ApiUtilTestImpl implements ApiUtil {
      * Throws an exception if the ID specified does not match the ID specified within the POJO object
      */
     public <T extends BaseDto> void setIdOrThrow(T dto, Long urlId, String objName)
-            throws VmidcRestServerException {
+            throws OscBadRequestException {
         if (dto.getId() != null && !dto.getId().equals(urlId)) {
             throw createIdMismatchException(dto.getId(), objName);
         }
