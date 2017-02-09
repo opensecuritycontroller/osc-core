@@ -1,5 +1,7 @@
 package org.osc.core.broker.util.api;
 
+import org.osc.core.broker.rest.server.exception.OscBadRequestException;
+import org.osc.core.broker.rest.server.exception.OscInternalServerErrorException;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -27,12 +29,11 @@ public class ApiUtilTestImpl implements ApiUtil {
      * @param request
      *            the request to submit
      * @return response in case of successful submission
-     * @throws VmidcRestServerException
      *             Exception either in case of any exceptions thrown by the service or in case of exceptions submitting
      *             the request
      */
     public <R extends Request, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> O submitRequestToService(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         try {
             System.out.println("Entered getListResponse()");
             System.out.println(service);
@@ -40,17 +41,14 @@ public class ApiUtilTestImpl implements ApiUtil {
             return service.dispatch(request);
         } catch (VmidcBrokerInvalidEntryException | VmidcBrokerInvalidRequestException
                 | VmidcBrokerValidationException expectedException) {
-            throw new VmidcRestServerException(Response.status(Response.Status.BAD_REQUEST), expectedException.getMessage(),
-                    VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+            throw new OscBadRequestException(expectedException.getMessage(), VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
         } catch (RestClientException | RemoteException remoteException) {
-            throw new VmidcRestServerException(Response.status(Response.Status.BAD_REQUEST), remoteException.getMessage(),
-                    VmidcRestServerException.REMOTE_EXCEPTION_ERROR_CODE);
+            throw new OscBadRequestException(remoteException.getMessage(), VmidcRestServerException.REMOTE_EXCEPTION_ERROR_CODE);
         } catch (VmidcException generalVmidcException) {
-            throw new VmidcRestServerException(Response.status(Response.Status.INTERNAL_SERVER_ERROR),
-                    generalVmidcException.getMessage(), VmidcRestServerException.VMIDC_EXCEPTION_ERROR_CODE);
+            throw new OscInternalServerErrorException(generalVmidcException.getMessage(), VmidcRestServerException.VMIDC_EXCEPTION_ERROR_CODE);
         } catch (Exception e) {
-            System.out.println(e.getStackTrace());
-            throw new VmidcRestServerException(Response.status(Response.Status.INTERNAL_SERVER_ERROR), e.getMessage());
+            e.printStackTrace();
+            throw new OscInternalServerErrorException(VmidcRestServerException.VMIDC_EXCEPTION_ERROR_CODE);
         }
     }
 
@@ -65,33 +63,32 @@ public class ApiUtilTestImpl implements ApiUtil {
      * @param request
      *            the request to submit
      * @return response in case of successful submission
-     * @throws VmidcRestServerException
      *             Exception either in case of any exceptions thrown by the service or in case of exceptions submitting
      *             the request
      */
     public <R extends BaseRequest<?>, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> O submitBaseRequestToService(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         request.setApi(true);
         return submitRequestToService(service, request);
     }
 
     public <R extends BaseRequest<?>, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> Response getResponseForBaseRequest(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         return Response.status(Response.Status.OK).entity(submitBaseRequestToService(service, request)).build();
     }
 
     public <R extends Request, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> Response getResponse(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         return Response.status(Response.Status.OK).entity(submitRequestToService(service, request)).build();
     }
 
     public <R extends Request, O extends ListResponse<?>, T extends ServiceDispatcher<R, O>> ListResponse<?> getListResponse(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         return submitRequestToService(service, request);
     }
 
     public <R extends Request, O extends SetResponse<?>, T extends ServiceDispatcher<R, O>> SetResponse<?> getSetResponse(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         return submitRequestToService(service, request);
     }
 
@@ -122,7 +119,7 @@ public class ApiUtilTestImpl implements ApiUtil {
      * POJO object
      */
     public <T extends BaseDto> void setIdAndParentIdOrThrow(T dto, Long urlId, Long urlParentId, String objName)
-            throws VmidcRestServerException {
+            throws OscBadRequestException {
         setIdOrThrow(dto, urlId, objName);
         setParentIdOrThrow(dto, urlParentId, objName);
     }
@@ -131,22 +128,21 @@ public class ApiUtilTestImpl implements ApiUtil {
      * Validates Parent ID set on the dto matches the Parent ID passed in
      */
     public <T extends BaseDto> void validateParentIdMatches(T dto, Long parentId, String objName)
-            throws VmidcRestServerException {
+            throws OscBadRequestException {
         if (!parentId.equals(dto.getParentId())) {
             throw createParentChildMismatchException(dto.getParentId(), objName);
         }
 
     }
 
-    public <T extends BaseDto> VmidcRestServerException createIdMismatchException(Long id, String objName) {
-        return new VmidcRestServerException(Response.status(Response.Status.BAD_REQUEST), String.format(
-                "The ID %d specified in the '%s' data does not match the id specified in the URL", id, objName));
+    public <T extends BaseDto> OscBadRequestException createIdMismatchException(Long id, String objName) {
+        return new OscBadRequestException(String.format("The ID %d specified in the '%s' data does not match the id specified in the URL", id, objName),
+                VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
     }
 
-    public <T extends BaseDto> VmidcRestServerException createParentChildMismatchException(Long parentId,
-                                                                                           String objName) {
-        return new VmidcRestServerException(Response.status(Response.Status.BAD_REQUEST),
-                String.format("The Parent ID %d specified in the '%s' data does not match the id specified in the URL",
-                        parentId, objName));
+    public <T extends BaseDto> OscBadRequestException createParentChildMismatchException(Long parentId,
+                                                                                         String objName) {
+        return new OscBadRequestException(String.format("The Parent ID %d specified in the '%s' data does not match the id specified in the URL", parentId, objName),
+                VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
     }
 }

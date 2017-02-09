@@ -29,12 +29,11 @@ public class ApiUtilImpl implements ApiUtil {
      * @param request
      *            the request to submit
      * @return response in case of successful submission
-     * @throws VmidcRestServerException
      *             Exception either in case of any exceptions thrown by the service or in case of exceptions submitting
      *             the request
      */
     public <R extends Request, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> O submitRequestToService(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         try {
             return service.dispatch(request);
         } catch (VmidcBrokerInvalidEntryException | VmidcBrokerInvalidRequestException
@@ -60,33 +59,32 @@ public class ApiUtilImpl implements ApiUtil {
      * @param request
      *            the request to submit
      * @return response in case of successful submission
-     * @throws VmidcRestServerException
      *             Exception either in case of any exceptions thrown by the service or in case of exceptions submitting
      *             the request
      */
     public <R extends BaseRequest<?>, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> O submitBaseRequestToService(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         request.setApi(true);
         return submitRequestToService(service, request);
     }
 
     public <R extends BaseRequest<?>, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> Response getResponseForBaseRequest(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         return Response.status(Response.Status.OK).entity(submitBaseRequestToService(service, request)).build();
     }
 
     public <R extends Request, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> Response getResponse(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         return Response.status(Response.Status.OK).entity(submitRequestToService(service, request)).build();
     }
 
     public <R extends Request, O extends ListResponse<?>, T extends ServiceDispatcher<R, O>> ListResponse<?> getListResponse(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         return submitRequestToService(service, request);
     }
 
     public <R extends Request, O extends SetResponse<?>, T extends ServiceDispatcher<R, O>> SetResponse<?> getSetResponse(
-            T service, R request) throws VmidcRestServerException {
+            T service, R request) {
         return submitRequestToService(service, request);
     }
 
@@ -95,7 +93,7 @@ public class ApiUtilImpl implements ApiUtil {
      * Throws an exception if the ID specified does not match the ID specified within the POJO object
      */
     public <T extends BaseDto> void setIdOrThrow(T dto, Long urlId, String objName)
-            throws VmidcRestServerException {
+            throws OscBadRequestException {
         if (dto.getId() != null && !dto.getId().equals(urlId)) {
             throw createIdMismatchException(dto.getId(), objName);
         }
@@ -117,7 +115,7 @@ public class ApiUtilImpl implements ApiUtil {
      * POJO object
      */
     public <T extends BaseDto> void setIdAndParentIdOrThrow(T dto, Long urlId, Long urlParentId, String objName)
-            throws VmidcRestServerException {
+            throws OscBadRequestException {
         setIdOrThrow(dto, urlId, objName);
         setParentIdOrThrow(dto, urlParentId, objName);
     }
@@ -126,22 +124,21 @@ public class ApiUtilImpl implements ApiUtil {
      * Validates Parent ID set on the dto matches the Parent ID passed in
      */
     public <T extends BaseDto> void validateParentIdMatches(T dto, Long parentId, String objName)
-            throws VmidcRestServerException {
+            throws OscBadRequestException {
         if (!parentId.equals(dto.getParentId())) {
             throw createParentChildMismatchException(dto.getParentId(), objName);
         }
 
     }
 
-    public <T extends BaseDto> VmidcRestServerException createIdMismatchException(Long id, String objName) {
-        return new VmidcRestServerException(Response.status(Response.Status.BAD_REQUEST), String.format(
-                "The ID %d specified in the '%s' data does not match the id specified in the URL", id, objName));
+    public <T extends BaseDto> OscBadRequestException createIdMismatchException(Long id, String objName) {
+        return new OscBadRequestException(String.format("The ID %d specified in the '%s' data does not match the id specified in the URL", id, objName),
+                VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
     }
 
-    public <T extends BaseDto> VmidcRestServerException createParentChildMismatchException(Long parentId,
+    public <T extends BaseDto> OscBadRequestException createParentChildMismatchException(Long parentId,
                                                                                            String objName) {
-        return new VmidcRestServerException(Response.status(Response.Status.BAD_REQUEST),
-                String.format("The Parent ID %d specified in the '%s' data does not match the id specified in the URL",
-                        parentId, objName));
+        return new OscBadRequestException(String.format("The Parent ID %d specified in the '%s' data does not match the id specified in the URL", parentId, objName),
+                VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
     }
 }
