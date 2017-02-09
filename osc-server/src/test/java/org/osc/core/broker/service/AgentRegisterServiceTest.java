@@ -1,22 +1,16 @@
 package org.osc.core.broker.service;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.osc.core.broker.service.AgentRegisterServiceTestData.*;
 
-import java.io.IOException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -43,14 +37,11 @@ import org.osc.core.broker.service.response.AgentRegisterServiceResponse;
 import org.osc.core.broker.service.tasks.agent.AgentInterfaceEndpointMapSetTask;
 import org.osc.core.broker.service.tasks.agent.UpdateApplianceConsolePasswordTask;
 import org.osc.core.broker.util.SessionStub;
-import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.SetLockObjectReferenceMatcher;
 import org.osc.core.test.util.TaskGraphMatcher;
 import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.NetworkUtil;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.DistributedApplianceInstanceElement;
@@ -69,7 +60,7 @@ public class AgentRegisterServiceTest {
 
     @Mock
     private Session sessionMock;
-    
+
     @Mock
     private SessionFactory sessionFactoryMock;
 
@@ -102,10 +93,10 @@ public class AgentRegisterServiceTest {
         this.agentApiMock = mock(AgentApi.class);
 
         PowerMockito.spy(HibernateUtil.class);
-        PowerMockito.doReturn(sessionFactoryMock).when(HibernateUtil.class, "init");
-        
-        Mockito.when(sessionFactoryMock.openSession()).thenReturn(sessionMock);
-        Mockito.when(service.getSessionFactory()).thenReturn(sessionFactoryMock);
+        PowerMockito.doReturn(this.sessionFactoryMock).when(HibernateUtil.class, "init");
+
+        Mockito.when(this.sessionFactoryMock.openSession()).thenReturn(this.sessionMock);
+        Mockito.when(this.service.getSessionFactory()).thenReturn(this.sessionFactoryMock);
 
         doThrow(VmidcBrokerInvalidEntryException.class).when(this.validatorMock).validateAndLoad(INVALID_REQUEST);
 
