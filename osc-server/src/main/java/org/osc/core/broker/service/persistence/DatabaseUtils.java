@@ -68,7 +68,7 @@ public class DatabaseUtils {
         if (adminUser == null) {
             User user = new User();
             user.setLoginName(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
-            user.setPassword(EncryptionUtil.encryptAESCTR(VmidcAuthFilter.VMIDC_DEFAULT_PASS));
+            user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.ADMIN);
             EntityManager.create(session, user);
         }
@@ -76,7 +76,7 @@ public class DatabaseUtils {
         if (agentUser == null) {
             User user = new User();
             user.setLoginName(AgentAuthFilter.VMIDC_AGENT_LOGIN);
-            user.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
+            user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.SYSTEM_AGENT);
             EntityManager.create(session, user);
         }
@@ -84,7 +84,7 @@ public class DatabaseUtils {
         if (nsxUser == null) {
             User user = new User();
             user.setLoginName(NsxAuthFilter.VMIDC_NSX_LOGIN);
-            user.setPassword(EncryptionUtil.encryptAESCTR(NsxAuthFilter.VMIDC_NSX_PASS));
+            user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.SYSTEM_NSX);
             EntityManager.create(session, user);
         }

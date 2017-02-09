@@ -7,14 +7,13 @@ import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.VmidcAuthFilter;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.EncryptionUtil;
 
 public class PasswordUtil {
 
     public static void initPasswordFromDb(String loginName) {
 
         Session session = HibernateUtil.getSessionFactory().openSession();
-        User user = null;
+        User user;
 
         try {
             EntityManager<User> emgr = new EntityManager<User>(User.class, session);
