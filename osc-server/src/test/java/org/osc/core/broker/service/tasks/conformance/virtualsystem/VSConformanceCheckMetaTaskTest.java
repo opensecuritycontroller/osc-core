@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import org.hibernate.Session;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -22,6 +23,7 @@ import org.osc.core.broker.service.LockUtil;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.sdn.api.ServiceApi;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceElement;
@@ -44,9 +46,9 @@ public class VSConformanceCheckMetaTaskTest {
     private static String DEFAULT_SERVICE_IP = getDefaultServerIp();
     private static String DEFAULT_SERVICEMANAGER_NAME = "DEFAULT_MANAGER_NAME";
     private static String DEFAULT_SERVICEMANAGER_URL = CreateNsxServiceManagerTask.buildRestCallbackUrl();
-    private static String DEFAULT_SERVICEMANAGER_PASSWORD = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
+    private static String DEFAULT_SERVICEMANAGER_PASSWORD;
 
-    private static String DEFAULT_SERVICE_PASSWORD = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
+    private static String DEFAULT_SERVICE_PASSWORD;
 
     private VirtualSystem vs;
 
@@ -55,6 +57,12 @@ public class VSConformanceCheckMetaTaskTest {
     public VSConformanceCheckMetaTaskTest(VirtualSystem vs, TaskGraph tg, boolean extraAutomation) {
         this.vs = vs;
         this.expectedGraph = tg;
+    }
+
+    @BeforeClass
+    public static void testSuiteInitialize() throws EncryptionException {
+        DEFAULT_SERVICEMANAGER_PASSWORD = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
+        DEFAULT_SERVICE_PASSWORD = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
     }
 
     @Before
@@ -117,7 +125,7 @@ public class VSConformanceCheckMetaTaskTest {
     }
 
     @Parameters()
-    public static Collection<Object[]> getTestData() {
+    public static Collection<Object[]> getTestData() throws EncryptionException {
         return Arrays.asList(new Object[][] {
             {UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS, createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS), false},
             {UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS,  createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS), false},

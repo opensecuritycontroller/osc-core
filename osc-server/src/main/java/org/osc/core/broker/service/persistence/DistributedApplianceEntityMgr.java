@@ -17,11 +17,12 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class DistributedApplianceEntityMgr {
 
     public static DistributedAppliance createEntity(Session session, DistributedApplianceDto dto, Appliance a,
-            DistributedAppliance da) {
+            DistributedAppliance da) throws EncryptionException {
 
         toEntity(a, da, dto);
 
@@ -29,7 +30,7 @@ public class DistributedApplianceEntityMgr {
 
     }
 
-    public static void toEntity(Appliance a, DistributedAppliance da, DistributedApplianceDto dto) {
+    public static void toEntity(Appliance a, DistributedAppliance da, DistributedApplianceDto dto) throws EncryptionException {
 
         // transform from dto to entity
         da.setId(dto.getId());
@@ -39,7 +40,7 @@ public class DistributedApplianceEntityMgr {
         da.setApplianceVersion(dto.getApplianceSoftwareVersionName());
     }
 
-    public static void fromEntity(DistributedAppliance da, DistributedApplianceDto dto) {
+    public static void fromEntity(DistributedAppliance da, DistributedApplianceDto dto) throws EncryptionException {
 
         // transform from entity to dto
         dto.setId(da.getId());

@@ -27,14 +27,8 @@ public class AuthUtilTest {
 	@Before
 	public void setUp() throws Exception {
 		mockHttpServletRequest = Mockito.mock(HttpServletRequest.class);
-		testKeyStore = KeyStore.getInstance("PKCS12");
-		testKeyStore.load(null, null);
 
-		testKeyStoreFactory = mock(KeyStoreProvider.KeyStoreFactory.class);
-		when(testKeyStoreFactory.createKeyStore()).thenReturn(testKeyStore);
-		KeyStoreProvider.setKeyStoreFactory(testKeyStoreFactory);
-
-		KeyStoreProvider.getInstance().putPassword("AesCtrKey", "A6EBBF1CDCC166710670DE15015EA0AF", getAESCTRKeyPassword());
+		AESCTREncryption.setKeyProvider(() -> { return "A6EBBF1CDCC166710670DE15015EA0AF"; });
 		encryptedPassword = EncryptionUtil.encryptAESCTR("admin123");
 	}
 

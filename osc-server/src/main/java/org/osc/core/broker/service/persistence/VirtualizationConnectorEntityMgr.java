@@ -15,6 +15,7 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +32,7 @@ public class VirtualizationConnectorEntityMgr {
 
     }
 
-    public static void toEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) {
+    public static void toEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) throws EncryptionException {
 
         // transform from dto to entity
         vc.setId(dto.getId());
@@ -59,7 +60,7 @@ public class VirtualizationConnectorEntityMgr {
         vc.setVirtualizationSoftwareVersion(dto.getSoftwareVersion());
     }
 
-    public static void fromEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) {
+    public static void fromEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) throws EncryptionException {
 
         // transform from entity to dto
         dto.setId(vc.getId());

@@ -1,6 +1,6 @@
 package org.osc.core.util;
 
-import javax.crypto.*;
+import javax.crypto.SecretKey;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.AESGCMEncryption;
 import org.osc.core.util.encryption.EncryptionException;
@@ -38,7 +38,7 @@ public class EncryptionUtil {
      * @param plainText text to be encrypted
      * @return IV and cypher text concatenated with ':' character
      */
-    public static String encryptAESCTR(String plainText) {
+    public static String encryptAESCTR(String plainText) throws EncryptionException {
         return new AESCTREncryption().encrypt(plainText);
     }
 
@@ -49,7 +49,7 @@ public class EncryptionUtil {
      * @param cipherText concatenation of IV and cipher text to be decrypted
      * @return decrypted plain text
      */
-    public static String decryptAESCTR(String cipherText) {
+    public static String decryptAESCTR(String cipherText) throws EncryptionException {
         return new AESCTREncryption().decrypt(cipherText);
     }
 
@@ -59,7 +59,7 @@ public class EncryptionUtil {
      * @param validCipherText IV and cypher text concatenated with ':' character
      * @return true if given cipher text is encrypted version of given plain text, false otherwise
      */
-    public static boolean validateAESCTR(String plainText, String validCipherText) {
+    public static boolean validateAESCTR(String plainText, String validCipherText) throws EncryptionException {
         return new AESCTREncryption().validate(plainText, validCipherText);
     }
 
@@ -68,7 +68,7 @@ public class EncryptionUtil {
      * @param plainText plain text to be encrypted
      * @return encrypted (derived) version
      */
-    static String encryptPbkdf2(String plainText) {
+    static String encryptPbkdf2(String plainText) throws EncryptionException {
         return new PBKDF2Derivation().derive(plainText);
     }
 
@@ -78,7 +78,7 @@ public class EncryptionUtil {
      * @param validCipherText derived version of some plain text
      * @return true if the cipher text is derived version of given plain text, false otherwise
      */
-    static boolean validatePbkdf2(String plainText, String validCipherText) {
+    static boolean validatePbkdf2(String plainText, String validCipherText) throws EncryptionException {
         return new PBKDF2Derivation().validate(plainText, validCipherText);
     }
 

@@ -27,6 +27,7 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class DatabaseUtils {
     private static final Logger log = Logger.getLogger(DatabaseUtils.class);
@@ -62,7 +63,7 @@ public class DatabaseUtils {
         }
     }
 
-    private static void createDefaultUsers(Session session) {
+    private static void createDefaultUsers(Session session) throws EncryptionException {
         EntityManager<User> userEmgr = new EntityManager<User>(User.class, session);
         User adminUser = userEmgr.findByFieldName("loginName", VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
         if (adminUser == null) {

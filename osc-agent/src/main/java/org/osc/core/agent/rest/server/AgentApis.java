@@ -56,6 +56,7 @@ import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
 
 import com.sun.jersey.spi.container.ResourceFilters;
+import org.osc.core.util.encryption.EncryptionException;
 
 @Path("/v1")
 public class AgentApis {
@@ -326,7 +327,13 @@ public class AgentApis {
     @Consumes(MediaType.APPLICATION_XML)
     public Response updateServerPassword(AgentUpdateVmidcPasswordRequest agentUpdateVmidcPasswordRequest) {
         Server.setVmidcServerPassword(agentUpdateVmidcPasswordRequest.getVmidcServerPassword());
-        AgentAuthFilter.AGENT_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(Server.getVmidcServerPassword());
+        try {
+            AgentAuthFilter.AGENT_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(Server.getVmidcServerPassword());
+        } catch (EncryptionException e) {
+            log.error("Failed to get default password", e);
+            //TODO : handle in exception mapper (after Jersey2 validation changes)
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
         /*
          * Need to immediately persist the vmidcPassword to the properties file
          */

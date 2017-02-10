@@ -15,6 +15,7 @@ import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.openstack.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class ListAvailabilityZonesService extends
         ServiceDispatcher<BaseOpenStackRequest, ListResponse<AvailabilityZoneDto>> {
@@ -22,7 +23,7 @@ public class ListAvailabilityZonesService extends
     private ListResponse<AvailabilityZoneDto> response = new ListResponse<AvailabilityZoneDto>();
 
     @Override
-    public ListResponse<AvailabilityZoneDto> exec(BaseOpenStackRequest request, Session session) throws IOException {
+    public ListResponse<AvailabilityZoneDto> exec(BaseOpenStackRequest request, Session session) throws IOException, EncryptionException {
         List<AvailabilityZoneDto> azList = new ArrayList<AvailabilityZoneDto>();
         // Initializing Entity Manager
         EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);

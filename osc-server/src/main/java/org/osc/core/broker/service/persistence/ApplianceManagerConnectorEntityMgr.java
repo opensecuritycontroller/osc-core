@@ -15,6 +15,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class ApplianceManagerConnectorEntityMgr {
 
@@ -40,7 +41,7 @@ public class ApplianceManagerConnectorEntityMgr {
         mc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
     }
 
-    public static void fromEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) {
+    public static void fromEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) throws EncryptionException {
 
         // transform from entity to dto
         dto.setId(mc.getId());

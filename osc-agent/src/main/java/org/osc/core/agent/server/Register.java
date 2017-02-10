@@ -10,6 +10,7 @@ import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 import java.io.IOException;
 import java.util.Date;
@@ -206,7 +207,7 @@ public class Register {
                 agentEnv.getApplianceGateway(), agentEnv.getApplianceMtu(), agentEnv.getVmidcIp());
     }
 
-    private static int authenticateAppliance(AgentRegisterResponse registrationResponse, boolean deinstall) {
+    private static int authenticateAppliance(AgentRegisterResponse registrationResponse, boolean deinstall) throws EncryptionException {
         String decrypted = EncryptionUtil.decryptAESCTR(registrationResponse.getSharedSecretKey());
         return Server.applianceUtils.authenticateAppliance(registrationResponse.getApplianceName(),
                 registrationResponse.getMgrIp(), decrypted, null, deinstall);

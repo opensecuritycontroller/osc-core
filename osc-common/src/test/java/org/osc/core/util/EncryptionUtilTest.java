@@ -7,6 +7,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -25,17 +26,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.crypto.*")
-@PrepareForTest(KeyStoreProvider.class)
 public class EncryptionUtilTest {
-
-	@Mock
-	KeyStoreProvider keyStoreProviderMock;
-
+	// AES-CTR test data
 	private String unEncryptedMessage = "helloworld";
 	private String aesCtrEncryptedMessage = "af5b59f52f5c3f0a77c6ba3bae08c1fe:26255b1fabfecfc469af";
 
+	// AES-GCM test data
 	private SecretKey key = generateTestAESGCMKey();
 	private SecretKey invalidKey = generateTestAESGCMKey();
 	private byte[] plainText;
@@ -50,10 +46,9 @@ public class EncryptionUtilTest {
 		aad = "Some additional authentication data".getBytes();
 		new SecureRandom().nextBytes(iv);
 
-		PowerMockito.mockStatic(KeyStoreProvider.class);
-		Mockito.when(KeyStoreProvider.getInstance()).thenReturn(keyStoreProviderMock);
+		AESCTREncryption.setKeyProvider(() -> { return "1234567890abcdef1234567890abcdef"; });
 
-		Mockito.when(keyStoreProviderMock.getPassword(Mockito.matches("AesCtrKey"), Mockito.anyString())).thenReturn("1234567890abcdef1234567890abcdef");
+		String test = EncryptionUtil.encryptAESCTR("helloworld");
 	}
 
 	@Rule
@@ -61,26 +56,26 @@ public class EncryptionUtilTest {
 
 	/** To check the valid behavior of encryption with valid string message */
 	@Test
-	public void testEncryptPbkdf2_WithValidMessage_ExpectsPbkdf2Hash() {
+	public void testEncryptPbkdf2_WithValidMessage_ExpectsPbkdf2Hash() throws EncryptionException {
 		String encryption = EncryptionUtil.encryptPbkdf2(unEncryptedMessage);
 		assertTrue(encryption.startsWith("4000"));
 		assertEquals(encryption.length(), 102);
 	}
 
 	@Test
-	public void testValidatePbkdf2_WithValidMessage_ExpectsSuccess() {
+	public void testValidatePbkdf2_WithValidMessage_ExpectsSuccess() throws EncryptionException {
 		String encryption = EncryptionUtil.encryptPbkdf2(unEncryptedMessage);
 		assertTrue(EncryptionUtil.validatePbkdf2(unEncryptedMessage, encryption));
 	}
 
 	@Test
-	public void testEncryptPbkdf2_WithEmptyMessage_ExpectsEmptyMessage() {
+	public void testEncryptPbkdf2_WithEmptyMessage_ExpectsEmptyMessage() throws EncryptionException {
 		String encryption = EncryptionUtil.encryptPbkdf2("");
 		assertEquals("", encryption);
 	}
 
 	@Test
-	public void testEncryptPbkdf2_WithNullMessage_ExpectsNull() {
+	public void testEncryptPbkdf2_WithNullMessage_ExpectsNull() throws EncryptionException {
 		String encryption = EncryptionUtil.encryptPbkdf2(null);
 		assertEquals(null, encryption);
 	}
@@ -93,37 +88,37 @@ public class EncryptionUtilTest {
 	}
 
 	@Test
-	public void testEncryptAesCtr_WithEmptyMessage_ExpectsEmptyMessage() {
+	public void testEncryptAesCtr_WithEmptyMessage_ExpectsEmptyMessage() throws EncryptionException {
 		String encryption = EncryptionUtil.encryptAESCTR("");
 		assertEquals("", encryption);
 	}
 
 	@Test
-	public void testEncryptAesCtr_WithNullMessage_ExpectsNull() {
+	public void testEncryptAesCtr_WithNullMessage_ExpectsNull() throws EncryptionException {
 		String encryption = EncryptionUtil.encryptAESCTR(null);
 		assertEquals(null, encryption);
 	}
 
 	@Test
-	public void testDecryptAesCtr_WithValidMessage_ExpectsDecryptedMessage() {
+	public void testDecryptAesCtr_WithValidMessage_ExpectsDecryptedMessage() throws EncryptionException {
 		String decryption = EncryptionUtil.decryptAESCTR(aesCtrEncryptedMessage);
 		assertEquals(unEncryptedMessage, decryption);
 	}
 
 	@Test
-	public void testDecryptAesCtr_WithNullMessage_ExpectsNull() {
+	public void testDecryptAesCtr_WithNullMessage_ExpectsNull() throws EncryptionException {
 		String decryption = EncryptionUtil.decryptAESCTR(null);
 		assertEquals(null, decryption);
 	}
 
 	@Test
-	public void testDecryptAesCtr_WithEmptyMessage_ExpectsEmptyMessage() {
+	public void testDecryptAesCtr_WithEmptyMessage_ExpectsEmptyMessage() throws EncryptionException {
 		String decryption = EncryptionUtil.decryptAESCTR("");
 		assertEquals("", decryption);
 	}
 
 	@Test
-	public void testValidateAesCtr_WithValidMessage_ExpectsSuccess() {
+	public void testValidateAesCtr_WithValidMessage_ExpectsSuccess() throws EncryptionException {
 		String encryption = EncryptionUtil.encryptAESCTR(unEncryptedMessage);
 		assertTrue(EncryptionUtil.validateAESCTR(unEncryptedMessage, encryption));
 	}

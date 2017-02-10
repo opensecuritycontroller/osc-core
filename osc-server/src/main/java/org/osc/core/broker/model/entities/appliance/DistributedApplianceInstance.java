@@ -24,6 +24,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova.CreatedServerDetails;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.manager.element.DistributedApplianceInstanceElement;
 
 import com.google.common.base.Objects;
@@ -298,19 +299,19 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.packets = packets;
     }
 
-    public String getCurrentConsolePassword() {
+    public String getCurrentConsolePassword() throws EncryptionException {
         return EncryptionUtil.decryptAESCTR(this.currentConsolePassword);
     }
 
-    public void setCurrentConsolePassword(String currentConsolePassword) {
+    public void setCurrentConsolePassword(String currentConsolePassword) throws EncryptionException {
         this.currentConsolePassword = EncryptionUtil.encryptAESCTR(currentConsolePassword);
     }
 
-    public String getNewConsolePassword() {
+    public String getNewConsolePassword() throws EncryptionException {
         return EncryptionUtil.decryptAESCTR(this.newConsolePassword);
     }
 
-    public void setNewConsolePassword(String newConsolePassword) {
+    public void setNewConsolePassword(String newConsolePassword) throws EncryptionException {
         this.newConsolePassword = EncryptionUtil.encryptAESCTR(newConsolePassword);
     }
 

@@ -13,6 +13,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Properties;
 
 public class AESCTREncryption {
@@ -24,74 +25,82 @@ public class AESCTREncryption {
 
     public static final String PROPS_AESCTR_PASSWORD = "aesctr.password";
 
-    public String encrypt(String plainText) {
-        if (StringUtils.isNotBlank(plainText)) {
-            byte[] plainTextBytes = plainText.getBytes();
-            byte[] iv = generateIv();
-
-            return DatatypeConverter.printHexBinary(iv) + ":" +
-                    DatatypeConverter.printHexBinary(encryptAesCtr(plainTextBytes, iv));
+    public AESCTREncryption() {
+        if (keyProvider == null) {
+            setKeyProvider(new KeyFromKeystoreProvider());
         }
-        return plainText;
     }
 
-    public String decrypt(String cipherText) {
-        if (StringUtils.isNotBlank(cipherText)) {
-            try {
-                String[] params = cipherText.split(":");
-                byte[] iv = DatatypeConverter.parseHexBinary(params[IV_INDEX]);
-                byte[] hash = DatatypeConverter.parseHexBinary(params[AES_INDEX]);
-
-                SecretKey key = new SecretKeySpec(DatatypeConverter.parseHexBinary(getHexKeyFromKeyStore()), "AES");
-                IvParameterSpec ivSpec = new IvParameterSpec(iv);
-                Cipher cipher = Cipher.getInstance(AESCTR_ALGORITHM);
-                cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
-                byte[] result = cipher.doFinal(DatatypeConverter.parseHexBinary(DatatypeConverter.printHexBinary(hash)));
-
-                return new String(result, "UTF-8");
-            } catch (Exception ex) {
-                LOG.error("Error encrypting message", ex);
-            }
+    public String encrypt(String plainText) throws EncryptionException {
+        if (StringUtils.isBlank(plainText)) {
+            return plainText;
         }
 
-        return cipherText;
+        byte[] plainTextBytes = plainText.getBytes();
+        byte[] iv = generateIv();
+
+        return String.join(":", DatatypeConverter.printHexBinary(iv),
+                                DatatypeConverter.printHexBinary(encryptAesCtr(plainTextBytes, iv)));
     }
 
-    public boolean validate(String plainText, String validCipherText) {
-        if (StringUtils.isNotBlank(plainText)) {
-            try {
-                byte[] passwordBytes = plainText.getBytes();
-                String[] params = validCipherText.split(":");
-                byte[] iv = DatatypeConverter.parseHexBinary(params[IV_INDEX]);
-                byte[] hash = DatatypeConverter.parseHexBinary(params[AES_INDEX]);
-
-                byte[] testHash = encryptAesCtr(passwordBytes, iv);
-
-                return ByteOperations.slowEquals(hash, testHash);
-            } catch (Exception ex) {
-                LOG.error("Error validation plainText", ex);
-            }
+    public String decrypt(String cipherText) throws EncryptionException {
+        if(StringUtils.isBlank(cipherText)) {
+            return cipherText;
         }
-        return false;
-    }
 
-    private byte[] encryptAesCtr(byte[] passwordBytes, byte[] iv) {
         try {
-            SecretKey key = new SecretKeySpec(DatatypeConverter.parseHexBinary(getHexKeyFromKeyStore()), "AES");
+            String[] params = cipherText.split(":");
+            byte[] iv = DatatypeConverter.parseHexBinary(params[IV_INDEX]);
+            byte[] hash = DatatypeConverter.parseHexBinary(params[AES_INDEX]);
+
+            SecretKey key = new SecretKeySpec(DatatypeConverter.parseHexBinary(keyProvider.getKeyHex()), "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+            Cipher cipher = Cipher.getInstance(AESCTR_ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+            byte[] result = cipher.doFinal(DatatypeConverter.parseHexBinary(DatatypeConverter.printHexBinary(hash)));
+
+            return new String(result, "UTF-8");
+        } catch (Exception ex) {
+            LOG.error("Error encrypting message", ex);
+            throw new EncryptionException("Failed to decrypt cipher with AES-CTR", ex);
+        }
+    }
+
+    public boolean validate(String plainText, String validCipherText) throws EncryptionException {
+        if (StringUtils.isBlank(plainText)) {
+            return false;
+        }
+
+        try {
+            byte[] passwordBytes = plainText.getBytes();
+            String[] params = validCipherText.split(":");
+            byte[] iv = DatatypeConverter.parseHexBinary(params[IV_INDEX]);
+            byte[] hash = DatatypeConverter.parseHexBinary(params[AES_INDEX]);
+
+            byte[] testHash = encryptAesCtr(passwordBytes, iv);
+
+            return ByteOperations.slowEquals(hash, testHash);
+        } catch (Exception ex) {
+            LOG.error("Error validation plainText", ex);
+            throw new EncryptionException("Failed to validate AES-CTR cipher against valid cipher text", ex);
+        }
+    }
+
+    private byte[] encryptAesCtr(byte[] passwordBytes, byte[] iv) throws EncryptionException {
+        try {
+            SecretKey key = new SecretKeySpec(DatatypeConverter.parseHexBinary(keyProvider.getKeyHex()), "AES");
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             Cipher cipher = Cipher.getInstance(AESCTR_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
             byte[] result = cipher.doFinal(DatatypeConverter.parseHexBinary(DatatypeConverter.printHexBinary(passwordBytes)));
 
-            for (int i=0; i < passwordBytes.length; i++) {
-                passwordBytes[i] = 0;
-            }
+            Arrays.fill(passwordBytes, (byte)0);
 
             return result;
         } catch (Exception ex) {
             LOG.error("Error encrypting plainText", ex);
+            throw new EncryptionException("Failed to encrypt cipher with AES-CTR", ex);
         }
-        return passwordBytes;
     }
 
     private byte[] generateIv() {
@@ -101,35 +110,52 @@ public class AESCTREncryption {
         return iv;
     }
 
-    private String getHexKeyFromKeyStore() {
-        String hexKey = null;
-        try {
-            String aesCtrPassword = loadKeystorePasswordForAESCTRKey();
+    // KEY PROVIDING STRATEGY
+    private static KeyProvider keyProvider;
 
-            if(StringUtils.isBlank(aesCtrPassword)) {
-                throw new Exception("Keystore password not found in security properties file");
-            }
-
-            KeyStoreProvider keyStoreProvider = KeyStoreProvider.getInstance();
-            hexKey = keyStoreProvider.getPassword("AesCtrKey", aesCtrPassword);
-            if (hexKey == null) {
-                hexKey = DatatypeConverter.printHexBinary(KeyGenerator.getInstance("AES").generateKey().getEncoded());
-                keyStoreProvider.putPassword("AesCtrKey", hexKey, aesCtrPassword);
-            }
-        } catch (Exception e) {
-            LOG.error("Error encrypting plainText", e);
-        }
-
-        return hexKey;
+    public static void setKeyProvider(KeyProvider provider){
+        keyProvider = provider;
     }
 
-    private String loadKeystorePasswordForAESCTRKey() {
-        Properties properties = new Properties();
-        try {
-            properties.load(getClass().getResourceAsStream(EncryptionUtil.SECURITY_PROPS_RESOURCE_PATH));
-        } catch (IOException e) {
-            LOG.error("Error loading key from properties", e);
+    public interface KeyProvider {
+        String getKeyHex() throws EncryptionException;
+    }
+
+    private class KeyFromKeystoreProvider implements KeyProvider {
+        @Override
+        public String getKeyHex() throws EncryptionException{
+            String hexKey = null;
+            try {
+                String aesCtrPassword = loadKeystorePasswordForAESCTRKey();
+
+                if(StringUtils.isBlank(aesCtrPassword)) {
+                    throw new Exception("Keystore password not found in security properties file");
+                }
+
+                KeyStoreProvider keyStoreProvider = KeyStoreProvider.getInstance();
+                hexKey = keyStoreProvider.getPassword("AesCtrKey", aesCtrPassword);
+
+                if (StringUtils.isNotBlank(hexKey)) {
+                    hexKey = DatatypeConverter.printHexBinary(KeyGenerator.getInstance("AES").generateKey().getEncoded());
+                    keyStoreProvider.putPassword("AesCtrKey", hexKey, aesCtrPassword);
+                }
+            } catch (Exception e) {
+                LOG.error("Error encrypting plainText", e);
+                throw new EncryptionException("Failed to get encryption key", e);
+            }
+
+            return hexKey;
         }
-        return properties.getProperty(PROPS_AESCTR_PASSWORD);
+
+        private String loadKeystorePasswordForAESCTRKey() throws EncryptionException {
+            Properties properties = new Properties();
+            try {
+                properties.load(getClass().getResourceAsStream(EncryptionUtil.SECURITY_PROPS_RESOURCE_PATH));
+            } catch (IOException e) {
+                LOG.error("Error loading key from properties", e);
+                throw new EncryptionException("Failed to load keystore password.", e);
+            }
+            return properties.getProperty(PROPS_AESCTR_PASSWORD);
+        }
     }
 }

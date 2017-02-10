@@ -3,16 +3,17 @@ package org.osc.core.broker.service.persistence;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class UserEntityMgr {
 
-    public static User createEntity(UserDto dto) {
+    public static User createEntity(UserDto dto) throws EncryptionException {
         User user = new User();
         toEntity(user, dto);
         return user;
     }
 
-    public static void toEntity(User user, UserDto dto) {
+    public static void toEntity(User user, UserDto dto) throws EncryptionException {
 
         // transform from dto to entity
         user.setId(dto.getId());
@@ -26,7 +27,7 @@ public class UserEntityMgr {
         user.setRole(dto.getRole());
     }
 
-    public static void fromEntity(User user, UserDto dto) {
+    public static void fromEntity(User user, UserDto dto) throws EncryptionException {
 
         dto.setId(user.getId());
         dto.setFirstName(user.getFirstName());

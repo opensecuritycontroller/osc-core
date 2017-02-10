@@ -1,13 +1,5 @@
 package org.osc.core.broker.service;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-import static org.osc.core.broker.service.AgentRegisterServiceTestData.*;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.Before;
@@ -15,11 +7,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -42,6 +30,8 @@ import org.osc.core.test.util.SetLockObjectReferenceMatcher;
 import org.osc.core.test.util.TaskGraphMatcher;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.NetworkUtil;
+import org.osc.core.util.encryption.AESCTREncryption;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.DistributedApplianceInstanceElement;
@@ -49,11 +39,24 @@ import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.element.AgentElement;
 import org.osc.sdk.sdn.element.AgentStatusElement;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.matches;
+import static org.mockito.Mockito.*;
+import static org.osc.core.broker.service.AgentRegisterServiceTestData.*;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ManagerApiFactory.class, JobEngine.class, VMwareSdnApiFactory.class, HibernateUtil.class })
+@PowerMockIgnore({"javax.crypto.*" })
+@PrepareForTest({ManagerApiFactory.class, JobEngine.class, VMwareSdnApiFactory.class, HibernateUtil.class, EncryptionException.class })
 public class AgentRegisterServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -85,9 +88,14 @@ public class AgentRegisterServiceTest {
     private static String UPDATE_CONSOLE_PWD_STR = "Update out-of-sync Appliance Console Password for DAI : '";
     private static String UPDATE_POLICY_STR = "Update out-of-sync Appliance Traffic Policy Mapping for DAI : '";
 
+    private static String AGENT_PASSWORD_ENCRYPTED = "0048E869D632A9E08EC15C3B0B436EAE:D61C28FA48E503FB";
+
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        AESCTREncryption.setKeyProvider(() -> { return "A6EBBF1CDCC166710670DE15015EA0AF"; });
+        AGENT_PASSWORD_ENCRYPTED = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
 
         this.sessionStub = new SessionStub(this.sessionMock);
         this.agentApiMock = mock(AgentApi.class);
@@ -662,7 +670,7 @@ public class AgentRegisterServiceTest {
                     this.daiIpAddress.equals(dai.getIpAddress()) &&
                     this.daiName.equals(dai.getName()) &&
                     this.daiIsPolicyMapOutOfSync == dai.isPolicyMapOutOfSync() &&
-                    EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS).equals(dai.getPassword()) &&
+                            AGENT_PASSWORD_ENCRYPTED.equals(dai.getPassword()) &&
                     this.request.getAgentVersion().getMajor().equals(dai.getAgentVersionMajor()) &&
                     this.request.getAgentVersion().getMinor().equals(dai.getAgentVersionMinor()) &&
                     this.request.getAgentVersion().getVersionStr().equals(dai.getAgentVersionStr()) &&

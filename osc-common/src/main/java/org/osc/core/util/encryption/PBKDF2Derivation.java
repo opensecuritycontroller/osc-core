@@ -10,6 +10,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 
 public class PBKDF2Derivation {
     private static final Logger LOG = Logger.getLogger(AESCTREncryption.class);
@@ -21,44 +22,49 @@ public class PBKDF2Derivation {
     private static final int SALT_INDEX = 1;
     private static final int PBKDF2_INDEX = 2;
 
-    public String derive(String plainText) {
-        if (StringUtils.isNotBlank(plainText)) {
-            try {
-                char[] passwordChars = plainText.toCharArray();
-                byte[] saltBytes = getSalt();
-                byte[] hashedPasswordBytes = pbkdf2(passwordChars, saltBytes);
-
-                plainText = "";
-                for (int i=0; i < passwordChars.length; i++) {
-                    passwordChars[i] = 0;
-                }
-
-                return PBKDF2_ITERATIONS + ":" +
-                        DatatypeConverter.printHexBinary(saltBytes) + ":" +
-                        DatatypeConverter.printHexBinary(hashedPasswordBytes);
-            } catch (Exception ex) {
-                LOG.error("Error encrypting plainText", ex);
-            }
+    public String derive(String plainText) throws EncryptionException {
+        if (StringUtils.isBlank(plainText)) {
+            return plainText;
         }
 
-        return plainText;
+        try {
+            char[] passwordChars = plainText.toCharArray();
+            byte[] saltBytes = getSalt();
+            byte[] hashedPasswordBytes = pbkdf2(passwordChars, saltBytes);
+
+            plainText = "";
+
+            Arrays.fill(passwordChars, (char) 0);
+
+            return String.join(":", Integer.toString(PBKDF2_ITERATIONS),
+                                    DatatypeConverter.printHexBinary(saltBytes),
+                                    DatatypeConverter.printHexBinary(hashedPasswordBytes));
+        } catch (Exception ex) {
+            String msg = "Error during PBKDF2 derivation";
+            LOG.error(msg, ex);
+            throw new EncryptionException(msg, ex);
+        }
+
     }
 
-    public boolean validate(String plainText, String validCipherText) {
-        if (StringUtils.isNotBlank(plainText)) {
-            try {
-                String[] params = validCipherText.split(":");
-                byte[] salt = DatatypeConverter.parseHexBinary(params[SALT_INDEX]);
-                byte[] hash = DatatypeConverter.parseHexBinary(params[PBKDF2_INDEX]);
-
-                byte[] testHash = pbkdf2(plainText.toCharArray(), salt);
-
-                return ByteOperations.slowEquals(hash, testHash);
-            } catch (Exception ex) {
-                LOG.error("Error validation plainText", ex);
-            }
+    public boolean validate(String plainText, String validCipherText) throws EncryptionException {
+        if (StringUtils.isBlank(plainText)) {
+            return false;
         }
-        return false;
+
+        try {
+            String[] params = validCipherText.split(":");
+            byte[] salt = DatatypeConverter.parseHexBinary(params[SALT_INDEX]);
+            byte[] hash = DatatypeConverter.parseHexBinary(params[PBKDF2_INDEX]);
+
+            byte[] testHash = pbkdf2(plainText.toCharArray(), salt);
+
+            return ByteOperations.slowEquals(hash, testHash);
+        } catch (Exception ex) {
+            String msg = "Error during validation of PBKDF2 derived cypher";
+            LOG.error(msg, ex);
+            throw new EncryptionException(msg, ex);
+        }
     }
 
     private byte[] pbkdf2(char[] passwordChars, byte[] saltBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {

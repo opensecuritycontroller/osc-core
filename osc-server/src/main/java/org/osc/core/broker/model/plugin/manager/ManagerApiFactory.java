@@ -17,6 +17,7 @@ import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.manager.ManagerAuthenticationType;
 import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
@@ -208,7 +209,7 @@ public class ManagerApiFactory {
         createApplianceManagerApi(mc.getManagerType()).checkConnection(getApplianceManagerConnectorElement(mc));
     }
 
-    private static ApplianceManagerConnector getDecryptedApplianceManagerConnector(ApplianceManagerConnector mc) {
+    private static ApplianceManagerConnector getDecryptedApplianceManagerConnector(ApplianceManagerConnector mc) throws EncryptionException {
         ApplianceManagerConnector shallowClone = new ApplianceManagerConnector(mc);
         if (!StringUtils.isEmpty(shallowClone.getPassword())) {
             shallowClone.setPassword(EncryptionUtil.decryptAESCTR(shallowClone.getPassword()));
@@ -216,7 +217,7 @@ public class ManagerApiFactory {
         return shallowClone;
     }
 
-    public static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(ApplianceManagerConnector mc) {
+    public static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(ApplianceManagerConnector mc) throws EncryptionException {
         ApplianceManagerConnector decryptedMc = getDecryptedApplianceManagerConnector(mc);
 
         // TODO emanoel: This will likely have some performance impact. We need to figure out an approach to keep these values cached on OSC
@@ -230,7 +231,7 @@ public class ManagerApiFactory {
                 .createManagerWebSocketNotificationApi(getApplianceManagerConnectorElement(mc));
     }
 
-    private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs) {
+    private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs) throws EncryptionException {
         return getApplianceManagerConnectorElement(vs.getDistributedAppliance().getApplianceManagerConnector());
     }
 }
