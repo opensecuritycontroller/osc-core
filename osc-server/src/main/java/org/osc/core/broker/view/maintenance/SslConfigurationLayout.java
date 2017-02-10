@@ -1,12 +1,10 @@
 package org.osc.core.broker.view.maintenance;
 
-import com.vaadin.data.Item;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.VerticalLayout;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.DeleteSslCertificateService;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -25,10 +23,13 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import com.vaadin.data.Item;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
+import com.vaadin.ui.VerticalLayout;
 
 public class SslConfigurationLayout extends FormLayout {
 
@@ -102,13 +103,13 @@ public class SslConfigurationLayout extends FormLayout {
     private void colorizeValidUntilRows() {
 
         final Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MONTH, CERT_MONTHLY_THRESHOLD);
+        calendar.add(Calendar.MONTH, this.CERT_MONTHLY_THRESHOLD);
 
         this.sslConfigTable.setCellStyleGenerator((Table.CellStyleGenerator) (table, itemId, propertyId) -> {
             if (propertyId != null) {
                 return null;
             }
-            Item item = sslConfigTable.getItem(itemId);
+            Item item = this.sslConfigTable.getItem(itemId);
             Date validUntil = (Date) item.getItemProperty("Valid until").getValue();
             if (validUntil.before(calendar.getTime())) {
                 return "highlight-warning";
@@ -143,7 +144,6 @@ public class SslConfigurationLayout extends FormLayout {
         colorizeValidUntilRows();
     }
 
-    @SuppressWarnings("serial")
     private Button createDeleteEntry(String alias) {
         String removeBtnLabel = (isConnected(alias)) ? "Force delete" : "Delete";
         final Button deleteArchiveButton = new Button(removeBtnLabel);
@@ -153,21 +153,26 @@ public class SslConfigurationLayout extends FormLayout {
     }
 
     private Button.ClickListener removeButtonListener = new Button.ClickListener() {
+        /**
+         *
+         */
+        private static final long serialVersionUID = 5173505013809394877L;
+
         @Override
         public void buttonClick(Button.ClickEvent event) {
             final String alias = (String) event.getButton().getData();
             if(isConnected(alias)){
-                deleteWindow = WindowUtil.createAlertWindow(
+                SslConfigurationLayout.this.deleteWindow = WindowUtil.createAlertWindow(
                         VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FORCE_REMOVE_DIALOG_TITLE),
                         VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FORCE_REMOVE_DIALOG_CONTENT, alias));
             } else {
-                deleteWindow = WindowUtil.createAlertWindow(
+                SslConfigurationLayout.this.deleteWindow = WindowUtil.createAlertWindow(
                         VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_TITLE),
                         VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_DIALOG_CONTENT, alias));
             }
-            deleteWindow.getComponentModel().getOkButton().setData(alias);
-            deleteWindow.getComponentModel().setOkClickedListener(acceptRemoveButtonListener);
-            ViewUtil.addWindow(deleteWindow);
+            SslConfigurationLayout.this.deleteWindow.getComponentModel().getOkButton().setData(alias);
+            SslConfigurationLayout.this.deleteWindow.getComponentModel().setOkClickedListener(SslConfigurationLayout.this.acceptRemoveButtonListener);
+            ViewUtil.addWindow(SslConfigurationLayout.this.deleteWindow);
         }
     };
 
@@ -183,6 +188,11 @@ public class SslConfigurationLayout extends FormLayout {
     }
 
     private Button.ClickListener acceptRemoveButtonListener = new Button.ClickListener() {
+        /**
+         *
+         */
+        private static final long serialVersionUID = 2512910250970666944L;
+
         @Override
         public void buttonClick(Button.ClickEvent event) {
             final String alias = (String) event.getButton().getData();
@@ -202,7 +212,7 @@ public class SslConfigurationLayout extends FormLayout {
 
             buildSslConfigurationTable();
 
-            deleteWindow.close();
+            SslConfigurationLayout.this.deleteWindow.close();
 
             String outputMessage = (succeed) ? VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVED : VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_FAILURE;
             ViewUtil.iscNotification(VmidcMessages.getString(outputMessage, new Date()), null, Notification.Type.TRAY_NOTIFICATION);
