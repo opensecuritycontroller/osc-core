@@ -135,7 +135,7 @@ public class AESCTREncryption {
                 KeyStoreProvider keyStoreProvider = KeyStoreProvider.getInstance();
                 hexKey = keyStoreProvider.getPassword("AesCtrKey", aesCtrPassword);
 
-                if (StringUtils.isNotBlank(hexKey)) {
+                if (StringUtils.isBlank(hexKey)) {
                     hexKey = DatatypeConverter.printHexBinary(KeyGenerator.getInstance("AES").generateKey().getEncoded());
                     keyStoreProvider.putPassword("AesCtrKey", hexKey, aesCtrPassword);
                 }

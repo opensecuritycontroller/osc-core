@@ -1,18 +1,8 @@
 package org.osc.core.broker.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-import static org.osc.core.broker.service.AgentRegisterServiceTestData.*;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -35,12 +25,10 @@ import org.osc.core.broker.service.response.AgentRegisterServiceResponse;
 import org.osc.core.broker.service.tasks.agent.AgentInterfaceEndpointMapSetTask;
 import org.osc.core.broker.service.tasks.agent.UpdateApplianceConsolePasswordTask;
 import org.osc.core.broker.util.SessionStub;
-import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.SetLockObjectReferenceMatcher;
 import org.osc.core.test.util.TaskGraphMatcher;
 import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
