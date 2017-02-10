@@ -29,6 +29,7 @@ import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.EventType;
@@ -196,9 +197,11 @@ public class UpdateVirtualizationConnectorService
         updateVirtualizationConnector(request, existingVc);
 
         if (dto.getType().isVmware()) {
-            AddVirtualizationConnectorService.checkVmwareConnection(log, request, existingVc);
+        	VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
+        	util.checkVmwareConnection(request, existingVc);
         } else {
-            AddVirtualizationConnectorService.checkOpenstackConnection(log, request, existingVc);
+        	VirtualizationConnectorUtil  util = new VirtualizationConnectorUtil();
+        	util.checkOpenstackConnection(request, existingVc);
         }
     }
 
