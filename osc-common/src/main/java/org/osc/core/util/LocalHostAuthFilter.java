@@ -14,8 +14,7 @@ import java.io.IOException;
  */
 @Provider
 @LocalHostAuth
-public class LocalHostAuthFilter implements ContainerRequestFilter
-{
+public class LocalHostAuthFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
         AuthUtil.authenticateLocalRequest((ContainerRequest) containerRequestContext);

@@ -252,6 +252,7 @@
 			<artifactId>openstack-neutron</artifactId>
 			<version>${jclouds.version}</version>
 		</dependency>
+		<!--TODO: bsulich exclusion will be deleted when replacing jcloud with openstack4j-->
 		<dependency>
 			<groupId>org.apache.jclouds</groupId>
 			<artifactId>jclouds-core</artifactId>

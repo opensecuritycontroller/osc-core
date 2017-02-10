@@ -42,6 +42,7 @@
 			<artifactId>jersey-bean-validation</artifactId>
 			<version>2.25</version>
 		</dependency>
+		<!--TODO: below exclusions are necessery to pick a correct version of library by bnd/osgi . -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.jaxrs</groupId>
 			<artifactId>jackson-jaxrs-json-provider</artifactId>

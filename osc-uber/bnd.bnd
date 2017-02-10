@@ -27,6 +27,7 @@ Require-Capability: \
 	aQute.lib.*,\
 	aQute.libg.*
 
+# TODO: it is necessary to move all possible dependecies out of uber bundle into osgi container after replacing jclouds with openstack4j
 -includeresource: \
     @${activation.dep},\
     @${amqp-client.dep},\

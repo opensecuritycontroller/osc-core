@@ -15,7 +15,12 @@ import org.osc.core.util.NetworkUtil;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.ws.rs.client.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -155,13 +160,13 @@ public abstract class RestBaseClient {
 
         return ClientBuilder.newBuilder()
                 .sslContext(ctx)
-                .hostnameVerifier((s, sslSession) -> true )
+                .hostnameVerifier((s, sslSession) -> true)
                 .build();
     }
 
     private Client configureDefaultClient() {
         return ClientBuilder.newBuilder()
-                .hostnameVerifier((s, sslSession) -> true )
+                .hostnameVerifier((s, sslSession) -> true)
                 .build();
     }
 
