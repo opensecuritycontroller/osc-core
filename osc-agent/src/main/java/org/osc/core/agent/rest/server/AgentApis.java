@@ -48,6 +48,7 @@ import org.osc.core.rest.client.agent.model.output.AgentCurrentVmidcServerRespon
 import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
 import org.osc.core.rest.client.agent.model.output.AgentSupportBundle;
 import org.osc.core.rest.client.agent.model.output.AgentUpgradeResponse;
+import org.osc.core.rest.client.crypto.SSLSocketFactoryWithValidCipherSuites;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.util.ArchiveUtil;
 import org.osc.core.util.EncryptionUtil;
@@ -490,7 +491,7 @@ public class AgentApis {
     private void downloadFileSecure(URL url, File outFile) throws Exception {
 
         final SSLContext sslContext = new SslContextProvider().getSSLContext();
-        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+        HttpsURLConnection.setDefaultSSLSocketFactory(new SSLSocketFactoryWithValidCipherSuites(sslContext.getSocketFactory()));
 
         // Create all-trusting host name verifier
         HostnameVerifier allHostsValid = new HostnameVerifier() {

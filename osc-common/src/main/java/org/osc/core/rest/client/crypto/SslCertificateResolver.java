@@ -67,7 +67,7 @@ public class SslCertificateResolver {
         HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
         urlConnection.setHostnameVerifier((string, ssls) -> true);
 
-        urlConnection.setSSLSocketFactory(sslCtx.getSocketFactory());
+        urlConnection.setSSLSocketFactory(new SSLSocketFactoryWithValidCipherSuites(sslCtx.getSocketFactory()));
         urlConnection.connect();
 
         Stream<Certificate> certificateStream = Arrays.stream(urlConnection.getServerCertificates());

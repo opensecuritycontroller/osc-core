@@ -2,17 +2,20 @@ package org.osc.core.broker.model.plugin.sdncontroller;
 
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.rest.client.crypto.SSLSocketFactoryWithValidCipherSuites;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.sdn.element.ConnectorElement;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 
 public class VMwareSdnConnector implements ConnectorElement {
 	private String ipAddress;
 	private String userName;
 	private String password;
 	private SSLContext sslContext;
+	private SSLSocketFactory sslSocketFactory;
 
     public VMwareSdnConnector(VirtualizationConnector vc) throws EncryptionException {
         if (vc == null) {
@@ -29,6 +32,10 @@ public class VMwareSdnConnector implements ConnectorElement {
         this.userName = vc.getControllerUsername();
         this.password = EncryptionUtil.decryptAESCTR(vc.getControllerPassword());
         this.sslContext = vc.getSslContext();
+
+        if(this.sslContext != null) {
+            this.sslSocketFactory = new SSLSocketFactoryWithValidCipherSuites(this.sslContext.getSocketFactory());
+        }
     }
 
     /**
@@ -54,6 +61,16 @@ public class VMwareSdnConnector implements ConnectorElement {
 	public SSLContext getSslContext() {
 		return this.sslContext;
 	}
+
+
+    /**
+     * @see ConnectorElement#getSslSocketFactory()
+     */
+    Override
+    public SSLSocketFactory getSslSocketFactory() {
+        return this.sslSocketFactory;
+    }
+
     /**
      * @see org.osc.sdk.sdn.element.ConnectorElement#getPassword()
      */
