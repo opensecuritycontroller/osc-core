@@ -47,6 +47,11 @@ public final class WindowUtil {
                 new OkCancelValidateButtonModel());
         validateWindow.setCaption(caption);
         validateWindow.getComponentModel().setCancelClickedListener(new ClickListener() {
+            /**
+             *
+             */
+            private static final long serialVersionUID = -1166844267835596823L;
+
             @Override
             public void buttonClick(ClickEvent event) {
                 validateWindow.close();
@@ -139,6 +144,11 @@ public final class WindowUtil {
         deleteWindow.setCaption(caption);
         deleteWindow.getComponentModel().setCancelClickedListener(new ClickListener() {
 
+            /**
+             *
+             */
+            private static final long serialVersionUID = -651121508110914210L;
+
             @Override
             public void buttonClick(ClickEvent event) {
                 deleteWindow.close();
@@ -173,6 +183,11 @@ public final class WindowUtil {
                 new OkCancelButtonModel());
         alertWindow.setCaption(caption);
         alertWindow.getComponentModel().setCancelClickedListener(new ClickListener() {
+
+            /**
+             *
+             */
+            private static final long serialVersionUID = 98853982893459323L;
 
             @Override
             public void buttonClick(ClickEvent event) {

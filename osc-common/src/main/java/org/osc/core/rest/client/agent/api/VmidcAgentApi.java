@@ -27,7 +27,7 @@ public class VmidcAgentApi extends RestBaseClient {
 
     public VmidcAgentApi(String agentServer, int port, String loginName, String password)
             throws Exception {
-        this(agentServer,port,loginName,password,true);
+        this(agentServer, port, loginName, password,true);
     }
 
     protected VmidcAgentApi(String agentServer, int port, String loginName, String password, boolean isHttps)

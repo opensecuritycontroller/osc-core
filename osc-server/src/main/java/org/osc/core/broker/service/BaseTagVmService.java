@@ -50,7 +50,7 @@ abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmRes
         VirtualizationConnector vc = dai.getVirtualSystem().getVirtualizationConnector();
 
         if (this.vimUtils == null) {
-            this.vimUtils =  new VimUtils(vc.getProviderIpAddress(), vc.getProviderUsername(), EncryptionUtil.decrypt(vc.getProviderPassword()));
+            this.vimUtils =  new VimUtils(vc.getProviderIpAddress(), vc.getProviderUsername(), EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
         }
 
         return customFindVm(this.vimUtils, request);

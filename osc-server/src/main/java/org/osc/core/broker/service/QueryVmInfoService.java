@@ -50,7 +50,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
             }
 
             VimUtils vmi = new VimUtils(vc.getProviderIpAddress(), vc.getProviderUsername(),
-                    EncryptionUtil.decrypt(vc.getProviderPassword()));
+                    EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
 
             if (request.ipAddress != null && !request.ipAddress.isEmpty()) {
                 for (String ipAddress : request.ipAddress) {

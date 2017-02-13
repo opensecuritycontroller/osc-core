@@ -14,7 +14,7 @@ import java.io.IOException;
 public class NsxAuthFilter implements ContainerRequestFilter {
 
     public static final String VMIDC_NSX_LOGIN = "nsx";
-    public static String VMIDC_NSX_PASS = "admin123";
+    public static String VMIDC_NSX_PASS = "";
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {

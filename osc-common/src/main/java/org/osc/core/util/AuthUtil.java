@@ -2,12 +2,12 @@ package org.osc.core.util;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.log4j.Logger;
+import org.osc.core.util.encryption.EncryptionException;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Response;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Map;
 
 public class AuthUtil {
@@ -47,32 +47,29 @@ public class AuthUtil {
             String[] credentials = credString.split(":");
 
             if (credentials.length != 2) {
-                log.warn("Authentication of " + requestUri + " failed because of invalid credentials");
+                log.warn("Authentication of " + requestUri + " failed - invalid credentials format");
                 throw wae;
             }
 
             String loginName = credentials[0];
             String password = credentials[1];
 
-            if (!(containsString(loginName, usernamePasswordMap.keySet(), true)
-                    && containsString(password, usernamePasswordMap.values(), false))) {
-                log.warn("Authentication of " + requestUri + " failed because of invalid credentials");
+            if (!validateUserAndPassword(loginName, password, usernamePasswordMap)) {
+                log.warn("Authentication of " + requestUri + " failed - user password mismatch");
                 throw wae;
             }
         }
     }
 
-    private static boolean containsString(String stringToSearch, Collection<String> strings, boolean ignoreCase) {
-        if (!ignoreCase) {
-            return strings.contains(stringToSearch);
-        } else {
-            for (String string : strings) {
-                if (string.equalsIgnoreCase(stringToSearch)) {
-                    return true;
-                }
+    private static boolean validateUserAndPassword(String loginName, String password, Map<String, String> usernamePasswordMap) {
+        return usernamePasswordMap.entrySet().stream().anyMatch(entry -> {
+            try {
+                return entry.getKey().equalsIgnoreCase(loginName) && EncryptionUtil.validateAESCTR(password, entry.getValue());
+            } catch (EncryptionException encryptionException) {
+                log.error("Failed to validate AESCTR password", encryptionException);
+                return false;
             }
-            return false;
-        }
+        });
     }
 
     public static void authenticateLocalRequest(ContainerRequestContext request) {

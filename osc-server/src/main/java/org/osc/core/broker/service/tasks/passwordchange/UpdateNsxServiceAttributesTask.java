@@ -39,7 +39,7 @@ public class UpdateNsxServiceAttributesTask extends TransactionalTask {
                 this.vs.getDistributedAppliance().getAppliance().getModel(),
                 this.vs.getDistributedAppliance().getApplianceVersion(),
                 ServerUtil.getServerIP(),
-                EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS),
+                EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS),
                 AgentAuthFilter.VMIDC_AGENT_LOGIN,
                 this.vs.getDistributedAppliance().getName()
                 );

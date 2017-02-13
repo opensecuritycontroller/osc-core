@@ -14,7 +14,7 @@ import java.io.IOException;
 public class OscAuthFilter implements ContainerRequestFilter {
 
     public static final String OSC_DEFAULT_LOGIN = "admin";
-    public static String OSC_DEFAULT_PASS = "admin123";
+    public static String OSC_DEFAULT_PASS = "l";
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {

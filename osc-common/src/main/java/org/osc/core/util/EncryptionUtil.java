@@ -1,122 +1,23 @@
 package org.osc.core.util;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Base64;
-
-import javax.crypto.AEADBadTagException;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.apache.log4j.Logger;
-
+import org.osc.core.util.encryption.AESCTREncryption;
+import org.osc.core.util.encryption.AESGCMEncryption;
+import org.osc.core.util.encryption.EncryptionException;
+import org.osc.core.util.encryption.PBKDF2Derivation;
 
 public class EncryptionUtil {
-    private static final Logger log = Logger.getLogger(EncryptionUtil.class);
-
-    // INNER TYPES
-    public static class EncryptionException extends Exception {
-        private static final long serialVersionUID = -52733376278542276L;
-
-        public EncryptionException(String message, Throwable cause) {
-            super(message, cause);
-        }
-
-        public EncryptionException(String message) {
-            super(message);
-        }
-    }
-
-    private static byte[] toEncryptedBytes(String message) throws Exception {
-        final MessageDigest md = MessageDigest.getInstance("md5");
-        final byte[] digestOfPassword = md.digest("HG58YZ3CR9".getBytes("utf-8"));
-        final byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
-        for (int j = 0, k = 16; j < 8;) {
-            keyBytes[k++] = keyBytes[j++];
-        }
-
-        final SecretKey key = new SecretKeySpec(keyBytes, "DESede");
-        final IvParameterSpec iv = new IvParameterSpec(new byte[8]);
-        final Cipher cipher = Cipher.getInstance("DESede/CBC/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-
-        final byte[] plainTextBytes = message.getBytes("utf-8");
-        final byte[] cipherText = cipher.doFinal(plainTextBytes);
-
-        return cipherText;
-    }
-
-    public static String encrypt(String message) {
-
-        if (message == null || message.isEmpty()) {
-            return message;
-        }
-
-        try {
-
-            byte[] cipherText = toEncryptedBytes(message);
-            return new String(Base64.getEncoder().encode(cipherText), "UTF-8");
-        } catch (Exception ex) {
-            log.error("Error encrypting message", ex);
-        }
-
-        return message;
-
-    }
-
-    private static String fromEncryptedBytes(byte[] message) throws Exception {
-
-        final MessageDigest md = MessageDigest.getInstance("md5");
-        final byte[] digestOfPassword = md.digest("HG58YZ3CR9".getBytes("UTF-8"));
-        final byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
-        for (int j = 0, k = 16; j < 8;) {
-            keyBytes[k++] = keyBytes[j++];
-        }
-
-        final SecretKey key = new SecretKeySpec(keyBytes, "DESede");
-        final IvParameterSpec iv = new IvParameterSpec(new byte[8]);
-        final Cipher decipher = Cipher.getInstance("DESede/CBC/PKCS5Padding");
-        decipher.init(Cipher.DECRYPT_MODE, key, iv);
-
-        final byte[] plainText = decipher.doFinal(message);
-
-        return new String(plainText, "UTF-8");
-    }
-
-    public static String decrypt(String encodedString) {
-
-        if (encodedString == null || encodedString.isEmpty()) {
-            return encodedString;
-        }
-
-        try {
-            return fromEncryptedBytes(Base64.getDecoder().decode(encodedString));
-        } catch (Exception ex) {
-            log.error("Error decrypting string", ex);
-        }
-
-        return encodedString;
-    }
-
+    public static final String SECURITY_PROPS_RESOURCE_PATH = "/org/osc/core/util/security.properties";
     /**
      * Encrypts plain text with AES-GCM authenticated encryption (details in RFC5084)
      * @param plainText text to be encrypted
      * @param key AES key
      * @param iv initialization vector
      * @param aad additional authentication data
-     * @return
+     * @return encrypted AES-GCM data
      */
-    public static byte[] encryptAESGCM(byte[] plainText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException{
-        return processAESGCM(Cipher.ENCRYPT_MODE, plainText, key, iv, aad);
+    public static byte[] encryptAESGCM(byte[] plainText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException {
+        return new AESGCMEncryption().encrypt(plainText, key, iv, aad);
     }
 
     /**
@@ -125,51 +26,60 @@ public class EncryptionUtil {
      * @param key AES key
      * @param iv initialization vector
      * @param aad additional authentication data
-     * @return
+     * @return decrypted AES-GCM data
      */
-    public static byte[] decryptAESGCM(byte[] cipherText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException{
-        return processAESGCM(Cipher.DECRYPT_MODE, cipherText, key, iv, aad);
+    public static byte[] decryptAESGCM(byte[] cipherText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException {
+        return new AESGCMEncryption().decrypt(cipherText, key, iv, aad);
     }
 
-    private static byte[] processAESGCM(int optMode, byte[] plainText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException{
-        try {
-            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            GCMParameterSpec spec = new GCMParameterSpec(iv.length * 8, iv);
-            cipher.init(optMode, key, spec);
-            cipher.updateAAD(aad);
-            return cipher.doFinal(plainText);
-        } catch (NoSuchAlgorithmException e) {
-            String msg = "AES/GCM/NoPadding algorithm is not supported.";
-            log.error(msg, e);
-            throw new EncryptionException(msg, e);
-        } catch (NoSuchPaddingException e) {
-            String msg = "Failed to create cipher.";
-            log.error(msg, e);
-            throw new EncryptionException(msg, e);
-        } catch (InvalidKeyException e) {
-            String msg = "The key used for AES GCM encryption is invalid.";
-            log.error(msg, e);
-            throw new EncryptionException(msg, e);
-        } catch (InvalidAlgorithmParameterException e) {
-            String msg = "IV used for AES GCM encryption is invalid.";
-            log.error(msg, e);
-            throw new EncryptionException(msg, e);
-        } catch (IllegalBlockSizeException e) {
-            String msg = "Failed to perform encryption (i.e. data length doesn't match block size).";
-            log.error(msg, e);
-            throw new EncryptionException(msg, e);
-        } catch (AEADBadTagException e) {
-            String msg = "Failed to perform encryption. Additional password is incorrect.";
-            log.error(msg, e);
-            throw new EncryptionException(msg, e);
-        } catch (BadPaddingException e) {
-            String msg = "Failed to perform encryption. Plain text is not padded properly.";
-            log.error(msg, e);
-            throw new EncryptionException(msg, e);
-        } catch (Exception e) {
-            String msg = "Failed to perform encryption.";
-            log.error(msg, e);
-            throw new EncryptionException(msg, e);
-        }
+    /**
+     * Encrypt plain text with AES-CTR (counter mode) (details in RFC3686)
+     * AES key is loaded from keystore
+     * @param plainText text to be encrypted
+     * @return IV and cypher text concatenated with ':' character
+     */
+    public static String encryptAESCTR(String plainText) throws EncryptionException {
+        return new AESCTREncryption().encrypt(plainText);
     }
+
+
+    /**
+     * Decrypts cypher text with AES-CTR (counter mode) (details in RFC3686)
+     * AES key is loaded from keystore
+     * @param cipherText concatenation of IV and cipher text to be decrypted
+     * @return decrypted plain text
+     */
+    public static String decryptAESCTR(String cipherText) throws EncryptionException {
+        return new AESCTREncryption().decrypt(cipherText);
+    }
+
+    /**
+     * Checks if given cipher text is AES-CTR-encrypted version of given plain text
+     * @param plainText plain text to be checked
+     * @param validCipherText IV and cypher text concatenated with ':' character
+     * @return true if given cipher text is encrypted version of given plain text, false otherwise
+     */
+    public static boolean validateAESCTR(String plainText, String validCipherText) throws EncryptionException {
+        return new AESCTREncryption().validate(plainText, validCipherText);
+    }
+
+    /**
+     * Encrypt plain text with PBKDF2 key derivation algorithm (details in RFC6070)
+     * @param plainText plain text to be encrypted
+     * @return encrypted (derived) version
+     */
+    static String encryptPbkdf2(String plainText) throws EncryptionException {
+        return new PBKDF2Derivation().derive(plainText);
+    }
+
+    /**
+     * Verifies if the cipher text is derived version of given plain text
+     * @param plainText plain text to check
+     * @param validCipherText derived version of some plain text
+     * @return true if the cipher text is derived version of given plain text, false otherwise
+     */
+    static boolean validatePbkdf2(String plainText, String validCipherText) throws EncryptionException {
+        return new PBKDF2Derivation().validate(plainText, validCipherText);
+    }
+
 }

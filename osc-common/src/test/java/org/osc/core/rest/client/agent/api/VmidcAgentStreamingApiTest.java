@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * Created by GER\bsulich on 1/10/17.
+ * RestClientTest streamingTest.
  */
 public class VmidcAgentStreamingApiTest extends JerseyTest {
 

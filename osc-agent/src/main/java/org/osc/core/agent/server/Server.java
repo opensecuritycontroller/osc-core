@@ -172,7 +172,7 @@ public class Server {
             Server.vmidcServerIp = prop.getProperty(VirtualizationEnvironmentProperties.VMIDC_IP);
             Server.vmidcServerPassword = prop.getProperty(VirtualizationEnvironmentProperties.VMIDC_PASSWORD);
             if (Server.vmidcServerPassword != null) {
-                AgentAuthFilter.AGENT_DEFAULT_PASS = EncryptionUtil.decrypt(Server.vmidcServerPassword);
+                AgentAuthFilter.AGENT_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(Server.vmidcServerPassword);
             }
         } catch (Exception e) {
             log.error("Unexpected behavior occurred in loading server properties", e);

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
@@ -18,8 +17,6 @@ import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.element.NetworkElement;
 
 public class PortGroupCheckTask extends TransactionalTask {
-
-    private final Logger log = Logger.getLogger(PortGroupCheckTask.class);
 
     private SecurityGroup sg;
     private SdnControllerApi controller;

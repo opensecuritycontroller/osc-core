@@ -47,19 +47,19 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
         // If user changes password, need to reflect it in auth-filter objects
         if (user.getLoginName().equals(OscAuthFilter.OSC_DEFAULT_LOGIN)) {
 
-            OscAuthFilter.OSC_DEFAULT_PASS = EncryptionUtil.decrypt(user.getPassword());
+            OscAuthFilter.OSC_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
             user.setRole(RoleType.ADMIN);
             response.setJobId(startPasswordPropagateMgrJob());
 
         } else if (user.getLoginName().equals(AgentAuthFilter.VMIDC_AGENT_LOGIN)) {
 
-            AgentAuthFilter.VMIDC_AGENT_PASS = EncryptionUtil.decrypt(user.getPassword());
+            AgentAuthFilter.VMIDC_AGENT_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
             user.setRole(RoleType.SYSTEM_AGENT);
             response.setJobId(startPasswordPropagateDaiJob());
 
         } else if (user.getLoginName().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
 
-            NsxAuthFilter.VMIDC_NSX_PASS = EncryptionUtil.decrypt(user.getPassword());
+            NsxAuthFilter.VMIDC_NSX_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
             user.setRole(RoleType.SYSTEM_NSX);
             response.setJobId(startPasswordPropagateNsxJob());
         }

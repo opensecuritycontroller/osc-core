@@ -41,6 +41,7 @@ import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMEntityManager;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.element.NetworkElement;
 
@@ -61,7 +62,7 @@ public class OpenstackUtil {
      * @throws IOException
      */
     public static String extractDomainId(String tenantId, String tenantName, VirtualizationConnector vc,
-            List<NetworkElement> protectedPorts) throws IOException {
+            List<NetworkElement> protectedPorts) throws IOException, EncryptionException {
         String domainId=null;
         Port port = null;
         try (
@@ -431,7 +432,7 @@ public class OpenstackUtil {
      * @throws IOException
      */
     public static void discoverVmForPort(Session session, String region, SecurityGroup sg, Port osPort, VMPort vmPort)
-            throws IOException {
+            throws IOException, EncryptionException {
 
         JCloudNova nova = null;
         try {
