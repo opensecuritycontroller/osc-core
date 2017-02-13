@@ -193,6 +193,7 @@ public class ServerControl {
     private static boolean isRunningServer() {
         try {
             log.info("Check if server is running ...");
+
             VmidcServerRestClient restClient = new VmidcServerRestClient("localhost", apiPort, VMIDC_DEFAULT_LOGIN, VMIDC_DEFAULT_PASS, true);
 
             ServerStatusResponse res = getServerStatusResponse(restClient);
