@@ -1,36 +1,8 @@
 package org.osc.core.broker.rest.server.api;
 
-import com.mcafee.vmidc.server.Server;
-import com.sun.jersey.api.JResponse;
-import com.sun.jersey.spi.container.ResourceFilters;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
-import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.rest.server.model.ServerStatusResponse;
-import org.osc.core.broker.service.AddSslCertificateService;
-import org.osc.core.broker.service.BackupService;
-import org.osc.core.broker.service.DeleteSslCertificateService;
-import org.osc.core.broker.service.ListSslCertificatesService;
-import org.osc.core.broker.service.dto.SslCertificateDto;
-import org.osc.core.broker.service.request.AddSslEntryRequest;
-import org.osc.core.broker.service.request.BackupRequest;
-import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.DeleteSslEntryRequest;
-import org.osc.core.broker.service.response.CommonResponse;
-import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
-import org.osc.core.util.LocalHostAuthFilter;
-import org.osc.core.util.PKIUtil;
-import org.osc.core.util.ServerUtil;
-import org.osc.core.util.VersionUtil;
+import java.io.File;
+import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -45,22 +17,51 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.io.File;
-import java.util.Date;
-import java.util.List;
 
-@Api(tags = "Operations for OSC server", authorizations = {@Authorization(value = "Basic Auth")})
-@Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/serverManagement")
-@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+import com.mcafee.vmidc.server.Server;
+import io.swagger.annotations.ApiParam;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.service.AddSslCertificateService;
+import org.osc.core.broker.service.DeleteSslCertificateService;
+import org.osc.core.broker.service.ListSslCertificatesService;
+import org.osc.core.broker.service.dto.SslCertificateDto;
+import org.osc.core.broker.service.request.AddSslEntryRequest;
+import org.osc.core.broker.service.request.BaseRequest;
+import org.osc.core.broker.service.request.DeleteSslEntryRequest;
+import org.osc.core.broker.service.response.CommonResponse;
+import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.rest.annotations.OscAuth;
+import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
+import org.osc.core.broker.rest.server.model.ServerStatusResponse;
+import org.osc.core.broker.service.BackupService;
+import org.osc.core.broker.service.request.BackupRequest;
+import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
+import org.osc.core.rest.annotations.LocalHostAuth;
+import org.osc.core.util.PKIUtil;
+import org.osc.core.util.ServerUtil;
+import org.osc.core.util.VersionUtil;
+
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+
+@Api(tags = "Operations for OSC server", authorizations = { @Authorization(value = "Basic Auth") })
+@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/serverManagement")
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 public class ServerMgmtApis {
     private static final Logger logger = Logger.getLogger(ServerMgmtApis.class);
 
     @ApiOperation(value = "Get server status",
             notes = "Returns server status information",
             response = ServerStatusResponse.class)
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
-            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)})
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/status")
     @GET
     public Response getStatus() {
@@ -79,9 +80,9 @@ public class ServerMgmtApis {
     @ApiOperation(value = "Backs up server database",
             notes = "Trigger database backup, place backup on server and make it avaliable for download",
             response = ServerStatusResponse.class)
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
-            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)})
-    @ResourceFilters({VmidcAuthFilter.class})
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @OscAuth
     @Path("/backup-db")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @POST
@@ -102,7 +103,7 @@ public class ServerMgmtApis {
         }
     }
 
-    @ResourceFilters({LocalHostAuthFilter.class})
+    @LocalHostAuth
     @Path("/upgradecomplete")
     @PUT
     public Response upgradeServerReady() {
@@ -145,9 +146,9 @@ public class ServerMgmtApis {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)})
     @Path("/sslcertificates")
-    @ResourceFilters({ VmidcAuthFilter.class })
+    @OscAuth
     @GET
-    public JResponse<List<SslCertificateDto>> getSslCertificatesList(@Context HttpHeaders headers) {
+    public List<SslCertificateDto> getSslCertificatesList(@Context HttpHeaders headers) {
 
         logger.info("Listing ssl certificates from trust store");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -156,7 +157,7 @@ public class ServerMgmtApis {
         ListResponse<SslCertificateDto> response = (ListResponse<SslCertificateDto>) ApiUtil
                 .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
 
-        return JResponse.ok(response.getList()).build();
+        return response.getList();
     }
 
     /**
@@ -166,7 +167,7 @@ public class ServerMgmtApis {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)})
     @Path("/sslcertificate")
-    @ResourceFilters({ VmidcAuthFilter.class })
+    @OscAuth
     @POST
     public Response addSslCertificate(@Context HttpHeaders headers, @ApiParam(required = true) SslCertificateDto sslEntry) {
         logger.info("Adding new SSL certificate to truststore");
@@ -185,7 +186,7 @@ public class ServerMgmtApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)
     })
     @Path("/sslcertificate/{alias}")
-    @ResourceFilters({ VmidcAuthFilter.class })
+    @OscAuth
     @DELETE
     public Response deleteSslCertificate(@Context HttpHeaders headers, @ApiParam(value = "SSL certificate alias") @PathParam("alias") String alias) {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);
