@@ -1,6 +1,7 @@
 package org.osc.core.broker.di;
 
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.ListDistributedApplianceInstanceService;
 import org.osc.core.broker.service.ListJobService;
 import org.osc.core.broker.service.alert.AcknowledgeAlertService;
 import org.osc.core.broker.service.alert.DeleteAlertService;
@@ -21,6 +22,7 @@ public class OSCTestFactory implements OSCFactory {
     private AcknowledgeAlertService acknowledgeAlertService;
     private DeleteAlertService deleteAlertService;
     private GetDtoFromEntityService dtoFromEntityService;
+    private ListDistributedApplianceInstanceService listDistributedApplianceInstanceService;
 
     public OSCTestFactory() {
         sessionUtil = new SessionUtilTestImpl();
@@ -33,6 +35,8 @@ public class OSCTestFactory implements OSCFactory {
         deleteAlertService = mock(DeleteAlertService.class);
 
         dtoFromEntityService = mock(GetDtoFromEntityService.class);
+
+        listDistributedApplianceInstanceService = mock(ListDistributedApplianceInstanceService.class);
     }
 
     @Override
@@ -68,5 +72,10 @@ public class OSCTestFactory implements OSCFactory {
     @Override
     public GetDtoFromEntityService dtoFromEntityService() {
         return dtoFromEntityService;
+    }
+
+    @Override
+    public ListDistributedApplianceInstanceService listDistributedApplianceInstanceService() {
+        return listDistributedApplianceInstanceService;
     }
 }

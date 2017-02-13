@@ -10,6 +10,9 @@ import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
 
 import javax.ws.rs.core.Application;
 
+import java.io.File;
+import java.nio.file.Files;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -73,6 +76,24 @@ public class VmiDCAgentApiTest extends JerseyTest {
         assertNotNull("Response and expectedResponse should match", response);
 
         assertNotNull("Response Version and expectedResponse Version should match", response.getVersion());
+    }
+
+    @Test
+    public void testClientAgentApiGetSupportBundle() {
+        // Arrange.
+        File response = null;
+
+        // Act.
+        try {
+            response = this.vmidcAgentApi.downloadLogFile();
+        } catch (Exception e) {
+            fail("VmiDCAgentApi test fails with exception: " + e);
+        }
+
+        // Assert.
+        assertNotNull("Response and expectedResponse should match", response);
+
+        assertNotNull("Response Version and expectedResponse Version should match", response.getAbsoluteFile());
     }
 
 }

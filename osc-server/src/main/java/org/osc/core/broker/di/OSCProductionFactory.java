@@ -1,6 +1,7 @@
 package org.osc.core.broker.di;
 
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.ListDistributedApplianceInstanceService;
 import org.osc.core.broker.service.ListJobService;
 import org.osc.core.broker.service.alert.AcknowledgeAlertService;
 import org.osc.core.broker.service.alert.DeleteAlertService;
@@ -54,5 +55,8 @@ public class OSCProductionFactory implements OSCFactory {
         return new GetDtoFromEntityService();
     }
 
-
+    @Override
+    public ListDistributedApplianceInstanceService listDistributedApplianceInstanceService() {
+        return new ListDistributedApplianceInstanceService();
+    }
 }

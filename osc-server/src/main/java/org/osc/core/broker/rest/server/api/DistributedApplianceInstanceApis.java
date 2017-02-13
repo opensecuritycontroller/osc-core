@@ -70,9 +70,10 @@ public class DistributedApplianceInstanceApis {
         logger.info("Listing Distributed Appliance Instances");
         sessionUtil.setUser(sessionUtil.getUsername(headers));
 
+        ListDistributedApplianceInstanceService service = OSC.get().listDistributedApplianceInstanceService();
         @SuppressWarnings("unchecked")
         ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) apiUtil
-                .getListResponse(new ListDistributedApplianceInstanceService(), new BaseRequest<>(true));
+                .getListResponse(service, new BaseRequest<>(true));
 
         return response.getList();
     }
@@ -94,7 +95,8 @@ public class DistributedApplianceInstanceApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(distributedApplianceInstanceId);
         getDtoRequest.setEntityName("DistributedApplianceInstance");
-        GetDtoFromEntityService<DistributedApplianceInstanceDto> getDtoService = new GetDtoFromEntityService<DistributedApplianceInstanceDto>();
+
+        GetDtoFromEntityService<DistributedApplianceInstanceDto> getDtoService = OSC.get().dtoFromEntityService();
 
         return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
@@ -116,7 +118,9 @@ public class DistributedApplianceInstanceApis {
         BaseIdRequest request = new BaseIdRequest(distributedApplianceInstanceId);
         request.setApi(true);
 
-        DownloadAgentLogResponse response = apiUtil.submitBaseRequestToService(new DownloadAgentLogService(), request);
+        DownloadAgentLogService service = new DownloadAgentLogService();
+
+        DownloadAgentLogResponse response = apiUtil.submitBaseRequestToService(service, request);
         ResponseBuilder responseBuilder = Response.ok(response.getSupportBundle());
         responseBuilder.header("Content-Disposition", "attachment; filename=AgentSupportBundle.zip");
 

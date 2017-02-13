@@ -1,6 +1,7 @@
 package org.osc.core.broker.di;
 
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.ListDistributedApplianceInstanceService;
 import org.osc.core.broker.service.ListJobService;
 import org.osc.core.broker.service.alert.AcknowledgeAlertService;
 import org.osc.core.broker.service.alert.DeleteAlertService;
@@ -23,4 +24,6 @@ public interface OSCFactory {
     DeleteAlertService deleteAlertService();
 
     GetDtoFromEntityService dtoFromEntityService();
+
+    ListDistributedApplianceInstanceService listDistributedApplianceInstanceService();
 }
