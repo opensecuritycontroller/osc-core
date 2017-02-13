@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.logging.LoggingFeature;
+import org.osc.core.rest.client.crypto.SSLSocketFactoryWithValidCipherSuites;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.exception.ClientResponseNotOkException;
 import org.osc.core.rest.client.exception.RestClientException;
@@ -156,7 +157,7 @@ public abstract class RestBaseClient {
     private Client configureHttpsClient() {
 
         SSLContext ctx = new SslContextProvider().getSSLContext();
-        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+        HttpsURLConnection.setDefaultSSLSocketFactory(new SSLSocketFactoryWithValidCipherSuites(ctx.getSocketFactory()));
 
         return ClientBuilder.newBuilder()
                 .sslContext(ctx)
