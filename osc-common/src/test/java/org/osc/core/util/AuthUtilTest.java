@@ -88,7 +88,7 @@ public class AuthUtilTest {
 	@Test
 	public void validAuthenticate() {
 		Mockito.when(mockRequest.getHeaderString("Authorization")).thenReturn("Basic YWRtaW46YWRtaW4xMjM=");
-		AuthUtil.authenticate(mockRequest, "admin", "admin123");
+		AuthUtil.authenticate(mockRequest, user, encryptedPassword);
 	}
 
 	@Test
