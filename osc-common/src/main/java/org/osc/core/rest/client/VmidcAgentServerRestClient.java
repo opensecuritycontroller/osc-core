@@ -10,6 +10,6 @@ public class VmidcAgentServerRestClient extends RestBaseClient {
 
         super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_JSON);
 
-        initRestBaseClient(agentServer, port, loginName, password, isHttps);
+        initRestBaseClient(agentServer, port, loginName, password, isHttps, true);
     }
 }

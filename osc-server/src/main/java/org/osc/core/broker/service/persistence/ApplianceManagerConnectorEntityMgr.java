@@ -1,6 +1,7 @@
 package org.osc.core.broker.service.persistence;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -56,7 +57,7 @@ public class ApplianceManagerConnectorEntityMgr {
             dto.setLastJobId(mc.getLastJob().getId());
         }
         dto.setApiKey(mc.getApiKey());
-        dto.setSslCertificateAttrSet(mc.getSslCertificateAttrSet());
+        dto.setSslCertificateAttrSet(mc.getSslCertificateAttrSet().stream().collect(Collectors.toSet()));
     }
 
     public static ApplianceManagerConnector findById(Session session, Long id) {
