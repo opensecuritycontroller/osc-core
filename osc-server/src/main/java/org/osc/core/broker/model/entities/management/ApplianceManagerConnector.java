@@ -86,7 +86,7 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
     @Transient
     private String clientIpAddress;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(name="SSL_CERTIFICATE_ATTR_APPL_MAN_CONNECTOR",
             joinColumns={@JoinColumn(name="APPLIANCE_MANAGER_CONNECTOR_ID")},
             inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
