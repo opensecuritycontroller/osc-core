@@ -22,6 +22,7 @@ import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.test.util.TestCriteria;
 import org.osc.core.test.util.TestCriteriaContent;
@@ -98,6 +99,17 @@ public class SessionStub {
         this.criteriaResultMap.put(expectedCriteria.getCriteriaContent(), returnValue);
 
         doAnswer(new CriteriaAnswer()).when(this.criteria).uniqueResult();
+    }
+
+    public void stubListVSPolicyByPolicyID(Long policyId, List<VirtualSystemPolicy> returnValue) {
+        TestCriteria expectedCriteria = new TestCriteria();
+        expectedCriteria.createAlias("policy", "pol");
+        expectedCriteria.add(Restrictions.eq("pol.id", policyId).ignoreCase());
+        expectedCriteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+
+        this.criteriaResultMap.put(expectedCriteria.getCriteriaContent(), returnValue);
+
+        doAnswer(new CriteriaAnswer()).when(this.criteria).list();
     }
 
     public void stubFindVirtualSystem(Long applianceId, Long virtualizationConnectorId, VirtualSystem returnValue) {
