@@ -1,5 +1,6 @@
 package org.osc.core.broker.rest.server.api;
 
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -118,7 +119,7 @@ public class DistributedApplianceInstanceApis {
         BaseIdRequest request = new BaseIdRequest(distributedApplianceInstanceId);
         request.setApi(true);
 
-        DownloadAgentLogService service = new DownloadAgentLogService();
+        DownloadAgentLogService service = OSC.get().downloadAgentLogService();
 
         DownloadAgentLogResponse response = apiUtil.submitBaseRequestToService(service, request);
         ResponseBuilder responseBuilder = Response.ok(response.getSupportBundle());
@@ -136,12 +137,13 @@ public class DistributedApplianceInstanceApis {
     @PUT
     public GetAgentStatusResponseDto getDistributedApplianceInstanceStatus(@Context HttpHeaders headers,
                                                                            @ApiParam(value = "The Ids of the Distributed Appliance Instances to get status for",
-                                                                                   required = true) DistributedApplianceInstancesRequest req) {
+                                                                                   required = true) @Valid DistributedApplianceInstancesRequest req) {
 
         logger.info("Getting Distributed Appliance Instance Status " + req);
         sessionUtil.setUser(sessionUtil.getUsername(headers));
 
-        return apiUtil.submitRequestToService(new GetAgentStatusService(), req);
+        GetAgentStatusService service = OSC.get().getAgentStatusService();
+        return apiUtil.submitRequestToService(service, req);
     }
 
     @ApiOperation(value = "Trigger Synchronization Job for Distributed Appliance Instances",
@@ -155,11 +157,12 @@ public class DistributedApplianceInstanceApis {
     @PUT
     public Response syncDistributedApplianceInstance(@Context HttpHeaders headers,
                                                      @ApiParam(value = "The Ids of the Distributed Appliance Instances to sync",
-                                                             required = true) DistributedApplianceInstancesRequest req) {
+                                                             required = true) @Valid DistributedApplianceInstancesRequest req) {
         logger.info("Sync Distributed Appliance Instances" + req);
         sessionUtil.setUser(sessionUtil.getUsername(headers));
 
-        return apiUtil.getResponse(new SyncAgentService(), req);
+        SyncAgentService service = OSC.get().syncAgentService();
+        return apiUtil.getResponse(service, req);
     }
 
     @ApiOperation(value = "Trigger Appliance Re-authentication Job for Distributed Appliance Instances",
@@ -173,10 +176,11 @@ public class DistributedApplianceInstanceApis {
     @PUT
     public Response authenticateDistributedApplianceInstance(@Context HttpHeaders headers,
                                                              @ApiParam(value = "The Ids of the Distributed Appliance Instances to trigger re-authentication for",
-                                                                     required = true) DistributedApplianceInstancesRequest req) {
+                                                                     required = true) @Valid DistributedApplianceInstancesRequest req) {
         logger.info("Re-Authenticate Distributed Appliance Instance" + req);
         sessionUtil.setUser(sessionUtil.getUsername(headers));
 
-        return apiUtil.getResponse(new RegisterAgentService(), req);
+        RegisterAgentService service = OSC.get().registerAgentService();
+        return apiUtil.getResponse(service, req);
     }
 }

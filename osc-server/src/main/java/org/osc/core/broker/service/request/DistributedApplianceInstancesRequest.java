@@ -5,10 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.util.ValidateUtil;
@@ -17,10 +19,10 @@ import org.osc.core.broker.util.ValidateUtil;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DistributedApplianceInstancesRequest implements Request {
 
+    @NotEmpty(message = "dtoIdList should not be empty")
     public List<Long> dtoIdList = new ArrayList<Long>();
 
-    DistributedApplianceInstancesRequest() {
-
+    public DistributedApplianceInstancesRequest() {
     }
 
     public DistributedApplianceInstancesRequest(List<DistributedApplianceInstanceDto> dtoList) {
@@ -34,6 +36,10 @@ public class DistributedApplianceInstancesRequest implements Request {
 
     public List<Long> getDtoIdList() {
         return this.dtoIdList;
+    }
+
+    public void setDtoIdList(List<Long> dtoIdList) {
+        this.dtoIdList = dtoIdList;
     }
 
     public static void checkForNullFields(DistributedApplianceInstancesRequest request) throws Exception {

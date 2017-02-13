@@ -69,6 +69,7 @@ public class BaseJerseyTest extends JerseyTest {
         when(apiUtil.getListResponse(any(), any())).thenCallRealMethod();
         when(apiUtil.createIdMismatchException(any(), any())).thenCallRealMethod();
         when(apiUtil.getResponseForBaseRequest(any(), any())).thenCallRealMethod();
+        when(apiUtil.getResponse(any(), any())).thenCallRealMethod();
 
         doCallRealMethod().when(apiUtil).setIdOrThrow(any(),any(),any());
     }

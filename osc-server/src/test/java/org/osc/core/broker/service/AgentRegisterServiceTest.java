@@ -1,31 +1,13 @@
 package org.osc.core.broker.service;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-import static org.osc.core.broker.service.AgentRegisterServiceTestData.*;
-
-import java.io.IOException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -43,14 +25,13 @@ import org.osc.core.broker.service.response.AgentRegisterServiceResponse;
 import org.osc.core.broker.service.tasks.agent.AgentInterfaceEndpointMapSetTask;
 import org.osc.core.broker.service.tasks.agent.UpdateApplianceConsolePasswordTask;
 import org.osc.core.broker.util.SessionStub;
-import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.SetLockObjectReferenceMatcher;
 import org.osc.core.test.util.TaskGraphMatcher;
 import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.NetworkUtil;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
+import org.osc.core.util.encryption.AESCTREncryption;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.DistributedApplianceInstanceElement;
@@ -58,18 +39,31 @@ import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.element.AgentElement;
 import org.osc.sdk.sdn.element.AgentStatusElement;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.matches;
+import static org.mockito.Mockito.*;
+import static org.osc.core.broker.service.AgentRegisterServiceTestData.*;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ManagerApiFactory.class, JobEngine.class, VMwareSdnApiFactory.class, HibernateUtil.class })
+@PowerMockIgnore({"javax.crypto.*" })
+@PrepareForTest({ManagerApiFactory.class, JobEngine.class, VMwareSdnApiFactory.class, HibernateUtil.class, EncryptionException.class })
 public class AgentRegisterServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     @Mock
     private Session sessionMock;
-    
+
     @Mock
     private SessionFactory sessionFactoryMock;
 
@@ -94,18 +88,23 @@ public class AgentRegisterServiceTest {
     private static String UPDATE_CONSOLE_PWD_STR = "Update out-of-sync Appliance Console Password for DAI : '";
     private static String UPDATE_POLICY_STR = "Update out-of-sync Appliance Traffic Policy Mapping for DAI : '";
 
+    private static String AGENT_PASSWORD_ENCRYPTED = "0048E869D632A9E08EC15C3B0B436EAE:D61C28FA48E503FB";
+
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        AESCTREncryption.setKeyProvider(() -> { return "A6EBBF1CDCC166710670DE15015EA0AF"; });
+        AGENT_PASSWORD_ENCRYPTED = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
 
         this.sessionStub = new SessionStub(this.sessionMock);
         this.agentApiMock = mock(AgentApi.class);
 
         PowerMockito.spy(HibernateUtil.class);
-        PowerMockito.doReturn(sessionFactoryMock).when(HibernateUtil.class, "init");
-        
-        Mockito.when(sessionFactoryMock.openSession()).thenReturn(sessionMock);
-        Mockito.when(service.getSessionFactory()).thenReturn(sessionFactoryMock);
+        PowerMockito.doReturn(this.sessionFactoryMock).when(HibernateUtil.class, "init");
+
+        Mockito.when(this.sessionFactoryMock.openSession()).thenReturn(this.sessionMock);
+        Mockito.when(this.service.getSessionFactory()).thenReturn(this.sessionFactoryMock);
 
         doThrow(VmidcBrokerInvalidEntryException.class).when(this.validatorMock).validateAndLoad(INVALID_REQUEST);
 
@@ -340,10 +339,10 @@ public class AgentRegisterServiceTest {
         verify(this.sessionMock).update(argThat(daiMatcher));
 
         verify(this.jobEngineMock)
-        .submit(
-                matches(UPDATE_CONSOLE_PWD_STR + NEW_CONSOLE_PASSWORD_DAI.getName() + "'"),
-                argThat(this.syncPwdTgMatcher),
-                argThat(this.syncPwdLorMatcher));
+                .submit(
+                        matches(UPDATE_CONSOLE_PWD_STR + NEW_CONSOLE_PASSWORD_DAI.getName() + "'"),
+                        argThat(this.syncPwdTgMatcher),
+                        argThat(this.syncPwdLorMatcher));
     }
 
     @Test
@@ -371,10 +370,10 @@ public class AgentRegisterServiceTest {
         verify(this.sessionMock).update(argThat(daiMatcher));
 
         verify(this.jobEngineMock)
-        .submit(
-                matches(UPDATE_POLICY_STR + SEC_GROUP_OUT_OF_SYNC_DAI.getName() + "'"),
-                argThat(this.syncSecGroupTgMatcher),
-                argThat(this.syncSecGroupLorMatcher));
+                .submit(
+                        matches(UPDATE_POLICY_STR + SEC_GROUP_OUT_OF_SYNC_DAI.getName() + "'"),
+                        argThat(this.syncSecGroupTgMatcher),
+                        argThat(this.syncSecGroupLorMatcher));
     }
 
     private void testDispatch_WithMismatchHealthStatus(AgentRegisterServiceRequest request, DistributedApplianceInstance dai, AgentStatus expectedStatus) throws Exception {
@@ -403,12 +402,12 @@ public class AgentRegisterServiceTest {
     }
 
     private void validateResponse(AgentRegisterServiceResponse response, AgentRegisterServiceRequest request,
-            VirtualSystem vs) {
+                                  VirtualSystem vs) {
         validateResponse(response, request, vs, null);
     }
 
     private void validateResponse(AgentRegisterServiceResponse response, AgentRegisterServiceRequest request,
-            VirtualSystem vs, DistributedApplianceInstance dai) {
+                                  VirtualSystem vs, DistributedApplianceInstance dai) {
         assertThat(response).as("response").isNotNull();
         assertThat(response.getApplianceConfig1()).as("applianceConfig1").isEqualTo(DEVICE_CONFIGURATION);
         assertThat(response.getApplianceConfig2()).as("applianceConfig2").isEqualTo(DEVICE_ADDITIONAL_CONFIGURATION);
@@ -462,27 +461,27 @@ public class AgentRegisterServiceTest {
 
         when(deviceMgrApi.getDeviceMemberConfiguration(
                 argThat(new DistributedApplianceInstanceElementMatcher(VMWARE_VS))))
-        .thenReturn(DEVICE_CONFIGURATION);
+                .thenReturn(DEVICE_CONFIGURATION);
 
         when(deviceMgrApi.getDeviceMemberAdditionalConfiguration(
                 argThat(new DistributedApplianceInstanceElementMatcher(VMWARE_VS))))
-        .thenReturn(DEVICE_ADDITIONAL_CONFIGURATION);
+                .thenReturn(DEVICE_ADDITIONAL_CONFIGURATION);
 
         when(deviceMgrApi.getDeviceMemberConfiguration(
                 argThat(new DistributedApplianceInstanceElementMatcher(NO_NSX_AGENT_VS))))
-        .thenReturn(DEVICE_CONFIGURATION);
+                .thenReturn(DEVICE_CONFIGURATION);
 
         when(deviceMgrApi.getDeviceMemberAdditionalConfiguration(
                 argThat(new DistributedApplianceInstanceElementMatcher(NO_NSX_AGENT_VS))))
-        .thenReturn(DEVICE_ADDITIONAL_CONFIGURATION);
+                .thenReturn(DEVICE_ADDITIONAL_CONFIGURATION);
 
         when(deviceMgrApi.getDeviceMemberConfiguration(
                 argThat(new DistributedApplianceInstanceElementMatcher(WITH_NSX_AGENT_VS))))
-        .thenReturn(DEVICE_CONFIGURATION);
+                .thenReturn(DEVICE_CONFIGURATION);
 
         when(deviceMgrApi.getDeviceMemberAdditionalConfiguration(
                 argThat(new DistributedApplianceInstanceElementMatcher(WITH_NSX_AGENT_VS))))
-        .thenReturn(DEVICE_ADDITIONAL_CONFIGURATION);
+                .thenReturn(DEVICE_ADDITIONAL_CONFIGURATION);
 
         PowerMockito.mockStatic(ManagerApiFactory.class);
 
@@ -504,10 +503,10 @@ public class AgentRegisterServiceTest {
 
         when(ManagerApiFactory.createApplianceManagerApi(
                 argThat(new DistributedApplianceInstanceGroupSyncNotSupportMatcher())))
-        .thenReturn(applianceMgrSecurityGroupSyncNotSupported);
+                .thenReturn(applianceMgrSecurityGroupSyncNotSupported);
 
         when(ManagerApiFactory.createApplianceManagerApi(SEC_GROUP_OUT_OF_SYNC_DAI))
-        .thenReturn(applianceMgrSecurityGroupSyncSupported);
+                .thenReturn(applianceMgrSecurityGroupSyncSupported);
 
         when(ManagerApiFactory.createApplianceManagerApi(VMWARE_VS)).thenReturn(applianceMgrNsmSupported);
         when(ManagerApiFactory.createApplianceManagerApi(NO_NSX_AGENT_VS)).thenReturn(applianceMgrNsmSupported);
@@ -552,7 +551,7 @@ public class AgentRegisterServiceTest {
 
         PowerMockito.mockStatic(JobEngine.class);
         when(JobEngine.getEngine())
-        .thenReturn(this.jobEngineMock);
+                .thenReturn(this.jobEngineMock);
 
         TaskGraph syncPwdTg = new TaskGraph();
         syncPwdTg.addTask(new UpdateApplianceConsolePasswordTask(NEW_CONSOLE_PASSWORD_DAI,
@@ -562,10 +561,10 @@ public class AgentRegisterServiceTest {
         this.syncPwdLorMatcher = new SetLockObjectReferenceMatcher(LockObjectReference.getObjectReferences(NEW_CONSOLE_PASSWORD_DAI));
 
         doReturn(jobMock).when(this.jobEngineMock)
-        .submit(
-                matches(UPDATE_CONSOLE_PWD_STR + NEW_CONSOLE_PASSWORD_DAI.getName() + "'"),
-                argThat(this.syncPwdTgMatcher),
-                argThat(this.syncPwdLorMatcher));
+                .submit(
+                        matches(UPDATE_CONSOLE_PWD_STR + NEW_CONSOLE_PASSWORD_DAI.getName() + "'"),
+                        argThat(this.syncPwdTgMatcher),
+                        argThat(this.syncPwdLorMatcher));
 
         TaskGraph syncSecGroupTg = new TaskGraph();
         syncSecGroupTg.addTask(new AgentInterfaceEndpointMapSetTask(SEC_GROUP_OUT_OF_SYNC_DAI));
@@ -574,10 +573,10 @@ public class AgentRegisterServiceTest {
         this.syncSecGroupLorMatcher = new SetLockObjectReferenceMatcher(LockObjectReference.getObjectReferences(SEC_GROUP_OUT_OF_SYNC_DAI));
 
         doReturn(jobMock).when(this.jobEngineMock)
-        .submit(matches(
-                UPDATE_POLICY_STR + SEC_GROUP_OUT_OF_SYNC_DAI.getName() + "'"),
-                argThat(this.syncSecGroupTgMatcher),
-                argThat(this.syncSecGroupLorMatcher));
+                .submit(matches(
+                        UPDATE_POLICY_STR + SEC_GROUP_OUT_OF_SYNC_DAI.getName() + "'"),
+                        argThat(this.syncSecGroupTgMatcher),
+                        argThat(this.syncSecGroupLorMatcher));
     }
 
     private class DistributedApplianceInstanceIpMatcher extends ArgumentMatcher<Object> {
@@ -668,22 +667,22 @@ public class AgentRegisterServiceTest {
             DistributedApplianceInstance dai = (DistributedApplianceInstance)object;
             boolean result =
                     this.daiId.equals(dai.getId()) &&
-                    this.daiIpAddress.equals(dai.getIpAddress()) &&
-                    this.daiName.equals(dai.getName()) &&
-                    this.daiIsPolicyMapOutOfSync == dai.isPolicyMapOutOfSync() &&
-                    EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS).equals(dai.getPassword()) &&
-                    this.request.getAgentVersion().getMajor().equals(dai.getAgentVersionMajor()) &&
-                    this.request.getAgentVersion().getMinor().equals(dai.getAgentVersionMinor()) &&
-                    this.request.getAgentVersion().getVersionStr().equals(dai.getAgentVersionStr()) &&
-                    this.request.getApplianceIp().equals(dai.getMgmtIpAddress()) &&
-                    this.mgmtGateway.equals(dai.getMgmtGateway()) &&
-                    ((this.daiSubnetMaskPrefixLength == null && dai.getMgmtSubnetPrefixLength() == null) ||
-                            this.daiSubnetMaskPrefixLength.equals(dai.getMgmtSubnetPrefixLength())) &&
-                    this.request.isDiscovered() == dai.getDiscovered() &&
-                    this.request.isInspectionReady() == dai.getInspectionReady() &&
-                    dai.getLastStatus() != null &&
-                    this.request.getAgentDpaInfo().netXDpaRuntimeInfo.workloadInterfaces.equals(dai.getWorkloadInterfaces()) &&
-                    this.request.getAgentDpaInfo().netXDpaRuntimeInfo.rx.equals(dai.getPackets());
+                            this.daiIpAddress.equals(dai.getIpAddress()) &&
+                            this.daiName.equals(dai.getName()) &&
+                            this.daiIsPolicyMapOutOfSync == dai.isPolicyMapOutOfSync() &&
+                            AGENT_PASSWORD_ENCRYPTED.equals(dai.getPassword()) &&
+                            this.request.getAgentVersion().getMajor().equals(dai.getAgentVersionMajor()) &&
+                            this.request.getAgentVersion().getMinor().equals(dai.getAgentVersionMinor()) &&
+                            this.request.getAgentVersion().getVersionStr().equals(dai.getAgentVersionStr()) &&
+                            this.request.getApplianceIp().equals(dai.getMgmtIpAddress()) &&
+                            this.mgmtGateway.equals(dai.getMgmtGateway()) &&
+                            ((this.daiSubnetMaskPrefixLength == null && dai.getMgmtSubnetPrefixLength() == null) ||
+                                    this.daiSubnetMaskPrefixLength.equals(dai.getMgmtSubnetPrefixLength())) &&
+                            this.request.isDiscovered() == dai.getDiscovered() &&
+                            this.request.isInspectionReady() == dai.getInspectionReady() &&
+                            dai.getLastStatus() != null &&
+                            this.request.getAgentDpaInfo().netXDpaRuntimeInfo.workloadInterfaces.equals(dai.getWorkloadInterfaces()) &&
+                            this.request.getAgentDpaInfo().netXDpaRuntimeInfo.rx.equals(dai.getPackets());
 
             if (result && this.agent != null) {
                 result = result &&

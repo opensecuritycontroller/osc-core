@@ -6,6 +6,9 @@ public class AgentStatusResponseDto {
     private AgentStatusResponse response;
     private String agentType;
 
+    public AgentStatusResponseDto() {
+    }
+
     public AgentStatusResponseDto(AgentStatusResponse response, String agentType) {
         this.response = response;
         this.agentType = agentType;

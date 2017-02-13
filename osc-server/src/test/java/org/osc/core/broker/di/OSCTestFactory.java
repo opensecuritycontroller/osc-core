@@ -1,8 +1,12 @@
 package org.osc.core.broker.di;
 
+import org.osc.core.broker.service.DownloadAgentLogService;
+import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDistributedApplianceInstanceService;
 import org.osc.core.broker.service.ListJobService;
+import org.osc.core.broker.service.RegisterAgentService;
+import org.osc.core.broker.service.SyncAgentService;
 import org.osc.core.broker.service.alert.AcknowledgeAlertService;
 import org.osc.core.broker.service.alert.DeleteAlertService;
 import org.osc.core.broker.service.alert.ListAlertService;
@@ -23,20 +27,25 @@ public class OSCTestFactory implements OSCFactory {
     private DeleteAlertService deleteAlertService;
     private GetDtoFromEntityService dtoFromEntityService;
     private ListDistributedApplianceInstanceService listDistributedApplianceInstanceService;
+    private DownloadAgentLogService downloadAgentLogService;
+    private RegisterAgentService registerAgentService;
+    private SyncAgentService syncAgentService;
+    private GetAgentStatusService getAgentStatusService;
 
     public OSCTestFactory() {
         sessionUtil = new SessionUtilTestImpl();
+
         apiUtil = mock(ApiUtilImpl.class);
-
         listJobService = mock(ListJobService.class);
-
         listAlertService = mock(ListAlertService.class);
         acknowledgeAlertService = mock(AcknowledgeAlertService.class);
         deleteAlertService = mock(DeleteAlertService.class);
-
         dtoFromEntityService = mock(GetDtoFromEntityService.class);
-
         listDistributedApplianceInstanceService = mock(ListDistributedApplianceInstanceService.class);
+        downloadAgentLogService = mock(DownloadAgentLogService.class);
+        registerAgentService = mock(RegisterAgentService.class);
+        syncAgentService = mock(SyncAgentService.class);
+        getAgentStatusService = mock(GetAgentStatusService.class);
     }
 
     @Override
@@ -77,5 +86,25 @@ public class OSCTestFactory implements OSCFactory {
     @Override
     public ListDistributedApplianceInstanceService listDistributedApplianceInstanceService() {
         return listDistributedApplianceInstanceService;
+    }
+
+    @Override
+    public DownloadAgentLogService downloadAgentLogService() {
+        return downloadAgentLogService;
+    }
+
+    @Override
+    public RegisterAgentService registerAgentService() {
+        return registerAgentService;
+    }
+
+    @Override
+    public SyncAgentService syncAgentService() {
+        return syncAgentService;
+    }
+
+    @Override
+    public GetAgentStatusService getAgentStatusService() {
+        return getAgentStatusService;
     }
 }
