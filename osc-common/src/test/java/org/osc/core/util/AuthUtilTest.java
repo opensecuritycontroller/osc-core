@@ -3,23 +3,41 @@ package org.osc.core.util;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.osc.core.util.encryption.AESCTREncryption;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.util.Properties;
 
 public class AuthUtilTest {
 
 	private ContainerRequestContext mockRequest;
 
 	private UriInfo uriInfo;
+	// password encrypted with AES CTR
+	private String encryptedPassword;
+	private String user = "admin";
+
+	KeyStore testKeyStore;
+	KeyStoreProvider.KeyStoreFactory testKeyStoreFactory;
 
 	@Before
-	public void setUp() {
-		mockRequest = Mockito.mock(ContainerRequestContext.class);
-		uriInfo = Mockito.mock(UriInfo.class);
+	public void setUp() throws Exception {
+        mockRequest = Mockito.mock(ContainerRequestContext.class);
+        uriInfo = Mockito.mock(UriInfo.class);
+		AESCTREncryption.setKeyProvider(() -> { return "A6EBBF1CDCC166710670DE15015EA0AF"; });
+		encryptedPassword = EncryptionUtil.encryptAESCTR("admin123");
+	}
+
+	private String getAESCTRKeyPassword() throws IOException {
+		Properties properties = new Properties();
+		properties.load(getClass().getResourceAsStream(EncryptionUtil.SECURITY_PROPS_RESOURCE_PATH));
+		return properties.getProperty(AESCTREncryption.PROPS_AESCTR_PASSWORD);
 	}
 
 	//Invalid test cases

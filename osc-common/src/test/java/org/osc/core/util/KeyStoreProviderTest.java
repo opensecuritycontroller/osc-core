@@ -16,23 +16,30 @@ import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-public class KeyStoreProviderTest {	
-	
+public class KeyStoreProviderTest {
+
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 	
 	KeyStore testKeyStore;
 	KeyStoreProvider.KeyStoreFactory testKeyStoreFactory;
-	
+
+	static SecretKey testKey;
+
 	@Before
-    public void setUp() throws Exception {
+	public void setUpClass() throws NoSuchAlgorithmException {
+		testKey = generateTestKey();
+	}
+
+	@Before
+	public void setUp() throws Exception {
 		testKeyStore = KeyStore.getInstance("PKCS12");
 		testKeyStore.load(null, null);
 		testKeyStoreFactory = mock(KeyStoreProvider.KeyStoreFactory.class);
 		when(testKeyStoreFactory.createKeyStore()).thenReturn(testKeyStore);
 		KeyStoreProvider.setKeyStoreFactory(testKeyStoreFactory);
-    }
-	
+	}
+
 	@Test
 	public void testPutPassword_withValidInput_storesPasswordProperly() throws Exception {
 		// Arrange.
@@ -140,8 +147,7 @@ public class KeyStoreProviderTest {
 		// Arrange.
 		String testEntryAlias = "TEST_ENTRY_ALIAS";
 		String testEntryPassword = "TEST_ENTRY_PASSWORD";
-		SecretKey testKey = generateTestKey();
-		
+
 		// Act.
 		KeyStoreProvider.getInstance().putSecretKey(testEntryAlias, testKey, testEntryPassword);
 		SecretKey keyFromKeyStore = KeyStoreProvider.getInstance().getSecretKey(testEntryAlias, testEntryPassword);
@@ -155,8 +161,7 @@ public class KeyStoreProviderTest {
 		// Arrange.
 		String testEntryAlias = null;
 		String testEntryPassword = "TEST_ENTRY_PASSWORD";
-		SecretKey testKey = generateTestKey();
-		
+
 		// Assert.
 		exception.expect(KeyStoreProviderException.class);
 		
@@ -183,8 +188,7 @@ public class KeyStoreProviderTest {
 		// Arrange.
 		String testEntryAlias = "TEST_ENTRY_ALIAS";
 		String testEntryPassword = null;
-		SecretKey testKey = generateTestKey();
-		
+
 		// Assert.
 		exception.expect(KeyStoreProviderException.class);
 		
@@ -225,17 +229,16 @@ public class KeyStoreProviderTest {
 		String testEntryAlias = "TEST_ENTRY_ALIAS";
 		String testEntryPassword = "TEST_ENTRY_PASSWORD";
 		String testInvalidEntryPassword = "TEST_INVALID_ENTRY_PASSWORD";
-		SecretKey testKey = generateTestKey();
-		
+
 		// Assert.
 		exception.expect(KeyStoreProviderException.class);
 				
 		// Act.
 		KeyStoreProvider.getInstance().putSecretKey(testEntryAlias, testKey, testEntryPassword);
 		KeyStoreProvider.getInstance().getSecretKey(testEntryAlias, testInvalidEntryPassword);
-	}	
-	
-	private SecretKey generateTestKey() throws NoSuchAlgorithmException {
+	}
+
+	private static SecretKey generateTestKey() throws NoSuchAlgorithmException {
 		KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 		keyGen.init(128, SecureRandom.getInstance("SHA1PRNG"));
 		return keyGen.generateKey();

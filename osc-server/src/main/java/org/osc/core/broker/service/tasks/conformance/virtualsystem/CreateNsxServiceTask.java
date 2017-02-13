@@ -51,7 +51,7 @@ public class CreateNsxServiceTask extends TransactionalTask {
                     serviceFunctionalityType,
                     this.vs.getId().toString(),
                     AgentAuthFilter.VMIDC_AGENT_LOGIN,
-                    EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS),
+                    EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS),
                     ServerUtil.getServerIP(),
                     this.vs.getApplianceSoftwareVersion().getAppliance().getModel(),
                     this.vs.getApplianceSoftwareVersion().getApplianceSoftwareVersion());

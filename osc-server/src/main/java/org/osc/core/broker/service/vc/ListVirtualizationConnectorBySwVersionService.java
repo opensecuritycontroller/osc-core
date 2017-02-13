@@ -9,7 +9,7 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.response.ListResponse;
-
+import org.osc.core.util.encryption.EncryptionException;
 
 
 public class ListVirtualizationConnectorBySwVersionService extends
@@ -19,7 +19,7 @@ public class ListVirtualizationConnectorBySwVersionService extends
 
     @Override
     public ListResponse<VirtualizationConnectorDto> exec(ListVirtualizationConnectorBySwVersionRequest request,
-            Session session) {
+            Session session) throws EncryptionException {
 
         // to do mapping
         List<VirtualizationConnectorDto> vcmList = new ArrayList<VirtualizationConnectorDto>();

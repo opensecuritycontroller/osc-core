@@ -119,7 +119,7 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
             dai.setName(daiName);
             dai.setPolicyMapOutOfSync(true);
-            dai.setPassword(EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS));
+            dai.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
 
             EntityManager.update(session, dai);
             this.log.info("Creating new DAI " + dai);

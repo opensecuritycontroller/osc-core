@@ -15,6 +15,7 @@ import org.osc.core.util.EncryptionUtil;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import org.osc.core.util.encryption.EncryptionException;
 
 /**
  *
@@ -42,20 +43,20 @@ public class OsRabbitMQClient extends RabbitMQClient {
      */
     private final ExecutorService messageListenerService = Executors.newSingleThreadExecutor();
 
-    public OsRabbitMQClient(VirtualizationConnector vc) {
+    public OsRabbitMQClient(VirtualizationConnector vc) throws EncryptionException {
         super();
         this.vc = vc;
         init(this.vc);
     }
 
-    public void init(VirtualizationConnector vc) {
+    public void init(VirtualizationConnector vc) throws EncryptionException {
         this.vc = vc;
         String rabbitMQIP = this.vc.getRabbitMQIP();
         init(rabbitMQIP,
                 Integer.parseInt(
                         this.vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT)),
                 vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER),
-                EncryptionUtil.decrypt(
+                EncryptionUtil.decryptAESCTR(
                         vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)),
                 NOVA_EXCHANGE, QUEUE_NAME, ROUTING_KEY);
     }
