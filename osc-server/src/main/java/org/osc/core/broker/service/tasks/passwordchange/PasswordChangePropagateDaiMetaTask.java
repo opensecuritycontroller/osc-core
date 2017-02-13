@@ -58,7 +58,7 @@ public class PasswordChangePropagateDaiMetaTask extends TransactionalMetaTask {
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
 
                     for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
-                        if (!dai.getPassword().equals(EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS))) {
+                        if (!dai.getPassword().equals(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS))) {
                             propagateTaskGraph.addTask(new PasswordChangePropagateToDaiTask(dai),
                                     TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                         }

@@ -57,7 +57,7 @@ abstract class BackupFileService<I extends Request, O extends Response> extends 
     }
     
     private class EncryptionParameters {
-    	public EncryptionParameters() throws KeyStoreProviderException, IOException {
+        EncryptionParameters() throws KeyStoreProviderException, IOException {
     		// get aliases/passwords to keystore from properties
     		Properties properties = getProperties();
             String keyAlias = properties.getProperty("db.backup.key.alias");

@@ -15,6 +15,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class ApplianceManagerConnectorEntityMgr {
 
@@ -35,12 +36,12 @@ public class ApplianceManagerConnectorEntityMgr {
         mc.setServiceType(ManagerApiFactory.createApplianceManagerApi(dto.getManagerType()).getServiceName());
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
-        mc.setPassword(EncryptionUtil.encrypt(dto.getPassword()));
+        mc.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
         mc.setApiKey(dto.getApiKey());
         mc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
     }
 
-    public static void fromEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) {
+    public static void fromEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) throws EncryptionException {
 
         // transform from entity to dto
         dto.setId(mc.getId());
@@ -48,7 +49,7 @@ public class ApplianceManagerConnectorEntityMgr {
         dto.setManagerType(mc.getManagerType());
         dto.setIpAddress(mc.getIpAddress());
         dto.setUsername(mc.getUsername());
-        dto.setPassword(EncryptionUtil.decrypt(mc.getPassword()));
+        dto.setPassword(EncryptionUtil.decryptAESCTR(mc.getPassword()));
         if (mc.getLastJob() != null) {
             dto.setLastJobStatus(mc.getLastJob().getStatus());
             dto.setLastJobState(mc.getLastJob().getState());

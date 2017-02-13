@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
-import org.osc.core.util.EncryptionUtil.EncryptionException;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 

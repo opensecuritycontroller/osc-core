@@ -48,6 +48,7 @@ import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.Secu
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class VSConformanceCheckMetaTaskTestData {
 
@@ -603,7 +604,7 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
-    public static TaskGraph createOpenstackWithDeploymentSpecGraph(VirtualSystem vs) {
+    public static TaskGraph createOpenstackWithDeploymentSpecGraph(VirtualSystem vs) throws EncryptionException {
         DeploymentSpec ds = (DeploymentSpec) vs.getDeploymentSpecs().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
@@ -772,7 +773,7 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
-    public static TaskGraph createDeleteOpenStackWithDeploymentSpecGraph(VirtualSystem vs) {
+    public static TaskGraph createDeleteOpenStackWithDeploymentSpecGraph(VirtualSystem vs) throws EncryptionException {
         DeploymentSpec ds = (DeploymentSpec) vs.getDeploymentSpecs().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
@@ -800,7 +801,7 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
-    public static TaskGraph createDeleteOpenStackWithOSImageRefGraph(VirtualSystem vs) {
+    public static TaskGraph createDeleteOpenStackWithOSImageRefGraph(VirtualSystem vs) throws EncryptionException {
         OsImageReference image = (OsImageReference) vs.getOsImageReference().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
@@ -828,7 +829,7 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
-    public static TaskGraph createDeleteOpenStackWithOSFlavorRefGraph(VirtualSystem vs) {
+    public static TaskGraph createDeleteOpenStackWithOSFlavorRefGraph(VirtualSystem vs) throws EncryptionException {
         OsFlavorReference flavor = (OsFlavorReference) vs.getOsFlavorReference().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();

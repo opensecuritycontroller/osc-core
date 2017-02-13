@@ -13,7 +13,7 @@ import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
-
+import org.osc.core.util.encryption.EncryptionException;
 
 
 public class ListVirtualizationConnectorService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<VirtualizationConnectorDto>> {
@@ -21,7 +21,7 @@ public class ListVirtualizationConnectorService extends ServiceDispatcher<BaseRe
     ListResponse<VirtualizationConnectorDto> response = new ListResponse<VirtualizationConnectorDto>();
 
     @Override
-    public ListResponse<VirtualizationConnectorDto> exec(BaseRequest<BaseDto> request, Session session) {
+    public ListResponse<VirtualizationConnectorDto> exec(BaseRequest<BaseDto> request, Session session) throws EncryptionException {
         // Initializing Entity Manager
         EntityManager<VirtualizationConnector> emgr = new EntityManager<VirtualizationConnector>(
                 VirtualizationConnector.class, session);
