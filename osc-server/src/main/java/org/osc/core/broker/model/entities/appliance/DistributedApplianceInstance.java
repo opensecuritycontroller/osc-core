@@ -122,10 +122,10 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "DISTRIBUTED_APPLIANCE_INSTANCE_VM_PORT",
-        joinColumns=
-                @JoinColumn(name="dai_fk", referencedColumnName="id"),
-            inverseJoinColumns=
-                @JoinColumn(name="vm_port_fk", referencedColumnName="id")
+    joinColumns=
+    @JoinColumn(name="dai_fk", referencedColumnName="id"),
+    inverseJoinColumns=
+    @JoinColumn(name="vm_port_fk", referencedColumnName="id")
             )
     private Set<VMPort> protectedPorts = new HashSet<>();
 
@@ -483,5 +483,4 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.inspectionEgressMacAddress = createdServer.getEgressInspectionMacAddr();
         this.inspectionOsEgressPortId = createdServer.getEgressInspectionPortId();
     }
-
 }

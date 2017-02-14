@@ -5,7 +5,6 @@ import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
-import org.osc.core.broker.rest.server.api.AgentApis;
 import org.osc.core.broker.rest.server.api.AlarmApis;
 import org.osc.core.broker.rest.server.api.AlertApis;
 import org.osc.core.broker.rest.server.api.ApplianceApis;
@@ -38,7 +37,6 @@ public class IscRestServlet extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         Set<Class<?>> classes = new HashSet<>();
-        classes.add(AgentApis.class);
         classes.add(NsxApis.class);
         classes.add(NsmMgrApis.class);
         classes.add(ManagerApis.class);

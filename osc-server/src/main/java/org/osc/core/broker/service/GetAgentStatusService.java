@@ -2,21 +2,27 @@ package org.osc.core.broker.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
+import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
+import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
 import org.osc.core.broker.service.response.AgentStatusResponseDto;
@@ -25,6 +31,7 @@ import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.rest.client.agent.api.VmidcAgentApi;
 import org.osc.core.rest.client.agent.model.output.AgentDpaInfo;
 import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
+import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.VersionUtil;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.element.DistributedApplianceInstanceElement;
@@ -36,7 +43,7 @@ import com.mcafee.vmidc.server.Server;
 
 public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianceInstancesRequest, GetAgentStatusResponseDto> {
 
-    private static final Logger log = Logger.getLogger(RegisterAgentService.class);
+    private static final Logger LOG = Logger.getLogger(GetAgentStatusService.class);
     private List<DistributedApplianceInstance> daiList = null;
     private Session session = null;
 
@@ -84,17 +91,17 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             final AgentType agentType) {
         Collection<AgentStatusResponseDto> results = Collections2.transform(responses,
                 new Function<AgentStatusResponse, AgentStatusResponseDto>(){
-                    @Override
-                    public AgentStatusResponseDto apply(AgentStatusResponse input) {
-                        return new AgentStatusResponseDto(input, agentType.toString());
-                    }
+            @Override
+            public AgentStatusResponseDto apply(AgentStatusResponse input) {
+                return new AgentStatusResponseDto(input, agentType.toString());
+            }
         });
         return results;
     }
 
     private Collection<AgentStatusResponse> getAgentlessStatus(
             final Collection<DistributedApplianceInstance> agentlessDais)
-            throws Exception {
+                    throws Exception {
         Collection<AgentStatusResponse> agentStatusResponses = new ArrayList<>();
         HashMap<VirtualSystem, List<DistributedApplianceInstance>> map = new HashMap<>();
         for(DistributedApplianceInstance dai: agentlessDais){
@@ -124,7 +131,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             List<ManagerDeviceMemberStatusElement> agentElems = agentApi.getFullStatus(agentlessDais);
             handleResponse(this.session, agentStatusList, agentElems);
         } catch (Exception e) {
-            log.error("Fail to retrieve agent info", e);
+            LOG.error("Fail to retrieve agent info", e);
         }
         return agentStatusList;
     }
@@ -174,7 +181,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
         agentStatus.setApplianceName(di.getName());
         try {
             VmidcAgentApi agentApi = new VmidcAgentApi(di.getIpAddress(), Server.getApiPort(),
-            AgentAuthFilter.VMIDC_AGENT_LOGIN, AgentAuthFilter.VMIDC_AGENT_PASS);
+                    AgentAuthFilter.VMIDC_AGENT_LOGIN, AgentAuthFilter.VMIDC_AGENT_PASS);
             agentStatus = agentApi.getFullStatus();
             DistributedApplianceInstance dai = (DistributedApplianceInstance) this.session.get(
                     DistributedApplianceInstance.class, di.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
@@ -182,7 +189,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             //Returns the host name for VMware and Openstack, Virtualization type.
             agentStatus.setVirtualServer(di.getHostName());
         } catch (Exception e) {
-            log.error("Fail to retrieve agent info", e);
+            LOG.error("Fail to retrieve agent info", e);
         }
         agentStatus.setPublicIp(di.getIpAddress());
         return agentStatus;
@@ -204,6 +211,55 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
         request.setName(dai.getName());
         request.setVirtualSystemId(dai.getVirtualSystem().getId());
 
-        AgentRegisterService.updateDaiAgentStatusInfo(request, session, dai);
+        updateDaiAgentStatusInfo(request, session, dai);
+    }
+
+    private static void updateDaiAgentStatusInfo(AgentRegisterServiceRequest request, Session session,
+            DistributedApplianceInstance dai) {
+
+        dai.setAgentVersionMajor(request.getAgentVersion().getMajor());
+        dai.setAgentVersionMinor(request.getAgentVersion().getMinor());
+        dai.setAgentVersionStr(request.getAgentVersion().getVersionStr());
+
+        // if DAI has no floating ip and the DS does not have floating ip pool assigned, update ip to appliance ip
+        if (dai.getFloatingIpId() == null && dai.getDeploymentSpec() != null
+                && StringUtils.isEmpty(dai.getDeploymentSpec().getFloatingIpPoolName())) {
+            dai.setIpAddress(request.getApplianceIp());
+        }
+        dai.setMgmtIpAddress(request.getApplianceIp());
+        dai.setMgmtGateway(request.getApplianceGateway());
+        if (request.getApplianceSubnetMask() != null) {
+            dai.setMgmtSubnetPrefixLength(
+                    String.valueOf(NetworkUtil.getPrefixLength(request.getApplianceSubnetMask())));
+        } else {
+            dai.setMgmtSubnetPrefixLength(null);
+        }
+
+        // Generate an alert if Appliance Instance Discovery flag changed from 'true' to 'false'
+        if (dai.getDiscovered() != null && dai.getDiscovered() && !request.isDiscovered()) {
+            LOG.warn("Generate an alert if Appliance Instance Discovery flag changed from 'true' to 'false'");
+            AlertGenerator.processDaiFailureEvent(DaiFailureType.DAI_STATUS_CHANGE, new LockObjectReference(dai),
+                    "Appliance Instance '" + dai.getName() + "' Discovery flag changed from 'true' to 'false'");
+        }
+        dai.setDiscovered(request.isDiscovered());
+        // Generate an alert if Appliance Instance Inspection Ready flag changed from 'true' to 'false'
+        if (dai.getInspectionReady() != null && dai.getInspectionReady() && !request.isInspectionReady()) {
+            LOG.warn("Generate an alert if Appliance Instance Inspection Ready flag changed from 'true' to 'false'");
+            AlertGenerator.processDaiFailureEvent(DaiFailureType.DAI_STATUS_CHANGE, new LockObjectReference(dai),
+                    "Appliance Instance '" + dai.getName() + "' Inspection Ready flag changed from 'true' to 'false'");
+        }
+        dai.setInspectionReady(request.isInspectionReady());
+        dai.setLastStatus(new Date());
+        if (request.getAgentDpaInfo() != null && request.getAgentDpaInfo().netXDpaRuntimeInfo != null) {
+            dai.setWorkloadInterfaces(request.getAgentDpaInfo().netXDpaRuntimeInfo.workloadInterfaces);
+            dai.setPackets(request.getAgentDpaInfo().netXDpaRuntimeInfo.rx);
+        }
+
+        if (dai.getVirtualSystem().getVirtualizationConnector().isVmware()) {
+            NsxUpdateAgentsService.updateNsxAgentInfo(session, dai);
+        }
+
+        // Update DAI to reflect last successful communication
+        EntityManager.update(session, dai);
     }
 }

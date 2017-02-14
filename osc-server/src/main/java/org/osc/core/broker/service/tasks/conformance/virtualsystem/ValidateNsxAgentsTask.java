@@ -10,7 +10,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.service.AgentRegisterService;
+import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteMemberDeviceTask;
@@ -64,7 +64,7 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
                     dai.setMgmtSubnetPrefixLength(agent.getSubnetPrefixLength());
                     EntityManager.update(session, dai);
                 }
-                AgentRegisterService.updateNsxAgentInfo(session, dai, agent);
+                NsxUpdateAgentsService.updateNsxAgentInfo(session, dai, agent);
             }
         }
 
