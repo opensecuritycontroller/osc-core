@@ -22,7 +22,7 @@ public class VmidcServerRestClient extends RestBaseClient {
      */
     public VmidcServerRestClient(String vmiDCServer, int port, String loginName, String password, boolean isHttps) {
 
-        super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_JSON);
+        super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_XML);
 
         initRestBaseClient(vmiDCServer, port, loginName, password, isHttps);
     }
