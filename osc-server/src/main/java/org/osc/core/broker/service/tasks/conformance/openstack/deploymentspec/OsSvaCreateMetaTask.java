@@ -14,8 +14,10 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.manager.api.ManagerDeviceApi;
 
 /**
  * Creates an SVA on openstack
@@ -77,6 +79,15 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
         if (!StringUtils.isBlank(this.ds.getFloatingIpPoolName())) {
             this.tg.appendTask(new OsSvaCheckFloatingIpTask(this.dai));
         }
+
+        this.tg.appendTask(new OsSvaCheckNetworkInfoTask(this.dai));
+
+        try (ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.dai.getVirtualSystem())) {
+            if (mgrApi.isDeviceGroupSupported()) {
+                this.tg.appendTask(new MgrCreateMemberDeviceTask(this.dai));
+            }
+        }
+
         OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(session, this.dai, this);
     }
 

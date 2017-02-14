@@ -32,7 +32,7 @@ public class ReleaseUpgradeMgr {
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
-    public static final int TARGET_DB_VERSION = 73;
+    public static final int TARGET_DB_VERSION = 74;
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
@@ -206,6 +206,8 @@ public class ReleaseUpgradeMgr {
                 upgrade71to72(stmt);
             case 72:
                 upgrade72to73(stmt);
+            case 73:
+                upgrade73to74(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -217,6 +219,11 @@ public class ReleaseUpgradeMgr {
         }
     }
 
+    private static void upgrade73to74(Statement stmt) throws SQLException, EncryptionException {
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN mgmt_os_port_id varchar(255);");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN mgmt_mac_address varchar(255);");
+    }
+                
     /**
      * 3DES encrypted passwords -> AES-CTR encrypted passwords
      */

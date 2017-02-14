@@ -59,6 +59,20 @@ public class VirtualSystemEntityMgr {
         return list.get(0);
     }
 
+    public static VirtualSystem findByNsxServiceId(Session session, String nsxServiceId) {
+        Criteria criteria = session.createCriteria(VirtualSystem.class)
+                .add(Restrictions.eq("nsxServiceId", nsxServiceId));
+
+        @SuppressWarnings("unchecked")
+        List<VirtualSystem> list = criteria.setFirstResult(0).setMaxResults(1).list();
+
+        if (list == null || list.size() == 0) {
+            return null;
+        }
+
+        return list.get(0);
+    }
+
     public static VirtualSystem findByDAAndVC(Session session, Long daId, Long vcId) {
 
         Criteria criteria = session.createCriteria(VirtualSystem.class).createAlias("virtualizationConnector", "vc")

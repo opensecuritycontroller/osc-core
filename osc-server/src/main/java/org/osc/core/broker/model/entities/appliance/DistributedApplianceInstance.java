@@ -107,6 +107,11 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
     @Column(name = "inspection_egress_mac_address")
     private String inspectionEgressMacAddress;
 
+    @Column(name = "mgmt_os_port_id")
+    private String mgmtOsPortId;
+    @Column(name = "mgmt_mac_address")
+    private String mgmtMacAddress;
+
     @Column(name = "floating_ip_id")
     private String floatingIpId;
 
@@ -122,10 +127,10 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "DISTRIBUTED_APPLIANCE_INSTANCE_VM_PORT",
-        joinColumns=
-                @JoinColumn(name="dai_fk", referencedColumnName="id"),
-            inverseJoinColumns=
-                @JoinColumn(name="vm_port_fk", referencedColumnName="id")
+    joinColumns=
+    @JoinColumn(name="dai_fk", referencedColumnName="id"),
+    inverseJoinColumns=
+    @JoinColumn(name="vm_port_fk", referencedColumnName="id")
             )
     private Set<VMPort> protectedPorts = new HashSet<>();
 
@@ -387,6 +392,22 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
 
     public void setInspectionOsIngressPortId(String inspectionOsPortId) {
         this.inspectionOsIngressPortId = inspectionOsPortId;
+    }
+
+    public String getMgmtOsPortId() {
+        return this.mgmtOsPortId;
+    }
+
+    public void setMgmtOsPortId(String mgmtOsPortId) {
+        this.mgmtOsPortId = mgmtOsPortId;
+    }
+
+    public String getMgmtMacAddress() {
+        return this.mgmtMacAddress;
+    }
+
+    public void setMgmtMacAddress(String mgmtMacAddress) {
+        this.mgmtMacAddress = mgmtMacAddress;
     }
 
     public String getInspectionIngressMacAddress() {
