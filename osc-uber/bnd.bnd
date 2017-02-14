@@ -27,7 +27,6 @@ Require-Capability: \
 	aQute.lib.*,\
 	aQute.libg.*
 
-# TODO: it is necessary to move all possible dependecies out of uber bundle into osgi container after replacing jclouds with openstack4j
 -includeresource: \
     @${activation.dep},\
     @${amqp-client.dep},\
@@ -89,27 +88,7 @@ Require-Capability: \
     @${sdn-controller-api.dep},\
     @${vmware-nsx-api.dep},\
     @${osc-common.dep},\
-    @${osc-server.dep},\
-    @${javax.ws.rs-api.dep},\
-    @${jersey-server.dep},\
-    @${jersey-container-servlet.dep},\
-    @${jersey-container-servlet-core.dep},\
-    @${jersey-bean-validation.dep},\
-    @${javax.annotation-api.dep},\
-    @${javax.el-api.dep},\
-    @${javax.el.dep},\
-    @${jersey-guava.dep},\
-    @${hibernate-validator.dep},\
-    @${classmate.dep},\
-    @${jersey-common.dep},\
-    @${jersey-client.dep},\
-    @${jersey-media-json-jackson.dep},\
-    @${jackson-jaxrs-json-provider.dep},\
-    @${jackson-module-jaxb-annotations.dep},\
-    @${jersey-entity-filtering.dep},\
-    @${jackson-jaxrs-base.dep},\
-    @${jersey-media-jaxb.dep}
-
+    @${osc-server.dep}
 
 Import-Package:\
     ${exclude-osgi},\
@@ -352,10 +331,6 @@ exclude-other:\
   !weblogic.jdbc.jts,\
   !weblogic.jdbc.vendor.oracle,\
   !weblogic.websocket,\
-  !weblogic.websocket.annotation,\
-  !jersey.repackaged.com.google.common.*,\
-  !org.glassfish.jersey.*,\
-  !com.thoughtworks.paranamer.*,\
-  !com.fasterxml.jackson.*
+  !weblogic.websocket.annotation
 
 #end

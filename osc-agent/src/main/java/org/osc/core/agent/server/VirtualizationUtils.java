@@ -1,5 +1,6 @@
 package org.osc.core.agent.server;
 
+import com.sun.jersey.core.util.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -20,7 +21,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Properties;
 
 public class VirtualizationUtils {
@@ -136,7 +136,7 @@ public class VirtualizationUtils {
         Properties prop = new Properties();
 
         try(FileInputStream fileInputStream = new FileInputStream(configFile)) {
-            String decodedFile = new String(Base64.getDecoder().decode(IOUtils.toString(fileInputStream)));
+            String decodedFile = new String(Base64.decode(IOUtils.toString(fileInputStream)));
             try (InputStream configFileStream = new ByteArrayInputStream(decodedFile.getBytes(StandardCharsets.UTF_8))) {
                 prop.load(configFileStream);
             }

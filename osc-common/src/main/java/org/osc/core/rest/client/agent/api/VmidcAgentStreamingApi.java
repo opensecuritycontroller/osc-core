@@ -13,14 +13,10 @@ public class VmidcAgentStreamingApi extends RestBaseClient {
     private static final String VMIDC_SERVER_REST_URL_BASE = "/api/agent/v1";
 
     public VmidcAgentStreamingApi(String agentServer, int port, String loginName, String password) {
-        this(agentServer, port, loginName, password, true);
-    }
-
-    protected VmidcAgentStreamingApi(String agentServer, int port, String loginName, String password, boolean isHttps) {
 
         super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_OCTET_STREAM);
 
-        initRestBaseClient(agentServer, port, loginName, password, isHttps);
+        initRestBaseClient(agentServer, port, loginName, password, true);
     }
 
     public void updateMgrFile(byte[] mgrFile, String mgrFileName) throws Exception {

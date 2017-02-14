@@ -1,8 +1,10 @@
 package org.osc.core.rest.client.exception;
 
-import javax.ws.rs.core.Response;
 import java.net.NoRouteToHostException;
 import java.net.SocketTimeoutException;
+
+import com.sun.jersey.api.client.ClientResponse;
+
 
 /**
  * A general rest exception. Any of the members can be null.
@@ -62,8 +64,8 @@ public class RestClientException extends Exception {
 
     public boolean isCredentialError() {
         return getResponseCode() != null
-                && (getResponseCode().equals(Response.Status.UNAUTHORIZED.getStatusCode()) || getResponseCode()
-                .equals(Response.Status.FORBIDDEN.getStatusCode()));
+                && (getResponseCode().equals(ClientResponse.Status.UNAUTHORIZED.getStatusCode()) || getResponseCode()
+                        .equals(ClientResponse.Status.FORBIDDEN.getStatusCode()));
     }
 
     public static boolean isCredentialError(Throwable exception) {

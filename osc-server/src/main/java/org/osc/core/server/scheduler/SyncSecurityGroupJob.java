@@ -8,7 +8,7 @@ import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.server.VmidcAuthFilter;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.EntityManager;
@@ -30,7 +30,7 @@ public class SyncSecurityGroupJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
+        SessionUtil.setUser(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
         Session session = null;
         try {
             session = HibernateUtil.getSessionFactory().openSession();
@@ -47,25 +47,25 @@ public class SyncSecurityGroupJob implements Job {
                     @Override
                     public void run() {
                         new TransactionalRunner<Object, SecurityGroup>(new TransactionalRunner.ExclusiveSessionHandler())
-                                .exec(new TransactionalAction<Object, SecurityGroup>() {
+                            .exec(new TransactionalAction<Object, SecurityGroup>() {
 
-                                    @Override
-                                    public Object run(Session session, SecurityGroup sg) {
+                            @Override
+                            public Object run(Session session, SecurityGroup sg) {
 
-                                        SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
+                                SessionUtil.setUser(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
 
-                                        try {
-                                            sg = (SecurityGroup) session.get(SecurityGroup.class, sg.getId());
-                                            ConformService.startSecurityGroupConformanceJob(sg);
-                                        } catch (Exception ex) {
-                                            AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE,
-                                                    new LockObjectReference(sg),
-                                                    "Failure during scheduling of Security Group Sync. " + ex.getMessage());
-                                            log.error("Fail to sync SG " + sg.getName(), ex);
-                                        }
-                                        return null;
-                                    }
-                                }, sg);
+                                try {
+                                    sg = (SecurityGroup) session.get(SecurityGroup.class, sg.getId());
+                                    ConformService.startSecurityGroupConformanceJob(sg);
+                                } catch (Exception ex) {
+                                    AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE,
+                                            new LockObjectReference(sg),
+                                            "Failure during scheduling of Security Group Sync. " + ex.getMessage());
+                                    log.error("Fail to sync SG " + sg.getName(), ex);
+                                }
+                                return null;
+                            }
+                        }, sg);
 
                     }
                 }, "Scheduled-SG-Sync-runner-Thread-" + System.currentTimeMillis());

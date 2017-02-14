@@ -9,7 +9,7 @@ import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.server.VmidcAuthFilter;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.ServerUtil;
@@ -39,7 +39,7 @@ public class UpdateMgrDomainNotificationTask extends TransactionalTask {
         try {
             mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(this.mc);
             mgrApi.updateDomainNotificationRegistration(this.oldBrokerIp, Server.getApiPort(),
-                    OscAuthFilter.OSC_DEFAULT_LOGIN, OscAuthFilter.OSC_DEFAULT_PASS);
+                    VmidcAuthFilter.VMIDC_DEFAULT_LOGIN, VmidcAuthFilter.VMIDC_DEFAULT_PASS);
 
             this.mc.setLastKnownNotificationIpAddress(ServerUtil.getServerIP());
             EntityManager.update(session, this.mc);
