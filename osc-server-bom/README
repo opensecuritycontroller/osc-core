@@ -6,7 +6,6 @@ x. File Layout
   root/*   - copied verbatim to disk
   src/*    - Modified by makefiles while copying to disk
 
-  mlos.packages     - list of packages retrieved from MLOS
   centos-6.packages - list of packages retrieved from CentOS
   postinstall       - script run at end of installation
                       place any post processing  to be done here
@@ -26,7 +25,7 @@ x. Networking:
 x. Startup SysVInit
 
   see: http://en.wikipedia.org/wiki/Init for a description of runlevels
-       MLOS is Redhat/CentOS based and starts at runlevel 3
+       Redhat/CentOS starts at runlevel 3
 
   Taken from: http://www.linuxplanet.com/linuxplanet/tutorials/7019/2
 
