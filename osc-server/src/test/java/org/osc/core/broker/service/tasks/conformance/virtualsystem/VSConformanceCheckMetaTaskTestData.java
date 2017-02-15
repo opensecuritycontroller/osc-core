@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.mockito.Mockito;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -277,9 +278,13 @@ public class VSConformanceCheckMetaTaskTestData {
             String policyName,
             Boolean policyDeletion,
             String vendorTemplateId) {
-        VirtualizationConnector vc = new VirtualizationConnector();
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
-        vc.setId(vcId);
+
+        // Mock SslContext
+        VirtualizationConnector vcSpy = Mockito.spy(VirtualizationConnector.class);
+        Mockito.doReturn(null).when(vcSpy).getSslContext();
+
+        vcSpy.setVirtualizationType(VirtualizationType.VMWARE);
+        vcSpy.setId(vcId);
 
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
         mc.setManagerType(ManagerType.NSM);
@@ -295,7 +300,7 @@ public class VSConformanceCheckMetaTaskTestData {
         vs.setId(vsId);
         vs.setNsxServiceManagerId(serviceManagerId);
         vs.setNsxServiceId(serviceId);
-        vs.setVirtualizationConnector(vc);
+        vs.setVirtualizationConnector(vcSpy);
         vs.setDomain(new Domain());
         vs.setNsxServiceInstanceId(serviceInstanceId);
         vs.setNsxDeploymentSpecIds(deploymentSpecIds);

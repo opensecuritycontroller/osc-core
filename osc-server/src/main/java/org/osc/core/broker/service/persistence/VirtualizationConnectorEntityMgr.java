@@ -19,6 +19,7 @@ import org.osc.core.util.encryption.EncryptionException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VirtualizationConnectorEntityMgr {
 
@@ -77,7 +78,7 @@ public class VirtualizationConnectorEntityMgr {
         dto.setProviderPassword(EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
         dto.setAdminTenantName(vc.getProviderAdminTenantName());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
-        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet());
+        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream().collect(Collectors.toSet()));
 
         dto.setSoftwareVersion(vc.getVirtualizationSoftwareVersion());
     }
