@@ -29,7 +29,7 @@ public class ApiUtil {
      * @param request
      *            the request to submit
      * @return response in case of successful submission
-     * @throws VmidcRestServerException
+     * @throws VmidcRestServer
      *             Exception either in case of any exceptions thrown by the service or in case of exceptions submitting
      *             the request
      */
@@ -63,7 +63,7 @@ public class ApiUtil {
      * @param request
      *            the request to submit
      * @return response in case of successful submission
-     * @throws VmidcRestServerException
+     * @throws VmidcRestServer
      *             Exception either in case of any exceptions thrown by the service or in case of exceptions submitting
      *             the request
      */

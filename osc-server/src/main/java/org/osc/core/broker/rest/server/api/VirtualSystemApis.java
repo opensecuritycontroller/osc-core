@@ -16,8 +16,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.rest.annotations.OscAuth;
+import org.osc.core.broker.rest.server.IscRestServlet;
+import org.osc.core.broker.rest.server.VmidcAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.AddDeploymentSpecService;
 import org.osc.core.broker.service.DeleteDeploymentSpecService;
@@ -44,6 +44,9 @@ import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.securityinterface.UpdateSecurityGroupInterfaceService;
 import org.osc.core.broker.util.SessionUtil;
 
+import com.sun.jersey.api.JResponse;
+import com.sun.jersey.spi.container.ResourceFilters;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -52,10 +55,10 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
 @Api(tags = "Operations for Virtual Systems", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/virtualSystems")
+@Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/virtualSystems")
+@ResourceFilters({ VmidcAuthFilter.class })
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@OscAuth
 public class VirtualSystemApis {
 
     private static final Logger logger = Logger.getLogger(VirtualSystemApis.class);
@@ -69,7 +72,7 @@ public class VirtualSystemApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vsId}/distributedApplianceInstances")
     @GET
-    public List<DistributedApplianceInstanceDto> getDistributedApplianceInstances(
+    public JResponse<List<DistributedApplianceInstanceDto>> getDistributedApplianceInstances(
             @Context HttpHeaders headers, @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
 
         logger.info("Listing Distributed Appliance Instances based on given VS id");
@@ -78,7 +81,7 @@ public class VirtualSystemApis {
         @SuppressWarnings("unchecked")
         ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) ApiUtil
                 .getListResponse(new ListDistributedApplianceInstanceByVSService(), new BaseIdRequest(vsId));
-        return response.getList();
+        return JResponse.ok(response.getList()).build();
     }
 
     @ApiOperation(value = "Lists Policies",
@@ -89,8 +92,8 @@ public class VirtualSystemApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vsId}/policies")
     @GET
-    public List<PolicyDto> getPolicies(@Context HttpHeaders headers,
-                                       @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
+    public JResponse<List<PolicyDto>> getPolicies(@Context HttpHeaders headers,
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
 
         logger.info("Listing Policies based on given VS id");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -98,10 +101,11 @@ public class VirtualSystemApis {
         @SuppressWarnings("unchecked")
         ListResponse<PolicyDto> response = (ListResponse<PolicyDto>) ApiUtil.getListResponse(new ListVirtualSystemPolicyService(),
                 new BaseIdRequest(vsId));
-        return response.getList();
+        return JResponse.ok(response.getList()).build();
     }
 
     // DS APIS
+
     @ApiOperation(value = "Lists Deployment Specifications (Openstack Only)",
             notes = "Lists the Deployment Specifications owned by the Virtual System",
             response = DeploymentSpecDto.class,
@@ -110,15 +114,15 @@ public class VirtualSystemApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vsId}/deploymentSpecs")
     @GET
-    public List<DeploymentSpecDto> getDeploymentSpecsByVirtualSystem(@Context HttpHeaders headers,
-                                                                     @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
+    public JResponse<List<DeploymentSpecDto>> getDeploymentSpecsByVirtualSystem(@Context HttpHeaders headers,
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Listing Deployment Spces");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<DeploymentSpecDto> response = (ListResponse<DeploymentSpecDto>) ApiUtil
                 .getListResponse(new ListDeploymentSpecServiceByVirtualSystem(), new BaseIdRequest(vsId));
-        return response.getList();
+        return JResponse.ok(response.getList()).build();
     }
 
     @ApiOperation(value = "Retrieves the Deployment Specification (Openstack Only)",
@@ -128,9 +132,9 @@ public class VirtualSystemApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vsId}/deploymentSpecs/{dsId}")
     @GET
-    public DeploymentSpecDto getDeploymentSpec(@Context HttpHeaders headers,
-                                               @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                               @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
+    public JResponse<DeploymentSpecDto> getDeploymentSpec(@Context HttpHeaders headers,
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("getting Deployment Spec " + dsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
@@ -141,7 +145,7 @@ public class VirtualSystemApis {
 
         ApiUtil.validateParentIdMatches(dto, vsId, "SecurityGroup");
 
-        return dto;
+        return JResponse.ok(dto).build();
     }
 
     @ApiOperation(value = "Creates a Deployment Specification (Openstack Only)",
@@ -152,8 +156,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs")
     @POST
     public Response createDeploymentSpec(@Context HttpHeaders headers,
-                                         @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                         @ApiParam(required = true) DeploymentSpecDto dsDto) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(required = true) DeploymentSpecDto dsDto) {
         logger.info("Creating Deployment Spec ...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setParentIdOrThrow(dsDto, vsId, "Deployment Specification");
@@ -169,9 +173,9 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs/{dsId}")
     @PUT
     public Response updateDeploymentSpec(@Context HttpHeaders headers,
-                                         @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                         @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId,
-                                         @ApiParam(required = true) DeploymentSpecDto dsDto) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId,
+            @ApiParam(required = true) DeploymentSpecDto dsDto) {
         logger.info("Updating Deployment Spec " + dsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setIdAndParentIdOrThrow(dsDto, dsId, vsId, "Deployment Spec");
@@ -187,8 +191,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs/{dsId}")
     @DELETE
     public Response deleteDeploymentSpec(@Context HttpHeaders headers,
-                                         @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                         @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         return ApiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
@@ -203,8 +207,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs/{dsId}/force")
     @DELETE
     public Response forceDeleteDeploymentSpec(@Context HttpHeaders headers,
-                                              @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                              @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         return ApiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
@@ -212,6 +216,7 @@ public class VirtualSystemApis {
     }
 
     // SGI APIS
+
     @ApiOperation(value = "Lists Traffic Policy Mappings",
             notes = "Lists the Traffic Policy Mappings owned by the Virtual System",
             response = SecurityGroupInterfaceDto.class,
@@ -220,14 +225,14 @@ public class VirtualSystemApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vsId}/securityGroupInterfaces")
     @GET
-    public List<SecurityGroupInterfaceDto> getSecurityGroupInterfacesByVirtualSystem(
+    public JResponse<List<SecurityGroupInterfaceDto>> getSecurityGroupInterfacesByVirtualSystem(
             @Context HttpHeaders headers, @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Listing Traffic Policy Mappings");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         @SuppressWarnings("unchecked")
         ListResponse<SecurityGroupInterfaceDto> response = (ListResponse<SecurityGroupInterfaceDto>) ApiUtil
                 .getListResponse(new ListSecurityGroupInterfaceServiceByVirtualSystem(), new BaseIdRequest(vsId));
-        return response.getList();
+        return JResponse.ok(response.getList()).build();
     }
 
     @ApiOperation(value = "Retrieves the Traffic Policy Mapping",
@@ -237,9 +242,9 @@ public class VirtualSystemApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vsId}/securityGroupInterfaces/{sgiId}")
     @GET
-    public SecurityGroupInterfaceDto getSecurityGroupInterface(@Context HttpHeaders headers,
-                                                               @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                                               @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
+    public JResponse<SecurityGroupInterfaceDto> getSecurityGroupInterface(@Context HttpHeaders headers,
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
         logger.info("Getting Security Group Interface " + sgiId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
@@ -250,7 +255,7 @@ public class VirtualSystemApis {
 
         ApiUtil.validateParentIdMatches(dto, vsId, "SecurityGroupInterface");
 
-        return dto;
+        return JResponse.ok(dto).build();
     }
 
     @ApiOperation(value = "Creates a Traffic Policy Mapping (Openstack Only)",
@@ -261,8 +266,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/securityGroupInterfaces")
     @POST
     public Response createSecutiryGroupInterface(@Context HttpHeaders headers,
-                                                 @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                                 @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
         logger.info("Creating Security Group Interface ...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setParentIdOrThrow(sgiDto, vsId, "Traffic Policy Mapping");
@@ -278,9 +283,9 @@ public class VirtualSystemApis {
     @Path("/{vsId}/securityGroupInterfaces/{sgiId}")
     @PUT
     public Response updateSecurityGroupInterface(@Context HttpHeaders headers,
-                                                 @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                                 @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId,
-                                                 @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId,
+            @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
         logger.info("Updating Security Group Interface " + sgiId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setIdAndParentIdOrThrow(sgiDto, sgiId, vsId, "Traffic Policy Mapping");
@@ -296,8 +301,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/securityGroupInterfaces/{sgiId}")
     @DELETE
     public Response deleteSecurityGroupInterface(@Context HttpHeaders headers,
-                                                 @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                                 @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
         logger.info("Deleting Security Group Interface.. " + sgiId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         return ApiUtil.getResponseForBaseRequest(new DeleteSecurityGroupInterfaceService(),
@@ -313,7 +318,7 @@ public class VirtualSystemApis {
     @Path("/{vsId}/force")
     @DELETE
     public Response forceDeleteVirtualSystem(@Context HttpHeaders headers,
-                                             @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Deleting Virtual System " + vsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         return ApiUtil.getResponseForBaseRequest(new ForceDeleteVirtualSystemService(),

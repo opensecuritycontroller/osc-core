@@ -8,8 +8,8 @@ public class VmidcAgentServerRestClient extends RestBaseClient {
 
     public VmidcAgentServerRestClient(String agentServer, int port, String loginName, String password, boolean isHttps) {
 
-        super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_JSON);
+        super(VMIDC_SERVER_REST_URL_BASE, MediaType.APPLICATION_XML);
 
-        initRestBaseClient(agentServer, port, loginName, password, isHttps, true);
+        initRestBaseClient(agentServer, port, loginName, password, isHttps);
     }
 }

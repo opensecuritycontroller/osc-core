@@ -3,34 +3,26 @@
 # include minimal contents for stand-alone jar
 # also avoids refering to jar by name
 -conditionalpackage:\
+    com.google.common.base,\
+    javax.ws.rs.*,\
+    org.apache.commons.cli.*,\
+    org.apache.commons.io.*,\
+    org.apache.log4j.*,\
     org.osc.core.broker.rest.server.model,\
     org.osc.core.rest.client.*,\
     org.osc.core.util
 
--includeresource: \
-    @log4j-1.2.17.jar,\
+# jersey-bundle contains META-INF/services
+# so include it explicitly
+-includeresource:\
+    @jersey-bundle-1.12.jar
+
+# dependencies embedded by -conditionalpackage
+xxx:\
+    @jsr311-api-1.1.1.jar,\
     @commons-cli-1.2.jar,\
-    @aopalliance-repackaged-2.5.0-b30.jar,\
-    @osgi-resource-locator-1.0.1.jar,\
-    @javax.ws.rs-api-2.0.1.jar,\
-    @javax.annotation-api-1.2.jar,\
-    @javax.inject-2.5.0-b30.jar,\
-    @javassist-3.20.0-GA.jar,\
-    @jersey-client-2.25.jar,\
-    @jersey-common-2.25.jar,\
-    @jersey-guava-2.25.jar,\
-    @jersey-media-json-jackson-2.25.jar,\
-    @jersey-entity-filtering-2.25.jar,\
-    @jersey-media-jaxb-2.25.jar,\
-    @jackson-annotations-2.8.5.jar,\
-    @jackson-core-2.8.5.jar,\
-    @jackson-databind-2.8.5.jar,\
-    @jackson-jaxrs-json-provider-2.8.5.jar,\
-    @jackson-module-jaxb-annotations-2.8.5.jar,\
-    @jackson-jaxrs-json-provider-2.8.5.jar,\
-    @jackson-jaxrs-base-2.8.5.jar,\
-    @hk2-locator-2.5.0-b30.jar,\
-    @hk2-utils-2.5.0-b30.jar,\
-    @hk2-api-2.5.0-b30.jar
+    @commons-io-1.3.2.jar,\
+    @guava-17.0.jar,\
+    @log4j-1.2.17.jar
 
 #

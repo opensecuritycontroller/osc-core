@@ -1,10 +1,18 @@
 package org.osc.core.rest.client;
 
-import org.apache.commons.lang3.ArrayUtils;
+import com.google.common.base.Throwables;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.ClientResponse.Status;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.WebResource.Builder;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.LoggingFilter;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.log4j.Logger;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.glassfish.jersey.logging.LoggingFeature;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.exception.ClientResponseNotOkException;
 import org.osc.core.rest.client.exception.RestClientException;
@@ -15,16 +23,8 @@ import org.osc.core.util.NetworkUtil;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.InvocationCallback;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import java.io.StringWriter;
@@ -36,8 +36,13 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
+import java.util.concurrent.TimeoutException;
 
 public abstract class RestBaseClient {
 
@@ -52,14 +57,16 @@ public abstract class RestBaseClient {
 
     private static Logger log = Logger.getLogger(RestBaseClient.class);
 
+    private final LoggingFilter debugFilter = new LoggingFilter(System.out);
     private Client client;
-    private WebTarget webTarget;
+    private WebResource webResource;
+    private ClientConfig clientCfg;
     private String host;
     protected String headerKey;
     protected String headerKeyValue;
     protected String contentType;
     protected Cookie cookie;
-    protected MultivaluedMap<String, Object> lastRequestHeaders;
+    protected MultivaluedMap<String, String> lastRequestHeaders;
 
     private String urlBase;
     private final String mediaType;
@@ -75,11 +82,11 @@ public abstract class RestBaseClient {
     }
 
     public void enableDebug() {
-        this.client.property(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT, Level.FINE);
+        this.client.addFilter(this.debugFilter);
     }
 
     public void disableDebug() {
-        this.client.property(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT, Level.OFF);
+        this.client.removeFilter(this.debugFilter);
     }
 
     public static String getLocalHostIp() {
@@ -98,7 +105,7 @@ public abstract class RestBaseClient {
      *            The timeout to use wait for REST calls reply
      */
     public void setConnectTimeout(Integer connectTimeout) {
-        client.property(ClientProperties.CONNECT_TIMEOUT, connectTimeout);
+        this.client.setConnectTimeout(connectTimeout);
     }
 
     /**
@@ -108,11 +115,11 @@ public abstract class RestBaseClient {
      *            The timeout to use wait for REST calls reply
      */
     public void setReadTimeout(Integer readTimeout) {
-        client.property(ClientProperties.READ_TIMEOUT, readTimeout);
+        this.client.setReadTimeout(readTimeout);
     }
 
-    protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps) {
-        this.initRestBaseClient(host, port, userName, password, isHttps, false);
+    protected void initRestBaseClient(String host, String userName, String password, boolean isHttps) {
+        initRestBaseClient(host, 0, userName, password, isHttps);
     }
 
     /**
@@ -127,59 +134,42 @@ public abstract class RestBaseClient {
      * @param userName username to use. null if we dont want to use basic auth
      * @param password password to use. null if we dont want to use basic auth
      * @param isHttps whether http or https
-     * @param forceAcceptAll force accept all SSL certificates
      */
-    protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps, boolean forceAcceptAll) {
+    protected void initRestBaseClient(String host, int port, String userName, String password, boolean isHttps) {
 
         this.host = host;
         String urlPrefix = (isHttps ? "https" : "http") + "://" + host + (port > 0 ? ":" + port : "");
         String restBaseUrl = urlPrefix + this.urlBase;
 
         if (isHttps) {
-            if(forceAcceptAll) {
-                this.client = configureHttpsForceAllClient();
-            } else {
-                this.client = configureHttpsClient();
-            }
+            this.clientCfg = configureHttpsClient();
         } else {
-            this.client = configureDefaultClient();
+            this.clientCfg = new DefaultClientConfig();
         }
 
-        client.property(ClientProperties.CONNECT_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
-        client.property(ClientProperties.READ_TIMEOUT, DEFAULT_READ_TIMEOUT);
-
-        this.webTarget = client.target(restBaseUrl);
-
+        this.client = Client.create(this.clientCfg);
+        this.client.setConnectTimeout(DEFAULT_CONNECTION_TIMEOUT);
+        this.client.setReadTimeout(DEFAULT_READ_TIMEOUT);
         if (enableDebugLogging) {
-            client.property(LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT, LoggingFeature.Verbosity.PAYLOAD_ANY);
+            this.client.addFilter(this.debugFilter);
         }
         if (userName != null && password != null) {
-            this.client.register(HttpAuthenticationFeature.basic(userName, password));
+            this.client.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(userName, password));
         }
+        this.webResource = this.client.resource(restBaseUrl);
     }
 
-    private Client configureDefaultClient() {
-        return ClientBuilder.newBuilder()
-                .hostnameVerifier((s, sslSession) -> true)
-                .build();
-    }
-
-    private Client configureHttpsClient() {
+    private ClientConfig configureHttpsClient() {
 
         SSLContext ctx = new SslContextProvider().getSSLContext();
         HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
 
-        return ClientBuilder.newBuilder()
-                .sslContext(ctx)
-                .hostnameVerifier((s, sslSession) -> true)
-                .build();
-    }
+        ClientConfig config = new DefaultClientConfig();
 
-    private Client configureHttpsForceAllClient() {
-        // :TODO emanoel: Agent Removal - remove below method.
-        SSLContext ctx = new SslContextProvider().getAcceptAllSSLContext();
-        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
-        return configureDefaultClient();
+        config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
+                new HTTPSProperties((hostname, session) -> true, ctx));
+
+        return config;
     }
 
     public <T> List<T> getResources(String resourcePath, final Class<T> clazz) throws Exception {
@@ -200,29 +190,58 @@ public abstract class RestBaseClient {
                 return List.class;
             }
         };
-        GenericType<List<T>> listOfClazzType = new GenericType<List<T>>(genericType) {};
 
-        Response response = null;
+        GenericType<List<T>> type = new GenericType<List<T>>(genericType) {
+        };
+
+        ClientResponse res = null;
         try {
-            final Invocation.Builder requestBuilder = getRequestBuilder(resourcePath);
-            response = requestBuilder.async().get(new InvocationLogCallback())
-                    .get(REQUEST_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
-            Response.Status status = Response.Status.fromStatusCode(response.getStatus());
-
-            if (status == Response.Status.OK) {
-                if (response.hasEntity()) {
-                    return response.readEntity(listOfClazzType);
+            final Builder requestBuilder = getRequestBuilder(resourcePath);
+            Callable<ClientResponse> task = new Callable<ClientResponse>() {
+                @Override
+                public ClientResponse call() throws Exception {
+                    return requestBuilder.get(ClientResponse.class);
                 }
-                return null;
+            };
+
+            res = execRequestTimeout(task);
+            Status status = getClientResponseStatus(res);
+
+            if (status == ClientResponse.Status.OK) {
+                if (res.hasEntity()) {
+                    return res.getEntity(type);
+                } else {
+                    return null;
+                }
             } else {
                 throw new ClientResponseNotOkException();
             }
+
         } catch (Exception ex) {
-            RestClientException restClientException = createRestClientException("GET", this.webTarget.getUri() + "/"
-                    + resourcePath, null, response, ex);
+
+            RestClientException restClientException = createRestClientException("GET", this.webResource.getURI() + "/"
+                    + resourcePath, null, res, ex);
             log.debug("Error invoking getResources", restClientException);
 
             throw restClientException;
+        }
+    }
+
+    private ClientResponse execRequestTimeout(Callable<ClientResponse> task) throws InterruptedException,
+            TimeoutException {
+        ExecutorService executor = Executors.newCachedThreadPool();
+        Future<ClientResponse> future = executor.submit(task);
+        try {
+            return future.get(REQUEST_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (ExecutionException e) {
+            throw Throwables.propagate(e.getCause());
+        } finally {
+            executor.shutdownNow();
+            try {
+                executor.awaitTermination(1, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                log.warn("Couldn't wait any longer for REST call completion. Shutting down request thread.", e);
+            }
         }
     }
 
@@ -236,30 +255,41 @@ public abstract class RestBaseClient {
     }
 
     public <T> T getResource(String resourcePath, final Class<T> clazz, MultivaluedMap<String, String> params,
-                             MultivaluedMap<String, String> headers) throws Exception {
-        Response response = null;
+            MultivaluedMap<String, String> headers) throws Exception {
+
+        ClientResponse res = null;
         try {
-            final Invocation.Builder requestBuilder = getRequestBuilder(resourcePath, params, headers);
-            response = requestBuilder.async().get(new InvocationLogCallback())
-                    .get(REQUEST_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
-            Response.Status status = Response.Status.fromStatusCode(response.getStatus());
-
-            if (status == Response.Status.OK) {
-                this.lastRequestHeaders = response.getHeaders();
-
-                if (response.hasEntity()) {
-                    return response.readEntity(clazz);
+            final Builder requestBuilder = getRequestBuilder(resourcePath, params);
+            Callable<ClientResponse> task = new Callable<ClientResponse>() {
+                @Override
+                public ClientResponse call() throws Exception {
+                    return requestBuilder.get(ClientResponse.class);
                 }
-                return null;
+            };
+
+            res = execRequestTimeout(task);
+            Status status = getClientResponseStatus(res);
+
+            if (status == ClientResponse.Status.OK) {
+
+                if (res.hasEntity()) {
+                    return res.getEntity(clazz);
+                } else {
+                    return null;
+                }
+
             } else {
                 throw new ClientResponseNotOkException();
             }
+
         } catch (Exception ex) {
-            RestClientException restClientException = createRestClientException("GET", this.webTarget.getUri() + "/"
-                    + resourcePath, null, response, ex);
+
+            RestClientException restClientException = createRestClientException("GET", this.webResource.getURI() + "/"
+                    + resourcePath, null, res, ex);
             log.debug("Error invoking getResources", restClientException);
 
             throw restClientException;
+
         }
     }
 
@@ -274,32 +304,44 @@ public abstract class RestBaseClient {
 
     @SuppressWarnings("unchecked")
     public <I, O> O postResource(String resourcePath, Class<O> resClazz, final I input,
-                                 MultivaluedMap<String, String> params, MultivaluedMap<String, String> headers) throws Exception {
-        Response response = null;
+            MultivaluedMap<String, String> params, MultivaluedMap<String, String> headers) throws Exception {
+
+        ClientResponse res = null;
+
         try {
-            final Invocation.Builder requestBuilder = getRequestBuilder(resourcePath, params, headers);
-            response = requestBuilder.async().post(Entity.entity(input, this.mediaType),new InvocationLogCallback())
-                    .get(REQUEST_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
-            Response.Status status = Response.Status.fromStatusCode(response.getStatus());
 
-            if (status == Response.Status.OK || status == Response.Status.CREATED) {
-                this.lastRequestHeaders = response.getHeaders();
-
-                if (response.hasEntity()) {
-                    return response.readEntity(resClazz);
+            final Builder requestBuilder = getRequestBuilder(resourcePath, params, headers);
+            Callable<ClientResponse> task = new Callable<ClientResponse>() {
+                @Override
+                public ClientResponse call() throws Exception {
+                    return requestBuilder.post(ClientResponse.class, input);
                 }
-                return (O) response;
-            } else if (status == Response.Status.NO_CONTENT) {
+            };
+
+            res = execRequestTimeout(task);
+            Status status = getClientResponseStatus(res);
+
+            if (status == ClientResponse.Status.OK || status == ClientResponse.Status.CREATED) {
+                this.lastRequestHeaders = res.getHeaders();
+
+                if (res.hasEntity()) {
+                    return res.getEntity(resClazz);
+                }
+                return (O) res;
+            } else if (status == ClientResponse.Status.NO_CONTENT) {
                 return null;
             } else {
                 throw new ClientResponseNotOkException();
             }
+
         } catch (Exception ex) {
-            RestClientException restClientException = createRestClientException("POST", this.webTarget.getUri() + "/"
-                    + resourcePath, input, response, ex);
+
+            RestClientException restClientException = createRestClientException("POST", this.webResource.getURI() + "/"
+                    + resourcePath, input, res, ex);
             log.debug("Error invoking postResource", restClientException);
 
             throw restClientException;
+
         }
     }
 
@@ -308,68 +350,85 @@ public abstract class RestBaseClient {
     }
 
     public <I> void putResource(String resourcePath, final I input, Cookie cookie) throws Exception {
-        Response response = null;
-        try {
-            final Invocation.Builder requestBuilder = getRequestBuilder(resourcePath);
-            response = requestBuilder.async().put(Entity.entity(input, this.mediaType), new InvocationLogCallback())
-                    .get(REQUEST_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
-            Response.Status status = Response.Status.fromStatusCode(response.getStatus());
 
-            if (status == Response.Status.OK || status == Response.Status.NO_CONTENT) {
-                this.lastRequestHeaders = response.getHeaders();
-            } else {
+        ClientResponse res = null;
+        try {
+
+            final Builder requestBuilder = getRequestBuilder(resourcePath);
+            Callable<ClientResponse> task = new Callable<ClientResponse>() {
+                @Override
+                public ClientResponse call() throws Exception {
+                    return requestBuilder.put(ClientResponse.class, input);
+                }
+            };
+
+            res = execRequestTimeout(task);
+            Status status = getClientResponseStatus(res);
+
+            if (status != ClientResponse.Status.OK && status != ClientResponse.Status.NO_CONTENT) {
                 throw new ClientResponseNotOkException();
+            } else {
+                this.lastRequestHeaders = res.getHeaders();
             }
+
         } catch (Exception ex) {
-            RestClientException restClientException = createRestClientException("PUT", this.webTarget.getUri() + "/"
-                    + resourcePath, input, response, ex);
+
+            RestClientException restClientException = createRestClientException("PUT", this.webResource.getURI() + "/"
+                    + resourcePath, input, res, ex);
             log.debug("Error invoking putResource", restClientException);
 
             throw restClientException;
+
         }
     }
 
     public String deleteResource(String resourcePath) throws Exception {
-        final Invocation.Builder requestBuilder = getRequestBuilder(resourcePath);
+
+        final Builder requestBuilder = getRequestBuilder(resourcePath);
         return deleteResource(resourcePath, requestBuilder);
     }
 
     public String deleteResource(URI resourcePath) throws Exception {
-        final Invocation.Builder requestBuilder = getRequestBuilder(resourcePath);
+
+        final Builder requestBuilder = getRequestBuilder(resourcePath);
         return deleteResource(resourcePath.getPath(), requestBuilder);
     }
 
-    private String deleteResource(String resourcePath, final Invocation.Builder requestBuilder) throws RestClientException {
-        Response response = null;
+    private String deleteResource(String resourcePath, final Builder requestBuilder) throws RestClientException {
+        ClientResponse res = null;
         try {
-            response = requestBuilder.async().delete(new InvocationLogCallback())
-                    .get(REQUEST_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
-            Response.Status status = Response.Status.fromStatusCode(response.getStatus());
-
-            // if response is positive
-            if (ArrayUtils.contains(new Response.Status[]{Response.Status.OK,
-                    Response.Status.ACCEPTED,
-                    Response.Status.NO_CONTENT}, status)) {
-                // if response contains content
-                if (status == Response.Status.NO_CONTENT) {
-                    return null;
-                } else {
-                    return response.readEntity(String.class);
+            Callable<ClientResponse> task = new Callable<ClientResponse>() {
+                @Override
+                public ClientResponse call() throws Exception {
+                    return requestBuilder.delete(ClientResponse.class);
                 }
-            } else { // response is not ok
+            };
+
+            res = execRequestTimeout(task);
+            Status status = getClientResponseStatus(res);
+
+            if (status != ClientResponse.Status.OK && status != ClientResponse.Status.ACCEPTED
+                    && status != ClientResponse.Status.NO_CONTENT) {
                 throw new ClientResponseNotOkException();
+            } else {
+                if (status != ClientResponse.Status.NO_CONTENT) {
+                    return res.getEntity(String.class);
+                }
+                return null;
             }
         } catch (Exception ex) {
-            RestClientException restClientException = createRestClientException("DELETE", this.webTarget.getUri()
-                    + "/" + resourcePath, null, response, ex);
+
+            RestClientException restClientException = createRestClientException("DELETE", this.webResource.getURI()
+                    + "/" + resourcePath, null, res, ex);
             log.debug("Error invoking deleteResource", restClientException);
 
             throw restClientException;
         }
+
     }
 
-    public WebTarget getWebTarget() {
-        return this.webTarget;
+    public WebResource getWebResource() {
+        return this.webResource;
     }
 
     public static <T> String pojoToXml(T pojo) throws Exception {
@@ -399,37 +458,34 @@ public abstract class RestBaseClient {
      *
      * @return the request builder
      */
-    private Invocation.Builder getRequestBuilder(String resourcePath, MultivaluedMap<String, String> params) {
-        WebTarget localWebTarget = this.webTarget.path(resourcePath);
-        return getRequestBuilder(localWebTarget, params, null);
+    private Builder getRequestBuilder(String resourcePath, MultivaluedMap<String, String> params) {
+        WebResource localWebResource = this.webResource.path(resourcePath);
+        return getRequestBuilder(localWebResource, params, null);
     }
 
-    private Invocation.Builder getRequestBuilder(String resourcePath, MultivaluedMap<String, String> params,
-                                                 MultivaluedMap<String, String> headers) {
-        WebTarget localWebTarget = this.webTarget.path(resourcePath);
-        return getRequestBuilder(localWebTarget, params, headers);
+    private Builder getRequestBuilder(String resourcePath, MultivaluedMap<String, String> params,
+            MultivaluedMap<String, String> headers) {
+        WebResource localWebResource = this.webResource.path(resourcePath);
+        return getRequestBuilder(localWebResource, params, headers);
     }
 
-    private Invocation.Builder getRequestBuilder(String resourcePath) {
-        WebTarget localWebTarget = this.webTarget.path(resourcePath);
-        return getRequestBuilder(localWebTarget, null, null);
+    private Builder getRequestBuilder(String resourcePath) {
+        WebResource localWebResource = this.webResource.path(resourcePath);
+        return getRequestBuilder(localWebResource, null, null);
     }
 
-    private Invocation.Builder getRequestBuilder(URI resourcePath) {
-        WebTarget localWebTarget = this.webTarget.path(resourcePath.toString());
-        return getRequestBuilder(localWebTarget, null, null);
+    private Builder getRequestBuilder(URI resourcePath) {
+        WebResource localWebResource = this.webResource.uri(resourcePath);
+        return getRequestBuilder(localWebResource, null, null);
     }
 
-    private Invocation.Builder getRequestBuilder(WebTarget localWebTarget, MultivaluedMap<String, String> params,
-                                                 MultivaluedMap<String, String> headers) {
+    private Builder getRequestBuilder(WebResource localWebResource, MultivaluedMap<String, String> params,
+            MultivaluedMap<String, String> headers) {
         if (params != null) {
-            for(String key: params.keySet()) {
-                List<String> values = params.get(key);
-                localWebTarget = localWebTarget.queryParam(key, values);
-            }
+            localWebResource = localWebResource.queryParams(params);
         }
 
-        Invocation.Builder requestBuilder = localWebTarget.request();
+        Builder requestBuilder = localWebResource.getRequestBuilder();
         requestBuilder.accept(this.mediaType);
 
         if (this.headerKey != null && this.headerKeyValue != null) {
@@ -464,7 +520,7 @@ public abstract class RestBaseClient {
      * @return the RestClientException
      */
     private RestClientException createRestClientException(String method, String resourcePath, Object input,
-                                                          Response clientResponse, Exception ex) {
+            ClientResponse clientResponse, Exception ex) {
 
         if (input != null) {
             if (this.mediaType.contains("xml")) {
@@ -477,7 +533,7 @@ public abstract class RestBaseClient {
         String response = null;
         if (clientResponse != null) {
             try {
-                response = clientResponse.readEntity(String.class);
+                response = clientResponse.getEntity(String.class);
                 log.error("REST Exception Encountered. Response is:\n" + response);
             } catch (Exception e) {
                 log.error("REST Exception Encountered. Response cannot be parsed");
@@ -488,28 +544,27 @@ public abstract class RestBaseClient {
         if (clientResponse != null) {
             status = clientResponse.getStatus();
         }
-        if (status != null && (status == Response.Status.UNAUTHORIZED.getStatusCode() ||
-                status == Response.Status.FORBIDDEN.getStatusCode())) {
+        if (status != null
+                && (status == ClientResponse.Status.UNAUTHORIZED.getStatusCode() || status == ClientResponse.Status.FORBIDDEN
+                        .getStatusCode())) {
             exceptionMessage = VmidcCommonMessages.getString(VmidcCommonMessages_.EXCEPTION_AUTH);
         } else if (ex.getCause() instanceof SocketTimeoutException || ex.getCause() instanceof ConnectException
                 || ex.getCause() instanceof NoRouteToHostException) {
             exceptionMessage = VmidcCommonMessages.getString(VmidcCommonMessages_.EXCEPTION_NETWORK_CONNECTIVITY,
                     this.host, ex.getCause().getMessage());
         } else {
-            String msg = ex.getMessage();
-            // TODO: bkasperowicz Investigate on ClientHandlerException equivalent for Jersey 2.x
-//            if (ex instanceof ClientHandlerException && ex.getCause() != null) {
-//                msg = ex.getCause().getMessage();
-//            } else {
-//                msg = ex.getMessage();
-//            }
+            String msg;
+            if (ex instanceof ClientHandlerException && ex.getCause() != null) {
+                msg = ex.getCause().getMessage();
+            } else {
+                msg = ex.getMessage();
+            }
             exceptionMessage = VmidcCommonMessages.getString(VmidcCommonMessages_.EXCEPTION_RESOURCE_FAILURE, method,
                     resourcePath, msg, status, response);
         }
         // If exception is an client handler exception, get the actual cause of the exception and pass that in.
-        // TODO: bkasperowicz Investigate on ClientHandlerException equivalent for Jersey 2.x
         RestClientException restClientException = new RestClientException(exceptionMessage,
-                /*ex instanceof ClientHandlerException ? ex.getCause() :*/ ex);
+                ex instanceof ClientHandlerException ? ex.getCause() : ex);
         restClientException.setHost(this.host);
         restClientException.setResourcePath(resourcePath);
         restClientException.setResponse(response);
@@ -518,20 +573,11 @@ public abstract class RestBaseClient {
         return restClientException;
     }
 
-    public Cookie getCookie() {
-        return this.cookie;
+    private Status getClientResponseStatus(ClientResponse res) {
+        return res.getClientResponseStatus();
     }
 
-    public class InvocationLogCallback implements InvocationCallback<Response> {
-
-        @Override
-        public void completed(Response t) {
-            log.trace("Request invocation completed. " + LoggingUtil.pojoToJsonString(t));
-        }
-
-        @Override
-        public void failed(Throwable throwable) {
-            log.error("Request invocation failed.", throwable);
-        }
+    public Cookie getCookie() {
+        return this.cookie;
     }
 }
