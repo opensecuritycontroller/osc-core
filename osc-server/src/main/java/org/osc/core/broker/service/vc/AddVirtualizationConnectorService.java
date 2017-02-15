@@ -35,7 +35,7 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
 
-    public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
+    void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
 		this.forceAddSSLCertificates = forceAddSSLCertificates;
 	}
     

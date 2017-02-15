@@ -1,7 +1,12 @@
 package org.osc.core.broker.service.vc;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 
@@ -11,6 +16,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -23,8 +29,14 @@ import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.util.SessionStub;
+import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({X509TrustManagerFactory.class })
 public class AddVirtualizationConnectorServiceTest {
 
     @Rule
@@ -44,15 +56,14 @@ public class AddVirtualizationConnectorServiceTest {
     private static final String NAME_ALREADY_EXISTS = "Name already exists in the System";
 
     private final Long id_100 = Long.valueOf(100l);
-    private final Long id_200 = Long.valueOf(200l);
-    private final Long id_300 = Long.valueOf(300l);
 
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
         this.sessionStub = new SessionStub(this.sessionMock);
-
+        PowerMockito.mockStatic(X509TrustManagerFactory.class);
+        when(X509TrustManagerFactory.getInstance()).thenReturn(mock(X509TrustManagerFactory.class));
     }
 
     @Test
@@ -91,7 +102,7 @@ public class AddVirtualizationConnectorServiceTest {
     }
 
     @Test
-    public void testDispatch_WhenOpenStackNameAlreadyExists_ThrowsSslCertificateException() throws Exception {
+    public void testDispatch_whenValidationThrowsSSLCertificateException_ThrowsSslCertificateException() throws Exception {
 
         // Arrange.
         this.exception.expect(SslCertificatesExtendedException.class);
@@ -100,12 +111,38 @@ public class AddVirtualizationConnectorServiceTest {
                 .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
         service.setForceAddSSLCertificates(true);
         
+        
         // Act.
         this.service.dispatch(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Assert.
         verify(this.validatorMock)
                 .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        
+        // clean up
+        service.setForceAddSSLCertificates(false);
+    }
+       
+    @Test
+    public void testDispatch_whenValidationThrowsSSLCertificateException_ReturnsResponse() throws Exception {
+
+        // Arrange.
+        ErrorTypeException exception = new ErrorTypeException("Error Thrown", ErrorType.CONTROLLER_EXCEPTION);
+        doThrow(new SslCertificatesExtendedException( exception, new ArrayList<CertificateResolverModel>())).doNothing().when(this.validatorMock)
+                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        service.setForceAddSSLCertificates(true);
+        this.sessionStub.stubSaveEntity(new VirtualizationConnectorMatcher(this.id_100), this.id_100);
+        
+        // Act.
+        BaseResponse response = this.service.dispatch(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+
+        // Assert.
+        verify(this.validatorMock, times(2))
+                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        validateResponse(response, this.id_100);
+        verify(this.sessionMock, times(1)).save(any());
+        verify(this.sessionMock, times(1)).update(any());
+        verify(this.sessionMock, times(0)).delete(any());
         
         // clean up
         service.setForceAddSSLCertificates(false);

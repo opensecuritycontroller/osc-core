@@ -41,10 +41,8 @@ public class AddVirtualizationConnectorServiceRequestValidator
 			virtualizationConnectorUtil = new VirtualizationConnectorUtil();
 		}
 		if (dto.getType().isVmware()) {
-
 			virtualizationConnectorUtil.checkVmwareConnection(request, vc);
 		} else {
-
 			virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
 		}
 	}

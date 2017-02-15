@@ -28,57 +28,7 @@ import com.rabbitmq.client.ShutdownSignalException;
 
 public class VirtualizationConnectorUtil {
 
-	 public VimUtils getVimUtils() {
-		return vimUtils;
-	}
-
-
-	public void setVimUtils(VimUtils vimUtils) {
-		this.vimUtils = vimUtils;
-	}
-
-
-	public SslCertificateResolver getSslCertificateResolver() {
-		return sslCertificateResolver;
-	}
-
-
-	public void setSslCertificateResolver(SslCertificateResolver sslCertificateResolver) {
-		this.sslCertificateResolver = sslCertificateResolver;
-	}
-
-
-	public OsRabbitMQClient getRabbitClient() {
-		return rabbitClient;
-	}
-
-
-	public void setRabbitClient(OsRabbitMQClient rabbitClient) {
-		this.rabbitClient = rabbitClient;
-	}
-
-
-	public Endpoint getEndPoint() {
-		return endPoint;
-	}
-
-
-	public void setEndPoint(Endpoint endPoint) {
-		this.endPoint = endPoint;
-	}
-
-
-	public JCloudKeyStone getKeystoneAPi() {
-		return keystoneAPi;
-	}
-
-
-	public void setKeystoneAPi(JCloudKeyStone keystoneAPi) {
-		this.keystoneAPi = keystoneAPi;
-	}
-
-
-	private static final Logger log = Logger.getLogger(VirtualizationConnectorUtil.class);
+	private static final Logger LOG = Logger.getLogger(VirtualizationConnectorUtil.class);
 	 
 	 private VimUtils vimUtils = null;
 	 private SslCertificateResolver sslCertificateResolver = null;
@@ -112,7 +62,7 @@ public class VirtualizationConnectorUtil {
                         URL url = new URL(exception.getResourcePath());
                 		sslCertificateResolver.fetchCertificatesFromURL(url, "nsx");
                 	}
-                    log.warn("Rest Exception encountered when trying to add NSX info to Virtualization Connector, " +
+                    LOG.warn("Rest Exception encountered when trying to add NSX info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
                     errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
                 }
@@ -126,7 +76,7 @@ public class VirtualizationConnectorUtil {
                     }
                 } catch (RemoteException remoteException) {
                     sslCertificateResolver.fetchCertificatesFromURL(VimUtils.getServiceURL(request.getDto().getProviderIP()), "vmware");
-                    log.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, " +
+                    LOG.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
                     errorTypeException = new ErrorTypeException(remoteException, ErrorType.PROVIDER_EXCEPTION);
                 }
@@ -167,7 +117,7 @@ public class VirtualizationConnectorUtil {
                         URI uri = new URI("https", request.getDto().getControllerIP(), null, null);
                         sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstack");
                     }
-                    log.warn("Exception encountered when trying to add SDN Controller info to Virtualization Connector, allowing user to either ignore or correct issue");
+                    LOG.warn("Exception encountered when trying to add SDN Controller info to Virtualization Connector, allowing user to either ignore or correct issue");
                     errorTypeException = new ErrorTypeException(e, ErrorType.CONTROLLER_EXCEPTION);
                 }
             }
@@ -195,7 +145,7 @@ public class VirtualizationConnectorUtil {
                         URI uri = new URI("https", vcDto.getProviderIP(), null, null);
                         sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstackkeystone");
                     }
-                    log.warn("Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
+                    LOG.warn("Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
                     errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
                 } finally {
                     if (keystoneAPi != null) {
@@ -216,7 +166,7 @@ public class VirtualizationConnectorUtil {
                     if (vc.getId() != null) {
                         OsRabbitMQClient osRabbitMQClient = RabbitMQRunner.getVcToRabbitMQClientMap().get(vc.getId());
                         if (osRabbitMQClient != null && osRabbitMQClient.isConnected()) {
-                            log.info("Exception encountered when connecting to RabbitMQ, ignoring since we are already connected", shutdownException);
+                            LOG.info("Exception encountered when connecting to RabbitMQ, ignoring since we are already connected", shutdownException);
                         } else {
                             errorTypeException = new ErrorTypeException(shutdownException, ErrorType.RABBITMQ_EXCEPTION);
                         }
@@ -226,7 +176,7 @@ public class VirtualizationConnectorUtil {
                 } catch (Throwable e) {
                     URI uri = new URI("https", null, rabbitClient.getServerIP(), rabbitClient.getPort(), null, null, null);
                     sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "rabbitmq");
-                    log.warn("Exception encountered when trying to connect to RabbitMQ, allowing user to either ignore or correct issue");
+                    LOG.warn("Exception encountered when trying to connect to RabbitMQ, allowing user to either ignore or correct issue");
                     errorTypeException = new ErrorTypeException(e, ErrorType.RABBITMQ_EXCEPTION);
                 }
             }

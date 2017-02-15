@@ -7,22 +7,13 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Session;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
-import org.osc.core.broker.service.request.VirtualizationConnectorDtoValidator;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
-import org.osc.core.broker.util.SessionStub;
 import org.osc.core.broker.util.ValidateUtil;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -31,19 +22,10 @@ import com.mcafee.vmidc.server.Server;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-public class VirtualizationConnectorDtoValidatorParameterizedTest {
+public class VirtualizationConnectorDtoValidatorParameterizedTest extends VirtualizationConnectorDtoValidatorBaseTest {
 	private VirtualizationConnectorDto dtoParam;
 	private Class<Throwable> exceptionTypeParam;
 	private String expectedErrorMessageParam;
-
-	@Mock
-	private Session sessionMock;
-
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
-
-	@InjectMocks
-	private VirtualizationConnectorDtoValidator dtoValidator;
 
 	public VirtualizationConnectorDtoValidatorParameterizedTest(VirtualizationConnectorDto dto,
 			Class<Throwable> exceptionType, String expectedErrorMessage) {
@@ -52,25 +34,8 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest {
 		this.expectedErrorMessageParam = expectedErrorMessage;
 	}
 
-	@Before
-	public void testInitialize() throws Exception {
-
-		MockitoAnnotations.initMocks(this);
-
-		SessionStub sessionStub = new SessionStub(this.sessionMock);
-
-		sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "name",
-				VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS, true);
-		sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "name",
-				VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS, true);
-		sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "controllerIpAddress",
-				VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS, true);
-		sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "providerIpAddress",
-				VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS, true);
-	}
-
 	@Test
-	public void testValidate_UsingInvalidField_ThrowsExpectedException() throws Exception {
+	public void testValidateForCreate_UsingInvalidField_ThrowsExpectedException() throws Exception {
 		// Arrange.
 		this.exception.expect(this.exceptionTypeParam);
 		this.exception.expectMessage(this.expectedErrorMessageParam);
@@ -96,7 +61,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest {
 		result.addAll(getInvalidMqPasswordTestData());
 		result.addAll(getInvalidMqPortTestData());
 		result.addAll(getInvalidIpAddresses());
-		
+
 		return result;
 	}
 
@@ -174,7 +139,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest {
 	}
 
 	static List<Object[]> getInvalidMqUserTestData() {
-		String[] invalidNames = new String[] { null, ""};
+		String[] invalidNames = new String[] { null, "" };
 
 		List<Object[]> result = new ArrayList<Object[]>();
 

@@ -45,6 +45,8 @@ public class UpdateVirtualizationConnectorService
     private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
 
     private boolean forceAddSSLCertificates = false;
+    
+    private VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
 
     public UpdateVirtualizationConnectorService() {
     }
@@ -196,13 +198,13 @@ public class UpdateVirtualizationConnectorService
         // Transforms the existing vc based on the update request
         updateVirtualizationConnector(request, existingVc);
 
-        if (dto.getType().isVmware()) {
-        	VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
-        	util.checkVmwareConnection(request, existingVc);
-        } else {
-        	VirtualizationConnectorUtil  util = new VirtualizationConnectorUtil();
-        	util.checkOpenstackConnection(request, existingVc);
-        }
+		if (dto.getType().isVmware()) {
+
+			util.checkVmwareConnection(request, existingVc);
+		} else {
+
+			util.checkOpenstackConnection(request, existingVc);
+		}
     }
 
     /**

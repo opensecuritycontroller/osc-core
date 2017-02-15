@@ -122,17 +122,17 @@ public class VirtualizationConnectorServiceData {
     
     private static void setOpenStackParams(VirtualizationConnectorDto vcDto,
     		String tenantName,
-            String rabbitMq_user,
-            String rabbitMq_password,
-            String rabbitMq_port,
+            String rabbitMquser,
+            String rabbitMqpassword,
+            String rabbitMqport,
             String controllerTypeStr){
     	
     	vcDto.setAdminTenantName(tenantName);
 
          Map<String, String> providerAttributes = new HashMap<>();
-         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, rabbitMq_user);
-         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, rabbitMq_password);
-         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, rabbitMq_port);
+         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, rabbitMquser);
+         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, rabbitMqpassword);
+         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, rabbitMqport);
          vcDto.setProviderAttributes(providerAttributes);
          
          if (controllerTypeStr != null && (!controllerTypeStr.isEmpty())) {
@@ -153,15 +153,15 @@ public class VirtualizationConnectorServiceData {
             String providerPassword,
             String version,
             String tenantName,
-            String rabbitMq_user,
-            String rabbitMq_password,
-            String rabbitMq_port,
+            String rabbitMquser,
+            String rabbitMqpassword,
+            String rabbitMqport,
             String controllerTypeStr) {
 
         DryRunRequest<VirtualizationConnectorDto> request = createRequest(virtualizationType, name, controllerIp,
                 controllerUser, controllerPassword, providerIp, providerUser, providerPassword, version);
         VirtualizationConnectorDto dto = request.getDto();
-        setOpenStackParams(dto, tenantName, rabbitMq_user, rabbitMq_password, rabbitMq_port, controllerTypeStr);
+        setOpenStackParams(dto, tenantName, rabbitMquser, rabbitMqpassword, rabbitMqport, controllerTypeStr);
         
         return request;
     }
