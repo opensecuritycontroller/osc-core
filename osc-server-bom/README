@@ -6,7 +6,9 @@ x. File Layout
   root/*   - copied verbatim to disk
   src/*    - Modified by makefiles while copying to disk
 
-  centos-6.packages - list of packages retrieved from CentOS
+  centos-6-new.packages - list of packages retrieved from CentOS
+  centos-6.packages1    - set one of centos packages
+  centos-6.packages2   - set two of centos packages.
   postinstall       - script run at end of installation
                       place any post processing  to be done here
 
