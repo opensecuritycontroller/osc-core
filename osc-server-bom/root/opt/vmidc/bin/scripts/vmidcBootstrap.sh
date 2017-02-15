@@ -43,7 +43,6 @@ sed -i -e '/^admin/d' /etc/sudoers
 chsh -s /sbin/nologin root
 echo admin123 | passwd --stdin root
 
-# Install facl (from MLOS)
 yum install -y acl
 
 #install graphviz

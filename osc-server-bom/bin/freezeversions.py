@@ -3,9 +3,9 @@
 #
 # Freeze the rpm versions found in the files:
 #
-#    mlos.packages1
-#    mlos.packages2
-#    centos-6.packages
+#    centos-6.packages1
+#    centos-6.packages2
+#    centos-6-new.packages
 #
 # New files are created with the name
 #
@@ -179,5 +179,5 @@ def freeze_package_file(file, config, resolved_pkgs, resolved_dependencies):
 
 resolved_pkgs = set()
 resolved_dependencies = set()
-for (file, config) in [("mlos.packages1", "repo/mlos.yum.conf"), ("mlos.packages2", "repo/mlos.yum.conf"), ("centos-6.packages", "repo/centos-6.yum.conf")]:
+for (file, config) in [("centos-6.packages1", "repo/centos-6-updated.yum.conf"), ("centos-6.packages2", "repo/centos-6-updated.yum.conf"), ("centos-6-new.packages", "repo/centos-6-updated.yum.conf")]:
     freeze_package_file(file, config, resolved_pkgs, resolved_dependencies)
