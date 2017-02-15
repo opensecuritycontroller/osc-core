@@ -88,7 +88,7 @@ public class VirtualizationConnector extends BaseEntity
     @CollectionTable(name = "VIRTUALIZATION_CONNECTOR_PROVIDER_ATTR", joinColumns = @JoinColumn(name = "vc_fk"))
     private Map<String, String> providerAttributes = new HashMap<>();
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name="SSL_CERTIFICATE_ATTR_VIRTUALIZATION_CONNECTOR",
             joinColumns={@JoinColumn(name="VIRTUALIZATION_CONNECTOR_ID")},
             inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
