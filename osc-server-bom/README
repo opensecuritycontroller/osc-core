@@ -9,6 +9,7 @@ x. File Layout
   centos-6-new.packages - list of packages retrieved from CentOS
   centos-6.packages1    - set one of centos packages
   centos-6.packages2   - set two of centos packages.
+  centos-epel.package-  epel centos packages for vm tools
   postinstall       - script run at end of installation
                       place any post processing  to be done here
 
