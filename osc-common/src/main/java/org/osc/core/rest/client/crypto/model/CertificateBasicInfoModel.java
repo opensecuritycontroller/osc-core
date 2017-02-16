@@ -20,6 +20,7 @@ public class CertificateBasicInfoModel {
     private String sha1Fingerprint;
     private Date validFrom;
     private Date validTo;
+    private String issuer;
     private String algorithmType;
 
     private X509Certificate certificate;
@@ -39,11 +40,13 @@ public class CertificateBasicInfoModel {
         this.validTo = null;
         this.sha1Fingerprint = null;
         this.certificateContent = "";
+        this.issuer = "";
     }
 
-    public CertificateBasicInfoModel(String alias, String sha1Fingerprint, Date validFrom, Date validTo, String algorithmType, X509Certificate certificate) {
+    public CertificateBasicInfoModel(String alias, String sha1Fingerprint, String issuer, Date validFrom, Date validTo, String algorithmType, X509Certificate certificate) {
         this.alias = alias;
         this.sha1Fingerprint = sha1Fingerprint;
+        this.issuer = issuer;
         this.validFrom = validFrom;
         this.validTo = validTo;
         this.algorithmType = algorithmType;
@@ -101,6 +104,14 @@ public class CertificateBasicInfoModel {
 
     public void setCertificateContent(String certificateContent) {
         this.certificateContent = certificateContent;
+    }
+
+    public String getIssuer() {
+        return issuer;
+    }
+
+    public void setIssuer(String issuer) {
+        this.issuer = issuer;
     }
 
     public boolean isConnected() {

@@ -65,6 +65,7 @@ public class SslConfigurationLayout extends FormLayout {
         this.sslConfigTable.setImmediate(true);
         this.sslConfigTable.addContainerProperty("Alias", String.class, null);
         this.sslConfigTable.addContainerProperty("SHA1 fingerprint", String.class, null);
+        this.sslConfigTable.addContainerProperty("Issuer", String.class, null);
         this.sslConfigTable.addContainerProperty("Valid from", Date.class, null);
         this.sslConfigTable.addContainerProperty("Valid until", Date.class, null);
         this.sslConfigTable.addContainerProperty("Algorithm type", String.class, null);
@@ -124,10 +125,11 @@ public class SslConfigurationLayout extends FormLayout {
                 this.sslConfigTable.addItem(new Object[]{
                         info.getAlias(),
                         info.getSha1Fingerprint(),
+                        info.getIssuer(),
                         info.getValidFrom(),
                         info.getValidTo(),
                         info.getAlgorithmType(),
-                        createDeleteEntry(info)
+                        this.createDeleteEntry(info)
                 }, info.getAlias().toLowerCase());
             }
         } catch (Exception e) {
@@ -137,7 +139,7 @@ public class SslConfigurationLayout extends FormLayout {
         this.sslConfigTable.setPageLength(this.sslConfigTable.size() + 1);
         this.sslConfigTable.sort(new Object[]{"Alias"}, new boolean[]{false});
 
-        colorizeValidUntilRows();
+        this.colorizeValidUntilRows();
     }
 
     @SuppressWarnings("serial")
@@ -197,8 +199,7 @@ public class SslConfigurationLayout extends FormLayout {
                 log.error("Failed to remove SSL alias from truststore", e);
             }
 
-            buildSslConfigurationTable();
-
+            SslConfigurationLayout.this.buildSslConfigurationTable();
             SslConfigurationLayout.this.deleteWindow.close();
 
             String outputMessage = (succeed) ? VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVED : VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_FAILURE;
