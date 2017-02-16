@@ -140,11 +140,13 @@ public class AddApplianceManagerConnectorService extends
                 }
             } catch (Exception e) {
                 log.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
-                try {
-                    URI uri = new URI("https", request.getDto().getIpAddress(), null, null);
-                    sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "manager");
-                } catch (IOException | URISyntaxException e1) {
-                    log.warn("Exception encountered when trying to fetch certificates from the request", e1);
+                if (sslCertificateResolver.checkExceptionTypeForSSL(e)) {
+                    try {
+                        URI uri = new URI("https", request.getDto().getIpAddress(), null, null);
+                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "manager");
+                    } catch (IOException | URISyntaxException e1) {
+                        log.warn("Failed to fetch SSL certificates from requested resource", e1);
+                    }
                 }
                 errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
             }
