@@ -395,7 +395,11 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 @Override
                 public void submitFormAction(ArrayList<CertificateResolverModel> certificateResolverModels) {
                     if(certificateResolverModels != null) {
-                        sslCertificateAttrs.addAll(certificateResolverModels.stream().map(crm -> new SslCertificateAttr(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()));
+                        BaseVCWindow.this.sslCertificateAttrs.addAll(
+                                certificateResolverModels.stream().map(
+                                        crm -> new SslCertificateAttr(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()
+                                )
+                        );
                     }
                 }
                 @Override

@@ -65,6 +65,7 @@ public class SslConfigurationLayout extends FormLayout {
         this.sslConfigTable.setImmediate(true);
         this.sslConfigTable.addContainerProperty("Alias", String.class, null);
         this.sslConfigTable.addContainerProperty("SHA1 fingerprint", String.class, null);
+        this.sslConfigTable.addContainerProperty("Issuer", String.class, null);
         this.sslConfigTable.addContainerProperty("Valid from", Date.class, null);
         this.sslConfigTable.addContainerProperty("Valid until", Date.class, null);
         this.sslConfigTable.addContainerProperty("Algorithm type", String.class, null);
@@ -124,20 +125,24 @@ public class SslConfigurationLayout extends FormLayout {
                 this.sslConfigTable.addItem(new Object[]{
                         info.getAlias(),
                         info.getSha1Fingerprint(),
+                        info.getIssuer(),
                         info.getValidFrom(),
                         info.getValidTo(),
                         info.getAlgorithmType(),
-                        createDeleteEntry(info)
+                        this.createDeleteEntry(info)
                 }, info.getAlias().toLowerCase());
             }
         } catch (Exception e) {
             log.error("Cannot build SSL configuration table", e);
             ViewUtil.iscNotification("Fail to get information from SSL attributes table (" + e.getMessage() + ")", Notification.Type.ERROR_MESSAGE);
         }
+
+        // Additional +1 is added for handling vaadin problem with resizing to content table
         this.sslConfigTable.setPageLength(this.sslConfigTable.size() + 1);
+
         this.sslConfigTable.sort(new Object[]{"Alias"}, new boolean[]{false});
 
-        colorizeValidUntilRows();
+        this.colorizeValidUntilRows();
     }
 
     @SuppressWarnings("serial")
@@ -197,8 +202,7 @@ public class SslConfigurationLayout extends FormLayout {
                 log.error("Failed to remove SSL alias from truststore", e);
             }
 
-            buildSslConfigurationTable();
-
+            SslConfigurationLayout.this.buildSslConfigurationTable();
             SslConfigurationLayout.this.deleteWindow.close();
 
             String outputMessage = (succeed) ? VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVED : VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_REMOVE_FAILURE;

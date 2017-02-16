@@ -25,7 +25,7 @@ public class AddSslCertificateService extends ServiceDispatcher<AddSslEntryReque
             X509TrustManagerFactory.getInstance().addEntry(certificate, request.getAlias());
         } catch (Exception e) {
             log.error("Cannot add new SSL certificate with alias: " +request.getAlias()+ " to trust store", e);
-            throw new VmidcBrokerInvalidEntryException("Failed to add new SSL certificate with alias" + request.getAlias());
+            throw new VmidcBrokerInvalidEntryException("Failed to add new SSL certificate with alias: " + request.getAlias());
         }
         return new EmptySuccessResponse();
     }
