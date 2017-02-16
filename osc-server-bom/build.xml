@@ -17,14 +17,12 @@
     </exec>
     <exec executable="sudo" resultproperty="ovf.result">
       <arg value="make" />
-      <arg value="image-os=${image-os}"/>
       <arg value="-f" />
       <arg value="makefiles/master.mk" />
       <arg value="clean" />
     </exec>
     <exec executable="sudo" resultproperty="ovf.result">
       <arg value="make" />
-      <arg value="image-os=${image-os}"/>
       <arg value="build-all-images=${build-all-images}"/>
       <arg value="buildNumber=${buildNumber}"/>
       <arg value="-j" />
@@ -48,7 +46,6 @@
   <target name="ovfCleanup" description="Cleanup OVF mounts" >
     <exec executable="sudo" resultproperty="ovf.result" >
       <arg value="make" />
-      <arg value="image-os=${image-os}"/>
       <arg value="--no-print-directory"/>
       <arg value="-f" />
       <arg value="makefiles/master.mk" />
@@ -59,7 +56,6 @@
   <target name="clean" description="Cleanup OVF mounts" >
     <exec executable="sudo" resultproperty="ovf.result" >
       <arg value="make" />
-      <arg value="image-os=${image-os}"/>
       <arg value="--no-print-directory"/>
       <arg value="-f" />
       <arg value="makefiles/master.mk" />
@@ -70,7 +66,6 @@
   <target name="realclean" description="Cleanup OVF mounts" >
     <exec executable="sudo" resultproperty="ovf.result" >
       <arg value="make" />
-      <arg value="image-os=${image-os}"/>
       <arg value="--no-print-directory"/>
       <arg value="-f" />
       <arg value="makefiles/master.mk" />
@@ -116,26 +111,6 @@
       <arg value="-j" />
       <arg value="-f" />
       <arg value="makefiles/install.mk" />
-    </exec>
-  </target>
-
-  <target name="packages-centos" description="Just install packages on the centos image" >
-    <exec executable="sudo" >
-      <arg value="make" />
-      <arg value="--no-print-directory"/>
-      <arg value="-j" />
-      <arg value="-f" />
-      <arg value="makefiles/packages_centos.mk" />
-    </exec>
-  </target>
-
-  <target name="install-centos" description="Just install OSC on the centos image" >
-    <exec executable="sudo" >
-      <arg value="make" />
-      <arg value="--no-print-directory"/>
-      <arg value="-j" />
-      <arg value="-f" />
-      <arg value="makefiles/install_centos.mk" />
     </exec>
   </target>
 
