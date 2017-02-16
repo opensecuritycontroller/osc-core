@@ -73,6 +73,8 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
         } catch (Exception e) {
             log.error("Cannot populate SSL configuration table", e);
         }
+
+        // Additional +1 is added for handling vaadin problem with resizing to content table
         this.sslConfigTable.setPageLength(this.sslConfigTable.size() + 1);
     }
 

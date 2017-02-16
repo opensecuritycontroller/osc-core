@@ -136,7 +136,10 @@ public class SslConfigurationLayout extends FormLayout {
             log.error("Cannot build SSL configuration table", e);
             ViewUtil.iscNotification("Fail to get information from SSL attributes table (" + e.getMessage() + ")", Notification.Type.ERROR_MESSAGE);
         }
+
+        // Additional +1 is added for handling vaadin problem with resizing to content table
         this.sslConfigTable.setPageLength(this.sslConfigTable.size() + 1);
+
         this.sslConfigTable.sort(new Object[]{"Alias"}, new boolean[]{false});
 
         this.colorizeValidUntilRows();
