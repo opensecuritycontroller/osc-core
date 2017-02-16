@@ -113,7 +113,7 @@ public class CertificateBasicInfoModel {
     public void setIssuer(String issuer) {
         this.issuer = issuer;
     }
-
+  
     public boolean isConnected() {
         return isConnected;
     }
