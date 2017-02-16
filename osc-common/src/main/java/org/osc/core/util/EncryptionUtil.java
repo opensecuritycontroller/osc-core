@@ -1,10 +1,12 @@
 package org.osc.core.util;
 
-import javax.crypto.SecretKey;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.AESGCMEncryption;
+import org.osc.core.util.encryption.DESDecryption;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osc.core.util.encryption.PBKDF2Derivation;
+
+import javax.crypto.SecretKey;
 
 public class EncryptionUtil {
     public static final String SECURITY_PROPS_RESOURCE_PATH = "/org/osc/core/util/security.properties";
@@ -82,4 +84,14 @@ public class EncryptionUtil {
         return new PBKDF2Derivation().validate(plainText, validCipherText);
     }
 
+    /**
+     * Decrypt DES message
+     * @deprecated use only for migration to non-deprecated methods purposes
+     * @param cipherText encoded string
+     * @return decoded string
+     */
+    @Deprecated
+    public static String decryptDES(String cipherText) throws EncryptionException {
+        return new DESDecryption().decrypt(cipherText);
+    }
 }
