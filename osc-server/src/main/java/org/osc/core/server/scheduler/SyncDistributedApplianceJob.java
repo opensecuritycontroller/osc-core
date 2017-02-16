@@ -8,7 +8,7 @@ import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.EntityManager;
@@ -30,7 +30,7 @@ public class SyncDistributedApplianceJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        SessionUtil.setUser(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
+        SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
         Session session = null;
         try {
             session = HibernateUtil.getSessionFactory().openSession();
@@ -47,12 +47,12 @@ public class SyncDistributedApplianceJob implements Job {
                     @Override
                     public void run() {
                         new TransactionalRunner<Object, DistributedAppliance>(new TransactionalRunner.ExclusiveSessionHandler())
-                            .exec(new TransactionalAction<Object, DistributedAppliance>() {
+                                .exec(new TransactionalAction<Object, DistributedAppliance>() {
 
                             @Override
                             public Object run(Session session, DistributedAppliance da) {
 
-                                SessionUtil.setUser(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
+                                        SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
 
                                 try {
                                     da = (DistributedAppliance) session.get(DistributedAppliance.class, da.getId());

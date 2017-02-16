@@ -12,13 +12,13 @@ import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.util.Base64;
 import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
-import com.sun.jersey.core.util.Base64;
 
 public class PKIUtil {
 
@@ -65,7 +65,7 @@ public class PKIUtil {
     }
 
     public static String toBase64EncodedString(byte[] bytes) throws Exception {
-        return new String(Base64.encode(bytes));
+        return new String(Base64.getEncoder().encode(bytes));
     }
 
     private static int generateKeyStoreFile(String keyStoreFile) {

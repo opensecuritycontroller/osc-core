@@ -29,6 +29,9 @@ import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.rest.client.exception.CorruptedPidException;
 import org.osc.core.util.VersionUtil.Version;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+
 public class ServerUtil {
     private static final Logger log = Logger.getLogger(ServerUtil.class);
 
@@ -732,7 +735,7 @@ public class ServerUtil {
         log.info("Checking pending server upgrade.");
 
         try {
-            restClient.putResource("upgradecomplete", null);
+            restClient.putResource("upgradecomplete", Entity.entity(null, MediaType.APPLICATION_JSON));
         } catch (Exception ex) {
             log.warn("No active pending upgrade. " + ex.getMessage());
             return true;

@@ -48,11 +48,12 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
         this.sslConfigTable.setImmediate(true);
         this.sslConfigTable.addContainerProperty("Alias", String.class, null);
         this.sslConfigTable.addContainerProperty("SHA1 fingerprint", String.class, null);
+        this.sslConfigTable.addContainerProperty("Issuer", String.class, null);
         this.sslConfigTable.addContainerProperty("Valid from", Date.class, null);
         this.sslConfigTable.addContainerProperty("Valid until", Date.class, null);
         this.sslConfigTable.addContainerProperty("Algorithm type", String.class, null);
         populateSSLConfigTable();
-        this.form.addComponent(sslConfigTable);
+        this.form.addComponent(this.sslConfigTable);
     }
 
     private void populateSSLConfigTable() {
@@ -63,6 +64,7 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
                 this.sslConfigTable.addItem(new Object[]{
                         info.getAlias(),
                         info.getSha1Fingerprint(),
+                        info.getIssuer(),
                         info.getValidFrom(),
                         info.getValidTo(),
                         info.getAlgorithmType(),
@@ -71,7 +73,9 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
         } catch (Exception e) {
             log.error("Cannot populate SSL configuration table", e);
         }
-        this.sslConfigTable.setPageLength(this.sslConfigTable.size());
+
+        // Additional +1 is added for handling vaadin problem with resizing to content table
+        this.sslConfigTable.setPageLength(this.sslConfigTable.size() + 1);
     }
 
     private ArrayList<CertificateBasicInfoModel> getCertificateBasicInfoModelList() {
@@ -82,6 +86,7 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
                 certificateBasicInfoModels.add(new CertificateBasicInfoModel(
                         basicInfoModel.getAlias(),
                         X509TrustManagerFactory.getSha1Fingerprint(basicInfoModel.getCertificate()),
+                        basicInfoModel.getCertificate().getIssuerDN().getName(),
                         basicInfoModel.getCertificate().getNotBefore(),
                         basicInfoModel.getCertificate().getNotAfter(),
                         basicInfoModel.getCertificate().getSigAlgName(),
@@ -110,23 +115,26 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
         }
 
         if (trustManagerFactory != null) {
+            String caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_ADDED,
+                    new Date());
             for (CertificateResolverModel certObj : this.certificateResolverModels) {
                 try {
                     trustManagerFactory.addEntry(certObj.getCertificate(), certObj.getAlias());
                 } catch (Exception e) {
+                    caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FAILED_ADD,
+                            new Date());
                     log.error("Cannot add new entry in truststore", e);
                 }
             }
-            ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_ADDED,
-                    new Date()), null, Notification.Type.TRAY_NOTIFICATION);
+            ViewUtil.iscNotification(caption, null, Notification.Type.TRAY_NOTIFICATION);
         }
 
-        sslCertificateWindowInterface.submitFormAction(this.certificateResolverModels);
+        this.sslCertificateWindowInterface.submitFormAction(this.certificateResolverModels);
         close();
     }
 
     @Override
     public void cancelForm() {
-        sslCertificateWindowInterface.cancelFormAction();
+        this.sslCertificateWindowInterface.cancelFormAction();
     }
 }

@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
@@ -54,7 +54,7 @@ public class WebSocketClientEndPoint extends Endpoint {
                         MgrChangeNotification mgrChangeNotification = WebSocketClientEndPoint.this.mgrApi
                                 .translateMessage(text);
                         if (mgrChangeNotification != null) {
-                            ManagerApis.triggerMcSyncService(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN,
+                            ManagerApis.triggerMcSyncService(OscAuthFilter.OSC_DEFAULT_LOGIN,
                                     WebSocketClientEndPoint.this.mc.getIpAddress(), mgrChangeNotification);
                         }
 

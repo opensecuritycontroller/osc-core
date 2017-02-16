@@ -18,6 +18,9 @@ blddir=$(realpath $(makedir)/..)/build
 bindir=$(realpath $(makedir)/..)/bin
 
 export buildNumber blddir bindir
+
+#Proxy setting needed for jenkins. By default these env variables exist in the shell. But for jenkins shell we have to add these env variables
+#here,due to a bug in jenkins.
 export http_proxy=http://proxy-us.intel.com:911
 export https_proxy=http://proxy-us.intel.com:912
 export ftp_proxy=http://proxy-us.intel.com:911

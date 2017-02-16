@@ -27,6 +27,7 @@ Require-Capability: \
 	aQute.lib.*,\
 	aQute.libg.*
 
+# TODO: it is necessary to move all possible dependecies out of uber bundle into osgi container after replacing jclouds with openstack4j
 -includeresource: \
     @${activation.dep},\
     @${amqp-client.dep},\
@@ -52,7 +53,6 @@ Require-Capability: \
     @${jackson-dataformat-yaml.dep},\
     @${javassist.dep},\
     @${javax.mail.dep},\
-    @${jboss-logging.dep},\
     @${jboss-transaction-api_1.1_spec.dep},\
     @${joda-time.dep},\
     @${json.dep},\
@@ -90,6 +90,7 @@ Require-Capability: \
     @${osc-common.dep},\
     @${osc-server.dep}
 
+
 Import-Package:\
     ${exclude-osgi},\
     ${exclude-osc},\
@@ -124,7 +125,8 @@ import-extra:\
   javax.servlet,\
   javax.servlet.annotation,\
   javax.servlet.descriptor,\
-  javax.servlet.http
+  javax.servlet.http,\
+  com.fasterxml.jackson.annotation
 
 exclude-osgi:\
   !org.osgi.service.jdbc

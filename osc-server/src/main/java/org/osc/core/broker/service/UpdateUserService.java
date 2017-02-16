@@ -9,7 +9,7 @@ import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.dto.UserDtoValidator;
@@ -45,9 +45,9 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
         UpdateUserResponse response = new UpdateUserResponse();
 
         // If user changes password, need to reflect it in auth-filter objects
-        if (user.getLoginName().equals(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN)) {
+        if (user.getLoginName().equals(OscAuthFilter.OSC_DEFAULT_LOGIN)) {
 
-            VmidcAuthFilter.VMIDC_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
+            OscAuthFilter.OSC_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
             user.setRole(RoleType.ADMIN);
             response.setJobId(startPasswordPropagateMgrJob());
 

@@ -18,21 +18,18 @@ import org.osc.core.broker.service.response.ListResponse;
 public class ListApplianceManagerConnectorService extends
 ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<ApplianceManagerConnectorDto>> {
 
-    ListResponse<ApplianceManagerConnectorDto> response = new ListResponse<ApplianceManagerConnectorDto>();
+    private ListResponse<ApplianceManagerConnectorDto> response = new ListResponse<>();
 
     @Override
     public ListResponse<ApplianceManagerConnectorDto> exec(BaseRequest<BaseDto> request, Session session) throws Exception {
         // Initializing Entity Manager
-        EntityManager<ApplianceManagerConnector> emgr = new EntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, session);
+        EntityManager<ApplianceManagerConnector> emgr = new EntityManager<>(ApplianceManagerConnector.class, session);
         // to do mapping
-        List<ApplianceManagerConnectorDto> mcmList = new ArrayList<ApplianceManagerConnectorDto>();
+        List<ApplianceManagerConnectorDto> mcmList = new ArrayList<>();
 
         // mapping all the MC objects to mc dto objects
         for (ApplianceManagerConnector mc : emgr.listAll(new Order[] { Order.asc("name") })) {
-
             ApplianceManagerConnectorDto dto = new ApplianceManagerConnectorDto();
-
             ApplianceManagerConnectorEntityMgr.fromEntity(mc, dto);
             if (request.isApi()) {
                 ApplianceManagerConnectorDto.sanitizeManagerConnector(dto);
