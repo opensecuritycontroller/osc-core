@@ -18,6 +18,11 @@ blddir=$(realpath $(makedir)/..)/build
 bindir=$(realpath $(makedir)/..)/bin
 
 export buildNumber blddir bindir
+export HTTP_PROXY=http://proxy-us.intel.com:911
+export HTTPS_PROXY=http://proxy-us.intel.com:912
+export FTP_PROXY=http://proxy-us.intel.com:911
+export SOCKS_PROXY=http://proxy-us.intel.com:1080
+export NO_PROXY=.corp.nai.org,corp.nai.org,intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16
 
 dowithbindmount= \
      mount -o loop boot.img $(blddir)/boot && \
