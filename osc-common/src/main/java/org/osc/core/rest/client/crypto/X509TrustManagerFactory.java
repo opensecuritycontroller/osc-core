@@ -208,14 +208,6 @@ public class X509TrustManagerFactory implements X509TrustManager {
         return certificateInfoList.stream().noneMatch(entry -> entry.getSha1Fingerprint().equals(fingerprint));
     }
 
-    public boolean exists(String alias) throws Exception {
-        if (this.keyStore == null) {
-            throw new Exception("Trust store is not initialized");
-        }
-
-        return this.keyStore.containsAlias(alias);
-    }
-
     public void updateAlias(String oldAlias, String newAlias) throws Exception {
         if (this.keyStore == null) {
             throw new Exception("Trust store is not initialized");
