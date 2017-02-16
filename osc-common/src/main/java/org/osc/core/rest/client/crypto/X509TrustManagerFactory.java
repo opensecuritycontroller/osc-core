@@ -152,8 +152,12 @@ public class X509TrustManagerFactory implements X509TrustManager {
             if ("X.509".equals(this.keyStore.getCertificate(alias).getType())) {
                 X509Certificate certificate = (X509Certificate) this.keyStore.getCertificate(alias);
                 try {
-                    list.add(new CertificateBasicInfoModel(alias, getSha1Fingerprint(certificate),
-                            certificate.getNotBefore(), certificate.getNotAfter(), certificate.getSigAlgName(), certificate));
+                    CertificateBasicInfoModel infoModel = new CertificateBasicInfoModel(
+                            alias, getSha1Fingerprint(certificate), certificate.getIssuerDN().getName(),
+                            certificate.getNotBefore(), certificate.getNotAfter(), certificate.getSigAlgName(),
+                            certificate);
+
+                    list.add(infoModel);
                 } catch (NoSuchAlgorithmException | CertificateEncodingException e) {
                     LOG.error("Failed to add certificate basic info model", e);
                 }
@@ -183,8 +187,25 @@ public class X509TrustManagerFactory implements X509TrustManager {
             throw new Exception("Trust store is not initialized");
         }
 
-        this.keyStore.setCertificateEntry(newAlias, certificate);
-        this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
+        if(checkFingerprintNotExist(getSha1Fingerprint(certificate))){
+            this.keyStore.setCertificateEntry(newAlias, certificate);
+            this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
+        } else {
+            throw new Exception("Given certificate fingerprint already exists in trust store");
+        }
+    }
+
+    public boolean exists(String alias) throws Exception {
+        if (this.keyStore == null) {
+            throw new Exception("Trust store is not initialized");
+        }
+
+        return this.keyStore.containsAlias(alias);
+    }
+
+    private boolean checkFingerprintNotExist(final String fingerprint) throws Exception {
+        List<CertificateBasicInfoModel> certificateInfoList = this.getCertificateInfoList();
+        return certificateInfoList.stream().noneMatch(entry -> entry.getSha1Fingerprint().equals(fingerprint));
     }
 
     public void updateAlias(String oldAlias, String newAlias) throws Exception {

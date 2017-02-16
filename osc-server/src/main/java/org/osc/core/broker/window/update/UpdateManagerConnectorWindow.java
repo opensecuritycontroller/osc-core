@@ -221,7 +221,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
                 ViewUtil.addWindow(new AddSSLCertificateWindow(certificateResolverModels, new AddSSLCertificateWindow.SSLCertificateWindowInterface() {
                     @Override
                     public void submitFormAction(ArrayList<CertificateResolverModel> certificateResolverModels) {
-                        certificateResolverModelsList = certificateResolverModels;
+                        UpdateManagerConnectorWindow.this.certificateResolverModelsList = certificateResolverModels;
                     }
 
                     @Override
