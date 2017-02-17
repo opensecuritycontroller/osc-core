@@ -102,7 +102,7 @@ public class AddVirtualizationConnectorServiceTest {
     }
 
     @Test
-    public void testDispatch_whenValidationThrowsSSLCertificateException_ThrowsSslCertificateException() throws Exception {
+    public void testDispatch_WhenValidationThrowsSSLCertificateException_WhenForceAddCertificate_ThrowsSslCertificateException() throws Exception {
 
         // Arrange.
         this.exception.expect(SslCertificatesExtendedException.class);
@@ -124,7 +124,7 @@ public class AddVirtualizationConnectorServiceTest {
     }
        
     @Test
-    public void testDispatch_whenValidationThrowsSSLCertificateException_ReturnsResponse() throws Exception {
+    public void testDispatch_WhenValidationThrowsSSLCertificateException_WhenForceAddCertificate_ReturnsResponse() throws Exception {
 
         // Arrange.
         ErrorTypeException exception = new ErrorTypeException("Error Thrown", ErrorType.CONTROLLER_EXCEPTION);

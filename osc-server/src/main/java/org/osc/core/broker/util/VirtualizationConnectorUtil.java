@@ -36,7 +36,10 @@ public class VirtualizationConnectorUtil {
 	 private Endpoint endPoint = null; 
 	 private JCloudKeyStone keystoneAPi = null;
 	 
-	 
+	 public void setVimUtils(VimUtils vimUtils) {
+			this.vimUtils = vimUtils;
+		}
+
 	 /**
      * Checks connection for vmware.
      *
@@ -67,7 +70,7 @@ public class VirtualizationConnectorUtil {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
                 }
             }
-
+            
             // Check Connectivity with vCenter
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
                 try {

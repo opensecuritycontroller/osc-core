@@ -4,6 +4,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import java.net.URL;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,8 +52,8 @@ public class VirtualizationConnectorUtilTest {
 	@Mock
 	OsRabbitMQClient rabbitClient;
 
-	@Mock
-	VimUtils vimUtils;
+//	@Mock
+//	VimUtils vimUtils;
 	
 	@InjectMocks
 	VirtualizationConnectorUtil util;
@@ -64,7 +65,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 	
 	@Test
-	public void testVmwareConnection_WhenSkipDryRunRequest_ReturnsSuccessful() throws Exception {
+	public void testVmwareConnection_WithSkipDryRunRequest_ReturnsSuccessful() throws Exception {
 
 		// Arrange.
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
@@ -93,7 +94,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenstackConnection_WhenSkipDryRunRequest_ReturnsSuccessful() throws Exception {
+	public void testOpenstackConnection_WithSkipDryRunRequest_ReturnsSuccessful() throws Exception {
 
 		// Arrange.
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST;
@@ -112,7 +113,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testVmwareConnection_WhenProviderRequest_ReturnsSuccessful() throws Exception {
+	public void testVmwareConnection_WithIgnoreProviderException_WhenProviderCheckStatusSuccess_ReturnsSuccessful() throws Exception {
 
 		// Arrange
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
@@ -139,7 +140,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testVmwareConnection_WithVmwareSDNconnectionfailure_throwsErrorTypeException() throws Exception {
+	public void testVmwareConnection_WithIgnoreProviderException_WhenProviderCheckStatusFail_throwsErrorTypeException() throws Exception {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);
@@ -167,7 +168,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testVmwareConnection_WithVmwareControllerRequest_throwsErrorTypeException() throws Exception {
+	public void testVmwareConnection_WithIgnoreProviderException_WhenProviderCheckStatusFail_WhenFetchCertificatesFromUrl_throwsErrorTypeException() throws Exception {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);
@@ -196,10 +197,12 @@ public class VirtualizationConnectorUtilTest {
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 	}
 
+
 	@Test
-	public void testVmwareConnection_WithVmwareProviderRequest_ReturnsSuccessful() throws Exception {
+	public void testVmwareConnection_WithIgnoreControllerException_WhenVCenterConnectionFail_ReturnsErrorTypeException() throws Exception {
 
 		// Arrange
+		this.exception.expect(ErrorTypeException.class);
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
 		List<ErrorType> errorList = new ArrayList<ErrorType>();
 		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
@@ -207,7 +210,7 @@ public class VirtualizationConnectorUtilTest {
 
 		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		VimUtils utils = mock(VimUtils.class);
+		PowerMockito.whenNew(VimUtils.class).withAnyArguments().thenThrow(new RemoteException());
 		doNothing().when(sslCertificateResolver).fetchCertificatesFromURL(any(URL.class), any(String.class));
 		doReturn(new ArrayList()).when(sslCertificateResolver).getCertificateResolverModels();
 		
@@ -222,7 +225,34 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WithControllerRequest_ReturnsSuccessful() throws Exception {
+	public void testVmwareConnection_WithIgnoreControllerException_WhenVCenterConnectionSuccess_ReturnsSuccessful() throws Exception {
+
+		// Arrange
+		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
+		List<ErrorType> errorList = new ArrayList<ErrorType>();
+		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+		request.addErrorsToIgnore(errorList);
+
+		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
+		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
+		VimUtils utils = mock(VimUtils.class);
+		util.setVimUtils(utils);
+		doNothing().when(sslCertificateResolver).fetchCertificatesFromURL(any(URL.class), any(String.class));
+		doReturn(new ArrayList()).when(sslCertificateResolver).getCertificateResolverModels();
+		
+
+		// Act.
+		util.checkVmwareConnection(spyRequest, vc);
+		
+		//Assert
+		verify(sslCertificateResolver, times(1)).getCertificateResolverModels();
+		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+	}
+
+	
+	@Test
+	public void testOpenStackConnection_WithIgnoreProviderException_WithIgnoreRabbitMqException_WhenSdnControllerStatusSuccess_ReturnsSuccessful() throws Exception {
 
 		// Arrange
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
@@ -250,7 +280,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WithControllerRequest_ReturnsErrorTypeException() throws Exception {
+	public void testOpenStackConnection_WithIgnoreProviderException_WithIgnoreRabbitMqException_WhenSdnControllerStatusFail_ReturnsErrorTypeException() throws Exception {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);
@@ -285,7 +315,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WithProviderRequest_ReturnsSuccessful() throws Exception {
+	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListTenantsFail_ReturnsErrorTypeException() throws Exception {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);
@@ -312,7 +342,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WithHttpsProviderRequest_ReturnsSuccessful2() throws Exception {
+	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListTenantsSuccess_ReturnsSuccessful() throws Exception {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);
@@ -343,7 +373,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WhenRabbitClientRequest_ReturnsSuccessful() throws Throwable {
+	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionSuccess_ReturnsSuccessful() throws Throwable {
 
 		// Arrange
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
@@ -369,7 +399,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WhenRequest_ThrowsErrorTypeException() throws Throwable {
+	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionFail_ThrowsErrorTypeException() throws Throwable {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);
@@ -402,7 +432,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WhenRabbitClientRequest_ThrowsErrorTypeException() throws Throwable {
+	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionThrowsSignalException_ThrowsErrorTypeException() throws Throwable {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);
@@ -431,7 +461,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WhenRabbitClientRequestwithVcId_ThrowsErrorTypeException() throws Throwable {
+	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionThrowsSignalException_WhenMqClientIsNotConnected_ThrowsErrorTypeException() throws Throwable {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);
@@ -462,7 +492,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WhenRequestwithShutdownSignalException_ReturnsSuccessful() throws Throwable {
+	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionThrowsSignalException_WhenMqClientIsConnected_ReturnsSuccessful() throws Throwable {
 
 		// Arrange
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
