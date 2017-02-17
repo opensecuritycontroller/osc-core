@@ -1,25 +1,5 @@
 package org.osc.core.broker.view.maintenance;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.util.Date;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.json.JSONException;
-import org.osc.core.broker.service.BackupService;
-import org.osc.core.broker.service.request.BackupRequest;
-import org.osc.core.broker.service.response.BackupResponse;
-import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
-import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.util.ArchiveUtil;
-import org.osc.core.util.NetworkUtil;
-import org.osc.core.util.ServerUtil;
-import org.osc.core.util.VersionUtil;
-
 import com.mcafee.vmidc.server.Server;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -35,6 +15,24 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.service.BackupService;
+import org.osc.core.broker.service.request.BackupRequest;
+import org.osc.core.broker.service.response.BackupResponse;
+import org.osc.core.broker.view.common.VmidcMessages;
+import org.osc.core.broker.view.common.VmidcMessages_;
+import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.util.ArchiveUtil;
+import org.osc.core.util.NetworkUtil;
+import org.osc.core.util.ServerUtil;
+import org.osc.core.util.VersionUtil;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.util.Date;
 
 public class SummaryLayout extends FormLayout {
 
@@ -132,16 +130,11 @@ public class SummaryLayout extends FormLayout {
             @Override
             public void setEnabled(boolean enabled) {
                 if (enabled) {
-                    try {
-                        // because setEnabled(false) calls are ignored and button is disabled
-                        // on client because of setDisableOnClick(true), by doing this we
-                        // make sure that the button is actually disabled so that setEnabled(true)
-                        // has effect
-                        getUI().getConnectorTracker().getDiffState(this).put("enabled", false);
-                    } catch (JSONException e) {
-                        throw new RuntimeException(e);
-                    }
-                    super.setEnabled(enabled);
+                    // because setEnabled(false) calls are ignored and button is disabled
+                    // on client because of setDisableOnClick(true), by doing this we
+                    // make sure that the button is actually disabled so that setEnabled(true) has effect
+                    getUI().getConnectorTracker().getDiffState(this).put("enabled", false);
+                    super.setEnabled(true);
                 }
             }
         };
