@@ -1,5 +1,5 @@
 ##
-## Copyright (C) 2014  McAfee Inc.
+## Copyright (C) 2014  Intel.
 ##
 ## Makefile to create the vmidc vmdk file
 ##
@@ -18,6 +18,11 @@ blddir=$(realpath $(makedir)/..)/build
 bindir=$(realpath $(makedir)/..)/bin
 
 export buildNumber blddir bindir
+export HTTP_PROXY=http://proxy-us.intel.com:911
+export HTTPS_PROXY=http://proxy-us.intel.com:912
+export FTP_PROXY=http://proxy-us.intel.com:911
+export SOCKS_PROXY=http://proxy-us.intel.com:1080
+export NO_PROXY=.corp.nai.org,corp.nai.org,intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16
 
 dowithbindmount= \
      mount -o loop boot.img $(blddir)/boot && \
@@ -39,20 +44,11 @@ OSC_disk-0.img: make-image
 
 make-image: version-info
 	$(MAKE) --no-print-directory -f makefiles/mount.mk
-        ifeq ($(image-os), centos)
-		$(dowithbindmount) $(MAKE) --no-print-directory -f makefiles/packages_centos.mk
-        else
-		$(dowithbindmount) $(MAKE) --no-print-directory -f makefiles/packages.mk
-        endif
+	$(dowithbindmount) $(MAKE) --no-print-directory -f makefiles/packages.mk
 	cd ./root/opt/vmidc/bin && python osc_pbkdf2_key.py $(bindir)
 	find root -type f -exec touch {} \;
-        ifeq ($(image-os), centos)
-		$(dowithbindmount) $(MAKE) --no-print-directory -f makefiles/install_centos.mk
-		$(MAKE) --no-print-directory -f makefiles/packages_centos.mk cleanup
-        else
-		$(dowithbindmount) $(MAKE) --no-print-directory -f makefiles/install.mk
-		$(MAKE) --no-print-directory -f makefiles/packages.mk cleanup
-        endif
+	$(dowithbindmount) $(MAKE) --no-print-directory -f makefiles/install.mk
+	$(MAKE) --no-print-directory -f makefiles/packages.mk cleanup
 	$(MAKE) --no-print-directory -f makefiles/mount.mk cleanup
 	$(MAKE) --no-print-directory -f makefiles/mount.mk transfer
 	$(MAKE) --no-print-directory -f makefiles/mount.mk grub
@@ -81,15 +77,9 @@ mount:
 	$(MAKE) -f makefiles/mount.mk
 
 install:
-        ifeq ($(image-os), centos)
-		$(dowithbindmount) $(MAKE) -f makefiles/packages_centos.mk
-		$(dowithbindmount) $(MAKE) -f makefiles/install_centos.mk
-		$(MAKE) -f makefiles/packages_centos.mk cleanup
-        else
-		$(dowithbindmount) $(MAKE) -f makefiles/packages.mk
-		$(dowithbindmount) $(MAKE) -f makefiles/install.mk
-		$(MAKE) -f makefiles/packages.mk cleanup
-        endif
+	$(dowithbindmount) $(MAKE) -f makefiles/packages.mk
+	$(dowithbindmount) $(MAKE) -f makefiles/install.mk
+	$(MAKE) -f makefiles/packages.mk cleanup
 
 
 grub:
@@ -99,22 +89,12 @@ umount:
 	$(MAKE) -f makefiles/mount.mk cleanup
 
 cleanup:
-        ifeq ($(image-os), centos)
-		$(MAKE) --no-print-directory -f makefiles/install_centos.mk cleanup
-		$(MAKE) --no-print-directory -f makefiles/packages_centos.mk cleanup
-        else
-		$(MAKE) --no-print-directory -f makefiles/install.mk cleanup
-		$(MAKE) --no-print-directory -f makefiles/packages.mk cleanup
-        endif
-
+	$(MAKE) --no-print-directory -f makefiles/install.mk cleanup
+	$(MAKE) --no-print-directory -f makefiles/packages.mk cleanup
 	$(MAKE) --no-print-directory -f makefiles/mount.mk cleanup
 
 clean:
-        ifeq ($(image-os), centos)
-		$(MAKE) --no-print-directory -f makefiles/packages_centos.mk clean
-        else
-		$(MAKE) --no-print-directory -f makefiles/packages.mk clean
-        endif
+	$(MAKE) --no-print-directory -f makefiles/packages.mk clean
 	$(MAKE) --no-print-directory -f makefiles/mount.mk clean
 
 	-$(RM) OSC_disk-0.vmdk
@@ -123,9 +103,4 @@ clean:
 	-$(RM) OSC_disk-0-raw.img
 
 realclean: clean
-        ifeq ($(image-os), centos) 
-		$(MAKE) --no-print-directory -f makefiles/packages_centos.mk realclean
-        else
-		$(MAKE) --no-print-directory -f makefiles/packages.mk realclean
-        endif
-
+	$(MAKE) --no-print-directory -f makefiles/packages.mk realclean

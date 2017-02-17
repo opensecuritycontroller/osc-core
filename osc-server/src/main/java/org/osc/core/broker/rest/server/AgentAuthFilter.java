@@ -14,7 +14,7 @@ import com.sun.jersey.spi.container.ResourceFilter;
 
 public class AgentAuthFilter implements ResourceFilter, ContainerRequestFilter {
     public static final String VMIDC_AGENT_LOGIN = "agent";
-    public static String VMIDC_AGENT_PASS = "admin123";
+    public static String VMIDC_AGENT_PASS = "";
 
     @Context
     HttpServletRequest request;

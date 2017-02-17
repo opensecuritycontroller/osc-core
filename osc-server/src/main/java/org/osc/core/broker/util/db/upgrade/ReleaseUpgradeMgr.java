@@ -1,13 +1,5 @@
 package org.osc.core.broker.util.db.upgrade;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.h2.util.StringUtils;
@@ -17,6 +9,19 @@ import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
+
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
@@ -27,7 +32,7 @@ public class ReleaseUpgradeMgr {
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
-    public static final int TARGET_DB_VERSION = 72;
+    public static final int TARGET_DB_VERSION = 73;
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
@@ -199,7 +204,8 @@ public class ReleaseUpgradeMgr {
                 upgrade70to71(stmt);
             case 71:
                 upgrade71to72(stmt);
-
+            case 72:
+                upgrade72to73(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -211,16 +217,31 @@ public class ReleaseUpgradeMgr {
         }
     }
 
-    private static void upgrade70to71(Statement stmt) throws SQLException {
+    /**
+     * 3DES encrypted passwords -> AES-CTR encrypted passwords
+     */
+    private static void upgrade72to73(Statement stmt) throws SQLException, EncryptionException {
+        updatePasswordScheme(stmt, "user", "password");
+        updatePasswordScheme(stmt, "appliance_manager_connector", "password");
+        updatePasswordScheme(stmt, "virtualization_connector", "controller_password");
+        updatePasswordScheme(stmt, "virtualization_connector", "provider_password");
+        updatePasswordScheme(stmt, "distributed_appliance", "mgr_secret_key");
+        updatePasswordScheme(stmt, "distributed_appliance_instance", "password");
 
-        execSql(stmt, "alter table VM_PORT"
-                + " ADD COLUMN parent_id varchar(255);");
-    }
+        String sqlQuery = "SELECT vc_fk, value FROM virtualization_connector_provider_attr WHERE key = 'rabbitMQPassword';";
+        ResultSet result = stmt.executeQuery(sqlQuery);
+        Map<Integer, String> attrs = new HashMap<>();
 
-    private static void upgrade69to70(Statement stmt) throws SQLException {
+        while (result.next()) {
+            attrs.put(result.getInt("vc_fk"), EncryptionUtil.encryptAESCTR(EncryptionUtil.decryptDES(result.getString("value"))));
+        }
 
-        execSql(stmt, "alter table SECURITY_GROUP"
-                + " ADD COLUMN network_elem_id varchar(255);");
+        PreparedStatement preparedStatementUpdate = stmt.getConnection().prepareStatement("UPDATE virtualization_connector_provider_attr SET value = ? WHERE vc_fk = ? AND key = 'rabbitMQPassword'");
+        for (Map.Entry<Integer, String> entry : attrs.entrySet()) {
+            preparedStatementUpdate.setString(1, entry.getValue());
+            preparedStatementUpdate.setInt(2, entry.getKey());
+            preparedStatementUpdate.executeUpdate();
+        }
     }
 
     /**
@@ -251,6 +272,18 @@ public class ReleaseUpgradeMgr {
                 "SSL_CERTIFICATE_ATTR_ID BIGINT NOT NULL," +
                 "CONSTRAINT AMC_ID_FK FOREIGN KEY (APPLIANCE_MANAGER_CONNECTOR_ID) REFERENCES APPLIANCE_MANAGER_CONNECTOR (ID) ON UPDATE CASCADE ON DELETE CASCADE," +
                 "CONSTRAINT SSL_CERT_ATTR_AMC_FK FOREIGN KEY (SSL_CERTIFICATE_ATTR_ID) REFERENCES SSL_CERTIFICATE_ATTR (ID) ON UPDATE CASCADE ON DELETE CASCADE);");
+    }
+
+    private static void upgrade70to71(Statement stmt) throws SQLException {
+
+        execSql(stmt, "alter table VM_PORT"
+                + " ADD COLUMN parent_id varchar(255);");
+    }
+
+    private static void upgrade69to70(Statement stmt) throws SQLException {
+
+        execSql(stmt, "alter table SECURITY_GROUP"
+                + " ADD COLUMN network_elem_id varchar(255);");
     }
 
     /**
@@ -1665,6 +1698,23 @@ public class ReleaseUpgradeMgr {
             }
         }
         return !StringUtils.isNullOrEmpty(val) && Integer.parseInt(val) == 0;
+    }
+
+    private static void updatePasswordScheme(Statement stmt, String tableName, String columnName) throws SQLException, EncryptionException {
+        String sqlQuery = "SELECT id, " + columnName + " FROM " + tableName + ";";
+        ResultSet result = stmt.executeQuery(sqlQuery);
+        Map<Integer, String> idsAndPasswords = new HashMap<>();
+
+        while (result.next()) {
+            idsAndPasswords.put(result.getInt("id"), EncryptionUtil.encryptAESCTR(EncryptionUtil.decryptDES(result.getString(columnName))));
+        }
+
+        PreparedStatement preparedStatementUpdate = stmt.getConnection().prepareStatement("UPDATE " + tableName + " SET " + columnName + " = ? WHERE id = ?");
+        for (Map.Entry<Integer, String> entry : idsAndPasswords.entrySet()) {
+            preparedStatementUpdate.setString(1, entry.getValue());
+            preparedStatementUpdate.setInt(2, entry.getKey());
+            preparedStatementUpdate.executeUpdate();
+        }
     }
 
     private static void backupDbFile() throws IOException {

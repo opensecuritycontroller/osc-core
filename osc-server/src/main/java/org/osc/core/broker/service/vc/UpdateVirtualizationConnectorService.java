@@ -35,6 +35,7 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.EventType;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osc.core.util.encryption.EncryptionException;
 
 import java.util.List;
 import java.util.Set;
@@ -212,7 +213,7 @@ public class UpdateVirtualizationConnectorService
      * no password specified, it uses the password from the DB.
      */
     private void updateVirtualizationConnector(DryRunRequest<VirtualizationConnectorDto> request,
-                                               VirtualizationConnector existingVc) {
+                                               VirtualizationConnector existingVc) throws EncryptionException {
         // cache existing DB passwords
         String providerDbPassword = existingVc.getProviderPassword();
         String controllerDbPassword = existingVc.getControllerPassword();

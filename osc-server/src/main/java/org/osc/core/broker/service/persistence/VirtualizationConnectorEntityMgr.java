@@ -15,9 +15,11 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VirtualizationConnectorEntityMgr {
 
@@ -31,7 +33,7 @@ public class VirtualizationConnectorEntityMgr {
 
     }
 
-    public static void toEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) {
+    public static void toEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) throws EncryptionException {
 
         // transform from dto to entity
         vc.setId(dto.getId());
@@ -42,7 +44,7 @@ public class VirtualizationConnectorEntityMgr {
         if (dto.isControllerDefined()) {
             vc.setControllerIpAddress(dto.getControllerIP());
             vc.setControllerUsername(dto.getControllerUser());
-            vc.setControllerPassword(EncryptionUtil.encrypt(dto.getControllerPassword()));
+            vc.setControllerPassword(EncryptionUtil.encryptAESCTR(dto.getControllerPassword()));
         } else {
             vc.setControllerIpAddress(null);
             vc.setControllerUsername(null);
@@ -51,7 +53,7 @@ public class VirtualizationConnectorEntityMgr {
 
         vc.setProviderIpAddress(dto.getProviderIP());
         vc.setProviderUsername(dto.getProviderUser());
-        vc.setProviderPassword(EncryptionUtil.encrypt(dto.getProviderPassword()));
+        vc.setProviderPassword(EncryptionUtil.encryptAESCTR(dto.getProviderPassword()));
         vc.setAdminTenantName(dto.getAdminTenantName());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
         vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
@@ -59,7 +61,7 @@ public class VirtualizationConnectorEntityMgr {
         vc.setVirtualizationSoftwareVersion(dto.getSoftwareVersion());
     }
 
-    public static void fromEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) {
+    public static void fromEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) throws EncryptionException {
 
         // transform from entity to dto
         dto.setId(vc.getId());
@@ -69,14 +71,14 @@ public class VirtualizationConnectorEntityMgr {
         dto.setControllerType(vc.getControllerType());
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
-        dto.setControllerPassword(EncryptionUtil.decrypt(vc.getControllerPassword()));
+        dto.setControllerPassword(EncryptionUtil.decryptAESCTR(vc.getControllerPassword()));
 
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
-        dto.setProviderPassword(EncryptionUtil.decrypt(vc.getProviderPassword()));
+        dto.setProviderPassword(EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
         dto.setAdminTenantName(vc.getProviderAdminTenantName());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
-        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet());
+        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream().collect(Collectors.toSet()));
 
         dto.setSoftwareVersion(vc.getVirtualizationSoftwareVersion());
     }

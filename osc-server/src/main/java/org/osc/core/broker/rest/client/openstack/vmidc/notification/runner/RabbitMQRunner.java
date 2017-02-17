@@ -18,6 +18,7 @@ import org.osc.core.broker.view.util.BroadcasterUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
 import org.osc.core.broker.view.util.EventType;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 /**
  *
@@ -135,7 +136,7 @@ public class RabbitMQRunner implements BroadcastListener {
                         || !client.getUser().equals(
                                 vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER))
                         || !client.getPassword().equals(
-                                EncryptionUtil.decrypt(vc.getProviderAttributes().get(
+                                EncryptionUtil.decryptAESCTR(vc.getProviderAttributes().get(
                                         VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)))
                         || client.getPort() != Integer.parseInt(vc.getProviderAttributes().get(
                                 VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT))) {
@@ -164,7 +165,7 @@ public class RabbitMQRunner implements BroadcastListener {
      *            VC Object for which we need a client
      */
 
-    private void add(final VirtualizationConnector vc) {
+    private void add(final VirtualizationConnector vc) throws EncryptionException {
         final OsRabbitMQClient rabbitMqClient = new OsRabbitMQClient(vc);
         // add RabbitMQCLient to Map
         vcToRabbitMQClientMap.put(vc.getId(), rabbitMqClient);

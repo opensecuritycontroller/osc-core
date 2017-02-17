@@ -5,7 +5,6 @@
 	<description>a vmidc deploy tool</description>
 
 	<property name="build-all-images" value="false" />
-	<property name="image-os" value="mlos2" />
 	<target name="ovf" depends="build,ovfOnly,ovfCopy" description="build all and generate vmidc ovf" />
 
 	<target name="build">
@@ -32,10 +31,9 @@
 		<touch file="/tmp/build_marker"/>
 		<exec executable="schroot" resultproperty="ovf.result" dir="osc-server-bom/">
 			<arg value="-c" />
-			<arg value="${image-os}" />
+			<arg value="centos" />
 			<arg value="--" />
 			<arg value="ant" />
-			<arg value="-Dimage-os=${image-os}"/>
 			<arg value="-Dbuild-all-images=${build-all-images}"/>
 			<arg value="-Dbranchname=${branchname}" />
 			<arg value="-DbuildNumber=${buildNumber}" />
