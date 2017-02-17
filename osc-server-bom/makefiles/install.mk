@@ -1,7 +1,5 @@
 ##
-## Copyright (C) 2014  McAfee Inc.
-##
-## Makefile to install the vmidc components into
+## Makefile to install the OSC components into
 ##  the directory $(blddir).
 ##
 
@@ -9,9 +7,10 @@
 ##  are perserved
 SHELL = exec /bin/bash --noprofile -c 'umask 0000; shift; eval "$$1"' --
 
-.PHONY: all mlos yum-vmidc yum-mlos cleanup rpm-list run-postinstall
+.PHONY: all yum-vmidc yum cleanup rpm-list run-postinstall
 
 blddir?=build
+
 
 kernelver=$(shell rpm --root=$(blddir) --qf "%{VERSION}" -qa kernel)
 kernelverrelease=$(shell rpm --root=$(blddir) --qf "%{VERSION}-%{RELEASE}" -qa kernel)
@@ -60,7 +59,7 @@ busybox-files:=$(addprefix $(blddir)/usr/local/share/initrd/bin/, \
   vi \
 )
 
-grub-files:=$(patsubst $(blddir)/usr/share/grub/x86_64-unknown/%, $(blddir)/boot/grub/%, $(shell find $(blddir)/usr/share/grub/x86_64-unknown -type f))
+grub-files:=$(patsubst $(blddir)/usr/share/grub/x86_64-redhat/%, $(blddir)/boot/grub/%, $(shell find $(blddir)/usr/share/grub/x86_64-redhat -type f))
 
 all: $(blddir)/boot/initrd-$(kernelverrelease).x86_64.img \
      $(files) \
@@ -70,87 +69,28 @@ all: $(blddir)/boot/initrd-$(kernelverrelease).x86_64.img \
      run-postinstall \
      $(grub-files)
 
-$(grub-files): $(blddir)/boot/grub/%: $(blddir)/usr/share/grub/x86_64-unknown/%
+$(grub-files): $(blddir)/boot/grub/%: $(blddir)/usr/share/grub/x86_64-redhat/%
 	cp -L $< $(@D)
 
 $(blddir)/boot/initrd-$(kernelverrelease).x86_64.img: \
       $(blddir)/etc/fstab \
-      $(blddir)/usr/local/share/initrd/bin/cryptsetup \
-      $(blddir)/usr/local/share/initrd/bin/mkfs.ext4 \
-      $(blddir)/usr/local/share/initrd/bin/parted \
-      $(blddir)/usr/local/share/initrd/bin/resize2fs \
-      $(blddir)/usr/local/share/initrd/init \
-      $(blddir)/usr/local/share/initrd/etc/keyfile \
-      $(blddir)/usr/local/share/initrd/etc/rc.local \
-      $(busybox-files) \
-      $(cryptsetup-targets) \
-      $(mkfs.ext4-targets) \
-      $(parted-targets) \
-      $(resize2fs-targets) \
-      $(blddir)/usr/local/share/initrd/lib/dm-mod.ko \
-      $(blddir)/usr/local/share/initrd/lib/dm-crypt.ko \
-      $(blddir)/usr/local/share/initrd/lib/virtio_mmio.ko \
-      $(blddir)/usr/local/share/initrd/lib/virtio.ko \
-      $(blddir)/usr/local/share/initrd/lib/virtio_balloon.ko \
-      $(blddir)/usr/local/share/initrd/lib/virtio_pci.ko \
-      $(blddir)/usr/local/share/initrd/lib/virtio_ring.ko \
-      $(blddir)/usr/local/share/initrd/lib/virtio_net.ko \
-      $(blddir)/usr/local/share/initrd/lib/virtio-rng.ko \
-      $(blddir)/usr/local/share/initrd/lib/virtio_console.ko \
-      $(blddir)/usr/local/share/initrd/lib/virtio_blk.ko \
-      $(blddir)/usr/local/share/initrd/lib/vmw_pvscsi.ko
-	chroot $(blddir) /sbin/mkinitrd --force --fresh --version $(kernelverrelease).x86_64 --output /boot/initrd-$(kernelverrelease).x86_64.img --proto /usr/local/share/initrd
+      $(blddir)/usr/local/share/initrd/etc/keyfile
+	$(shell cp $(blddir)/sbin/busybox  $(blddir)/bin/ )
+	$(shell cp $(blddir)/sbin/lvm  $(blddir)/bin/ )
+	$(shell cp $(blddir)/sbin/cryptsetup  $(blddir)/bin/ )
+	$(shell cp $(blddir)/sbin/mkfs.ext4 $(blddir)/bin/ )
+	$(shell cp $(blddir)/sbin/findfs $(blddir)/bin/ )
+	$(shell cp $(blddir)/sbin/fdisk $(blddir)/bin/ )
+	$(shell cp $(blddir)/usr/bin/xz $(blddir)/bin/ )
+	$(shell cp -R centos/initrmfs/dracut-mods/95osc_mod  $(blddir)/usr/share/dracut/modules.d/ )
 
-      #$(blddir)/usr/local/share/initrd/lib/virtio_scsi.ko
+	chroot $(blddir) /sbin/dracut --force --add-drivers "dm-mod dm-crypt virtio virtio_balloon virtio_pci virtio_ring virtio_net virtio-rng virtio_console virtio_blk vmw_pvscsi" --install "cryptsetup mkfs.ext4 parted resize2fs cat dd head less ls mount sh vi busybox lvm fdisk findfs tar xz" --include /usr/local/share/initrd/etc/ /etc/  /boot/initrd-$(kernelverrelease).x86_64.img $(kernelverrelease).x86_64 
 
-# May be needed for above rule (Maybe better to place in lib and let the normal initrd do it's thing
 
-$(blddir)/usr/local/share/initrd/lib/dm-mod.ko: $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/md/dm-mod.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/dm-crypt.ko: $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/md/dm-crypt.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio_mmio.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/virtio/virtio_mmio.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/virtio/virtio.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio_balloon.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/virtio/virtio_balloon.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio_pci.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/virtio/virtio_pci.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio_ring.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/virtio/virtio_ring.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio_net.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/net/virtio_net.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio-rng.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/char/hw_random/virtio-rng.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio_console.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/char/virtio_console.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio_blk.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/block/virtio_blk.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/vmw_pvscsi.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/scsi/vmw_pvscsi.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/lib/virtio_scsi.ko : $(blddir)/lib/modules/$(kernelverrelease).x86_64/kernel/drivers/scsi/virtio_scsi.ko | $(blddir)/usr/local/share/initrd/lib
-	install -o root -g root -m 755 $< $@
-
-$(blddir)/usr/local/share/initrd/init: $(blddir)/usr/lib/initrd/init $(blddir)/usr/local/share/initrd
-	cp $< $@
-
-$(busybox-files): $(blddir)/usr/local/share/initrd/bin/busybox | $(blddir)/usr/local/share/initrd/bin
+$(busybox-files): $(blddir)/usr/local/share/initrd/bin/busybox | $(blddir)/bin
 	ln -fs busybox $@
 
-$(blddir)/usr/local/share/initrd/bin/busybox: $(blddir)/sbin/busybox $(blddir)/usr/local/share/initrd/bin
+$(blddir)/usr/local/share/initrd/bin/busybox: $(blddir)/sbin/busybox $(blddir)/bin
 	cp -L $< $(@D)
 
 $(dirs) $(blddir)/usr/local/share/initrd/lib:
@@ -180,7 +120,7 @@ $(sort $(cryptsetup-lib64-targets) $(resize2fs-lib64-targets) $(parted-lib64-tar
 $(sort $(cryptsetup-usrlib64-targets) $(resize2fs-usrlib64-targets) $(parted-usrlib64-targets) $(mkfs.ext4-usrlib64-targets)): $(blddir)/usr/local/share/initrd/lib64/%: $(blddir)/usr/lib64/% | $(blddir)/usr/local/share/initrd/lib64
 	cp -L $< $(@D)/
 
-$(blddir)/boot/grub/grub.conf: src/boot/grub/grub.conf
+$(blddir)/boot/grub/grub.conf: centos/boot/grub/grub.conf
 	sed -e 's/KERNELVERRELEASE/$(kernelverrelease)/g' $< > $@
 
 $(blddir)/usr/local/share/initrd/etc/keyfile: | $(blddir)/usr/local/share/initrd/etc
@@ -238,13 +178,9 @@ clean:
 	          $(blddir)/usr/local/share/initrd/bin/parted \
 	          $(blddir)/usr/local/share/initrd/bin/resize2fs \
 	          $(blddir)/usr/local/share/initrd/etc/keyfile \
-	          $(blddir)/usr/local/share/initrd/init; \
+	          $(blddir)/usr/share/dracut/modules.d/95osc_mod \
 	do if [ -f $$f ]; then echo $(RM) $$f; $(RM) $$f; fi; done
 	@for d in $(rdirs); do if [ -d $$d ]; then echo rmdir $$d; rmdir $$d; fi; done
 
 .FORCE:
-
-.dummy:
-#$(blddir)/etc/issue $(blddir)/etc/system-release: $(blddir)/%: src/% | $(dirs) .FORCE
-	#sed -e "s/VERSION/$(buildNumber)/" < $< > $@ 
 

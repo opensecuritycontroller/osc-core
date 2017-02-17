@@ -7,6 +7,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 
@@ -45,7 +47,7 @@ public class Policy extends BaseEntity {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void setName(String name) {
@@ -53,7 +55,7 @@ public class Policy extends BaseEntity {
     }
 
     public ApplianceManagerConnector getApplianceManagerConnector() {
-        return applianceManagerConnector;
+        return this.applianceManagerConnector;
     }
 
     void setApplianceManagerConnector(ApplianceManagerConnector applianceManagerConnector) {
@@ -61,7 +63,7 @@ public class Policy extends BaseEntity {
     }
 
     public Domain getDomain() {
-        return domain;
+        return this.domain;
     }
 
     public void setDomain(Domain domain) {
@@ -69,7 +71,7 @@ public class Policy extends BaseEntity {
     }
 
     public String getMgrPolicyId() {
-        return mgrPolicyId;
+        return this.mgrPolicyId;
     }
 
     public void setMgrPolicyId(String mgrPolicyId) {
@@ -78,8 +80,44 @@ public class Policy extends BaseEntity {
 
     @Override
     public String toString() {
-        return "Policy [name=" + name + ", applianceManagerConnector=" + applianceManagerConnector + ", mgrPolicyId="
-                + mgrPolicyId + ", getId()=" + getId() + "]";
+        return "Policy [name=" + this.name + ", applianceManagerConnector=" + this.applianceManagerConnector + ", mgrPolicyId="
+                + this.mgrPolicyId + ", getId()=" + getId() + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        HashCodeBuilder builder = new HashCodeBuilder()
+                .append(getName())
+                .append(getId());
+        if (this.applianceManagerConnector != null) {
+            builder.append(this.applianceManagerConnector.getId());
+        }
+
+        return builder.toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object == null) {
+            return false;
+        }
+        if (getClass() != object.getClass()) {
+            return false;
+        }
+        if (this == object) {
+            return true;
+        }
+
+        Policy other = (Policy) object;
+        EqualsBuilder builder =  new EqualsBuilder()
+                .append(getName(), other.getName())
+                .append(getId(), other.getId());
+
+        Long mcId = this.applianceManagerConnector != null ? this.applianceManagerConnector.getId() : null;
+        Long otherMcId = other.getApplianceManagerConnector() != null ? other.getApplianceManagerConnector().getId() : null;
+        builder.append(mcId, otherMcId);
+
+        return  builder.isEquals();
     }
 
 }

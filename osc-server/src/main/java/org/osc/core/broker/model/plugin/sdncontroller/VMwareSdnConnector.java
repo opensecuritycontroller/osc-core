@@ -3,6 +3,7 @@ package org.osc.core.broker.model.plugin.sdncontroller;
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.sdn.element.ConnectorElement;
 
 import javax.net.ssl.SSLContext;
@@ -13,7 +14,7 @@ public class VMwareSdnConnector implements ConnectorElement {
 	private String password;
 	private SSLContext sslContext;
 
-    public VMwareSdnConnector(VirtualizationConnector vc) {
+    public VMwareSdnConnector(VirtualizationConnector vc) throws EncryptionException {
         if (vc == null) {
             throw new IllegalArgumentException("The provided virtualization connector cannot be null.");
         }
@@ -26,7 +27,7 @@ public class VMwareSdnConnector implements ConnectorElement {
 
         this.ipAddress = vc.getControllerIpAddress();
         this.userName = vc.getControllerUsername();
-        this.password = EncryptionUtil.decrypt(vc.getControllerPassword());
+        this.password = EncryptionUtil.decryptAESCTR(vc.getControllerPassword());
         this.sslContext = vc.getSslContext();
     }
 

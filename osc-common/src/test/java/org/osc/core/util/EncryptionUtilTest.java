@@ -1,87 +1,128 @@
 package org.osc.core.util;
 
-import static org.junit.Assert.*;
-
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Arrays;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.EncryptionUtil.EncryptionException;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.osc.core.util.encryption.AESCTREncryption;
+import org.osc.core.util.encryption.EncryptionException;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class EncryptionUtilTest {
-
+	// AES-CTR test data
 	private String unEncryptedMessage = "helloworld";
-	private String encryptedMessage = "SvQhNtPMXaAV85ot1FkogA==";
+	private String aesCtrEncryptedMessage = "af5b59f52f5c3f0a77c6ba3bae08c1fe:26255b1fabfecfc469af";
 
+	// AES-GCM test data
 	private SecretKey key = generateTestAESGCMKey();
 	private SecretKey invalidKey = generateTestAESGCMKey();
 	private byte[] plainText;
 	private byte[] iv;
 	private byte[] aad;
-	
+
 	@Before
-	public void setUp() throws NoSuchAlgorithmException {
+	public void setUp() throws Exception {
 		// Arrange.
 		plainText = "Some text to encrypt".getBytes();
 		iv = new byte[16];
 		aad = "Some additional authentication data".getBytes();
 		new SecureRandom().nextBytes(iv);
+
+		AESCTREncryption.setKeyProvider(() -> { return "1234567890abcdef1234567890abcdef"; });
+
+		String test = EncryptionUtil.encryptAESCTR("helloworld");
 	}
-	
+
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
-	
+
 	/** To check the valid behavior of encryption with valid string message */
 	@Test
-	public void testEncryption() {
-		String encryption = EncryptionUtil.encrypt(unEncryptedMessage);
-		assertEquals(encryptedMessage, encryption);
+	public void testEncryptPbkdf2_WithValidMessage_ExpectsPbkdf2Hash() throws EncryptionException {
+		String encryption = EncryptionUtil.encryptPbkdf2(unEncryptedMessage);
+		assertTrue(encryption.startsWith("4000"));
+		assertEquals(encryption.length(), 102);
 	}
 
-	/** To check the valid behavior of decryption with valid encoded string */
 	@Test
-	public void testDecryption() {
-		String decryption = EncryptionUtil.decrypt(encryptedMessage);
-		assertEquals(unEncryptedMessage, decryption);
+	public void testValidatePbkdf2_WithValidMessage_ExpectsSuccess() throws EncryptionException {
+		String encryption = EncryptionUtil.encryptPbkdf2(unEncryptedMessage);
+		assertTrue(EncryptionUtil.validatePbkdf2(unEncryptedMessage, encryption));
 	}
 
-	/** To check the valid behavior of encryption with null message */
 	@Test
-	public void testNullMessageEncryption() {
-		String encryption = EncryptionUtil.encrypt(null);
-		assertEquals(null, encryption);
-	}
-
-	/** To check the valid behavior of decryption with null encoded string */
-	@Test
-	public void testNullMessageDecryption() {
-		String decryption = EncryptionUtil.decrypt(null);
-		assertEquals(null, decryption);
-	}
-
-	/** To check the valid behavior of encryption with empty message */
-	@Test
-	public void testEmptyMessageEncrytion() {
-		String encryption = EncryptionUtil.encrypt("");
+	public void testEncryptPbkdf2_WithEmptyMessage_ExpectsEmptyMessage() throws EncryptionException {
+		String encryption = EncryptionUtil.encryptPbkdf2("");
 		assertEquals("", encryption);
 	}
 
-	/** To check the valid behavior of decryption with empty encoded string */
 	@Test
-	public void testEmptyMessageDecryption() {
-		String decryption = EncryptionUtil.decrypt("");
+	public void testEncryptPbkdf2_WithNullMessage_ExpectsNull() throws EncryptionException {
+		String encryption = EncryptionUtil.encryptPbkdf2(null);
+		assertEquals(null, encryption);
+	}
+
+	@Test
+	public void testEncryptAesCtr_WithValidMessage_ExpectsAesCtrHash() throws Exception {
+		String encryption = EncryptionUtil.encryptAESCTR(unEncryptedMessage);
+		assertEquals(encryption.substring(32,33), ":");
+		assertEquals(encryption.length(), 53);
+	}
+
+	@Test
+	public void testEncryptAesCtr_WithEmptyMessage_ExpectsEmptyMessage() throws EncryptionException {
+		String encryption = EncryptionUtil.encryptAESCTR("");
+		assertEquals("", encryption);
+	}
+
+	@Test
+	public void testEncryptAesCtr_WithNullMessage_ExpectsNull() throws EncryptionException {
+		String encryption = EncryptionUtil.encryptAESCTR(null);
+		assertEquals(null, encryption);
+	}
+
+	@Test
+	public void testDecryptAesCtr_WithValidMessage_ExpectsDecryptedMessage() throws EncryptionException {
+		String decryption = EncryptionUtil.decryptAESCTR(aesCtrEncryptedMessage);
+		assertEquals(unEncryptedMessage, decryption);
+	}
+
+	@Test
+	public void testDecryptAesCtr_WithNullMessage_ExpectsNull() throws EncryptionException {
+		String decryption = EncryptionUtil.decryptAESCTR(null);
+		assertEquals(null, decryption);
+	}
+
+	@Test
+	public void testDecryptAesCtr_WithEmptyMessage_ExpectsEmptyMessage() throws EncryptionException {
+		String decryption = EncryptionUtil.decryptAESCTR("");
 		assertEquals("", decryption);
 	}
-	
+
+	@Test
+	public void testValidateAesCtr_WithValidMessage_ExpectsSuccess() throws EncryptionException {
+		String encryption = EncryptionUtil.encryptAESCTR(unEncryptedMessage);
+		assertTrue(EncryptionUtil.validateAESCTR(unEncryptedMessage, encryption));
+	}
+
 	@Test
 	public void testEncryptAESGCM_withValidInputParameters_encryptionSucceeds() throws EncryptionException {
 		// Arrange.

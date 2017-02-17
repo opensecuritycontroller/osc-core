@@ -100,7 +100,7 @@ public class AgentRegisterService extends ServiceDispatcher<AgentRegisterService
 
             dai.setName(applianceName);
             dai.setPolicyMapOutOfSync(true);
-            dai.setPassword(EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS));
+            dai.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
 
             LOG.info("Creating new DAI " + dai);
         } else if (dai == null) {

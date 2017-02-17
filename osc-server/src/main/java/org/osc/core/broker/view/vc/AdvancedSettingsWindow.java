@@ -14,6 +14,9 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
+import org.osc.core.util.encryption.EncryptionException;
+
+import org.apache.log4j.Logger;
 
 public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
@@ -23,6 +26,8 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
     private static final long serialVersionUID = 1L;
 
     private static final String ADVANCED_SETTINGS_CAPTION = VmidcMessages.getString(VmidcMessages_.ADVANCED);
+
+    private static final Logger LOG = Logger.getLogger(AdvancedSettingsWindow.class);
 
     private CheckBox providerHttps = null;
     private TextField rabbitMQIp = null;
@@ -78,7 +83,7 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
                     .get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER));
         }
         if (this.baseVCWindow.providerAttributes.get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD) != null) {
-            this.rabbitMQUserPassword.setValue(EncryptionUtil.decrypt(this.baseVCWindow.providerAttributes
+            this.rabbitMQUserPassword.setValue(EncryptionUtil.decryptAESCTR(this.baseVCWindow.providerAttributes
                     .get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)));
         }
         if (this.baseVCWindow.providerAttributes.get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT) != null) {
@@ -112,19 +117,25 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
     @Override
     public void submitForm() {
         if (validateForm()) {
-            //override all default values with user provided ones...
-            this.baseVCWindow.providerAttributes.clear();
-            this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, this.providerHttps
-                    .getValue().toString());
-            this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_IP,
-                    this.rabbitMQIp.getValue().toString());
-            this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER,
-                    this.rabbitMQUserName.getValue().toString());
-            this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                    EncryptionUtil.encrypt(this.rabbitMQUserPassword.getValue().toString()));
-            this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT,
-                    this.rabbitMQPort.getValue().toString());
-            close();
+            try {
+                //override all default values with user provided ones...
+                this.baseVCWindow.providerAttributes.clear();
+                this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, this.providerHttps
+                        .getValue().toString());
+                this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_IP,
+                        this.rabbitMQIp.getValue().toString());
+                this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER,
+                        this.rabbitMQUserName.getValue().toString());
+                    this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                            EncryptionUtil.encryptAESCTR(this.rabbitMQUserPassword.getValue().toString()));
+                this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT,
+                        this.rabbitMQPort.getValue().toString());
+                close();
+            } catch (EncryptionException e) {
+                String msg = "Failed to encrypt rabbit MQ user password";
+                LOG.error(msg, e);
+                ViewUtil.iscNotification(msg, Notification.Type.ERROR_MESSAGE);
+            }
         }
     }
 }

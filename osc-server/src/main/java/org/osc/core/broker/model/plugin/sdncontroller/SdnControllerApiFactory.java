@@ -69,9 +69,9 @@ public class SdnControllerApiFactory {
             throws Exception {
         VirtualizationConnector shallowClone = new VirtualizationConnector(vc);
         SdnControllerApi sca = createNetworkControllerApi(shallowClone.getControllerType());
-        shallowClone.setProviderPassword(EncryptionUtil.decrypt(shallowClone.getProviderPassword()));
+        shallowClone.setProviderPassword(EncryptionUtil.decryptAESCTR(shallowClone.getProviderPassword()));
         if (!StringUtils.isEmpty(shallowClone.getControllerPassword())) {
-            shallowClone.setControllerPassword(EncryptionUtil.decrypt(shallowClone.getControllerPassword()));
+            shallowClone.setControllerPassword(EncryptionUtil.decryptAESCTR(shallowClone.getControllerPassword()));
         }
         sca.setVirtualizationConnector(shallowClone);
         sca.setRegion(region);

@@ -13,7 +13,7 @@ import com.sun.jersey.spi.container.ResourceFilter;
 
 public class VmidcAuthFilter implements ResourceFilter, ContainerRequestFilter {
     public static final String VMIDC_DEFAULT_LOGIN = "admin";
-    public static String VMIDC_DEFAULT_PASS = "admin123";
+    public static String VMIDC_DEFAULT_PASS = "";
 
     @Context
     private HttpServletRequest request;

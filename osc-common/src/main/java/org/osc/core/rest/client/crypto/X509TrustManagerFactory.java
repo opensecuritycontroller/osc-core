@@ -1,13 +1,5 @@
 package org.osc.core.rest.client.crypto;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
-
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -25,6 +17,15 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
+
 public class X509TrustManagerFactory implements X509TrustManager {
 
     private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
@@ -36,9 +37,6 @@ public class X509TrustManagerFactory implements X509TrustManager {
     private X509TrustManager rootcaX509TrustManager = null;
     private KeyStore keyStore;
     private SslConfig sslConfig;
-
-    private X509TrustManagerFactory() {
-    }
 
     public X509TrustManagerFactory(SslConfig sslConfig) throws Exception {
         this.sslConfig = sslConfig;
@@ -154,8 +152,12 @@ public class X509TrustManagerFactory implements X509TrustManager {
             if ("X.509".equals(this.keyStore.getCertificate(alias).getType())) {
                 X509Certificate certificate = (X509Certificate) this.keyStore.getCertificate(alias);
                 try {
-                    list.add(new CertificateBasicInfoModel(alias, getSha1Fingerprint(certificate),
-                            certificate.getNotBefore(), certificate.getNotAfter(), certificate.getSigAlgName(), certificate));
+                    CertificateBasicInfoModel infoModel = new CertificateBasicInfoModel(
+                            alias, getSha1Fingerprint(certificate), certificate.getIssuerDN().getName(),
+                            certificate.getNotBefore(), certificate.getNotAfter(), certificate.getSigAlgName(),
+                            certificate);
+
+                    list.add(infoModel);
                 } catch (NoSuchAlgorithmException | CertificateEncodingException e) {
                     LOG.error("Failed to add certificate basic info model", e);
                 }
@@ -176,7 +178,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
             X509Certificate certificate = (X509Certificate) cf.generateCertificate(inputStream);
             String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
             this.keyStore.setCertificateEntry(newAlias, certificate);
-            this.keyStore.store(new FileOutputStream(sslConfig.getTruststorefile()), sslConfig.getTruststorepass().toCharArray());
+            this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
         }
     }
 
@@ -185,8 +187,25 @@ public class X509TrustManagerFactory implements X509TrustManager {
             throw new Exception("Trust store is not initialized");
         }
 
-        this.keyStore.setCertificateEntry(newAlias, certificate);
-        this.keyStore.store(new FileOutputStream(sslConfig.getTruststorefile()), sslConfig.getTruststorepass().toCharArray());
+        if(checkFingerprintNotExist(getSha1Fingerprint(certificate))){
+            this.keyStore.setCertificateEntry(newAlias, certificate);
+            this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
+        } else {
+            throw new Exception("Given certificate fingerprint already exists in trust store");
+        }
+    }
+
+    public boolean exists(String alias) throws Exception {
+        if (this.keyStore == null) {
+            throw new Exception("Trust store is not initialized");
+        }
+
+        return this.keyStore.containsAlias(alias);
+    }
+
+    private boolean checkFingerprintNotExist(final String fingerprint) throws Exception {
+        List<CertificateBasicInfoModel> certificateInfoList = this.getCertificateInfoList();
+        return certificateInfoList.stream().noneMatch(entry -> entry.getSha1Fingerprint().equals(fingerprint));
     }
 
     public void updateAlias(String oldAlias, String newAlias) throws Exception {
@@ -198,7 +217,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
             X509Certificate certificate = (X509Certificate) this.keyStore.getCertificate(oldAlias);
             removeEntry(oldAlias);
             addEntry(certificate, newAlias);
-            this.keyStore.store(new FileOutputStream(sslConfig.getTruststorefile()), sslConfig.getTruststorepass().toCharArray());
+            this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
         }
     }
 
@@ -208,7 +227,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
         }
 
         this.keyStore.deleteEntry(alias);
-        this.keyStore.store(new FileOutputStream(sslConfig.getTruststorefile()), sslConfig.getTruststorepass().toCharArray());
+        this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
     }
 
     private X509TrustManager getTrustManager(KeyStore keyStore) throws Exception {
@@ -232,6 +251,6 @@ public class X509TrustManagerFactory implements X509TrustManager {
      * @return cleaned filename
      */
     private String cleanFileName(String filename) {
-        return filename.replaceAll(ALNUM_FILTER_REGEX, "");
+        return filename.replaceAll(this.ALNUM_FILTER_REGEX, "");
     }
 }

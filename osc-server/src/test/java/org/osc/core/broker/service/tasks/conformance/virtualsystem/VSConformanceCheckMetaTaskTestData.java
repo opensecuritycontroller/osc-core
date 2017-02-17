@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.mockito.Mockito;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -48,6 +49,7 @@ import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.Secu
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class VSConformanceCheckMetaTaskTestData {
 
@@ -276,9 +278,13 @@ public class VSConformanceCheckMetaTaskTestData {
             String policyName,
             Boolean policyDeletion,
             String vendorTemplateId) {
-        VirtualizationConnector vc = new VirtualizationConnector();
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
-        vc.setId(vcId);
+
+        // Mock SslContext
+        VirtualizationConnector vcSpy = Mockito.spy(VirtualizationConnector.class);
+        Mockito.doReturn(null).when(vcSpy).getSslContext();
+
+        vcSpy.setVirtualizationType(VirtualizationType.VMWARE);
+        vcSpy.setId(vcId);
 
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
         mc.setManagerType(ManagerType.NSM);
@@ -294,7 +300,7 @@ public class VSConformanceCheckMetaTaskTestData {
         vs.setId(vsId);
         vs.setNsxServiceManagerId(serviceManagerId);
         vs.setNsxServiceId(serviceId);
-        vs.setVirtualizationConnector(vc);
+        vs.setVirtualizationConnector(vcSpy);
         vs.setDomain(new Domain());
         vs.setNsxServiceInstanceId(serviceInstanceId);
         vs.setNsxDeploymentSpecIds(deploymentSpecIds);
@@ -603,7 +609,7 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
-    public static TaskGraph createOpenstackWithDeploymentSpecGraph(VirtualSystem vs) {
+    public static TaskGraph createOpenstackWithDeploymentSpecGraph(VirtualSystem vs) throws EncryptionException {
         DeploymentSpec ds = (DeploymentSpec) vs.getDeploymentSpecs().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
@@ -772,7 +778,7 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
-    public static TaskGraph createDeleteOpenStackWithDeploymentSpecGraph(VirtualSystem vs) {
+    public static TaskGraph createDeleteOpenStackWithDeploymentSpecGraph(VirtualSystem vs) throws EncryptionException {
         DeploymentSpec ds = (DeploymentSpec) vs.getDeploymentSpecs().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
@@ -800,7 +806,7 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
-    public static TaskGraph createDeleteOpenStackWithOSImageRefGraph(VirtualSystem vs) {
+    public static TaskGraph createDeleteOpenStackWithOSImageRefGraph(VirtualSystem vs) throws EncryptionException {
         OsImageReference image = (OsImageReference) vs.getOsImageReference().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
@@ -828,7 +834,7 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
-    public static TaskGraph createDeleteOpenStackWithOSFlavorRefGraph(VirtualSystem vs) {
+    public static TaskGraph createDeleteOpenStackWithOSFlavorRefGraph(VirtualSystem vs) throws EncryptionException {
         OsFlavorReference flavor = (OsFlavorReference) vs.getOsFlavorReference().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();

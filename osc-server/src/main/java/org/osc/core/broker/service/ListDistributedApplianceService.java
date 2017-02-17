@@ -12,7 +12,7 @@ import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
-
+import org.osc.core.util.encryption.EncryptionException;
 
 
 public class ListDistributedApplianceService extends
@@ -21,7 +21,7 @@ public class ListDistributedApplianceService extends
     ListResponse<DistributedApplianceDto> response = new ListResponse<DistributedApplianceDto>();
 
     @Override
-    public ListResponse<DistributedApplianceDto> exec(BaseRequest<BaseDto> request, Session session) {
+    public ListResponse<DistributedApplianceDto> exec(BaseRequest<BaseDto> request, Session session) throws EncryptionException {
         // Initializing Entity Manager
         EntityManager<DistributedAppliance> emgr = new EntityManager<DistributedAppliance>(DistributedAppliance.class,
                 session);

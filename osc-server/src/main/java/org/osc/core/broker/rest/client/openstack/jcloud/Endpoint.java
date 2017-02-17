@@ -5,6 +5,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 import javax.net.ssl.SSLContext;
 
@@ -26,24 +27,24 @@ public class Endpoint {
         this.sslContext = sslContext;
     }
 
-    public Endpoint(VirtualizationConnector vc) {
+    public Endpoint(VirtualizationConnector vc) throws EncryptionException {
         this.endPointIP = vc.getProviderIpAddress();
         this.tenant = vc.getProviderAdminTenantName();
         this.user = vc.getProviderUsername();
-        this.password = EncryptionUtil.decrypt(vc.getProviderPassword());
+        this.password = EncryptionUtil.decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
         this.sslContext = vc.getSslContext();
     }
 
-    public Endpoint(DeploymentSpec ds) {
+    public Endpoint(DeploymentSpec ds) throws EncryptionException {
         this(ds.getVirtualSystem().getVirtualizationConnector(), ds.getTenantName());
     }
 
-    public Endpoint(VirtualizationConnector vc, String tenant) {
+    public Endpoint(VirtualizationConnector vc, String tenant) throws EncryptionException {
         this.endPointIP = vc.getProviderIpAddress();
         this.tenant = tenant;
         this.user = vc.getProviderUsername();
-        this.password = EncryptionUtil.decrypt(vc.getProviderPassword());
+        this.password = EncryptionUtil.decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
     }
 
