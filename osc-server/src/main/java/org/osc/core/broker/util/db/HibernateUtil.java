@@ -10,9 +10,9 @@ import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.User;
@@ -56,7 +56,7 @@ public class HibernateUtil {
 
     private static final Logger log = Logger.getLogger(HibernateUtil.class);
 
-    private static ServiceRegistry serviceRegistry;
+    private static StandardServiceRegistry serviceRegistry;
     private static SessionFactory sessionFactory;
     
     public static Connection getSQLConnection(DBConnectionParameters params) throws SQLException, KeyStoreProviderException {
@@ -124,7 +124,6 @@ public class HibernateUtil {
          */
 
         try {
-
         	DBConnectionParameters connectionParams = new DBConnectionParameters();
         	
             Configuration configuration = new Configuration();
@@ -133,8 +132,7 @@ public class HibernateUtil {
 
             addAnnotatedClasses(configuration);
 
-            serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties())
-                    .buildServiceRegistry();
+            serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
             sessionFactory = configuration.buildSessionFactory(serviceRegistry);
             
             return sessionFactory;
@@ -142,6 +140,8 @@ public class HibernateUtil {
         } catch (Throwable ex) {
 
             log.error("Initial SessionFactory creation failed.", ex);
+            StandardServiceRegistryBuilder.destroy(serviceRegistry);
+            serviceRegistry = null;
             throw new ExceptionInInitializerError(ex);
         }
     }
