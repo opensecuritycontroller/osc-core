@@ -256,8 +256,12 @@ public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
         this.mgrId = mgrId;
     }
 
-    public Set<SecurityGroupInterface> getSecurityGroupInterfaces() {
-        return this.securityGroupInterfaces;
+	public Set<SecurityGroupInterface> getSecurityGroupInterfaces() {
+		return this.securityGroupInterfaces;
+	}
+
+    public void setSecurityGroupInterfaces(Set<SecurityGroupInterface> securityGroupInterfaces) {
+        this.securityGroupInterfaces = securityGroupInterfaces;
     }
 
     public String getNsxVsmUuid() {
@@ -274,6 +278,10 @@ public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
             this.name = this.distributedAppliance.getName() + "-" + getId().toString();
         }
         return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Set<DeploymentSpec> getDeploymentSpecs() {
