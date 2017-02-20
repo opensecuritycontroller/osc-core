@@ -31,7 +31,6 @@ import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPartOfAnotherSecurityGroupException;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
-import org.osc.core.broker.service.tasks.agent.AgentsInterfaceEndpointMapRemoveMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecurityGroupTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
 import org.osc.sdk.controller.api.SdnControllerApi;
@@ -139,11 +138,6 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(vs);
                 List<Task> tasksToSucceedToDeleteSGI = new ArrayList<>();
                 if (managerApi.isSecurityGroupSyncSupport()) {
-                    if (managerApi.isAgentManaged()) {
-                        AgentsInterfaceEndpointMapRemoveMetaTask task = new AgentsInterfaceEndpointMapRemoveMetaTask(
-                                sgi);
-                        this.tg.appendTask(task);
-                    }
                     ManagerSecurityGroupApi mgrSgApi = ManagerApiFactory.createManagerSecurityGroupApi(vs);
                     ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(this.sg.getMgrId());
                     if (mepg != null) {
@@ -178,10 +172,10 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             } else if (sgm.getType() == SecurityGroupMemberType.NETWORK) {
                 this.tg.appendTask(new SecurityGroupMemberNetworkCheckTask(sgm, sgm.getNetwork(), vdc),
-                		TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                        TaskGuard.ALL_PREDECESSORS_COMPLETED);
             } else if (sgm.getType() == SecurityGroupMemberType.SUBNET) {
                 this.tg.appendTask(new SecurityGroupMemberSubnetCheckTask(sgm, sgm.getSubnet(), vdc),
-                		TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                        TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
         }
     }

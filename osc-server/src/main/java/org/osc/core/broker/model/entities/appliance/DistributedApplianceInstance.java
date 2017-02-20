@@ -7,8 +7,6 @@ import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -54,20 +52,8 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
     @Column(name = "last_status")
     private Date lastStatus;
 
-    @Column(name = "password")
-    private String password;
-
     @Column(name = "mgr_device_id")
     private String mgrDeviceId;
-
-    @Column(name = "agent_version_str")
-    private String agentVersionStr;
-
-    @Column(name = "agent_version_major")
-    private Long agentVersionMajor;
-
-    @Column(name = "agent_version_minor")
-    private Long agentVersionMinor;
 
     @Column(name = "workload_interfaces")
     private Long workloadInterfaces;
@@ -121,9 +107,6 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
     private String mgmtGateway;
     @Column(name = "mgmt_subnet_prefix_length")
     private String mgmtSubnetPrefixLength;
-    @Column(name = "agent_type", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private AgentType agentType;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "DISTRIBUTED_APPLIANCE_INSTANCE_VM_PORT",
@@ -133,9 +116,6 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
     @JoinColumn(name="vm_port_fk", referencedColumnName="id")
             )
     private Set<VMPort> protectedPorts = new HashSet<>();
-
-    @Column(name = "is_policy_map_out_of_sync", columnDefinition = "bit default 1")
-    private boolean isPolicyMapOutOfSync;
 
     @Column(name = "current_console_password")
     private String currentConsolePassword;
@@ -151,12 +131,11 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         super();
     }
 
-    public DistributedApplianceInstance(VirtualSystem virtualSystem, AgentType agentType) {
+    public DistributedApplianceInstance(VirtualSystem virtualSystem) {
         super();
-
         this.virtualSystem = virtualSystem;
-        this.agentType = agentType;
     }
+
 
     @Override
     public String getName() {
@@ -165,14 +144,6 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public AgentType getAgentType() {
-        return this.agentType;
-    }
-
-    public void setAgentType(AgentType agentType) {
-        this.agentType = agentType;
     }
 
     @Override
@@ -200,44 +171,12 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.lastStatus = lastStatus;
     }
 
-    public String getPassword() {
-        return this.password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getMgrDeviceId() {
         return this.mgrDeviceId;
     }
 
     public void setMgrDeviceId(String mgrDeviceId) {
         this.mgrDeviceId = mgrDeviceId;
-    }
-
-    public String getAgentVersionStr() {
-        return this.agentVersionStr;
-    }
-
-    public void setAgentVersionStr(String agentVersionStr) {
-        this.agentVersionStr = agentVersionStr;
-    }
-
-    public Long getAgentVersionMajor() {
-        return this.agentVersionMajor;
-    }
-
-    public void setAgentVersionMajor(Long agentVersionMajor) {
-        this.agentVersionMajor = agentVersionMajor;
-    }
-
-    public Long getAgentVersionMinor() {
-        return this.agentVersionMinor;
-    }
-
-    public void setAgentVersionMinor(Long agentVersionMinor) {
-        this.agentVersionMinor = agentVersionMinor;
     }
 
     public String getNsxAgentId() {
@@ -278,14 +217,6 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
 
     public void setNsxHostVsmUuid(String nsxHostVsmUuid) {
         this.nsxHostVsmUuid = nsxHostVsmUuid;
-    }
-
-    public void setPolicyMapOutOfSync(boolean flag) {
-        this.isPolicyMapOutOfSync = flag;
-    }
-
-    public boolean isPolicyMapOutOfSync() {
-        return this.isPolicyMapOutOfSync;
     }
 
     public Long getWorkloadInterfaces() {
@@ -494,7 +425,6 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.inspectionOsEgressPortId = null;
         this.discovered = false;
         this.inspectionReady = false;
-        this.agentVersionStr = null;
     }
 
     public void updateDaiOpenstackSvaInfo(CreatedServerDetails createdServer) {
@@ -504,5 +434,4 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.inspectionEgressMacAddress = createdServer.getEgressInspectionMacAddr();
         this.inspectionOsEgressPortId = createdServer.getEgressInspectionPortId();
     }
-
 }

@@ -48,7 +48,6 @@
 		</delete>
 		<mkdir dir="Build${buildNumber}" />
 		<copy file="target/serverUpgradeBundle.zip" tofile="Build${buildNumber}/serverUpgradeBundle-${buildNumber}.zip" />
-		<copy file="osc-agent-bom/vmidc.tar" tofile="Build${buildNumber}/vmidc-${buildNumber}.tar" />
         
 		<copy file="${user.home}/.m2/repository/org/osc/plugin/security-mgr-sample-plugin/1.0/security-mgr-sample-plugin-1.0.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" />
 		<copy file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />

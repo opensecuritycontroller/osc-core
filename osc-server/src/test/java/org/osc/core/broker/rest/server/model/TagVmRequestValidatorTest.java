@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -22,7 +21,7 @@ public class TagVmRequestValidatorTest {
     private static final TagVmRequest VALID_REQUEST = createRequest(VALID_APPLIANCE_NAME);
     private static final TagVmRequest INVALID_REQUEST = createRequest(INVALID_APPLIANCE_NAME);
 
-    private static final DistributedApplianceInstance DISTRIBUTED_APPLIANCE_INSTANCE = new DistributedApplianceInstance( createVirtualSystem(), AgentType.AGENT);
+    private static final DistributedApplianceInstance DISTRIBUTED_APPLIANCE_INSTANCE = new DistributedApplianceInstance(createVirtualSystem());
 
     @Mock
     Session session;
