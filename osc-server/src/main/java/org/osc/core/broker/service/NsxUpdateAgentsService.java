@@ -237,7 +237,7 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         String applianceName = vs.getName() + "-" + dai.getId().toString();
         dai.setName(applianceName);
         dai.setPolicyMapOutOfSync(true);
-        dai.setPassword(EncryptionUtil.encrypt(AgentAuthFilter.VMIDC_AGENT_PASS));
+        dai.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
 
         EntityManager.update(session, dai);
 
