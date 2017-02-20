@@ -10,7 +10,6 @@ import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
@@ -75,11 +74,6 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
                 // Updating Mgr VSS with the updated iSC server IP
                 propagateTaskGraph.addTask(new MgrCheckDevicesMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED,
                         lockTask);
-
-                for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
-                    propagateTaskGraph.addTask(new IpChangePropagateToDaiTask(dai),
-                            TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
-                }
             }
 
             propagateTaskGraph.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);

@@ -2,9 +2,7 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -20,28 +18,22 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsImageRefere
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
-import org.osc.core.broker.model.virtualization.VirtualizationEnvironmentProperties;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova.CreatedServerDetails;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDeploymentSpecNotificationRunner;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.ServerUtil;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.element.NetworkElement;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
 
 import com.google.common.collect.ImmutableMap;
-import com.sun.jersey.core.util.Base64;
 
 /**
  * Creates SVA for given dai
@@ -66,32 +58,6 @@ class OsSvaServerCreateTask extends TransactionalTask {
         @Override
         public Map<String, String> getBootStrapProperties() {
             return this.bootStrapProperties;
-        }
-
-    }
-
-    private static class ApplianceBootstrapInformation implements ApplianceBootstrapInformationElement {
-
-        BootstrapFileElement file;
-
-        public ApplianceBootstrapInformation(final String filename, final byte[] fileContent) {
-            this.file = new BootstrapFileElement() {
-
-                @Override
-                public String getName() {
-                    return filename;
-                }
-
-                @Override
-                public byte[] getContent() {
-                    return fileContent;
-                }
-            };
-        }
-
-        @Override
-        public List<BootstrapFileElement> getBootstrapFiles() {
-            return Arrays.asList(this.file);
         }
 
     }
@@ -207,29 +173,11 @@ class OsSvaServerCreateTask extends TransactionalTask {
     private ApplianceBootstrapInformationElement generateBootstrapInfo(final VirtualSystem vs,
             final String applianceName) throws Exception {
 
-        ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(vs);
         ManagerDeviceApi deviceApi = ManagerApiFactory.createManagerDeviceApi(vs);
         Map<String, String> bootstrapProperties = vs.getApplianceSoftwareVersion().getConfigProperties();
-        if (managerApi.isAgentManaged()) {
-            StringBuilder configString = new StringBuilder();
-            configString.append(VirtualizationEnvironmentProperties.VMIDC_IP + "=" + ServerUtil.getServerIP() + "\n");
-            configString.append(
-                    VirtualizationEnvironmentProperties.VMIDC_USER + "=" + AgentAuthFilter.VMIDC_AGENT_LOGIN + "\n");
-            configString.append(VirtualizationEnvironmentProperties.VMIDC_PASSWORD + "="
-                    + EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS) + "\n");
-            configString.append(VirtualizationEnvironmentProperties.VIRTUAL_SYSTEM_ID + "=" + vs.getId() + "\n");
-            configString.append(VirtualizationEnvironmentProperties.APPLIANCE_NAME + "=" + applianceName + "\n");
 
-            if (bootstrapProperties != null) {
-                for (Entry<String, String> configProperty : bootstrapProperties.entrySet()) {
-                    configString.append(configProperty.getKey() + "=" + configProperty.getValue() + "\n");
-                }
-            }
-            return new ApplianceBootstrapInformation("/tmp/vmidcAgent.conf", Base64.encode(configString.toString()));
-        } else {
-            return deviceApi
-                    .getBootstrapinfo(new ApplianceBootStrap(applianceName, ImmutableMap.copyOf(bootstrapProperties)));
-        }
+        return deviceApi
+                .getBootstrapinfo(new ApplianceBootStrap(applianceName, ImmutableMap.copyOf(bootstrapProperties)));
     }
 
     @Override

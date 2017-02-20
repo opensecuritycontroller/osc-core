@@ -14,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -132,7 +131,7 @@ public class UpdateDistributedApplianceServiceTest {
         this.vs.setVirtualizationConnector(this.vc);
         this.vs.setMarkedForDeletion(false);
 
-        this.daInstance = new DistributedApplianceInstance(new VirtualSystem(), AgentType.AGENT);
+        this.daInstance = new DistributedApplianceInstance(new VirtualSystem());
         this.daInstance.setApplianceConfig(new byte[3]);
         this.vs.addDistributedApplianceInstance(this.daInstance);
 
