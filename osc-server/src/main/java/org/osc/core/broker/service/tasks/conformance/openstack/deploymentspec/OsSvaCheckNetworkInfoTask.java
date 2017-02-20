@@ -1,5 +1,6 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -36,27 +37,23 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
-        if (StringUtils.isBlank(ds.getManagementNetworkId())) {
-            throw new IllegalStateException(String.format(
-                    "The ds %s should not have an empty management network identifier",
-                    ds.getId()));
-        }
-
         Endpoint endPoint = new Endpoint(ds);
         try (JCloudNeutron neutron = new JCloudNeutron(endPoint)){
             Network mgmtNetwork = neutron.getNetworkById(ds.getRegion(), ds.getManagementNetworkId());
-
-            if (mgmtNetwork == null) {
-                throw new IllegalStateException(String.format(
-                        "A network was not found for the id %s",
-                        ds.getManagementNetworkId()));
-            }
 
             if (mgmtNetwork.getSubnets() == null || mgmtNetwork.getSubnets().isEmpty()) {
                 throw new IllegalStateException(String.format(
                         "The network %s does not contain a subnet.",
                         ds.getManagementNetworkId()));
             }
+
+            if (mgmtNetwork.getSubnets().size() > 1) {
+                throw new IllegalStateException(String.format(
+                        "The management network %s should have only one subnet, but it has %s.",
+                        ds.getManagementNetworkId(),
+                        mgmtNetwork.getSubnets().size()));
+            }
+
             // Assumed the network contains only a single subnet.
             String mgmtSubnetId = (String) mgmtNetwork.getSubnets().toArray()[0];
             Subnet mgmtSubnet = neutron.getSubnetById(ds.getRegion(), mgmtSubnetId);
@@ -67,28 +64,14 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
                         mgmtSubnetId));
             }
 
+
             // Use the appliance IP address as management IP,
             // if none is set then use the first IP address assigned to the to the appliance inspection port.
             String mgmtIpAddress = this.dai.getIpAddress();
 
             if (StringUtils.isBlank(mgmtIpAddress)) {
-                if (StringUtils.isBlank(this.dai.getInspectionOsIngressPortId())) {
-                    throw new IllegalStateException(String.format(
-                            "The dai %s does not contain an ingress port id.",
-                            this.dai.getInspectionOsIngressPortId()));
-                }
-
-                Port port = neutron.getPortById(ds.getRegion(), this.dai.getInspectionOsIngressPortId());
-
-                if (port == null || port.getFixedIps() == null || port.getFixedIps().isEmpty()) {
-                    throw new IllegalStateException(String.format(
-                            "The port %s was not found or did not contain any assigned IP.",
-                            this.dai.getInspectionOsIngressPortId()));
-                }
-
-                IP ip = (IP) port.getFixedIps().toArray()[0];
-                mgmtIpAddress = ip.getIpAddress();
-
+                mgmtIpAddress = getMgmtIpAddress(ds, mgmtNetwork, mgmtSubnet, this.dai, neutron);
+                this.dai.setIpAddress(mgmtIpAddress);
                 LOG.info("Retrieved mgmg IP address" + mgmtIpAddress);
             }
 
@@ -96,6 +79,7 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
 
             this.dai.setMgmtGateway(mgmtSubnet.getGatewayIp());
             this.dai.setMgmtSubnetPrefixLength(mgmtSubnetPrefixLength);
+            this.dai.setMgmtIpAddress(mgmtIpAddress);
             this.dai.setMgmtIpAddress(mgmtIpAddress);
 
             LOG.info(String.format(
@@ -108,6 +92,37 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
             EntityManager.update(session, this.dai);
         }
     }
+
+    public String getMgmtIpAddress(DeploymentSpec ds, Network mgmgNetwork, Subnet mgmtSubnet, DistributedApplianceInstance dai, JCloudNeutron neutron) {
+        String mgmtPortId = dai.getMgmtOsPortId();
+        Port mgmtPort = null;
+
+        // In case the DAI does not have a mgmtPortId yet, for instance in database upgrade scenarios.
+        if (mgmtPortId == null) {
+            List<Port> ports = neutron.listPortsBySubnet(ds.getRegion(), ds.getTenantId(), mgmgNetwork.getId(), mgmtSubnet.getId(), false);
+            for (Port port : ports) {
+                if (port.getDeviceId().equals(dai.getOsServerId())) {
+                    mgmtPort = port;
+                    dai.setMgmtOsPortId(port.getId());
+                    dai.setMgmtMacAddress(port.getMacAddress());
+                    break;
+                }
+            }
+        } else {
+            mgmtPort = neutron.getPortById(ds.getRegion(), mgmtPortId);
+        }
+
+        if (mgmtPort == null) {
+            throw new IllegalStateException(String.format(
+                    "No management port found for dai %s.",
+                    dai.getName()));
+        }
+
+        IP ip = (IP) mgmtPort.getFixedIps().toArray()[0];
+
+        return ip.getIpAddress();
+    }
+
 
     @Override
     public String getName() {

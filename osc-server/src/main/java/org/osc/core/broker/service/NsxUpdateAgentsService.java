@@ -62,19 +62,18 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
             DistributedApplianceInstance dai = DistributedApplianceInstanceEntityMgr.findByNsxAgentIdAndNsxIp(session,
                     agent.agentId, request.nsxIpAddress);
 
-            if (dai != null) {
-                updateNsxAgentInfo(session, dai, agent);
-            } else {
+            if (dai == null) {
                 String host = NetworkUtil.resolveIpToName(request.nsxIpAddress);
                 if (host != null) {
                     dai = DistributedApplianceInstanceEntityMgr.findByNsxAgentIdAndNsxIp(session, agent.agentId, host);
                 }
-                if (dai != null) {
-                    updateNsxAgentInfo(session, dai, agent);
-                } else {
-                    LOG.info("Unregistered deployed appliance detected (" + agent + "). Creating a new DAI.");
-                    createNewDAI(session, agent);
-                }
+            }
+
+            if (dai != null) {
+                updateNsxAgentInfo(session, dai, agent);
+            } else {
+                LOG.info("Unregistered deployed appliance detected (" + agent + "). Creating a new DAI.");
+                createNewDAI(session, agent);
             }
         }
 
@@ -167,7 +166,8 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
     private static AgentElement findNsxAgent(DistributedApplianceInstance dai) {
         try {
             AgentApi agentApi = VMwareSdnApiFactory.createAgentApi(dai.getVirtualSystem());
-            for (AgentElement agent : agentApi.getAgents(dai.getVirtualSystem().getNsxServiceId())) {
+            List<AgentElement> agents = agentApi.getAgents(dai.getVirtualSystem().getNsxServiceId());
+            for (AgentElement agent : agents) {
                 if (agent.getIpAddress() == null) {
                     continue;
                 }
@@ -208,9 +208,10 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
     private void createNewDAI(Session session, Agent agent) throws Exception {
         VirtualSystem vs = VirtualSystemEntityMgr.findByNsxServiceId(session,  agent.serviceId);
 
-        // If we cant find the VS, that means this is a zombie VS call.
+        // If we can't find the VS, that means this is a zombie VS call.
         if (vs == null) {
             LOG.warn(String.format("No virtual system found for the service id %s. A DAI will not be created.", agent.serviceId));
+            return;
         }
 
         // TODO emanoel: remove agent type.

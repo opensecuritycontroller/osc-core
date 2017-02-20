@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 
 public class JCloudNeutron extends BaseJCloudApi {
 
-    private static final Logger log = Logger.getLogger(JCloudNeutron.class);
+	private static final Logger log = Logger.getLogger(JCloudNeutron.class);
 
     private static final String QUERY_PARAM_SHARED = "shared";
     private static final String QUERY_PARAM_COMPUTE_DEVICE_OWNER = "compute:";

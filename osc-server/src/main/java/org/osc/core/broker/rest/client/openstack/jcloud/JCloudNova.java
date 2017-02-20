@@ -145,7 +145,7 @@ public class JCloudNova extends BaseJCloudApi {
 
             if (sgName!=null) {
                 options.securityGroupNames(sgName);
-	        }
+            }
 
             if (availabilityZone != null) {
                 options.availabilityZone(availabilityZone);

@@ -107,6 +107,11 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
     @Column(name = "inspection_egress_mac_address")
     private String inspectionEgressMacAddress;
 
+    @Column(name = "mgmt_os_port_id")
+    private String mgmtOsPortId;
+    @Column(name = "mgmt_mac_address")
+    private String mgmtMacAddress;
+
     @Column(name = "floating_ip_id")
     private String floatingIpId;
 
@@ -389,6 +394,22 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.inspectionOsIngressPortId = inspectionOsPortId;
     }
 
+    public String getMgmtOsPortId() {
+        return this.mgmtOsPortId;
+    }
+
+    public void setMgmtOsPortId(String mgmtOsPortId) {
+        this.mgmtOsPortId = mgmtOsPortId;
+    }
+
+    public String getMgmtMacAddress() {
+        return this.mgmtMacAddress;
+    }
+
+    public void setMgmtMacAddress(String mgmtMacAddress) {
+        this.mgmtMacAddress = mgmtMacAddress;
+    }
+
     public String getInspectionIngressMacAddress() {
         return this.inspectionIngressMacAddress;
     }
@@ -483,4 +504,5 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.inspectionEgressMacAddress = createdServer.getEgressInspectionMacAddr();
         this.inspectionOsEgressPortId = createdServer.getEgressInspectionPortId();
     }
+
 }
