@@ -4,6 +4,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.hibernate.Session;
 import org.junit.Before;
@@ -20,9 +21,14 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
+@PrepareForTest({ EncryptionUtil.class})
 public class AddVirtualizationConnectorServiceRequestValidatorTest {
 
     @Mock
@@ -41,9 +47,11 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     private AddVirtualizationConnectorServiceRequestValidator validator;
 
     @Before
-    public void testInitialize() {
+    public void testInitialize() throws EncryptionException {
         MockitoAnnotations.initMocks(this);
 
+        PowerMockito.mockStatic(EncryptionUtil.class);
+	    when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
     }
 
     @Test

@@ -31,12 +31,13 @@ import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.util.SessionStub;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osc.core.util.EncryptionUtil;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({X509TrustManagerFactory.class })
+@PrepareForTest({X509TrustManagerFactory.class, EncryptionUtil.class })
 public class AddVirtualizationConnectorServiceTest {
 
     @Rule
@@ -64,6 +65,9 @@ public class AddVirtualizationConnectorServiceTest {
         this.sessionStub = new SessionStub(this.sessionMock);
         PowerMockito.mockStatic(X509TrustManagerFactory.class);
         when(X509TrustManagerFactory.getInstance()).thenReturn(mock(X509TrustManagerFactory.class));
+        
+        PowerMockito.mockStatic(EncryptionUtil.class);
+        when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
     }
 
     @Test

@@ -30,6 +30,8 @@ import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.rest.client.crypto.SslCertificateResolver;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
@@ -40,7 +42,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.rabbitmq.client.ShutdownSignalException;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SdnControllerApiFactory.class, RabbitMQRunner.class })
+@PrepareForTest({ SdnControllerApiFactory.class, RabbitMQRunner.class, EncryptionUtil.class })
 public class VirtualizationConnectorUtilTest {
 
 	@Rule
@@ -52,16 +54,16 @@ public class VirtualizationConnectorUtilTest {
 	@Mock
 	OsRabbitMQClient rabbitClient;
 
-//	@Mock
-//	VimUtils vimUtils;
-	
 	@InjectMocks
 	VirtualizationConnectorUtil util;
 
 	@Before
-	public void testInitialize() {
+	public void testInitialize() throws Exception {
 		MockitoAnnotations.initMocks(this);
 
+		  PowerMockito.mockStatic(EncryptionUtil.class);
+	      when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted Passowrd");
+	      when(EncryptionUtil.decryptAESCTR(any(String.class))).thenReturn("Decrypted Passowrd");
 	}
 	
 	@Test
@@ -77,7 +79,7 @@ public class VirtualizationConnectorUtilTest {
 		PowerMockito.mockStatic(SdnControllerApiFactory.class);
 		VMwareSdnApi vmwareSdnApi = mock(VMwareSdnApi.class);
 		when(SdnControllerApiFactory.createVMwareSdnApi(vc)).thenReturn(vmwareSdnApi);
-		doNothing().when(vmwareSdnApi).checkStatus(new VMwareSdnConnector(vc));
+		doNothing().when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
 		doNothing().when(sslCertificateResolver).fetchCertificatesFromURL(any(URL.class), any(String.class));
 		doReturn(new ArrayList()).when(sslCertificateResolver).getCertificateResolverModels();
 		
@@ -123,15 +125,17 @@ public class VirtualizationConnectorUtilTest {
 		request.addErrorsToIgnore(errorList);
 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
+		VirtualizationConnector spyVc = spy(vc);
+		doReturn(null).when(spyVc).getSslContext();
 		PowerMockito.mockStatic(SdnControllerApiFactory.class);
 		VMwareSdnApi vmwareSdnApi = mock(VMwareSdnApi.class);
-		when(SdnControllerApiFactory.createVMwareSdnApi(vc)).thenReturn(vmwareSdnApi);
-		doNothing().when(vmwareSdnApi).checkStatus(new VMwareSdnConnector(vc));
+		when(SdnControllerApiFactory.createVMwareSdnApi(spyVc)).thenReturn(vmwareSdnApi);
+		doNothing().when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
 
 		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
 		
 		// Act.
-		util.checkVmwareConnection(spyRequest, vc);
+		util.checkVmwareConnection(spyRequest, spyVc);
 
 		// Assert
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
@@ -152,14 +156,16 @@ public class VirtualizationConnectorUtilTest {
 
 		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
+		VirtualizationConnector spyVc = spy(vc);
+		doReturn(null).when(spyVc).getSslContext();
 		PowerMockito.mockStatic(SdnControllerApiFactory.class);
 		VMwareSdnApi vmwareSdnApi = spy(VMwareSdnApi.class);
-		when(SdnControllerApiFactory.createVMwareSdnApi(vc)).thenReturn(vmwareSdnApi);
+		when(SdnControllerApiFactory.createVMwareSdnApi(spyVc)).thenReturn(vmwareSdnApi);
 		HttpException httpException = new HttpException(10, null, null, null, null);
 		doThrow(httpException).when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
 
 		// Act.
-		util.checkVmwareConnection(spyRequest, vc);
+		util.checkVmwareConnection(spyRequest, spyVc);
 		
 		//Assert
 		verify(vmwareSdnApi, times(1)).checkStatus( any(VMwareSdnConnector.class));
@@ -180,15 +186,17 @@ public class VirtualizationConnectorUtilTest {
 
 		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
+		VirtualizationConnector spyVc = spy(vc);
+		doReturn(null).when(spyVc).getSslContext();
 		PowerMockito.mockStatic(SdnControllerApiFactory.class);
 		VMwareSdnApi vmwareSdnApi = spy(VMwareSdnApi.class);
-		when(SdnControllerApiFactory.createVMwareSdnApi(vc)).thenReturn(vmwareSdnApi);
+		when(SdnControllerApiFactory.createVMwareSdnApi(spyVc)).thenReturn(vmwareSdnApi);
 		HttpException httpException = new HttpException(null, null, "http://www.osctest.com", null, null);
 		doThrow(httpException).when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
 		doNothing().when(sslCertificateResolver).fetchCertificatesFromURL(any(URL.class), any(String.class));
 
 		// Act.
-		util.checkVmwareConnection(spyRequest, vc);
+		util.checkVmwareConnection(spyRequest, spyVc);
 		
 		//Assert
 		verify(vmwareSdnApi, times(1)).checkStatus( any(VMwareSdnConnector.class));
@@ -210,13 +218,15 @@ public class VirtualizationConnectorUtilTest {
 
 		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
+		VirtualizationConnector spyVc = spy(vc);
+		doReturn(null).when(spyVc).getSslContext();
 		PowerMockito.whenNew(VimUtils.class).withAnyArguments().thenThrow(new RemoteException());
 		doNothing().when(sslCertificateResolver).fetchCertificatesFromURL(any(URL.class), any(String.class));
 		doReturn(new ArrayList()).when(sslCertificateResolver).getCertificateResolverModels();
 		
 
 		// Act.
-		util.checkVmwareConnection(spyRequest, vc);
+		util.checkVmwareConnection(spyRequest, spyVc);
 		
 		//Assert
 		verify(sslCertificateResolver, times(1)).getCertificateResolverModels();
@@ -235,6 +245,8 @@ public class VirtualizationConnectorUtilTest {
 
 		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
+		VirtualizationConnector spyVc = spy(vc);
+		doReturn(null).when(spyVc).getSslContext();
 		VimUtils utils = mock(VimUtils.class);
 		util.setVimUtils(utils);
 		doNothing().when(sslCertificateResolver).fetchCertificatesFromURL(any(URL.class), any(String.class));
@@ -242,7 +254,7 @@ public class VirtualizationConnectorUtilTest {
 		
 
 		// Act.
-		util.checkVmwareConnection(spyRequest, vc);
+		util.checkVmwareConnection(spyRequest, spyVc);
 		
 		//Assert
 		verify(sslCertificateResolver, times(1)).getCertificateResolverModels();
