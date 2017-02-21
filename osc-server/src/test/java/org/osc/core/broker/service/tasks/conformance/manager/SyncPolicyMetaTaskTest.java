@@ -50,12 +50,13 @@ public class SyncPolicyMetaTaskTest {
         MockitoAnnotations.initMocks(this);
 
         for (ApplianceManagerConnector mc : TEST_MCS) {
-        	Mockito.doReturn(this.mc).when(this.sessionMock).get(ApplianceManagerConnector.class, mc.getId());
+            Mockito.doReturn(this.mc).when(this.sessionMock).get(ApplianceManagerConnector.class, mc.getId());
         }
 
         this.sessionStub = new SessionStub(this.sessionMock);
         this.sessionStub.stubListVSPolicyByPolicyID(POLICY_WITHOUT_MGR_POLICY.getId(), null);
         this.sessionStub.stubListVSPolicyByPolicyID(POLICY_WITH_VS_POLICY.getId(), Arrays.asList(VS_POLICY));
+        this.sessionStub.stubListVSPolicyByPolicyID(POLICY_WITH_VS_POLICY_1.getId(), Arrays.asList(VS_POLICY_1));
 
         PowerMockito.mockStatic(ManagerApiFactory.class);
         registerMgrPolicies(NO_MGR_POLICY_MC, DOMAIN_WITHOUT_POLICY.getMgrId(), null);
@@ -63,18 +64,21 @@ public class SyncPolicyMetaTaskTest {
         registerMgrPolicies(MGR_POLICY_WITH_POLICY_MC, DOMAIN_WITH_POLICY.getMgrId(), Arrays.asList(MGR_POLICY));
         registerMgrPolicies(POLICY_WITHOUT_MGR_POLICY_MC, DOMAIN_WITH_POLICY.getMgrId(), Arrays.asList(MGR_POLICY));
         registerMgrPolicies(POLICY_WITH_VS_POLICY_MC, DOMAIN_WITH_POLICY.getMgrId(), Arrays.asList(MGR_POLICY));
+        registerMgrPolicies(DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC, DOMAIN_WITH_POLICY.getMgrId(), Arrays.asList(MGR_POLICY));
+        registerMgrPolicies(DOMAINS_WITHOUT_POLICIES_AND_WITH_ORPHAN_POLICIES_MC, DOMAIN_WITHOUT_POLICY.getMgrId(), null);
+        registerMgrPolicies(DOMAIN_WITH_MULTIPLE_POLICIES_MC, DOMAIN_WITH_POLICY.getMgrId(), Arrays.asList(MGR_POLICY));
     }
 
     @Test
     public void testExecuteTransasction_WithVariousManagerConnectors_ExpectsCorrectTaskGraph() throws Exception {
-    	//Arrange.
-    	SyncPolicyMetaTask task = new SyncPolicyMetaTask(this.mc);
+        //Arrange.
+        SyncPolicyMetaTask task = new SyncPolicyMetaTask(this.mc);
 
-    	//Act.
-    	task.executeTransaction(this.sessionMock);
+        //Act.
+        task.executeTransaction(this.sessionMock);
 
-    	//Assert.
-    	TaskGraphHelper.validateTaskGraph(task, this.expectedGraph);
+        //Assert.
+        TaskGraphHelper.validateTaskGraph(task, this.expectedGraph);
     }
 
     @Parameters()
@@ -85,7 +89,12 @@ public class SyncPolicyMetaTaskTest {
             {MGR_POLICY_WITHOUT_POLICY_MC, createPolicyGraph(MGR_POLICY_WITHOUT_POLICY_MC)},
             {MGR_POLICY_WITH_POLICY_MC, updatePolicyGraph(MGR_POLICY_WITH_POLICY_MC)},
             {POLICY_WITHOUT_MGR_POLICY_MC, deletePolicyGraph(POLICY_WITHOUT_MGR_POLICY_MC)},
-            {POLICY_WITH_VS_POLICY_MC, removeVendorTemplateAndDeletePolicyGraph(POLICY_WITH_VS_POLICY_MC)}
+            {POLICY_WITH_VS_POLICY_MC, removeVendorTemplateAndDeletePolicyGraph(POLICY_WITH_VS_POLICY_MC)},
+            {DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC,
+                deleteOrphanAndVSPoliciesGraph(DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC)},
+            {DOMAINS_WITHOUT_POLICIES_AND_WITH_ORPHAN_POLICIES_MC,
+                deletePoliciesWithoutMgrPoliciesGraph(DOMAINS_WITHOUT_POLICIES_AND_WITH_ORPHAN_POLICIES_MC)},
+            {DOMAIN_WITH_MULTIPLE_POLICIES_MC, deletePoliciesFromDomainGraph(DOMAIN_WITH_MULTIPLE_POLICIES_MC)}
         });
     }
 
