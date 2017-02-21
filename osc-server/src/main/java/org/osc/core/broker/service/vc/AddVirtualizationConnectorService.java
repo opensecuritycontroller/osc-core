@@ -209,6 +209,7 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
         if (!request.isSkipAllDryRun()) {
             SslCertificateResolver sslCertificateResolver = new SslCertificateResolver();
             ErrorTypeException errorTypeException = null;
+
             if (request.getDto().isControllerDefined() && !request.isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION)) {
                 try {
                     // Check NSC Connectivity and Credentials
@@ -216,10 +217,7 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                         controller.getStatus();
                     }
                 } catch (Exception e) {
-                    VirtualizationConnectorDto vcDto = request.getDto();
-                    boolean isHttps = VirtualizationConnector.isHttps(vcDto.getProviderAttributes());
-                    if (isHttps && StringUtils.isNotEmpty(request.getDto().getControllerIP()) &&
-                            sslCertificateResolver.checkExceptionTypeForSSL(e)) {
+                    if (StringUtils.isNotEmpty(request.getDto().getControllerIP()) && sslCertificateResolver.checkExceptionTypeForSSL(e)) {
                         URI uri = new URI("https", request.getDto().getControllerIP(), null, null);
                         sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstack");
                     }
@@ -230,6 +228,7 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
             // Check Connectivity with Key stone if https response exception is not to be ignored
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
                 JCloudKeyStone keystoneAPi = null;
+                String keystoneEndpointUrl = null;
                 try {
                     VirtualizationConnectorDto vcDto = request.getDto();
                     boolean isHttps = VirtualizationConnector.isHttps(vcDto.getProviderAttributes());
@@ -237,14 +236,12 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                             vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, new SslContextProvider().getSSLContext());
 
                     keystoneAPi = new JCloudKeyStone(endPoint);
+                    keystoneEndpointUrl = keystoneAPi.getEndpointUrl();
                     keystoneAPi.listTenants();
 
                 } catch (Exception exception) {
-                    VirtualizationConnectorDto vcDto = request.getDto();
-                    boolean isHttps = VirtualizationConnector.isHttps(vcDto.getProviderAttributes());
-                    if (isHttps && sslCertificateResolver.checkExceptionTypeForSSL(exception)) {
-                        URI uri = new URI("https", vcDto.getProviderIP(), null, null);
-                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstackkeystone");
+                    if (keystoneEndpointUrl != null && sslCertificateResolver.checkExceptionTypeForSSL(exception)) {
+                        sslCertificateResolver.fetchCertificatesFromURL(new URL(keystoneEndpointUrl), "openstackkeystone");
                     }
                     log.warn("Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
                     errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);

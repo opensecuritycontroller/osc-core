@@ -142,9 +142,8 @@ public class AddApplianceManagerConnectorService extends
                 log.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
                 if (sslCertificateResolver.checkExceptionTypeForSSL(e)) {
                     try {
-                        URI uri = new URI("https", request.getDto().getIpAddress(), null, null);
-                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "manager");
-                    } catch (IOException | URISyntaxException e1) {
+                        sslCertificateResolver.fetchCertificatesFromURL(ManagerApiFactory.getConnectionUrl(mc), "manager");
+                    } catch (Exception e1) {
                         log.warn("Failed to fetch SSL certificates from requested resource", e1);
                     }
                 }
