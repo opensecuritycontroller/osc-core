@@ -80,7 +80,6 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
             this.dai.setMgmtGateway(mgmtSubnet.getGatewayIp());
             this.dai.setMgmtSubnetPrefixLength(mgmtSubnetPrefixLength);
             this.dai.setMgmtIpAddress(mgmtIpAddress);
-            this.dai.setMgmtIpAddress(mgmtIpAddress);
 
             LOG.info(String.format(
                     "Updating the DAI %s, with mgmtIpAddress %s, mgmtSubnetPrefixLength %s, mgmtGateway %s.",
