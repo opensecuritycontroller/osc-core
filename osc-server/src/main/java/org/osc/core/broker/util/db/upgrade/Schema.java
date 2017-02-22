@@ -156,6 +156,8 @@ public class Schema {
                 "inspection_ingress_mac_address varchar(255)," +
                 "inspection_os_egress_port_id varchar(255)," +
                 "inspection_egress_mac_address varchar(255)," +
+                "mgmt_os_port_id varchar(255)," +
+                "mgmt_mac_address varchar(255)," +
                 "floating_ip_id varchar(255)," +
                 "mgmt_ip_address varchar(255)," +
                 "mgmt_gateway_address varchar(255)," +

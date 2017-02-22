@@ -10,7 +10,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
-import org.osc.core.broker.service.AgentRegisterService;
+import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -48,7 +48,7 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
                     .startNow()
                     .withSchedule(
                             SimpleScheduleBuilder.simpleSchedule()
-                                    .withIntervalInMinutes(SCHEDULED_MONITOR_DAI_INTERVAL).repeatForever()).build();
+                            .withIntervalInMinutes(SCHEDULED_MONITOR_DAI_INTERVAL).repeatForever()).build();
 
             scheduler.scheduleJob(monitorDaiJob, monitorDaiJobTrigger);
 
@@ -78,16 +78,16 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
                 // Generate an alert if it has been more than 4 minutes since we last heard from the DAI
                 if (date == null || new Date().compareTo(date) > 0) {
                     log.warn("Generate an alert for DAI '" + dai.getName()
-                            + "' since we have not receive expected registration request (every 3 minutes)");
+                    + "' since we have not receive expected registration request (every 3 minutes)");
                     AlertGenerator.processDaiFailureEvent(DaiFailureType.DAI_TIMEOUT,
                             new LockObjectReference(dai.getId(), dai.getName(),
                                     ObjectType.DISTRIBUTED_APPLIANCE_INSTANCE),
                             "Health status information for Appliance Instance '" + dai.getName()
-                                    + "' not timely reported and is out of date");
+                            + "' not timely reported and is out of date");
 
                     // In case of NSX, update
                     if (dai.getVirtualSystem().getVirtualizationConnector().isVmware()) {
-                        AgentRegisterService.updateNsxAgentInfo(session, dai, "UNKNOWN");
+                        NsxUpdateAgentsService.updateNsxAgentInfo(session, dai, "UNKNOWN");
                     }
                     dai.setDiscovered(null);
                     dai.setInspectionReady(null);
