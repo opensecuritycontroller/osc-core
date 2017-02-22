@@ -6,19 +6,16 @@ import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
+import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
-import org.osc.core.util.EncryptionUtil;
 
 
 public class PasswordChangePropagateDaiMetaTask extends TransactionalMetaTask {
@@ -56,13 +53,6 @@ public class PasswordChangePropagateDaiMetaTask extends TransactionalMetaTask {
                     // Updating NSX service instance attribute "vmidcPassword'
                     propagateTaskGraph.addTask(new UpdateNsxServiceInstanceAttributesTask(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
-
-                    for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
-                        if (!dai.getPassword().equals(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS))) {
-                            propagateTaskGraph.addTask(new PasswordChangePropagateToDaiTask(dai),
-                                    TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
-                        }
-                    }
                 }
             }
             propagateTaskGraph.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);

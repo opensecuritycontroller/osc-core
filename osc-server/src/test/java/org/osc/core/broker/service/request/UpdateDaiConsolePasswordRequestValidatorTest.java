@@ -13,7 +13,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -51,8 +50,8 @@ public class UpdateDaiConsolePasswordRequestValidatorTest {
     private static final VirtualSystem VIRTUAL_SYSTEM = createVirtualSystem();
 
     private static final DistributedApplianceInstance DISTRIBUTED_APPLIANCE_INSTANCE_NULL = null;
-    private static final DistributedApplianceInstance DISTRIBUTED_APPLIANCE_INSTANCE_WITH_OTHER_VS = new DistributedApplianceInstance(new VirtualSystem(), AgentType.AGENT);
-    private static final DistributedApplianceInstance DISTRIBUTED_APPLIANCE_INSTANCE_WITH_VS = new DistributedApplianceInstance(VIRTUAL_SYSTEM, AgentType.AGENT);
+    private static final DistributedApplianceInstance DISTRIBUTED_APPLIANCE_INSTANCE_WITH_OTHER_VS = new DistributedApplianceInstance(new VirtualSystem());
+    private static final DistributedApplianceInstance DISTRIBUTED_APPLIANCE_INSTANCE_WITH_VS = new DistributedApplianceInstance(VIRTUAL_SYSTEM);
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -181,7 +180,7 @@ public class UpdateDaiConsolePasswordRequestValidatorTest {
     @Test
     public void testValidateAndLoad_WithValidRequestWithoutDaiAndDaiListedByVs_ExpectsCorrectDais() throws Exception {
         // Arrange
-        DistributedApplianceInstance distributedApplianceInstance = new DistributedApplianceInstance(new VirtualSystem(), AgentType.AGENT);
+        DistributedApplianceInstance distributedApplianceInstance = new DistributedApplianceInstance(new VirtualSystem());
         this.daiList.add(distributedApplianceInstance);
 
         // Act

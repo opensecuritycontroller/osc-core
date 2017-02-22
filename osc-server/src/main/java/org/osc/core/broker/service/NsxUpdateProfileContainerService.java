@@ -13,14 +13,13 @@ import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.NsxUpdateProfileContainerRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.tasks.agent.AgentsInterfaceEndpointMapUpdateMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxServiceProfileContainerCheckMetaTask;
 import org.osc.core.util.NetworkUtil;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 
 public class NsxUpdateProfileContainerService extends
-        ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse> {
+ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse> {
 
     //private static final Logger log = Logger.getLogger(NsxUpdateProfileContainerService.class);
 
@@ -53,11 +52,6 @@ public class NsxUpdateProfileContainerService extends
 
         ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(vs);
         if (vs.getMgrId() != null && managerApi.isSecurityGroupSyncSupport()) {
-            if (managerApi.isAgentManaged()) {
-                // Sync Service profile Containers (SG members) mapping to all DAIs
-                tg.addTask(new AgentsInterfaceEndpointMapUpdateMetaTask(vs, request.serviceProfileId,
-                        request.containerSet.toIscEndpointGroupSet()), syncTask);
-            }
             tg.addTask(new MgrSecurityGroupCheckMetaTask(vs), syncTask);
         }
 

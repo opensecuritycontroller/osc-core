@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.AgentStatus;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
@@ -17,7 +16,6 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.Agent;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.api.proprietary.NsxApis.UpdatedAgent;
 import org.osc.core.broker.rest.server.api.proprietary.NsxApis.UpdatedAgents;
 import org.osc.core.broker.service.alert.AlertGenerator;
@@ -28,7 +26,6 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.NsxUpdateAgentsRequest;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
-import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.NetworkUtil;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
@@ -214,8 +211,7 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
             return;
         }
 
-        // TODO emanoel: remove agent type.
-        DistributedApplianceInstance dai = new DistributedApplianceInstance(vs, AgentType.AGENT);
+        DistributedApplianceInstance dai = new DistributedApplianceInstance(vs);
         dai.setIpAddress(agent.getIpAddress());
         // Setting a temporary name since it is mandatory field.
         dai.setMgmtIpAddress(agent.getIpAddress());
@@ -237,8 +233,6 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         // Generate a unique, intuitive and immutable name
         String applianceName = vs.getName() + "-" + dai.getId().toString();
         dai.setName(applianceName);
-        dai.setPolicyMapOutOfSync(true);
-        dai.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
 
         EntityManager.update(session, dai);
 

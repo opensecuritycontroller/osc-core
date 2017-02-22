@@ -7,16 +7,12 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 
 /**
@@ -113,9 +109,7 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
             dai = (DistributedApplianceInstance) session.load(DistributedApplianceInstance.class, daiToLoad.getId());
         } else {
             String daiName;
-            ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(ds.getVirtualSystem());
-            AgentType agentType = managerApi.isAgentManaged() ? AgentType.AGENT : AgentType.AGENTLESS;
-            dai = new DistributedApplianceInstance(ds.getVirtualSystem(), agentType);
+            dai = new DistributedApplianceInstance(ds.getVirtualSystem());
             dai.setOsHostName(this.hypervisorHostName);
             dai.setOsAvailabilityZone(this.availabilityZone);
             dai.setDeploymentSpec(ds);
@@ -129,8 +123,6 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
             this.log.info("Creating DAI using name '" + daiName + "'");
 
             dai.setName(daiName);
-            dai.setPolicyMapOutOfSync(true);
-            dai.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
 
             EntityManager.update(session, dai);
             this.log.info("Creating new DAI " + dai);

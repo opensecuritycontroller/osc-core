@@ -3,21 +3,14 @@ package org.osc.core.broker.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.IscEntity;
-import org.osc.core.broker.model.entities.appliance.AgentType;
-import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
-import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.google.common.net.InetAddresses;
 
 public class ValidateUtil {
@@ -169,45 +162,5 @@ public class ValidateUtil {
 
     public static boolean isEmpty(Collection<?> collection) {
         return collection == null || collection.isEmpty();
-    }
-
-    // This behaviour validates if the input list of DistributedApplianceInstance's has an Agentless Entity or not. If an agentLess DAI exists, it throws
-    //  VmidcBrokerValidationException Exception.
-    public static void handleActionNotSupported(List<DistributedApplianceInstance> daiList) throws VmidcBrokerValidationException {
-        if (CollectionUtils.isNotEmpty(daiList)){
-            if (daiList.size() == 1){
-                if (daiList.get(0).getAgentType().equals(AgentType.AGENTLESS)){
-                    throw new VmidcBrokerValidationException(
-                            "This action is not applicable for the selection since it contains Agentless Instance(s)");
-                }
-
-            } else if (daiList.size() > 1){
-                // Filters the  Agentless DAI's from the input daiList and returns the Agent DAI's
-                Collection<DistributedApplianceInstance> agentDaiList = filterDistributedApplInstances(daiList,
-                        AgentType.AGENTLESS);
-                // Verifies whether the input DaiList contains Agentless DAI's or not.
-                if (daiList.size() != agentDaiList.size()){
-                    throw new VmidcBrokerValidationException(
-                            "This action is not applicable for the selection since it contains Agentless Instance(s)");
-                }
-
-            }
-        }
-    }
-
-    public static Collection<DistributedApplianceInstance> filterDistributedApplInstances(
-            List<DistributedApplianceInstance> daiList, final AgentType agentType) {
-        Collection<DistributedApplianceInstance> agentLessDai =
-                Collections2.filter(daiList,
-                        new Predicate<DistributedApplianceInstance>(){
-                            @Override
-                            public boolean apply(DistributedApplianceInstance dai) {
-                                if (dai.getAgentType().equals(agentType)){
-                                    return false;
-                                }
-                                return true;
-                            }
-                });
-        return agentLessDai;
     }
 }

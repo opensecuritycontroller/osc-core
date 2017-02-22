@@ -3,17 +3,14 @@ package org.osc.core.broker.window.status;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
-import org.osc.core.broker.service.response.AgentStatusResponseDto;
 import org.osc.core.broker.service.response.GetAgentStatusResponseDto;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
 import org.osc.core.util.ServerUtil;
 
-import com.mcafee.vmidc.server.Server;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -32,8 +29,8 @@ public class AgentStatusWindow extends Window {
     private List<DistributedApplianceInstanceDto> daiList = null;
 
     /**
-	 *
-	 */
+     *
+     */
     private static final long serialVersionUID = 1L;
     protected FormLayout form;
     private VerticalLayout statusPane;
@@ -47,7 +44,7 @@ public class AgentStatusWindow extends Window {
         setResizable(true);
         setHeight("500px");
         setWidth("475px");
-        setCaption(Server.PRODUCT_NAME + " Agent(s) Status Window");
+        setCaption("Appliance Instance Status");
 
         // creating top level layout for every window
         VerticalLayout content = new VerticalLayout();
@@ -98,13 +95,14 @@ public class AgentStatusWindow extends Window {
 
         try {
             GetAgentStatusResponseDto response = statusService.dispatch(req);
-            for (AgentStatusResponseDto status : response.getAgentStatusDtoList()) {
-                if (AgentType.AGENT.toString().equals(status.getAgentType())){
-                    this.statusPane.addComponent(createTableManaged(status.getResponse()));
+            for (AgentStatusResponse status : response.getAgentStatusList()) {
+                // TODO emanoel: For now assuming that if the dpa info is null the status is not supported by the manager.
+                // may change the status response for an enum: DISCOVERED, INSPECTION_READY, NOT_PROVIDED, etc.
+                if (status.getAgentDpaInfo() != null){
+                    this.statusPane.addComponent(createTableStatusProvided(status));
                 } else {
-                    this.statusPane.addComponent(createTableUnmanaged(status.getResponse()));
+                    this.statusPane.addComponent(createTableStatusNotProvided(status));
                 }
-
             }
         } catch (Exception e) {
             log.error("Fail to get DAI status", e);
@@ -114,42 +112,14 @@ public class AgentStatusWindow extends Window {
     }
 
     @SuppressWarnings("unchecked")
-    private Table createTableUnmanaged(AgentStatusResponse res) {
-
+    private Table createTableStatusNotProvided(AgentStatusResponse res) {
         Table statusTable = new Table();
-
         // initializing network table with empty values
         addCommonTableItems(statusTable);
-        statusTable.addItem(new Object[] { "DPA Stats: ", "" }, new Integer(9));
-        statusTable.addItem(new Object[] { "Discovered: ", "" }, new Integer(10));
-        statusTable.addItem(new Object[] { "Inspection Ready: ", "" }, new Integer(11));
-
-        try {
-            addCommonTableItemValues(res, statusTable);
-            if (null != res.getVersion() && null != res.getVersion().getVersionStr()) {
-                Long dropped = 0L;
-                if (res.getAgentDpaInfo().netXDpaRuntimeInfo.dropSva != null) {
-                    dropped += res.getAgentDpaInfo().netXDpaRuntimeInfo.dropSva;
-                }
-                statusTable
-                        .getItem(9)
-                        .getItemProperty("Value")
-                        .setValue(
-                                "Rx:" + res.getAgentDpaInfo().netXDpaRuntimeInfo.rx + ", Tx:"
-                                        + res.getAgentDpaInfo().netXDpaRuntimeInfo.txSva + ", Dropped:" + dropped);
-                statusTable.getItem(10).getItemProperty("Value")
-                        .setValue(Boolean.valueOf(res.isDiscovered()).toString());
-                statusTable.getItem(11).getItemProperty("Value")
-                        .setValue(Boolean.valueOf(res.isInspectionReady()).toString());
-            }
-        } catch (Exception e) {
-            log.error("Fail to retrieve agent info", e);
-
-            statusTable.getItem(5).getItemProperty("Value").setValue("Not Available due to communication error.");
-        }
-
+        addCommonTableItemValues(res, statusTable);
+        statusTable.addItem(new Object[] { "Status Not Available: ", "" }, new Integer(6));
+        statusTable.getItem(6).getItemProperty("Value").setValue(res.getStatusLines().get(0));
         return statusTable;
-
     }
 
     private void addCommonTableItems(Table statusTable) {
@@ -166,43 +136,33 @@ public class AgentStatusWindow extends Window {
         statusTable.addItem(new Object[] { "Local IP: ", "" }, new Integer(2));
         statusTable.addItem(new Object[] { "Public IP: ", "" }, new Integer(3));
         statusTable.addItem(new Object[] { "V.Server: ", "" }, new Integer(4));
-        statusTable.addItem(new Object[] { Server.SHORT_PRODUCT_NAME + " IP: ", "" }, new Integer(5));
-        statusTable.addItem(new Object[] { "Manager IP: ", "" }, new Integer(6));
-        statusTable.addItem(new Object[] { "Version: ", "" }, new Integer(7));
-
-        statusTable.addItem(new Object[] { "Agent time: ", "" }, new Integer(8));
+        statusTable.addItem(new Object[] { "Manager IP: ", "" }, new Integer(5));
     }
 
     @SuppressWarnings("unchecked")
-    private Table createTableManaged(AgentStatusResponse res) {
+    private Table createTableStatusProvided(AgentStatusResponse res) {
 
         Table statusTable = new Table();
 
         // initializing network table with empty values
         addCommonTableItems(statusTable);
-        statusTable.addItem(new Object[] { "Uptime: ", "" }, new Integer(9));
-        statusTable.addItem(new Object[] { "CPA PID: ", "" }, new Integer(10));
-        statusTable.addItem(new Object[] { "DPA PID: ", "" }, new Integer(11));
-        statusTable.addItem(new Object[] { "DPA Info: ", "" }, new Integer(12));
-        statusTable.addItem(new Object[] { "DPA Stats: ", "" }, new Integer(13));
-        statusTable.addItem(new Object[] { "Discovered: ", "" }, new Integer(14));
-        statusTable.addItem(new Object[] { "Inspection Ready: ", "" }, new Integer(15));
+        statusTable.addItem(new Object[] { "DPA PID: ", "" }, new Integer(6));
+        statusTable.addItem(new Object[] { "DPA Info: ", "" }, new Integer(7));
+        statusTable.addItem(new Object[] { "DPA Stats: ", "" }, new Integer(8));
+        statusTable.addItem(new Object[] { "Discovered: ", "" }, new Integer(9));
+        statusTable.addItem(new Object[] { "Inspection Ready: ", "" }, new Integer(10));
 
         try {
             addCommonTableItemValues(res, statusTable);
 
             if (null != res.getVersion() && null != res.getVersion().getVersionStr()) {
-                statusTable.getItem(9).getItemProperty("Value").setValue(ServerUtil.uptimeToString(res.getCpaUptime()));
-                statusTable.getItem(10).getItemProperty("Value").setValue(res.getCpaPid());
-                statusTable.getItem(11).getItemProperty("Value")
-                        .setValue(res.getAgentDpaInfo().netXDpaRuntimeInfo.dpaPid);
-                statusTable
-                        .getItem(12)
-                        .getItemProperty("Value")
-                        .setValue(
-                                "IPC Ver:" + res.getAgentDpaInfo().dpaStaticInfo.ipcVersion + ", Name:"
-                                        + res.getAgentDpaInfo().dpaStaticInfo.dpaName + ", Version:"
-                                        + res.getAgentDpaInfo().dpaStaticInfo.dpaVersion);
+                statusTable.getItem(6).getItemProperty("Value")
+                .setValue(res.getAgentDpaInfo().netXDpaRuntimeInfo.dpaPid);
+                statusTable.getItem(7).getItemProperty("Value")
+                .setValue(
+                        "IPC Ver:" + res.getAgentDpaInfo().dpaStaticInfo.ipcVersion + ", Name:"
+                                + res.getAgentDpaInfo().dpaStaticInfo.dpaName + ", Version:"
+                                + res.getAgentDpaInfo().dpaStaticInfo.dpaVersion);
 
                 Long dropped = 0L;
                 if (res.getAgentDpaInfo().netXDpaRuntimeInfo.dropResource != null) {
@@ -216,21 +176,21 @@ public class AgentStatusWindow extends Window {
                 }
 
                 statusTable
-                        .getItem(13)
-                        .getItemProperty("Value")
-                        .setValue(
-                                "Rx:" + res.getAgentDpaInfo().netXDpaRuntimeInfo.rx + ", Tx:"
-                                        + res.getAgentDpaInfo().netXDpaRuntimeInfo.txSva + ", Dropped:" + dropped
-                                        + ", Insp-If:" + res.getAgentDpaInfo().netXDpaRuntimeInfo.workloadInterfaces);
-                statusTable.getItem(14).getItemProperty("Value")
-                        .setValue(Boolean.valueOf(res.isDiscovered()).toString());
-                statusTable.getItem(15).getItemProperty("Value")
-                        .setValue(Boolean.valueOf(res.isInspectionReady()).toString());
+                .getItem(8)
+                .getItemProperty("Value")
+                .setValue(
+                        "Rx:" + res.getAgentDpaInfo().netXDpaRuntimeInfo.rx + ", Tx:"
+                                + res.getAgentDpaInfo().netXDpaRuntimeInfo.txSva + ", Dropped:" + dropped
+                                + ", Insp-If:" + res.getAgentDpaInfo().netXDpaRuntimeInfo.workloadInterfaces);
+                statusTable.getItem(9).getItemProperty("Value")
+                .setValue(Boolean.valueOf(res.isDiscovered()).toString());
+                statusTable.getItem(10).getItemProperty("Value")
+                .setValue(Boolean.valueOf(res.isInspectionReady()).toString());
             }
         } catch (Exception e) {
             log.error("Fail to retrieve agent info", e);
 
-            statusTable.getItem(5).getItemProperty("Value").setValue("Not Available due to communication error.");
+            statusTable.getItem(6).getItemProperty("Value").setValue("Not Available due to communication error.");
         }
 
         return statusTable;
@@ -245,14 +205,11 @@ public class AgentStatusWindow extends Window {
         statusTable.getItem(4).getItemProperty("Value").setValue(res.getVirtualServer());
 
         if (null != res.getVersion() && null != res.getVersion().getVersionStr()) {
-            statusTable.getItem(5).getItemProperty("Value").setValue(res.getBrokerIp());
-            statusTable.getItem(6).getItemProperty("Value").setValue(res.getManagerIp());
-            statusTable.getItem(7).getItemProperty("Value").setValue(res.getVersion().getVersionStr());
-            statusTable.getItem(8).getItemProperty("Value").setValue(res.getCurrentServerTime().toString());
+            statusTable.getItem(5).getItemProperty("Value").setValue(res.getManagerIp());
+            statusTable.getItem(6).getItemProperty("Value").setValue(res.getCurrentServerTime().toString());
         } else {
             statusTable.getItem(5).getItemProperty("Value").setValue("Not Available due to communication error.");
         }
-
     }
 
 }

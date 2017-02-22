@@ -13,7 +13,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -27,7 +26,7 @@ public class AgentRegisterServiceRequestValidatorTest {
     public ExpectedException exception = ExpectedException.none();
 
     private AgentRegisterServiceRequestValidator validator;
-    private static DistributedApplianceInstance DAI_WITH_VS = createDai(new VirtualSystem(), AgentType.AGENT);
+    private static DistributedApplianceInstance DAI_WITH_VS = createDai(new VirtualSystem());
 
     private static AgentRegisterServiceRequest REQUEST_WITH_NAME =
             createRequest("REQUEST_NAME", "REQUEST_WITH_NAME_IP", 1L);
@@ -146,8 +145,8 @@ public class AgentRegisterServiceRequestValidatorTest {
         return request;
     }
 
-    private static DistributedApplianceInstance createDai(VirtualSystem vs, AgentType agentType) {
-        DistributedApplianceInstance dai = new DistributedApplianceInstance(vs, agentType);
+    private static DistributedApplianceInstance createDai(VirtualSystem vs) {
+        DistributedApplianceInstance dai = new DistributedApplianceInstance(vs);
         return dai;
     }
 }
