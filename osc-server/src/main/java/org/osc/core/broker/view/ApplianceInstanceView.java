@@ -74,33 +74,6 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
             }
         });
 
-        this.parentTable.addGeneratedColumn("inspectionReady", new ColumnGenerator() {
-            @Override
-            public Object generateCell(CustomTable source, Object itemId, Object columnId) {
-                DistributedApplianceInstanceDto daiDto = ApplianceInstanceView.this.parentContainer
-                        .getItem(itemId).getBean();
-                return daiDto.isApplianceStatusEnabled() ? daiDto.getInspectionReady() : "N/A";
-            }
-        });
-
-        this.parentTable.addGeneratedColumn("lastStatus", new ColumnGenerator() {
-            @Override
-            public Object generateCell(CustomTable source, Object itemId, Object columnId) {
-                DistributedApplianceInstanceDto daiDto = ApplianceInstanceView.this.parentContainer
-                        .getItem(itemId).getBean();
-                return daiDto.isApplianceStatusEnabled() ? daiDto.getLastStatus() : "N/A";
-            }
-        });
-
-        this.parentTable.addGeneratedColumn("discovered", new ColumnGenerator() {
-            @Override
-            public Object generateCell(CustomTable source, Object itemId, Object columnId) {
-                DistributedApplianceInstanceDto daiDto = ApplianceInstanceView.this.parentContainer
-                        .getItem(itemId).getBean();
-                return daiDto.isApplianceStatusEnabled() ? daiDto.getDiscovered() : "N/A";
-            }
-        });
-
         this.parentTable.addGeneratedColumn("distributedApplianceName", new ColumnGenerator() {
             @Override
             public Object generateCell(CustomTable source, Object itemId, Object columnId) {

@@ -1,7 +1,5 @@
 package org.osc.core.broker.service.dto;
 
-import java.util.Date;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -51,19 +49,19 @@ public class DistributedApplianceInstanceDto extends BaseDto {
     private String hostname;
 
     @ApiModelProperty(
-            value = "The last time a callback was made from the appliance. This value can be empty till we receive the first callback from the instance.",
+            value = "The last time a callback was made from the appliance. If appliance instance status is not supported by the manager it will return 'N/A'.",
             readOnly = true)
-    private Date lastStatus;
+    private String lastStatus;
 
-    @ApiModelProperty(value = "Indicates whether the instance is authenticated with its manager.",
+    @ApiModelProperty(value = "Indicates whether the instance is authenticated with its manager. If appliance instance status is not supported by the manager it will return 'N/A'",
             required = true,
             readOnly = true)
-    private Boolean discovered;
+    private String discovered;
 
-    @ApiModelProperty(value = "Indicates whether the instance is ready to inspect and handle traffic.",
+    @ApiModelProperty(value = "Indicates whether the instance is ready to inspect and handle traffic. If appliance instance status is not supported by the manager it will return 'N/A'",
             required = true,
             readOnly = true)
-    private Boolean inspectionReady;
+    private String inspectionReady;
 
     @ApiModelProperty(value = "The Id of the corresponding server instance on openstack.(Openstack Only)",
             readOnly = true)
@@ -129,9 +127,6 @@ public class DistributedApplianceInstanceDto extends BaseDto {
                 .getApplianceManagerConnector().getName();
         this.virtualConnectorName = dai.getVirtualSystem().getVirtualizationConnector().getName();
         this.hostname = dai.getHostName();
-        this.lastStatus = dai.getLastStatus();
-        this.discovered = dai.getDiscovered();
-        this.inspectionReady = dai.getInspectionReady();
 
         this.osVmId = dai.getOsServerId();
         this.osHostname = dai.getOsHostName();
@@ -147,7 +142,10 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         boolean isApplianceStatusEnabled =
                 ManagerApiFactory.createApplianceManagerApi(dai.getVirtualSystem().getDistributedAppliance().getApplianceManagerConnector().getManagerType()).isAgentManaged();
 
-        setApplianceStatusEnabled(isApplianceStatusEnabled);
+        this.isApplianceStatusEnabled = isApplianceStatusEnabled;
+        this.discovered = this.isApplianceStatusEnabled ? dai.getDiscovered().toString() : "N/A";
+        this.inspectionReady = this.isApplianceStatusEnabled ? dai.getInspectionReady().toString() : "N/A";
+        this.lastStatus = this.isApplianceStatusEnabled ? dai.getLastStatus().toString() : "N/A";
     }
 
     public String getName() {
@@ -186,11 +184,6 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         return this.isApplianceStatusEnabled;
     }
 
-
-    public void setApplianceStatusEnabled(Boolean isApplianceStatusEnabled) {
-        this.isApplianceStatusEnabled = isApplianceStatusEnabled;
-    }
-
     public String getDistributedApplianceName() {
         return this.distributedApplianceName;
     }
@@ -223,28 +216,16 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         this.hostname = nsxHostname;
     }
 
-    public Date getLastStatus() {
+    public String getLastStatus() {
         return this.lastStatus;
     }
 
-    public void setLastStatus(Date lastStatus) {
-        this.lastStatus = lastStatus;
-    }
-
-    public Boolean getDiscovered() {
+    public String getDiscovered() {
         return this.discovered;
     }
 
-    public void setDiscovered(Boolean discovered) {
-        this.discovered = discovered;
-    }
-
-    public Boolean getInspectionReady() {
+    public String getInspectionReady() {
         return this.inspectionReady;
-    }
-
-    public void setInspectionReady(Boolean inspectionReady) {
-        this.inspectionReady = inspectionReady;
     }
 
     public String getOsVmId() {
