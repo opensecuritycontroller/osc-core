@@ -1,9 +1,9 @@
 package org.osc.core.broker.service.test;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.osc.core.broker.util.db.HibernateUtil;
 
 class InMemDB {
@@ -23,7 +23,7 @@ class InMemDB {
 
             HibernateUtil.addAnnotatedClasses(configuration);
 
-            serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
+            serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
             sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 
             return sessionFactory;

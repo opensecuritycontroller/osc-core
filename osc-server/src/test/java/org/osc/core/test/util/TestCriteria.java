@@ -182,6 +182,12 @@ public class TestCriteria implements Criteria {
     }
 
     @Override
+    public Criteria addQueryHint(String s) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
     public Criteria setFetchMode(String arg0, FetchMode arg1) throws HibernateException {
         // TODO Auto-generated method stub
         return null;

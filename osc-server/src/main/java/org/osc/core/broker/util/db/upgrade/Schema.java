@@ -1192,14 +1192,6 @@ public class Schema {
         }; // end of schema array
     // @formatter:on
 
-    public static void generateDdlFile(Configuration configuration, String outputFile) {
-
-        SchemaExport export = new SchemaExport(configuration);
-        export.setOutputFile(outputFile);
-        export.setDelimiter(";");
-        export.execute(true, false, false, true);
-    }
-
     @SuppressFBWarnings(value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
     public static void createSchema() throws SQLException, KeyStoreProviderException, IOException {
         try (Connection connection = HibernateUtil.getSQLConnection(new DBConnectionParameters());
