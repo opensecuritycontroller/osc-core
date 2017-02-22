@@ -53,8 +53,7 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
                 applianceSoftwareVersion.getApplianceSoftwareVersion(), this.vs.getName(),
                 applianceSoftwareVersion.getImageUrl());
 
-        JCloudGlance glance = new JCloudGlance(this.osEndPoint);
-        try {
+        try (JCloudGlance glance = new JCloudGlance(this.osEndPoint)) {
             Set<OsImageReference> imageReferences = this.vs.getOsImageReference();
             boolean uploadImage = true;
 
@@ -64,16 +63,16 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
                     ImageDetails image = glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
                     if (image == null || image != null && image.getStatus() != Status.ACTIVE) {
                         iterator.remove();
-                        this.tg.appendTask(new DeleteImageTask(imageReference));
+                        this.tg.appendTask(new DeleteOsImageTask(imageReference));
                     } else if (!image.getName().equals(expectedGlanceImageName)) {
                         // Assume image name is changed, means the version is upgraded since image name contains version
                         // information. Delete existing image and create new image.
-                        this.tg.appendTask(new DeleteImageTask(this.region, imageReference, this.osEndPoint));
+                        this.tg.appendTask(new DeleteOsImageTask(this.region, imageReference, this.osEndPoint));
                     } else {
                         uploadImage = false;
                         // For any existing images in db which dont have the version set, set the version
                         if(imageReference.getApplianceVersion() == null) {
-                            this.tg.appendTask(new UpdateImageApplianceVersionTask(imageReference, this.vs));
+                            this.tg.appendTask(new UpdateImageApplianceVersionFromDbTask(imageReference, this.vs));
                         }
                     }
                 }
@@ -82,8 +81,6 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
                 this.tg.appendTask(new UploadImageToGlanceTask(this.vs, this.region, expectedGlanceImageName,
                         applianceSoftwareVersion, this.osEndPoint), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
-        } finally {
-            glance.close();
         }
     }
 

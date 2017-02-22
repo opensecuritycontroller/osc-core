@@ -10,13 +10,13 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsImageRefere
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
-public class UpdateImageApplianceVersionTask extends TransactionalTask {
-    private static final Logger log = Logger.getLogger(UpdateImageApplianceVersionTask.class);
+public class UpdateImageApplianceVersionFromDbTask extends TransactionalTask {
+    private static final Logger log = Logger.getLogger(UpdateImageApplianceVersionFromDbTask.class);
 
     private OsImageReference imageReference;
     private VirtualSystem vs;
 
-    public UpdateImageApplianceVersionTask(OsImageReference imageReference, VirtualSystem vs) {
+    public UpdateImageApplianceVersionFromDbTask(OsImageReference imageReference, VirtualSystem vs) {
         this.imageReference = imageReference;
         this.vs = vs;
     }

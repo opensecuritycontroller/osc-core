@@ -41,7 +41,7 @@ import org.osc.core.broker.service.tasks.conformance.deleteda.UnregisterServiceM
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteVSSDeviceTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteFlavorTask;
-import org.osc.core.broker.service.tasks.conformance.openstack.DeleteImageTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsImageTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxSecurityGroupsCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.NsxSecurityGroupInterfacesCheckMetaTask;
@@ -811,7 +811,7 @@ public class VSConformanceCheckMetaTaskTestData {
 
         TaskGraph expectedGraph = new TaskGraph();
         Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector());
-        expectedGraph.appendTask(new DeleteImageTask(image.getRegion(), image, endPoint));
+        expectedGraph.appendTask(new DeleteOsImageTask(image.getRegion(), image, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new MgrDeleteVSSDeviceTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new DeleteVsFromDbTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);

@@ -8,20 +8,20 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
-public class DeleteImageTask  extends TransactionalTask {
-    private final Logger log = Logger.getLogger(DeleteImageTask.class);
+public class DeleteOsImageTask  extends TransactionalTask {
+    private final Logger log = Logger.getLogger(DeleteOsImageTask.class);
 
     private String region;
     private OsImageReference imageReference;
     private Endpoint osEndPoint;
 
-    public DeleteImageTask(String region, OsImageReference imageReference, Endpoint osEndPoint) {
+    public DeleteOsImageTask(String region, OsImageReference imageReference, Endpoint osEndPoint) {
         this.region = region;
         this.osEndPoint = osEndPoint;
         this.imageReference = imageReference;
     }
 
-    public DeleteImageTask(OsImageReference imageReference) {
+    public DeleteOsImageTask(OsImageReference imageReference) {
         this.imageReference = imageReference;
     }
 
