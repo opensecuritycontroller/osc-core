@@ -35,7 +35,7 @@ import org.osc.core.broker.service.tasks.conformance.deleteda.UnregisterServiceM
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteVSSDeviceTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteFlavorTask;
-import org.osc.core.broker.service.tasks.conformance.openstack.DeleteImageFromGlanceTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.DeleteImageTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxSecurityGroupsCheckMetaTask;
@@ -118,7 +118,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
                 tg.appendTask(new DSConformanceCheckMetaTask(ds, endPoint));
             }
             for (OsImageReference image : this.vs.getOsImageReference()) {
-                tg.appendTask(new DeleteImageFromGlanceTask(image.getRegion(), image, new Endpoint(vc)));
+                tg.appendTask(new DeleteImageTask(image.getRegion(), image, new Endpoint(vc)));
             }
             for (OsFlavorReference flavor : this.vs.getOsFlavorReference()) {
                 tg.appendTask(new DeleteFlavorTask(flavor.getRegion(), flavor, new Endpoint(vc)));
