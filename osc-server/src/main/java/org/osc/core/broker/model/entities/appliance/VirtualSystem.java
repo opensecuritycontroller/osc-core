@@ -316,6 +316,10 @@ public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
         this.osImageReference.add(osImageReference);
     }
 
+    public void removeOsImageReference(OsImageReference osImageReference) {
+            this.osImageReference.remove(osImageReference);
+    }
+
     public Set<OsFlavorReference> getOsFlavorReference() {
         return this.osFlavorReference;
     }
