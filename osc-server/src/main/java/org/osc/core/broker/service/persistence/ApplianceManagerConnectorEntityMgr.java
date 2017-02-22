@@ -29,7 +29,6 @@ public class ApplianceManagerConnectorEntityMgr {
     }
 
     public static void toEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) throws Exception {
-
         // Transform from dto to entity
         mc.setId(dto.getId());
         mc.setName(dto.getName());
@@ -40,13 +39,15 @@ public class ApplianceManagerConnectorEntityMgr {
         mc.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
         mc.setApiKey(dto.getApiKey());
         mc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
+        mc.setVendorName(dto.getVendorName());
     }
 
     public static void fromEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) throws EncryptionException {
-
         // transform from entity to dto
         dto.setId(mc.getId());
-        dto.setName(mc.getName());
+
+        // TODO emanoel: remove getVendorName.
+        dto.setName(mc.getName() + mc.getVendorName());
         dto.setManagerType(mc.getManagerType());
         dto.setIpAddress(mc.getIpAddress());
         dto.setUsername(mc.getUsername());
@@ -58,6 +59,7 @@ public class ApplianceManagerConnectorEntityMgr {
         }
         dto.setApiKey(mc.getApiKey());
         dto.setSslCertificateAttrSet(mc.getSslCertificateAttrSet().stream().collect(Collectors.toSet()));
+        dto.setVendorName(mc.getVendorName());
     }
 
     public static ApplianceManagerConnector findById(Session session, Long id) {

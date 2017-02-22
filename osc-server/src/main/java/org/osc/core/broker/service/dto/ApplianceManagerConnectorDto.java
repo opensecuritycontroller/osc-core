@@ -56,6 +56,9 @@ public class ApplianceManagerConnectorDto extends BaseDto {
     @ApiModelProperty(hidden = true)
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
 
+    @ApiModelProperty(readOnly = true)
+    private String vendorName;
+
     public String getName() {
         return this.name;
     }
@@ -142,6 +145,14 @@ public class ApplianceManagerConnectorDto extends BaseDto {
 
     public void setSslCertificateAttrSet(Set<SslCertificateAttr> sslCertificateAttrSet) {
         this.sslCertificateAttrSet = sslCertificateAttrSet;
+    }
+
+    public String getVendorName() {
+        return this.vendorName;
+    }
+
+    public void setVendorName(String vendorName) {
+        this.vendorName = vendorName;
     }
 
     @Override

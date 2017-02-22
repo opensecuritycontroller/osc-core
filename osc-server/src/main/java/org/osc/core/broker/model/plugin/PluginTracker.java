@@ -21,6 +21,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * This class keeps track of installed units and the services that arise from
  * them. When an unit is installed but has not yet registered any services, a
@@ -38,12 +40,20 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class PluginTracker<T> {
 
-    private final Logger LOGGER = Logger.getLogger(PluginTracker.class);
-
+    private final static Logger LOGGER = Logger.getLogger(PluginTracker.class);
     /**
      * Marker property on Plugin services indicating the plugin name.
      */
     public static final String PROP_PLUGIN_NAME = "osc.plugin.name";
+
+    /**
+     * Marker property on Plugin services indicating the plugin vendor name.
+     */
+    public static final String PROP_PLUGIN_VENDOR_NAME = "osc.plugin.vendor_name";
+
+    private static final Map<String, Class<?>> REQUIRED_PLUGIN_PROPERTIES =  ImmutableMap.<String, Class<?>>builder()
+            .put(PROP_PLUGIN_NAME, String.class)
+            .put(PROP_PLUGIN_VENDOR_NAME, String.class).build();
 
     private final BundleContext context;
     private final Class<T> pluginClass;
@@ -88,11 +98,11 @@ public class PluginTracker<T> {
         this.serviceTracker = new ServiceTracker<T,T>(context, pluginClass, null) {
             @Override
             public T addingService(ServiceReference<T> reference) {
-                Object pluginNameObj = reference.getProperty(PROP_PLUGIN_NAME);
-                if (!(pluginNameObj instanceof String)) {
-                    PluginTracker.this.LOGGER.warn(String.format("Plugin service id=%d from bundle %s did not have %s property, or property was not a String. Service ignored.", reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), PROP_PLUGIN_NAME));
-                    return null; // returning null means we will never hear about this service again.
+                if (!containsRequiredProperties(reference, REQUIRED_PLUGIN_PROPERTIES)) {
+                    return null;
                 }
+
+                Object pluginNameObj = reference.getProperty(PROP_PLUGIN_NAME);
                 String pluginName = (String) pluginNameObj;
 
                 T service = this.context.getService(reference);
@@ -130,6 +140,18 @@ public class PluginTracker<T> {
     public void close() {
         this.installListenerReg.unregister();
         this.serviceTracker.close();
+    }
+
+    public static boolean containsRequiredProperties(ServiceReference<?> reference, Map<String, Class<?>> requiredProperties) {
+        for (Map.Entry<String, Class<?>> entry : requiredProperties.entrySet()) {
+            Object pluginNameObj = reference.getProperty(entry.getKey());
+            if (pluginNameObj == null || !entry.getValue().isInstance(pluginNameObj)) {
+                LOGGER.warn(String.format("Plugin service id=%d from bundle %s did not have %s property, or property was not a of type %s. Service ignored.", reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), PROP_PLUGIN_NAME, entry.getValue()));
+                return false; // returning null means we will never hear about this service again.
+            }
+        }
+
+        return true;
     }
 
     private void addServiceForPlugin(String name, T service) {
@@ -183,7 +205,7 @@ public class PluginTracker<T> {
         }
 
         if (!type.equals(this.pluginType.toString())) {
-            this.LOGGER.trace(String.format("Unit %s of type %s skipped by plugin tracker of type %s", name, type, this.pluginType));
+            LOGGER.trace(String.format("Unit %s of type %s skipped by plugin tracker of type %s", name, type, this.pluginType));
             return;
         }
 

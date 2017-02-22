@@ -57,6 +57,9 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
     @Column(name = "password")
     private String password;
 
+    @Column(name = "vendor_name")
+    private String vendorName;
+
     @OneToMany(mappedBy = "applianceManagerConnector", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Policy> policies = new HashSet<Policy>();
 
@@ -88,8 +91,8 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name="SSL_CERTIFICATE_ATTR_APPL_MAN_CONNECTOR",
-            joinColumns={@JoinColumn(name="APPLIANCE_MANAGER_CONNECTOR_ID")},
-            inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
+    joinColumns={@JoinColumn(name="APPLIANCE_MANAGER_CONNECTOR_ID")},
+    inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
 
     public ApplianceManagerConnector() {
@@ -125,6 +128,14 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getVendorName() {
+        return this.vendorName;
+    }
+
+    public void setVendorName(String vendorName) {
+        this.vendorName = vendorName;
     }
 
     @Override
@@ -216,7 +227,7 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
     }
 
     public Set<SslCertificateAttr> getSslCertificateAttrSet() {
-        return sslCertificateAttrSet;
+        return this.sslCertificateAttrSet;
     }
 
     public void setSslCertificateAttrSet(Set<SslCertificateAttr> sslCertificateAttrSet) {

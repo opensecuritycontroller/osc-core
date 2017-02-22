@@ -58,6 +58,7 @@ public class Schema {
                 "ip_address varchar(255) not null," +
                 "manager_type varchar(255) not null," +
                 "name varchar(255) not null," +
+                "vendor_name varchar(255)," +
                 "password varchar(255)," +
                 "public_key blob," +
                 "service_type varchar(255) not null," +

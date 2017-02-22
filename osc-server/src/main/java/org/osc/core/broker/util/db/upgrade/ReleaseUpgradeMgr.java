@@ -32,7 +32,7 @@ public class ReleaseUpgradeMgr {
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
-    public static final int TARGET_DB_VERSION = 75;
+    public static final int TARGET_DB_VERSION = 76;
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
@@ -210,6 +210,8 @@ public class ReleaseUpgradeMgr {
                 upgrade73to74(stmt);
             case 74:
                 upgrade74to75(stmt);
+            case 75:
+                upgrade75to76(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -219,6 +221,10 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+    
+    private static void upgrade75to76(Statement stmt) throws SQLException, EncryptionException {
+        execSql(stmt, "alter table APPLIANCE_MANAGER_CONNECTOR ADD COLUMN vendor_name varchar(255);");
     }
     
     private static void upgrade74to75(Statement stmt) throws SQLException, EncryptionException {

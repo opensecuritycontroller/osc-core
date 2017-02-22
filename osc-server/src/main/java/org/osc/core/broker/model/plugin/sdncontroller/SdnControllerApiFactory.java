@@ -1,5 +1,13 @@
 package org.osc.core.broker.model.plugin.sdncontroller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -10,7 +18,14 @@ import org.osc.core.broker.model.plugin.PluginTracker;
 import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ServiceUnavailableException;
+import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.service.request.BaseRequest;
+import org.osc.core.broker.service.request.DryRunRequest;
+import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.vc.ListVirtualizationConnectorService;
+import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.EncryptionUtil;
@@ -23,15 +38,12 @@ import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import com.google.common.collect.ImmutableMap;
 
 public class SdnControllerApiFactory {
 
     public static final String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
+    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES =  ImmutableMap.<String, Class<?>>builder().build();
 
     private static HashMap<String, ServiceObjects<SdnControllerApi>> sdnControllerPlugins = new HashMap<>();
     private static HashMap<String, ServiceObjects<VMwareSdnApi>> vmWareSdnPlugins = new HashMap<>();
@@ -156,12 +168,26 @@ public class SdnControllerApiFactory {
                     return null;
                 }
 
+                if (!PluginTracker.containsRequiredProperties(reference, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES)) {
+                    return null;
+                }
+
                 String name = (String) nameObj;
                 ServiceObjects<T> serviceObjects = this.context.getServiceObjects(reference);
-
                 ServiceObjects<?> existing = null;
 
                 if (pluginClass == SdnControllerApi.class) {
+                    if (!PluginTracker.containsRequiredProperties(reference, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES)) {
+                        return null;
+                    }
+
+                    try {
+                        updateVirtualizationConnectors(name, reference);
+                    } catch (Exception e) {
+                        LOG.error("Error will updating the virtualization connectors", e);
+                        return null;
+                    }
+
                     @SuppressWarnings("unchecked")
                     ServiceObjects<SdnControllerApi> sdnControllerServiceObjects = (ServiceObjects<SdnControllerApi>) serviceObjects;
                     existing =  sdnControllerPlugins.putIfAbsent(name, sdnControllerServiceObjects);
@@ -207,6 +233,37 @@ public class SdnControllerApiFactory {
         removeTrackers(sdnControllerPluginTrackers);
         removeTrackers(vmWareSdnPluginTrackers);
         installManagerTracker.close();
+    }
+
+    private static <T> void updateVirtualizationConnectors(String pluginName, ServiceReference<T> reference) throws Exception  {
+        List<VirtualizationConnectorDto> vcs = getVirtualizationConnectors(pluginName);
+        for (VirtualizationConnectorDto vc : vcs) {
+            // TODO emanoel: set plugin properties below.
+            //mc.setVendorName((String)reference.getProperty(PluginTracker.PROP_PLUGIN_VENDOR_NAME));
+
+            DryRunRequest<VirtualizationConnectorDto> updateRequest = new DryRunRequest<VirtualizationConnectorDto>();
+            updateRequest.setDto(vc);
+
+            UpdateVirtualizationConnectorService updateService = new UpdateVirtualizationConnectorService();
+
+            updateService.dispatch(updateRequest);
+        }
+    }
+
+    private static List<VirtualizationConnectorDto> getVirtualizationConnectors(String pluginName) throws Exception {
+        List<VirtualizationConnectorDto> result = new ArrayList<VirtualizationConnectorDto>();
+        BaseRequest<BaseDto> request = new BaseRequest<>();
+        ListResponse<VirtualizationConnectorDto> res;
+        ListVirtualizationConnectorService listService = new ListVirtualizationConnectorService();
+
+        res = listService.dispatch(request);
+        for (VirtualizationConnectorDto vc : res.getList()) {
+            if (vc.getControllerType().equals(ControllerType.fromText(pluginName))) {
+                result.add(vc);
+            }
+        }
+
+        return result;
     }
 
     private static <T> void removeTrackers(List<PluginTracker<T>> trackers) {
