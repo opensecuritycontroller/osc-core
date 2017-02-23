@@ -9,17 +9,13 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.ContainerSet;
 import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemPolicyEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
-import org.osc.core.broker.service.tasks.agent.AgentsInterfaceEndpointMapRemoveMetaTask;
-import org.osc.core.broker.service.tasks.agent.AgentsInterfaceEndpointMapUpdateMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxServiceProfileContainerCheckMetaTask;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.sdn.api.ServiceProfileApi;
 import org.osc.sdk.sdn.element.SecurityGroupElement;
 import org.osc.sdk.sdn.element.ServiceProfileElement;
@@ -58,10 +54,6 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
                 }
             }
             if (!found) {
-                ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(this.vs);
-                if (managerApi.isSecurityGroupSyncSupport() && managerApi.isAgentManaged()) {
-                    this.tg.appendTask(new AgentsInterfaceEndpointMapRemoveMetaTask(dbSecurityGroupInterface));
-                }
                 this.tg.appendTask(new DeleteSecurityGroupInterfaceTask(dbSecurityGroupInterface));
             }
         }
@@ -90,10 +82,6 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
             // Later, we'll also remove it the interface binding from mgr.
 
             if (sgi != null) {
-                ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(vs);
-                if (managerApi.isSecurityGroupSyncSupport() && managerApi.isAgentManaged()) {
-                    tg.appendTask(new AgentsInterfaceEndpointMapRemoveMetaTask(sgi));
-                }
                 tg.appendTask(new DeleteSecurityGroupInterfaceTask(sgi));
             }
 
@@ -119,13 +107,6 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
             List<SecurityGroupElement> securityGroups = serviceProfileApi.getSecurityGroups(serviceProfile.getId());
             ContainerSet containerSet = new ContainerSet(securityGroups);
             tg.appendTask(new NsxServiceProfileContainerCheckMetaTask(vs, serviceProfile, containerSet));
-
-            // Propagate SGs to DAI
-            ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(vs);
-            if (vs.getMgrId() != null && managerApi.isSecurityGroupSyncSupport() && managerApi.isAgentManaged()) {
-                tg.appendTask(new AgentsInterfaceEndpointMapUpdateMetaTask(vs, serviceProfile.getId(),
-                        containerSet.toIscEndpointGroupSet()));
-            }
         }
     }
 

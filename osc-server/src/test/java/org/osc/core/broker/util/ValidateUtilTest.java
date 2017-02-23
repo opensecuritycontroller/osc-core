@@ -6,11 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Test;
-import org.osc.core.broker.model.entities.appliance.AgentType;
-import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
-import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
 import com.google.common.collect.Lists;
 
@@ -18,14 +14,6 @@ public class ValidateUtilTest {
 
     private static final List<String> validDaNames = Lists.newArrayList("arv-1","arv-56789-123");
     private static final List<String> invalidDaNames = Lists.newArrayList("arv_#", "arv_longer_than_13_chars");
-
-    private static final VirtualSystem virtualSystem = new VirtualSystem();
-    private static final DistributedApplianceInstance agentLessDai1 = new DistributedApplianceInstance(virtualSystem, AgentType.AGENTLESS);
-    private static final DistributedApplianceInstance agentLessDai2 = new DistributedApplianceInstance(virtualSystem, AgentType.AGENTLESS);
-    private static final DistributedApplianceInstance agentDai1 = new DistributedApplianceInstance(virtualSystem, AgentType.AGENT);
-    private static final DistributedApplianceInstance agentDai2 = new DistributedApplianceInstance(virtualSystem, AgentType.AGENT);
-
-
 
     /**
      * Unsupported emails which are valid
@@ -152,7 +140,7 @@ public class ValidateUtilTest {
             ValidateUtil.validateFieldLength(map, 11);
             fail("Error in validateFieldLength, We should not get here");
         } catch (VmidcBrokerInvalidEntryException e) {
-         // Nothing to do
+            // Nothing to do
         }
     }
 
@@ -195,91 +183,5 @@ public class ValidateUtilTest {
                 // Nothing to do,expected
             }
         }
-    }
-
-    @Test
-    public void testHandleActionNotSupported_singleDai_agentless() {
-
-        List<DistributedApplianceInstance> agentLessDaiList = Lists.newArrayList(agentLessDai1);
-
-        try {
-            ValidateUtil.handleActionNotSupported(agentLessDaiList);
-            fail("AgentLess DAI instance exist in the input DAI List. This behaviour should throw VmidcBrokerValidationException");
-        } catch (VmidcBrokerValidationException e) {
-            // as expected
-            assertTrue(true);
-        } catch(Exception exception) {
-            fail("AgentLess DAI instance exist in the input DAI List. VmidcBrokerValidationException is expected.......");
-        }
-
-    }
-
-    @Test
-    public void testHandleActionNotSupported_singleDai_agent() {
-
-        List<DistributedApplianceInstance> agentDaiList = Lists.newArrayList(agentDai1);
-
-        try {
-            ValidateUtil.handleActionNotSupported(agentDaiList);
-            // as expected
-            assertTrue(true);
-        } catch (VmidcBrokerValidationException validationException) {
-
-            fail("All the input DAI instances are AGENT instances. This behaviour should not throw VmidcBrokerValidationException");
-        } catch(Exception exception) {
-            fail("All the input DAI instances are AGENT instances. This behaviour should not throw any exception.");
-        }
-
-    }
-
-    @Test
-    public void testHandleActionNotSupported_listDai_Agentless() {
-
-        List<DistributedApplianceInstance> agentLessDaiList = Lists.newArrayList(agentLessDai1, agentLessDai2);
-
-        try {
-            ValidateUtil.handleActionNotSupported(agentLessDaiList);
-            fail("AgentLess DAI instance exist in the input DAI List. This behaviour should throw VmidcBrokerValidationException");
-        } catch (VmidcBrokerValidationException e1) {
-            // as expected
-            assertTrue(true);
-        } catch(Exception exception) {
-            fail("AgentLess DAI instance exist in the input DAI List. VmidcBrokerValidationException is expected.......");
-        }
-    }
-
-    @Test
-    public void testHandleActionNotSupported_listDai_AgentandAgentless() {
-
-        List<DistributedApplianceInstance> daiList = Lists.newArrayList(agentLessDai1, agentLessDai2, agentDai1);
-
-        try {
-            ValidateUtil.handleActionNotSupported(daiList);
-            fail("AgentLess DAI instance exist in the input DAI List. This behaviour should throw VmidcBrokerValidationException");
-        } catch (VmidcBrokerValidationException e1) {
-            // as expected
-            assertTrue(true);
-        } catch(Exception exception) {
-            fail("AgentLess DAI instance exist in the input DAI List. VmidcBrokerValidationException is expected.......");
-        }
-
-    }
-
-    @Test
-    public void testHandleActionNotSupported_listDai_Agent() {
-
-        List<DistributedApplianceInstance> daiList = Lists.newArrayList(agentDai1, agentDai2);
-
-        try {
-            ValidateUtil.handleActionNotSupported(daiList);
-            // as expected
-            assertTrue(true);
-        } catch (VmidcBrokerValidationException validationException) {
-
-            fail("All the input DAI instances are AGENT instances. This behaviour should not throw VmidcBrokerValidationException");
-        } catch(Exception exception) {
-            fail("All the input DAI instances are AGENT instances. This behaviour should not throw any exception.");
-        }
-
     }
 }
