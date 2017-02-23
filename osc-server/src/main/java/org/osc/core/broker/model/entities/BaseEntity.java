@@ -14,7 +14,7 @@ import javax.persistence.Version;
 public class BaseEntity implements Serializable, IscEntity {
     private static final long serialVersionUID = 1L;
 
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id")
     private Long id;

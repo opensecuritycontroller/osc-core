@@ -57,6 +57,7 @@ Require-Capability: \
     @${json.dep},\
     @${jsoup.dep},\
     @${log4j.dep},\
+    @${classmate.dep},\
     @${org.apache.commons.lang.dep},\
     @${popupbutton.dep},\
     @${quartz.dep},\
@@ -167,8 +168,6 @@ exclude-tomcat:\
   !javax.ejb
 
 exclude-other:\
-  !com.fasterxml.classmate,\
-  !com.fasterxml.classmate.members,\
   !com.gargoylesoftware.htmlunit,\
   !com.gargoylesoftware.htmlunit.html,\
   !com.gargoylesoftware.htmlunit.javascript,\
@@ -242,7 +241,9 @@ exclude-other:\
   !com.vividsolutions.jts.geom,\
   !com.vividsolutions.jts.io,\
   !commonj.work,\
+  !net.bytebuddy.*,\
   !oracle.sql,\
+  !org.apache.logging.log4j.*,\
   !org.apache.lucene.analysis,\
   !org.apache.lucene.analysis.standard,\
   !org.apache.lucene.document,\
