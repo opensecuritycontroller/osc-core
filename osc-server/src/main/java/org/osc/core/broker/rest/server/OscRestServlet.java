@@ -2,7 +2,6 @@ package org.osc.core.broker.rest.server;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.osc.core.broker.rest.server.api.AgentApis;
 import org.osc.core.broker.rest.server.api.AlarmApis;
 import org.osc.core.broker.rest.server.api.AlertApis;
 import org.osc.core.broker.rest.server.api.ApplianceApis;
@@ -44,7 +43,6 @@ public class OscRestServlet extends ResourceConfig {
         register(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class);
 
         //Agent Api
-        register(AgentApis.class);
         register(NsxApis.class);
         register(NsmMgrApis.class);
         register(ManagerApis.class);
