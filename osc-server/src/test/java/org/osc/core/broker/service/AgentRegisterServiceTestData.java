@@ -1,6 +1,5 @@
 package org.osc.core.broker.service;
 
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -12,10 +11,8 @@ import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.rest.client.nsx.model.Agent;
 import org.osc.core.broker.rest.client.nsx.model.Agent.AllocatedIpAddress;
 import org.osc.core.broker.rest.client.nsx.model.Agent.HostInfo;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 import org.osc.core.rest.client.agent.model.output.AgentDpaInfo;
-import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.VersionUtil;
 import org.osc.core.util.encryption.EncryptionException;
 
@@ -42,7 +39,7 @@ class AgentRegisterServiceTestData {
     static AgentRegisterServiceRequest NULL_DAI_OPENSTACK_REQUEST = createRequest(OPENSTACK_VS_ID, "NULL_DAI_OPENSTACK_IP");
 
     static AgentRegisterServiceRequest OPENSTACK_MISMATCH_VS_ID_REQUEST = createRequest(MISMATCHING_VS_ID, "OPENSTACK_MISMATCH_VS_ID_IP");
-    static DistributedApplianceInstance MISTMATCH_VS_ID_DAI = new DistributedApplianceInstance(OPENSTACK_VS, AgentType.AGENT);
+    static DistributedApplianceInstance MISTMATCH_VS_ID_DAI = new DistributedApplianceInstance(OPENSTACK_VS);
 
     static AgentRegisterServiceRequest NULL_DAI_VMWARE_REQUEST;
 
@@ -119,7 +116,7 @@ class AgentRegisterServiceTestData {
                             204L);
 
             EXISTING_DAI =
-                    createDistributedApplianceInstance(VMWARE_VS, 205L, "EXISTING_DAI_NAME", "EXISTING_DAI_IP", AgentType.AGENT);
+                    createDistributedApplianceInstance(VMWARE_VS, 205L, "EXISTING_DAI_NAME", "EXISTING_DAI_IP");
 
             NO_NSX_AGENT_REQUEST =
                     createRequest(
@@ -251,8 +248,7 @@ class AgentRegisterServiceTestData {
                             "AGENT_HEALTH_MISMATCH_IP",
                             "AGENT_HEALTH_MISMATCH_NSX_AGENT_ID",
                             true,
-                            true,
-                            AgentType.AGENT);
+                            true);
 
             AGENT_HEALTH_MISMATCH_DISCOVERED_DAI =
                     createDistributedApplianceInstance(
@@ -262,8 +258,7 @@ class AgentRegisterServiceTestData {
                             "AGENT_HEALTH_MISMATCH_DISCOVERED_IP",
                             "AGENT_HEALTH_MISMATCH_NSX_AGENT_DISCOVERED_ID",
                             true,
-                            false,
-                            AgentType.AGENT);
+                            false);
 
             AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_DAI =
                     createDistributedApplianceInstance(
@@ -273,8 +268,7 @@ class AgentRegisterServiceTestData {
                             "AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_IP",
                             "AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_NSX_AGENT_ID",
                             false,
-                            false,
-                            AgentType.AGENT);
+                            false);
 
             AGENT_HEALTH_MATCH_DAI =
                     createDistributedApplianceInstance(
@@ -284,8 +278,7 @@ class AgentRegisterServiceTestData {
                             "AGENT_HEALTH_MATCH_IP",
                             "AGENT_HEALTH_MATCH_NSX_AGENT_ID",
                             true,
-                            true,
-                            AgentType.AGENT);
+                            true);
 
             NEW_CONSOLE_PASSWORD_DAI =
                     createDistributedApplianceInstance(
@@ -298,8 +291,7 @@ class AgentRegisterServiceTestData {
                             null,
                             "NEW_CONSOLE_PASSWORD_PWD",
                             false,
-                            false,
-                            AgentType.AGENT);
+                            false);
 
             SEC_GROUP_OUT_OF_SYNC_DAI =
                     createDistributedApplianceInstance(
@@ -312,8 +304,7 @@ class AgentRegisterServiceTestData {
                             null,
                             null,
                             true,
-                            true,
-                            AgentType.AGENT);
+                            true);
         } catch(EncryptionException encryptionException) {
             System.err.println("Failed to initialize test data. Encryption error : " + encryptionException.getStackTrace());
         }
@@ -323,9 +314,8 @@ class AgentRegisterServiceTestData {
             VirtualSystem vs,
             Long daiId,
             String daiName,
-            String daiIp,
-            AgentType agentType) throws EncryptionException {
-        return createDistributedApplianceInstance(vs, daiId, daiName, daiIp, null, null, null, null, false, false, agentType);
+            String daiIp) throws EncryptionException {
+        return createDistributedApplianceInstance(vs, daiId, daiName, daiIp, null, null, null, null, false, false);
     }
 
     private static DistributedApplianceInstance createDistributedApplianceInstance(
@@ -335,9 +325,8 @@ class AgentRegisterServiceTestData {
             String daiIp,
             String nsxAgentId,
             Boolean isDiscovered,
-            Boolean isInspectionReady,
-            AgentType agentType) throws EncryptionException {
-        return createDistributedApplianceInstance(vs, daiId, daiName, daiIp, nsxAgentId, isDiscovered,isInspectionReady, null, false, false, agentType);
+            Boolean isInspectionReady) throws EncryptionException {
+        return createDistributedApplianceInstance(vs, daiId, daiName, daiIp, nsxAgentId, isDiscovered,isInspectionReady, null, false, false);
     }
 
     private static DistributedApplianceInstance createDistributedApplianceInstance(
@@ -350,19 +339,16 @@ class AgentRegisterServiceTestData {
             Boolean isInspectionReady,
             String consolePassword,
             boolean policyMapOutOfSync,
-            boolean includeDeploymentSpec,
-            AgentType agentType) throws EncryptionException {
-        DistributedApplianceInstance dai =  new DistributedApplianceInstance(vs, agentType);
+            boolean includeDeploymentSpec) throws EncryptionException {
+        DistributedApplianceInstance dai =  new DistributedApplianceInstance(vs);
         dai.setId(daiId);
         dai.setName(daiName);
-        dai.setPassword(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS));
         dai.setIpAddress(daiIp);
         dai.setMgmtGateway("MGMT_GATEWAY");
         dai.setNsxAgentId(nsxAgentId);
         dai.setDiscovered(isDiscovered);
         dai.setInspectionReady(isInspectionReady);
         dai.setNewConsolePassword(consolePassword);
-        dai.setPolicyMapOutOfSync(policyMapOutOfSync);
         if (includeDeploymentSpec) {
             DeploymentSpec ds = new DeploymentSpec();
             dai.setDeploymentSpec(ds);

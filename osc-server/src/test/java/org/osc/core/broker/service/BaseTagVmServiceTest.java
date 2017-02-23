@@ -7,7 +7,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -66,7 +65,7 @@ public abstract class BaseTagVmServiceTest {
         VirtualSystem vs = new VirtualSystem();
         vs.setVirtualizationConnector(vc);
 
-        DistributedApplianceInstance distributedApplianceInstance = new DistributedApplianceInstance(vs, AgentType.AGENT);
+        DistributedApplianceInstance distributedApplianceInstance = new DistributedApplianceInstance(vs);
 
         Mockito.doReturn(distributedApplianceInstance).when(this.validatorMock).validateAndLoad(REQUEST_WITH_TAG);
         Mockito.doReturn(distributedApplianceInstance).when(this.validatorMock).validateAndLoad(REQUEST_WITH_TAG_INVALID_VM_UUID);

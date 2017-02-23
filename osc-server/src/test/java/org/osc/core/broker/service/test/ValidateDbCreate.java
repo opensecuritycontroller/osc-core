@@ -14,7 +14,6 @@ import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -81,7 +80,7 @@ public class ValidateDbCreate {
     }
 
     private void addDistributedApplianceInstanceEntity(Session session, VirtualSystem virtualSystem) {
-        DistributedApplianceInstance distributedApplianceInst = new DistributedApplianceInstance(virtualSystem, AgentType.AGENT);
+        DistributedApplianceInstance distributedApplianceInst = new DistributedApplianceInstance(virtualSystem);
         distributedApplianceInst.setIpAddress("123.4.5.7");
         distributedApplianceInst.setName("Agent1");
 

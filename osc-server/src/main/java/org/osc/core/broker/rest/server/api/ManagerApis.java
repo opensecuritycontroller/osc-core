@@ -22,17 +22,14 @@ import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.rest.server.model.QueryVmInfoRequest;
 import org.osc.core.broker.rest.server.model.TagVmRequest;
-import org.osc.core.broker.rest.server.model.UpdateApplianceConsolePasswordRequest;
 import org.osc.core.broker.service.PropagateVSMgrFileService;
 import org.osc.core.broker.service.QueryVmInfoService;
 import org.osc.core.broker.service.TagVmService;
 import org.osc.core.broker.service.UnTagVmService;
-import org.osc.core.broker.service.UpdateApplianceConsolePasswordService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.mc.MCChangeNotificationService;
 import org.osc.core.broker.service.request.MCChangeNotificationRequest;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
-import org.osc.core.broker.service.request.UpdateDaiConsolePasswordRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.util.SessionUtil;
@@ -59,7 +56,7 @@ public class ManagerApis {
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
                     + "request is reported by and responds to the notification accordingly",
-            response = BaseJobResponse.class)
+                    response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/notification")
@@ -77,7 +74,7 @@ public class ManagerApis {
                     + "If successful, returns the File Propagation Job Id. Each Appliance Instance file will be "
                     + "propagated and persisted in the CPA directoy and the process-mgr-file.py will be called to "
                     + "notify the appliance to process the file.",
-            response = BaseJobResponse.class)
+                    response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Corresponding File Propagation Job started. Id in response is expected to be empty"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/propagateMgrFile/vs/{virtualSystemName}")
@@ -104,7 +101,7 @@ public class ManagerApis {
                     + "criteria. If found, the respond will include the VM "
                     + "information based on the information provided for query. For example, if IP is provided, "
                     + "response will include a map entry where the key is the IP and the value is the VM information.<br>",
-            response = QueryVmInfoResponse.class)
+                    response = QueryVmInfoResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/queryVmInfo")
@@ -116,23 +113,6 @@ public class ManagerApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         return ApiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
-    }
-
-    @Path("/updateApplianceConsolePassword/vs/{virtualSystemName}")
-    @PUT
-    public Response updateApplianceConsolePassword(@Context HttpHeaders headers,
-                                                   @PathParam("virtualSystemName") String virtualSystemName,
-                                                   UpdateApplianceConsolePasswordRequest uacpr) {
-
-        log.info("Update appliance(s) console password for vsName: " + virtualSystemName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-
-        UpdateDaiConsolePasswordRequest request = new UpdateDaiConsolePasswordRequest();
-        request.setVsName(virtualSystemName);
-        request.setDaiList(uacpr.applianceInstance);
-        request.setNewPassword(uacpr.newPassword);
-
-        return ApiUtil.getResponse(new UpdateApplianceConsolePasswordService(), request);
     }
 
     @Path("/tagVm")

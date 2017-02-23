@@ -126,25 +126,19 @@ public class Schema {
                 "updated_by varchar(255)," +
                 "updated_timestamp timestamp," +
                 "version bigint," +
-                "agent_version_major bigint," +
-                "agent_version_minor bigint," +
-                "agent_version_str varchar(255)," +
                 "ip_address varchar(255)," +
-                "is_policy_map_out_of_sync bit default 1," +
                 "last_status timestamp," +
                 "workload_interfaces bigint," +
                 "packets bigint," +
                 "discovered boolean," +
                 "inspection_ready boolean," +
                 "name varchar(255) not null," +
-                "agent_type varchar(255) not null," +
                 "mgr_device_id varchar(255)," +
                 "nsx_agent_id varchar(255)," +
                 "nsx_host_id varchar(255)," +
                 "nsx_host_name varchar(255)," +
                 "nsx_host_vsm_uuid varchar(255)," +
                 "nsx_vm_id varchar(255)," +
-                "password varchar(255)," +
                 "current_console_password varchar(255)," +
                 "new_console_password varchar(255)," +
                 "appliance_config blob," +
@@ -156,6 +150,8 @@ public class Schema {
                 "inspection_ingress_mac_address varchar(255)," +
                 "inspection_os_egress_port_id varchar(255)," +
                 "inspection_egress_mac_address varchar(255)," +
+                "mgmt_os_port_id varchar(255)," +
+                "mgmt_mac_address varchar(255)," +
                 "floating_ip_id varchar(255)," +
                 "mgmt_ip_address varchar(255)," +
                 "mgmt_gateway_address varchar(255)," +

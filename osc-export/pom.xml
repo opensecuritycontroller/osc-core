@@ -333,12 +333,6 @@
 									</fileset>
 								</copy>
 
-								<copy todir="${basedir}/webapp/ovf">
-									<fileset dir="${basedir}/../osc-agent/target">
-										<include name="agentUpgradeBundle.zip" />
-										<include name="osc-agent.jar" />
-									</fileset>
-								</copy>
 
 								<!-- serverBOM -->
 								<unjar dest="${basedir}/../osc-server-bom/root/opt/vmidc/bin"

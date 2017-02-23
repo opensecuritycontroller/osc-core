@@ -21,14 +21,11 @@ import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.rest.server.model.QueryVmInfoRequest;
 import org.osc.core.broker.rest.server.model.TagVmRequest;
-import org.osc.core.broker.rest.server.model.UpdateApplianceConsolePasswordRequest;
 import org.osc.core.broker.service.PropagateVSMgrFileService;
 import org.osc.core.broker.service.QueryVmInfoService;
 import org.osc.core.broker.service.TagVmService;
 import org.osc.core.broker.service.UnTagVmService;
-import org.osc.core.broker.service.UpdateApplianceConsolePasswordService;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
-import org.osc.core.broker.service.request.UpdateDaiConsolePasswordRequest;
 import org.osc.core.broker.util.SessionUtil;
 
 @Path(OscRestServlet.MGR_NSM_API_PATH_PREFIX)
@@ -63,22 +60,6 @@ public class NsmMgrApis {
 
         return ApiUtil.getResponse(new PropagateVSMgrFileService(), request);
 
-    }
-
-    @Path("/updateApplianceConsolePassword/vs/{vsName}")
-    @PUT
-    public Response updateApplianceConsolePassword(@Context HttpHeaders headers, @PathParam("vsName") String vsName,
-                                                   UpdateApplianceConsolePasswordRequest uacpr) {
-
-        log.info("Update appliance(s) console password for vsName: " + vsName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-
-        UpdateDaiConsolePasswordRequest request = new UpdateDaiConsolePasswordRequest();
-        request.setVsName(vsName);
-        request.setDaiList(uacpr.applianceInstance);
-        request.setNewPassword(uacpr.newPassword);
-
-        return ApiUtil.getResponse(new UpdateApplianceConsolePasswordService(), request);
     }
 
     @Path("/queryVmInfo")

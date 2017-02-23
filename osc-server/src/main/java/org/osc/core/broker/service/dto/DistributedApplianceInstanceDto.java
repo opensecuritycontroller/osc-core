@@ -1,12 +1,11 @@
 package org.osc.core.broker.service.dto;
 
-import java.util.Date;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 
 import io.swagger.annotations.ApiModelProperty;
 
@@ -46,33 +45,23 @@ public class DistributedApplianceInstanceDto extends BaseDto {
     @ApiModelProperty(required = true, readOnly = true)
     private String virtualConnectorName;
 
-    @ApiModelProperty(
-            value = "The Agent version information.  This value can be empty till we receive the first callback from the instance.",
-            readOnly = true)
-    private String agentVersionStr;
-
-    @ApiModelProperty(
-            value = "The Agent type information.  This value can be Agent or Agentless.",
-            readOnly = true)
-    private String agentTypeStr;
-
     @ApiModelProperty(readOnly = true)
     private String hostname;
 
     @ApiModelProperty(
-            value = "The last time a callback was made from the appliance. This value can be empty till we receive the first callback from the instance.",
+            value = "The last time a callback was made from the appliance. If appliance instance status is not supported by the manager it will return 'N/A'.",
             readOnly = true)
-    private Date lastStatus;
+    private String lastStatus;
 
-    @ApiModelProperty(value = "Indicates whether the instance is authenticated with its manager.",
+    @ApiModelProperty(value = "Indicates whether the instance is authenticated with its manager. If appliance instance status is not supported by the manager it will return 'N/A'",
             required = true,
             readOnly = true)
-    private Boolean discovered;
+    private String discovered;
 
-    @ApiModelProperty(value = "Indicates whether the instance is ready to inspect and handle traffic.",
+    @ApiModelProperty(value = "Indicates whether the instance is ready to inspect and handle traffic. If appliance instance status is not supported by the manager it will return 'N/A'",
             required = true,
             readOnly = true)
-    private Boolean inspectionReady;
+    private String inspectionReady;
 
     @ApiModelProperty(value = "The Id of the corresponding server instance on openstack.(Openstack Only)",
             readOnly = true)
@@ -114,18 +103,20 @@ public class DistributedApplianceInstanceDto extends BaseDto {
     @ApiModelProperty(value = "The management port gateway.", readOnly = true)
     private String mgmtGateway;
 
+    @ApiModelProperty(readOnly = true, value = "Determines whether the appliance manager enables retrieval of appliance status.")
+    private Boolean isApplianceStatusEnabled;
+
     public DistributedApplianceInstanceDto() {
 
     }
 
-    public DistributedApplianceInstanceDto(DistributedApplianceInstance dai) {
+    public DistributedApplianceInstanceDto(DistributedApplianceInstance dai) throws Exception {
         setId(dai.getId());
 
         this.virtualsystemId = dai.getVirtualSystem().getId();
         setVcId(dai.getVirtualSystem().getVirtualizationConnector().getId());
         setMcId(dai.getVirtualSystem().getDistributedAppliance().getApplianceManagerConnector().getId());
         this.name = dai.getName();
-        this.agentTypeStr = dai.getAgentType().toString();
         this.ipAddress = dai.getIpAddress();
 
         this.applianceModel = dai.getVirtualSystem().getDistributedAppliance().getAppliance().getModel();
@@ -135,11 +126,7 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         this.applianceManagerConnectorName = dai.getVirtualSystem().getDistributedAppliance()
                 .getApplianceManagerConnector().getName();
         this.virtualConnectorName = dai.getVirtualSystem().getVirtualizationConnector().getName();
-        this.agentVersionStr = dai.getAgentVersionStr();
         this.hostname = dai.getHostName();
-        this.lastStatus = dai.getLastStatus();
-        this.discovered = dai.getDiscovered();
-        this.inspectionReady = dai.getInspectionReady();
 
         this.osVmId = dai.getOsServerId();
         this.osHostname = dai.getOsHostName();
@@ -151,6 +138,14 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         this.mgmtIpAddress = dai.getMgmtIpAddress();
         this.mgmtSubnetPrefixLength = dai.getMgmtSubnetPrefixLength();
         this.mgmtGateway = dai.getMgmtGateway();
+
+        boolean isApplianceStatusEnabled =
+                ManagerApiFactory.createApplianceManagerApi(dai.getVirtualSystem().getDistributedAppliance().getApplianceManagerConnector().getManagerType()).isAgentManaged();
+
+        this.isApplianceStatusEnabled = isApplianceStatusEnabled;
+        this.discovered = this.isApplianceStatusEnabled ? (dai.getDiscovered() != null ? dai.getDiscovered().toString() : "") : "N/A";
+        this.inspectionReady = this.isApplianceStatusEnabled ? (dai.getInspectionReady() != null ? dai.getInspectionReady().toString() : "") : "N/A";
+        this.lastStatus = this.isApplianceStatusEnabled ? (dai.getLastStatus() != null ? dai.getLastStatus().toString() : "") : "N/A";
     }
 
     public String getName() {
@@ -185,6 +180,10 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         this.swVersion = swVersion;
     }
 
+    public Boolean isApplianceStatusEnabled() {
+        return this.isApplianceStatusEnabled;
+    }
+
     public String getDistributedApplianceName() {
         return this.distributedApplianceName;
     }
@@ -209,22 +208,6 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         this.virtualConnectorName = virtualConnectorName;
     }
 
-    public String getAgentVersionStr() {
-        return this.agentVersionStr;
-    }
-
-    public void setAgentVersionStr(String agentVersionStr) {
-        this.agentVersionStr = agentVersionStr;
-    }
-
-    public String getAgentTypeStr() {
-        return this.agentTypeStr;
-    }
-
-    public void setAgentTypeStr(String agentTypeStr) {
-        this.agentTypeStr = agentTypeStr;
-    }
-
     public String getHostname() {
         return this.hostname;
     }
@@ -233,28 +216,16 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         this.hostname = nsxHostname;
     }
 
-    public Date getLastStatus() {
+    public String getLastStatus() {
         return this.lastStatus;
     }
 
-    public void setLastStatus(Date lastStatus) {
-        this.lastStatus = lastStatus;
-    }
-
-    public Boolean getDiscovered() {
+    public String getDiscovered() {
         return this.discovered;
     }
 
-    public void setDiscovered(Boolean discovered) {
-        this.discovered = discovered;
-    }
-
-    public Boolean getInspectionReady() {
+    public String getInspectionReady() {
         return this.inspectionReady;
-    }
-
-    public void setInspectionReady(Boolean inspectionReady) {
-        this.inspectionReady = inspectionReady;
     }
 
     public String getOsVmId() {
@@ -321,7 +292,7 @@ public class DistributedApplianceInstanceDto extends BaseDto {
                 + this.applianceModel + ", swVersion=" + this.swVersion + ", distributedApplianceName="
                 + this.distributedApplianceName + ", applianceManagerConnectorName="
                 + this.applianceManagerConnectorName + ", virtualConnectorName=" + this.virtualConnectorName
-                + ", agentVersionStr=" + this.agentVersionStr + ", hostname=" + this.hostname + ", lastStatus="
+                + ", hostname=" + this.hostname + ", lastStatus="
                 + this.lastStatus + ", discovered=" + this.discovered + ", inspectionReady=" + this.inspectionReady
                 + ", osVmId=" + this.osVmId + ", osHostname=" + this.osHostname + ", osInspectionIngressPortId="
                 + this.osInspectionIngressPortId + ", osInspectionIngressMacAddress="

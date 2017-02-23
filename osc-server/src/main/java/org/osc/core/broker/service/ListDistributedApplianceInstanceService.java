@@ -13,12 +13,12 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
 public class ListDistributedApplianceInstanceService extends
-        ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<DistributedApplianceInstanceDto>> {
+ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<DistributedApplianceInstanceDto>> {
 
     ListResponse<DistributedApplianceInstanceDto> response = new ListResponse<DistributedApplianceInstanceDto>();
 
     @Override
-    public ListResponse<DistributedApplianceInstanceDto> exec(BaseRequest<BaseDto> request, Session session) {
+    public ListResponse<DistributedApplianceInstanceDto> exec(BaseRequest<BaseDto> request, Session session) throws Exception {
         EntityManager<DistributedApplianceInstance> emgr = new EntityManager<DistributedApplianceInstance>(
                 DistributedApplianceInstance.class, session);
         List<DistributedApplianceInstanceDto> daiList = new ArrayList<DistributedApplianceInstanceDto>();
@@ -29,5 +29,4 @@ public class ListDistributedApplianceInstanceService extends
         this.response.setList(daiList);
         return this.response;
     }
-
 }

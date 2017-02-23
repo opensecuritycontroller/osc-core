@@ -4,13 +4,12 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.service.AgentRegisterService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.EntityManager;
 
 public class AgentRegisterServiceRequestValidator implements RequestValidator<AgentRegisterServiceRequest, DistributedApplianceInstance> {
     private Session session;
-    private static final Logger log = Logger.getLogger(AgentRegisterService.class);
+    private static final Logger log = Logger.getLogger(AgentRegisterServiceRequestValidator.class);
 
     public AgentRegisterServiceRequestValidator(Session session) {
         this.session = session;

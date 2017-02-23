@@ -93,7 +93,6 @@
                 
                 <module>osc-tools</module>
                 <module>osc-common</module>
-                <module>osc-agent</module>
                 <module>osc-server</module>
 
                 <module>osc-uber</module>
@@ -114,7 +113,6 @@
             <modules>
                 <module>osc-tools</module>
                 <module>osc-common</module>
-                <module>osc-agent</module>
                 <module>osc-server</module>
 
                 <module>osc-uber</module>

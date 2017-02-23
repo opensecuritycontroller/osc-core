@@ -16,7 +16,6 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -58,13 +57,13 @@ public class HibernateUtil {
 
     private static ServiceRegistry serviceRegistry;
     private static SessionFactory sessionFactory;
-    
+
     public static Connection getSQLConnection(DBConnectionParameters params) throws SQLException, KeyStoreProviderException {
-    	ensureInitialized();
-    	
-    	return DriverManager.getConnection(params.getConnectionURL(), params.getLogin(), params.getPassword());
+        ensureInitialized();
+
+        return DriverManager.getConnection(params.getConnectionURL(), params.getLogin(), params.getPassword());
     }
-    
+
     public static void addAnnotatedClasses(Configuration configuration) {
 
         configuration.addAnnotatedClass(User.class);
@@ -101,20 +100,19 @@ public class HibernateUtil {
         configuration.addAnnotatedClass(JobsArchive.class);
         configuration.addAnnotatedClass(Network.class);
         configuration.addAnnotatedClass(Subnet.class);
-        configuration.addAnnotatedClass(AgentType.class);
         configuration.addAnnotatedClass(OsSecurityGroupReference.class);
         configuration.addAnnotatedClass(SslCertificateAttr.class);
     }
 
     public static void initSessionFactory() {
-    	if (sessionFactory != null) {
-    		sessionFactory.close();
-    		sessionFactory = null;
-    	}
-    	
-    	ensureInitialized();
+        if (sessionFactory != null) {
+            sessionFactory.close();
+            sessionFactory = null;
+        }
+
+        ensureInitialized();
     }
-    
+
     private static SessionFactory init() {
         /*
          * Increase lock timeout and avoid table lock for updates as per below.
@@ -125,8 +123,8 @@ public class HibernateUtil {
 
         try {
 
-        	DBConnectionParameters connectionParams = new DBConnectionParameters();
-        	
+            DBConnectionParameters connectionParams = new DBConnectionParameters();
+
             Configuration configuration = new Configuration();
 
             connectionParams.fillHibernateConfiguration(configuration);
@@ -136,7 +134,7 @@ public class HibernateUtil {
             serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties())
                     .buildServiceRegistry();
             sessionFactory = configuration.buildSessionFactory(serviceRegistry);
-            
+
             return sessionFactory;
 
         } catch (Throwable ex) {
@@ -147,23 +145,23 @@ public class HibernateUtil {
     }
 
     public static void replaceDefaultDBPassword(DBConnectionParameters params) throws Exception {
-    	try (Connection connection = HibernateUtil.getSQLConnection(params);
-    		 PreparedStatement changePasswordStatement = connection.prepareStatement("ALTER USER " + params.getLogin().toUpperCase() + " SET PASSWORD ?")) {
-               
-           	connection.setAutoCommit(false);
-           	
-	    	String newPassword = RandomStringUtils.randomAscii(32);
-	    	
-	    	try {
-		    	// change password in DB
-		    	changePasswordStatement.setString(1, newPassword);
-		    	changePasswordStatement.execute();
-		    	
-		    	// put password in keystore
-		    	params.updatePassword(newPassword);
-		    	
-		    	// reinitialize session factory
-		    	HibernateUtil.initSessionFactory();
+        try (Connection connection = HibernateUtil.getSQLConnection(params);
+                PreparedStatement changePasswordStatement = connection.prepareStatement("ALTER USER " + params.getLogin().toUpperCase() + " SET PASSWORD ?")) {
+
+            connection.setAutoCommit(false);
+
+            String newPassword = RandomStringUtils.randomAscii(32);
+
+            try {
+                // change password in DB
+                changePasswordStatement.setString(1, newPassword);
+                changePasswordStatement.execute();
+
+                // put password in keystore
+                params.updatePassword(newPassword);
+
+                // reinitialize session factory
+                HibernateUtil.initSessionFactory();
                 connection.commit();
             } catch (Exception ex) {
                 log.error("Error while changing DB password.", ex);
@@ -178,16 +176,16 @@ public class HibernateUtil {
             }
         }
     }
-    
+
     public static SessionFactory getSessionFactory() {
-    	ensureInitialized();
-    	
-    	return sessionFactory;
+        ensureInitialized();
+
+        return sessionFactory;
     }
-    
+
     private static void ensureInitialized() {
         if (sessionFactory == null) {
-        	sessionFactory = init();
+            sessionFactory = init();
         }
     }
 
