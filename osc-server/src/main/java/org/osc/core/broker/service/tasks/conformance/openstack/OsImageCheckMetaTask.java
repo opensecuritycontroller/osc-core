@@ -4,8 +4,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.jclouds.openstack.glance.v1_0.domain.Image.Status;
 import org.jclouds.openstack.glance.v1_0.domain.ImageDetails;
@@ -30,6 +28,8 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
     private Endpoint osEndPoint;
     private TaskGraph tg;
 
+    private JCloudGlance glance;
+
     public OsImageCheckMetaTask(VirtualSystem vs, String region, Endpoint osEndPoint) {
         this.vs = vs;
         this.vcName = vs.getVirtualizationConnector().getName();
@@ -42,8 +42,7 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
     public void executeTransaction(Session session) throws Exception {
         this.tg = new TaskGraph();
 
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId(),
-                new LockOptions().setLockMode(LockMode.PESSIMISTIC_WRITE));
+        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
 
         log.info("Checking VS" + this.vs.getName() + " has the corresponding image uploaded in glance");
 
@@ -53,14 +52,18 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
                 applianceSoftwareVersion.getApplianceSoftwareVersion(), this.vs.getName(),
                 applianceSoftwareVersion.getImageUrl());
 
-        try (JCloudGlance glance = new JCloudGlance(this.osEndPoint)) {
+        if (this.glance == null) {
+            this.glance = new JCloudGlance(this.osEndPoint);
+        }
+
+        try {
             Set<OsImageReference> imageReferences = this.vs.getOsImageReference();
             boolean uploadImage = true;
 
             for (Iterator<OsImageReference> iterator = imageReferences.iterator(); iterator.hasNext();) {
                 OsImageReference imageReference = iterator.next();
                 if (imageReference.getRegion().equals(this.region)) {
-                    ImageDetails image = glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
+                    ImageDetails image = this.glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
                     if (image == null || image != null && image.getStatus() != Status.ACTIVE) {
                         iterator.remove();
                         this.tg.appendTask(new DeleteOsImageTask(imageReference));
@@ -72,7 +75,7 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
                         uploadImage = false;
                         // For any existing images in db which dont have the version set, set the version
                         if(imageReference.getApplianceVersion() == null) {
-                            this.tg.appendTask(new UpdateImageApplianceVersionFromDbTask(imageReference, this.vs));
+                            this.tg.appendTask(new UpdateImageVersionTask(imageReference, this.vs));
                         }
                     }
                 }
@@ -81,6 +84,8 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
                 this.tg.appendTask(new UploadImageToGlanceTask(this.vs, this.region, expectedGlanceImageName,
                         applianceSoftwareVersion, this.osEndPoint), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
+        } finally {
+            this.glance.close();
         }
     }
 
