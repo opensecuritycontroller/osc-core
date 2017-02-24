@@ -1,5 +1,5 @@
 #
-# Create bundle to allow jersey 1.x to be extracted from uber-bundle
+# Create bundle to allow jcloud to be extracted from uber-bundle
 #
 -include target/depend.bnd
 
