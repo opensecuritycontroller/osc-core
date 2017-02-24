@@ -26,3 +26,5 @@ osc-server/src/main/webapp/VAADIN/themes/vmidc/styles.css
 osc-server/src/main/webapp/VAADIN/widgetsets/
 **/*.iml
 **/?
+*.classpath
+*.classpath
