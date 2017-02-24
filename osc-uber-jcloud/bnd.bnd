@@ -38,10 +38,10 @@ Import-Package:\
 #  is workaround to stop jackson binding to wrong version
 #  as it imports version="[1.1.1,2.0)"
 -exportcontents:\
-  com.sun.jersey.api.*;version=${Bundle-Version},\
-  com.sun.jersey.client.*;version=${Bundle-Version},\
-  com.sun.jersey.core.*;version=${Bundle-Version},\
-  com.sun.jersey.spi.*;version=${Bundle-Version},\
+  com.sun.jersey.api.*;version=1.12,\
+  com.sun.jersey.client.*;version=1.12,\
+  com.sun.jersey.core.*;version=1.12,\
+  com.sun.jersey.spi.*;version=1.12,\
   javax.ws.rs.*;version=1.1.0,\
   org.jclouds.*;version=2.0.0
 

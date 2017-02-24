@@ -54,7 +54,7 @@ x-runproperties.debug: \
 	org.apache.felix.webconsole.plugins.ds;version='[2.0.2,2.0.3)',\
 	org.apache.felix.http.api;version='[3.0.0,3.0.1)',\
 	org.apache.felix.resolver;version='[1.10.1,1.10.2)',\
-	osc-uber-jcloud;version='[1.12.0,1.12.1)',\
+	osc-uber-jcloud;version='[1.0.0,1.0.1)',\
 	javax.websocket-api;version='[1.0.0,1.0.1)',\
 	javax.ws.rs-api;version='[2.0.1,2.0.2)',\
 	org.glassfish.jersey.core.jersey-server;version='[2.25.0,2.25.1)',\
