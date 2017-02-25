@@ -174,7 +174,9 @@
 							<goal>check</goal>
 						</goals>
 						<configuration>
-							<configLocation>ISC_checks.xml</configLocation>
+							<configLocation>OSC_checks.xml</configLocation>
+							<suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+							<suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
 							<!-- Turning the fail-on-violation flag on -->
 							<failOnViolation>true</failOnViolation>
 						</configuration>
