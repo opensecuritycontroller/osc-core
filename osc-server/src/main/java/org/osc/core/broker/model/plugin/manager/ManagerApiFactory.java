@@ -1,5 +1,7 @@
 package org.osc.core.broker.model.plugin.manager;
 
+import static org.osc.sdk.manager.Constants.*;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,7 +47,17 @@ public class ManagerApiFactory {
 
     public static final String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
 
-    private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES =  ImmutableMap.<String, Class<?>>builder().build();
+    private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES =
+            ImmutableMap.<String, Class<?>>builder()
+            .put(VENDOR_NAME, String.class)
+            .put(SERVICE_NAME, String.class)
+            .put(EXTERNAL_SERVICE_NAME, String.class)
+            .put(AUTHENTICATION_TYPE, String.class)
+            .put(NOTIFICATION_TYPE, String.class)
+            .put(SYNC_SECURITY_GROUP, Boolean.class)
+            .put(PROVIDE_DEVICE_STATUS, Boolean.class)
+            .put(SYNC_POLICY_MAPPING, Boolean.class)
+            .build();
 
     private final static Logger log = Logger.getLogger(ManagerApiFactory.class);
 

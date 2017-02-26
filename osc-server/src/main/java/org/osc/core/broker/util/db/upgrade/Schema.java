@@ -58,7 +58,13 @@ public class Schema {
                 "ip_address varchar(255) not null," +
                 "manager_type varchar(255) not null," +
                 "name varchar(255) not null," +
-                "vendor_name varchar(255)," +
+                "vendor_name varchar(255) not null," +
+                "external_service_name varchar(255) not null," +
+                "authentication_type varchar(255) not null," +
+                "notification_type varchar(255) not null," +
+                "syncs_security_group boolean not null," +
+                "provides_device_status boolean not null," +
+                "syncs_policy_mapping boolean not null," +
                 "password varchar(255)," +
                 "public_key blob," +
                 "service_type varchar(255) not null," +
@@ -371,6 +377,12 @@ public class Schema {
                 "virtualization_type varchar(255) not null," +
                 "controller_type varchar(255) not null," +
                 "admin_tenant_name varchar(255)," +
+                "supports_offbox_redirection boolean not null," +
+                "supports_service_function_chaining boolean not null," +
+                "supports_failure_policy boolean not null," +
+                "uses_provider_creds boolean not null," +
+                "provides_flow_info boolean not null," +
+                "supports_port_group boolean not null," +
                 "primary key (id)" +
             ");",
 

@@ -15,6 +15,8 @@ import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.sdk.manager.ManagerAuthenticationType;
+import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
 
 import io.swagger.annotations.ApiModelProperty;
 
@@ -58,6 +60,27 @@ public class ApplianceManagerConnectorDto extends BaseDto {
 
     @ApiModelProperty(readOnly = true)
     private String vendorName;
+
+    @ApiModelProperty(value = "The name of the service managed by this manager.", readOnly = true)
+    private String serviceName;
+
+    @ApiModelProperty(value = "The name of the service managed by this manager to be used in external systems.", readOnly = true)
+    private String externalServiceName;
+
+    @ApiModelProperty(value = "The authentication type used by this manager.", readOnly = true)
+    private ManagerAuthenticationType authenticationType;
+
+    @ApiModelProperty(value = "The notification type used by this manager to communicate with OSC.", readOnly = true)
+    private ManagerNotificationSubscriptionType notificationType;
+
+    @ApiModelProperty(value = "Indicates whether this manager supports syncing security group information.", readOnly = true)
+    private Boolean syncsSecurityGroup;
+
+    @ApiModelProperty(value = "Indicates whether this manager can provide the status of the deployed devices.", readOnly = true)
+    private Boolean providesDeviceStatus;
+
+    @ApiModelProperty(value = "Indicates whether this manager supports syncing the policy mappings.", readOnly = true)
+    private Boolean syncsPolicyMapping;
 
     public String getName() {
         return this.name;
@@ -153,6 +176,62 @@ public class ApplianceManagerConnectorDto extends BaseDto {
 
     public void setVendorName(String vendorName) {
         this.vendorName = vendorName;
+    }
+
+    public String getServiceName() {
+        return this.serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public String getExternalServiceName() {
+        return this.externalServiceName;
+    }
+
+    public void setExternalServiceName(String externalServiceName) {
+        this.externalServiceName = externalServiceName;
+    }
+
+    public ManagerAuthenticationType getAuthenticationType() {
+        return this.authenticationType;
+    }
+
+    public void setAuthenticationType(ManagerAuthenticationType authenticationType) {
+        this.authenticationType = authenticationType;
+    }
+
+    public ManagerNotificationSubscriptionType getNotificationType() {
+        return this.notificationType;
+    }
+
+    public void setNotificationType(ManagerNotificationSubscriptionType notificationType) {
+        this.notificationType = notificationType;
+    }
+
+    public Boolean syncsSecurityGroup() {
+        return this.syncsSecurityGroup;
+    }
+
+    public void setSyncsSecurityGroup(Boolean syncsSecurityGroup) {
+        this.syncsSecurityGroup = syncsSecurityGroup;
+    }
+
+    public Boolean providesDeviceStatus() {
+        return this.providesDeviceStatus;
+    }
+
+    public void setProvidesDeviceStatus(Boolean providesDeviceStatus) {
+        this.providesDeviceStatus = providesDeviceStatus;
+    }
+
+    public Boolean syncsPolicyMapping() {
+        return this.syncsPolicyMapping;
+    }
+
+    public void setSyncsPolicyMapping(Boolean syncsPolicyMapping) {
+        this.syncsPolicyMapping = syncsPolicyMapping;
     }
 
     @Override
