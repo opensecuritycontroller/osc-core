@@ -55,7 +55,6 @@ Require-Capability: \
     @${jboss-logging.dep},\
     @${jboss-transaction-api_1.1_spec.dep},\
     @${joda-time.dep},\
-    @${json.dep},\
     @${jsoup.dep},\
     @${log4j.dep},\
     @${org.apache.commons.lang.dep},\
@@ -66,7 +65,6 @@ Require-Capability: \
     @${slf4j-api.dep},\
     @${snakeyaml.dep},\
     @${stepper.dep},\
-    @${streamhtmlparser-jsilver.dep},\
     @${swagger-annotations.dep},\
     @${swagger-core.dep},\
     @${swagger-models.dep},\
@@ -83,12 +81,18 @@ Require-Capability: \
     @${vaadin-slf4j-jdk14.dep},\
     @${vaadin-themes.dep},\
     @${validation-api.dep},\
-    @${vijava.dep},\
+    @${httpclient.dep},\
+    @${commons-codec.dep},\
+    @${commons-logging.dep},\
+    @${yavijava.dep},\
     @${security-mgr-api.dep},\
     @${sdn-controller-api.dep},\
     @${vmware-nsx-api.dep},\
     @${osc-common.dep},\
-    @${osc-server.dep}
+    @${osc-server.dep},\
+    @${gwt-elemental.dep},\
+    @${gwt-user.dep},\
+    @${vaadin-sass-compiler.dep}
 
 Import-Package:\
     ${exclude-osgi},\
@@ -172,6 +176,7 @@ exclude-other:\
   !com.fasterxml.classmate.members,\
   !com.gargoylesoftware.htmlunit,\
   !com.gargoylesoftware.htmlunit.html,\
+  !com.gargoylesoftware.htmlunit.util,\
   !com.gargoylesoftware.htmlunit.javascript,\
   !com.gargoylesoftware.htmlunit.javascript.host,\
   !com.google.appengine.api.datastore,\
@@ -206,6 +211,14 @@ exclude-other:\
   !com.google.gwt.lang,\
   !com.google.gwt.thirdparty.debugging.sourcemap,\
   !com.google.gwt.thirdparty.debugging.sourcemap.proto,\
+  !com.google.gwt.thirdparty.json,\
+  !com.google.gwt.thirdparty.guava.common.base,\
+  !com.google.gwt.thirdparty.guava.common.collect,\
+  !com.google.gwt.thirdparty.guava.common.io,\
+  !com.google.gwt.thirdparty.guava.common.primitives,\
+  !com.yahoo.platform.yui.compressor,\
+  !org.objectweb.asm.commons,\
+  !org.kohsuke.args4j,\
   !com.google.gwt.util.tools,\
   !com.google.gwt.util.tools.shared,\
   !com.google.inject.internal.asm.util,\
@@ -331,6 +344,10 @@ exclude-other:\
   !weblogic.jdbc.jts,\
   !weblogic.jdbc.vendor.oracle,\
   !weblogic.websocket,\
-  !weblogic.websocket.annotation
+  !weblogic.websocket.annotation,\
+  !org.apache.avalon.*,\
+  !org.apache.http.*,\
+  !org.apache.log.*,\
+  !org.apache.log4j.*
 
 #end

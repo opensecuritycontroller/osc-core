@@ -1,6 +1,8 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.osc.core.broker.job.TaskGraph;
@@ -15,8 +17,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
-
-import com.google.gwt.thirdparty.guava.common.collect.Sets;
 
 public class DSUpdateOrDeleteMetaTaskTestData {
     public static List<DeploymentSpec> TEST_DEPLOYMENT_SPECS = new ArrayList<>();
@@ -118,11 +118,11 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         dai.setOsHostName(daiHostName);
         dai.setName(daiName);
 
-        ds.setDistributedApplianceInstances(Sets.newHashSet(dai));
+        ds.setDistributedApplianceInstances(new HashSet<>(Arrays.asList(dai)));
 
         Host host = new Host();
         host.setName(selectedHostName);
-        ds.setHosts(Sets.newHashSet(host));
+        ds.setHosts(new HashSet<>(Arrays.asList(host)));
 
         return ds;
     }
@@ -146,7 +146,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         DeploymentSpec ds = createDeploymentSpec(dsId, region);
 
         AvailabilityZone az = new AvailabilityZone(ds, null, selectedAzName);
-        ds.setAvailabilityZones(Sets.newHashSet(az));
+        ds.setAvailabilityZones(new HashSet<>(Arrays.asList(az)));
 
         DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM);
         dai.setOsHostName(daiHostName);
@@ -161,7 +161,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
         HostAggregate ha = new HostAggregate(ds, hostAggregateOSId);
 
-        ds.setHostAggregates(Sets.newHashSet(ha));
+        ds.setHostAggregates(new HashSet<>(Arrays.asList(ha)));
         return ds;
     }
 
@@ -172,7 +172,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         dai.setName(daiName);
 
         dais.add(dai);
-        ds.setDistributedApplianceInstances(Sets.newHashSet(dai));
+        ds.setDistributedApplianceInstances(new HashSet<>(Arrays.asList(dai)));
 
         return ds;
     }

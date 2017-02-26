@@ -1,6 +1,5 @@
 package org.osc.core.broker.service.vc;
 
-import com.google.gwt.thirdparty.guava.common.base.Objects;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -176,8 +175,8 @@ public class UpdateVirtualizationConnectorService
         if (!request.isIgnoreErrorsAndCommit(ErrorType.IP_CHANGED_EXCEPTION) && !request.isSkipAllDryRun()
                 && existingVc.getVirtualSystems().size() > 0
                 && ((existingVc.getControllerIpAddress() != null
-                && !Objects.equal(existingVc.getControllerIpAddress(), dto.getControllerIP()))
-                || !Objects.equal(existingVc.getProviderIpAddress(), dto.getProviderIP()))) {
+                && !existingVc.getControllerIpAddress().equals(dto.getControllerIP())
+                || !existingVc.getProviderIpAddress().equals(dto.getProviderIP())))) {
             log.info("Ip changed for either the controller or the provider with deployed Virtual Systems");
             throw new ErrorTypeException(VmidcMessages.getString(VmidcMessages_.VC_WARNING_IPUPDATE),
                     ErrorType.IP_CHANGED_EXCEPTION);

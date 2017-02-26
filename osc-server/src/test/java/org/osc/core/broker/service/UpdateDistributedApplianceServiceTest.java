@@ -1,5 +1,6 @@
 package org.osc.core.broker.service;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import org.hibernate.Session;
@@ -38,7 +39,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.common.collect.Sets;
-import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ConformService.class, LockUtil.class, ManagerApiFactory.class})
@@ -171,7 +171,7 @@ public class UpdateDistributedApplianceServiceTest {
                 this.vc.getVirtualizationType(),
                 this.vc.getVirtualizationSoftwareVersion(),
                 softwareVersion);
-        this.sessionStub.stubListByDaId(this.daDto.getId(), Lists.newArrayList(this.daDto.getId()));
+        this.sessionStub.stubListByDaId(this.daDto.getId(), Arrays.asList(this.daDto.getId()));
 
         PowerMockito.mockStatic(ConformService.class);
         Mockito.when(ConformService.startDAConformJob(Mockito.any(Session.class),
