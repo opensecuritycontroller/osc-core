@@ -1,6 +1,5 @@
 package org.osc.core.broker.model.plugin.manager;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,14 +13,9 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.PluginTracker;
 import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
-import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
-import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
-import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
-import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.DryRunRequest;
-import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.mc.UpdateMCPluginPropertiesService;
+import org.osc.core.broker.service.request.UpdateConnectorPluginPropertiesRequest;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.EncryptionUtil;
@@ -108,8 +102,15 @@ public class ManagerApiFactory {
 
                 String name = (String) nameObj;
 
+                Map<String, Object> properties = new HashMap<String, Object>();
+                for (String propertyKey : reference.getPropertyKeys()) {
+                    properties.put(propertyKey, reference.getProperty(propertyKey));
+                }
+
                 try {
-                    updateManagerConnectors(name, reference);
+                    UpdateConnectorPluginPropertiesRequest updateRequest = new UpdateConnectorPluginPropertiesRequest(name, properties);
+                    UpdateMCPluginPropertiesService updateService = new UpdateMCPluginPropertiesService();
+                    updateService.dispatch(updateRequest);
                 } catch (Exception e) {
                     log.error("Error will updating the manager connectors", e);
                     return null;
@@ -258,35 +259,5 @@ public class ManagerApiFactory {
 
     private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs) throws EncryptionException {
         return getApplianceManagerConnectorElement(vs.getDistributedAppliance().getApplianceManagerConnector());
-    }
-
-    private static void updateManagerConnectors(String pluginName, ServiceReference<ApplianceManagerApi> reference) throws Exception  {
-        List<ApplianceManagerConnectorDto> mcs = getManagerConnectors(pluginName);
-        for (ApplianceManagerConnectorDto mc : mcs) {
-            mc.setVendorName((String)reference.getProperty(PluginTracker.PROP_PLUGIN_VENDOR_NAME));
-
-            DryRunRequest<ApplianceManagerConnectorDto> updateRequest = new DryRunRequest<ApplianceManagerConnectorDto>();
-            updateRequest.setDto(mc);
-
-            UpdateApplianceManagerConnectorService updateService = new UpdateApplianceManagerConnectorService();
-
-            updateService.dispatch(updateRequest);
-        }
-    }
-
-    private static List<ApplianceManagerConnectorDto> getManagerConnectors(String pluginName) throws Exception {
-        List<ApplianceManagerConnectorDto> result = new ArrayList<ApplianceManagerConnectorDto>();
-        BaseRequest<BaseDto> request = new BaseRequest<>();
-        ListResponse<ApplianceManagerConnectorDto> res;
-        ListApplianceManagerConnectorService listService = new ListApplianceManagerConnectorService();
-
-        res = listService.dispatch(request);
-        for (ApplianceManagerConnectorDto mc : res.getList()) {
-            if (mc.getManagerType().equals(ManagerType.fromText(pluginName))) {
-                result.add(mc);
-            }
-        }
-
-        return result;
     }
 }

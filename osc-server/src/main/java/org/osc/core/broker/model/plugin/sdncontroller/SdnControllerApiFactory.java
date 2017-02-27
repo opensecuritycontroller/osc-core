@@ -1,6 +1,5 @@
 package org.osc.core.broker.model.plugin.sdncontroller;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -18,14 +17,9 @@ import org.osc.core.broker.model.plugin.PluginTracker;
 import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ServiceUnavailableException;
-import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.DryRunRequest;
-import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.vc.ListVirtualizationConnectorService;
-import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
+import org.osc.core.broker.service.request.UpdateConnectorPluginPropertiesRequest;
+import org.osc.core.broker.service.vc.UpdateVCPluginPropertiesService;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.EncryptionUtil;
@@ -181,8 +175,15 @@ public class SdnControllerApiFactory {
                         return null;
                     }
 
+                    Map<String, Object> properties = new HashMap<String, Object>();
+                    for (String propertyKey : reference.getPropertyKeys()) {
+                        properties.put(propertyKey, reference.getProperty(propertyKey));
+                    }
+
                     try {
-                        updateVirtualizationConnectors(name, reference);
+                        UpdateConnectorPluginPropertiesRequest updateRequest = new UpdateConnectorPluginPropertiesRequest(name, properties);
+                        UpdateVCPluginPropertiesService updateService = new UpdateVCPluginPropertiesService();
+                        updateService.dispatch(updateRequest);
                     } catch (Exception e) {
                         LOG.error("Error will updating the virtualization connectors", e);
                         return null;
@@ -233,37 +234,6 @@ public class SdnControllerApiFactory {
         removeTrackers(sdnControllerPluginTrackers);
         removeTrackers(vmWareSdnPluginTrackers);
         installManagerTracker.close();
-    }
-
-    private static <T> void updateVirtualizationConnectors(String pluginName, ServiceReference<T> reference) throws Exception  {
-        List<VirtualizationConnectorDto> vcs = getVirtualizationConnectors(pluginName);
-        for (VirtualizationConnectorDto vc : vcs) {
-            // TODO emanoel: set plugin properties below.
-            //mc.setVendorName((String)reference.getProperty(PluginTracker.PROP_PLUGIN_VENDOR_NAME));
-
-            DryRunRequest<VirtualizationConnectorDto> updateRequest = new DryRunRequest<VirtualizationConnectorDto>();
-            updateRequest.setDto(vc);
-
-            UpdateVirtualizationConnectorService updateService = new UpdateVirtualizationConnectorService();
-
-            updateService.dispatch(updateRequest);
-        }
-    }
-
-    private static List<VirtualizationConnectorDto> getVirtualizationConnectors(String pluginName) throws Exception {
-        List<VirtualizationConnectorDto> result = new ArrayList<VirtualizationConnectorDto>();
-        BaseRequest<BaseDto> request = new BaseRequest<>();
-        ListResponse<VirtualizationConnectorDto> res;
-        ListVirtualizationConnectorService listService = new ListVirtualizationConnectorService();
-
-        res = listService.dispatch(request);
-        for (VirtualizationConnectorDto vc : res.getList()) {
-            if (vc.getControllerType().equals(ControllerType.fromText(pluginName))) {
-                result.add(vc);
-            }
-        }
-
-        return result;
     }
 
     private static <T> void removeTrackers(List<PluginTracker<T>> trackers) {

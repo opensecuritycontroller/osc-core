@@ -46,14 +46,8 @@ public class PluginTracker<T> {
      */
     public static final String PROP_PLUGIN_NAME = "osc.plugin.name";
 
-    /**
-     * Marker property on Plugin services indicating the plugin vendor name.
-     */
-    public static final String PROP_PLUGIN_VENDOR_NAME = "osc.plugin.vendor_name";
-
     private static final Map<String, Class<?>> REQUIRED_PLUGIN_PROPERTIES =  ImmutableMap.<String, Class<?>>builder()
-            .put(PROP_PLUGIN_NAME, String.class)
-            .put(PROP_PLUGIN_VENDOR_NAME, String.class).build();
+            .put(PROP_PLUGIN_NAME, String.class).build();
 
     private final BundleContext context;
     private final Class<T> pluginClass;

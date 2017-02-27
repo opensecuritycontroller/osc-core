@@ -1,5 +1,9 @@
 package org.osc.core.broker.service.persistence;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -10,16 +14,13 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class VirtualizationConnectorEntityMgr {
 
@@ -154,6 +155,13 @@ public class VirtualizationConnectorEntityMgr {
     public static List<VirtualizationConnector> listByType(Session session, VirtualizationType type) {
         Criteria criteria = session.createCriteria(VirtualizationConnector.class)
                 .add(Restrictions.eq("virtualizationType", type)).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        return criteria.list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<VirtualizationConnector> listByControllerType(Session session, ControllerType type) {
+        Criteria criteria = session.createCriteria(VirtualizationConnector.class)
+                .add(Restrictions.eq("controllerType", type)).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         return criteria.list();
     }
 
