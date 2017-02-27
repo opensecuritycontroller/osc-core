@@ -1,6 +1,15 @@
 package org.osc.core.broker.service.dto;
 
-import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -10,14 +19,7 @@ import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.util.ValidateUtil;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import io.swagger.annotations.ApiModelProperty;
 
 // Virtualization Connector Data Transfer Object associated with VC entity
 @XmlRootElement(name = "virtualizationConnector")
@@ -56,11 +58,29 @@ public class VirtualizationConnectorDto extends BaseDto {
     @ApiModelProperty(value = "The SDN controller type", allowableValues = "NONE, NSC")
     private ControllerType controllerType;
 
+    @ApiModelProperty(value = "Indicates whether this VC SDN controller supports traffic redirection to a VNF running on a remote hypervisor.", readOnly = true)
+    private Boolean supportsOffboxRedirection;
+
+    @ApiModelProperty(value = "Indicates whether this VC SDN controller supports supports traffic redirection to multiple VNFs (service function chaining).", readOnly = true)
+    private Boolean supportsServiceFunctionChaining;
+
+    @ApiModelProperty(value = "Indicates whether this VC SDN controller supports inspection port failure detection and can bypass traffic inspection.", readOnly = true)
+    private Boolean supportsFailurePolicy;
+
+    @ApiModelProperty(value = "Indicates whether this VC SDN controller uses the virtualization provider credentials.", readOnly = true)
+    private Boolean usesProviderCreds;
+
+    @ApiModelProperty(value = "Indicates whether this VC SDN controller provides flow port information.", readOnly = true)
+    private Boolean providesFlowInfo;
+
+    @ApiModelProperty(value = "Indicates whether this VC SDN controller supports port groups.", readOnly = true)
+    private Boolean supportsPortGroup;
+
     @ApiModelProperty(
             value = "The Provider Attributes are all required if Provider is OpenStack except rabbitMQIP if the RabbitMQ endpoint is the same as the OpenStack keystone. "
-            		+ "This is a map of the following attributes: ishttps, rabbitMQIp, rabbitUser, rabbitMQPassword, rabbitMQPort",
-            allowableValues = "ishttps, rabbitMQIP, rabbitUser, rabbitMQPassword, rabbitMQPort",
-            dataType = "map[string,string]")
+                    + "This is a map of the following attributes: ishttps, rabbitMQIp, rabbitUser, rabbitMQPassword, rabbitMQPort",
+                    allowableValues = "ishttps, rabbitMQIP, rabbitUser, rabbitMQPassword, rabbitMQPort",
+                    dataType = "map[string,string]")
     private Map<String, String> providerAttributes = new HashMap<>();
 
     @ApiModelProperty(value = "Required if Provider is openstack")
@@ -162,7 +182,7 @@ public class VirtualizationConnectorDto extends BaseDto {
     }
 
     public Set<SslCertificateAttr> getSslCertificateAttrSet() {
-        return sslCertificateAttrSet;
+        return this.sslCertificateAttrSet;
     }
 
     public void setSslCertificateAttrSet(Set<SslCertificateAttr> sslCertificateAttrSet) {
@@ -175,6 +195,54 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     public void setAdminTenantName(String adminTenantName) {
         this.adminTenantName = adminTenantName;
+    }
+
+    public Boolean supportsOffboxRedirection() {
+        return this.supportsOffboxRedirection;
+    }
+
+    public void setSupportsOffboxRedirection(Boolean supportsOffboxRedirection) {
+        this.supportsOffboxRedirection = supportsOffboxRedirection;
+    }
+
+    public Boolean supportsServiceFunctionChaining() {
+        return this.supportsServiceFunctionChaining;
+    }
+
+    public void setSupportsServiceFunctionChaining(Boolean supportsServiceFunctionChaining) {
+        this.supportsServiceFunctionChaining = supportsServiceFunctionChaining;
+    }
+
+    public Boolean supportsFailurePolicy() {
+        return this.supportsFailurePolicy;
+    }
+
+    public void setSupportsFailurePolicy(Boolean supportsFailurePolicy) {
+        this.supportsFailurePolicy = supportsFailurePolicy;
+    }
+
+    public Boolean usesProviderCreds() {
+        return this.usesProviderCreds;
+    }
+
+    public void setUsesProviderCreds(Boolean usesProviderCreds) {
+        this.usesProviderCreds = usesProviderCreds;
+    }
+
+    public Boolean supportsPortGroup() {
+        return this.supportsPortGroup;
+    }
+
+    public void setSupportsPortGroup(Boolean supportsPortGroup) {
+        this.supportsPortGroup = supportsPortGroup;
+    }
+
+    public Boolean providesFlowInfo() {
+        return this.providesFlowInfo;
+    }
+
+    public void setProvidesFlowInfo(Boolean providesFlowInfo) {
+        this.providesFlowInfo = providesFlowInfo;
     }
 
     @ApiModelProperty(hidden = true)
@@ -299,22 +367,22 @@ public class VirtualizationConnectorDto extends BaseDto {
     }
 
     public static void checkFieldFormat(VirtualizationConnectorDto dto) throws VmidcBrokerInvalidEntryException {
-    	ValidateUtil.checkForValidIpAddressFormat(dto.getProviderIP());
+        ValidateUtil.checkForValidIpAddressFormat(dto.getProviderIP());
 
-    	if (dto.getType().isOpenstack() && dto.getProviderAttributes() != null) {
+        if (dto.getType().isOpenstack() && dto.getProviderAttributes() != null) {
             String rabbitMqPort = dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT);
             if (!StringUtils.isNumeric(rabbitMqPort)) {
                 throw new VmidcBrokerInvalidEntryException(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT
                         + " expected to be an Integer. Value is: " + rabbitMqPort);
             }
-            
+
             String rabbitMQIP = dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_IP);
             if (!StringUtils.isBlank(rabbitMQIP)) {
-            	ValidateUtil.checkForValidIpAddressFormat(rabbitMQIP);
+                ValidateUtil.checkForValidIpAddressFormat(rabbitMQIP);
             }
         }
     }
-    
+
     public static void sanitizeVirtualizationConnector(VirtualizationConnectorDto dto) {
         dto.setProviderPassword(null);
         dto.setControllerPassword(null);

@@ -224,7 +224,20 @@ public class ReleaseUpgradeMgr {
     }
     
     private static void upgrade75to76(Statement stmt) throws SQLException, EncryptionException {
-        execSql(stmt, "alter table APPLIANCE_MANAGER_CONNECTOR ADD COLUMN vendor_name varchar(255);");
+        execSql(stmt, "alter table APPLIANCE_MANAGER_CONNECTOR ADD COLUMN vendor_name varchar(255) not null default 'VENDOR_NAME';");
+        execSql(stmt, "alter table APPLIANCE_MANAGER_CONNECTOR ADD COLUMN external_service_name varchar(255) not null default 'EXT_SERVICE_NAME';");
+        execSql(stmt, "alter table APPLIANCE_MANAGER_CONNECTOR ADD COLUMN authentication_type varchar(255) not null default 'BASIC_AUTH';");
+        execSql(stmt, "alter table APPLIANCE_MANAGER_CONNECTOR ADD COLUMN notification_type varchar(255) not null default 'NONE';");
+        execSql(stmt, "alter table APPLIANCE_MANAGER_CONNECTOR ADD COLUMN syncs_security_group boolean not null default false;");
+        execSql(stmt, "alter table APPLIANCE_MANAGER_CONNECTOR ADD COLUMN provides_device_status boolean not null default false;");
+        execSql(stmt, "alter table APPLIANCE_MANAGER_CONNECTOR ADD COLUMN syncs_policy_mapping boolean not null default false;");
+        
+        execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR ADD COLUMN supports_offbox_redirection boolean not null default false;");
+        execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR ADD COLUMN supports_service_function_chaining boolean not null default false;");
+        execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR ADD COLUMN supports_failure_policy boolean not null default false;");
+        execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR ADD COLUMN uses_provider_creds boolean not null default false;");
+        execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR ADD COLUMN provides_flow_info boolean not null default false;");
+        execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR ADD COLUMN supports_port_group boolean not null default false;");
     }
     
     private static void upgrade74to75(Statement stmt) throws SQLException, EncryptionException {

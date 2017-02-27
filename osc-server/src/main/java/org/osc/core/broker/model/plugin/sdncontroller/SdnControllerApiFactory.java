@@ -1,5 +1,7 @@
 package org.osc.core.broker.model.plugin.sdncontroller;
 
+import static org.osc.sdk.controller.Constants.*;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -37,7 +39,15 @@ import com.google.common.collect.ImmutableMap;
 public class SdnControllerApiFactory {
 
     public static final String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
-    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES =  ImmutableMap.<String, Class<?>>builder().build();
+    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES =
+            ImmutableMap.<String, Class<?>>builder()
+            .put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class)
+            .put(SUPPORT_SFC, Boolean.class)
+            .put(SUPPORT_FAILURE_POLICY, Boolean.class)
+            .put(USE_PROVIDER_CREDS, Boolean.class)
+            .put(QUERY_PORT_INFO, Boolean.class)
+            .put(SUPPORT_PORT_GROUP, Boolean.class)
+            .build();
 
     private static HashMap<String, ServiceObjects<SdnControllerApi>> sdnControllerPlugins = new HashMap<>();
     private static HashMap<String, ServiceObjects<VMwareSdnApi>> vmWareSdnPlugins = new HashMap<>();

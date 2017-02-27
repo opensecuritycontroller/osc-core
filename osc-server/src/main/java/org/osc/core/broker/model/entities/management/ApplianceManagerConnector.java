@@ -27,6 +27,8 @@ import org.osc.core.broker.model.entities.job.LastJobContainer;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.sdk.manager.ManagerAuthenticationType;
+import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 
 @SuppressWarnings("serial")
@@ -59,6 +61,24 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
 
     @Column(name = "vendor_name")
     private String vendorName;
+
+    @Column(name = "external_service_name")
+    private String externalServiceName;
+
+    @Column(name= "authentication_type")
+    private String authenticationType;
+
+    @Column(name = "notification_type")
+    private String notificationType;
+
+    @Column(name = "syncs_security_group")
+    private Boolean syncsSecurityGroup;
+
+    @Column(name = "provides_device_status")
+    private Boolean providesDeviceStatus;
+
+    @Column(name = "syncs_policy_mapping")
+    private Boolean syncsPolicyMapping;
 
     @OneToMany(mappedBy = "applianceManagerConnector", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Policy> policies = new HashSet<Policy>();
@@ -128,6 +148,54 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getExternalServiceName() {
+        return this.externalServiceName;
+    }
+
+    public void setExternalServiceName(String externalServiceName) {
+        this.externalServiceName = externalServiceName;
+    }
+
+    public ManagerAuthenticationType getAuthenticationType() {
+        return ManagerAuthenticationType.getType(this.authenticationType);
+    }
+
+    public void setAuthenticationType(ManagerAuthenticationType authenticationType) {
+        this.authenticationType = authenticationType.toString();
+    }
+
+    public ManagerNotificationSubscriptionType getNotificationType() {
+        return ManagerNotificationSubscriptionType.getType(this.notificationType);
+    }
+
+    public void setNotificationType(ManagerNotificationSubscriptionType notificationType) {
+        this.notificationType = notificationType.toString();
+    }
+
+    public Boolean syncsSecurityGroup() {
+        return this.syncsSecurityGroup;
+    }
+
+    public void setSyncsSecurityGroup(Boolean syncsSecurityGroup) {
+        this.syncsSecurityGroup = syncsSecurityGroup;
+    }
+
+    public Boolean providesDeviceStatus() {
+        return this.providesDeviceStatus;
+    }
+
+    public void setProvidesDeviceStatus(Boolean providesDeviceStatus) {
+        this.providesDeviceStatus = providesDeviceStatus;
+    }
+
+    public Boolean syncsPolicyMapping() {
+        return this.syncsPolicyMapping;
+    }
+
+    public void setSyncsPolicyMapping(Boolean syncsPolicyMapping) {
+        this.syncsPolicyMapping = syncsPolicyMapping;
     }
 
     public String getVendorName() {

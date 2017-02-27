@@ -1,5 +1,7 @@
 package org.osc.core.broker.service.vc;
 
+import static org.osc.sdk.controller.Constants.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +46,13 @@ ServiceDispatcher<UpdateConnectorPluginPropertiesRequest, EmptySuccessResponse>{
         EntityManager<VirtualizationConnector> emgr = new EntityManager<>(VirtualizationConnector.class, session);
 
         for (VirtualizationConnector vc : vcs) {
-            // TODO emanoel: set VC properties here.
+            vc.setSupportsOffboxRedirection((Boolean) properties.get(SUPPORT_OFFBOX_REDIRECTION));
+            vc.setSupportsServiceFunctionChaining((Boolean) properties.get(SUPPORT_SFC));
+            vc.setSupportsFailurePolicy((Boolean) properties.get(SUPPORT_FAILURE_POLICY));
+            vc.setUsesProviderCreds((Boolean) properties.get(USE_PROVIDER_CREDS));
+            vc.setProvidesFlowInfo((Boolean) properties.get(QUERY_PORT_INFO));
+            vc.setSupportsPortGroup((Boolean) properties.get(SUPPORT_PORT_GROUP));
+
             emgr.update(vc);
         }
 

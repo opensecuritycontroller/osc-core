@@ -34,8 +34,8 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 @Entity
 @Table(name = "VIRTUALIZATION_CONNECTOR")
 public class VirtualizationConnector extends BaseEntity
-        implements org.osc.sdk.manager.element.VirtualizationConnectorElement,
-        org.osc.sdk.controller.element.VirtualizationConnectorElement {
+implements org.osc.sdk.manager.element.VirtualizationConnectorElement,
+org.osc.sdk.controller.element.VirtualizationConnectorElement {
 
     private static final long serialVersionUID = 1L;
 
@@ -73,6 +73,24 @@ public class VirtualizationConnector extends BaseEntity
     @Column(name = "virtualization_software_version")
     private String virtualizationSoftwareVersion;
 
+    @Column(name = "supports_offbox_redirection")
+    private Boolean supportsOffboxRedirection;
+
+    @Column(name = "supports_service_function_chaining")
+    private Boolean supportsServiceFunctionChaining;
+
+    @Column(name = "supports_failure_policy")
+    private Boolean supportsFailurePolicy;
+
+    @Column(name = "uses_provider_creds")
+    private Boolean usesProviderCreds;
+
+    @Column(name = "provides_flow_info")
+    private Boolean providesFlowInfo;
+
+    @Column(name = "supports_port_group")
+    private Boolean supportsPortGroup;
+
     @Column(name = "controller_type", nullable = false)
     private String controllerType = ControllerType.NONE.getValue();
 
@@ -90,8 +108,8 @@ public class VirtualizationConnector extends BaseEntity
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name="SSL_CERTIFICATE_ATTR_VIRTUALIZATION_CONNECTOR",
-            joinColumns={@JoinColumn(name="VIRTUALIZATION_CONNECTOR_ID")},
-            inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
+    joinColumns={@JoinColumn(name="VIRTUALIZATION_CONNECTOR_ID")},
+    inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
 
     @Column(name = "admin_tenant_name")
@@ -211,6 +229,54 @@ public class VirtualizationConnector extends BaseEntity
         this.controllerType = controllerType != null ? controllerType.getValue() : ControllerType.NONE.getValue();
     }
 
+    public Boolean supportsOffboxRedirection() {
+        return this.supportsOffboxRedirection;
+    }
+
+    public void setSupportsOffboxRedirection(Boolean supportsOffboxRedirection) {
+        this.supportsOffboxRedirection = supportsOffboxRedirection;
+    }
+
+    public Boolean supportsServiceFunctionChaining() {
+        return this.supportsServiceFunctionChaining;
+    }
+
+    public void setSupportsServiceFunctionChaining(Boolean supportsServiceFunctionChaining) {
+        this.supportsServiceFunctionChaining = supportsServiceFunctionChaining;
+    }
+
+    public Boolean supportsFailurePolicy() {
+        return this.supportsFailurePolicy;
+    }
+
+    public void setSupportsFailurePolicy(Boolean supportsFailurePolicy) {
+        this.supportsFailurePolicy = supportsFailurePolicy;
+    }
+
+    public Boolean usesProviderCreds() {
+        return this.usesProviderCreds;
+    }
+
+    public void setUsesProviderCreds(Boolean usesProviderCreds) {
+        this.usesProviderCreds = usesProviderCreds;
+    }
+
+    public Boolean supportsPortGroup() {
+        return this.supportsPortGroup;
+    }
+
+    public void setSupportsPortGroup(Boolean supportsPortGroup) {
+        this.supportsPortGroup = supportsPortGroup;
+    }
+
+    public Boolean providesFlowInfo() {
+        return this.providesFlowInfo;
+    }
+
+    public void setProvidesFlowInfo(Boolean providesFlowInfo) {
+        this.providesFlowInfo = providesFlowInfo;
+    }
+
     public boolean isControllerDefined() {
         return !getControllerType().equals(ControllerType.NONE);
     }
@@ -237,7 +303,7 @@ public class VirtualizationConnector extends BaseEntity
     }
 
     public Set<SslCertificateAttr> getSslCertificateAttrSet() {
-        return sslCertificateAttrSet;
+        return this.sslCertificateAttrSet;
     }
 
     public void setSslCertificateAttrSet(Set<SslCertificateAttr> sslCertificateAttrSet) {

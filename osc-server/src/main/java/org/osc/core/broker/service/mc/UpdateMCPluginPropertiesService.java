@@ -1,7 +1,6 @@
 package org.osc.core.broker.service.mc;
 
-import static org.osc.sdk.manager.Constants.SERVICE_NAME;
-import static org.osc.sdk.manager.Constants.VENDOR_NAME;
+import static org.osc.sdk.manager.Constants.*;
 
 import java.util.List;
 import java.util.Map;
@@ -17,6 +16,8 @@ import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMg
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.request.UpdateConnectorPluginPropertiesRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.sdk.manager.ManagerAuthenticationType;
+import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
 
 public class UpdateMCPluginPropertiesService extends
 ServiceDispatcher<UpdateConnectorPluginPropertiesRequest, EmptySuccessResponse>{
@@ -50,7 +51,12 @@ ServiceDispatcher<UpdateConnectorPluginPropertiesRequest, EmptySuccessResponse>{
         for (ApplianceManagerConnector mc : mcs) {
             mc.setVendorName((String)properties.get(VENDOR_NAME));
             mc.setServiceType((String)properties.get(SERVICE_NAME));
-            // TODO emanoel: add other properties
+            mc.setExternalServiceName((String)properties.get(EXTERNAL_SERVICE_NAME));
+            mc.setNotificationType(ManagerNotificationSubscriptionType.getType((String)properties.get(NOTIFICATION_TYPE)));
+            mc.setAuthenticationType(ManagerAuthenticationType.getType((String)properties.get(AUTHENTICATION_TYPE)));
+            mc.setSyncsSecurityGroup((Boolean)properties.get(SYNC_SECURITY_GROUP));
+            mc.setProvidesDeviceStatus((Boolean)properties.get(PROVIDE_DEVICE_STATUS));
+            mc.setSyncsPolicyMapping((Boolean)properties.get(SYNC_POLICY_MAPPING));
             emgr.update(mc);
         }
 
