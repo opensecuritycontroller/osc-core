@@ -128,6 +128,14 @@ public class AddApplianceManagerConnectorService extends
         checkManagerConnection(log, request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
     }
 
+    /**
+     * Checks connection for manager.
+     *
+     * If thrown exception is instance of SSLException this error will be cached and handled through additional
+     * SSL resolver which automatically fetch necessary certificates
+     *
+     * @throws ErrorTypeException in case of manager connection issues
+     */
     public static void checkManagerConnection(Logger log, DryRunRequest<ApplianceManagerConnectorDto> request,
                                               ApplianceManagerConnector mc) throws ErrorTypeException {
         if (!request.isSkipAllDryRun()) {

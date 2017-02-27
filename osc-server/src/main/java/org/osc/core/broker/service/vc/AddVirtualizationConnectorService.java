@@ -150,6 +150,9 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
     /**
      * Checks connection for vmware.
      *
+     * If thrown exception is instance of SSLException this error will be cached and handled through additional
+     * SSL resolver which automatically fetch necessary certificates
+     *
      * @throws ErrorTypeException in case of controller/provider connection issues
      * @throws Exception          in case of any other issues
      */
@@ -200,6 +203,9 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
 
     /**
      * Checks connection for openstack.
+     *
+     * If thrown exception is instance of SSLException this error will be cached and handled through additional
+     * SSL resolver which automatically fetch necessary certificates
      *
      * @throws ErrorTypeException in case of keystone/controller/rabbitmq connection issues
      * @throws Exception          in case of any other issues
