@@ -1,6 +1,7 @@
 **/target/**
 **/.settings/org.eclipse.m2e.core.prefs
 **/src/main/generated/**
+**/.settings/org.eclipse.m2e.core.prefs
 osc-server-bom/root/opt/vmidc/bin/webapp/**
 osc-export/generated/**
 osc-export/webapp/**

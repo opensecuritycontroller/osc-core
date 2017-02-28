@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.model.entities.appliance.AgentType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -115,7 +114,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     private static DeploymentSpec createDsWithDaiAndHostSelectedData (Long dsId, String region, String daiHostName, String selectedHostName, String daiName) {
         DeploymentSpec ds = createDeploymentSpec(dsId, region);
-        DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM, AgentType.AGENT);
+        DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM);
         dai.setOsHostName(daiHostName);
         dai.setName(daiName);
 
@@ -149,7 +148,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         AvailabilityZone az = new AvailabilityZone(ds, null, selectedAzName);
         ds.setAvailabilityZones(Sets.newHashSet(az));
 
-        DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM, AgentType.AGENT);
+        DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM);
         dai.setOsHostName(daiHostName);
         dai.setName(daiName);
 
@@ -168,7 +167,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     private static DeploymentSpec createDsWithDaiAndHostAggregateSelectedData(Long dsId, String region, String daiHostName, String daiName, String hostAggregateOSId, List<DistributedApplianceInstance> dais) {
         DeploymentSpec ds = createDsWithHostAggregateSelectedData(dsId, region, hostAggregateOSId);
-        DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM, AgentType.AGENT);
+        DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM);
         dai.setOsHostName(daiHostName);
         dai.setName(daiName);
 

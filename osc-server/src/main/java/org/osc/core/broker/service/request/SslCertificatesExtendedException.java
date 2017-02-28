@@ -10,7 +10,7 @@ public class SslCertificatesExtendedException extends ErrorTypeException {
     private ArrayList<CertificateResolverModel> certificateResolverModels;
 
     public ArrayList<CertificateResolverModel> getCertificateResolverModels() {
-        return certificateResolverModels;
+        return this.certificateResolverModels;
     }
 
     public SslCertificatesExtendedException(ErrorTypeException errorTypeException, ArrayList<CertificateResolverModel> certificateResolverModels) {

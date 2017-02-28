@@ -1,6 +1,8 @@
 package org.osc.core.server.scheduler;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -8,11 +10,12 @@ import org.hibernate.Transaction;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
+import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.rest.client.agent.api.VmidcAgentApi;
-import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
+import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
+import org.osc.sdk.manager.element.ManagerDeviceMemberStatusElement;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -36,8 +39,18 @@ public class ApplianceAgentsJob implements Job {
 
             for (DistributedAppliance da : emgr.listAll()) {
                 for (VirtualSystem vs : da.getVirtualSystems()) {
-                    for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
-                        getAgentFullStatus(dai);
+
+                    ApplianceManagerConnector apmc = vs.getDistributedAppliance().getApplianceManagerConnector();
+                    ManagerDeviceMemberApi agentApi =  ManagerApiFactory.createManagerDeviceMemberApi(apmc, vs);
+
+                    // TODO emanoel: IsAgentManaged is geing used as synonimous of isApplianceStatusSupported.
+                    // This method will be remove from the API and made as an appropriate OSGi service property as part of another
+                    // user story to come soon.
+                    if (ManagerApiFactory.createApplianceManagerApi(vs).isAgentManaged()) {
+                        List<ManagerDeviceMemberStatusElement> agentElems = agentApi.getFullStatus(new ArrayList<>(vs.getDistributedApplianceInstances()));
+                        for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
+                            getAgentFullStatus(dai, agentElems);
+                        }
                     }
                 }
             }
@@ -45,9 +58,7 @@ public class ApplianceAgentsJob implements Job {
             tx.commit();
 
         } catch (Exception ex) {
-
             log.error("Fail to sync DAs", ex);
-
         } finally {
             if (session != null) {
                 session.close();
@@ -55,19 +66,19 @@ public class ApplianceAgentsJob implements Job {
         }
     }
 
-    private void getAgentFullStatus(DistributedApplianceInstance dai) throws Exception {
+    private void getAgentFullStatus(DistributedApplianceInstance dai, List<ManagerDeviceMemberStatusElement> statusList) throws Exception {
         Session session = HibernateUtil.getSessionFactory().openSession();
         try {
             Transaction tx = session.beginTransaction();
-            VmidcAgentApi agentApi = new VmidcAgentApi(dai.getIpAddress(), 8090, AgentAuthFilter.VMIDC_AGENT_LOGIN,
-                    AgentAuthFilter.VMIDC_AGENT_PASS);
+            ManagerDeviceMemberStatusElement memberStatus = findDeviceMemberStatus(dai, statusList);
 
-            AgentStatusResponse res = agentApi.getFullStatus();
-            dai.setLastStatus(new Date());
-            if (res.getAgentDpaInfo() != null && res.getAgentDpaInfo().netXDpaRuntimeInfo != null) {
-                dai.setWorkloadInterfaces(res.getAgentDpaInfo().netXDpaRuntimeInfo.workloadInterfaces);
-                dai.setPackets(res.getAgentDpaInfo().netXDpaRuntimeInfo.rx);
+            if (memberStatus != null) {
+                dai.setLastStatus(new Date());
+                if (memberStatus.getRx() != null) {
+                    dai.setPackets(memberStatus.getRx());
+                }
             }
+
             EntityManager.update(session, dai);
             tx.commit();
 
@@ -82,4 +93,13 @@ public class ApplianceAgentsJob implements Job {
         }
     }
 
+    private ManagerDeviceMemberStatusElement findDeviceMemberStatus(DistributedApplianceInstance dai, List<ManagerDeviceMemberStatusElement> statusList) {
+        for (ManagerDeviceMemberStatusElement memberStatus : statusList) {
+            if (memberStatus.getDistributedApplianceInstanceElement().getId().equals(dai.getId())) {
+                return memberStatus;
+            }
+        }
+
+        return null;
+    }
 }

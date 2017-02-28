@@ -25,5 +25,4 @@ public class GetAgentStatusResponse implements Response {
     public String toString() {
         return "GetAgentStatusResponse [agentStatusList=" + this.agentStatusList + "]";
     }
-
 }

@@ -6,22 +6,23 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GetAgentStatusResponseDto implements Response {
-    private List<AgentStatusResponseDto> agentStatusDtoList = null;
+    private List<AgentStatusResponse> agentStatusList = null;
 
-    public List<AgentStatusResponseDto> getAgentStatusDtoList() {
-        return this.agentStatusDtoList;
+    public List<AgentStatusResponse> getAgentStatusList() {
+        return this.agentStatusList;
     }
 
-    public void setAgentStatusList(List<AgentStatusResponseDto> agentStatusDtoList) {
-        this.agentStatusDtoList = agentStatusDtoList;
+    public void setAgentStatusList(List<AgentStatusResponse> agentStatusList) {
+        this.agentStatusList = agentStatusList;
     }
 
     @Override
     public String toString() {
-        return "GetAgentStatusResponseDto [agentStatusDtoList=" + this.agentStatusDtoList + "]";
+        return "GetAgentStatusResponseDto [agentStatusDtoList=" + this.agentStatusList + "]";
     }
-
 }
