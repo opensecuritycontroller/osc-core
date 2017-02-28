@@ -29,10 +29,6 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.rest.client.exception.RestClientException;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 public class AddApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
 
@@ -152,7 +148,7 @@ public class AddApplianceManagerConnectorService extends
                     try {
                         sslCertificateResolver.fetchCertificatesFromURL(ManagerApiFactory.getConnectionUrl(mc), "manager");
                     } catch (Exception e1) {
-                        log.warn("Failed to fetch SSL certificates from requested resource", e1);
+                        log.warn("Failed to fetch SSL certificates from requested resource:" + e1.getMessage());
                     }
                 }
                 errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);

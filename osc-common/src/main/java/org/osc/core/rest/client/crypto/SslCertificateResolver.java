@@ -44,6 +44,9 @@ public class SslCertificateResolver {
         urlConnection.connect();
 
         Stream<Certificate> certificateStream = Arrays.stream(urlConnection.getServerCertificates());
+
+        LOG.debug("Successfully connected to: " + url.toString() + " and found: " + certificateStream.count() + " SSL certificates");
+
         certificateStream.forEach(cert -> {
             if (cert instanceof X509Certificate) {
                 try {
