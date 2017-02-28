@@ -44,6 +44,9 @@ public class SslCertificateResolver {
         urlConnection.connect();
 
         Stream<Certificate> certificateStream = Arrays.stream(urlConnection.getServerCertificates());
+
+        LOG.debug("Successfully connected to: " + url.toString());
+
         certificateStream.forEach(cert -> {
             if (cert instanceof X509Certificate) {
                 try {
@@ -52,6 +55,7 @@ public class SslCertificateResolver {
                     long unixTimestamp = Instant.now().getEpochSecond();
                     CertificateResolverModel model = new CertificateResolverModel(certificate, aliasPrefix + "_" + unixTimestamp,
                             X509TrustManagerFactory.getSha1Fingerprint(certificate));
+                    LOG.debug("Found certificate with fingerprint: " + model.getSha1());
                     this.certificateResolverModels.add(model);
                 } catch (CertificateExpiredException cee) {
                     LOG.error("Improper certificate: certificate expired", cee);

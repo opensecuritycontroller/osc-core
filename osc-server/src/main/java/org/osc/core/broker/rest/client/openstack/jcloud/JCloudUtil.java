@@ -62,7 +62,7 @@ public class JCloudUtil {
         return contextBuilder.buildApi(api);
     }
 
-    private static String prepareEndpointURL(Endpoint endPoint) throws URISyntaxException, MalformedURLException {
+    static String prepareEndpointURL(Endpoint endPoint) throws URISyntaxException, MalformedURLException {
         String schema = endPoint.isHttps() ? "https" : "http";
         URI uri = new URI(schema, null, endPoint.getEndPointIP(), 5000, "/v2.0", null, null);
         return uri.toURL().toString();

@@ -85,7 +85,7 @@ public class Endpoint {
     }
 
     public SSLContext getSslContext() {
-        return sslContext;
+        return this.sslContext;
     }
 
     @Override

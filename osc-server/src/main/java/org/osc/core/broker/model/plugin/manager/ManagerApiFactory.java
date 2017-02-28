@@ -1,5 +1,6 @@
 package org.osc.core.broker.model.plugin.manager;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -207,6 +208,10 @@ public class ManagerApiFactory {
 
     public static void checkConnection(ApplianceManagerConnector mc) throws Exception {
         createApplianceManagerApi(mc.getManagerType()).checkConnection(getApplianceManagerConnectorElement(mc));
+    }
+
+    public static URL getConnectionUrl(ApplianceManagerConnector mc) throws Exception {
+        return createApplianceManagerApi(mc.getManagerType()).getConnectionUrl(getApplianceManagerConnectorElement(mc));
     }
 
     private static ApplianceManagerConnector getDecryptedApplianceManagerConnector(ApplianceManagerConnector mc) throws EncryptionException {

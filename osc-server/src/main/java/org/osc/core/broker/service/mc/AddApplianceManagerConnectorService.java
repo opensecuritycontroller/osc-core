@@ -29,10 +29,6 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.rest.client.exception.RestClientException;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 public class AddApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
 
@@ -128,6 +124,14 @@ public class AddApplianceManagerConnectorService extends
         checkManagerConnection(log, request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
     }
 
+    /**
+     * Checks connection for manager.
+     *
+     * If thrown exception is instance of SSLException this error will be cached and handled through additional
+     * SSL resolver which automatically fetch necessary certificates
+     *
+     * @throws ErrorTypeException in case of manager connection issues
+     */
     public static void checkManagerConnection(Logger log, DryRunRequest<ApplianceManagerConnectorDto> request,
                                               ApplianceManagerConnector mc) throws ErrorTypeException {
         if (!request.isSkipAllDryRun()) {
@@ -142,10 +146,9 @@ public class AddApplianceManagerConnectorService extends
                 log.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
                 if (sslCertificateResolver.checkExceptionTypeForSSL(e)) {
                     try {
-                        URI uri = new URI("https", request.getDto().getIpAddress(), null, null);
-                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "manager");
-                    } catch (IOException | URISyntaxException e1) {
-                        log.warn("Failed to fetch SSL certificates from requested resource", e1);
+                        sslCertificateResolver.fetchCertificatesFromURL(ManagerApiFactory.getConnectionUrl(mc), "manager");
+                    } catch (Exception e1) {
+                        log.warn("Failed to fetch SSL certificates from requested resource:" + e1.getMessage());
                     }
                 }
                 errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
