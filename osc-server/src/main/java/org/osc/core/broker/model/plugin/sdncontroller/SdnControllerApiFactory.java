@@ -16,10 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.sdncontroller;
 
+import static org.osc.sdk.controller.Constants.*;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -46,11 +49,22 @@ import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.google.common.collect.ImmutableMap;
+
 public class SdnControllerApiFactory {
 
     public static final String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
+    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES =
+            ImmutableMap.<String, Class<?>>builder()
+            .put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class)
+            .put(SUPPORT_SFC, Boolean.class)
+            .put(SUPPORT_FAILURE_POLICY, Boolean.class)
+            .put(USE_PROVIDER_CREDS, Boolean.class)
+            .put(QUERY_PORT_INFO, Boolean.class)
+            .put(SUPPORT_PORT_GROUP, Boolean.class)
+            .build();
 
-    private static HashMap<String, ServiceObjects<SdnControllerApi>> sdnControllerPlugins = new HashMap<>();
+    private static HashMap<String, SdnControllerApiContext> sdnControllerPlugins = new HashMap<>();
     private static HashMap<String, ServiceObjects<VMwareSdnApi>> vmWareSdnPlugins = new HashMap<>();
 
     private static BundleContext bundleContext;
@@ -123,11 +137,44 @@ public class SdnControllerApiFactory {
     }
 
     public static SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception {
-        ServiceObjects<SdnControllerApi> plugin = sdnControllerPlugins.get(controllerType.toString());
-        if (plugin != null) {
-            return plugin.getService();
+        SdnControllerApiContext pluginContext = sdnControllerPlugins.get(controllerType.toString());
+        if (pluginContext != null) {
+            return pluginContext.sdnControllerServices.getService();
         } else {
             throw new VmidcException("Unsupported Network Controller type.");
+        }
+    }
+
+    public static Boolean supportsOffboxRedirection(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_OFFBOX_REDIRECTION);
+    }
+
+    public static Boolean supportsServiceFunctionChaining(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_SFC);
+    }
+
+    public static Boolean supportsFailurePolicy(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_FAILURE_POLICY);
+    }
+
+    public static Boolean usesProviderCreds(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, USE_PROVIDER_CREDS);
+    }
+
+    public static Boolean providesTrafficPortInfo(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, QUERY_PORT_INFO);
+    }
+
+    public static Boolean supportsPortGroup(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_PORT_GROUP);
+    }
+
+    private static Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception {
+        SdnControllerApiContext pluginContext = sdnControllerPlugins.get(controllerType.toString());
+        if (pluginContext != null) {
+            return pluginContext.reference.getProperty(propertyName);
+        } else {
+            throw new VmidcException("Unsupported controller type '" + controllerType + "'");
         }
     }
 
@@ -150,14 +197,14 @@ public class SdnControllerApiFactory {
         PluginTracker<T> tracker = null;
         if (pluginClass == SdnControllerApi.class) {
             synchronized (sdnControllerPluginTrackers) {
-                tracker = new PluginTracker<>(bundleContext, pluginClass, pluginType, installMgr, customizer);
+                tracker = new PluginTracker<>(bundleContext, pluginClass, pluginType, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES, installMgr, customizer);
                 @SuppressWarnings("unchecked")
                 PluginTracker<SdnControllerApi> sdnControllerTracker = (PluginTracker<SdnControllerApi>) tracker;
                 sdnControllerPluginTrackers.add(sdnControllerTracker);
             }
         } else if (pluginClass == VMwareSdnApi.class) {
             synchronized (vmWareSdnPluginTrackers) {
-                tracker = new PluginTracker<>(bundleContext, pluginClass, pluginType, installMgr, customizer);
+                tracker = new PluginTracker<>(bundleContext, pluginClass, pluginType, null, installMgr, customizer);
                 @SuppressWarnings("unchecked")
                 PluginTracker<VMwareSdnApi> vmWareSdnTracker = (PluginTracker<VMwareSdnApi>) tracker;
                 vmWareSdnPluginTrackers.add(vmWareSdnTracker);
@@ -194,12 +241,15 @@ public class SdnControllerApiFactory {
                 String name = (String) nameObj;
                 ServiceObjects<T> serviceObjects = this.context.getServiceObjects(reference);
 
-                ServiceObjects<?> existing = null;
+                Object existing = null;
 
                 if (pluginClass == SdnControllerApi.class) {
                     @SuppressWarnings("unchecked")
                     ServiceObjects<SdnControllerApi> sdnControllerServiceObjects = (ServiceObjects<SdnControllerApi>) serviceObjects;
-                    existing =  sdnControllerPlugins.putIfAbsent(name, sdnControllerServiceObjects);
+                    @SuppressWarnings("unchecked")
+                    ServiceReference<SdnControllerApi> sdnControllerReference = (ServiceReference<SdnControllerApi>) reference;
+
+                    existing =  sdnControllerPlugins.putIfAbsent(name, new SdnControllerApiContext(sdnControllerServiceObjects, sdnControllerReference));
                 } else if (pluginClass == VMwareSdnApi.class){
                     @SuppressWarnings("unchecked")
                     ServiceObjects<VMwareSdnApi> vmWareSdnServiceObjects = (ServiceObjects<VMwareSdnApi>) serviceObjects;
@@ -220,7 +270,7 @@ public class SdnControllerApiFactory {
             }
             @Override
             public void removedService(ServiceReference<T> reference, String name) {
-                ServiceObjects<?> serviceObjects = null;
+                Object serviceObjects = null;
                 if (pluginClass == SdnControllerApi.class) {
                     serviceObjects = sdnControllerPlugins.remove(name);
                 } else if (pluginClass == VMwareSdnApi.class) {
@@ -262,5 +312,15 @@ public class SdnControllerApiFactory {
         controllerTypes.addAll(sdnControllerPlugins.keySet());
         controllerTypes.addAll(vmWareSdnPlugins.keySet());
         return controllerTypes;
+    }
+
+    private static class SdnControllerApiContext {
+        private ServiceObjects<SdnControllerApi> sdnControllerServices;
+        private ServiceReference<SdnControllerApi> reference;
+
+        SdnControllerApiContext(ServiceObjects<SdnControllerApi> sdnControllerServices, ServiceReference<SdnControllerApi>  reference) {
+            this.sdnControllerServices = sdnControllerServices;
+            this.reference = reference;
+        }
     }
 }

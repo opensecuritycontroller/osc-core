@@ -69,17 +69,24 @@ public class PluginTracker<T> {
 
     private final ServiceTracker<T, T> serviceTracker;
     private final InstallableListener installListener;
-
+    private final Map<String, Class<?>> requiredProperties;
     private final Map<String, Plugin<T>> pluginMap = new HashMap<>();
 
     private ServiceRegistration<InstallableListener> installListenerReg;
 
-    public PluginTracker(BundleContext context, Class<T> pluginClass, PluginType pluginType, InstallableManager installMgr, PluginTrackerCustomizer<T> customizer) {
+    public PluginTracker(BundleContext context, Class<T> pluginClass, PluginType pluginType, Map<String, Class<?>> requiredProperties, InstallableManager installMgr, PluginTrackerCustomizer<T> customizer) {
         this.context = context;
         this.pluginClass = pluginClass;
         this.installMgr = installMgr;
         this.customizer = customizer;
         this.pluginType = pluginType;
+        this.requiredProperties = new HashMap<String, Class<?>>();
+        this.requiredProperties.put(PROP_PLUGIN_NAME, String.class);
+
+        if (requiredProperties != null) {
+            this.requiredProperties.putAll(requiredProperties);
+        }
+
         if (customizer == null) {
             throw new IllegalArgumentException("Null customizer on PluginTracker not permitted");
         }
@@ -104,11 +111,11 @@ public class PluginTracker<T> {
         this.serviceTracker = new ServiceTracker<T,T>(context, pluginClass, null) {
             @Override
             public T addingService(ServiceReference<T> reference) {
-                Object pluginNameObj = reference.getProperty(PROP_PLUGIN_NAME);
-                if (!(pluginNameObj instanceof String)) {
-                    PluginTracker.this.LOGGER.warn(String.format("Plugin service id=%d from bundle %s did not have %s property, or property was not a String. Service ignored.", reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), PROP_PLUGIN_NAME));
-                    return null; // returning null means we will never hear about this service again.
+                if (!containsRequiredProperties(reference)) {
+                    return null;
                 }
+
+                Object pluginNameObj = reference.getProperty(PROP_PLUGIN_NAME);
                 String pluginName = (String) pluginNameObj;
 
                 T service = this.context.getService(reference);
@@ -188,6 +195,18 @@ public class PluginTracker<T> {
         for (PluginEvent<T> event : events) {
             this.customizer.pluginEvent(event);
         }
+    }
+
+    private boolean containsRequiredProperties(ServiceReference<?> reference) {
+        for (Map.Entry<String, Class<?>> entry : this.requiredProperties.entrySet()) {
+            Object pluginNameObj = reference.getProperty(entry.getKey());
+            if (pluginNameObj == null || !entry.getValue().isInstance(pluginNameObj)) {
+                this.LOGGER.warn(String.format("Plugin service id=%d from bundle %s did not have %s property, or property was not a of type %s. Service ignored.", reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), PROP_PLUGIN_NAME, entry.getValue()));
+                return false; // returning null means we will never hear about this service again.
+            }
+        }
+
+        return true;
     }
 
     private void updateUnit(InstallableUnit unit) {
