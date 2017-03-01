@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+-# Usage: set-ngfw-network-info node-ip node-netmask default-gateway		
+ # Configures basic networking on the firewall		
+ # Just a wrapper for the real python code
+
 import sys
 from sg.scripts.set_ngfw_network_info import run
 sys.exit(run())
