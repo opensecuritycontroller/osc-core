@@ -144,14 +144,16 @@ public class AddApplianceManagerConnectorService extends
                 }
             } catch (Exception e) {
                 log.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
+                log.error("Manager exception: " + e.getMessage());
+                errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
                 if (sslCertificateResolver.checkExceptionTypeForSSL(e)) {
                     try {
                         sslCertificateResolver.fetchCertificatesFromURL(ManagerApiFactory.getConnectionUrl(mc), "manager");
                     } catch (Exception e1) {
-                        log.warn("Failed to fetch SSL certificates from requested resource:" + e1.getMessage());
+                        log.warn("Failed to fetch SSL certificates from requested resource: " + e1.getMessage());
+                        errorTypeException = new ErrorTypeException(e1, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
                     }
                 }
-                errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
             }
 
             if (!sslCertificateResolver.getCertificateResolverModels().isEmpty()) {

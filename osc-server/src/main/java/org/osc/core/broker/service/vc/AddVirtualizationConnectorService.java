@@ -33,11 +33,14 @@ import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.rest.client.exception.RestClientException;
+import org.osc.core.rest.client.exception.SslCertificateResolverException;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.rmi.RemoteException;
 
@@ -167,14 +170,20 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                     VMwareSdnApi vmwareSdnApi = SdnControllerApiFactory.createVMwareSdnApi(vc);
                     vmwareSdnApi.checkStatus(new VMwareSdnConnector(vc));
                 } catch (HttpException exception) {
-                    if (exception.getSatus() == null && sslCertificateResolver.checkExceptionTypeForSSL(exception)) {
-                        URL url = new URL(exception.getResourcePath());
-                        sslCertificateResolver.fetchCertificatesFromURL(url, "nsx");
-                    }
                     log.warn("Rest Exception encountered when trying to add NSX info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
                     log.error("Controller exception: " + exception.getMessage());
                     errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
+
+                    if (exception.getSatus() == null && sslCertificateResolver.checkExceptionTypeForSSL(exception)) {
+                        URL url = new URL(exception.getResourcePath());
+                        try {
+                            sslCertificateResolver.fetchCertificatesFromURL(url, "nsx");
+                        } catch (SslCertificateResolverException | IOException e1) {
+                            log.warn("Failed to fetch SSL certificates from requested resource: " + e1.getMessage());
+                            errorTypeException = new ErrorTypeException(e1, ErrorType.CONTROLLER_EXCEPTION);
+                        }
+                    }
                 }
             }
 
@@ -183,13 +192,19 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                 try {
                     new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(), request.getDto().getProviderPassword());
                 } catch (RemoteException remoteException) {
-                    if (sslCertificateResolver.checkExceptionTypeForSSL(remoteException)) {
-                        sslCertificateResolver.fetchCertificatesFromURL(VimUtils.getServiceURL(request.getDto().getProviderIP()), "vmware");
-                    }
                     log.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
                     log.error("Provider exception: " + remoteException.getMessage());
                     errorTypeException = new ErrorTypeException(remoteException, ErrorType.PROVIDER_EXCEPTION);
+
+                    if (sslCertificateResolver.checkExceptionTypeForSSL(remoteException)) {
+                        try {
+                            sslCertificateResolver.fetchCertificatesFromURL(VimUtils.getServiceURL(request.getDto().getProviderIP()), "vmware");
+                        } catch (SslCertificateResolverException | IOException | URISyntaxException e1) {
+                            log.warn("Failed to fetch SSL certificates from requested resource: " + e1.getMessage());
+                            errorTypeException = new ErrorTypeException(e1, ErrorType.PROVIDER_EXCEPTION);
+                        }
+                    }
                 }
             }
 
@@ -223,12 +238,18 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                         controller.getStatus();
                     }
                 } catch (Exception e) {
+                    log.warn("Exception encountered when trying to add SDN Controller info to Virtualization Connector, allowing user to either ignore or correct issue");
+                    log.error("SDN Controller exception: " + e.getMessage());
+                    errorTypeException = new ErrorTypeException(e, ErrorType.CONTROLLER_EXCEPTION);
                     if (StringUtils.isNotEmpty(request.getDto().getControllerIP()) && sslCertificateResolver.checkExceptionTypeForSSL(e)) {
                         URI uri = new URI("https", request.getDto().getControllerIP(), null, null);
-                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstack");
+                        try {
+                            sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstack");
+                        } catch (SslCertificateResolverException | IOException e1) {
+                            log.warn("Failed to fetch SSL certificates from requested resource: " + e1.getMessage());
+                            errorTypeException = new ErrorTypeException(e1, ErrorType.CONTROLLER_EXCEPTION);
+                        }
                     }
-                    log.warn("Exception encountered when trying to add SDN Controller info to Virtualization Connector, allowing user to either ignore or correct issue");
-                    errorTypeException = new ErrorTypeException(e, ErrorType.CONTROLLER_EXCEPTION);
                 }
             }
             // Check Connectivity with Key stone if https response exception is not to be ignored
@@ -246,11 +267,18 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                     keystoneAPi.listTenants();
 
                 } catch (Exception exception) {
-                    if (keystoneEndpointUrl != null && sslCertificateResolver.checkExceptionTypeForSSL(exception)) {
-                        sslCertificateResolver.fetchCertificatesFromURL(new URL(keystoneEndpointUrl), "openstackkeystone");
-                    }
                     log.warn("Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
+                    log.error("Keystone exception: " + exception.getMessage());
                     errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
+
+                    if (keystoneEndpointUrl != null && sslCertificateResolver.checkExceptionTypeForSSL(exception)) {
+                        try {
+                            sslCertificateResolver.fetchCertificatesFromURL(new URL(keystoneEndpointUrl), "openstackkeystone");
+                        } catch (SslCertificateResolverException | IOException e1) {
+                            log.warn("Failed to fetch SSL certificates from requested resource: " + e1.getMessage());
+                            errorTypeException = new ErrorTypeException(e1, ErrorType.PROVIDER_EXCEPTION);
+                        }
+                    }
                 } finally {
                     if (keystoneAPi != null) {
                         keystoneAPi.close();
@@ -275,13 +303,20 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                         errorTypeException = new ErrorTypeException(shutdownException, ErrorType.RABBITMQ_EXCEPTION);
                     }
                 } catch (Throwable e) {
+                    log.warn("Exception encountered when trying to connect to RabbitMQ, allowing user to either ignore or correct issue");
+                    log.error("RabbitMQ exception: " + e.getMessage());
+                    errorTypeException = new ErrorTypeException(e, ErrorType.RABBITMQ_EXCEPTION);
+
                     if (sslCertificateResolver.checkExceptionTypeForSSL(e)) {
                         URI uri = new URI("https", null, rabbitClient.getServerIP(), rabbitClient.getPort(), null, null, null);
-                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "rabbitmq");
+                        try {
+                            sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "rabbitmq");
+                        } catch (SslCertificateResolverException | IOException e1) {
+                            log.warn("Failed to fetch SSL certificates from requested resource: " + e1.getMessage());
+                            errorTypeException = new ErrorTypeException(e1, ErrorType.RABBITMQ_EXCEPTION);
+                        }
                     }
 
-                    log.warn("Exception encountered when trying to connect to RabbitMQ, allowing user to either ignore or correct issue");
-                    errorTypeException = new ErrorTypeException(e, ErrorType.RABBITMQ_EXCEPTION);
                 }
             }
 

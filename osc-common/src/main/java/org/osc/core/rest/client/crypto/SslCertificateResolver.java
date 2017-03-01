@@ -2,10 +2,12 @@ package org.osc.core.rest.client.crypto;
 
 import org.apache.log4j.Logger;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osc.core.rest.client.exception.SslCertificateResolverException;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLPeerUnverifiedException;
 import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
@@ -16,8 +18,6 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.Stream;
 
 /**
  * Class handles fetching SSL certificates from external source before the connection with specified endpoint could be established
@@ -33,43 +33,41 @@ public class SslCertificateResolver {
      *
      * @param url         endpoint address
      * @param aliasPrefix prefix for alias i.e. vmware, openstack, manager
+     * @throws SslCertificateResolverException exception handles potential SSL error causes
      * @throws IOException
      */
-    public void fetchCertificatesFromURL(URL url, String aliasPrefix) throws IOException {
+    public void fetchCertificatesFromURL(URL url, String aliasPrefix)
+            throws SslCertificateResolverException, IOException {
+
         SSLContext sslCtx = new SslContextProvider().getAcceptAllSSLContext();
-        HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
+        HttpsURLConnection urlConnection;
+        urlConnection = (HttpsURLConnection) url.openConnection();
         urlConnection.setHostnameVerifier((string, ssls) -> true);
 
         urlConnection.setSSLSocketFactory(sslCtx.getSocketFactory());
         urlConnection.connect();
 
-        Stream<Certificate> certificateStream = Arrays.stream(urlConnection.getServerCertificates());
-
-        LOG.debug("Successfully connected to: " + url.toString());
-
-        certificateStream.forEach(cert -> {
-            if (cert instanceof X509Certificate) {
-                try {
-                    X509Certificate certificate = ((X509Certificate) cert);
-                    certificate.checkValidity();
-                    long unixTimestamp = Instant.now().getEpochSecond();
-                    CertificateResolverModel model = new CertificateResolverModel(certificate, aliasPrefix + "_" + unixTimestamp,
-                            X509TrustManagerFactory.getSha1Fingerprint(certificate));
-                    LOG.debug("Found certificate with fingerprint: " + model.getSha1());
-                    this.certificateResolverModels.add(model);
-                } catch (CertificateExpiredException cee) {
-                    LOG.error("Improper certificate: certificate expired", cee);
-                } catch (CertificateNotYetValidException e) {
-                    LOG.error("Improper certificate: certificate not yet validated", e);
-                } catch (CertificateEncodingException | NoSuchAlgorithmException e) {
-                    LOG.error("Cannot generate sha1 fingerprint for certificate", e);
-                }
-            } else {
-                LOG.error("Improper certificate: unknown certificate type: " + cert);
+        try {
+            LOG.debug("Successfully connected to: " + url.toString());
+            Certificate[] serverCertificates = urlConnection.getServerCertificates();
+            for (Certificate serverCertificate : serverCertificates) {
+                X509Certificate certificate = ((X509Certificate) serverCertificate);
+                certificate.checkValidity();
+                long unixTimestamp = Instant.now().getEpochSecond();
+                CertificateResolverModel model = new CertificateResolverModel(certificate, aliasPrefix + "_" + unixTimestamp,
+                        X509TrustManagerFactory.getSha1Fingerprint(certificate));
+                LOG.debug("Found certificate with fingerprint: " + model.getSha1());
+                this.certificateResolverModels.add(model);
             }
-        });
-
-        urlConnection.disconnect();
+        } catch (CertificateEncodingException | NoSuchAlgorithmException | SSLPeerUnverifiedException e) {
+            throw new SslCertificateResolverException("Failed to fetch certificate: " + e.getMessage(), e);
+        } catch (CertificateNotYetValidException e) {
+            throw new SslCertificateResolverException("Failed to fetch not yet valid certificate: " + e.getMessage(), e);
+        } catch (CertificateExpiredException e) {
+            throw new SslCertificateResolverException("Failed to fetch expired certificate: " + e.getMessage(), e);
+        } finally {
+            urlConnection.disconnect();
+        }
     }
 
     /**
