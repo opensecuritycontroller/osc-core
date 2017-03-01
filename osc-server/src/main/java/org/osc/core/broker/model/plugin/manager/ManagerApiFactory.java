@@ -19,6 +19,7 @@ package org.osc.core.broker.model.plugin.manager;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -29,6 +30,8 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.PluginTracker;
 import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.service.mc.UpdateMCPluginPropertiesService;
+import org.osc.core.broker.service.request.UpdateConnectorPluginPropertiesRequest;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.EncryptionUtil;
@@ -52,9 +55,13 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.google.common.collect.ImmutableMap;
+
 public class ManagerApiFactory {
 
     public static final String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
+
+    private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES =  ImmutableMap.<String, Class<?>>builder().build();
 
     private final static Logger log = Logger.getLogger(ManagerApiFactory.class);
 
@@ -100,12 +107,31 @@ public class ManagerApiFactory {
         pluginServiceTracker = new ServiceTracker<ApplianceManagerApi, String>(bundleContext, ApplianceManagerApi.class, null) {
             @Override
             public String addingService(ServiceReference<ApplianceManagerApi> reference) {
-                Object nameObj = reference.getProperty("osc.plugin.name");
+                Object nameObj = reference.getProperty(PluginTracker.PROP_PLUGIN_NAME);
                 if (!(nameObj instanceof String)) {
                     return null;
                 }
 
+                if (!PluginTracker.containsRequiredProperties(reference, REQUIRED_MANAGER_PLUGIN_PROPERTIES)) {
+                    return null;
+                }
+
                 String name = (String) nameObj;
+
+                Map<String, Object> properties = new HashMap<String, Object>();
+                for (String propertyKey : reference.getPropertyKeys()) {
+                    properties.put(propertyKey, reference.getProperty(propertyKey));
+                }
+
+                try {
+                    UpdateConnectorPluginPropertiesRequest updateRequest = new UpdateConnectorPluginPropertiesRequest(name, properties);
+                    UpdateMCPluginPropertiesService updateService = new UpdateMCPluginPropertiesService();
+                    updateService.dispatch(updateRequest);
+                } catch (Exception e) {
+                    log.error("Error will updating the manager connectors", e);
+                    return null;
+                }
+
                 ApplianceManagerApi service = this.context.getService(reference);
 
                 ApplianceManagerApi existing = plugins.putIfAbsent(name, service);

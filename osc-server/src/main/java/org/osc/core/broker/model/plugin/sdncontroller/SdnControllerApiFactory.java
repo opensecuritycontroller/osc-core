@@ -16,6 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.sdncontroller;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -27,6 +34,8 @@ import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ServiceUnavailableException;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.service.request.UpdateConnectorPluginPropertiesRequest;
+import org.osc.core.broker.service.vc.UpdateVCPluginPropertiesService;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.EncryptionUtil;
@@ -39,15 +48,12 @@ import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import com.google.common.collect.ImmutableMap;
 
 public class SdnControllerApiFactory {
 
     public static final String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
+    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES =  ImmutableMap.<String, Class<?>>builder().build();
 
     private static HashMap<String, ServiceObjects<SdnControllerApi>> sdnControllerPlugins = new HashMap<>();
     private static HashMap<String, ServiceObjects<VMwareSdnApi>> vmWareSdnPlugins = new HashMap<>();
@@ -172,12 +178,33 @@ public class SdnControllerApiFactory {
                     return null;
                 }
 
+                if (!PluginTracker.containsRequiredProperties(reference, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES)) {
+                    return null;
+                }
+
                 String name = (String) nameObj;
                 ServiceObjects<T> serviceObjects = this.context.getServiceObjects(reference);
-
                 ServiceObjects<?> existing = null;
 
                 if (pluginClass == SdnControllerApi.class) {
+                    if (!PluginTracker.containsRequiredProperties(reference, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES)) {
+                        return null;
+                    }
+
+                    Map<String, Object> properties = new HashMap<String, Object>();
+                    for (String propertyKey : reference.getPropertyKeys()) {
+                        properties.put(propertyKey, reference.getProperty(propertyKey));
+                    }
+
+                    try {
+                        UpdateConnectorPluginPropertiesRequest updateRequest = new UpdateConnectorPluginPropertiesRequest(name, properties);
+                        UpdateVCPluginPropertiesService updateService = new UpdateVCPluginPropertiesService();
+                        updateService.dispatch(updateRequest);
+                    } catch (Exception e) {
+                        LOG.error("Error will updating the virtualization connectors", e);
+                        return null;
+                    }
+
                     @SuppressWarnings("unchecked")
                     ServiceObjects<SdnControllerApi> sdnControllerServiceObjects = (ServiceObjects<SdnControllerApi>) serviceObjects;
                     existing =  sdnControllerPlugins.putIfAbsent(name, sdnControllerServiceObjects);
