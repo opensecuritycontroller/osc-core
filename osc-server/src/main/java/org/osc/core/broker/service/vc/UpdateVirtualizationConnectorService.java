@@ -45,6 +45,7 @@ import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.EventType;
@@ -61,6 +62,8 @@ public class UpdateVirtualizationConnectorService
     private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
 
     private boolean forceAddSSLCertificates = false;
+    
+    private VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
 
     public UpdateVirtualizationConnectorService() {
     }
@@ -212,11 +215,13 @@ public class UpdateVirtualizationConnectorService
         // Transforms the existing vc based on the update request
         updateVirtualizationConnector(request, existingVc);
 
-        if (dto.getType().isVmware()) {
-            AddVirtualizationConnectorService.checkVmwareConnection(log, request, existingVc);
-        } else {
-            AddVirtualizationConnectorService.checkOpenstackConnection(log, request, existingVc);
-        }
+		if (dto.getType().isVmware()) {
+
+			util.checkVmwareConnection(request, existingVc);
+		} else {
+
+			util.checkOpenstackConnection(request, existingVc);
+		}
     }
 
     /**
