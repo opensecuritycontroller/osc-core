@@ -157,9 +157,9 @@
 						<configuration>
 							<target>
 								<exec outputproperty="productVersion" executable="cat">
-									<arg value="../version.txt" />
+									<arg value="version.txt" />
 								</exec>
-								<exec outputproperty="buildNumber" dir="../." executable="sh">
+								<exec outputproperty="buildNumber" dir="." executable="sh">
 									<arg value="-c" />
                                     <arg value="${repoVersionCmd}" />
 								</exec>
