@@ -36,7 +36,6 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.manager.element.ApplianceSoftwareVersionElement;
 

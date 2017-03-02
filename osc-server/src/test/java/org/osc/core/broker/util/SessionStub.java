@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -39,7 +41,7 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.test.util.TestCriteria;
 import org.osc.core.test.util.TestCriteriaContent;
 

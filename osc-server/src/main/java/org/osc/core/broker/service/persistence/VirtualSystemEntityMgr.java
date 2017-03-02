@@ -40,7 +40,8 @@ public class VirtualSystemEntityMgr {
         dto.setDistributedAppliance(entity.getDistributedAppliance().getName());
         dto.setVcId(entity.getVirtualizationConnector().getId());
         dto.setVirtualizationConnectorName(entity.getVirtualizationConnector().getName());
-        dto.setVirtualizationType(entity.getVirtualizationConnector().getVirtualizationType());
+        dto.setVirtualizationType(VirtualizationType.valueOf(
+                entity.getVirtualizationConnector().getVirtualizationType().name()));
         dto.setMarkForDeletion(entity.getMarkedForDeletion());
         dto.setEncapsulationType(entity.getEncapsulationType());
 

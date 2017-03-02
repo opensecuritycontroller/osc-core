@@ -47,15 +47,13 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.sdk.controller.TagEncapsulationType;
-import org.osc.sdk.manager.element.VirtualSystemElement;
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "VIRTUAL_SYSTEM", uniqueConstraints = @UniqueConstraint(columnNames = { "virtualization_connector_fk",
 "distributed_appliance_fk" }))
-public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
+public class VirtualSystem extends BaseEntity {
 
     private static final String TEMP_VS_NAME = "~temp~";
 
@@ -147,7 +145,6 @@ public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
         super();
     }
 
-    @Override
     public byte[] getKeyStore() {
         return this.keyStore;
     }
@@ -188,16 +185,14 @@ public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
         this.nsxServiceInstanceId = nsxServiceInstanceId;
     }
 
-    @Override
     public DistributedAppliance getDistributedAppliance() {
         return this.distributedAppliance;
     }
 
-    void setDistributedAppliance(DistributedAppliance distributedAppliance) {
+    public void setDistributedAppliance(DistributedAppliance distributedAppliance) {
         this.distributedAppliance = distributedAppliance;
     }
 
-    @Override
     public VirtualizationConnector getVirtualizationConnector() {
         return this.virtualizationConnector;
     }
@@ -206,7 +201,6 @@ public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
         this.virtualizationConnector = virtualizationConnector;
     }
 
-    @Override
     public ApplianceSoftwareVersion getApplianceSoftwareVersion() {
         return this.applianceSoftwareVersion;
     }
@@ -254,7 +248,6 @@ public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
         this.virtualSystemPolicies.remove(virtualSystemPolicy);
     }
 
-    @Override
     public Domain getDomain() {
         return this.domain;
     }
@@ -263,7 +256,6 @@ public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
         this.domain = domain;
     }
 
-    @Override
     public String getMgrId() {
         return this.mgrId;
     }
@@ -288,7 +280,6 @@ public class VirtualSystem extends BaseEntity implements VirtualSystemElement {
         this.nsxVsmUuid = nsxVsmUuid;
     }
 
-    @Override
     public String getName() {
         if (this.name == null || this.name.equals(TEMP_VS_NAME)) {
             this.name = this.distributedAppliance.getName() + "-" + getId().toString();

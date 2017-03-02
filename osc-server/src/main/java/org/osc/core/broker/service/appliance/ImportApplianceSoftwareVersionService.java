@@ -70,7 +70,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
 
             if (appliance == null) {
                 appliance = new Appliance();
-                appliance.setManagerType(this.imageMetadata.getManagerType());
+                appliance.setManagerType(this.imageMetadata.getManagerType().getValue());
                 appliance.setModel(this.imageMetadata.getModel());
                 appliance.setManagerSoftwareVersion(this.imageMetadata.getManagerVersion());
 
@@ -78,7 +78,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
 
                 appliance = applianceEntityManager.create(appliance);
             } else {
-                if (!appliance.getManagerType().equals(this.imageMetadata.getManagerType())) {
+                if (!appliance.getManagerType().equals(this.imageMetadata.getManagerType().getValue())) {
                     throw new VmidcBrokerValidationException("Invalid manager type for the appliance. Expected: "
                             + appliance.getManagerType().toString() + " Received:"
                             + this.imageMetadata.getManagerType().toString());
@@ -105,7 +105,9 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
              * record exists in DB but image does not in the file system.
              */
             ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(session,
-                    appliance.getId(), softwareVersion, virtualizationType, virtualizationVersion);
+                    appliance.getId(), softwareVersion,
+                    org.osc.core.broker.model.entities.appliance.VirtualizationType.valueOf(
+                            virtualizationType.name()), virtualizationVersion);
 
             boolean isPolicyMappingSupported = ManagerApiFactory.createApplianceManagerApi(
                     this.imageMetadata.getManagerType()).isPolicyMappingSupported();

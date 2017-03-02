@@ -34,11 +34,10 @@ import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.LastJobContainer;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.sdk.manager.element.DistributedApplianceElement;
 
 @Entity
 @Table(name = "DISTRIBUTED_APPLIANCE")
-public class DistributedAppliance extends BaseEntity implements DistributedApplianceElement, LastJobContainer {
+public class DistributedAppliance extends BaseEntity implements LastJobContainer {
 
     private static final long serialVersionUID = 1L;
 
@@ -80,12 +79,10 @@ public class DistributedAppliance extends BaseEntity implements DistributedAppli
         this.applianceManagerConnector = applianceManagerConnector;
     }
 
-    @Override
     public Appliance getAppliance() {
         return this.appliance;
     }
 
-    @Override
     public String getApplianceVersion() {
         return this.applianceVersion;
     }
@@ -119,16 +116,14 @@ public class DistributedAppliance extends BaseEntity implements DistributedAppli
         this.name = name;
     }
 
-    @Override
     public ApplianceManagerConnector getApplianceManagerConnector() {
         return this.applianceManagerConnector;
     }
 
-    void setApplianceManagerConnector(ApplianceManagerConnector applianceManagerConnector) {
+    public void setApplianceManagerConnector(ApplianceManagerConnector applianceManagerConnector) {
         this.applianceManagerConnector = applianceManagerConnector;
     }
 
-    @Override
     public String getMgrSecretKey() {
         return this.mgrSecretKey;
     }
@@ -137,10 +132,12 @@ public class DistributedAppliance extends BaseEntity implements DistributedAppli
         this.mgrSecretKey = mgrSecretKey;
     }
 
+    @Override
     public JobRecord getLastJob() {
         return this.lastJob;
     }
 
+    @Override
     public void setLastJob(JobRecord lastJob) {
         this.lastJob = lastJob;
     }

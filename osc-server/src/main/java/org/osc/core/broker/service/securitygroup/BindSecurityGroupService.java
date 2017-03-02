@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
@@ -219,7 +220,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 
         ValidateUtil.checkMarkedForDeletion(this.securityGroup, this.securityGroup.getName());
 
-        if (this.securityGroup.getVirtualizationConnector().isVmware()) {
+        if (this.securityGroup.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
             throw new ActionNotSupportedException(
                     "Invalid Action. Binding of Security Group for Vmware Virtualization Connectors needs to done "
                             + "through NSX.");

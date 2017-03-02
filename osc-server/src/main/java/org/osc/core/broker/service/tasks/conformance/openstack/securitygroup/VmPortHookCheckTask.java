@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -41,8 +43,6 @@ import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.element.InspectionHookElement;
-
-import java.util.Set;
 
 /**
  * This task just adds/update the hooks. If the SGI is marked for deletion, this task does not do anything.
@@ -93,7 +93,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                         && this.vmPort.getVm() == null) {
 
                     if (SdnControllerApiFactory.createNetworkControllerApi(this.sgm).isOffboxRedirectionSupported()) {
-                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, this.sgm.getMemberRegion(),
+                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, this.sgm.getSubnet().getRegion(),
                                 tenantId, null, this.vs);
                     } else {
                         throw new VmidcBrokerValidationException(
@@ -101,7 +101,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                     }
 
                 } else {
-                    assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, this.sgm.getMemberRegion(),
+                    assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, getMemberRegion(this.sgm),
                             tenantId, this.vmPort.getVm().getHost(), this.vs);
                 }
 
@@ -171,6 +171,20 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                 }
 
             }
+        }
+    }
+
+    private String getMemberRegion(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        switch (sgm.getType()) {
+        case VM:
+            return sgm.getVm().getRegion();
+        case NETWORK:
+            return sgm.getNetwork().getRegion();
+        case SUBNET:
+            return sgm.getSubnet().getRegion();
+        default:
+            throw new VmidcBrokerValidationException("Openstack Id is not applicable for Members of type '" + sgm.getType()
+                    + "'");
         }
     }
 

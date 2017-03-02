@@ -36,10 +36,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.ForeignKey;
-import org.joda.time.DateTime;
-import org.osc.core.broker.job.TaskGuard;
-import org.osc.core.broker.job.TaskState;
-import org.osc.core.broker.job.TaskStatus;
 import org.osc.core.broker.model.entities.BaseEntity;
 
 @Entity
@@ -104,11 +100,11 @@ public class TaskRecord extends BaseEntity {
     }
 
     public JobRecord getJob() {
-        return job;
+        return this.job;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void setName(String name) {
@@ -120,7 +116,7 @@ public class TaskRecord extends BaseEntity {
     }
 
     public String getFailReason() {
-        return failReason;
+        return this.failReason;
     }
 
     public void setFailReason(String failReason) {
@@ -132,7 +128,7 @@ public class TaskRecord extends BaseEntity {
     }
 
     public TaskGuard getTaskGaurd() {
-        return taskGaurd;
+        return this.taskGaurd;
     }
 
     public void setTaskGaurd(TaskGuard taskGaurd) {
@@ -140,7 +136,7 @@ public class TaskRecord extends BaseEntity {
     }
 
     public TaskState getState() {
-        return state;
+        return this.state;
     }
 
     public void setState(TaskState state) {
@@ -148,7 +144,7 @@ public class TaskRecord extends BaseEntity {
     }
 
     public TaskStatus getStatus() {
-        return status;
+        return this.status;
     }
 
     public void setStatus(TaskStatus status) {
@@ -156,53 +152,53 @@ public class TaskRecord extends BaseEntity {
     }
 
     public Date getQueuedTimestamp() {
-        return queuedTimestamp;
+        return this.queuedTimestamp;
     }
 
-    public void setQueuedTimestamp(DateTime queuedTimestamp) {
+    public void setQueuedTimestamp(Date queuedTimestamp) {
         if (queuedTimestamp == null) {
             return;
         }
-        this.queuedTimestamp = queuedTimestamp.toDate();
+        this.queuedTimestamp = queuedTimestamp;
     }
 
     public Date getStartedTimestamp() {
-        return startedTimestamp;
+        return this.startedTimestamp;
     }
 
-    public void setStartedTimestamp(DateTime startedTimestamp) {
+    public void setStartedTimestamp(Date startedTimestamp) {
         if (startedTimestamp == null) {
             return;
         }
-        this.startedTimestamp = startedTimestamp.toDate();
+        this.startedTimestamp = startedTimestamp;
     }
 
     public Date getCompletedTimestamp() {
-        return completedTimestamp;
+        return this.completedTimestamp;
     }
 
-    public void setCompletedTimestamp(DateTime completedTimestamp) {
+    public void setCompletedTimestamp(Date completedTimestamp) {
         if (completedTimestamp == null) {
             return;
         }
-        this.completedTimestamp = completedTimestamp.toDate();
+        this.completedTimestamp = completedTimestamp;
     }
 
     public Set<TaskRecord> getPredecessors() {
-        return predecessors;
+        return this.predecessors;
     }
 
     public Set<TaskRecord> getSuccessors() {
-        return successors;
+        return this.successors;
     }
 
     public Set<TaskRecord> getChildren() {
-        return children;
+        return this.children;
     }
 
     public List<Long> getPredecessorsIds() {
         List<Long> ids = new ArrayList<Long>();
-        for (TaskRecord tr : predecessors) {
+        for (TaskRecord tr : this.predecessors) {
             ids.add(tr.getId());
         }
         return ids;
@@ -211,10 +207,10 @@ public class TaskRecord extends BaseEntity {
     public String getPredecessorsOrderIds() {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
-        for (TaskRecord tr : predecessors) {
+        for (TaskRecord tr : this.predecessors) {
             sb.append(tr.getDependencyOrder() + ",");
         }
-        if (!predecessors.isEmpty()) {
+        if (!this.predecessors.isEmpty()) {
             sb.deleteCharAt(sb.length() - 1);
         }
         sb.append("]");
@@ -223,8 +219,8 @@ public class TaskRecord extends BaseEntity {
 
     @Override
     public String toString() {
-        return "TaskRecord [id=" + getId() + ", name=" + getName() + ", state=" + state + ", status=" + status
-                + ", taskGaurd=" + taskGaurd + ", failReason=" + failReason + "]";
+        return "TaskRecord [id=" + getId() + ", name=" + getName() + ", state=" + this.state + ", status=" + this.status
+                + ", taskGaurd=" + this.taskGaurd + ", failReason=" + this.failReason + "]";
     }
 
     public void addSuccessor(TaskRecord task) {
@@ -240,7 +236,7 @@ public class TaskRecord extends BaseEntity {
     }
 
     public Long getDependencyOrder() {
-        return dependencyOrder;
+        return this.dependencyOrder;
     }
 
     public void setDependencyOrder(Long dependencyOrder) {

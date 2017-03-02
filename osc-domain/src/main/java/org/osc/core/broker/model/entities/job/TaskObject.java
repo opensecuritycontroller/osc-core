@@ -27,9 +27,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.ForeignKey;
-import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.ObjectType;
 
 @Entity
 @Table(name = "TASK_OBJECT", uniqueConstraints = { @UniqueConstraint(columnNames = { "task_fk", "object_type",
@@ -56,10 +55,6 @@ public class TaskObject extends BaseEntity {
     public TaskObject() {
     }
 
-    public TaskObject(TaskRecord task, LockObjectReference lor) {
-        this(task, lor.getName(), lor.getType(), lor.getId());
-    }
-
     public TaskObject(TaskRecord task, String name, ObjectType objectType, Long objectId) {
         this.task = task;
         task.addObject(this);
@@ -70,24 +65,24 @@ public class TaskObject extends BaseEntity {
     }
 
     public ObjectType getObjectType() {
-        return objectType;
+        return this.objectType;
     }
 
     public Long getObjectId() {
-        return objectId;
+        return this.objectId;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public TaskRecord getTask() {
-        return task;
+        return this.task;
     }
 
     @Override
     public String toString() {
-        return "TaskObject [objectType=" + objectType + ", name=" + name + ", objectId=" + objectId + "]";
+        return "TaskObject [objectType=" + this.objectType + ", name=" + this.name + ", objectId=" + this.objectId + "]";
     }
 
 }

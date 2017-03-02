@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
-import java.util.Set;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -34,8 +32,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsProtectionEntity;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
-import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
 @SuppressWarnings("serial")
 @Entity
@@ -135,47 +131,6 @@ public class SecurityGroupMember extends BaseEntity implements Comparable<Securi
             return null;
         }
     }
-
-    public String getMemberRegion() throws VmidcBrokerValidationException {
-        switch (getType()) {
-        case VM:
-            return getVm().getRegion();
-        case NETWORK:
-            return getNetwork().getRegion();
-        case SUBNET:
-            return getSubnet().getRegion();
-        default:
-            throw new VmidcBrokerValidationException("Openstack Id is not applicable for Members of type '" + getType()
-                    + "'");
-        }
-    }
-
-    public String getMemberOpenstackId() throws VmidcBrokerValidationException {
-        switch (getType()) {
-        case VM:
-            return getVm().getOpenstackId();
-        case NETWORK:
-            return getNetwork().getOpenstackId();
-        case SUBNET:
-            return getSubnet().getOpenstackId();
-        default:
-            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + getType() + "'");
-        }
-    }
-
-    public Set<VMPort> getPorts() throws VmidcBrokerValidationException {
-        switch (getType()) {
-        case VM:
-            return getVm().getPorts();
-        case NETWORK:
-            return getNetwork().getPorts();
-        case SUBNET:
-            return getSubnet().getPorts();
-        default:
-            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + getType() + "'");
-        }
-    }
-
 
     @Override
     public int compareTo(SecurityGroupMember o) {

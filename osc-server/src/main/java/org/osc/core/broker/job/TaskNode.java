@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.job;
 
+import static org.osc.core.broker.job.Job.toEntityType;
+
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -134,10 +136,12 @@ public class TaskNode implements Runnable, TaskElement {
             this.taskRecord = (TaskRecord) session.get(TaskRecord.class, this.taskRecord.getId(), new LockOptions(
                     LockMode.PESSIMISTIC_WRITE));
 
-            this.taskRecord.setState(getState());
-            this.taskRecord.setCompletedTimestamp(getCompletedTimestamp());
-            this.taskRecord.setQueuedTimestamp(getQueuedTimestamp());
-            this.taskRecord.setStartedTimestamp(getStartedTimestamp());
+            this.taskRecord.setState(
+                    toEntityType(org.osc.core.broker.model.entities.job.TaskState.class,
+                            getState()));
+            this.taskRecord.setCompletedTimestamp(getCompletedTimestamp().toDate());
+            this.taskRecord.setQueuedTimestamp(getQueuedTimestamp().toDate());
+            this.taskRecord.setStartedTimestamp(getStartedTimestamp().toDate());
 
             this.taskRecord.setName(getSafeTaskName());
 
@@ -214,7 +218,9 @@ public class TaskNode implements Runnable, TaskElement {
             this.taskRecord = (TaskRecord) session.get(TaskRecord.class, this.taskRecord.getId(), new LockOptions(
                     LockMode.PESSIMISTIC_WRITE));
 
-            this.taskRecord.setStatus(getStatus());
+            this.taskRecord.setStatus(
+                    toEntityType(org.osc.core.broker.model.entities.job.TaskStatus.class,
+                            getStatus()));
             if (this.failReason != null) {
                 if (this.failReason.getMessage() != null) {
                     this.taskRecord.setFailReason(this.failReason.getMessage());

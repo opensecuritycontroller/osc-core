@@ -27,7 +27,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.sdk.manager.element.ApplianceElement;
 
 @Entity
@@ -53,24 +52,25 @@ public class Appliance extends BaseEntity implements ApplianceElement {
     }
 
     public void addApplianceSoftwareVersion(ApplianceSoftwareVersion applianceSoftwareVersion) {
-        applianceSoftwareVersions.add(applianceSoftwareVersion);
+        this.applianceSoftwareVersions.add(applianceSoftwareVersion);
         applianceSoftwareVersion.setAppliance(this);
     }
 
     public void removeApplianceSoftwareVersion(ApplianceSoftwareVersion applianceSoftwareVersion) {
-        applianceSoftwareVersions.remove(applianceSoftwareVersion);
+        this.applianceSoftwareVersions.remove(applianceSoftwareVersion);
     }
 
     public String getManagerSoftwareVersion() {
-        return managerSoftwareVersion;
+        return this.managerSoftwareVersion;
     }
 
     public void setManagerSoftwareVersion(String managerSoftwareVersion) {
         this.managerSoftwareVersion = managerSoftwareVersion;
     }
 
+    @Override
     public String getModel() {
-        return model;
+        return this.model;
     }
 
     public void setModel(String model) {
@@ -79,20 +79,20 @@ public class Appliance extends BaseEntity implements ApplianceElement {
 
     @Override
     public String toString() {
-        return "Appliance [model=" + model + ", managerType=" + managerType + ", managerSoftwareVersion="
-                + managerSoftwareVersion + ", getId()=" + getId() + "]";
+        return "Appliance [model=" + this.model + ", managerType=" + this.managerType + ", managerSoftwareVersion="
+                + this.managerSoftwareVersion + ", getId()=" + getId() + "]";
     }
 
-    public ManagerType getManagerType() {
-        return ManagerType.fromText(managerType);
+    public String getManagerType() {
+        return this.managerType;
     }
 
-    public void setManagerType(ManagerType managerType) {
-        this.managerType = managerType.getValue();
+    public void setManagerType(String managerType) {
+        this.managerType = managerType;
     }
 
     public Set<ApplianceSoftwareVersion> getApplianceVersions() {
-        return applianceSoftwareVersions;
+        return this.applianceSoftwareVersions;
     }
 
 }

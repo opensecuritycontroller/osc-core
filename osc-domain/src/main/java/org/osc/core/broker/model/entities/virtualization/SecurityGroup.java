@@ -16,9 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -40,12 +38,6 @@ import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.LastJobContainer;
-import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberElementImpl;
-import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberListElementImpl;
-import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.sdk.manager.element.SecurityGroupMemberElement;
-import org.osc.sdk.manager.element.SecurityGroupMemberListElement;
 
 @SuppressWarnings("serial")
 @Entity
@@ -194,26 +186,14 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
         this.mgrId = mgrId;
     }
 
+    @Override
     public JobRecord getLastJob() {
         return this.lastJob;
     }
 
+    @Override
     public void setLastJob(JobRecord lastJob) {
         this.lastJob = lastJob;
-    }
-
-    public SecurityGroupMemberListElement getSecurityGroupMemberListElement() throws VmidcBrokerValidationException {
-        List<SecurityGroupMemberElement> sgmElements = new ArrayList<>();
-        for (SecurityGroupMember sgm : getSecurityGroupMembers()) {
-            SecurityGroupMemberElementImpl sgmElement = new SecurityGroupMemberElementImpl(sgm.getId().toString(),
-                    sgm.getMemberName());
-            for (VMPort port : sgm.getPorts()) {
-                sgmElement.addMacAddresses(port.getMacAddresses());
-                sgmElement.addIpAddress(port.getPortIPs());
-            }
-            sgmElements.add(sgmElement);
-        }
-        return new SecurityGroupMemberListElementImpl(sgmElements);
     }
 
     public String getNetworkElementId() {

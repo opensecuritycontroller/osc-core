@@ -21,8 +21,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -38,20 +36,17 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
-import org.osc.core.rest.client.crypto.SslContextProvider;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 
 @Entity
 @Table(name = "VIRTUALIZATION_CONNECTOR")
 public class VirtualizationConnector extends BaseEntity
-        implements org.osc.sdk.manager.element.VirtualizationConnectorElement,
-        org.osc.sdk.controller.element.VirtualizationConnectorElement {
+        implements org.osc.sdk.manager.element.VirtualizationConnectorElement {
+
+    private static final String NO_CONTROLLER = "NONE";
 
     private static final long serialVersionUID = 1L;
 
@@ -90,7 +85,7 @@ public class VirtualizationConnector extends BaseEntity
     private String virtualizationSoftwareVersion;
 
     @Column(name = "controller_type", nullable = false)
-    private String controllerType = ControllerType.NONE.getValue();
+    private String controllerType = NO_CONTROLLER;
 
     @OneToMany(mappedBy = "virtualizationConnector", fetch = FetchType.LAZY)
     private Set<VirtualSystem> virtualSystems = new HashSet<VirtualSystem>();
@@ -149,7 +144,6 @@ public class VirtualizationConnector extends BaseEntity
         this.name = name;
     }
 
-    @Override
     public String getControllerIpAddress() {
         return this.controllerIpAddress;
     }
@@ -158,7 +152,6 @@ public class VirtualizationConnector extends BaseEntity
         this.controllerIpAddress = controllerIpAddress;
     }
 
-    @Override
     public String getControllerUsername() {
         return this.controllerUsername;
     }
@@ -167,7 +160,6 @@ public class VirtualizationConnector extends BaseEntity
         this.controllerUsername = controllerUsername;
     }
 
-    @Override
     public String getControllerPassword() {
         return this.controllerPassword;
     }
@@ -176,7 +168,6 @@ public class VirtualizationConnector extends BaseEntity
         this.controllerPassword = controllerPassword;
     }
 
-    @Override
     public String getProviderIpAddress() {
         return this.providerIpAddress;
     }
@@ -185,7 +176,6 @@ public class VirtualizationConnector extends BaseEntity
         this.providerIpAddress = providerIpAddress;
     }
 
-    @Override
     public String getProviderUsername() {
         return this.providerUsername;
     }
@@ -194,7 +184,6 @@ public class VirtualizationConnector extends BaseEntity
         this.providerUsername = providerUsername;
     }
 
-    @Override
     public String getProviderPassword() {
         return this.providerPassword;
     }
@@ -219,31 +208,22 @@ public class VirtualizationConnector extends BaseEntity
         this.virtualizationSoftwareVersion = virtualizationSoftwareVersion;
     }
 
-    public ControllerType getControllerType() {
-        return ControllerType.fromText(this.controllerType);
+    public String getControllerType() {
+        return this.controllerType;
     }
 
-    public void setControllerType(ControllerType controllerType) {
-        this.controllerType = controllerType != null ? controllerType.getValue() : ControllerType.NONE.getValue();
+    public void setControllerType(String controllerType) {
+        this.controllerType = controllerType != null ? controllerType : NO_CONTROLLER;
     }
 
     public boolean isControllerDefined() {
-        return !getControllerType().equals(ControllerType.NONE);
-    }
-
-    public boolean isVmware() {
-        return getVirtualizationType().isVmware();
-    }
-
-    public boolean isOpenstack() {
-        return getVirtualizationType().isOpenstack();
+        return !getControllerType().equals(NO_CONTROLLER);
     }
 
     public Set<VirtualSystem> getVirtualSystems() {
         return this.virtualSystems;
     }
 
-    @Override
     public String getProviderAdminTenantName() {
         return this.adminTenantName;
     }
@@ -253,38 +233,19 @@ public class VirtualizationConnector extends BaseEntity
     }
 
     public Set<SslCertificateAttr> getSslCertificateAttrSet() {
-        return sslCertificateAttrSet;
+        return this.sslCertificateAttrSet;
     }
 
     public void setSslCertificateAttrSet(Set<SslCertificateAttr> sslCertificateAttrSet) {
         this.sslCertificateAttrSet = sslCertificateAttrSet;
     }
 
-    @Override
     public Map<String, String> getProviderAttributes() {
         return this.providerAttributes;
     }
 
-    @Override
-    public SSLContext getSslContext() {
-        SslContextProvider sslContextProvider = new SslContextProvider();
-        return sslContextProvider.getSSLContext();
-    }
-
-    @Override
-    public TrustManager[] getTruststoreManager() throws Exception {
-        return new TrustManager[]{X509TrustManagerFactory.getInstance()};
-    }
-
-    @Override
     public boolean isProviderHttps() {
         String httpsValue = this.providerAttributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS);
-        return httpsValue != null && httpsValue.equals(Boolean.TRUE.toString());
-    }
-
-    public static boolean isHttps(Map<String, String> attributes) {
-        String httpsValue = attributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS);
-
         return httpsValue != null && httpsValue.equals(Boolean.TRUE.toString());
     }
 
@@ -307,13 +268,6 @@ public class VirtualizationConnector extends BaseEntity
      */
     public String getRabbitMQIP() {
         String rabbitMQIP = getProviderAttributes() != null ? getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_IP) : null;
-        return StringUtils.isBlank(rabbitMQIP) ? getProviderIpAddress() : rabbitMQIP;
+        return rabbitMQIP == null || rabbitMQIP.isEmpty() ? getProviderIpAddress() : rabbitMQIP;
     }
-
-    @Override
-    public boolean isControllerHttps() {
-        // TODO: Future. Need to add support for Controller HTTPS access
-        return false;
-    }
-
 }

@@ -26,6 +26,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
@@ -52,7 +53,7 @@ public class PortGroupCheckTask extends TransactionalTask {
         List<NetworkElement> protectedPorts = new ArrayList<>();
 
         for (SecurityGroupMember sgm : members) {
-            protectedPorts.addAll(sgm.getPorts());
+            protectedPorts.addAll(getPorts(sgm));
         }
         String domainId = OpenstackUtil.extractDomainId(this.sg.getTenantId(), this.sg.getTenantName(),
                 this.sg.getVirtualizationConnector(), protectedPorts);
@@ -91,6 +92,19 @@ public class PortGroupCheckTask extends TransactionalTask {
                     session.update(this.sg);
                 }
             }
+        }
+    }
+
+    public Set<VMPort> getPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        switch (sgm.getType()) {
+        case VM:
+            return sgm.getVm().getPorts();
+        case NETWORK:
+            return sgm.getNetwork().getPorts();
+        case SUBNET:
+            return sgm.getSubnet().getPorts();
+        default:
+            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
         }
     }
 

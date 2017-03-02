@@ -16,7 +16,19 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.*;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.IMAGE_URL_OUT_OF_SYNC;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.TEST_VIRTUAL_SYSTEMS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_APPLIANCEVERSION_IMAGE_URL_OUT_OF_SYNC_UPDATE_NSX_SCHED_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_APPLIANCEVERSION_IMAGE_URL_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_NEW_DIST_APPL_NO_DEPLOYMENT_SPEC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_NSX_ALL_DEPLOY_SPEC_MISSING_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_NSX_DS_OUT_OF_SYNC_5_5_X_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_NSX_DS_OUT_OF_SYNC_6_X_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_OSC_DB_UPGRADE_NEW_ESX_VERSION_SUPPORT_NSX_OOS_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_OSC_DB_UPGRADE_NEW_ESX_VERSION_SUPPORT_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.createApplVersionImageUrlOutOfSyncUpdateNsxSchedGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.createApplianceVersionImageUrlOutOfSyncGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.createRegisterDeploySpecExpectedGraph;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,8 +47,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
@@ -49,6 +61,10 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 @PowerMockRunnerDelegate(value = Parameterized.class)
 @PrepareForTest({VMwareSdnApiFactory.class, RegisterDeploymentSpecTask.class})
 public class NsxDeploymentSpecCheckMetaTaskTest {
+    private static final String VMWARE_5_5_STRING = "5.5";
+
+    private static final String VMWARE_6_STRING = "6";
+
     @Mock
     public Session sessionMock;
 
@@ -87,9 +103,9 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
         registerVersionedDeploymentSpecDbUpgrade(VMWARE_OSC_DB_UPGRADE_NEW_ESX_VERSION_SUPPORT_VS, false); //3
         registerVersionedDeploymentSpecDbUpgrade(VMWARE_OSC_DB_UPGRADE_NEW_ESX_VERSION_SUPPORT_NSX_OOS_VS, true);  //4
         registerVersionedDeploymentSpec(null, VMWARE_NSX_DS_OUT_OF_SYNC_6_X_VS,
-                VmwareSoftwareVersion.VMWARE_V6.toString());//5
+                VMWARE_6_STRING);//5
         registerVersionedDeploymentSpec(null, VMWARE_NSX_DS_OUT_OF_SYNC_5_5_X_VS,
-                VmwareSoftwareVersion.VMWARE_V5_5.toString()); //6
+                VMWARE_5_5_STRING); //6
         registerVersionedDeploymentSpec(null, VMWARE_NSX_ALL_DEPLOY_SPEC_MISSING_VS,
                 ALL_DEPLOY_SPECS_MISSING); //7
 
@@ -120,19 +136,19 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
     private void registerVersionedDeploymentSpec(String imageUrl, VirtualSystem vs, String missingDS) throws Exception {
         VersionedDeploymentSpec vds = new VersionedDeploymentSpec();
         vds.setOvfUrl(imageUrl);
-        vds.setHostVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString() + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
+        vds.setHostVersion(VMWARE_5_5_STRING + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
         VersionedDeploymentSpec vds2 = new VersionedDeploymentSpec();
         vds2.setOvfUrl(imageUrl);
-        vds2.setHostVersion(VmwareSoftwareVersion.VMWARE_V6.toString() + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
+        vds2.setHostVersion(VMWARE_6_STRING + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
         List<VersionedDeploymentSpec> versionedSpecsList = new ArrayList<VersionedDeploymentSpec>();
         if (missingDS==null ){
             versionedSpecsList.add(vds);
             versionedSpecsList.add(vds2);
         } else if (missingDS.equals(ALL_DEPLOY_SPECS_MISSING)){
             versionedSpecsList = Collections.emptyList();
-        } else if (missingDS.equals(VmwareSoftwareVersion.VMWARE_V5_5.toString())){
+        } else if (missingDS.equals(VMWARE_5_5_STRING)){
             versionedSpecsList.add(vds2);
-        } else if (missingDS.equals(VmwareSoftwareVersion.VMWARE_V6.toString())){
+        } else if (missingDS.equals(VMWARE_6_STRING)){
             versionedSpecsList.add(vds);
         }
 
@@ -142,7 +158,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
 
     private void registerVersionedDeploymentSpecDbUpgrade( VirtualSystem vs, boolean outOfSync) throws Exception {
         VersionedDeploymentSpec vds = new VersionedDeploymentSpec();
-        vds.setHostVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString() + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
+        vds.setHostVersion(VMWARE_5_5_STRING + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
         List<VersionedDeploymentSpec> versionedSpecsList = new ArrayList<VersionedDeploymentSpec>();
         versionedSpecsList.add(vds);
 

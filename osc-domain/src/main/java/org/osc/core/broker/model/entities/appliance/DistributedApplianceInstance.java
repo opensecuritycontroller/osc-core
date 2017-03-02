@@ -18,6 +18,7 @@ package org.osc.core.broker.model.entities.appliance;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.Basic;
@@ -36,16 +37,10 @@ import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova.CreatedServerDetails;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
-import org.osc.sdk.manager.element.DistributedApplianceInstanceElement;
-
-import com.google.common.base.Objects;
 
 @Entity
 @Table(name = "DISTRIBUTED_APPLIANCE_INSTANCE")
-public class DistributedApplianceInstance extends BaseEntity implements DistributedApplianceInstanceElement {
+public class DistributedApplianceInstance extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -153,7 +148,6 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
     }
 
 
-    @Override
     public String getName() {
         return this.name;
     }
@@ -162,7 +156,6 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.name = name;
     }
 
-    @Override
     public VirtualSystem getVirtualSystem() {
         return this.virtualSystem;
     }
@@ -251,20 +244,8 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.packets = packets;
     }
 
-    public String getCurrentConsolePassword() throws EncryptionException {
-        return EncryptionUtil.decryptAESCTR(this.currentConsolePassword);
-    }
-
-    public void setCurrentConsolePassword(String currentConsolePassword) throws EncryptionException {
-        this.currentConsolePassword = EncryptionUtil.encryptAESCTR(currentConsolePassword);
-    }
-
-    public String getNewConsolePassword() throws EncryptionException {
-        return EncryptionUtil.decryptAESCTR(this.newConsolePassword);
-    }
-
-    public void setNewConsolePassword(String newConsolePassword) throws EncryptionException {
-        this.newConsolePassword = EncryptionUtil.encryptAESCTR(newConsolePassword);
+    public void setNewConsolePassword(String newConsolePassword) {
+        this.newConsolePassword = newConsolePassword;
     }
 
     public Boolean getDiscovered() {
@@ -324,7 +305,6 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         return StringUtils.isEmpty(this.nsxHostName) ? this.osHostName : this.nsxHostName;
     }
 
-    @Override
     public byte[] getApplianceConfig() {
         return this.applianceConfig;
     }
@@ -426,8 +406,8 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
     }
 
     public boolean isSingleNicInspection() {
-        return Objects.equal(this.inspectionOsIngressPortId, this.inspectionOsEgressPortId)
-                && Objects.equal(this.inspectionIngressMacAddress, this.inspectionEgressMacAddress);
+        return Objects.equals(this.inspectionOsIngressPortId, this.inspectionOsEgressPortId)
+                && Objects.equals(this.inspectionIngressMacAddress, this.inspectionEgressMacAddress);
     }
 
     /**
@@ -443,11 +423,13 @@ public class DistributedApplianceInstance extends BaseEntity implements Distribu
         this.inspectionReady = false;
     }
 
-    public void updateDaiOpenstackSvaInfo(CreatedServerDetails createdServer) {
-        this.osServerId = createdServer.getServerId();
-        this.inspectionIngressMacAddress = createdServer.getIngressInspectionMacAddr();
-        this.inspectionOsIngressPortId = createdServer.getIngressInspectionPortId();
-        this.inspectionEgressMacAddress = createdServer.getEgressInspectionMacAddr();
-        this.inspectionOsEgressPortId = createdServer.getEgressInspectionPortId();
+    public void updateDaiOpenstackSvaInfo(String serverId,
+            String ingressMacAddr, String ingressPortId, String egressMacAddr,
+            String egressPortId) {
+        this.osServerId = serverId;
+        this.inspectionIngressMacAddress = ingressMacAddr;
+        this.inspectionOsIngressPortId = ingressPortId;
+        this.inspectionEgressMacAddress = egressMacAddr;
+        this.inspectionOsEgressPortId = egressPortId;
     }
 }

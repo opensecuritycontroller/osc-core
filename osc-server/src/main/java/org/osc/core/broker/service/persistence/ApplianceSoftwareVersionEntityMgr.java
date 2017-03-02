@@ -27,8 +27,8 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.sdk.controller.TagEncapsulationType;
@@ -50,7 +50,7 @@ public class ApplianceSoftwareVersionEntityMgr {
         // transfrom from dto to entity
         av.setId(dto.getId());
         av.setApplianceSoftwareVersion(dto.getSwVersion());
-        av.setVirtualizationType(dto.getVirtualizationType());
+        av.setVirtualizationType(VirtualizationType.valueOf(dto.getVirtualizationType().name()));
         av.setVirtualizarionSoftwareVersion(dto.getVirtualizationVersion());
         av.setImageUrl(dto.getImageUrl());
         av.setEncapsulationTypes(dto.getEncapsulationTypes());
@@ -69,7 +69,8 @@ public class ApplianceSoftwareVersionEntityMgr {
         dto.setId(av.getId());
         dto.setParentId(av.getAppliance().getId());
         dto.setSwVersion(av.getApplianceSoftwareVersion());
-        dto.setVirtualizationType(av.getVirtualizationType());
+        dto.setVirtualizationType(org.osc.core.broker.model.virtualization.VirtualizationType.valueOf(
+                av.getVirtualizationType().name()));
         dto.setVirtualizationVersion(av.getVirtualizarionSoftwareVersion());
         dto.setImageUrl(av.getImageUrl());
         dto.setEncapsulationTypes(av.getEncapsulationTypes());

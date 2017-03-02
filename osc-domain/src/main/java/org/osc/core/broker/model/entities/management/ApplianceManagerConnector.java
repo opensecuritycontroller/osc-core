@@ -19,8 +19,6 @@ package org.osc.core.broker.model.entities.management;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -40,15 +38,11 @@ import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.LastJobContainer;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.rest.client.crypto.SslContextProvider;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "APPLIANCE_MANAGER_CONNECTOR")
-public class ApplianceManagerConnector extends BaseEntity implements ApplianceManagerConnectorElement, LastJobContainer {
+public class ApplianceManagerConnector extends BaseEntity implements LastJobContainer {
 
     @Column(name = "name", unique = true, nullable = false)
     private String name;
@@ -131,10 +125,8 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
         this.lastJob = originalMc.lastJob;
         this.lastKnownBrokerIpAddress = originalMc.lastKnownBrokerIpAddress;
         this.apiKey = originalMc.apiKey;
-        this.clientIpAddress = originalMc.clientIpAddress;
     }
 
-    @Override
     public String getName() {
         return this.name;
     }
@@ -143,13 +135,12 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
         this.name = name;
     }
 
-    @Override
-    public ManagerType getManagerType() {
-        return ManagerType.fromText(this.managerType);
+    public String getManagerType() {
+        return this.managerType;
     }
 
-    public void setManagerType(ManagerType managerType) {
-        this.managerType = managerType.getValue();
+    public void setManagerType(String managerType) {
+        this.managerType = managerType;
     }
 
     public String getServiceType() {
@@ -160,7 +151,6 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
         this.serviceType = serviceType;
     }
 
-    @Override
     public String getIpAddress() {
         return this.ipAddress;
     }
@@ -169,7 +159,6 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
         this.ipAddress = ipAddress;
     }
 
-    @Override
     public String getUsername() {
         return this.username;
     }
@@ -178,7 +167,6 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
         this.username = username;
     }
 
-    @Override
     public String getPassword() {
         return this.password;
     }
@@ -195,7 +183,6 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
         return this.domains;
     }
 
-    @Override
     public byte[] getPublicKey() {
         return this.publicKey;
     }
@@ -222,7 +209,6 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
         this.domains.remove(domain);
     }
 
-    @Override
     public String getApiKey() {
         return this.apiKey;
     }
@@ -232,7 +218,7 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
     }
 
     public Set<SslCertificateAttr> getSslCertificateAttrSet() {
-        return sslCertificateAttrSet;
+        return this.sslCertificateAttrSet;
     }
 
     public void setSslCertificateAttrSet(Set<SslCertificateAttr> sslCertificateAttrSet) {
@@ -247,7 +233,6 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
      *
      * @return
      */
-    @Override
     public String getLastKnownNotificationIpAddress() {
         return this.lastKnownBrokerIpAddress;
     }
@@ -276,23 +261,8 @@ public class ApplianceManagerConnector extends BaseEntity implements ApplianceMa
     /**
      * @see org.osc.sdk.manager.element.ApplianceManagerConnectorElement#getClientIpAddress()
      */
-    @Override
     public String getClientIpAddress() {
         return this.clientIpAddress;
-    }
-
-    /**
-     * @see ApplianceManagerConnectorElement#getSslContext()
-     */
-    @Override
-    public SSLContext getSslContext() {
-        SslContextProvider sslContextProvider = new SslContextProvider();
-        return sslContextProvider.getSSLContext();
-    }
-
-    @Override
-    public TrustManager[] getTruststoreManager() throws Exception {
-        return new TrustManager[]{X509TrustManagerFactory.getInstance()};
     }
 
     /**

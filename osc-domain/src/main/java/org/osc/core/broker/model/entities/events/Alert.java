@@ -24,8 +24,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Table;
 
-import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.ObjectType;
 
 @SuppressWarnings("serial")
 @Entity

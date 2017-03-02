@@ -29,8 +29,6 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.sdk.manager.element.JobElement;
 

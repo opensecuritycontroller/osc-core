@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+
 package org.osc.core.broker.model.entities.job;
 
 import javax.persistence.Column;
@@ -27,9 +28,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.ForeignKey;
-import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.ObjectType;
 
 @Entity
 @Table(name = "JOB_OBJECT", uniqueConstraints = { @UniqueConstraint(columnNames = { "job_fk", "object_type",
@@ -56,10 +56,6 @@ public class JobObject extends BaseEntity {
     public JobObject() {
     }
 
-    public JobObject(JobRecord job, LockObjectReference lor) {
-        this(job, lor.getName(), lor.getType(), lor.getId());
-    }
-
     public JobObject(JobRecord job, String name, ObjectType objectType, Long objectId) {
         this.job = job;
         job.addObject(this);
@@ -70,24 +66,24 @@ public class JobObject extends BaseEntity {
     }
 
     public ObjectType getObjectType() {
-        return objectType;
+        return this.objectType;
     }
 
     public Long getObjectId() {
-        return objectId;
+        return this.objectId;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public JobRecord getJob() {
-        return job;
+        return this.job;
     }
 
     @Override
     public String toString() {
-        return "TaskObject [objectType=" + objectType + ", name=" + name + ", objectId=" + objectId + "]";
+        return "TaskObject [objectType=" + this.objectType + ", name=" + this.name + ", objectId=" + this.objectId + "]";
     }
 
 }
