@@ -305,15 +305,6 @@ public class ServerControl {
             throw new IllegalArgumentException("Rest client exception is empty");
         }
 
-        SslCertificateExceptionResolver sslCertificateExceptionResolver = new SslCertificateExceptionResolver();
-
-        if (!sslCertificateExceptionResolver.checkExceptionTypeForSSL(e)) {
-            throw e;
-        }
-
-        log.info("Trying to fetch SSL certificate from server");
-
-
         final ArrayList<CertificateResolverModel> certificateResolverModels = new ArrayList<>();
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
         try {
@@ -323,7 +314,8 @@ public class ServerControl {
             log.error("Error occurred in TrustStoreManagerFactory", e);
         }
 
-        if (!certificateResolverModels.isEmpty()) {
+        if (certificateResolverModels.isEmpty()) {
+            log.error("Failed to fetch SSL certificates");
             throw e;
         }
 
