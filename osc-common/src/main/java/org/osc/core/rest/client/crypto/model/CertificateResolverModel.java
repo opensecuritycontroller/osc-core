@@ -24,8 +24,18 @@ import java.security.cert.X509Certificate;
 public class CertificateResolverModel {
 
     private final X509Certificate certificate;
-    private final String alias;
+    private String alias;
     private final String sha1;
+
+    /**
+     * Constructor for fetched certificate
+     * @param certificate - certificate content
+     * @param sha1 - fingerprint of certificate
+     */
+    public CertificateResolverModel(X509Certificate certificate, String sha1) {
+        this.certificate = certificate;
+        this.sha1 = sha1;
+    }
 
     /**
      * Constructor for fetched certificate
@@ -43,20 +53,24 @@ public class CertificateResolverModel {
      * @return X509Certificate certificate
      */
     public X509Certificate getCertificate() {
-        return certificate;
+        return this.certificate;
     }
 
     /**
      * @return alias prefix
      */
     public String getAlias() {
-        return alias;
+        return this.alias;
     }
 
     /**
      * @return SHA1 fingerprint of certificate
      */
     public String getSha1() {
-        return sha1;
+        return this.sha1;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
     }
 }

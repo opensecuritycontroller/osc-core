@@ -17,7 +17,6 @@
 package org.osc.core.server.control;
 
 import java.io.FileInputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -34,7 +33,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.model.ServerStatusResponse;
 import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
 import org.osc.core.rest.client.VmidcServerRestClient;
-import org.osc.core.rest.client.crypto.SslCertificateResolver;
+import org.osc.core.rest.client.crypto.SslCertificateExceptionResolver;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.rest.client.exception.RestClientException;
@@ -306,23 +305,30 @@ public class ServerControl {
             throw new IllegalArgumentException("Rest client exception is empty");
         }
 
-        SslCertificateResolver sslCertificateResolver = new SslCertificateResolver();
+        SslCertificateExceptionResolver sslCertificateExceptionResolver = new SslCertificateExceptionResolver();
 
-        if (!sslCertificateResolver.checkExceptionTypeForSSL(e)) {
+        if (!sslCertificateExceptionResolver.checkExceptionTypeForSSL(e)) {
             throw e;
         }
 
         log.info("Trying to fetch SSL certificate from server");
 
-        String internalAlias = SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS;
-        sslCertificateResolver.fetchCertificatesFromURL(new URL(e.getResourcePath()), internalAlias);
 
-        if (sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
+        final ArrayList<CertificateResolverModel> certificateResolverModels = new ArrayList<>();
+        X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
+        try {
+            List<CertificateResolverModel> connectionCertificates = trustManagerFactory.getConnectionCertificates();
+            connectionCertificates.forEach(certificateResolverModels::add);
+        } catch (Exception e1) {
+            log.error("Error occurred in TrustStoreManagerFactory", e);
+        }
+
+        if (!certificateResolverModels.isEmpty()) {
             throw e;
         }
 
-        X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
-        for (CertificateResolverModel model : sslCertificateResolver.getCertificateResolverModels()) {
+        String internalAlias = SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS;
+        for (CertificateResolverModel model : certificateResolverModels) {
             trustManagerFactory.addEntry(model.getCertificate(), internalAlias);
             log.info("Added new certificate with alias: " + internalAlias + " and SHA1: " + model.getSha1());
         }

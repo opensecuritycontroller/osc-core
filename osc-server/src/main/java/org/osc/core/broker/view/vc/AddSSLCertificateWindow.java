@@ -152,5 +152,6 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
     @Override
     public void cancelForm() {
         this.sslCertificateWindowInterface.cancelFormAction();
+        close();
     }
 }

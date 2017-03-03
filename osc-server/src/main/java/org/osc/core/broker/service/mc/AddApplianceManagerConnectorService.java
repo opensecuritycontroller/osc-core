@@ -19,8 +19,6 @@ package org.osc.core.broker.service.mc;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
-import org.osc.core.broker.job.lock.LockManager;
-import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
@@ -40,19 +38,17 @@ import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.ValidateUtil;
-import org.osc.core.rest.client.crypto.SslCertificateResolver;
+import org.osc.core.rest.client.crypto.SslCertificateExceptionResolver;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.core.rest.client.exception.RestClientException;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AddApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
 
-    static final Logger log = Logger.getLogger(AddApplianceManagerConnectorService.class);
+    private static final Logger LOG = Logger.getLogger(AddApplianceManagerConnectorService.class);
 
     private boolean forceAddSSLCertificates = false;
 
@@ -65,44 +61,32 @@ public class AddApplianceManagerConnectorService extends
 
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, Session session)
-            throws Exception, RestClientException {
+            throws Exception {
         EntityManager<ApplianceManagerConnector> appMgrEntityMgr = new EntityManager<>(ApplianceManagerConnector.class, session);
 
         try {
-            validate(session, request, appMgrEntityMgr);
+            validate(request, appMgrEntityMgr);
         } catch (Exception e) {
             if (e instanceof SslCertificatesExtendedException && this.forceAddSSLCertificates) {
                 request = internalSSLCertificatesFetch(request, (SslCertificatesExtendedException) e);
-                validate(session, request, appMgrEntityMgr);
+                validate(request, appMgrEntityMgr);
             } else {
                 throw e;
             }
         }
 
-        ApplianceManagerConnector mc = null;
-        UnlockObjectTask mcUnlock = null;
+        ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto());
+        mc = appMgrEntityMgr.create(mc);
 
-        try {
-            mc = ApplianceManagerConnectorEntityMgr.createEntity(request.getDto());
-            mc = appMgrEntityMgr.create(mc);
+        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(session);
+        mc.setSslCertificateAttrSet(certificateAttrEntityMgr.storeSSLEntries(mc.getSslCertificateAttrSet(), mc.getId()));
 
-            SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(session);
-            mc.setSslCertificateAttrSet(certificateAttrEntityMgr.storeSSLEntries(mc.getSslCertificateAttrSet(), mc.getId()));
+        appMgrEntityMgr.update(mc);
 
-            appMgrEntityMgr.update(mc);
+        // Commit the changes early so that the entity is available for the job engine
+        commitChanges(true);
+        UnlockObjectTask mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
 
-            // Commit the changes early so that the entity is available for the job engine
-            commitChanges(true);
-            mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
-        } catch (Exception e) {
-            // If we experience any failure, unlock MC.
-            //:TODO dead code - mcUnlock will be always null - release will never happen
-            if (mcUnlock != null) {
-                log.info("Releasing lock for MC '" + mc.getName() + "'");
-                LockManager.getLockManager().releaseLock(new LockRequest(mcUnlock));
-            }
-            throw e;
-        }
 
         BaseJobResponse response = new BaseJobResponse();
         response.setId(mc.getId());
@@ -122,8 +106,8 @@ public class AddApplianceManagerConnectorService extends
         return request;
     }
 
-    private void validate(Session session, DryRunRequest<ApplianceManagerConnectorDto> request,
-                          EntityManager<ApplianceManagerConnector> emgr) throws Exception, ErrorTypeException {
+    private void validate(DryRunRequest<ApplianceManagerConnectorDto> request,
+                          EntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
         ApplianceManagerConnectorDto.checkForNullFields(request.getDto());
         ApplianceManagerConnectorDto.checkFieldLength(request.getDto());
@@ -141,35 +125,34 @@ public class AddApplianceManagerConnectorService extends
             throw new VmidcBrokerValidationException("Appliance Manager IP Address: " + request.getDto().getIpAddress() + " already exists.");
         }
 
-        checkManagerConnection(log, request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
+        checkManagerConnection(LOG, request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
     }
 
-    public static void checkManagerConnection(Logger log, DryRunRequest<ApplianceManagerConnectorDto> request,
-                                              ApplianceManagerConnector mc) throws ErrorTypeException {
-        if (!request.isSkipAllDryRun()) {
-            SslCertificateResolver sslCertificateResolver = new SslCertificateResolver();
-            ErrorTypeException errorTypeException = null;
+    static void checkManagerConnection(Logger log, DryRunRequest<ApplianceManagerConnectorDto> request,
+                                       ApplianceManagerConnector mc) throws ErrorTypeException {
+        if (!request.isSkipAllDryRun() && !request.isIgnoreErrorsAndCommit(ErrorType.MANAGER_CONNECTOR_EXCEPTION)) {
             try {
-                // Check Connectivity
-                if (!request.isIgnoreErrorsAndCommit(ErrorType.MANAGER_CONNECTOR_EXCEPTION)) {
-                    ManagerApiFactory.checkConnection(mc);
-                }
+                ManagerApiFactory.checkConnection(mc);
             } catch (Exception e) {
+                ErrorTypeException errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
                 log.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
-                if (sslCertificateResolver.checkExceptionTypeForSSL(e)) {
+                SslCertificateExceptionResolver sslCertificateExceptionResolver = new SslCertificateExceptionResolver();
+                if (sslCertificateExceptionResolver.checkExceptionTypeForSSL(e)) {
+                    final ArrayList<CertificateResolverModel> certificateResolverModels = new ArrayList<>();
                     try {
-                        URI uri = new URI("https", request.getDto().getIpAddress(), null, null);
-                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "manager");
-                    } catch (IOException | URISyntaxException e1) {
-                        log.warn("Failed to fetch SSL certificates from requested resource", e1);
+                        List<CertificateResolverModel> connectionCertificates = X509TrustManagerFactory.getInstance().getConnectionCertificates();
+                        connectionCertificates.forEach(model -> {
+                            model.setAlias("manager_" + model.getAlias());
+                            certificateResolverModels.add(model);
+                        });
+                    } catch (Exception e1) {
+                        log.error("Error occurred in TrustStoreManagerFactory", e);
+                    }
+
+                    if (!certificateResolverModels.isEmpty()) {
+                        throw new SslCertificatesExtendedException(errorTypeException, certificateResolverModels);
                     }
                 }
-                errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
-            }
-
-            if (!sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
-                throw new SslCertificatesExtendedException(errorTypeException, sslCertificateResolver.getCertificateResolverModels());
-            } else if (errorTypeException != null) {
                 throw errorTypeException;
             }
         }
