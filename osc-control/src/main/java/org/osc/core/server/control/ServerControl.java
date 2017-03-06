@@ -280,46 +280,6 @@ public class ServerControl {
     }
 
     private static ServerStatusResponse getServerStatusResponse(VmidcServerRestClient restClient) throws Exception {
-        //try {
         return restClient.getResource("status", ServerStatusResponse.class);
-       /* } catch (RestClientException e) {
-            log.warn("Failed to connect to running server.", e);
-            //getSslCertificates(restClient, e);
-            throw e;
-        }*/
     }
-
-    /*private static void getSslCertificates(VmidcServerRestClient restClient, RestClientException e) throws Exception {
-
-        if (e == null) {
-            throw new IllegalArgumentException("Rest client exception is empty");
-        }
-
-        final ArrayList<CertificateResolverModel> certificateResolverModels = new ArrayList<>();
-        X509TrustManagerFactory managerFactory = X509TrustManagerFactory.getInstance();
-        managerFactory.setListener(model -> {
-            model.setAlias("internal_" + model.getAlias());
-            certificateResolverModels.add(model);
-        });
-
-        try {
-            restClient.getResource("status", ServerStatusResponse.class);
-        } catch (Exception e1) {
-            // Internal request for certificates
-        }
-
-        if (certificateResolverModels.isEmpty()) {
-            log.error("Failed to fetch SSL certificates");
-            throw e;
-        }
-
-        String internalAlias = SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS;
-        for (CertificateResolverModel model : certificateResolverModels) {
-            managerFactory.addEntry(model.getCertificate(), internalAlias);
-            log.info("Added new certificate with alias: " + internalAlias + " and SHA1: " + model.getSha1());
-        }
-
-        log.warn("Retrying connection with server");
-    }*/
-
 }
