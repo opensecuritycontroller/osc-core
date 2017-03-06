@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.rest.client.crypto.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.log4j.Logger;
 
 import javax.xml.bind.DatatypeConverter;
@@ -39,6 +40,7 @@ public class CertificateBasicInfoModel {
     private String issuer;
     private String algorithmType;
 
+    @JsonIgnore
     private X509Certificate certificate;
 
     private String certificateContent;

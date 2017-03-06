@@ -15,11 +15,6 @@
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.configadmin)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.scr)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.fileinstall)',\
-	osgi.identity;filter:='(osgi.identity=jclouds-core)',\
-	osgi.identity;filter:='(osgi.identity=openstack-glance)',\
-	osgi.identity;filter:='(osgi.identity=openstack-keystone)',\
-	osgi.identity;filter:='(osgi.identity=openstack-neutron)',\
-	osgi.identity;filter:='(osgi.identity=openstack-nova)',\
 	osgi.identity;filter:='(osgi.identity=slf4j.simple)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.metatype)',\
 	osgi.identity;filter:='(&(osgi.identity=org.apache.felix.resolver)(version>=1.10.1))',\
@@ -37,6 +32,7 @@ hk2:\
 -runblacklist:\
     osgi.identity;filter:='(osgi.identity=com.sun.jersey.bundle)',\
     osgi.identity;filter:='(osgi.identity=javax.ws.rs.jsr311-api)'
+
 
 
 # set bootdelegation to allow gson to access sun.misc.Unsafe without importing it

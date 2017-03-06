@@ -24,7 +24,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.NotificationListener;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.util.EncryptionUtil;
@@ -138,7 +138,7 @@ public class OsRabbitMQClient extends RabbitMQClient {
 
     @Override
     protected final void receiveMessage(String message) {
-        SessionUtil.setUser(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
+        SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
         log.debug(" [RabbitMQ Client Message Received ]  - " + message);
         String eventType = OsNotificationUtil.getEventTypeFromMessage(message);
 

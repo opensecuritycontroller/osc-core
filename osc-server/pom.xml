@@ -268,10 +268,17 @@
 			<artifactId>openstack-neutron</artifactId>
 			<version>${jclouds.version}</version>
 		</dependency>
+		<!--TODO: bsulich exclusion will be deleted when replacing jcloud with openstack4j-->
 		<dependency>
 			<groupId>org.apache.jclouds</groupId>
 			<artifactId>jclouds-core</artifactId>
 			<version>${jclouds.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>javax.ws.rs</groupId>
+					<artifactId>jsr311-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<!-- Enable Logging for jclouds https://jclouds.apache.org/reference/logging/ 
 			<dependency> <groupId>org.apache.jclouds.driver</groupId> <artifactId>jclouds-slf4j</artifactId> 

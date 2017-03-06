@@ -34,7 +34,6 @@ import org.osc.sdk.sdn.element.ServiceElement;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
 import org.osc.sdk.sdn.exception.HttpException;
 
-import com.sun.jersey.api.client.ClientResponse;
 
 public class ValidateNsxTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(ValidateNsxTask.class);
@@ -76,9 +75,9 @@ public class ValidateNsxTask extends TransactionalTask {
                 try {
                     service = serviceApi.getService(this.vs.getNsxServiceId());
                 } catch (HttpException he) {
-                    if (!he.getSatus().equals(ClientResponse.Status.NOT_FOUND.getStatusCode())) {
-                        throw he;
-                    }
+//                    if (!he.getSatus().equals(ClientResponse.Status.NOT_FOUND.getStatusCode())) {
+//                        throw he;
+//                    }
 
                     LOG.info("Nsx Service ID '" + this.vs.getNsxServiceId() + "' not found");
                 }

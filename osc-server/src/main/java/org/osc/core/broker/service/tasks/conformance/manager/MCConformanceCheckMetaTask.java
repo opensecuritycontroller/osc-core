@@ -30,7 +30,7 @@ import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -181,7 +181,7 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 
 	private static boolean isOutOfSyncRegistration(ManagerNotificationRegistrationElement registration) {
 		if (registration.getPassword() == null
-				|| !registration.getPassword().equals(VmidcAuthFilter.VMIDC_DEFAULT_PASS)) {
+				|| !registration.getPassword().equals(OscAuthFilter.OSC_DEFAULT_PASS)) {
 			return true;
 		}
 		if (registration.getIpAddress() == null || !registration.getIpAddress().equals(ServerUtil.getServerIP())) {

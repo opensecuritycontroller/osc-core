@@ -33,7 +33,7 @@ import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache.VmIn
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
@@ -64,7 +64,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
             String vmOpenstackId = OsNotificationUtil.isMessageRelevant(message, this.objectIdList,
                     OsNotificationKeyType.INSTANCE_ID.toString());
             if (vmOpenstackId != null) {
-                SessionUtil.setUser(VmidcAuthFilter.VMIDC_DEFAULT_LOGIN);
+                SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
 
                 log.info(" [Instance] : message received - " + message);
                 try {
