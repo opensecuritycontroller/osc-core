@@ -25,7 +25,6 @@ import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class DeleteImageFromGlanceTask  extends TransactionalTask {
-
     private final Logger log = Logger.getLogger(DeleteImageFromGlanceTask.class);
 
     private String region;
