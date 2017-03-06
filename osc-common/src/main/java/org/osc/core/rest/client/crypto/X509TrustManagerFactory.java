@@ -40,14 +40,13 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class X509TrustManagerFactory implements X509TrustManager {
 
     private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
     private static final String TRUSTSTOREFILE = "vmidctruststore.jks";
+    private static final String INTERNALKEYSTOREFILE = "vmidcKeyStore.jks";
     private static final String TRUSTSTOREPASSWORD = "abc12345";
 
     private static X509TrustManagerFactory instance = null;
@@ -55,7 +54,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
     private X509TrustManager trustManager = null;
     private KeyStore keyStore;
     private SslConfig sslConfig = new SslConfig(TRUSTSTOREFILE, TRUSTSTOREPASSWORD);
-    private HashMap<String, CertificateResolverModel> connectionCertificates = new HashMap<>();
+    private CertificateErrorListener listener = null;
 
     public static X509TrustManagerFactory getInstance() throws Exception {
         if (instance == null) {
@@ -93,13 +92,37 @@ public class X509TrustManagerFactory implements X509TrustManager {
                 X509Certificate x509Certificate = chain[0];
                 //x509Certificate.checkValidity(); //:TODO uncomment if needed feature
                 long unixTimestamp = Instant.now().getEpochSecond();
-                CertificateResolverModel resolverModel = new CertificateResolverModel(x509Certificate, String.valueOf(unixTimestamp), getSha1Fingerprint(x509Certificate));
-                this.connectionCertificates.put(resolverModel.getSha1(), resolverModel);
+                CertificateResolverModel resolverModel = new CertificateResolverModel(
+                        x509Certificate, String.valueOf(unixTimestamp), getSha1Fingerprint(x509Certificate));
+                if(this.listener != null) {
+                    this.listener.notifySSlException(resolverModel);
+                }
             } catch (NoSuchAlgorithmException e) {
                 LOG.error("Cannot generate SHA1 fingerprint for certificate", e);
             }
             throw cx;
         }
+    }
+
+    public void setListener(CertificateErrorListener listener){
+        this.listener = listener;
+    }
+
+    public void clearListener(){
+        this.listener = null;
+    }
+
+    private X509Certificate loadInternalCertificate() throws Exception {
+       KeyStore keystoreInternal = KeyStore.getInstance(this.sslConfig.getTruststoretype());
+        LOG.debug("Opening trust store file....");
+        try (InputStream inputStream = new FileInputStream(INTERNALKEYSTOREFILE)) {
+            keystoreInternal.load(inputStream, TRUSTSTOREPASSWORD.toCharArray());
+        } catch (FileNotFoundException e) {
+            throw new Exception("Failed to load trust store", e);
+        } catch (CertificateException e) {
+            throw new Exception("Failed to load certificate from trust store", e);
+        }
+        return (X509Certificate) keystoreInternal.getCertificate("vmidckeystore");
     }
 
     private void reloadTrustManager() throws Exception {
@@ -112,6 +135,8 @@ public class X509TrustManagerFactory implements X509TrustManager {
         } catch (CertificateException e) {
             throw new Exception("Failed to load certificate from trust store", e);
         }
+
+        this.keyStore.setCertificateEntry("internal", loadInternalCertificate());
 
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509", "SunJSSE");
         trustManagerFactory.init(this.keyStore);
@@ -153,8 +178,6 @@ public class X509TrustManagerFactory implements X509TrustManager {
     }
 
     public void addEntry(File file) throws Exception {
-        reloadTrustManager();
-
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         try (FileInputStream inputStream = new FileInputStream(file)) {
             X509Certificate certificate = (X509Certificate) cf.generateCertificate(inputStream);
@@ -165,8 +188,6 @@ public class X509TrustManagerFactory implements X509TrustManager {
     }
 
     public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
-        reloadTrustManager();
-
         if(checkFingerprintNotExist(getSha1Fingerprint(certificate))){
             this.keyStore.setCertificateEntry(newAlias, certificate);
             this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
@@ -176,8 +197,6 @@ public class X509TrustManagerFactory implements X509TrustManager {
     }
 
     public boolean exists(String alias) throws Exception {
-        reloadTrustManager();
-
         return this.keyStore.containsAlias(alias);
     }
 
@@ -187,8 +206,6 @@ public class X509TrustManagerFactory implements X509TrustManager {
     }
 
     public void updateAlias(String oldAlias, String newAlias) throws Exception {
-        reloadTrustManager();
-
         if (this.keyStore.containsAlias(oldAlias)) {
             X509Certificate certificate = (X509Certificate) this.keyStore.getCertificate(oldAlias);
             removeEntry(oldAlias);
@@ -198,8 +215,6 @@ public class X509TrustManagerFactory implements X509TrustManager {
     }
 
     public void removeEntry(String alias) throws Exception {
-        reloadTrustManager();
-
         this.keyStore.deleteEntry(alias);
         this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
     }
@@ -222,9 +237,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
         return DatatypeConverter.printHexBinary(digest);
     }
 
-    public List<CertificateResolverModel> getConnectionCertificates() {
-        List<CertificateResolverModel> modelList = this.connectionCertificates.values().stream().collect(Collectors.toList());
-        this.connectionCertificates.clear();
-        return modelList;
+    public interface CertificateErrorListener{
+        void notifySSlException(CertificateResolverModel model);
     }
 }

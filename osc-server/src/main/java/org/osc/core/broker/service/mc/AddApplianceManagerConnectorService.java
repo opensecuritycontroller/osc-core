@@ -38,12 +38,10 @@ import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.ValidateUtil;
-import org.osc.core.rest.client.crypto.SslCertificateExceptionResolver;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class AddApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
@@ -131,27 +129,26 @@ public class AddApplianceManagerConnectorService extends
     static void checkManagerConnection(Logger log, DryRunRequest<ApplianceManagerConnectorDto> request,
                                        ApplianceManagerConnector mc) throws ErrorTypeException {
         if (!request.isSkipAllDryRun() && !request.isIgnoreErrorsAndCommit(ErrorType.MANAGER_CONNECTOR_EXCEPTION)) {
+
+            ArrayList<CertificateResolverModel> resolverModels = new ArrayList<>();
+            try {
+                X509TrustManagerFactory managerFactory = X509TrustManagerFactory.getInstance();
+                managerFactory.setListener(model -> {
+                    model.setAlias("manager_" + model.getAlias());
+                    resolverModels.add(model);
+                    managerFactory.clearListener();
+                });
+            } catch (Exception e1) {
+                log.error("Error occurred in TrustStoreManagerFactory", e1);
+            }
+
             try {
                 ManagerApiFactory.checkConnection(mc);
             } catch (Exception e) {
                 ErrorTypeException errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
                 log.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
-                SslCertificateExceptionResolver sslCertificateExceptionResolver = new SslCertificateExceptionResolver();
-                if (sslCertificateExceptionResolver.checkExceptionTypeForSSL(e)) {
-                    final ArrayList<CertificateResolverModel> certificateResolverModels = new ArrayList<>();
-                    try {
-                        List<CertificateResolverModel> connectionCertificates = X509TrustManagerFactory.getInstance().getConnectionCertificates();
-                        connectionCertificates.forEach(model -> {
-                            model.setAlias("manager_" + model.getAlias());
-                            certificateResolverModels.add(model);
-                        });
-                    } catch (Exception e1) {
-                        log.error("Error occurred in TrustStoreManagerFactory", e);
-                    }
-
-                    if (!certificateResolverModels.isEmpty()) {
-                        throw new SslCertificatesExtendedException(errorTypeException, certificateResolverModels);
-                    }
+                if (!resolverModels.isEmpty()) {
+                    throw new SslCertificatesExtendedException(errorTypeException, resolverModels);
                 }
                 throw errorTypeException;
             }

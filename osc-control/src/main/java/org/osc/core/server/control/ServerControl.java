@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.server.control;
 
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -31,16 +26,16 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.model.ServerStatusResponse;
-import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
 import org.osc.core.rest.client.VmidcServerRestClient;
-import org.osc.core.rest.client.crypto.SslCertificateExceptionResolver;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.core.rest.client.exception.RestClientException;
 import org.osc.core.util.LogUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.util.VersionUtil;
+
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 public class ServerControl {
     private static final Logger log = Logger.getLogger(ServerControl.class);
@@ -285,33 +280,32 @@ public class ServerControl {
     }
 
     private static ServerStatusResponse getServerStatusResponse(VmidcServerRestClient restClient) throws Exception {
-        ServerStatusResponse res;
-        try {
-            res = restClient.getResource("status", ServerStatusResponse.class);
-        } catch (RestClientException e) {
-            if (e.isCredentialError() || e.isConnectException()) {
-                throw e;
-            }
-
+        //try {
+        return restClient.getResource("status", ServerStatusResponse.class);
+       /* } catch (RestClientException e) {
             log.warn("Failed to connect to running server.", e);
-            res = getSslCertificates(restClient, e);
-        }
-        return res;
+            //getSslCertificates(restClient, e);
+            throw e;
+        }*/
     }
 
-    private static ServerStatusResponse getSslCertificates(VmidcServerRestClient restClient, RestClientException e) throws Exception {
+    /*private static void getSslCertificates(VmidcServerRestClient restClient, RestClientException e) throws Exception {
 
         if (e == null) {
             throw new IllegalArgumentException("Rest client exception is empty");
         }
 
         final ArrayList<CertificateResolverModel> certificateResolverModels = new ArrayList<>();
-        X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
+        X509TrustManagerFactory managerFactory = X509TrustManagerFactory.getInstance();
+        managerFactory.setListener(model -> {
+            model.setAlias("internal_" + model.getAlias());
+            certificateResolverModels.add(model);
+        });
+
         try {
-            List<CertificateResolverModel> connectionCertificates = trustManagerFactory.getConnectionCertificates();
-            connectionCertificates.forEach(certificateResolverModels::add);
+            restClient.getResource("status", ServerStatusResponse.class);
         } catch (Exception e1) {
-            log.error("Error occurred in TrustStoreManagerFactory", e);
+            // Internal request for certificates
         }
 
         if (certificateResolverModels.isEmpty()) {
@@ -321,11 +315,11 @@ public class ServerControl {
 
         String internalAlias = SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS;
         for (CertificateResolverModel model : certificateResolverModels) {
-            trustManagerFactory.addEntry(model.getCertificate(), internalAlias);
+            managerFactory.addEntry(model.getCertificate(), internalAlias);
             log.info("Added new certificate with alias: " + internalAlias + " and SHA1: " + model.getSha1());
         }
+
         log.warn("Retrying connection with server");
-        return restClient.getResource("status", ServerStatusResponse.class);
-    }
+    }*/
 
 }

@@ -17,7 +17,6 @@
 package org.osc.core.broker.util;
 
 import com.rabbitmq.client.ShutdownSignalException;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,11 +36,8 @@ import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
-import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
-import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
@@ -50,7 +46,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import javax.net.ssl.SSLHandshakeException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,7 +62,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SdnControllerApiFactory.class, RabbitMQRunner.class, EncryptionUtil.class, VirtualizationConnectorUtil.class, SslContextProvider.class})
+@PrepareForTest({ SdnControllerApiFactory.class, RabbitMQRunner.class, EncryptionUtil.class, VirtualizationConnectorUtil.class})
 public class VirtualizationConnectorUtilTest {
 
 	@Rule
@@ -79,9 +74,6 @@ public class VirtualizationConnectorUtilTest {
 	@Mock
 	private X509TrustManagerFactory trustManagerFactory;
 
-	@Mock
-	private SslContextProvider sslContextProvider;
-
 	@InjectMocks
 	private VirtualizationConnectorUtil util;
 
@@ -92,8 +84,6 @@ public class VirtualizationConnectorUtilTest {
 		  PowerMockito.mockStatic(EncryptionUtil.class);
 	      when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted Passowrd");
 	      when(EncryptionUtil.decryptAESCTR(any(String.class))).thenReturn("Decrypted Passowrd");
-
-	      when(this.trustManagerFactory.getConnectionCertificates()).thenReturn(new ArrayList<>());
 	}
 	
 	@Test
@@ -280,89 +270,6 @@ public class VirtualizationConnectorUtilTest {
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 	}
 
-	@Test
-	public void testVmwareConnection_WithIgnoreProviderException_WhenExceptionIsSSL_ReturnsListWithCertificate() throws Exception {
-		// Arrange
-		ArrayList<CertificateResolverModel> resolverModels = new ArrayList<>();
-		resolverModels.add(new CertificateResolverModel(null,"12345", "abc12345"));
-		when(this.trustManagerFactory.getConnectionCertificates()).thenReturn(resolverModels);
-
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
-
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		VirtualizationConnector spyVc = spy(vc);
-		doReturn(null).when(spyVc).getSslContext();
-		PowerMockito.mockStatic(SdnControllerApiFactory.class);
-		VMwareSdnApi vmwareSdnApi = spy(VMwareSdnApi.class);
-		when(SdnControllerApiFactory.createVMwareSdnApi(spyVc)).thenReturn(vmwareSdnApi);
-		HttpException httpException = new HttpException(null, null, null, null, null);
-		doThrow(httpException).when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
-
-		// Act.
-		try {
-			this.util.checkVmwareConnection(spyRequest, spyVc);
-		} catch (Exception e) {
-			Assert.assertTrue(e instanceof SslCertificatesExtendedException);
-			ArrayList<CertificateResolverModel> certificateResolverModels = ((SslCertificatesExtendedException) e).getCertificateResolverModels();
-			Assert.assertEquals(1,  certificateResolverModels.size());
-			Assert.assertEquals("nsx_12345",  certificateResolverModels.get(0).getAlias());
-			Assert.assertEquals("abc12345",  certificateResolverModels.get(0).getSha1());
-		}
-
-		//Assert
-		verify(this.trustManagerFactory, times(1)).getConnectionCertificates();
-		verify(vmwareSdnApi, times(1)).checkStatus( any(VMwareSdnConnector.class));
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-	}
-
-	@Test
-	public void testVmwareConnection_WhenExceptionIsSSL_ReturnsListWithCertificates() throws Exception {
-		// Arrange
-		ArrayList<CertificateResolverModel> resolverModelsNsx = new ArrayList<>();
-		resolverModelsNsx.add(new CertificateResolverModel(null,"12345", "abc12345"));
-		ArrayList<CertificateResolverModel> resolverModelsVsphere = new ArrayList<>();
-		resolverModelsVsphere.add(new CertificateResolverModel(null,"678910", "def654321"));
-		when(this.trustManagerFactory.getConnectionCertificates())
-				.thenReturn(resolverModelsNsx)
-				.thenReturn(resolverModelsVsphere);
-
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		VirtualizationConnector spyVc = spy(vc);
-		doReturn(null).when(spyVc).getSslContext();
-		PowerMockito.mockStatic(SdnControllerApiFactory.class);
-		VMwareSdnApi vmwareSdnApi = spy(VMwareSdnApi.class);
-		when(SdnControllerApiFactory.createVMwareSdnApi(spyVc)).thenReturn(vmwareSdnApi);
-		HttpException httpException = new HttpException(null, null, null, null, null);
-		doThrow(httpException).when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
-		PowerMockito.whenNew(VimUtils.class).withAnyArguments().thenThrow(new RemoteException());
-
-		// Act.
-		try {
-			this.util.checkVmwareConnection(spyRequest, spyVc);
-		} catch (Exception e) {
-			Assert.assertTrue(e instanceof SslCertificatesExtendedException);
-			ArrayList<CertificateResolverModel> certificateResolverModels = ((SslCertificatesExtendedException) e).getCertificateResolverModels();
-			Assert.assertEquals(2,  certificateResolverModels.size());
-			Assert.assertEquals("nsx_12345",  certificateResolverModels.get(0).getAlias());
-			Assert.assertEquals("abc12345",  certificateResolverModels.get(0).getSha1());
-			Assert.assertEquals("vmware_678910",  certificateResolverModels.get(1).getAlias());
-			Assert.assertEquals("def654321",  certificateResolverModels.get(1).getSha1());
-		}
-
-		//Assert
-		verify(this.trustManagerFactory, times(2)).getConnectionCertificates();
-		verify(vmwareSdnApi, times(1)).checkStatus( any(VMwareSdnConnector.class));
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-	}
-	
 	@Test
 	public void testOpenStackConnection_WithIgnoreProviderException_WithIgnoreRabbitMqException_WhenSdnControllerStatusSuccess_ReturnsSuccessful() throws Exception {
 
@@ -625,72 +532,4 @@ public class VirtualizationConnectorUtilTest {
 		verify(this.rabbitClient, times(1)).testConnection();
 	}
 
-	@Test
-	public void testOpenStackConnection_WhenExceptionIsSSL_ReturnsListWithCertificates() throws Throwable {
-		// Arrange
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
-		ArrayList<CertificateResolverModel> resolverModelsOpenstack = new ArrayList<>();
-		resolverModelsOpenstack.add(new CertificateResolverModel(null,"12345", "abc12345"));
-		ArrayList<CertificateResolverModel> resolverModelsKeystone = new ArrayList<>();
-		resolverModelsKeystone.add(new CertificateResolverModel(null,"678910", "def654321"));
-		ArrayList<CertificateResolverModel> resolverModelsRabbitMq = new ArrayList<>();
-		resolverModelsRabbitMq.add(new CertificateResolverModel(null,"11121314", "ghi12345"));
-		when(this.trustManagerFactory.getConnectionCertificates())
-				.thenReturn(resolverModelsOpenstack)
-				.thenReturn(resolverModelsKeystone)
-				.thenReturn(resolverModelsRabbitMq);
-
-		PowerMockito.mockStatic(RabbitMQRunner.class);
-
-		HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
-		when(RabbitMQRunner.getVcToRabbitMQClientMap()).thenReturn(map);
-		OsRabbitMQClient mqClient = mock(OsRabbitMQClient.class);
-		doReturn(mqClient).when(map).get(any(Integer.class));
-		doReturn(true).when(mqClient).isConnected();
-
-		request.getDto().setId(20l);
-
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		VirtualizationConnector spyVc = spy(vc);
-
-		doReturn(null).when(spyVc).getSslContext();
-		PowerMockito.mockStatic(SdnControllerApiFactory.class);
-		SdnControllerApi sdnController = mock(SdnControllerApi.class);
-		when(SdnControllerApiFactory.createNetworkControllerApi(spyVc)).thenReturn(sdnController);
-		when(this.sslContextProvider.getSSLContext()).thenReturn(null);
-		PowerMockito.whenNew(SslContextProvider.class).withAnyArguments().thenReturn(this.sslContextProvider);
-		RuntimeException sslException = new RuntimeException("Test", new SSLHandshakeException("No trusted certificate found"));
-		doThrow(sslException).when(sdnController).getStatus();
-		PowerMockito.whenNew(JCloudKeyStone.class).withAnyArguments().thenThrow(sslException);
-
-		JCloudKeyStone cloudKeyStone = mock(JCloudKeyStone.class);
-		when(cloudKeyStone.listTenants()).thenThrow(sslException);
-		request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
-		doNothing().when(cloudKeyStone).close();
-
-		doThrow(sslException).when(this.rabbitClient).testConnection();
-
-		// Act.
-		try {
-			this.util.checkOpenstackConnection(spyRequest, spyVc);
-		} catch (Exception e) {
-			Assert.assertTrue(e instanceof SslCertificatesExtendedException);
-			ArrayList<CertificateResolverModel> certificateResolverModels = ((SslCertificatesExtendedException) e).getCertificateResolverModels();
-			Assert.assertEquals(3,  certificateResolverModels.size());
-			Assert.assertEquals("openstack_12345",  certificateResolverModels.get(0).getAlias());
-			Assert.assertEquals("abc12345",  certificateResolverModels.get(0).getSha1());
-			Assert.assertEquals("openstackkeystone_678910",  certificateResolverModels.get(1).getAlias());
-			Assert.assertEquals("def654321",  certificateResolverModels.get(1).getSha1());
-			Assert.assertEquals("rabbitmq_11121314",  certificateResolverModels.get(2).getAlias());
-			Assert.assertEquals("ghi12345",  certificateResolverModels.get(2).getSha1());
-		}
-
-		// Assert
-		verify(this.trustManagerFactory, times(3)).getConnectionCertificates();
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-		verify(this.rabbitClient, times(1)).testConnection();
-	}
 }
