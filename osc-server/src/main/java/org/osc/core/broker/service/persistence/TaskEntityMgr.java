@@ -28,7 +28,9 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.osc.core.broker.job.TaskState;
+import org.osc.core.broker.job.TaskStatus;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.job.TaskObject;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.dto.TaskFailureRecordDto;
@@ -50,8 +52,8 @@ public class TaskEntityMgr extends EntityManager<TaskRecord> {
         taskDto.setId(tr.getId());
         taskDto.setParentId(tr.getJob().getId());
         taskDto.setName(tr.getName());
-        taskDto.setStatus(tr.getStatus());
-        taskDto.setState(tr.getState());
+        taskDto.setStatus(TaskStatus.valueOf(tr.getStatus().name()));
+        taskDto.setState(TaskState.valueOf(tr.getState().name()));
         taskDto.setQueued(tr.getQueuedTimestamp());
         taskDto.setStarted(tr.getStartedTimestamp());
         taskDto.setCompleted(tr.getCompletedTimestamp());
@@ -68,7 +70,8 @@ public class TaskEntityMgr extends EntityManager<TaskRecord> {
 
         Set<LockObjectReference> objects = new HashSet<LockObjectReference>();
         for (TaskObject jo : task.getObjects()) {
-            objects.add(new LockObjectReference(jo.getObjectId(), jo.getName(), jo.getObjectType()));
+            objects.add(new LockObjectReference(jo.getObjectId(), jo.getName(),
+                    ObjectType.valueOf(jo.getObjectType().name())));
         }
         return objects;
     }

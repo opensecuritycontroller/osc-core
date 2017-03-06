@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -50,9 +53,6 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.EventType;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-
-import java.util.List;
-import java.util.Set;
 
 public class UpdateApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
@@ -185,7 +185,8 @@ public class UpdateApplianceManagerConnectorService extends
         }
 
         // cannot change type once created
-        if (!request.getDto().getManagerType().equals(existingMc.getManagerType())) {
+        if (!request.getDto().getManagerType().getValue()
+                .equals(existingMc.getManagerType())) {
 
             throw new VmidcBrokerInvalidRequestException("Cannot change type of Appliance Manager Connector.");
         }

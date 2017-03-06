@@ -77,7 +77,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                     + "  is not found.");
         }
 
-        if (this.vc.getControllerType().equals(ControllerType.NONE)) {
+        if (this.vc.getControllerType().equals(ControllerType.NONE.getValue())) {
             throw new VmidcBrokerValidationException(
                     "Creation of Security Groups is not allowed in the absence of SDN Controller.");
         }

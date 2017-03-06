@@ -26,7 +26,6 @@ import org.hibernate.Transaction;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
@@ -35,12 +34,13 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.job.JobRecord;
+import org.osc.core.broker.model.entities.job.JobStatus;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.persistence.EntityManager;
 
 public class ValidateDbCreate {
@@ -191,7 +191,7 @@ public class ValidateDbCreate {
         ApplianceManagerConnector applianceMgrCon = new ApplianceManagerConnector();
 
         applianceMgrCon.setName("nsm-1");
-        applianceMgrCon.setManagerType(ManagerType.NSM);
+        applianceMgrCon.setManagerType(ManagerType.NSM.getValue());
         applianceMgrCon.setServiceType("IPS_IDS");
         applianceMgrCon.setUsername("admin");
         applianceMgrCon.setPassword("pass123");
@@ -224,7 +224,7 @@ public class ValidateDbCreate {
     private Appliance addApplianceEntity(Session session) {
         Appliance appliance = new Appliance();
 
-        appliance.setManagerType(ManagerType.NSM);
+        appliance.setManagerType(ManagerType.NSM.getValue());
         appliance.setModel("model-1");
         appliance.setManagerSoftwareVersion("1.2");
 

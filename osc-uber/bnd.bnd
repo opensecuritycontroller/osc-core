@@ -10,7 +10,11 @@ Require-Capability: \
     osgi.implementation;filter:="(&(osgi.implementation=osgi.http)(version>=1)(!(version>=2)))"
 
 # Automatically export packages annotated with @Version in package-info.java
--exportcontents: ${packages;VERSIONED}
+# The JPA and hibernate exports are temporary until Hibernate is extracted from the uber bundle
+-exportcontents: ${packages;VERSIONED}, \
+ javax.persistence, org.hibernate.annotations;version=4.2.11,\
+    org.hibernate.proxy;uses:="javassist.util.proxy", \
+    javassist.util.proxy
   
 # Generate an OSGi Contract Requirement for bundles that depend on Servlet API
 # (see https://www.osgi.org/portable-java-contract-definitions/)

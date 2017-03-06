@@ -16,6 +16,45 @@
  *******************************************************************************/
 package org.osc.core.broker.view;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.NullInputStream;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.hibernate.Session;
+import org.osc.core.broker.job.JobEngine;
+import org.osc.core.broker.model.entities.job.TaskGuard;
+import org.osc.core.broker.model.entities.job.TaskRecord;
+import org.osc.core.broker.model.entities.job.TaskState;
+import org.osc.core.broker.model.entities.job.TaskStatus;
+import org.osc.core.broker.service.ListJobService;
+import org.osc.core.broker.service.ListTaskService;
+import org.osc.core.broker.service.dto.JobRecordDto;
+import org.osc.core.broker.service.dto.TaskRecordDto;
+import org.osc.core.broker.service.persistence.TaskEntityMgr;
+import org.osc.core.broker.service.request.ListJobRequest;
+import org.osc.core.broker.service.request.ListTaskRequest;
+import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.util.BroadcastMessage;
+import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.view.common.VmidcMessages;
+import org.osc.core.broker.view.common.VmidcMessages_;
+import org.osc.core.broker.view.util.ToolbarButtons;
+import org.osc.core.broker.view.util.ViewUtil;
+
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -36,45 +75,8 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import elemental.events.KeyboardEvent.KeyCode;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.NullInputStream;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.osc.core.broker.job.JobEngine;
-import org.osc.core.broker.job.TaskGuard;
-import org.osc.core.broker.job.TaskState;
-import org.osc.core.broker.job.TaskStatus;
-import org.osc.core.broker.model.entities.job.TaskRecord;
-import org.osc.core.broker.service.ListJobService;
-import org.osc.core.broker.service.ListTaskService;
-import org.osc.core.broker.service.dto.JobRecordDto;
-import org.osc.core.broker.service.dto.TaskRecordDto;
-import org.osc.core.broker.service.persistence.TaskEntityMgr;
-import org.osc.core.broker.service.request.ListJobRequest;
-import org.osc.core.broker.service.request.ListTaskRequest;
-import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.BroadcastMessage;
-import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
-import org.osc.core.broker.view.util.ToolbarButtons;
-import org.osc.core.broker.view.util.ViewUtil;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import elemental.events.KeyboardEvent.KeyCode;
 
 public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
@@ -372,7 +374,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
                 out.printf("node_%d [%n", tr.getId());
                 out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
-                if (tr.getState().isTerminalState()) {
+                if(org.osc.core.broker.job.TaskState.valueOf(tr.getState().name()).isTerminalState()) {
                     if (tr.getStatus().equals(TaskStatus.PASSED)) {
                         if (tr.getChildren().isEmpty()) {
                             out.printf("  fillcolor=%s fontcolor=white%n", "green4");

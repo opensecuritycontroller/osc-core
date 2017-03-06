@@ -24,6 +24,7 @@ import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
@@ -50,7 +51,7 @@ public class DAConformanceCheckMetaTask extends TransactionalMetaTask {
         this.tg = new TaskGraph();
         for (VirtualSystem vs : this.da.getVirtualSystems()) {
             TaskGraph vsTaskGraph = new TaskGraph();
-            if (vs.getVirtualizationConnector().isVmware()) {
+            if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
                 vsTaskGraph.addTask(new ValidateNsxTask(vs));
             }
             if (vs.getMarkedForDeletion()) {

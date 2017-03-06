@@ -146,6 +146,11 @@ public class ManagerApiFactory {
         return plugins.keySet();
     }
 
+    public static ApplianceManagerApi createApplianceManagerApi(String managerType) throws Exception {
+        return createApplianceManagerApi(ManagerType.fromText(managerType));
+
+    }
+
     public static ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception {
         ApplianceManagerApi plugin = plugins.get(managerType.toString());
         if (plugin != null) {
@@ -165,17 +170,20 @@ public class ManagerApiFactory {
 
     public static ManagerDeviceApi createManagerDeviceApi(VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                .createManagerDeviceApi(getApplianceManagerConnectorElement(vs), vs);
+                .createManagerDeviceApi(getApplianceManagerConnectorElement(vs),
+                        new VirtualSystemElementImpl(vs));
     }
 
     public static ManagerSecurityGroupInterfaceApi createManagerSecurityGroupInterfaceApi(VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                .createManagerSecurityGroupInterfaceApi(getApplianceManagerConnectorElement(vs), vs);
+                .createManagerSecurityGroupInterfaceApi(getApplianceManagerConnectorElement(vs),
+                        new VirtualSystemElementImpl(vs));
     }
 
     public static ManagerSecurityGroupApi createManagerSecurityGroupApi(VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                .createManagerSecurityGroupApi(getApplianceManagerConnectorElement(vs), vs);
+                .createManagerSecurityGroupApi(getApplianceManagerConnectorElement(vs),
+                        new VirtualSystemElementImpl(vs));
     }
 
     public static ManagerPolicyApi createManagerPolicyApi(ApplianceManagerConnector mc) throws Exception {
@@ -190,7 +198,8 @@ public class ManagerApiFactory {
 
     public static ManagerDeviceMemberApi createManagerDeviceMemberApi(ApplianceManagerConnector mc, VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(mc.getManagerType())
-                .createManagerDeviceMemberApi(getApplianceManagerConnectorElement(mc), vs);
+                .createManagerDeviceMemberApi(getApplianceManagerConnectorElement(mc),
+                        new VirtualSystemElementImpl(vs));
     }
 
     public static ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc) throws Exception {
@@ -200,7 +209,8 @@ public class ManagerApiFactory {
 
     public static IscJobNotificationApi createIscJobNotificationApi(VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                .createIscJobNotificationApi(getApplianceManagerConnectorElement(vs), vs);
+                .createIscJobNotificationApi(getApplianceManagerConnectorElement(vs),
+                        new VirtualSystemElementImpl(vs));
     }
 
     public static boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception {
@@ -239,7 +249,7 @@ public class ManagerApiFactory {
         // TODO emanoel: This will likely have some performance impact. We need to figure out an approach to keep these values cached on OSC
         // with some TTL and/or some refreshing mechanism not just for this scenario but potentially also others.
         decryptedMc.setClientIpAddress(ServerUtil.getServerIP());
-        return decryptedMc;
+        return new ApplianceManagerConnectorElementImpl(decryptedMc);
     }
 
     static ManagerWebSocketNotificationApi createManagerWebSocketNotificationApi(ApplianceManagerConnector mc) throws Exception {

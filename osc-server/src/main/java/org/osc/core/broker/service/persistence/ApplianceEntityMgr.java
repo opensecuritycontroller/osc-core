@@ -41,7 +41,7 @@ public class ApplianceEntityMgr {
         // transform from dto to entity
         a.setId(dto.getId());
         a.setModel(dto.getModel());
-        a.setManagerType(dto.getManagerType());
+        a.setManagerType(dto.getManagerType().getValue());
         a.setManagerSoftwareVersion(dto.getManagerVersion());
     }
 

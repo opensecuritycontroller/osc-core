@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import com.google.gwt.thirdparty.guava.common.base.Objects;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -53,8 +55,7 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.util.encryption.EncryptionException;
 
-import java.util.List;
-import java.util.Set;
+import com.google.gwt.thirdparty.guava.common.base.Objects;
 
 public class UpdateVirtualizationConnectorService
         extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>, BaseResponse> {
@@ -187,7 +188,7 @@ public class UpdateVirtualizationConnectorService
         }
 
         // cannot change type once created
-        if (!dto.getType().equals(existingVc.getVirtualizationType())) {
+        if (!dto.getType().name().equals(existingVc.getVirtualizationType().name())) {
             throw new VmidcBrokerInvalidRequestException("Cannot change type of Virtualization Connector.");
         }
 
@@ -204,8 +205,8 @@ public class UpdateVirtualizationConnectorService
 
         // If controller type is changed, only NONE->new-type is allowed unconditionally.
         // For all other cases (current-type->NONE, current-type->new-type), there should not be any virtual systems using it.
-        if (!existingVc.getControllerType().equals(dto.getControllerType())
-                && !existingVc.getControllerType().equals(ControllerType.NONE)
+        if (!existingVc.getControllerType().equals(dto.getControllerType().getValue())
+                && !existingVc.getControllerType().equals(ControllerType.NONE.getValue())
                 && (existingVc.getVirtualSystems().size() > 0 || existingVc.getSecurityGroups().size() > 0)) {
             throw new VmidcBrokerInvalidRequestException(
                     "SDN Controller type cannot be changed if this Virtualization Connector is "

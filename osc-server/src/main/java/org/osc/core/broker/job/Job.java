@@ -36,6 +36,7 @@ import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest;
+import org.osc.core.broker.model.entities.ObjectType;
 import org.osc.core.broker.model.entities.job.JobObject;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.TaskObject;
@@ -52,7 +53,7 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.sdk.manager.element.JobElement;
 
 /**
- * 
+ *
  * Job class is returned by the {@link JobEngine} on submission and
  * holds a running job.
  */
@@ -132,7 +133,7 @@ public class Job implements Runnable, JobElement {
         try {
             tx = session.beginTransaction();
             this.jobRecord = (JobRecord) session.get(JobRecord.class, this.jobRecord.getId());
-            this.jobRecord.setStatus(getStatus());
+            this.jobRecord.setStatus(getEntityStatus());
             EntityManager.update(session, this.jobRecord);
             tx.commit();
             TransactionalBroadcastUtil.broadcast(session);
@@ -150,6 +151,10 @@ public class Job implements Runnable, JobElement {
                 session.close();
             }
         }
+    }
+
+    private org.osc.core.broker.model.entities.job.JobStatus getEntityStatus() {
+        return toEntityType(org.osc.core.broker.model.entities.job.JobStatus.class, this.status);
     }
 
     public Date getCompletedTimestamp() {
@@ -396,7 +401,7 @@ public class Job implements Runnable, JobElement {
             tx = session.beginTransaction();
             this.jobRecord = (JobRecord) session.get(JobRecord.class, this.jobRecord.getId());
 
-            this.jobRecord.setState(getState());
+            this.jobRecord.setState(getEntityState());
             this.jobRecord.setQueuedTimestamp(getQueuedTimestamp());
             this.jobRecord.setStartedTimestamp(getStartedTimestamp());
             this.jobRecord.setCompletedTimestamp(getCompletedTimestamp());
@@ -418,6 +423,10 @@ public class Job implements Runnable, JobElement {
                 session.close();
             }
         }
+    }
+
+    private org.osc.core.broker.model.entities.job.JobState getEntityState() {
+        return toEntityType(org.osc.core.broker.model.entities.job.JobState.class, this.state);
     }
 
     public Date getStartedTimestamp() {
@@ -587,8 +596,8 @@ public class Job implements Runnable, JobElement {
                 jobRecord = new JobRecord();
                 jobRecord.setSubmittedBy(SessionUtil.getCurrentUser());
                 jobRecord.setName(getName());
-                jobRecord.setState(getState());
-                jobRecord.setStatus(getStatus());
+                jobRecord.setState(getEntityState());
+                jobRecord.setStatus(getEntityStatus());
 
                 String contextUser = SessionUtil.getCurrentUser();
                 jobRecord.setCreatedBy(contextUser);
@@ -597,7 +606,8 @@ public class Job implements Runnable, JobElement {
                 if (this.objects != null) {
                     // Add object references only on creation to ensure uniqueness
                     for (LockObjectReference lor : this.objects) {
-                        JobObject jobObject = new JobObject(jobRecord, lor);
+                        JobObject jobObject = new JobObject(jobRecord, lor.getName(),
+                                toEntityType(ObjectType.class, lor.getType()), lor.getId());
                         jobRecord.addObject(jobObject);
                     }
                 }
@@ -628,6 +638,10 @@ public class Job implements Runnable, JobElement {
         }
     }
 
+    static <T extends Enum<T>> T toEntityType(Class<T> toClass, Enum<?> original) {
+        return original == null ? null : (T) Enum.valueOf(toClass, original.name());
+    }
+
     private void persistTaskGraph(Session session) {
         Long i = 1L;
         for (TaskNode taskNode : this.taskGraph.getGraph().topologicalSort()) {
@@ -641,8 +655,8 @@ public class Job implements Runnable, JobElement {
                 taskRecord.setCreatedBy(getJobRecord().getCreatedBy());
                 taskRecord.setCreatedTimestamp(new Date());
             } else {
-                taskRecord = (TaskRecord) session.get(TaskRecord.class, taskRecord.getId(), new LockOptions(
-                        LockMode.PESSIMISTIC_WRITE));
+                taskRecord = (TaskRecord) session.get(TaskRecord.class, taskRecord.getId(),
+                        new LockOptions(LockMode.PESSIMISTIC_WRITE));
                 taskRecord.setUpdatedBy(getJobRecord().getCreatedBy());
                 taskRecord.setUpdatedTimestamp(new Date());
             }
@@ -650,15 +664,20 @@ public class Job implements Runnable, JobElement {
 
             taskRecord.setName(taskNode.getSafeTaskName());
             taskRecord.setDependencyOrder(i++);
-            taskRecord.setTaskGaurd(taskNode.getTaskGaurd());
-            taskRecord.setState(taskNode.getState());
-            taskRecord.setStatus(taskNode.getStatus());
+            taskRecord.setTaskGaurd(
+                    toEntityType(org.osc.core.broker.model.entities.job.TaskGuard.class, taskNode.getTaskGaurd()));
+            taskRecord.setState(
+                    toEntityType(org.osc.core.broker.model.entities.job.TaskState.class, taskNode.getState()));
+            taskRecord.setStatus(
+                    toEntityType(org.osc.core.broker.model.entities.job.TaskStatus.class, taskNode.getStatus()));
 
             if (taskRecord.getId() == null) {
                 if (taskNode.getTask().getObjects() != null) {
                     // Add object references only on creation to ensure uniqueness
                     for (LockObjectReference lor : taskNode.getTask().getObjects()) {
-                        TaskObject taskObject = new TaskObject(taskRecord, lor);
+                        TaskObject taskObject = new TaskObject(taskRecord,
+                                lor.getName(), toEntityType(ObjectType.class, lor.getType()),
+                                        lor.getId());
                         taskRecord.addObject(taskObject);
                     }
                 }
@@ -679,8 +698,8 @@ public class Job implements Runnable, JobElement {
             }
 
             TaskRecord taskRecord = taskNode.getTaskStore();
-            taskRecord = (TaskRecord) session.get(TaskRecord.class, taskRecord.getId(), new LockOptions(
-                    LockMode.PESSIMISTIC_WRITE));
+            taskRecord = (TaskRecord) session.get(TaskRecord.class, taskRecord.getId(),
+                    new LockOptions(LockMode.PESSIMISTIC_WRITE));
 
             /*
              * This is a workaround for Hibernate lazy load issue that
@@ -722,7 +741,7 @@ public class Job implements Runnable, JobElement {
 
     /**
      * Gets all the acquired lock references to objects within the task graph
-     * 
+     *
      */
     List<LockObjectReference> getCurrentLockReferences() {
         List<LockObjectReference> lockReferences = new ArrayList<>();

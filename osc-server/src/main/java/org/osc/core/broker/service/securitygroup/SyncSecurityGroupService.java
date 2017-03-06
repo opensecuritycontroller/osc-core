@@ -18,6 +18,7 @@ package org.osc.core.broker.service.securitygroup;
 
 import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.server.api.ApiUtil;
@@ -70,7 +71,7 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
             throw ApiUtil.createParentChildMismatchException(request.getParentId(), "Security Group");
         }
 
-        if(!this.vc.isOpenstack()) {
+        if(this.vc.getVirtualizationType() != VirtualizationType.OPENSTACK) {
             throw new VmidcBrokerValidationException("Syncing of security groups is only applicable for Openstack");
         }
     }

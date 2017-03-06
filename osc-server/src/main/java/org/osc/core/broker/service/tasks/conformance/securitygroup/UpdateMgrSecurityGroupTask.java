@@ -45,7 +45,7 @@ class UpdateMgrSecurityGroupTask extends TransactionalTask {
         ManagerSecurityGroupApi mgrApi = ManagerApiFactory.createManagerSecurityGroupApi(this.vs);
         try {
             mgrApi.updateSecurityGroup(this.sg.getMgrId(), this.sg.getName(),
-                    this.sg.getSecurityGroupMemberListElement());
+                    CreateMgrSecurityGroupTask.getSecurityGroupMemberListElement(this.sg));
         } finally {
             mgrApi.close();
         }

@@ -30,8 +30,8 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
@@ -70,17 +70,21 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
         boolean deploymentSpecChanged = false;
 
         List<VmwareSoftwareVersion> vsSoftwareVersions = new ArrayList<>();
-        Map<VmwareSoftwareVersion, String> vsDeplSpecs = this.vs.getNsxDeploymentSpecIds();
+        Map<org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion, String> vsDeplSpecs = this.vs.getNsxDeploymentSpecIds();
 
-        List<VmwareSoftwareVersion> unorderedList = new ArrayList<>(vsDeplSpecs.keySet());
-        Collections.sort(unorderedList, new VmwareSoftwareVersion.VmwareSoftwareVersionOrdinalComparator());
-        vsSoftwareVersions.addAll(unorderedList);//now ordered by enum ordinal
+        List<org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion> unorderedList = new ArrayList<>(vsDeplSpecs.keySet());
+        Collections.sort(unorderedList);
+        for(org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion vsv : unorderedList) {
+            vsSoftwareVersions.add(VmwareSoftwareVersion.valueOf(vsv.name()));//now ordered by enum ordinal
+        }
 
         DeploymentSpecApi deploymentSpecApi = VMwareSdnApiFactory.createDeploymentSpecApi(this.vs);
         List<DeploymentSpecElement> deploymentSpecs = deploymentSpecApi.getDeploymentSpecs(this.vs.getNsxServiceId());
         List<VmwareSoftwareVersion> apiSoftwareVersions = new ArrayList<>();
         for (DeploymentSpecElement ds : deploymentSpecs){
-            apiSoftwareVersions.add(VmwareSoftwareVersion.fromText(StringUtils.chomp(ds.getHostVersion(), RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS)));
+            apiSoftwareVersions.add(VmwareSoftwareVersion.valueOf(
+                    org.osc.core.broker.model.virtualization.VmwareSoftwareVersion.fromText(StringUtils.chomp(ds.getHostVersion(), RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS))
+                    .name()));
         }
 
         List<VmwareSoftwareVersion> nsxDepSpecsOutOfSync =

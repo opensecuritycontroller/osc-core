@@ -25,6 +25,7 @@ import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.alert.AlertGenerator;
@@ -102,7 +103,8 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
                             + "' not timely reported and is out of date");
 
                     // In case of NSX, update
-                    if (dai.getVirtualSystem().getVirtualizationConnector().isVmware()) {
+                    if (dai.getVirtualSystem().getVirtualizationConnector()
+                            .getVirtualizationType() == VirtualizationType.VMWARE) {
                         NsxUpdateAgentsService.updateNsxAgentInfo(session, dai, "UNKNOWN");
                     }
                     dai.setDiscovered(null);
