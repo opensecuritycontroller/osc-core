@@ -37,7 +37,6 @@ import org.osc.core.broker.service.policy.PolicyDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.sdk.controller.FailurePolicyType;
-import org.osc.sdk.controller.api.SdnControllerApi;
 
 public class ListSecurityGroupBindingsBySgService extends
 ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
@@ -78,16 +77,20 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
 
         // Other available Bindings
         if (this.sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
+            FailurePolicyType failurePolicyType =
+                    SdnControllerApiFactory.supportsFailurePolicy(this.sg) ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA;
+
             for (VirtualSystem vs : vsSet) {
                 // Only allow binding to non-deleted services
                 if (!vs.getMarkedForDeletion()) {
                     order++;
-                    SdnControllerApi controller = SdnControllerApiFactory
-                            .createNetworkControllerApi(this.sg.getVirtualizationConnector());
                     // Checking if the SDN controller supports failure policy. If yes giving the default Failure Policy Type value FAIL_OPEN
-                    VirtualSystemPolicyBindingDto virtualSystemBindingDto = new VirtualSystemPolicyBindingDto(
-                            vs.getId(), vs.getDistributedAppliance().getName(), null,
-                            controller.isFailurePolicySupported() ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA,
+                    VirtualSystemPolicyBindingDto virtualSystemBindingDto =
+                            new VirtualSystemPolicyBindingDto(
+                                    vs.getId(),
+                                    vs.getDistributedAppliance().getName(),
+                                    null,
+                                    failurePolicyType,
                                     order);
 
                     if (vs.getDomain() != null) {

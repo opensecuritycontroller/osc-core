@@ -45,10 +45,7 @@ ServiceDispatcher<I, O> {
             + "  is either not found or is been deleted by the user.");
         }
 
-        boolean isPolicyMappingSupported =
-                ManagerApiFactory.createApplianceManagerApi(this.vs).isPolicyMappingSupported();
-
-        if (!isPolicyMappingSupported) {
+        if (!ManagerApiFactory.syncsPolicyMapping(this.vs)) {
             throw new VmidcBrokerValidationException("Security group interfaces cannot be created or updated for appliance manager that does not support policy mapping.");
         }
 
@@ -62,7 +59,7 @@ ServiceDispatcher<I, O> {
 
         if (!mc.getPolicies().contains(this.policy)) {
             throw new VmidcBrokerValidationException("Policy with Name: " + this.policy.getName()
-                    + " is not defined in the manager: " + mc.getName());
+            + " is not defined in the manager: " + mc.getName());
         }
     }
 

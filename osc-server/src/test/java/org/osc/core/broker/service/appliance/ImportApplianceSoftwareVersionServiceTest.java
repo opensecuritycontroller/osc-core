@@ -18,15 +18,9 @@ package org.osc.core.broker.service.appliance;
 
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.spy;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.powermock.api.mockito.PowerMockito.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -189,7 +183,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         mcPolicyMappingSupported.setManagerType(mgrTypePolicyMappingSupported.toString());
         Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_VALID_MC)).thenReturn(mcPolicyMappingSupported);
         ApplianceManagerApi applianceMgrPolicyMappingSupported = Mockito.mock(ApplianceManagerApi.class);
-        Mockito.when(applianceMgrPolicyMappingSupported.isPolicyMappingSupported()).thenReturn(true);
+        //Mockito.when(applianceMgrPolicyMappingSupported.isPolicyMappingSupported()).thenReturn(true);
 
         PowerMockito.mockStatic(ManagerApiFactory.class);
         Mockito.when(ManagerApiFactory.createApplianceManagerApi(mgrTypePolicyMappingSupported))

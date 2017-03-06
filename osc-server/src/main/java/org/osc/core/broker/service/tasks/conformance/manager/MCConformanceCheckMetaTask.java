@@ -30,6 +30,7 @@ import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.server.VmidcAuthFilter;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
@@ -69,10 +70,10 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
     public void executeTransaction(Session session) throws Exception {
         boolean isLockProvided = true;
         this.tg = new TaskGraph();
-        this.mc = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class, this.mc.getId());
+        this.mc = session.get(ApplianceManagerConnector.class, this.mc.getId());
 
         try {
-            this.mc = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class, this.mc.getId());
+            this.mc = session.get(ApplianceManagerConnector.class, this.mc.getId());
 
             if (this.mcUnlockTask == null) {
                 isLockProvided = false;
@@ -93,7 +94,7 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
                 this.tg.addTaskGraph(syncPersistedUrlNotification(session, this.mc));
             }
 
-            if (ManagerApiFactory.syncsSecurityGroup(this.mc.getManagerType())) {
+            if (ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(this.mc.getManagerType()))) {
                 Task syncDomains = new SyncDomainMetaTask(this.mc);
                 this.tg.addTask(syncDomains);
 

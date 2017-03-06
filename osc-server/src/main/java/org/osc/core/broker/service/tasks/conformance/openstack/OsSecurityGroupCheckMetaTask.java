@@ -33,7 +33,6 @@ import org.jclouds.openstack.neutron.v2.domain.SecurityGroup;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -42,7 +41,6 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
-import org.osc.sdk.controller.api.SdnControllerApi;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -68,11 +66,6 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         VirtualSystem vs = ds.getVirtualSystem();
         log.info(
                 "Checking if VS" + vs.getName() + " has the corresponding Openstack Security Group");
-        VirtualizationConnector vc = vs.getVirtualizationConnector();
-        SdnControllerApi controller = null;
-        if (vc.isControllerDefined()) {
-            controller = SdnControllerApiFactory.createNetworkControllerApi(vs);
-        }
 
         Endpoint endPoint = new Endpoint(ds);
         try (JCloudNeutron neutron = new JCloudNeutron(endPoint)) {
@@ -87,7 +80,8 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                 }
             }
 
-            boolean isNuageController = controller != null && controller.getName().equals("Nuage");
+            // The only SDN controller that currently returns true for supportsPortGroup is Nuage.
+            boolean isNuageController = SdnControllerApiFactory.supportsPortGroup(vs);
             // If DS or DDS both have no os security group reference, create OS SG
             if (sgReference == null) {
                 //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
@@ -131,11 +125,11 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         expectedList.add(
                 Rule.createBuilder(RuleDirection.INGRESS, "").ethertype(RuleEthertype.IPV4).protocol(null).build());
         expectedList
-                .add(Rule.createBuilder(RuleDirection.EGRESS, "").ethertype(RuleEthertype.IPV4).protocol(null).build());
+        .add(Rule.createBuilder(RuleDirection.EGRESS, "").ethertype(RuleEthertype.IPV4).protocol(null).build());
         expectedList.add(
                 Rule.createBuilder(RuleDirection.INGRESS, "").ethertype(RuleEthertype.IPV6).protocol(null).build());
         expectedList
-                .add(Rule.createBuilder(RuleDirection.EGRESS, "").ethertype(RuleEthertype.IPV6).protocol(null).build());
+        .add(Rule.createBuilder(RuleDirection.EGRESS, "").ethertype(RuleEthertype.IPV6).protocol(null).build());
 
         ImmutableList.<Rule>builder().addAll(expectedList);
 
