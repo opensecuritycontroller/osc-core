@@ -19,12 +19,12 @@ package org.osc.core.broker.model.entities.appliance;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.management.Policy;
 
@@ -35,13 +35,13 @@ public class VirtualSystemPolicy extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vs_fk", nullable = false)
-    @ForeignKey(name = "FK_VSP_VS")
+    @JoinColumn(name = "vs_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_VSP_VS"))
     private VirtualSystem virtualSystem;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "policy_fk", nullable = false)
-    @ForeignKey(name = "FK_VSP_POLICY")
+    @JoinColumn(name = "policy_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_VSP_POLICY"))
     private Policy policy;
 
     @Column(name = "nsx_vendor_template_id")
@@ -58,7 +58,7 @@ public class VirtualSystemPolicy extends BaseEntity {
     }
 
     public VirtualSystem getVirtualSystem() {
-        return virtualSystem;
+        return this.virtualSystem;
     }
 
     void setVirtualSystem(VirtualSystem virtualSystem) {
@@ -66,7 +66,7 @@ public class VirtualSystemPolicy extends BaseEntity {
     }
 
     public String getNsxVendorTemplateId() {
-        return nsxVendorTemplateId;
+        return this.nsxVendorTemplateId;
     }
 
     public void setNsxVendorTemplateId(String nsxVendorTemplateId) {
@@ -74,7 +74,7 @@ public class VirtualSystemPolicy extends BaseEntity {
     }
 
     public Policy getPolicy() {
-        return policy;
+        return this.policy;
     }
 
     public void setPolicy(Policy policy) {
@@ -83,7 +83,7 @@ public class VirtualSystemPolicy extends BaseEntity {
 
     @Override
     public String toString() {
-        return "VirtualSystemPolicy [policy=" + policy + ", nsxVendorTemplateId=" + nsxVendorTemplateId + ", getId()="
+        return "VirtualSystemPolicy [policy=" + this.policy + ", nsxVendorTemplateId=" + this.nsxVendorTemplateId + ", getId()="
                 + getId() + "]";
     }
 }

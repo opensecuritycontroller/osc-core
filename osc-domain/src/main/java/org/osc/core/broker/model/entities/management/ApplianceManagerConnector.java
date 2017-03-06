@@ -24,6 +24,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.Lob;
@@ -33,7 +34,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.job.JobRecord;
@@ -74,8 +74,7 @@ public class ApplianceManagerConnector extends BaseEntity implements LastJobCont
     private Set<Domain> domains = new HashSet<Domain>();
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_job_id_fk")
-    @ForeignKey(name = "FK_MC_LAST_JOB")
+    @JoinColumn(name = "last_job_id_fk", foreignKey = @ForeignKey(name = "FK_MC_LAST_JOB"))
     private JobRecord lastJob;
 
     @Column(name = "last_known_broker_ip_address", nullable = true)
