@@ -14,8 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.model.entities.job;
+package org.osc.core.broker.service.manager;
 
-public enum TaskStatus {
-    FAILED, SKIPPED, PASSED, ABORTED;
+import org.osc.core.broker.model.entities.management.Domain;
+import org.osc.sdk.manager.element.DomainElement;
+
+public class DomainElementImpl implements DomainElement {
+
+    private final Domain domain;
+
+    public DomainElementImpl(Domain domain) {
+        this.domain = domain;
+    }
+
+    @Override
+    public String getMgrId() {
+        return this.domain.getMgrId();
+    }
+
 }

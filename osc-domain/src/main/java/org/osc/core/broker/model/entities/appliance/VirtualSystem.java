@@ -47,7 +47,6 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
-import org.osc.sdk.controller.TagEncapsulationType;
 
 @SuppressWarnings("serial")
 @Entity

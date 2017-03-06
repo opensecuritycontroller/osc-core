@@ -55,17 +55,19 @@ public class VirtualSystemElementImpl implements VirtualSystemElement {
 
     @Override
     public VirtualizationConnectorElement getVirtualizationConnector() {
-        return this.virtualSystem.getVirtualizationConnector();
+        return new VirtualizationConnectorElementImpl(
+                this.virtualSystem.getVirtualizationConnector());
     }
 
     @Override
     public ApplianceSoftwareVersionElement getApplianceSoftwareVersion() {
-        return this.virtualSystem.getApplianceSoftwareVersion();
+        return new ApplianceSoftwareVersionElementImpl(
+                this.virtualSystem.getApplianceSoftwareVersion());
     }
 
     @Override
     public DomainElement getDomain() {
-        return this.virtualSystem.getDomain();
+        return new DomainElementImpl(this.virtualSystem.getDomain());
     }
 
     @Override

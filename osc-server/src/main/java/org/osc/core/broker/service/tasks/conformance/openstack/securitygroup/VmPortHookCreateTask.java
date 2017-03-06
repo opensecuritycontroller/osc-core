@@ -26,10 +26,13 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.service.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
+import org.osc.sdk.controller.FailurePolicyType;
+import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnControllerApi;
 
 class VmPortHookCreateTask extends TransactionalTask {
@@ -77,13 +80,14 @@ class VmPortHookCreateTask extends TransactionalTask {
                     PortGroup portGroup = new PortGroup();
                     portGroup.setPortGroupId(portGroupId);
                     controller.installInspectionHook(portGroup, new DefaultInspectionPort(ingressPort, egressPort),
-                            this.securityGroupInterface.getTagValue(), vs.getEncapsulationType(),
-                            this.securityGroupInterface.getOrder(), this.securityGroupInterface.getFailurePolicyType());
+                            this.securityGroupInterface.getTagValue(), TagEncapsulationType.valueOf(vs.getEncapsulationType().name()),
+                            this.securityGroupInterface.getOrder(), FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
                 }
             } else {
-                controller.installInspectionHook(this.vmPort, new DefaultInspectionPort(ingressPort, egressPort),
-                        this.securityGroupInterface.getTagValue(), vs.getEncapsulationType(),
-                        this.securityGroupInterface.getOrder(), this.securityGroupInterface.getFailurePolicyType());
+                controller.installInspectionHook(new NetworkElementImpl(this.vmPort),
+                        new DefaultInspectionPort(ingressPort, egressPort),
+                        this.securityGroupInterface.getTagValue(), TagEncapsulationType.valueOf(vs.getEncapsulationType().name()),
+                        this.securityGroupInterface.getOrder(), FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
             }
         } finally {
             controller.close();

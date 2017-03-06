@@ -43,8 +43,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 
 @Entity
 @Table(name = "VIRTUALIZATION_CONNECTOR")
-public class VirtualizationConnector extends BaseEntity
-        implements org.osc.sdk.manager.element.VirtualizationConnectorElement {
+public class VirtualizationConnector extends BaseEntity {
 
     private static final String NO_CONTROLLER = "NONE";
 
@@ -135,7 +134,6 @@ public class VirtualizationConnector extends BaseEntity
         this.adminTenantName = originalVc.adminTenantName;
     }
 
-    @Override
     public String getName() {
         return this.name;
     }

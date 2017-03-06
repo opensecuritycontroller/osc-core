@@ -37,7 +37,7 @@ public class DistributedApplianceElementImpl implements DistributedApplianceElem
 
     @Override
     public ApplianceElement getAppliance() {
-        return this.distributedAppliance.getAppliance();
+        return new ApplianceElementImpl(this.distributedAppliance.getAppliance());
     }
 
     @Override

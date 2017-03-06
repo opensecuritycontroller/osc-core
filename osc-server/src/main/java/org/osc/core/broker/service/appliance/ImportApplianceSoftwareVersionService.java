@@ -18,6 +18,7 @@ package org.osc.core.broker.service.appliance;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -25,6 +26,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.virtualization.VirtualizationType;
@@ -147,7 +149,11 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                 // We allow re-importing of the image to support the use case of backing up database and restore to a new VM
                 if (isImageMissing(av.getImageUrl())) {
                     if (isPolicyMappingSupported){
-                        av.setEncapsulationTypes(this.imageMetadata.getEncapsulationTypes());
+                        av.setEncapsulationTypes(
+                                this.imageMetadata.getEncapsulationTypes()
+                                .stream()
+                                .map(t -> TagEncapsulationType.valueOf(t.name()))
+                                .collect(Collectors.toList()));
                     }
                     av.setMinCpus(this.imageMetadata.getMinCpus());
                     av.setMemoryInMb(this.imageMetadata.getMemoryInMb());

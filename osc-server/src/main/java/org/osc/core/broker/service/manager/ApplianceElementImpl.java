@@ -14,8 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.model.entities.job;
+package org.osc.core.broker.service.manager;
 
-public enum TaskStatus {
-    FAILED, SKIPPED, PASSED, ABORTED;
+import org.osc.core.broker.model.entities.appliance.Appliance;
+import org.osc.sdk.manager.element.ApplianceElement;
+
+public class ApplianceElementImpl implements ApplianceElement {
+
+    private final Appliance appliance;
+
+    public ApplianceElementImpl(Appliance appliance) {
+        this.appliance = appliance;
+    }
+
+    @Override
+    public String getModel() {
+        return this.appliance.getModel();
+    }
+
 }

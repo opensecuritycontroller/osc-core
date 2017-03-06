@@ -21,9 +21,12 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.service.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
+import org.osc.sdk.controller.FailurePolicyType;
+import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnControllerApi;
 
 class VmPortHookUpdateTask extends TransactionalTask {
@@ -59,10 +62,12 @@ class VmPortHookUpdateTask extends TransactionalTask {
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
-            controller.updateInspectionHook(this.vmPort, new DefaultInspectionPort(ingressPort, egressPort),
+            controller.updateInspectionHook(new NetworkElementImpl(this.vmPort),
+                    new DefaultInspectionPort(ingressPort, egressPort),
                     this.securityGroupInterface.getTagValue(),
-                    this.securityGroupInterface.getVirtualSystem().getEncapsulationType(),
-                    this.securityGroupInterface.getOrder(), this.securityGroupInterface.getFailurePolicyType());
+                    TagEncapsulationType.valueOf(this.securityGroupInterface.getVirtualSystem().getEncapsulationType().name()),
+                    this.securityGroupInterface.getOrder(),
+                    FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
         } finally {
             controller.close();
         }

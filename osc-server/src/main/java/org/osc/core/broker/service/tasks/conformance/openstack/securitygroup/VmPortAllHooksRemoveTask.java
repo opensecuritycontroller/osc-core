@@ -23,6 +23,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnControllerApi;
 
@@ -54,7 +55,7 @@ class VmPortAllHooksRemoveTask extends TransactionalTask {
 
         SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.sgm);
         try {
-            controller.removeAllInspectionHooks(this.port);
+            controller.removeAllInspectionHooks(new NetworkElementImpl(this.port));
         } finally {
             controller.close();
         }

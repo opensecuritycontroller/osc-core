@@ -30,11 +30,10 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
-import org.osc.sdk.manager.element.DomainElement;
 
 @Entity
 @Table(name = "DOMAIN")
-public class Domain extends BaseEntity implements DomainElement {
+public class Domain extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -63,7 +62,7 @@ public class Domain extends BaseEntity implements DomainElement {
     }
 
     public String getMgrId() {
-        return mgrId;
+        return this.mgrId;
     }
 
     void setApplianceManagerConnector(ApplianceManagerConnector applianceManagerConnector) {
@@ -88,11 +87,11 @@ public class Domain extends BaseEntity implements DomainElement {
     }
 
     public ApplianceManagerConnector getApplianceManagerConnector() {
-        return applianceManagerConnector;
+        return this.applianceManagerConnector;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void setName(String name) {
@@ -101,7 +100,7 @@ public class Domain extends BaseEntity implements DomainElement {
 
     @Override
     public String toString() {
-        return "Domain [name=" + name + ", mgrId=" + mgrId + ", getId()=" + getId() + "]";
+        return "Domain [name=" + this.name + ", mgrId=" + this.mgrId + ", getId()=" + getId() + "]";
     }
 
 }

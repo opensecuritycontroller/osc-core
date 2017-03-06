@@ -35,12 +35,11 @@ import javax.persistence.Table;
 import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.sdk.controller.element.NetworkElement;
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "VM_PORT")
-public class VMPort extends BaseEntity implements NetworkElement {
+public class VMPort extends BaseEntity {
 
     @Column(name = "os_network_id", nullable = false)
     private String osNetworkId;
@@ -122,7 +121,6 @@ public class VMPort extends BaseEntity implements NetworkElement {
         return this.openstackId;
     }
 
-    @Override
     public List<String> getMacAddresses() {
         return Arrays.asList(this.macAddress);
     }
@@ -169,7 +167,6 @@ public class VMPort extends BaseEntity implements NetworkElement {
                 + ", dais=" + this.dais +  ", parentId=" + this.parentId+"]";
     }
 
-    @Override
     public String getElementId() {
         return getOpenstackId();
     }
@@ -202,12 +199,10 @@ public class VMPort extends BaseEntity implements NetworkElement {
         this.dais.clear();
     }
 
-    @Override
     public List<String> getPortIPs() {
         return this.ipAddresses;
     }
 
-    @Override
     public String getParentId() {
         return this.parentId;
     }

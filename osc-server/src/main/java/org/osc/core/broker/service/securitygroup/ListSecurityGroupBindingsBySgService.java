@@ -60,7 +60,7 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
             vsSet.remove(vs);
             VirtualSystemPolicyBindingDto virtualSystemBindingDto = new VirtualSystemPolicyBindingDto(vs.getId(), vs
                     .getDistributedAppliance().getName(), sgInterface.getMgrPolicy() == null ? null : sgInterface.getMgrPolicy().getId(),
-                            sgInterface.getFailurePolicyType(),
+                            FailurePolicyType.valueOf(sgInterface.getFailurePolicyType().name()),
                             sgInterface.getOrder());
             virtualSystemBindingDto.setMarkedForDeletion(sgInterface.getMarkedForDeletion());
             virtualSystemBindingDto.setBinded(true);

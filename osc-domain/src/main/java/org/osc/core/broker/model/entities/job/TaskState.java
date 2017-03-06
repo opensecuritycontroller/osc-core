@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.job;
 
-import org.osc.sdk.manager.element.TaskStateElement;
-
-public enum TaskState implements TaskStateElement {
+public enum TaskState {
     NOT_RUNNING, QUEUED, PENDING, RUNNING, COMPLETED;
 }

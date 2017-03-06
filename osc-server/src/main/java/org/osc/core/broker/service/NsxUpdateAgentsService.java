@@ -24,7 +24,6 @@ import java.util.UUID;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.model.entities.appliance.AgentStatus;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
@@ -41,6 +40,7 @@ import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.NsxUpdateAgentsRequest;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
+import org.osc.core.broker.service.sdn.AgentStatusElementImpl;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
 import org.osc.core.util.NetworkUtil;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
@@ -147,19 +147,19 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
                     currentStatus = agentStatus.getStatus();
                 }
 
-                AgentStatus newStatus;
+                AgentStatusElementImpl newStatus;
                 // Calculate what status is ought to be
                 if (status == null) {
                     if (dai.getDiscovered() != null && dai.getInspectionReady() != null && dai.getDiscovered() && dai.getInspectionReady()) {
-                        newStatus = new AgentStatus("UP", null);
+                        newStatus = new AgentStatusElementImpl("UP", null);
                     } else if (dai.getDiscovered() != null && dai.getDiscovered()) {
-                        newStatus = new AgentStatus("WARNING", "Appliance is not ready for inspection.");
+                        newStatus = new AgentStatusElementImpl("WARNING", "Appliance is not ready for inspection.");
                     } else {
-                        newStatus = new AgentStatus("DOWN", "Appliance is not discovered and/or ready (discovery:"
+                        newStatus = new AgentStatusElementImpl("DOWN", "Appliance is not discovered and/or ready (discovery:"
                                 + dai.getDiscovered() + ", ready:" + dai.getInspectionReady() + ").");
                     }
                 } else {
-                    newStatus = new AgentStatus(status, "Appliance status is " + status + ".");
+                    newStatus = new AgentStatusElementImpl(status, "Appliance status is " + status + ".");
                 }
 
                 // If it is status is different then what it should be - update it.

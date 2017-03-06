@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.job;
 
-import org.osc.sdk.manager.element.JobStatusElement;
-
-public enum JobStatus implements JobStatusElement{
+public enum JobStatus {
     FAILED, PASSED, ABORTED;
 }

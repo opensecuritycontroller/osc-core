@@ -36,14 +36,12 @@ import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.Policy;
-import org.osc.sdk.controller.FailurePolicyType;
-import org.osc.sdk.manager.element.ManagerSecurityGroupInterfaceElement;
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "SECURITY_GROUP_INTERFACE", uniqueConstraints = { @UniqueConstraint(columnNames = { "virtual_system_fk",
 "tag" }) })
-public class SecurityGroupInterface extends BaseEntity implements ManagerSecurityGroupInterfaceElement {
+public class SecurityGroupInterface extends BaseEntity {
 
     public static class SecurityGroupInterfaceOrderComparator implements Comparator<SecurityGroupInterface> {
 
@@ -140,7 +138,6 @@ public class SecurityGroupInterface extends BaseEntity implements ManagerSecurit
         this.policy = policy;
     }
 
-    @Override
     public String getName() {
         return this.name;
     }
@@ -157,7 +154,6 @@ public class SecurityGroupInterface extends BaseEntity implements ManagerSecurit
         this.nsxVsmUuid = nsxVsmUuid;
     }
 
-    @Override
     public String getTag() {
         return this.tag;
     }
@@ -234,12 +230,10 @@ public class SecurityGroupInterface extends BaseEntity implements ManagerSecurit
         return null;
     }
 
-    @Override
     public String getSecurityGroupInterfaceId() {
         return this.mgrSecurityGroupIntefaceId;
     }
 
-    @Override
     public String getPolicyId() {
         return getMgrPolicyId();
     }

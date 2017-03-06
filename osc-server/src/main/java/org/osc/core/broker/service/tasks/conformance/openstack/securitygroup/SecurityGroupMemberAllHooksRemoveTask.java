@@ -29,6 +29,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnControllerApi;
 
@@ -70,7 +71,7 @@ class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
             for (VMPort port : ports) {
                 this.log.info("Deleting Zombie Inspection Hooks for member '" + this.sgm.getMemberName()
                         + "' And port: '" + port.getElementId() + "'");
-                controller.removeAllInspectionHooks(port);
+                controller.removeAllInspectionHooks(new NetworkElementImpl(port));
                 port.removeAllDais();
                 EntityManager.update(session, port);
             }

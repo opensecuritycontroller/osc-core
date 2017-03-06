@@ -145,7 +145,8 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                                     vs,
                                     policy,
                                     tagString,
-                                    failurePolicyType,
+                                    org.osc.core.broker.model.entities.virtualization.FailurePolicyType.valueOf(
+                                            failurePolicyType.name()),
                                     order);
 
                             SecurityGroupInterfaceEntityMgr.toEntity(sgi, this.securityGroup, serviceToBindTo.getName());
@@ -160,7 +161,8 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                             if (hasServiceChanged(sgi, serviceToBindTo, policy, order)) {
                                 log.info("Updating Security group interface " + sgi.getName());
                                 sgi.setPolicy(policy);
-                                sgi.setFailurePolicyType(failurePolicyType);
+                                sgi.setFailurePolicyType(org.osc.core.broker.model.entities.virtualization.FailurePolicyType.valueOf(
+                                        failurePolicyType.name()));
                                 sgi.setOrder(order);
                             }
                             EntityManager.update(session, sgi);
@@ -196,7 +198,9 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
     private boolean hasServiceChanged(SecurityGroupInterface sgi, VirtualSystemPolicyBindingDto serviceToBindTo,
             Policy policy, long order) {
         boolean policyChanged = policy != null && (sgi.getPolicy() == null || !sgi.getPolicy().equals(policy));
-        return policyChanged || sgi.getFailurePolicyType() != serviceToBindTo.getFailurePolicyType() || sgi.getOrder() != order;
+        return policyChanged ||
+                FailurePolicyType.valueOf(sgi.getFailurePolicyType().name()) != serviceToBindTo.getFailurePolicyType() ||
+                sgi.getOrder() != order;
     }
 
     private boolean isServiceSelected(List<VirtualSystemPolicyBindingDto> servicesToBindTo, Long virtualSystemId) {

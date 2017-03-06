@@ -21,6 +21,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.service.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
@@ -59,7 +60,7 @@ class VmPortHookTagUpdateTask extends TransactionalTask {
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
-            controller.setInspectionHookTag(this.vmPort, new DefaultInspectionPort(ingressPort, egressPort),
+            controller.setInspectionHookTag(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort),
                     this.securityGroupInterface.getTagValue());
         } finally {
             controller.close();

@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.model.entities.job;
+package org.osc.core.broker.model.entities.virtualization;
 
-public enum TaskStatus {
-    FAILED, SKIPPED, PASSED, ABORTED;
+public enum FailurePolicyType {
+    FAIL_OPEN, FAIL_CLOSE, NA;
 }

@@ -36,6 +36,7 @@ import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.sdn.NetworkElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.sdk.controller.DefaultInspectionPort;
@@ -140,7 +141,8 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                 DefaultNetworkPort egressPort = new DefaultNetworkPort(
                         assignedRedirectedDai.getInspectionOsEgressPortId(),
                         assignedRedirectedDai.getInspectionEgressMacAddress());
-                hook = controller.getInspectionHook(this.vmPort, new DefaultInspectionPort(ingressPort, egressPort));
+                hook = controller.getInspectionHook(new NetworkElementImpl(this.vmPort),
+                        new DefaultInspectionPort(ingressPort, egressPort));
             }
 
             // Missing tag indicates missing hook
@@ -165,7 +167,8 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                 // Check failure policy
                 FailurePolicyType failurePolicyType = hook.getFailurePolicyType();
                 if (failurePolicyType != null
-                        && !failurePolicyType.equals(this.securityGroupInterface.getFailurePolicyType())) {
+                        && org.osc.core.broker.model.entities.virtualization.FailurePolicyType.valueOf(failurePolicyType.name())
+                         != this.securityGroupInterface.getFailurePolicyType()) {
                     this.tg.appendTask(new VmPortHookFailurePolicyUpdateTask(this.vmPort, this.securityGroupInterface,
                             assignedRedirectedDai));
                 }

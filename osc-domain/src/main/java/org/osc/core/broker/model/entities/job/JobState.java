@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.job;
 
-import org.osc.sdk.manager.element.JobStateElement;
-
-public enum JobState implements JobStateElement {
+public enum JobState {
     NOT_RUNNING, QUEUED, RUNNING, COMPLETED;
 }

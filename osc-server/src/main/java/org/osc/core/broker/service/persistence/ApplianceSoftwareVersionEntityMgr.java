@@ -18,6 +18,7 @@ package org.osc.core.broker.service.persistence;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.Criteria;
 import org.hibernate.Query;
@@ -27,11 +28,12 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
-import org.osc.sdk.controller.TagEncapsulationType;
+//import org.osc.sdk.controller.TagEncapsulationType;
 
 public class ApplianceSoftwareVersionEntityMgr {
 
@@ -53,7 +55,10 @@ public class ApplianceSoftwareVersionEntityMgr {
         av.setVirtualizationType(VirtualizationType.valueOf(dto.getVirtualizationType().name()));
         av.setVirtualizarionSoftwareVersion(dto.getVirtualizationVersion());
         av.setImageUrl(dto.getImageUrl());
-        av.setEncapsulationTypes(dto.getEncapsulationTypes());
+        av.setEncapsulationTypes(dto.getEncapsulationTypes()
+                .stream()
+                .map(t -> TagEncapsulationType.valueOf(t.name()))
+                .collect(Collectors.toList()));
         av.setMinCpus(dto.getMinCpus());
         av.setMemoryInMb(dto.getMemoryInMb());
         av.setDiskSizeInGb(dto.getDiskSizeInGb());
@@ -73,7 +78,10 @@ public class ApplianceSoftwareVersionEntityMgr {
                 av.getVirtualizationType().name()));
         dto.setVirtualizationVersion(av.getVirtualizarionSoftwareVersion());
         dto.setImageUrl(av.getImageUrl());
-        dto.setEncapsulationTypes(av.getEncapsulationTypes());
+        dto.setEncapsulationTypes(av.getEncapsulationTypes()
+                .stream()
+                .map(t -> org.osc.sdk.controller.TagEncapsulationType.valueOf(t.name()))
+                .collect(Collectors.toList()));
         dto.setAdditionalNicForInspection(av.hasAdditionalNicForInspection());
     }
 

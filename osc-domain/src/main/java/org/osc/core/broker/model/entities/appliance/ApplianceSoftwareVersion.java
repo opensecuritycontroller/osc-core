@@ -36,14 +36,12 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
-import org.osc.sdk.controller.TagEncapsulationType;
-import org.osc.sdk.manager.element.ApplianceSoftwareVersionElement;
 
 @Entity
 @Table(name = "APPLIANCE_SOFTWARE_VERSION", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "appliance_fk", "appliance_software_version", "virtualization_type",
                 "virtualization_software_version" }), @UniqueConstraint(columnNames = { "image_url" }) })
-public class ApplianceSoftwareVersion extends BaseEntity implements ApplianceSoftwareVersionElement {
+public class ApplianceSoftwareVersion extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -130,7 +128,6 @@ public class ApplianceSoftwareVersion extends BaseEntity implements ApplianceSof
     /**
      * @return the applianceSoftwareVersion
      */
-    @Override
     public String getApplianceSoftwareVersion() {
         return this.applianceSoftwareVersion;
     }
@@ -246,7 +243,6 @@ public class ApplianceSoftwareVersion extends BaseEntity implements ApplianceSof
                 + ", configProperties=" + this.configProperties + "getId()=" + getId() + "]";
     }
 
-    @Override
     public String getApplianceModel() {
         return this.appliance.getModel();
     }

@@ -30,11 +30,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
-import org.osc.sdk.manager.element.JobElement;
 
 @Entity
 @Table(name = "JOB")
-public class JobRecord extends BaseEntity implements JobElement {
+public class JobRecord extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -80,7 +79,6 @@ public class JobRecord extends BaseEntity implements JobElement {
         return this.tasks;
     }
 
-    @Override
     public JobState getState() {
         return this.state;
     }
@@ -89,7 +87,6 @@ public class JobRecord extends BaseEntity implements JobElement {
         this.state = state;
     }
 
-    @Override
     public JobStatus getStatus() {
         return this.status;
     }

@@ -27,11 +27,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
-import org.osc.sdk.manager.element.ApplianceElement;
 
 @Entity
 @Table(name = "APPLIANCE")
-public class Appliance extends BaseEntity implements ApplianceElement {
+public class Appliance extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -68,7 +67,6 @@ public class Appliance extends BaseEntity implements ApplianceElement {
         this.managerSoftwareVersion = managerSoftwareVersion;
     }
 
-    @Override
     public String getModel() {
         return this.model;
     }
