@@ -58,20 +58,18 @@ public class X509TrustManagerFactory implements X509TrustManager {
     private KeyStore keyStore;
     private CertificateInterceptor listener = null;
 
-    public static X509TrustManagerFactory getInstance() throws Exception {
+    public static X509TrustManagerFactory getInstance() {
         if (instance == null) {
             instance = new X509TrustManagerFactory();
-        } else {
-            instance.reloadTrustManager();
         }
         return instance;
     }
 
-    private X509TrustManagerFactory() throws Exception {
+    private X509TrustManagerFactory() {
         try {
             reloadTrustManager();
         } catch (Exception e) {
-            LOG.error("Error during loading truststore");
+            LOG.error("Error occurred during TrustManagerFactory initialization", e);
         }
     }
 
@@ -196,18 +194,21 @@ public class X509TrustManagerFactory implements X509TrustManager {
             this.keyStore.setCertificateEntry(newAlias, certificate);
             this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
         }
+        reloadTrustManager();
     }
 
     public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
         if (checkFingerprintNotExist(getSha1Fingerprint(certificate))) {
             this.keyStore.setCertificateEntry(newAlias, certificate);
             this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
+            reloadTrustManager();
         } else {
             throw new Exception("Given certificate fingerprint already exists in trust store");
         }
     }
 
     public boolean exists(String alias) throws Exception {
+        reloadTrustManager();
         return this.keyStore.containsAlias(alias);
     }
 
@@ -217,6 +218,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
     }
 
     public void updateAlias(String oldAlias, String newAlias) throws Exception {
+        reloadTrustManager();
         if (this.keyStore.containsAlias(oldAlias)) {
             X509Certificate certificate = (X509Certificate) this.keyStore.getCertificate(oldAlias);
             removeEntry(oldAlias);
@@ -226,6 +228,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
     }
 
     public void removeEntry(String alias) throws Exception {
+        reloadTrustManager();
         this.keyStore.deleteEntry(alias);
         this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
     }

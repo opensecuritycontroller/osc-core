@@ -131,16 +131,13 @@ public class AddApplianceManagerConnectorService extends
         if (!request.isSkipAllDryRun() && !request.isIgnoreErrorsAndCommit(ErrorType.MANAGER_CONNECTOR_EXCEPTION)) {
 
             ArrayList<CertificateResolverModel> resolverModels = new ArrayList<>();
-            try {
-                X509TrustManagerFactory managerFactory = X509TrustManagerFactory.getInstance();
-                managerFactory.setListener(model -> {
-                    model.setAlias("manager_" + model.getAlias());
-                    resolverModels.add(model);
-                    managerFactory.clearListener();
-                });
-            } catch (Exception e1) {
-                log.error("Error occurred in TrustStoreManagerFactory", e1);
-            }
+
+            X509TrustManagerFactory managerFactory = X509TrustManagerFactory.getInstance();
+            managerFactory.setListener(model -> {
+                model.setAlias("manager_" + model.getAlias());
+                resolverModels.add(model);
+                managerFactory.clearListener();
+            });
 
             try {
                 ManagerApiFactory.checkConnection(mc);
