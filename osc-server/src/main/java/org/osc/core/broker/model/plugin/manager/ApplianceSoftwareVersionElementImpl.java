@@ -14,22 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.manager;
+package org.osc.core.broker.model.plugin.manager;
 
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.sdk.manager.element.VirtualizationConnectorElement;
+import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.sdk.manager.element.ApplianceSoftwareVersionElement;
 
-public class VirtualizationConnectorElementImpl implements VirtualizationConnectorElement {
+public class ApplianceSoftwareVersionElementImpl implements ApplianceSoftwareVersionElement {
 
-    private final VirtualizationConnector virtualizationConnector;
+    private final ApplianceSoftwareVersion applianceSoftwareVersion;
 
-    public VirtualizationConnectorElementImpl(VirtualizationConnector virtualizationConnector) {
-        this.virtualizationConnector = virtualizationConnector;
+    public ApplianceSoftwareVersionElementImpl(ApplianceSoftwareVersion applianceSoftwareVersion) {
+        this.applianceSoftwareVersion = applianceSoftwareVersion;
     }
 
     @Override
-    public String getName() {
-        return this.virtualizationConnector.getName();
+    public String getApplianceSoftwareVersion() {
+        return this.applianceSoftwareVersion.getApplianceSoftwareVersion();
+    }
+
+    @Override
+    public String getApplianceModel() {
+        return this.applianceSoftwareVersion.getApplianceModel();
     }
 
 }

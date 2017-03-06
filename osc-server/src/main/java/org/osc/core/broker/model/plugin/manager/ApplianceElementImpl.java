@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.manager;
+package org.osc.core.broker.model.plugin.manager;
 
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.sdk.manager.element.ApplianceElement;
