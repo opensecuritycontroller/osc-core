@@ -374,7 +374,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
                 out.printf("node_%d [%n", tr.getId());
                 out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
-                if (tr.getState() == org.osc.core.broker.model.entities.job.TaskState.COMPLETED) {
+                if(org.osc.core.broker.job.TaskState.valueOf(tr.getState().name()).isTerminalState()) {
                     if (tr.getStatus().equals(TaskStatus.PASSED)) {
                         if (tr.getChildren().isEmpty()) {
                             out.printf("  fillcolor=%s fontcolor=white%n", "green4");
