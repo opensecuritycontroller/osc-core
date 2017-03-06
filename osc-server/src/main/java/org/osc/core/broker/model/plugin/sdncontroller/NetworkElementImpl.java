@@ -41,14 +41,12 @@ public class NetworkElementImpl implements NetworkElement {
 
     @Override
     public List<String> getPortIPs() {
-        // TODO Auto-generated method stub
-        return null;
+        return this.vmPort.getPortIPs();
     }
 
     @Override
     public String getParentId() {
-        // TODO Auto-generated method stub
-        return null;
+        return this.vmPort.getParentId();
     }
 
 }
