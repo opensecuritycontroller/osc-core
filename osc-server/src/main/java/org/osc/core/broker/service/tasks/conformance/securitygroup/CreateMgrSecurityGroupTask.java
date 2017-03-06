@@ -16,16 +16,25 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.securitygroup;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberElementImpl;
+import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberListElementImpl;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
+import org.osc.sdk.manager.element.SecurityGroupMemberElement;
+import org.osc.sdk.manager.element.SecurityGroupMemberListElement;
 
 class CreateMgrSecurityGroupTask extends TransactionalTask {
     //private static final Logger log = Logger.getLogger(CreateMgrEndpointGroupTask.class);
@@ -52,7 +61,7 @@ class CreateMgrSecurityGroupTask extends TransactionalTask {
                 iscId = this.sg.getId().toString();
             }
             String mgrEndpointGroupId = mgrApi.createSecurityGroup(this.sg.getName(), iscId,
-                    this.sg.getSecurityGroupMemberListElement());
+                    getSecurityGroupMemberListElement(this.sg));
             this.sg.setMgrId(mgrEndpointGroupId);
             EntityManager.update(session, this.sg);
 
@@ -60,6 +69,33 @@ class CreateMgrSecurityGroupTask extends TransactionalTask {
             mgrApi.close();
         }
 
+    }
+
+    static SecurityGroupMemberListElement getSecurityGroupMemberListElement(SecurityGroup sg) throws VmidcBrokerValidationException {
+        List<SecurityGroupMemberElement> sgmElements = new ArrayList<>();
+        for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
+            SecurityGroupMemberElementImpl sgmElement = new SecurityGroupMemberElementImpl(sgm.getId().toString(),
+                    sgm.getMemberName());
+            for (VMPort port : getPorts(sgm)) {
+                sgmElement.addMacAddresses(port.getMacAddresses());
+                sgmElement.addIpAddress(port.getPortIPs());
+            }
+            sgmElements.add(sgmElement);
+        }
+        return new SecurityGroupMemberListElementImpl(sgmElements);
+    }
+
+    private static Set<VMPort> getPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        switch (sgm.getType()) {
+        case VM:
+            return sgm.getVm().getPorts();
+        case NETWORK:
+            return sgm.getNetwork().getPorts();
+        case SUBNET:
+            return sgm.getSubnet().getPorts();
+        default:
+            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
+        }
     }
 
     @Override

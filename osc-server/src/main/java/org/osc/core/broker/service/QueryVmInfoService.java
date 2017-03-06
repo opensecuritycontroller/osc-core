@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.jclouds.openstack.nova.v2_0.domain.Server;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -59,7 +60,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
 
         QueryVmInfoResponse response = new QueryVmInfoResponse();
 
-        if (vc.isVmware()) {
+        if (vc.getVirtualizationType() == VirtualizationType.VMWARE) {
 
             if (request.macAddress != null && !request.macAddress.isEmpty()) {
                 throw new VmidcBrokerValidationException("MAC address based query are not supported for VMware.");
@@ -106,7 +107,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                 }
             }
 
-        } else if (vc.isOpenstack()) {
+        } else if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
 
             if (request.ipAddress != null && !request.ipAddress.isEmpty()) {
                 JCloudNeutron neutron = null;
@@ -312,7 +313,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         }
 
         if (request.flow != null) {
-            if (dai.getVirtualSystem().getVirtualizationConnector().isOpenstack()
+            if (dai.getVirtualSystem().getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK
                     && !dai.getVirtualSystem().getVirtualizationConnector().isControllerDefined()) {
                 throw new VmidcBrokerValidationException(
                         "Flow based queries can only be supported if SDN controller is defined.");

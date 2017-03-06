@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.hibernate.LockMode;
@@ -31,8 +32,10 @@ import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -93,7 +96,12 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             if (isApplianceStatusSupported) {
                 ApplianceManagerConnector apmc = vs.getDistributedAppliance().getApplianceManagerConnector();
                 ManagerDeviceMemberApi agentApi =  ManagerApiFactory.createManagerDeviceMemberApi(apmc, vs);
-                agentStatusResponses.addAll(invokeRequest(new ArrayList<DistributedApplianceInstanceElement>(list), agentApi));
+
+                List<DistributedApplianceInstanceElement> elements = list.stream()
+                    .map(DistributedApplianceInstanceElementImpl::new)
+                    .collect(Collectors.toList());
+
+                agentStatusResponses.addAll(invokeRequest(elements, agentApi));
             } else {
                 agentStatusResponses.addAll(createStatusNotSupportedResponses(list));
             }
@@ -189,7 +197,9 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             dai.setPackets(agentStatus.getAgentDpaInfo().netXDpaRuntimeInfo.rx);
         }
 
-        if (dai.getVirtualSystem().getVirtualizationConnector().isVmware()) {
+        if (dai.getVirtualSystem().getVirtualizationConnector().getVirtualizationType() ==
+                VirtualizationType.VMWARE)
+        {
             NsxUpdateAgentsService.updateNsxAgentInfo(session, dai);
         }
 

@@ -28,6 +28,7 @@ import org.hibernate.criterion.Restrictions;
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.job.JobObject;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.service.dto.JobRecordDto;
@@ -40,8 +41,8 @@ public class JobEntityManager {
         dto.setId(job.getId());
         dto.setName(job.getName());
         dto.setFailureReason(job.getFailureReason());
-        dto.setState(job.getState());
-        dto.setStatus(job.getStatus());
+        dto.setState(JobState.valueOf(job.getState().name()));
+        dto.setStatus(JobStatus.valueOf(job.getStatus().name()));
         dto.setQueued(job.getQueuedTimestamp());
         dto.setStarted(job.getStartedTimestamp());
         dto.setCompleted(job.getCompletedTimestamp());
@@ -56,7 +57,8 @@ public class JobEntityManager {
 
         Set<LockObjectReference> objects = new HashSet<LockObjectReference>();
         for (JobObject jo : job.getObjects()) {
-            objects.add(new LockObjectReference(jo.getObjectId(), jo.getName(), jo.getObjectType()));
+            objects.add(new LockObjectReference(jo.getObjectId(), jo.getName(),
+                    ObjectType.valueOf(jo.getObjectType().name())));
         }
         return objects;
     }

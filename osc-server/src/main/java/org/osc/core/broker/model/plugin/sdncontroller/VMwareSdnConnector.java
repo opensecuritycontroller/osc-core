@@ -16,13 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.sdncontroller;
 
+import javax.net.ssl.SSLContext;
+
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.sdn.element.ConnectorElement;
-
-import javax.net.ssl.SSLContext;
 
 public class VMwareSdnConnector implements ConnectorElement {
 	private String ipAddress;
@@ -44,7 +45,7 @@ public class VMwareSdnConnector implements ConnectorElement {
         this.ipAddress = vc.getControllerIpAddress();
         this.userName = vc.getControllerUsername();
         this.password = EncryptionUtil.decryptAESCTR(vc.getControllerPassword());
-        this.sslContext = vc.getSslContext();
+        this.sslContext = new SslContextProvider().getSSLContext();
     }
 
     /**

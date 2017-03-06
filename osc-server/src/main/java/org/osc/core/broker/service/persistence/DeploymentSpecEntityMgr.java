@@ -16,10 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.osc.core.broker.job.JobState;
+import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
@@ -28,10 +34,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class DeploymentSpecEntityMgr {
 
@@ -67,8 +69,8 @@ public class DeploymentSpecEntityMgr {
         dto.setInspectionNetworkId(ds.getInspectionNetworkId());
         dto.setCount(ds.getInstanceCount());
         if (ds.getLastJob() != null) {
-            dto.setLastJobStatus(ds.getLastJob().getStatus());
-            dto.setLastJobState(ds.getLastJob().getState());
+            dto.setLastJobStatus(JobStatus.valueOf(ds.getLastJob().getStatus().name()));
+            dto.setLastJobState(JobState.valueOf(ds.getLastJob().getState().name()));
             dto.setLastJobId(ds.getLastJob().getId());
         }
         dto.setShared(ds.isShared());

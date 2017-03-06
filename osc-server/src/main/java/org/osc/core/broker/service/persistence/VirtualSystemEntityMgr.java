@@ -30,6 +30,7 @@ import org.hibernate.criterion.Restrictions;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
+import org.osc.sdk.controller.TagEncapsulationType;
 
 public class VirtualSystemEntityMgr {
 
@@ -40,9 +41,16 @@ public class VirtualSystemEntityMgr {
         dto.setDistributedAppliance(entity.getDistributedAppliance().getName());
         dto.setVcId(entity.getVirtualizationConnector().getId());
         dto.setVirtualizationConnectorName(entity.getVirtualizationConnector().getName());
-        dto.setVirtualizationType(entity.getVirtualizationConnector().getVirtualizationType());
+        dto.setVirtualizationType(VirtualizationType.valueOf(
+                entity.getVirtualizationConnector().getVirtualizationType().name()));
         dto.setMarkForDeletion(entity.getMarkedForDeletion());
-        dto.setEncapsulationType(entity.getEncapsulationType());
+
+        org.osc.core.broker.model.entities.appliance.TagEncapsulationType encapsulationType = entity.getEncapsulationType();
+
+        if(encapsulationType != null) {
+            dto.setEncapsulationType(TagEncapsulationType.valueOf(
+                encapsulationType.name()));
+        }
 
         if (entity.getDomain() != null) {
             dto.setDomainId(entity.getDomain().getId());

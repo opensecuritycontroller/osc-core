@@ -27,6 +27,7 @@ import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.persistence.EntityManager;
@@ -72,7 +73,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
 
             for (VirtualSystem vs : da.getVirtualSystems()) {
 
-                if (vs.getVirtualizationConnector().isVmware()) {
+                if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
                     // Updating Service Manager callback URL
                     propagateTaskGraph.addTask(new UpdateNsxServiceManagerTask(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);

@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.EntityManager;
@@ -46,7 +47,8 @@ public class DeleteSecurityGroupInterfaceTask extends TransactionalTask {
 
         this.securityGroupInterface = (SecurityGroupInterface) session.get(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
-        boolean isVmwareSGI = this.securityGroupInterface.getVirtualSystem().getVirtualizationConnector().isVmware();
+        boolean isVmwareSGI = this.securityGroupInterface.getVirtualSystem()
+                .getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE;
 
         for (SecurityGroup sg : this.securityGroupInterface.getSecurityGroups()) {
             sg.removeSecurityInterface(this.securityGroupInterface);

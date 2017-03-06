@@ -31,6 +31,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.openstack.request.ListOpenstackMembersRequest;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.EntityManager;
@@ -40,7 +41,7 @@ import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
 
 /**
  * Lists servers based on the openstack request. The Parent ID is assumed to be of the VC
- * 
+ *
  * The ID is assumed to be the id of a Security group so the server list filters out any existing members of the
  * security group.
  * If the id is not set, all servers from that VC are listed
@@ -63,7 +64,7 @@ public class ListOpenstackMembersService extends
             SecurityGroup sg = SecurityGroupEntityMgr.findById(session, request.getId());
             for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
                 if (!sgm.getMarkedForDeletion()) {
-                    existingMemberIds.add(sgm.getMemberOpenstackId());
+                    existingMemberIds.add(getMemberOpenstackId(sgm));
                 }
             }
         } else if (request.getCurrentSelectedMembers() != null) {
@@ -137,6 +138,19 @@ public class ListOpenstackMembersService extends
         response.setList(openstackMemberList);
         return response;
 
+    }
+
+    private String getMemberOpenstackId(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        switch (sgm.getType()) {
+        case VM:
+            return sgm.getVm().getOpenstackId();
+        case NETWORK:
+            return sgm.getNetwork().getOpenstackId();
+        case SUBNET:
+            return sgm.getSubnet().getOpenstackId();
+        default:
+            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
+        }
     }
 
     private String createSubnetNetworkName(Subnet subnet, String region, JCloudNeutron neutronApi) {
