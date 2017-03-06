@@ -45,16 +45,18 @@ import java.util.List;
 public class X509TrustManagerFactory implements X509TrustManager {
 
     private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
-    private static final String TRUSTSTOREFILE = "vmidctruststore.jks";
-    private static final String INTERNALKEYSTOREFILE = "vmidcKeyStore.jks";
-    private static final String TRUSTSTOREPASSWORD = "abc12345";
+    private static final String KEYSTORE_TYPE = "JKS";
+    private static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
+    private static final String TRUSTSTORE_PASSWORD = "abc12345";
+    private static final String INTERNAL_KEYSTORE_FILE = "vmidcKeyStore.jks";
+    private static final String INTERNAL_KEYSTORE_PASSWORD = "abc12345";
+    private static final String INTERNAL_KEYSTORE_ALIAS = "vmidckeystore";
 
     private static X509TrustManagerFactory instance = null;
     private final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
     private X509TrustManager trustManager = null;
     private KeyStore keyStore;
-    private SslConfig sslConfig = new SslConfig(TRUSTSTOREFILE, TRUSTSTOREPASSWORD);
-    private CertificateErrorListener listener = null;
+    private CertificateInterceptor listener = null;
 
     public static X509TrustManagerFactory getInstance() throws Exception {
         if (instance == null) {
@@ -94,8 +96,8 @@ public class X509TrustManagerFactory implements X509TrustManager {
                 long unixTimestamp = Instant.now().getEpochSecond();
                 CertificateResolverModel resolverModel = new CertificateResolverModel(
                         x509Certificate, String.valueOf(unixTimestamp), getSha1Fingerprint(x509Certificate));
-                if(this.listener != null) {
-                    this.listener.notifySSlException(resolverModel);
+                if (this.listener != null) {
+                    this.listener.intercept(resolverModel);
                 }
             } catch (NoSuchAlgorithmException e) {
                 LOG.error("Cannot generate SHA1 fingerprint for certificate", e);
@@ -104,31 +106,25 @@ public class X509TrustManagerFactory implements X509TrustManager {
         }
     }
 
-    public void setListener(CertificateErrorListener listener){
+    /**
+     * Set listener for intercepting SSL certificate
+     * @param listener - implementation of handling missing SSL certificate
+     */
+    public void setListener(CertificateInterceptor listener) {
         this.listener = listener;
     }
 
-    public void clearListener(){
+    /**
+     * Unset listener
+     */
+    public void clearListener() {
         this.listener = null;
     }
 
-    private X509Certificate loadInternalCertificate() throws Exception {
-       KeyStore keystoreInternal = KeyStore.getInstance(this.sslConfig.getTruststoretype());
-        LOG.debug("Opening trust store file....");
-        try (InputStream inputStream = new FileInputStream(INTERNALKEYSTOREFILE)) {
-            keystoreInternal.load(inputStream, TRUSTSTOREPASSWORD.toCharArray());
-        } catch (FileNotFoundException e) {
-            throw new Exception("Failed to load trust store", e);
-        } catch (CertificateException e) {
-            throw new Exception("Failed to load certificate from trust store", e);
-        }
-        return (X509Certificate) keystoreInternal.getCertificate("vmidckeystore");
-    }
-
     private void reloadTrustManager() throws Exception {
-        this.keyStore = KeyStore.getInstance(this.sslConfig.getTruststoretype());
+        this.keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
         LOG.debug("Opening trust store file....");
-        try (InputStream inputStream = new FileInputStream(this.sslConfig.getTruststorefile())) {
+        try (InputStream inputStream = new FileInputStream(TRUSTSTORE_FILE)) {
             this.keyStore.load(inputStream, null); //Password is unnecessary as we are fetching public data
         } catch (FileNotFoundException e) {
             throw new Exception("Failed to load trust store", e);
@@ -136,6 +132,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
             throw new Exception("Failed to load certificate from trust store", e);
         }
 
+        // :TODO remove after solving US11330
         this.keyStore.setCertificateEntry("internal", loadInternalCertificate());
 
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509", "SunJSSE");
@@ -150,6 +147,20 @@ public class X509TrustManagerFactory implements X509TrustManager {
 
         throw new NoSuchAlgorithmException("No X509TrustManager in TrustManagerFactory");
 
+    }
+
+    // :TODO remove after solving US11330
+    private X509Certificate loadInternalCertificate() throws Exception {
+        KeyStore keystoreInternal = KeyStore.getInstance(KEYSTORE_TYPE);
+        LOG.debug("Opening internal keystore file....");
+        try (InputStream inputStream = new FileInputStream(INTERNAL_KEYSTORE_FILE)) {
+            keystoreInternal.load(inputStream, INTERNAL_KEYSTORE_PASSWORD.toCharArray());
+        } catch (FileNotFoundException e) {
+            throw new Exception("Failed to load internal keystore", e);
+        } catch (CertificateException e) {
+            throw new Exception("Failed to load certificate from internal keystore", e);
+        }
+        return (X509Certificate) keystoreInternal.getCertificate(INTERNAL_KEYSTORE_ALIAS);
     }
 
     public List<CertificateBasicInfoModel> getCertificateInfoList() throws Exception {
@@ -183,14 +194,14 @@ public class X509TrustManagerFactory implements X509TrustManager {
             X509Certificate certificate = (X509Certificate) cf.generateCertificate(inputStream);
             String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
             this.keyStore.setCertificateEntry(newAlias, certificate);
-            this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
+            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
         }
     }
 
     public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
-        if(checkFingerprintNotExist(getSha1Fingerprint(certificate))){
+        if (checkFingerprintNotExist(getSha1Fingerprint(certificate))) {
             this.keyStore.setCertificateEntry(newAlias, certificate);
-            this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
+            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
         } else {
             throw new Exception("Given certificate fingerprint already exists in trust store");
         }
@@ -210,13 +221,13 @@ public class X509TrustManagerFactory implements X509TrustManager {
             X509Certificate certificate = (X509Certificate) this.keyStore.getCertificate(oldAlias);
             removeEntry(oldAlias);
             addEntry(certificate, newAlias);
-            this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
+            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
         }
     }
 
     public void removeEntry(String alias) throws Exception {
         this.keyStore.deleteEntry(alias);
-        this.keyStore.store(new FileOutputStream(this.sslConfig.getTruststorefile()), this.sslConfig.getTruststorepass().toCharArray());
+        this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
     }
 
     /**
@@ -237,7 +248,10 @@ public class X509TrustManagerFactory implements X509TrustManager {
         return DatatypeConverter.printHexBinary(digest);
     }
 
-    public interface CertificateErrorListener{
-        void notifySSlException(CertificateResolverModel model);
+    /**
+     * Interface which allows to intercept missing certificates. Should be defined before calling REST API
+     */
+    public interface CertificateInterceptor {
+        void intercept(CertificateResolverModel model);
     }
 }
