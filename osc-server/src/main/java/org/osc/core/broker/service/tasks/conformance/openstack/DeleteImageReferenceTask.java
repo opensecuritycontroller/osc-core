@@ -42,8 +42,8 @@ public class DeleteImageReferenceTask  extends TransactionalTask {
 
     @Override
     public void executeTransaction(Session session) throws Exception {
-        this.imageReference = (OsImageReference) session.get(OsImageReference.class, this.imageReference.getId());
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId(),
+        this.imageReference = session.get(OsImageReference.class, this.imageReference.getId());
+        this.vs = session.get(VirtualSystem.class, this.vs.getId(),
                 new LockOptions().setLockMode(LockMode.PESSIMISTIC_WRITE));
 
         LOG.info("Deleting image " + this.imageReference.getImageRefId() + " from DB");
