@@ -79,4 +79,7 @@ x-runproperties.debug: \
 	com.fasterxml.jackson.core.jackson-core;version='[2.8.5,2.8.6)',\
 	com.fasterxml.jackson.core.jackson-databind;version='[2.8.5,2.8.6)',\
 	com.fasterxml.jackson.core.jackson-annotations;version='[2.8.5,2.8.6)',\
-	org.jboss.logging.jboss-logging;version='[3.1.0,3.1.1)'
+	org.jboss.logging.jboss-logging;version='[3.1.0,3.1.1)',\
+	org.apache.commons.lang;version='[2.6.0,2.6.1)',\
+	org.osgi.service.repository;version='[1.1.0,1.1.1)',\
+	osc-domain;version='[1.0.0,1.0.1)'

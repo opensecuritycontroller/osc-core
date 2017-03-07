@@ -16,7 +16,50 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.*;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DEFAULT_SERVICE_NAME;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_OPENSTACK_WITH_DEPLOYMENT_SPECS_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_OPENSTACK_WITH_OS_FLAVOR_REF_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_OPENSTACK_WITH_OS_IMAGE_REF_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_VMWARE_DELETE_SERVICE_INSTANCE_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_VMWARE_DELETE_SERVICE_MANAGER_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_VMWARE_DELETE_SERVICE_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_VMWARE_UNDENPLOY_SERVICE_INSTANCE_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.TEST_VIRTUAL_SYSTEMS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_OPENSTACK_DEPLOYMENT_SPEC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_OPENSTACK_LOCK_DEPLOYMENT_SPEC_FAILS_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_OPENSTACK_NO_DEPLOYMENT_SPEC_TASK;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_OPENSTACK_NO_DEPLOYMENT_SPEC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_SERVICEINSTANCE_IP_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_SERVICEINSTANCE_PASSWORD_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_SERVICEMANAGER_PASSWORD_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_SERVICE_IP_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_SERVICE_NAME_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_SERVICE_PASSWORD_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_VSDOMAIN_POLICY_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_VSPOLICY_MARKED_FOR_DELETION_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_VSPOLICY_NAME_OUT_OF_SYNC_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_VSPOLICY_WITHOUT_SERVICE_ID_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_VMWARE_VSPOLICY_WITHOUT_TEMPLATE_VS;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDeleteOpenStackWithDeploymentSpecGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDeleteOpenStackWithOSFlavorRefGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDeleteOpenStackWithOSImageRefGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDeleteServiceGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDeleteServiceInstanceGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDeleteServiceManagerGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDomainPolicyOnlyGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createOpenstacWhenLockingDeploymentSpecFailsGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createOpenstackNoDeploymentSpecGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createOpenstackWithDeploymentSpecGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createServiceInstanceOutOfSyncGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createServiceManagerOutOfSyncGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createServiceOutOfSyncGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createUndenployServiceInstanceGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createVsPolicyMarkedForDeletionGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createVsPolicyNameOutOfSyncGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createVsPolicyWithoutServiceIdGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createVsPolicyWithoutTemplateGraph;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +88,7 @@ import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceElement;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -52,6 +96,7 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
 @PrepareForTest({VMwareSdnApiFactory.class, LockUtil.class, CreateNsxServiceManagerTask.class})
+@PowerMockIgnore("javax.net.ssl.*")
 public class VSConformanceCheckMetaTaskTest {
     @Mock
     public Session sessionMock;

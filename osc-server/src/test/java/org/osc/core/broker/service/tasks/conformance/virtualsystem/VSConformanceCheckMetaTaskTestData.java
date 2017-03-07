@@ -32,6 +32,8 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
@@ -40,8 +42,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.rest.client.nsx.model.Service;
 import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
@@ -297,13 +297,12 @@ public class VSConformanceCheckMetaTaskTestData {
 
         // Mock SslContext
         VirtualizationConnector vcSpy = Mockito.spy(VirtualizationConnector.class);
-        Mockito.doReturn(null).when(vcSpy).getSslContext();
 
         vcSpy.setVirtualizationType(VirtualizationType.VMWARE);
         vcSpy.setId(vcId);
 
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
-        mc.setManagerType(ManagerType.NSM);
+        mc.setManagerType(ManagerType.NSM.getValue());
 
         DistributedAppliance da = new DistributedAppliance(mc);
         da.setId(daId);
@@ -826,7 +825,7 @@ public class VSConformanceCheckMetaTaskTestData {
         OsImageReference image = (OsImageReference) vs.getOsImageReference().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
-        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector());
+        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), vs.getVirtualizationConnector().getProviderAdminTenantName());
         expectedGraph.appendTask(new DeleteImageFromGlanceTask(image.getRegion(), image, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new MgrDeleteVSSDeviceTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
@@ -854,7 +853,7 @@ public class VSConformanceCheckMetaTaskTestData {
         OsFlavorReference flavor = (OsFlavorReference) vs.getOsFlavorReference().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
-        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector());
+        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), vs.getVirtualizationConnector().getProviderAdminTenantName());
         expectedGraph.appendTask(new DeleteFlavorTask(flavor.getRegion(), flavor, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new MgrDeleteVSSDeviceTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);

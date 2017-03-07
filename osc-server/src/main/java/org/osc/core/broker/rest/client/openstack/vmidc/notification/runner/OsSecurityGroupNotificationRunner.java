@@ -132,7 +132,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
             try {
                 if (!sgm.getMarkedForDeletion() && (type == null || sgm.getType().equals(type))) {
-                    idList.add(sgm.getMemberOpenstackId());
+                    idList.add(getMemberOpenstackId(sgm));
                 }
 
             } catch (VmidcBrokerValidationException ex) {
@@ -140,6 +140,19 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
             }
         }
         return idList;
+    }
+
+    private String getMemberOpenstackId(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        switch (sgm.getType()) {
+        case VM:
+            return sgm.getVm().getOpenstackId();
+        case NETWORK:
+            return sgm.getNetwork().getOpenstackId();
+        case SUBNET:
+            return sgm.getSubnet().getOpenstackId();
+        default:
+            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
+        }
     }
 
     private void addListener(SecurityGroup sg) {

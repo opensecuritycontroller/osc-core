@@ -16,6 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.sdncontroller;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -26,6 +32,7 @@ import org.osc.core.broker.model.plugin.PluginTracker;
 import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ServiceUnavailableException;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.server.installer.InstallableManager;
@@ -38,12 +45,6 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 public class SdnControllerApiFactory {
 
@@ -74,7 +75,21 @@ public class SdnControllerApiFactory {
     }
 
     public static SdnControllerApi createNetworkControllerApi(SecurityGroupMember sgm) throws Exception {
-        return createNetworkControllerApi(sgm.getSecurityGroup().getVirtualizationConnector(), sgm.getMemberRegion());
+        return createNetworkControllerApi(sgm.getSecurityGroup().getVirtualizationConnector(), getMemberRegion(sgm));
+    }
+
+    private static String getMemberRegion(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        switch (sgm.getType()) {
+        case VM:
+            return sgm.getVm().getRegion();
+        case NETWORK:
+            return sgm.getNetwork().getRegion();
+        case SUBNET:
+            return sgm.getSubnet().getRegion();
+        default:
+            throw new VmidcBrokerValidationException("Openstack Id is not applicable for Members of type '" + sgm.getType()
+                    + "'");
+        }
     }
 
     public static SdnControllerApi createNetworkControllerApi(VirtualSystem vs, String region) throws Exception {
@@ -89,7 +104,7 @@ public class SdnControllerApiFactory {
         if (!StringUtils.isEmpty(shallowClone.getControllerPassword())) {
             shallowClone.setControllerPassword(EncryptionUtil.decryptAESCTR(shallowClone.getControllerPassword()));
         }
-        sca.setVirtualizationConnector(shallowClone);
+        sca.setVirtualizationConnector(new VirtualizationConnectorElementImpl(shallowClone));
         sca.setRegion(region);
         return sca;
     }
@@ -101,6 +116,10 @@ public class SdnControllerApiFactory {
         } else {
             throw new VmidcException(String.format("NSX plugin not found for controller type: %s", vc.getControllerType().toString()));
         }
+    }
+
+    public static SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception {
+        return createNetworkControllerApi(ControllerType.fromText(controllerType));
     }
 
     public static SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception {

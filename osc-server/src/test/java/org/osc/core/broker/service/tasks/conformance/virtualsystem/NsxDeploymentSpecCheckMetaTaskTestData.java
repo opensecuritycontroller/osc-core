@@ -22,20 +22,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
 import org.osc.core.broker.service.tasks.network.UpdateNsxDeploymentSpecTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
@@ -261,7 +260,7 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
         vc.setId(vcId);
 
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
-        mc.setManagerType(ManagerType.NSM);
+        mc.setManagerType(ManagerType.NSM.getValue());
 
         DistributedAppliance da = new DistributedAppliance(mc);
         da.setId(daId);
@@ -314,7 +313,8 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         for (VmwareSoftwareVersion sw : vs_ds.keySet()){
             VersionedDeploymentSpec spec = new VersionedDeploymentSpec();
-            spec.setHostVersion(sw.toString() + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
+            spec.setHostVersion(org.osc.core.broker.model.virtualization.VmwareSoftwareVersion.valueOf(sw.name())
+                    .toString() + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
             spec.setOvfUrl(IMAGE_URL_OUT_OF_SYNC);
             expectedGraph.addTask(new UpdateNsxDeploymentSpecTask(vs, spec));
         }
@@ -328,7 +328,8 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         for (VmwareSoftwareVersion sw : vs_ds.keySet()){
             VersionedDeploymentSpec spec = new VersionedDeploymentSpec();
-            spec.setHostVersion(sw.toString() + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
+            spec.setHostVersion(org.osc.core.broker.model.virtualization.VmwareSoftwareVersion.valueOf(sw.name())
+                    .toString() + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
             spec.setOvfUrl(IMAGE_URL_OUT_OF_SYNC);
             expectedGraph.addTask(new UpdateNsxDeploymentSpecTask(vs, spec));
         }
@@ -339,7 +340,7 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
     public static TaskGraph createRegisterDeploySpecExpectedGraph(VirtualSystem vs, VmwareSoftwareVersion... softwareVersions) {
         TaskGraph expectedGraph = new TaskGraph();
         List<VmwareSoftwareVersion> versions = Arrays.asList(softwareVersions);
-        for (VmwareSoftwareVersion version : CollectionUtils.emptyIfNull(versions)) {
+        for (VmwareSoftwareVersion version : versions) {
             expectedGraph.appendTask(new RegisterDeploymentSpecTask(vs , version));
         }
         return expectedGraph;

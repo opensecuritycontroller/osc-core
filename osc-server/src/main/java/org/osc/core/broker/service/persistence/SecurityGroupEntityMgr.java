@@ -26,9 +26,12 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.osc.core.broker.job.JobState;
+import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
@@ -45,7 +48,7 @@ public class SecurityGroupEntityMgr {
 
     /**
      * This method does not include security group members of the security group
-     * 
+     *
      */
     public static void fromEntity(SecurityGroup entity, SecurityGroupDto dto) {
         dto.setId(entity.getId());
@@ -57,8 +60,8 @@ public class SecurityGroupEntityMgr {
         dto.setTenantId(entity.getTenantId());
         dto.setTenantName(entity.getTenantName());
         if (entity.getLastJob() != null) {
-            dto.setLastJobStatus(entity.getLastJob().getStatus());
-            dto.setLastJobState(entity.getLastJob().getState());
+            dto.setLastJobStatus(JobStatus.valueOf(entity.getLastJob().getStatus().name()));
+            dto.setLastJobState(JobState.valueOf(entity.getLastJob().getState().name()));
             dto.setLastJobId(entity.getLastJob().getId());
         }
     }
@@ -75,7 +78,7 @@ public class SecurityGroupEntityMgr {
 
         SecurityGroup sg = findById(session, dto.getId());
 
-        if (sg.getVirtualizationConnector().isOpenstack()) {
+        if (sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK) {
 
             Criteria vmNumberCriteria = session.createCriteria(SecurityGroupMember.class, "sgm")
                     .createAlias("sgm.securityGroup", "sg").add(Restrictions.eq("sg.id", dto.getId()))
@@ -93,7 +96,8 @@ public class SecurityGroupEntityMgr {
             dto.setMemberDescription(String.format("VM: %d , Network: %d , Subnet: %d",
                     vmNumberCriteria.uniqueResult(), nwNumberCriteria.uniqueResult(), subNumberCriteria.uniqueResult()));
 
-        } else if (sg.getVirtualizationConnector().isVmware()) {
+        } else if (sg.getVirtualizationConnector().getVirtualizationType()
+                == VirtualizationType.VMWARE) {
 
             Criteria ipNumberCriteria = session.createCriteria(SecurityGroupMember.class, "sgm")
                     .createAlias("sgm.securityGroup", "sg").add(Restrictions.eq("sg.id", dto.getId()))

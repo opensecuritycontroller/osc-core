@@ -129,6 +129,7 @@
             <modules>
                 <module>osc-tools</module>
                 <module>osc-common</module>
+                <module>osc-domain</module>
                 <module>osc-server</module>
 
                 <module>osc-uber</module>
@@ -319,4 +320,7 @@
 			</plugin>
 		</plugins>
 	</reporting>
+	<modules>
+		<module>osc-domain</module>
+	</modules>
 </project>

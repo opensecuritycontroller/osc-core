@@ -17,8 +17,10 @@
 package org.osc.core.broker.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.Session;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
 import org.osc.core.broker.service.request.ListEncapsulationTypeByVersionTypeAndModelRequest;
 import org.osc.core.broker.service.response.ListResponse;
@@ -33,7 +35,11 @@ public class ListEncapsulationTypeByVersionTypeAndModel extends
     public ListResponse<TagEncapsulationType> exec(ListEncapsulationTypeByVersionTypeAndModelRequest request,
             Session session) throws Exception {
         List<TagEncapsulationType> list = ApplianceSoftwareVersionEntityMgr.getEncapsulationByApplianceSoftwareVersion(
-                session, request.getAppliacneSoftwareVersion(), request.getAppliacneModel(), request.getVcType());
+                session, request.getAppliacneSoftwareVersion(), request.getAppliacneModel(),
+                VirtualizationType.valueOf(request.getVcType().name()))
+                .stream()
+                .map(t -> TagEncapsulationType.valueOf(t.name()))
+                .collect(Collectors.toList());
         this.response.setList(list);
 
         return this.response;

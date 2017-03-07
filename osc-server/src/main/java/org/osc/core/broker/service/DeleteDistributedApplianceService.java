@@ -26,6 +26,7 @@ import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.request.DeleteDistributedApplianceRequestValidator;
@@ -59,7 +60,7 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
 
             for (VirtualSystem vs : da.getVirtualSystems()) {
                 TaskGraph vsDeleteTaskGraph = new TaskGraph();
-                if (vs.getVirtualizationConnector().getVirtualizationType().isVmware()) {
+                if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
                     vsDeleteTaskGraph.addTask(new ValidateNsxTask(vs));
                 }
                 vsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(vs));

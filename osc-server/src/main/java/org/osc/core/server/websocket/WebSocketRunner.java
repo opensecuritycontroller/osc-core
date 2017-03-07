@@ -40,7 +40,6 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
 import org.osc.core.broker.view.util.EventType;
-import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 
 public class WebSocketRunner implements BroadcastListener {
     private static final int MAX_TRIES = 10;
@@ -175,7 +174,7 @@ public class WebSocketRunner implements BroadcastListener {
 
         } else if (event == EventType.UPDATED && ManagerApiFactory.isWebSocketNotifications(mc)) {
 
-            ApplianceManagerConnectorElement oldMC = this.webSocketConnections.get(mc.getId()).getMc();
+            ApplianceManagerConnector oldMC = this.webSocketConnections.get(mc.getId()).getMc();
 
             // Close and open a new web socket connection only if the IP/APIKey has updated of the given MC
             if (!oldMC.getIpAddress().equals(mc.getIpAddress()) || !oldMC.getApiKey().equals(mc.getApiKey())) {

@@ -19,6 +19,7 @@ package org.osc.core.broker.util;
 import java.net.URI;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -45,13 +46,13 @@ import com.rabbitmq.client.ShutdownSignalException;
 public class VirtualizationConnectorUtil {
 
 	private static final Logger LOG = Logger.getLogger(VirtualizationConnectorUtil.class);
-	 
+
 	 private VimUtils vimUtils = null;
 	 private SslCertificateResolver sslCertificateResolver = null;
 	 private OsRabbitMQClient rabbitClient = null;
-	 private Endpoint endPoint = null; 
+	 private Endpoint endPoint = null;
 	 private JCloudKeyStone keystoneAPi = null;
-	 
+
 	 public void setVimUtils(VimUtils vimUtils) {
 			this.vimUtils = vimUtils;
 		}
@@ -65,11 +66,11 @@ public class VirtualizationConnectorUtil {
     public void checkVmwareConnection(DryRunRequest<VirtualizationConnectorDto> request,
                                              VirtualizationConnector vc) throws Exception, ErrorTypeException, SslCertificatesExtendedException {
         if (!request.isSkipAllDryRun()) {
-            
-        	if(sslCertificateResolver == null) {
-        		sslCertificateResolver = new SslCertificateResolver();                
+
+        	if(this.sslCertificateResolver == null) {
+        		this.sslCertificateResolver = new SslCertificateResolver();
         	}
-        	
+
         	ErrorTypeException errorTypeException = null;
             // Check Connectivity with NSX if rest exception is not to be ignored
             if (!request.isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION)) {
@@ -79,30 +80,30 @@ public class VirtualizationConnectorUtil {
                 } catch (HttpException exception) {
                 	if(exception.getSatus() == null){
                         URL url = new URL(exception.getResourcePath());
-                		sslCertificateResolver.fetchCertificatesFromURL(url, "nsx");
+                		this.sslCertificateResolver.fetchCertificatesFromURL(url, "nsx");
                 	}
                     LOG.warn("Rest Exception encountered when trying to add NSX info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
                     errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
                 }
             }
-            
+
             // Check Connectivity with vCenter
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
                 try {
-                    if(vimUtils == null) {
-                    	vimUtils = new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(), request.getDto().getProviderPassword());
+                    if(this.vimUtils == null) {
+                    	this.vimUtils = new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(), request.getDto().getProviderPassword());
                     }
                 } catch (RemoteException remoteException) {
-                    sslCertificateResolver.fetchCertificatesFromURL(VimUtils.getServiceURL(request.getDto().getProviderIP()), "vmware");
+                    this.sslCertificateResolver.fetchCertificatesFromURL(VimUtils.getServiceURL(request.getDto().getProviderIP()), "vmware");
                     LOG.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
                     errorTypeException = new ErrorTypeException(remoteException, ErrorType.PROVIDER_EXCEPTION);
                 }
             }
 
-            if (!sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
-                throw new SslCertificatesExtendedException(errorTypeException, sslCertificateResolver.getCertificateResolverModels());
+            if (!this.sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
+                throw new SslCertificatesExtendedException(errorTypeException, this.sslCertificateResolver.getCertificateResolverModels());
             } else if (errorTypeException != null) {
                 throw errorTypeException;
             }
@@ -119,8 +120,8 @@ public class VirtualizationConnectorUtil {
     public void checkOpenstackConnection(DryRunRequest<VirtualizationConnectorDto> request,
                                                 VirtualizationConnector vc) throws Exception, ErrorTypeException, SslCertificatesExtendedException {
         if (!request.isSkipAllDryRun()) {
-        	if(sslCertificateResolver == null) {
-        		sslCertificateResolver = new SslCertificateResolver();                
+        	if(this.sslCertificateResolver == null) {
+        		this.sslCertificateResolver = new SslCertificateResolver();
         	}
         	ErrorTypeException errorTypeException = null;
             if (request.getDto().isControllerDefined() && !request.isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION)) {
@@ -131,10 +132,10 @@ public class VirtualizationConnectorUtil {
                     }
                 } catch (Exception e) {
                     VirtualizationConnectorDto vcDto = request.getDto();
-                    boolean isHttps = VirtualizationConnector.isHttps(vcDto.getProviderAttributes());
+                    boolean isHttps = isHttps(vcDto.getProviderAttributes());
                     if (isHttps && StringUtils.isNotEmpty(request.getDto().getControllerIP())) {
                         URI uri = new URI("https", request.getDto().getControllerIP(), null, null);
-                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstack");
+                        this.sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstack");
                     }
                     LOG.warn("Exception encountered when trying to add SDN Controller info to Virtualization Connector, allowing user to either ignore or correct issue");
                     errorTypeException = new ErrorTypeException(e, ErrorType.CONTROLLER_EXCEPTION);
@@ -142,44 +143,44 @@ public class VirtualizationConnectorUtil {
             }
             // Check Connectivity with Key stone if https response exception is not to be ignored
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
-                
+
                 try {
                     VirtualizationConnectorDto vcDto = request.getDto();
-                    boolean isHttps = VirtualizationConnector.isHttps(vcDto.getProviderAttributes());
-                    
-                    if(endPoint == null) {
-                    	endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
-                    
+                    boolean isHttps = isHttps(vcDto.getProviderAttributes());
+
+                    if(this.endPoint == null) {
+                    	this.endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
+
                             vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, new SslContextProvider().getSSLContext());
                     }
-                    if(keystoneAPi == null) {
-                    	keystoneAPi = new JCloudKeyStone(endPoint);
+                    if(this.keystoneAPi == null) {
+                    	this.keystoneAPi = new JCloudKeyStone(this.endPoint);
                     }
-                    keystoneAPi.listTenants();
+                    this.keystoneAPi.listTenants();
 
                 } catch (Exception exception) {
                     VirtualizationConnectorDto vcDto = request.getDto();
-                    boolean isHttps = VirtualizationConnector.isHttps(vcDto.getProviderAttributes());
+                    boolean isHttps = isHttps(vcDto.getProviderAttributes());
                     if (isHttps) {
                         URI uri = new URI("https", vcDto.getProviderIP(), null, null);
-                        sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstackkeystone");
+                        this.sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstackkeystone");
                     }
                     LOG.warn("Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
                     errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
                 } finally {
-                    if (keystoneAPi != null) {
-                        keystoneAPi.close();
+                    if (this.keystoneAPi != null) {
+                        this.keystoneAPi.close();
                     }
                 }
             }
 
             if (!request.isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION)) {
-                 
-                if( rabbitClient == null ) {
-                	rabbitClient = new OsRabbitMQClient(vc);
+
+                if( this.rabbitClient == null ) {
+                	this.rabbitClient = new OsRabbitMQClient(vc);
                 }
                 try {
-                    rabbitClient.testConnection();
+                    this.rabbitClient.testConnection();
                 } catch (ShutdownSignalException shutdownException) {
                     // If its an existing VC which we are connected to, then this exception is expected
                     if (vc.getId() != null) {
@@ -193,19 +194,25 @@ public class VirtualizationConnectorUtil {
                         errorTypeException = new ErrorTypeException(shutdownException, ErrorType.RABBITMQ_EXCEPTION);
                     }
                 } catch (Throwable e) {
-                    URI uri = new URI("https", null, rabbitClient.getServerIP(), rabbitClient.getPort(), null, null, null);
-                    sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "rabbitmq");
+                    URI uri = new URI("https", null, this.rabbitClient.getServerIP(), this.rabbitClient.getPort(), null, null, null);
+                    this.sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "rabbitmq");
                     LOG.warn("Exception encountered when trying to connect to RabbitMQ, allowing user to either ignore or correct issue");
                     errorTypeException = new ErrorTypeException(e, ErrorType.RABBITMQ_EXCEPTION);
                 }
             }
 
-            if (!sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
-                throw new SslCertificatesExtendedException(errorTypeException, sslCertificateResolver.getCertificateResolverModels());
+            if (!this.sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
+                throw new SslCertificatesExtendedException(errorTypeException, this.sslCertificateResolver.getCertificateResolverModels());
             } else if (errorTypeException != null) {
                 throw errorTypeException;
             }
         }
+    }
+
+    private static boolean isHttps(Map<String, String> attributes) {
+        String httpsValue = attributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS);
+
+        return httpsValue != null && httpsValue.equals(Boolean.TRUE.toString());
     }
 
 }

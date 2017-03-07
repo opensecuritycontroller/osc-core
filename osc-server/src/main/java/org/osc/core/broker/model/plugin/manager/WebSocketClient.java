@@ -18,6 +18,7 @@ package org.osc.core.broker.model.plugin.manager;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 
 import javax.websocket.ClientEndpointConfig;
@@ -39,7 +40,6 @@ import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.exception.ClientResponseNotOkException;
 import org.osc.core.rest.client.exception.RestClientException;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
-import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 
 public class WebSocketClient {
 
@@ -61,7 +61,7 @@ public class WebSocketClient {
     private final ReconnectHandler reconnectHandler = getReconnecHandler();
     private Thread keepAliveThread;
 
-    public ApplianceManagerConnectorElement getMc() {
+    public ApplianceManagerConnector getMc() {
         return this.mc;
     }
 
@@ -211,7 +211,7 @@ public class WebSocketClient {
         this.keepAliveThread.interrupt();
     }
 
-    private String initURI(ApplianceManagerConnectorElement mc, int port, String resourePath, boolean isHttps) {
+    private String initURI(ApplianceManagerConnector mc, int port, String resourePath, boolean isHttps) {
         String uri;
         if (isHttps) {
             uri = "wss://";
