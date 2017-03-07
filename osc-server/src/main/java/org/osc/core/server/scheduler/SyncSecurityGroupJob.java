@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.rest.server.VmidcAuthFilter;
@@ -56,7 +57,7 @@ public class SyncSecurityGroupJob implements Job {
             tx.commit();
 
             for (final SecurityGroup sg : sgs) {
-                if (sg.getVirtualizationConnector().isVmware()) {
+                if (sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
                     continue;
                 }
                 Thread sgSync = new Thread(new Runnable() {

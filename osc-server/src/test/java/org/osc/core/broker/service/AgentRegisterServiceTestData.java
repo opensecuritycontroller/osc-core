@@ -19,16 +19,17 @@ package org.osc.core.broker.service;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.rest.client.nsx.model.Agent;
 import org.osc.core.broker.rest.client.nsx.model.Agent.AllocatedIpAddress;
 import org.osc.core.broker.rest.client.nsx.model.Agent.HostInfo;
 import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 import org.osc.core.rest.client.agent.model.output.AgentDpaInfo;
+import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.VersionUtil;
 import org.osc.core.util.encryption.EncryptionException;
 
@@ -364,7 +365,7 @@ class AgentRegisterServiceTestData {
         dai.setNsxAgentId(nsxAgentId);
         dai.setDiscovered(isDiscovered);
         dai.setInspectionReady(isInspectionReady);
-        dai.setNewConsolePassword(consolePassword);
+        dai.setNewConsolePassword(EncryptionUtil.encryptAESCTR(consolePassword));
         if (includeDeploymentSpec) {
             DeploymentSpec ds = new DeploymentSpec();
             dai.setDeploymentSpec(ds);
@@ -429,7 +430,7 @@ class AgentRegisterServiceTestData {
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
         mc.setIpAddress("1.1.1.1");
         mc.setPublicKey(new byte[3]);
-        mc.setManagerType(ManagerType.NSM);
+        mc.setManagerType(ManagerType.NSM.getValue());
 
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setVirtualizationType(virtualizationType);

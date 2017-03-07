@@ -43,13 +43,13 @@ import java.util.ArrayList;
 public class VirtualizationConnectorUtil {
 
 	private static final Logger LOG = Logger.getLogger(VirtualizationConnectorUtil.class);
-	 
+
 	 private VimUtils vimUtils = null;
 	 private X509TrustManagerFactory managerFactory = null;
 	 private OsRabbitMQClient rabbitClient = null;
-	 private Endpoint endPoint = null; 
+	 private Endpoint endPoint = null;
 	 private JCloudKeyStone keystoneAPi = null;
-	 
+
 	 public void setVimUtils(VimUtils vimUtils) {
 			this.vimUtils = vimUtils;
 		}
@@ -84,7 +84,7 @@ public class VirtualizationConnectorUtil {
                             "allowing user to either ignore or correct issue.");
                 }
             }
-            
+
             // Check Connectivity with vCenter
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "vmware");

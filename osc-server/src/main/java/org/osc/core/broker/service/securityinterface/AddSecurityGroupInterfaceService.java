@@ -18,6 +18,7 @@ package org.osc.core.broker.service.securityinterface;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
+import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -40,7 +41,7 @@ BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJo
                 this.vs,
                 null,
                 null,
-                dto.getFailurePolicyType(),
+                FailurePolicyType.valueOf(dto.getFailurePolicyType().name()),
                 0L);
 
         SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, this.policy, SecurityGroupInterface.ISC_TAG_PREFIX);

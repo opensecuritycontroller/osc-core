@@ -26,6 +26,7 @@ import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -159,7 +160,8 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
 
                 VirtualSystem newVs = new VirtualSystem(da);
 
-                newVs.setEncapsulationType(vsDto.getEncapsulationType());
+                newVs.setEncapsulationType(TagEncapsulationType.valueOf(
+                        vsDto.getEncapsulationType().name()));
                 newVs.setApplianceSoftwareVersion(av);
                 newVs.setDomain(domain);
                 newVs.setVirtualizationConnector(vc);

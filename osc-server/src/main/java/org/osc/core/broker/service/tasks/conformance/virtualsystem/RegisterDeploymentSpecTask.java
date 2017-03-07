@@ -24,8 +24,8 @@ import org.osc.core.broker.job.TaskInput;
 import org.osc.core.broker.job.TaskOutput;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -59,7 +59,8 @@ public class RegisterDeploymentSpecTask extends TransactionalTask {
 
         this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
         this.deploymentSpecId = createDeploymentSpec(this.version);
-        this.vs.getNsxDeploymentSpecIds().put(this.version, this.deploymentSpecId);
+        this.vs.getNsxDeploymentSpecIds().put(this.version,
+                this.deploymentSpecId);
         EntityManager.update(session, this.vs);
     }
 

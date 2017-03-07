@@ -25,6 +25,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.osc.core.broker.job.JobState;
+import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
@@ -49,7 +51,7 @@ public class ApplianceManagerConnectorEntityMgr {
         // Transform from dto to entity
         mc.setId(dto.getId());
         mc.setName(dto.getName());
-        mc.setManagerType(dto.getManagerType());
+        mc.setManagerType(dto.getManagerType().getValue());
         mc.setServiceType(ManagerApiFactory.createApplianceManagerApi(dto.getManagerType()).getServiceName());
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
@@ -63,13 +65,13 @@ public class ApplianceManagerConnectorEntityMgr {
         // transform from entity to dto
         dto.setId(mc.getId());
         dto.setName(mc.getName());
-        dto.setManagerType(mc.getManagerType());
+        dto.setManagerType(ManagerType.fromText(mc.getManagerType()));
         dto.setIpAddress(mc.getIpAddress());
         dto.setUsername(mc.getUsername());
         dto.setPassword(EncryptionUtil.decryptAESCTR(mc.getPassword()));
         if (mc.getLastJob() != null) {
-            dto.setLastJobStatus(mc.getLastJob().getStatus());
-            dto.setLastJobState(mc.getLastJob().getState());
+            dto.setLastJobStatus(JobStatus.valueOf(mc.getLastJob().getStatus().name()));
+            dto.setLastJobState(JobState.valueOf(mc.getLastJob().getState().name()));
             dto.setLastJobId(mc.getLastJob().getId());
         }
         dto.setApiKey(mc.getApiKey());

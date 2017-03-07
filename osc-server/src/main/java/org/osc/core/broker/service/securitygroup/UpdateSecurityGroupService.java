@@ -70,7 +70,7 @@ public class UpdateSecurityGroupService extends
             Iterator<SecurityGroupMember> sgMemberEntityIterator = securityGroupMembers.iterator();
             while (sgMemberEntityIterator.hasNext()) {
                 SecurityGroupMember sgMemberEntity = sgMemberEntityIterator.next();
-                String entityOpenstackId = sgMemberEntity.getMemberOpenstackId();
+                String entityOpenstackId = getMemberOpenstackId(sgMemberEntity);
                 boolean isMemberSelected = selectedMemberOsId.contains(entityOpenstackId);
                 if (!isMemberSelected) {
                     log.info("Removing Member: " + sgMemberEntity.getMemberName());
@@ -124,6 +124,19 @@ public class UpdateSecurityGroupService extends
                     "Invalid request. Cannot change the Virtualization Connector a Security Group is associated with.");
         }
 
+    }
+
+    private String getMemberOpenstackId(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        switch (sgm.getType()) {
+        case VM:
+            return sgm.getVm().getOpenstackId();
+        case NETWORK:
+            return sgm.getNetwork().getOpenstackId();
+        case SUBNET:
+            return sgm.getSubnet().getOpenstackId();
+        default:
+            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
+        }
     }
 
 }

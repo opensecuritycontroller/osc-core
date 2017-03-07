@@ -25,6 +25,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -86,7 +87,7 @@ class VmPortHookRemoveTask extends TransactionalTask {
                     portGroup.setPortGroupId(portGroupId);
                     controller.removeInspectionHook(portGroup, new DefaultInspectionPort(ingressPort, egressPort));
                 } else {
-                    controller.removeInspectionHook(this.vmPort, new DefaultInspectionPort(ingressPort, egressPort));
+                    controller.removeInspectionHook(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort));
                 }
             }
             this.vmPort.removeDai(this.dai);

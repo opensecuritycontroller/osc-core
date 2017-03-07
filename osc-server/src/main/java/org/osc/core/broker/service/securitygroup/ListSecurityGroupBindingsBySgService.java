@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
@@ -59,7 +60,7 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
             vsSet.remove(vs);
             VirtualSystemPolicyBindingDto virtualSystemBindingDto = new VirtualSystemPolicyBindingDto(vs.getId(), vs
                     .getDistributedAppliance().getName(), sgInterface.getMgrPolicy() == null ? null : sgInterface.getMgrPolicy().getId(),
-                            sgInterface.getFailurePolicyType(),
+                            FailurePolicyType.valueOf(sgInterface.getFailurePolicyType().name()),
                             sgInterface.getOrder());
             virtualSystemBindingDto.setMarkedForDeletion(sgInterface.getMarkedForDeletion());
             virtualSystemBindingDto.setBinded(true);
@@ -76,7 +77,7 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
         }
 
         // Other available Bindings
-        if (!this.sg.getVirtualizationConnector().isVmware()) {
+        if (this.sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
             for (VirtualSystem vs : vsSet) {
                 // Only allow binding to non-deleted services
                 if (!vs.getMarkedForDeletion()) {
@@ -119,8 +120,8 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");
         }
 
-        if (this.sg.getVirtualizationConnector().getControllerType().equals(ControllerType.NONE)
-                && !this.sg.getVirtualizationConnector().isVmware()) {
+        if (this.sg.getVirtualizationConnector().getControllerType().equals(ControllerType.NONE.getValue())
+                && this.sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
             throw new ActionNotSupportedException(
                     "Invalid Action. Controller is not defined for this Virtualization Connector.");
         }

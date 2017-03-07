@@ -27,6 +27,7 @@ import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
@@ -108,7 +109,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         VirtualizationConnector vc = this.vs.getVirtualizationConnector();
         UnlockObjectTask vcUnlockTask = LockUtil.lockVC(vc, LockType.READ_LOCK);
 
-        if (vc.getVirtualizationType().isVmware()) {
+        if (vc.getVirtualizationType() == VirtualizationType.VMWARE) {
             if (this.vs.getNsxServiceManagerId() != null) {
                 tg.appendTask(new UnregisterServiceManagerCallbackTask(this.vs));
             }
@@ -128,7 +129,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
             tg.appendTask(new ValidateNsxAgentsTask(this.vs));
 
-        } else if (vc.getVirtualizationType().isOpenstack()) {
+        } else if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
             for (DeploymentSpec ds : this.vs.getDeploymentSpecs()) {
                 Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
                 tg.appendTask(new DSConformanceCheckMetaTask(ds, endPoint));
@@ -153,7 +154,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         TaskGraph tg = new TaskGraph();
         VirtualizationConnector vc = this.vs.getVirtualizationConnector();
         UnlockObjectTask vcUnlockTask = LockUtil.lockVC(vc, LockType.READ_LOCK);
-        if (vc.getVirtualizationType().isVmware()) {
+        if (vc.getVirtualizationType() == VirtualizationType.VMWARE) {
 
             // Sync service manager
             if (this.vs.getNsxServiceManagerId() == null) {
@@ -197,7 +198,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
             tg.appendTask(new ValidateNsxAgentsTask(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
-        } else if (vc.getVirtualizationType().isOpenstack()) {
+        } else if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
 
             // Conformance of Deployment Specs
             for (DeploymentSpec ds : this.vs.getDeploymentSpecs()) {

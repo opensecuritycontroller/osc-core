@@ -16,7 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.*;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.APPLIANCE_ID_EXISTING;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_VC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DOMAIN_ID_VALID_NAME;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.MC_ID_VALID_MC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.SW_VERSION_EXISTING_VC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_OPENSTACK;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_NAME_OPENSTACK;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.daVcAlreadyExistsDto;
 
 import org.hibernate.Session;
 import org.junit.Rule;
@@ -29,13 +36,12 @@ import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
-import org.osc.core.broker.service.dto.DistributedApplianceDtoValidator;
 import org.osc.core.broker.util.SessionStub;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.powermock.api.mockito.PowerMockito;
@@ -79,7 +85,7 @@ public class DistributedApplianceDtoValidatorBaseTest {
 
         ApplianceManagerConnector mcPolicyMappingSupported = new ApplianceManagerConnector();
         ManagerType mgrTypePolicyMappingSupported = ManagerType.NSM;
-        mcPolicyMappingSupported.setManagerType(mgrTypePolicyMappingSupported);
+        mcPolicyMappingSupported.setManagerType(mgrTypePolicyMappingSupported.getValue());
 
         Mockito.when(this.sessionMock.get(Appliance.class, APPLIANCE_ID_EXISTING)).thenReturn(new Appliance());
         Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_VALID_MC)).thenReturn(mcPolicyMappingSupported);
@@ -99,5 +105,6 @@ public class DistributedApplianceDtoValidatorBaseTest {
 
         PowerMockito.mockStatic(ManagerApiFactory.class);
         Mockito.when(ManagerApiFactory.createApplianceManagerApi(mgrTypePolicyMappingSupported)).thenReturn(applianceMgrPolicyMappingSupported);
+        Mockito.when(ManagerApiFactory.createApplianceManagerApi(mgrTypePolicyMappingSupported.getValue())).thenReturn(applianceMgrPolicyMappingSupported);
     }
 }

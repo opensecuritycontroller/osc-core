@@ -117,7 +117,7 @@ public class RabbitMQRunner implements BroadcastListener {
 
     private void updateVCNotificationThreadMap(VirtualizationConnector vc, EventType event) throws Exception {
         if (event == EventType.ADDED) {
-            if (!vc.getVirtualizationType().isOpenstack()) {
+            if (vc.getVirtualizationType() != org.osc.core.broker.model.entities.appliance.VirtualizationType.OPENSTACK) {
                 return;
             }
 

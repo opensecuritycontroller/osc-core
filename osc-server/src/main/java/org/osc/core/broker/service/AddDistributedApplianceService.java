@@ -24,6 +24,7 @@ import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
+import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
@@ -120,7 +121,11 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, AddDistributedApplianceR
             vs.setApplianceSoftwareVersion(av);
             vs.setDomain(domain);
             vs.setVirtualizationConnector(vc);
-            vs.setEncapsulationType(vsDto.getEncapsulationType());
+            org.osc.sdk.controller.TagEncapsulationType encapsulationType = vsDto.getEncapsulationType();
+            if(encapsulationType != null) {
+                vs.setEncapsulationType(TagEncapsulationType.valueOf(
+                    encapsulationType.name()));
+            }
             // generate key store and persist it as byte array in db
             vs.setKeyStore(PKIUtil.generateKeyStore());
             vsList.add(vs);

@@ -16,14 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.jcloud;
 
+import javax.net.ssl.SSLContext;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
-
-import javax.net.ssl.SSLContext;
 
 public class Endpoint {
 
@@ -49,7 +50,7 @@ public class Endpoint {
         this.user = vc.getProviderUsername();
         this.password = EncryptionUtil.decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
-        this.sslContext = vc.getSslContext();
+        this.sslContext = new SslContextProvider().getSSLContext();
     }
 
     public Endpoint(DeploymentSpec ds) throws EncryptionException {
@@ -119,20 +120,20 @@ public class Endpoint {
         Endpoint other = (Endpoint) object;
 
         return new EqualsBuilder()
-                .append(this.getEndPointIP(), other.getEndPointIP())
-                .append(this.getTenant(), other.getTenant())
-                .append(this.getUser(), other.getUser())
-                .append(this.getPassword(), other.getPassword())
+                .append(getEndPointIP(), other.getEndPointIP())
+                .append(getTenant(), other.getTenant())
+                .append(getUser(), other.getUser())
+                .append(getPassword(), other.getPassword())
                 .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder()
-                .append(this.getEndPointIP())
-                .append(this.getTenant())
-                .append(this.getUser())
-                .append(this.getPassword())
+                .append(getEndPointIP())
+                .append(getTenant())
+                .append(getUser())
+                .append(getPassword())
                 .toHashCode();
     }
 }

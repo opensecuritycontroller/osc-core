@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.persistence;
 
 import java.util.List;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
@@ -26,6 +27,7 @@ import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
+import org.osc.sdk.controller.FailurePolicyType;
 
 public class SecurityGroupInterfaceEntityMgr {
 
@@ -51,7 +53,8 @@ public class SecurityGroupInterfaceEntityMgr {
         dto.setIsUserConfigurable(sgi.isUserConfigurable());
         dto.setSecurityGroupId(sgi.getSecurityGroup() != null ? sgi.getSecurityGroup().getId() : null);
         dto.setSecurityGroupName(sgi.getSecurityGroup() != null ? sgi.getSecurityGroup().getName() : null);
-        dto.setFailurePolicyType(sgi.getFailurePolicyType());
+        dto.setFailurePolicyType(FailurePolicyType.valueOf(
+                sgi.getFailurePolicyType().name()));
         dto.setMarkForDeletion(sgi.getMarkedForDeletion());
         dto.setOrder(sgi.getOrder());
     }

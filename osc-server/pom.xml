@@ -121,6 +121,12 @@
 
 		<dependency>
 			<groupId>org.osc.core</groupId>
+			<artifactId>osc-domain</artifactId>
+			<version>1.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.osc.core</groupId>
 			<artifactId>osc-common</artifactId>
 			<version>1.0</version>
 		</dependency>

@@ -48,11 +48,11 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.internal.matchers.InstanceOf;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
@@ -130,12 +130,12 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         // Image meta data setup
         when(this.imageMetaData.getImageName()).thenReturn(OVF_IMAGE_NAME);
-        when(this.imageMetaData.getVirtualizationType()).thenReturn(VirtualizationType.VMWARE);
+        when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.model.virtualization.VirtualizationType.VMWARE);
         when(this.imageMetaData.getModel()).thenReturn(SOFTWARE_MODEL);
         when(this.imageMetaData.getManagerType()).thenReturn(ManagerType.NSM);
         when(this.imageMetaData.getManagerVersion()).thenReturn(MANAGER_VERSION);
-        when(this.imageMetaData.getVirtualizationType()).thenReturn(VirtualizationType.VMWARE);
-        when(this.imageMetaData.getVmwareVirtualizationVersion()).thenReturn(VmwareSoftwareVersion.VMWARE_V5_5);
+        when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.model.virtualization.VirtualizationType.VMWARE);
+        when(this.imageMetaData.getVmwareVirtualizationVersion()).thenReturn(org.osc.core.broker.model.virtualization.VmwareSoftwareVersion.VMWARE_V5_5);
         when(this.imageMetaData.getVirtualizationVersionString()).thenReturn(VmwareSoftwareVersion.VMWARE_V5_5.toString());
         when(this.imageMetaData.getSoftwareVersion()).thenReturn(SOFTWARE_VERSION);
         when(this.imageMetaData.getImageName()).thenReturn(OVF_IMAGE_NAME);
@@ -152,7 +152,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         // Appliance Mocking
         Appliance mockExistingMatchingAppliance = mock(Appliance.class);
-        when(mockExistingMatchingAppliance.getManagerType()).thenReturn(ManagerType.NSM);
+        when(mockExistingMatchingAppliance.getManagerType()).thenReturn(ManagerType.NSM.getValue());
         when(mockExistingMatchingAppliance.getManagerSoftwareVersion()).thenReturn(MANAGER_VERSION);
         when(mockExistingMatchingAppliance.getId()).thenReturn(APPLIANCE_ID);
 
@@ -186,7 +186,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         ApplianceManagerConnector mcPolicyMappingSupported = new ApplianceManagerConnector();
         ManagerType mgrTypePolicyMappingSupported = ManagerType.NSM;
-        mcPolicyMappingSupported.setManagerType(mgrTypePolicyMappingSupported);
+        mcPolicyMappingSupported.setManagerType(mgrTypePolicyMappingSupported.toString());
         Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_VALID_MC)).thenReturn(mcPolicyMappingSupported);
         ApplianceManagerApi applianceMgrPolicyMappingSupported = Mockito.mock(ApplianceManagerApi.class);
         Mockito.when(applianceMgrPolicyMappingSupported.isPolicyMappingSupported()).thenReturn(true);
@@ -194,6 +194,8 @@ public class ImportApplianceSoftwareVersionServiceTest {
         PowerMockito.mockStatic(ManagerApiFactory.class);
         Mockito.when(ManagerApiFactory.createApplianceManagerApi(mgrTypePolicyMappingSupported))
                 .thenReturn(applianceMgrPolicyMappingSupported);
+        Mockito.when(ManagerApiFactory.createApplianceManagerApi(mgrTypePolicyMappingSupported.getValue()))
+            .thenReturn(applianceMgrPolicyMappingSupported);
     }
 
     @Test

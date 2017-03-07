@@ -24,10 +24,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.joda.time.DateTime;
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
-import org.osc.core.broker.job.TaskState;
-import org.osc.core.broker.job.TaskStatus;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.model.entities.events.Alarm;
@@ -35,7 +31,11 @@ import org.osc.core.broker.model.entities.events.AlarmAction;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.Severity;
 import org.osc.core.broker.model.entities.job.JobRecord;
+import org.osc.core.broker.model.entities.job.JobState;
+import org.osc.core.broker.model.entities.job.JobStatus;
 import org.osc.core.broker.model.entities.job.TaskRecord;
+import org.osc.core.broker.model.entities.job.TaskState;
+import org.osc.core.broker.model.entities.job.TaskStatus;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.VmidcAuthFilter;
@@ -165,7 +165,7 @@ public class DatabaseUtils {
                     for (TaskRecord task : uncompletedTasks) {
                         task.setState(TaskState.COMPLETED);
                         task.setStatus(TaskStatus.ABORTED);
-                        task.setCompletedTimestamp(new DateTime());
+                        task.setCompletedTimestamp(new DateTime().toDate());
                     }
 
                     List<JobRecord> uncompletedJobs = new JobEntityManager().getUncompletedJobs(session);

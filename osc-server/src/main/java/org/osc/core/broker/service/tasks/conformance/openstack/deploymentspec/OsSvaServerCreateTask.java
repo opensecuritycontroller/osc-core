@@ -133,7 +133,12 @@ class OsSvaServerCreateTask extends TransactionalTask {
                         ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),
                         sgReference.getSgRefName());
             }
-            this.dai.updateDaiOpenstackSvaInfo(createdServer);
+            this.dai.updateDaiOpenstackSvaInfo(createdServer.getServerId(),
+                    createdServer.getIngressInspectionMacAddr(),
+                    createdServer.getIngressInspectionPortId(),
+                    createdServer.getEgressInspectionMacAddr(),
+                    createdServer.getEgressInspectionPortId()
+                    );
             // Add new server ID to VM notification listener for this DS
             OsDeploymentSpecNotificationRunner.addSVAIdToListener(this.dai.getDeploymentSpec().getId(),
                     createdServer.getServerId());

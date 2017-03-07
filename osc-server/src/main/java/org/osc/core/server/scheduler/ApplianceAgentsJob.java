@@ -16,9 +16,9 @@
  *******************************************************************************/
 package org.osc.core.server.scheduler;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -27,6 +27,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -63,7 +64,10 @@ public class ApplianceAgentsJob implements Job {
                     // This method will be remove from the API and made as an appropriate OSGi service property as part of another
                     // user story to come soon.
                     if (ManagerApiFactory.createApplianceManagerApi(vs).isAgentManaged()) {
-                        List<ManagerDeviceMemberStatusElement> agentElems = agentApi.getFullStatus(new ArrayList<>(vs.getDistributedApplianceInstances()));
+                        List<ManagerDeviceMemberStatusElement> agentElems = agentApi.getFullStatus(
+                                vs.getDistributedApplianceInstances().stream()
+                                    .map(DistributedApplianceInstanceElementImpl::new)
+                                    .collect(Collectors.toList()));
                         for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
                             getAgentFullStatus(dai, agentElems);
                         }
