@@ -39,6 +39,7 @@ import org.osc.sdk.sdn.exception.HttpException;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class VirtualizationConnectorUtil {
 
@@ -144,7 +145,7 @@ public class VirtualizationConnectorUtil {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstackkeystone");
                 try {
                     VirtualizationConnectorDto vcDto = request.getDto();
-                    boolean isHttps = VirtualizationConnector.isHttps(vcDto.getProviderAttributes());
+                    boolean isHttps = isHttps(vcDto.getProviderAttributes());
                     
                     if(this.endPoint == null) {
                         this.endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
@@ -198,6 +199,11 @@ public class VirtualizationConnectorUtil {
                 throw errorTypeException;
             }
         }
+    }
+
+    private static boolean isHttps(Map<String, String> attributes) {
+        return attributes.containsKey(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS) &&
+                String.valueOf(true).equals(attributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS));
     }
 
     private void initSSLCertificatesListener(X509TrustManagerFactory managerFactory,
