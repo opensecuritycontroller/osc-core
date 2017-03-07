@@ -46,6 +46,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
 
     private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
+    //:TODO combine with vmidckeystore as part of US11664
     private static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
     private static final String TRUSTSTORE_PASSWORD = "abc12345";
     private static final String INTERNAL_KEYSTORE_FILE = "vmidcKeyStore.jks";
@@ -90,7 +91,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
         } catch (CertificateException cx) {
             try {
                 X509Certificate x509Certificate = chain[0];
-                //x509Certificate.checkValidity(); //:TODO uncomment if needed feature
+                //x509Certificate.checkValidity(); //:TODO uncomment if certificate should be checked against expiration
                 long unixTimestamp = Instant.now().getEpochSecond();
                 CertificateResolverModel resolverModel = new CertificateResolverModel(
                         x509Certificate, String.valueOf(unixTimestamp), getSha1Fingerprint(x509Certificate));
@@ -198,7 +199,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
     }
 
     public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
-        if (checkFingerprintNotExist(getSha1Fingerprint(certificate))) {
+        if (fingerprintNotExist(getSha1Fingerprint(certificate))) {
             this.keyStore.setCertificateEntry(newAlias, certificate);
             this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
             reloadTrustManager();
@@ -212,7 +213,7 @@ public class X509TrustManagerFactory implements X509TrustManager {
         return this.keyStore.containsAlias(alias);
     }
 
-    private boolean checkFingerprintNotExist(final String fingerprint) throws Exception {
+    private boolean fingerprintNotExist(final String fingerprint) throws Exception {
         List<CertificateBasicInfoModel> certificateInfoList = this.getCertificateInfoList();
         return certificateInfoList.stream().noneMatch(entry -> entry.getSha1Fingerprint().equals(fingerprint));
     }
@@ -243,7 +244,12 @@ public class X509TrustManagerFactory implements X509TrustManager {
         return filename.replaceAll(this.ALNUM_FILTER_REGEX, "");
     }
 
-    public static String getSha1Fingerprint(X509Certificate cert) throws NoSuchAlgorithmException, CertificateEncodingException {
+    public static String getSha1Fingerprint(X509Certificate cert) throws NoSuchAlgorithmException, CertificateEncodingException, IllegalArgumentException {
+
+        if(cert == null) {
+            throw new IllegalArgumentException("Provided certificate is empty");
+        }
+
         MessageDigest md = MessageDigest.getInstance("SHA-1");
         byte[] der = cert.getEncoded();
         md.update(der);
