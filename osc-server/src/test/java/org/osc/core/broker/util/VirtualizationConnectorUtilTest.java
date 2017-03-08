@@ -37,6 +37,7 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
+import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.controller.api.SdnControllerApi;
@@ -63,30 +64,36 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SdnControllerApiFactory.class, RabbitMQRunner.class, EncryptionUtil.class, VirtualizationConnectorUtil.class})
+@PrepareForTest({SdnControllerApiFactory.class, RabbitMQRunner.class, EncryptionUtil.class,
+        VirtualizationConnectorUtil.class, X509TrustManagerFactory.class, SslContextProvider.class})
 @PowerMockIgnore("javax.net.ssl.*")
 public class VirtualizationConnectorUtilTest {
 
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
-	@Mock
-	private OsRabbitMQClient rabbitClient;
+    @Mock
+    private OsRabbitMQClient rabbitClient;
 
-	@Mock
-	private X509TrustManagerFactory trustManagerFactory;
+    @Mock
+    private X509TrustManagerFactory trustManagerFactory;
 
-	@InjectMocks
-	private VirtualizationConnectorUtil util;
+    @Mock
+    private SslContextProvider contextProvider;
 
-	@Before
-	public void testInitialize() throws Exception {
-		MockitoAnnotations.initMocks(this);
+    @InjectMocks
+    private VirtualizationConnectorUtil util;
 
-		  PowerMockito.mockStatic(EncryptionUtil.class);
-	      when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted Passowrd");
-	      when(EncryptionUtil.decryptAESCTR(any(String.class))).thenReturn("Decrypted Passowrd");
-	}
+    @Before
+    public void testInitialize() throws Exception {
+        MockitoAnnotations.initMocks(this);
+
+        PowerMockito.mockStatic(EncryptionUtil.class);
+        when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted Passowrd");
+        when(EncryptionUtil.decryptAESCTR(any(String.class))).thenReturn("Decrypted Passowrd");
+        when(this.contextProvider.getSSLContext()).thenReturn(null);
+        PowerMockito.whenNew(SslContextProvider.class).withAnyArguments().thenReturn(this.contextProvider);
+    }
 
 	@Test
 	public void testVmwareConnection_WithSkipDryRunRequest_ReturnsSuccessful() throws Exception {

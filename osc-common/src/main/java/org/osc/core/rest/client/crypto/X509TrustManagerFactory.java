@@ -42,13 +42,15 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-public class X509TrustManagerFactory implements X509TrustManager {
+public final class X509TrustManagerFactory implements X509TrustManager {
 
     private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
     //:TODO combine with vmidckeystore as part of US11664
+    // vmidctruststore stores public certificates needed to establish SSL connection
     private static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
     private static final String TRUSTSTORE_PASSWORD = "abc12345";
+    // vmidckeystore stores private certificate used by application to enable HTTPS - it's also used to establish connection internally
     private static final String INTERNAL_KEYSTORE_FILE = "vmidcKeyStore.jks";
     private static final String INTERNAL_KEYSTORE_PASSWORD = "abc12345";
     private static final String INTERNAL_KEYSTORE_ALIAS = "vmidckeystore";
