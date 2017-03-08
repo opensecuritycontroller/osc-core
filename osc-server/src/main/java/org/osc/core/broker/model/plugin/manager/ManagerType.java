@@ -16,10 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.manager;
 
-import io.swagger.annotations.ApiModelProperty;
-
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -29,18 +25,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.sdk.manager.element.ManagerTypeElement;
 
-@XmlRootElement(name ="managerType")
+import io.swagger.annotations.ApiModelProperty;
+
+@XmlRootElement(name = "managerType")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ManagerType implements ManagerTypeElement {
-    public final static String NSM_MANAGER_NAME = "NSM";
-    public final static String SMC_MANAGER_NAME = "SMC";
+    public final static ManagerType NSM = new ManagerType("NSM");
+    public final static ManagerType SMC = new ManagerType("SMC");
 
-    private static Set<String> managerTypes = new HashSet<String>(Arrays.asList(NSM_MANAGER_NAME, SMC_MANAGER_NAME));
-
-    public final static ManagerType NSM = ManagerType.fromText("NSM");
-    public final static ManagerType SMC = ManagerType.fromText("SMC");
-
-    @ApiModelProperty(required=true, value="Registered plugin names like NSM, SMC etc")
+    @ApiModelProperty(required = true, value = "Registered plugin names like NSM, SMC etc")
     private final String value;
 
     public ManagerType() {
@@ -51,31 +44,15 @@ public class ManagerType implements ManagerTypeElement {
         this.value = value;
     }
 
-    public static void addTypes(Set<String> managerTypes) {
-        ManagerType.managerTypes.addAll(managerTypes);
-    }
-
-    public static void addType(String managerType) {
-        ManagerType.managerTypes.add(managerType);
-    }
-
-    public static void removeType(String managerType) {
-        ManagerType.managerTypes.remove(managerType);
-    }
-
     public static ManagerType fromText(String text) {
-        if (!managerTypes.contains(text)) {
+        if (!values().contains(text)) {
             throw new IllegalArgumentException("No manager type found for '" + text + "'");
         }
         return new ManagerType(text);
     }
 
     public static Set<String> values() {
-        return managerTypes;
-    }
-
-    public static String valueOf(String value) {
-        return ManagerType.fromText(value).getValue();
+        return ManagerApiFactory.getManagerTypes();
     }
 
     public String getValue() {
