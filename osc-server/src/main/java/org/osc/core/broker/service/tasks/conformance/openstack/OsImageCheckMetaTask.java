@@ -62,7 +62,7 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
     public void executeTransaction(Session session) throws Exception {
         this.tg = new TaskGraph();
 
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+        this.vs = session.get(VirtualSystem.class, this.vs.getId());
 
         LOG.info("Checking VS " + this.vs.getName() + " has the corresponding image uploaded in glance");
 
@@ -78,26 +78,26 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
 
         try {
             Set<OsImageReference> imageReferences = this.vs.getOsImageReference();
-            boolean uploadImage = true;
+            boolean uploadImage = false;
 
             for (OsImageReference imageReference : imageReferences) {
                 if (imageReference.getRegion().equals(this.region)) {
                     ImageDetails image = this.glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
                     if (image == null || image != null && image.getStatus() != Status.ACTIVE) {
                         this.tg.appendTask(new DeleteImageReferenceTask(imageReference, this.vs));
+                        uploadImage = true;
                     } else if (!image.getName().equals(expectedGlanceImageName)) {
                         // Assume image name is changed, means the version is upgraded since image name contains version
                         // information. Delete existing image and create new image.
                         this.tg.appendTask(new DeleteImageFromGlanceTask(this.region, imageReference, this.osEndPoint));
-                    } else {
-                        uploadImage = false;
+                        uploadImage = true;
                     }
                 }
             }
             if (uploadImage) {
                 this.tg.appendTask(new UploadImageToGlanceTask(this.vs, this.region, expectedGlanceImageName,
                         applianceSoftwareVersion, this.osEndPoint), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-            } else {
+            } else if (!imageReferences.isEmpty()){
                 this.tg.appendTask(new UpdateVsWithImageVersionTask(this.vs));
             }
         } finally {
@@ -107,8 +107,7 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
 
     @Override
     public String getName() {
-        return String.format("Checking Image exists in Glance for Virtual Connector '%s' in Region '%s'", this.vcName,
-                this.region);
+        return "Checking Image exists in Glance for Virtual Connector '" + this.vcName + "' in Region '" + this.region + "'";
     }
 
     @Override

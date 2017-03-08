@@ -35,6 +35,7 @@ public class DeleteImageFromGlanceTask  extends TransactionalTask {
         this.region = region;
         this.osEndPoint = osEndPoint;
         this.imageReference = imageReference;
+        this.name = getName();
     }
 
     @Override
