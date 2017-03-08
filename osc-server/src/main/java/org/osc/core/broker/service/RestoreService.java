@@ -111,7 +111,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
         } catch (Exception ex) {
         	// restore old DB password
         	connectionParams.updatePassword(oldDBPassword);
-        	
+            Server.setInMaintenance(false);
             if (successRename) {
             	newDBFileTemp.delete();
                 originalDBFile.renameTo(newDBFileTemp);
@@ -119,7 +119,6 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
             log.error("Restore (pid:" + ServerUtil.getCurrentPid() + "): Error restoring Database.", ex);
             throw new VmidcException(ex.getMessage());
         } finally {
-        	Server.setInMaintenance(false);
             request.getBkpFile().delete();
             File f = new File("tmp" + File.separator + DATABASE_FILENAME);
             if (f.exists()) {
