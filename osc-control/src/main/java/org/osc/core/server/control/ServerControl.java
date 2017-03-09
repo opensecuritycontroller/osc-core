@@ -33,16 +33,16 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.model.ServerStatusResponse;
-import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
 import org.osc.core.rest.client.VmidcServerRestClient;
-import org.osc.core.rest.client.crypto.SslCertificateResolver;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.core.rest.client.exception.RestClientException;
 import org.osc.core.util.LogUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.util.VersionUtil;
+
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
@@ -293,47 +293,6 @@ public class ServerControl {
     }
 
     private static ServerStatusResponse getServerStatusResponse(VmidcServerRestClient restClient) throws Exception {
-        ServerStatusResponse res;
-        try {
-            res = restClient.getResource("status", ServerStatusResponse.class);
-        } catch (RestClientException e) {
-            if (e.isCredentialError() || e.isConnectException()) {
-                throw e;
-            }
-
-            log.warn("Failed to connect to running server.", e);
-            res = getSslCertificates(restClient, e);
-        }
-        return res;
-    }
-
-    private static ServerStatusResponse getSslCertificates(VmidcServerRestClient restClient, RestClientException e) throws Exception {
-
-        if (e == null) {
-            throw new IllegalArgumentException("Rest client exception is empty");
-        }
-
-        SslCertificateResolver sslCertificateResolver = new SslCertificateResolver();
-
-        if (!sslCertificateResolver.checkExceptionTypeForSSL(e)) {
-            throw e;
-        }
-
-        log.info("Trying to fetch SSL certificate from server");
-
-        String internalAlias = SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS;
-        sslCertificateResolver.fetchCertificatesFromURL(new URL(e.getResourcePath()), internalAlias);
-
-        if (sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
-            throw e;
-        }
-
-        X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
-        for (CertificateResolverModel model : sslCertificateResolver.getCertificateResolverModels()) {
-            trustManagerFactory.addEntry(model.getCertificate(), internalAlias);
-            log.info("Added new certificate with alias: " + internalAlias + " and SHA1: " + model.getSha1());
-        }
-        log.warn("Retrying connection with server");
         return restClient.getResource("status", ServerStatusResponse.class);
     }
 

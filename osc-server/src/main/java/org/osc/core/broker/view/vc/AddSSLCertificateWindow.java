@@ -122,23 +122,15 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
 
     @Override
     public void submitForm() {
-        X509TrustManagerFactory trustManagerFactory = null;
-
-        try {
-            trustManagerFactory = X509TrustManagerFactory.getInstance();
-        } catch (Exception e) {
-            log.error("Cannot initialize trust manager factory", e);
-        }
+        X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
 
         if (trustManagerFactory != null) {
-            String caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_ADDED,
-                    new Date());
+            String caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_ADDED, new Date());
             for (CertificateResolverModel certObj : this.certificateResolverModels) {
                 try {
                     trustManagerFactory.addEntry(certObj.getCertificate(), certObj.getAlias());
                 } catch (Exception e) {
-                    caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FAILED_ADD,
-                            new Date());
+                    caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FAILED_ADD, new Date());
                     log.error("Cannot add new entry in truststore", e);
                 }
             }
@@ -152,5 +144,6 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
     @Override
     public void cancelForm() {
         this.sslCertificateWindowInterface.cancelFormAction();
+        close();
     }
 }
