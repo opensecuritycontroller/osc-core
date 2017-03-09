@@ -28,13 +28,13 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 
 @Entity
@@ -46,8 +46,8 @@ public class ApplianceSoftwareVersion extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "appliance_fk", nullable = false)
-    @ForeignKey(name = "FK_AV_APPLIANCE")
+    @JoinColumn(name = "appliance_fk", nullable = false,
+        foreignKey = @ForeignKey(name = "FK_AV_APPLIANCE"))
     // name our own index
     private Appliance appliance;
 
@@ -82,9 +82,9 @@ public class ApplianceSoftwareVersion extends BaseEntity {
     @ElementCollection(fetch = FetchType.EAGER)
     @Column(name = "encapsulation_type")
     @Enumerated(EnumType.STRING)
-    @ForeignKey(name = "FK_ASV_ASV_ENCAPSULATION")
     @CollectionTable(name = "APPLIANCE_SOFTWARE_VERSION_ENCAPSULATION_TYPE_ATTR",
-            joinColumns = @JoinColumn(name = "appliance_software_version_fk"))
+            joinColumns = @JoinColumn(name = "appliance_software_version_fk"),
+            foreignKey = @ForeignKey(name = "FK_ASV_ASV_ENCAPSULATION"))
     private List<TagEncapsulationType> encapsulationTypes = new ArrayList<TagEncapsulationType>();
 
     @ElementCollection(fetch = FetchType.EAGER)

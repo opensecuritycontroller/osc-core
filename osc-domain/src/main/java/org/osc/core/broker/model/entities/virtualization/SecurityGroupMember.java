@@ -21,12 +21,12 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsProtectionEntity;
@@ -40,8 +40,8 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 public class SecurityGroupMember extends BaseEntity implements Comparable<SecurityGroupMember> {
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "security_group_fk", nullable = false)
-    @ForeignKey(name = "FK_SGM_SG")
+    @JoinColumn(name = "security_group_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_SGM_SG"))
     private SecurityGroup securityGroup;
 
     @Column(name = "member_type", nullable = false)
@@ -49,18 +49,16 @@ public class SecurityGroupMember extends BaseEntity implements Comparable<Securi
     private SecurityGroupMemberType type;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vm_fk")
-    @ForeignKey(name = "FK_SGM_VM")
+    @JoinColumn(name = "vm_fk", foreignKey = @ForeignKey(name = "FK_SGM_VM"))
     private VM vm;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "network_fk")
-    @ForeignKey(name = "FK_SGM_NETWORK")
+    @JoinColumn(name = "network_fk", foreignKey = @ForeignKey(name = "FK_SGM_NETWORK"))
+
     private Network network;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "subnet_fk")
-    @ForeignKey(name = "FK_SGM_SUBNET")
+    @JoinColumn(name = "subnet_fk", foreignKey = @ForeignKey(name = "FK_SGM_SUBNET"))
     private Subnet subnet;
 
     @Column(name = "address")

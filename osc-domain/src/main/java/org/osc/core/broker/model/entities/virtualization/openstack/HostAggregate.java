@@ -19,11 +19,11 @@ package org.osc.core.broker.model.entities.virtualization.openstack;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 
 @SuppressWarnings("serial")
@@ -38,8 +38,8 @@ public class HostAggregate extends BaseEntity {
     private String name;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "ds_fk", nullable = false)
-    @ForeignKey(name = "FK_HOST_AGGREGATE_DS")
+    @JoinColumn(name = "ds_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_HOST_AGGREGATE_DS"))
     private DeploymentSpec deploymentSpec;
 
     public HostAggregate(DeploymentSpec deploymentSpec, String openstackId) {
@@ -68,7 +68,7 @@ public class HostAggregate extends BaseEntity {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void setName(String name) {

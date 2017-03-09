@@ -20,13 +20,13 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 
 @Entity
@@ -40,8 +40,8 @@ public class VirtualSystemMgrFile extends BaseEntity {
     public static final String FILE_TYPE_DATFILE = "dat-sigfile";
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vs_fk", nullable = false)
-    @ForeignKey(name = "FK_VSMF_VS")
+    @JoinColumn(name = "vs_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_VSMF_VS"))
     private VirtualSystem virtualSystem;
 
     @Column(name = "mgr_file")
@@ -69,7 +69,7 @@ public class VirtualSystemMgrFile extends BaseEntity {
     }
 
     public VirtualSystem getVirtualSystem() {
-        return virtualSystem;
+        return this.virtualSystem;
     }
 
     public void setVirtualSystem(VirtualSystem virtualSystem) {
@@ -77,7 +77,7 @@ public class VirtualSystemMgrFile extends BaseEntity {
     }
 
     public byte[] getMgrFile() {
-        return mgrFile;
+        return this.mgrFile;
     }
 
     public void setMgrFile(byte[] mgrFile) {
@@ -85,7 +85,7 @@ public class VirtualSystemMgrFile extends BaseEntity {
     }
 
     public String getFileType() {
-        return fileType;
+        return this.fileType;
     }
 
     public void setFileType(String fileType) {
@@ -93,7 +93,7 @@ public class VirtualSystemMgrFile extends BaseEntity {
     }
 
     public String getLocation() {
-        return location;
+        return this.location;
     }
 
     public void setLocation(String location) {
@@ -101,7 +101,7 @@ public class VirtualSystemMgrFile extends BaseEntity {
     }
 
     public String getProcessFileCmd() {
-        return processFileCmd;
+        return this.processFileCmd;
     }
 
     public void setProcessFileCmd(String processFileCmd) {
@@ -110,8 +110,8 @@ public class VirtualSystemMgrFile extends BaseEntity {
 
     @Override
     public String toString() {
-        return "VirtualSystemMgrFile [virtualSystem=" + virtualSystem + ", mgrType=" + fileType + ", location="
-                + location + ", processFileCmd=" + processFileCmd + ", getId()=" + getId() + "]";
+        return "VirtualSystemMgrFile [virtualSystem=" + this.virtualSystem + ", mgrType=" + this.fileType + ", location="
+                + this.location + ", processFileCmd=" + this.processFileCmd + ", getId()=" + getId() + "]";
     }
 
 }

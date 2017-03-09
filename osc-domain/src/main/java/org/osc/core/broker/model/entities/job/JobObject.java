@@ -22,12 +22,12 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.ObjectType;
 
@@ -39,8 +39,8 @@ public class JobObject extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "job_fk", nullable = false)
-    @ForeignKey(name = "FK_JOB_OBJECT_TASK")
+    @JoinColumn(name = "job_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_JOB_OBJECT_TASK"))
     private JobRecord job;
 
     @Column(name = "name", nullable = false)
