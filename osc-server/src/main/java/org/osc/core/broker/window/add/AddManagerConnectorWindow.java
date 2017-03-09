@@ -208,8 +208,8 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         addRequest.getDto().setApiKey(this.apiKey.getValue().trim());
 
         HashSet<SslCertificateAttr> sslSet = new HashSet<>();
-        if (certificateResolverModelsList != null) {
-            sslSet.addAll(certificateResolverModelsList.stream().map(crm -> new SslCertificateAttr(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()));
+        if (this.certificateResolverModelsList != null) {
+            sslSet.addAll(this.certificateResolverModelsList.stream().map(crm -> new SslCertificateAttr(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()));
         }
         addRequest.getDto().setSslCertificateAttrSet(sslSet);
 
@@ -229,7 +229,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         ViewUtil.showJobNotification(addResponse.getJobId());
     }
 
-    protected void sslAwareHandleException(final Exception originalException) {
+    private void sslAwareHandleException(final Exception originalException) {
         if (originalException instanceof SslCertificatesExtendedException) {
             SslCertificatesExtendedException unknownException = (SslCertificatesExtendedException) originalException;
             ArrayList<CertificateResolverModel> certificateResolverModels = unknownException.getCertificateResolverModels();
@@ -237,7 +237,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
                 ViewUtil.addWindow(new AddSSLCertificateWindow(certificateResolverModels, new AddSSLCertificateWindow.SSLCertificateWindowInterface() {
                     @Override
                     public void submitFormAction(ArrayList<CertificateResolverModel> certificateResolverModels) {
-                        certificateResolverModelsList = certificateResolverModels;
+                        AddManagerConnectorWindow.this.certificateResolverModelsList = certificateResolverModels;
                     }
 
                     @Override
