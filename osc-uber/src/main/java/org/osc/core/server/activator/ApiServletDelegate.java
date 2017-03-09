@@ -24,6 +24,7 @@ import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHIT
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -97,13 +98,14 @@ public class ApiServletDelegate extends Application implements Servlet {
     /** The Jersey REST container */
     private ServletContainer container;
 
-    // override Application.getSingtons() to provide injected references
+    // override Application.getSingletons() to provide injected references
     @Override
     public Set<Object> getSingletons() {
-        return new HashSet<Object>(Arrays.asList(new Object[] { this.alarmApis, this.alertApis, this.applianceApis,
-                this.distributedApplianceApis, this.distributedApplianceInstanceApis, this.jobApis, this.managerApis,
-                this.managerConnectorApis, this.nsmMgrApis, this.nsxApis, this.serverDebugApis, this.serverMgmtApis,
-                this.virtualSystemApis, this.virtualizationConnectorApis }));
+        return Collections.unmodifiableSet(new HashSet<Object>(Arrays.asList(
+                new Object[] { this.alarmApis, this.alertApis, this.applianceApis, this.distributedApplianceApis,
+                        this.distributedApplianceInstanceApis, this.jobApis, this.managerApis,
+                        this.managerConnectorApis, this.nsmMgrApis, this.nsxApis, this.serverDebugApis,
+                        this.serverMgmtApis, this.virtualSystemApis, this.virtualizationConnectorApis })));
     }
 
     @Activate
