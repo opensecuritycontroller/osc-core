@@ -129,9 +129,6 @@ public class SdnControllerApiFactory {
         }
     }
 
-    public static void shutdown() {
-    }
-
     public static Set<String> getControllerTypes() {
         return apiFactoryService.getControllerTypes();
     }

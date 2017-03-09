@@ -55,7 +55,7 @@ public class ControllerType {
         return new ControllerType(text);
     }
 
-    // this is only used from tests
+    /* only used from test {@code VirtualizationConnectorServiceData} */
     public static void addType(String type) {
         controllerTypes.add(type);
     }

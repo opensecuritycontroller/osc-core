@@ -79,9 +79,6 @@ public class ManagerApiFactory {
         }
     }
 
-    public static void shutdown() {
-    }
-
     public static Set<String> getManagerTypes() {
         return apiFactoryService.getManagerTypes();
     }

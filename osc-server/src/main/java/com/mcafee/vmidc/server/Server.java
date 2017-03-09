@@ -366,10 +366,6 @@ public class Server {
         // gracefully closing all RabbitMQ clients before shutting down server
         shutdownRabbitMq();
 
-        // Shutdown Plugin listeners/trackers
-        SdnControllerApiFactory.shutdown();
-        ManagerApiFactory.shutdown();
-
         // Ensure to close database
         HibernateUtil.shutdown();
 

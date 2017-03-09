@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
@@ -48,6 +49,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 public class ApiFactoryServiceImpl implements ApiFactoryService {
 
     private static final String OSC_PLUGIN_NAME = PluginTracker.PROP_PLUGIN_NAME;
+    private final Logger log = Logger.getLogger(ApiFactoryServiceImpl.class);
 
     private Map<String, ApplianceManagerApi> managerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<ApplianceManagerApi>> managerRefs = new ConcurrentHashMap<>();
@@ -74,54 +76,53 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
                 try {
                     tracker.close();
                 } catch (Exception e) {
+                    this.log.debug("Error closing tracker: " + e, e);
                 }
             });
         }
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    void addApplianceManagerApi(ComponentServiceObjects<ApplianceManagerApi> serviceObjs) {
+    private <T> void addApi(ComponentServiceObjects<T> serviceObjs, Map<String, ComponentServiceObjects<T>> refs) {
         Object name = serviceObjs.getServiceReference().getProperty(OSC_PLUGIN_NAME);
         if (name instanceof String) {
-            this.managerRefs.put((String) name, serviceObjs);
+            refs.put((String) name, serviceObjs);
+            this.log.info("add plugin: " + name);
         }
     }
 
-    void removeApplianceManagerApi(ComponentServiceObjects<ApplianceManagerApi> serviceObjs) {
+    private <T> void removeApi(ComponentServiceObjects<T> serviceObjs, Map<String, ComponentServiceObjects<T>> refs) {
         Object name = serviceObjs.getServiceReference().getProperty(OSC_PLUGIN_NAME);
         if (name instanceof String) {
-            this.managerRefs.remove(name);
+            refs.remove(name, serviceObjs);
+            this.log.info("remove plugin: " + name);
         }
+    }
+
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    void addApplianceManagerApi(ComponentServiceObjects<ApplianceManagerApi> serviceObjs) {
+        addApi(serviceObjs, this.managerRefs);
+    }
+
+    void removeApplianceManagerApi(ComponentServiceObjects<ApplianceManagerApi> serviceObjs) {
+        removeApi(serviceObjs, this.managerRefs);
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     void addSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
-        Object name = serviceObjs.getServiceReference().getProperty(OSC_PLUGIN_NAME);
-        if (name instanceof String) {
-            this.sdnControllerRefs.put((String) name, serviceObjs);
-        }
+        addApi(serviceObjs, this.sdnControllerRefs);
     }
 
     void removeSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
-        Object name = serviceObjs.getServiceReference().getProperty(OSC_PLUGIN_NAME);
-        if (name instanceof String) {
-            this.sdnControllerRefs.remove(name);
-        }
+        removeApi(serviceObjs, this.sdnControllerRefs);
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     void addVMwareSdnApi(ComponentServiceObjects<VMwareSdnApi> serviceObjs) {
-        Object name = serviceObjs.getServiceReference().getProperty(OSC_PLUGIN_NAME);
-        if (name instanceof String) {
-            this.vmwareSdnRefs.put((String) name, serviceObjs);
-        }
+        addApi(serviceObjs, this.vmwareSdnRefs);
     }
 
     void removeVMwareSdnApi(ComponentServiceObjects<VMwareSdnApi> serviceObjs) {
-        Object name = serviceObjs.getServiceReference().getProperty(OSC_PLUGIN_NAME);
-        if (name instanceof String) {
-            this.vmwareSdnRefs.remove(name);
-        }
+        addApi(serviceObjs, this.vmwareSdnRefs);
     }
 
     @Override
@@ -168,6 +169,14 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         return autoCloseProxy(serviceObjs, SdnControllerApi.class);
     }
 
+    /**
+     * Create a proxy for an <code>AutoCloseable</code> prototype service, that automatically calls
+     * {@code ServiceObjects#ungetService(Object)} when {@code AutoCloseable#close()} is called.
+     *
+     * @param serviceObjs
+     * @param type
+     * @return
+     */
     private <T extends AutoCloseable> T autoCloseProxy(ComponentServiceObjects<T> serviceObjs, Class<T> type) {
         T service = serviceObjs.getService();
 

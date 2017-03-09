@@ -30,15 +30,63 @@ import org.osgi.annotation.versioning.ConsumerType;
 
 @ConsumerType
 public interface ApiFactoryService {
+    /**
+     * Creates an {@code ApplianceManagerApi} instance for the specified manager type.
+     *
+     * @param managerType
+     * @return
+     * @throws Exception
+     */
     ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception;
 
+    /**
+     * Creates a {@code SdnControllerApi} instance for the specified controller type.
+     *
+     * @param controllerType
+     * @return
+     * @throws Exception
+     */
     SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception;
 
+    /**
+     * Creates a {@code VMwareSdnApi} instance for the specified {@code VirtualizationConnector} type.
+     *
+     * @param vc
+     * @return
+     * @throws VmidcException
+     */
     VMwareSdnApi createVMwareSdnApi(VirtualizationConnector vc) throws VmidcException;
 
+    /**
+     * Gets the set of currently registered manager types.
+     *
+     * @return
+     */
     Set<String> getManagerTypes();
+
+    /**
+     * Gets the set of currently registered controller types.
+     *
+     * @return
+     */
     Set<String> getControllerTypes();
 
+    /**
+     * Creates a </<code>PluginTracker</code> to track installed units and the services that arise from
+     * them. When an unit is installed but has not yet registered any services, a
+     * Plugin is created in the INSTALL_WAIT state. When one or more services
+     * appear, the Plugin transitions to the READY state. If all the services for a
+     * Plugin go away, it transitions back to INSTALL_WAIT. Finally when the
+     * installable unit is removed, the plugin will be removed.
+     *
+     * @param <T>
+     *            The service type registered by the Plugin.
+     *
+     * @param customizer
+     * @param pluginClass
+     * @param pluginType
+     * @return
+     */
     <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
             PluginType pluginType);
 }
