@@ -19,27 +19,27 @@ package org.osc.core.broker.service.alert;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.criterion.Order;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.persistence.AlertEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
 public class ListAlertService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<AlertDto>> {
 
     @Override
-    public ListResponse<AlertDto> exec(BaseRequest<BaseDto> request, Session session) throws Exception {
+    public ListResponse<AlertDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
 
         // Initializing Entity Manager
-        EntityManager<Alert> emgr = new EntityManager<Alert>(Alert.class, session);
+        OSCEntityManager<Alert> emgr = new OSCEntityManager<Alert>(Alert.class, em);
 
         List<AlertDto> alertList = new ArrayList<AlertDto>();
 
-        for (Alert alert : emgr.listAll(new Order[] { Order.desc("createdTimestamp") })) {
+        for (Alert alert : emgr.listAll(false, "createdTimestamp")) {
             AlertDto dto = new AlertDto();
             AlertEntityMgr.fromEntity(alert, dto);
             alertList.add(dto);

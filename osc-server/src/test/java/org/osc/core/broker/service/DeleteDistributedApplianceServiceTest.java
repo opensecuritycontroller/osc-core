@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -76,7 +78,9 @@ public class DeleteDistributedApplianceServiceTest {
     DeleteDistributedApplianceService deleteDistributedApplianceService;
 
     @Mock
-    Session session;
+    EntityManager em;
+    @Mock
+    EntityTransaction tx;
 
     @Mock
     private DeleteDistributedApplianceRequestValidator validatorMock;
@@ -89,6 +93,8 @@ public class DeleteDistributedApplianceServiceTest {
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        Mockito.when(this.em.getTransaction()).thenReturn(this.tx);
 
         VALID_DA_WITH_SYSTEMS.setName("name");
         VirtualizationConnector openStackVirtualizationConnector = new VirtualizationConnector();
@@ -151,7 +157,7 @@ public class DeleteDistributedApplianceServiceTest {
         this.exception.expect(VmidcBrokerValidationException.class);
 
         // Act
-        this.deleteDistributedApplianceService.exec(INVALID_REQUEST, this.session);
+        this.deleteDistributedApplianceService.exec(INVALID_REQUEST, this.em);
     }
 
     @Test
@@ -160,27 +166,27 @@ public class DeleteDistributedApplianceServiceTest {
         this.exception.expect(NullPointerException.class);
 
         // Act
-        this.deleteDistributedApplianceService.exec(UNLOCKABLE_DA_REQUEST, this.session);
+        this.deleteDistributedApplianceService.exec(UNLOCKABLE_DA_REQUEST, this.em);
     }
 
     @Test
     public void testExec_WithForceDeleteRequest_ExpectsSuccess() throws Exception {
         // Act
-        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.exec(VALID_REQUEST_FORCE_DELETE, this.session);
+        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.exec(VALID_REQUEST_FORCE_DELETE, this.em);
 
         // Assert
         Assert.assertEquals("The received JobID in force delete case is different than expected.", JOB_ID, baseJobResponse.getJobId());
-        Mockito.verify(this.session, Mockito.times(0)).beginTransaction();
+        Mockito.verify(this.tx, Mockito.times(0)).begin();
     }
 
     @Test
     public void testExec_WithNonForceDeleteRequestAndValidDA_ExpectsSuccess() throws Exception {
         // Act
-        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.exec(VALID_REQUEST_NOT_FORCE_DELETE, this.session);
+        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.exec(VALID_REQUEST_NOT_FORCE_DELETE, this.em);
 
         // Assert
         Assert.assertEquals("The received JobID in non force delete case is different than expected.", JOB_ID, baseJobResponse.getJobId());
-        Mockito.verify(this.session, Mockito.times(1)).beginTransaction();
+        Mockito.verify(this.tx, Mockito.times(1)).begin();
     }
 
     @Test

@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jclouds.openstack.neutron.v2.domain.Network;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -24,7 +25,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.openstack.request.BaseOpenStackRequest;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.response.ListResponse;
 
 public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<Network>> {
@@ -32,10 +33,10 @@ public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, 
     private ListResponse<Network> response = new ListResponse<Network>();
 
     @Override
-    public ListResponse<Network> exec(BaseOpenStackRequest request, Session session) throws Exception {
+    public ListResponse<Network> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
 
         // Initializing Entity Manager
-        EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();

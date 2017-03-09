@@ -16,15 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securitygroup;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
@@ -34,19 +35,19 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
     private static final Logger LOG = Logger.getLogger(AddSecurityGroupService.class);
 
     @Override
-    public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, Session session) throws Exception,
+    public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, EntityManager em) throws Exception,
     VmidcBrokerValidationException {
 
         SecurityGroupDto dto = request.getDto();
-        validateAndLoad(session, dto);
+        validateAndLoad(em, dto);
         if (dto.isProtectAll()
-                && SecurityGroupEntityMgr.isSecurityGroupExistWithProtectAll(session, dto.getTenantId(),
+                && SecurityGroupEntityMgr.isSecurityGroupExistWithProtectAll(em, dto.getTenantId(),
                         this.vc.getId())) {
             throw new VmidcBrokerValidationException(
                     "Security Group exists with the same Tenant and Selection for this Virtualization Connector.");
         }
 
-        if (SecurityGroupEntityMgr.isSecurityGroupExistWithSameNameAndTenant(session, dto.getName(), dto.getTenantId())) {
+        if (SecurityGroupEntityMgr.isSecurityGroupExistWithSameNameAndTenant(em, dto.getName(), dto.getTenantId())) {
             throw new VmidcBrokerValidationException("Security Group Name: " + dto.getName() + " already exists on the same Tenant.");
         }
 
@@ -61,16 +62,16 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
             LOG.info("Creating security group: " + securityGroup.toString());
-            EntityManager.create(session, securityGroup);
+            OSCEntityManager.create(em, securityGroup);
 
             if (!securityGroup.isProtectAll()) {
                 for (SecurityGroupMemberItemDto securityGroupMemberDto : request.getMembers()) {
                     validate(securityGroupMemberDto);
-                    addSecurityGroupMember(session, securityGroup, securityGroupMemberDto);
+                    addSecurityGroupMember(em, securityGroup, securityGroupMemberDto);
                 }
             }
 
-            EntityManager.update(session, securityGroup);
+            OSCEntityManager.update(em, securityGroup);
 
             commitChanges(true);
 

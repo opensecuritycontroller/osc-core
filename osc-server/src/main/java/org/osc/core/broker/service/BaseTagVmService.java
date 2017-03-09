@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
@@ -40,9 +41,9 @@ abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmRes
     private SecurityTagApi securityTagApi;
 
     @Override
-    public TagVmResponse exec(TagVmRequest request, Session session) throws Exception {
+    public TagVmResponse exec(TagVmRequest request, EntityManager em) throws Exception {
         if (this.validator == null) {
-            this.validator = new TagVmRequestValidator(session);
+            this.validator = new TagVmRequestValidator(em);
         }
 
         DistributedApplianceInstance dai = this.validator.validateAndLoad(request);

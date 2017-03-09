@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -38,13 +39,13 @@ public class DeleteApplianceManagerConnectorService extends
     private static final Logger log = Logger.getLogger(DeleteApplianceManagerConnectorService.class);
 
     @Override
-    public BaseJobResponse exec(BaseIdRequest request, Session session)
+    public BaseJobResponse exec(BaseIdRequest request, EntityManager em)
             throws Exception {
 
-        ApplianceManagerConnector mc = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class,
+        ApplianceManagerConnector mc = em.find(ApplianceManagerConnector.class,
                 request.getId());
 
-        validate(session, request, mc);
+        validate(em, request, mc);
 
         Long jobId = startJob(mc);
 
@@ -53,7 +54,7 @@ public class DeleteApplianceManagerConnectorService extends
         return response;
     }
 
-    private void validate(Session session, BaseIdRequest request, ApplianceManagerConnector mc)
+    private void validate(EntityManager em, BaseIdRequest request, ApplianceManagerConnector mc)
             throws Exception {
 
         if (mc == null) {
@@ -62,7 +63,7 @@ public class DeleteApplianceManagerConnectorService extends
                     + " is not found.");
         }
 
-        if (DistributedApplianceEntityMgr.isReferencedByDistributedAppliance(session, mc)) {
+        if (DistributedApplianceEntityMgr.isReferencedByDistributedAppliance(em, mc)) {
 
             throw new VmidcBrokerInvalidRequestException(
                     "Cannot delete Appliance Manager Connector that is referenced by a Distributed Appliance.");

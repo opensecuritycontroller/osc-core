@@ -19,12 +19,13 @@ package org.osc.core.broker.service.securityinterface;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
@@ -36,9 +37,9 @@ public class ListSecurityGroupInterfaceServiceByVirtualSystem extends
     ListResponse<SecurityGroupInterfaceDto> response = new ListResponse<SecurityGroupInterfaceDto>();
 
     @Override
-    public ListResponse<SecurityGroupInterfaceDto> exec(BaseIdRequest request, Session session) throws Exception {
+    public ListResponse<SecurityGroupInterfaceDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
         // to do mapping
-        validateAndLoad(request, session);
+        validateAndLoad(request, em);
 
         List<SecurityGroupInterfaceDto> dtoList = new ArrayList<SecurityGroupInterfaceDto>();
 
@@ -53,9 +54,9 @@ public class ListSecurityGroupInterfaceServiceByVirtualSystem extends
         return this.response;
     }
 
-    private void validateAndLoad(BaseIdRequest req, Session session) throws Exception {
+    private void validateAndLoad(BaseIdRequest req, EntityManager em) throws Exception {
         BaseIdRequest.checkForNullId(req);
-        EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
         this.vs = emgr.findByPrimaryKey(req.getId());
         if (this.vs == null) {
             throw new VmidcBrokerValidationException("Virtual System with Id: " + req.getId() + "  is not found.");

@@ -16,23 +16,24 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
-import org.hibernate.Session;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 
 public class UpdateDaiConsolePasswordRequestValidator implements ListRequestValidator<UpdateDaiConsolePasswordRequest, DistributedApplianceInstance> {
 
-    private Session session;
+    private EntityManager em;
 
-    public UpdateDaiConsolePasswordRequestValidator(Session session) {
-        this.session = session;
+    public UpdateDaiConsolePasswordRequestValidator(EntityManager em) {
+        this.em = em;
     }
 
     @Override
@@ -57,19 +58,23 @@ public class UpdateDaiConsolePasswordRequestValidator implements ListRequestVali
             throw new VmidcBrokerValidationException("Invalid password.");
         }
 
-        EntityManager<VirtualSystem> emgr = new EntityManager<>(VirtualSystem.class, session);
-        Long vsId = VirtualSystem.getVsIdFromName(vsName);
-        VirtualSystem vs = emgr.findByPrimaryKey(vsId);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, this.em);
+
+        // This code used to use VirtualSystem.getVsIdFromName(vsName), but the name is already unique!
+        //Long vsId = VirtualSystem.getVsIdFromName(vsName);
+        VirtualSystem vs = emgr.findByFieldName("name", vsName);
 
         if (vs == null) {
+            // Avoid changing external behaviour
+            Long vsId = VirtualSystem.getVsIdFromName(vsName);
             throw new VmidcBrokerValidationException("Virtual System with ID: " + vsId + " not found.");
         }
 
         List<DistributedApplianceInstance> daiList = new ArrayList<>();
         if (request.getDaiList() != null && !request.getDaiList().isEmpty()) {
 
-            EntityManager<DistributedApplianceInstance> daiEmgr = new EntityManager<>(
-                    DistributedApplianceInstance.class, session);
+            OSCEntityManager<DistributedApplianceInstance> daiEmgr = new OSCEntityManager<>(
+                    DistributedApplianceInstance.class, this.em);
 
             for (String daiName : request.getDaiList()) {
                 DistributedApplianceInstance dai = daiEmgr.findByFieldName("name", daiName);
@@ -86,7 +91,7 @@ public class UpdateDaiConsolePasswordRequestValidator implements ListRequestVali
 
         } else {
 
-            daiList = DistributedApplianceInstanceEntityMgr.listByVsId(session, vsId);
+            daiList = DistributedApplianceInstanceEntityMgr.listByVsId(this.em, vs.getId());
             if (daiList == null || daiList.isEmpty()) {
                 throw new VmidcException("VSS '" + vs.getName() + "' does not have members.");
             }

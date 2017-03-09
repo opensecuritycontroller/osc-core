@@ -18,15 +18,16 @@ package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskOutput;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.VendorTemplateApi;
 
@@ -54,18 +55,18 @@ public class RegisterVendorTemplateTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         LOG.debug("Start excecuting RegisterVendorTemplate Task");
 
         if (this.vsp == null) {
-            this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
-            this.policy = (Policy) session.get(Policy.class, this.policy.getId());
+            this.vs = em.find(VirtualSystem.class, this.vs.getId());
+            this.policy = em.find(Policy.class, this.policy.getId());
 
             this.vsp = new VirtualSystemPolicy(this.vs);
             this.vsp.setPolicy(this.policy);
-            EntityManager.create(session, this.vsp);
+            OSCEntityManager.create(em, this.vsp);
         } else {
-            this.vsp = (VirtualSystemPolicy) session.get(VirtualSystemPolicy.class, this.vsp.getId());
+            this.vsp = em.find(VirtualSystemPolicy.class, this.vsp.getId());
         }
 
         VendorTemplateApi templateApi = VMwareSdnApiFactory.createVendorTemplateApi(this.vsp.getVirtualSystem());
@@ -73,7 +74,7 @@ public class RegisterVendorTemplateTask extends TransactionalTask {
 
         LOG.debug("Update policyVendorTemplateId: " + this.vendorTemplateId);
         this.vsp.setNsxVendorTemplateId(this.vendorTemplateId);
-        EntityManager.update(session, this.vsp);
+        OSCEntityManager.update(em, this.vsp);
     }
 
     @Override

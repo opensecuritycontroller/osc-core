@@ -19,12 +19,12 @@ package org.osc.core.broker.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.criterion.Order;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.service.dto.JobRecordDto;
-import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.persistence.JobEntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.ListJobRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
@@ -33,16 +33,15 @@ public class ListJobService extends ServiceDispatcher<ListJobRequest, ListRespon
     ListResponse<JobRecordDto> response = new ListResponse<JobRecordDto>();
 
     @Override
-    public ListResponse<JobRecordDto> exec(ListJobRequest request, Session session) throws Exception {
+    public ListResponse<JobRecordDto> exec(ListJobRequest request, EntityManager em) throws Exception {
         // Initializing Entity Manager
-        EntityManager<JobRecord> emgr = new EntityManager<JobRecord>(JobRecord.class, session);
+        OSCEntityManager<JobRecord> emgr = new OSCEntityManager<JobRecord>(JobRecord.class, em);
         // to do mapping
 
         List<JobRecordDto> dtoList = new ArrayList<JobRecordDto>();
 
-        final Order[] o = { Order.desc("id") };
         // mapping all the job objects to job dto objects
-        for (JobRecord j : emgr.listAll(o)) {
+        for (JobRecord j : emgr.listAll(false, "id")) {
             JobRecordDto dto = new JobRecordDto();
             JobEntityManager.fromEntity(j, dto);
             dtoList.add(dto);

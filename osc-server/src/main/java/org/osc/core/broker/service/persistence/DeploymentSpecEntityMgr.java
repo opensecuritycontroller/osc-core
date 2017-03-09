@@ -20,10 +20,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -96,61 +97,90 @@ public class DeploymentSpecEntityMgr {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<DeploymentSpec> listDeploymentSpecByVirtualSystem(Session session, VirtualSystem vs,
-            Order[] orders) {
-        Criteria criteria = session.createCriteria(DeploymentSpec.class).add(Restrictions.eq("virtualSystem", vs))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        if (orders != null) {
-            for (Order order : orders) {
-                criteria.addOrder(order);
-            }
-        }
-        return criteria.list();
+    public static List<DeploymentSpec> listDeploymentSpecByVirtualSystem(EntityManager em, VirtualSystem vs) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DeploymentSpec> query = cb.createQuery(DeploymentSpec.class);
+
+        Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.get("virtualSystem"), vs));
+
+        query = query.orderBy(cb.asc(root.get("name")));
+        return em.createQuery(query).getResultList();
     }
 
-    public static DeploymentSpec findDeploymentSpecByVirtualSystemTenantAndRegion(Session session, VirtualSystem vs,
+    public static DeploymentSpec findDeploymentSpecByVirtualSystemTenantAndRegion(EntityManager em, VirtualSystem vs,
             String tenantId, String region) {
 
-        Criteria criteria = session.createCriteria(DeploymentSpec.class).add(Restrictions.eq("tenantId", tenantId))
-                .add(Restrictions.eq("region", region)).add(Restrictions.eq("virtualSystem", vs));
-        return (DeploymentSpec) criteria.uniqueResult();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DeploymentSpec> query = cb.createQuery(DeploymentSpec.class);
+
+        Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
+
+        query = query.select(root)
+                .where(cb.equal(root.get("tenantId"), tenantId),
+                       cb.equal(root.get("region"), region),
+                       cb.equal(root.get("virtualSystem"), vs));
+
+        List<DeploymentSpec> list = em.createQuery(query).setMaxResults(1).getResultList();
+        return list.isEmpty() ? null : list.get(0);
     }
 
-	@SuppressWarnings("unchecked")
-	public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemTenantAndRegion(Session session,
+	public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemTenantAndRegion(EntityManager em,
 			VirtualSystem vs, String tenantId, String region) {
 
-		Criteria criteria = session.createCriteria(DeploymentSpec.class).add(Restrictions.eq("tenantId", tenantId))
-				.add(Restrictions.eq("region", region)).add(Restrictions.eq("virtualSystem", vs))
-				.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-		return criteria.list();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DeploymentSpec> query = cb.createQuery(DeploymentSpec.class);
+
+        Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.get("tenantId"), tenantId),
+                       cb.equal(root.get("region"), region),
+                       cb.equal(root.get("virtualSystem"), vs));
+
+        return em.createQuery(query).getResultList();
 	}
 
-    public static DeploymentSpec findById(Session session, Long id) {
+    public static DeploymentSpec findById(EntityManager em, Long id) {
 
         // Initializing Entity Manager
-        EntityManager<DeploymentSpec> emgr = new EntityManager<DeploymentSpec>(DeploymentSpec.class, session);
+        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
 
         return emgr.findByPrimaryKey(id);
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<DeploymentSpec> listDeploymentSpecByTenentId(Session session, String tenantId) {
-        Criteria criteria = session.createCriteria(DeploymentSpec.class).add(Restrictions.eq("tenantId", tenantId))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<DeploymentSpec> listDeploymentSpecByTenentId(EntityManager em, String tenantId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DeploymentSpec> query = cb.createQuery(DeploymentSpec.class);
+
+        Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.get("tenantId"), tenantId));
+
+        return em.createQuery(query).getResultList();
     }
 
     public static boolean isDeploymentSpecAllHostInRegion(DeploymentSpec ds) {
         return ds.getAvailabilityZones().isEmpty() && ds.getHostAggregates().isEmpty() && ds.getHosts().isEmpty();
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<DeploymentSpec> listDeploymentSpecByDistributedAppliance(Session session, DistributedAppliance da) {
-        Criteria criteria = session.createCriteria(DeploymentSpec.class).add(Restrictions.in("virtualSystem", da.getVirtualSystems()))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+    public static List<DeploymentSpec> listDeploymentSpecByDistributedAppliance(EntityManager em, DistributedAppliance da) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        return criteria.list();
+        CriteriaQuery<DeploymentSpec> query = cb.createQuery(DeploymentSpec.class);
+
+        Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
+
+        query = query.select(root).distinct(true)
+                .where(root.get("virtualSystem").in(da.getVirtualSystems()));
+
+        return em.createQuery(query).getResultList();
     }
 }

@@ -21,8 +21,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.v2_0.domain.Resource;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
@@ -41,7 +42,7 @@ import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.securitygroup.BaseSecurityGroupService;
 import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPartOfAnotherSecurityGroupException;
@@ -68,23 +69,23 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.sg = (SecurityGroup) session.get(SecurityGroup.class, this.sg.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
         this.tg = new TaskGraph();
 
         if (this.sg.getMarkedForDeletion()) {
             this.log.info("Security Group " + this.sg.getName() + " marked for deletion, deleting Endpoint Group");
-            buildTaskGraph(session, true);
+            buildTaskGraph(em, true);
         } else {
             this.log.info("Checking Security Group " + this.sg.getName());
 
             if (this.sg.isProtectAll()) {
                 // Mark all current entities as deleted, as we read them they will get unmarked for deletion.
                 for (SecurityGroupMember sgm : this.sg.getSecurityGroupMembers()) {
-                    EntityManager.markDeleted(session, sgm);
+                    OSCEntityManager.markDeleted(em, sgm);
                 }
-                List<String> excludedMembers = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(session,
+                List<String> excludedMembers = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(em,
                         this.sg.getVirtualizationConnector().getId());
 
                 JCloudNova nova = new JCloudNova(new Endpoint(this.sg.getVirtualizationConnector(),
@@ -96,7 +97,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                         for (Resource server : servers) {
                             if (!excludedMembers.contains(server.getId())) {
                                 try {
-                                    BaseSecurityGroupService.addSecurityGroupMember(session, this.sg,
+                                    BaseSecurityGroupService.addSecurityGroupMember(em, this.sg,
                                             new SecurityGroupMemberItemDto(region, server.getName(), server.getId(),
                                                     SecurityGroupMemberType.VM, false));
                                     // Once the VM is part of the security group, dont try to add it again.
@@ -121,12 +122,12 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 }
 
             }
-            buildTaskGraph(session, false);
+            buildTaskGraph(em, false);
         }
 
     }
 
-    private void buildTaskGraph(Session session, boolean isDeleteTg) throws Exception {
+    private void buildTaskGraph(EntityManager em, boolean isDeleteTg) throws Exception {
         VmDiscoveryCache vdc;
         if (isDeleteTg) {
             vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(), this.sg.getVirtualizationConnector()
@@ -136,7 +137,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         }
 
         // SGM Member sync with no task deferred
-        addSGMemberSyncJob(session, isDeleteTg, vdc);
+        addSGMemberSyncJob(em, isDeleteTg, vdc);
 
         if (this.sg.getVirtualizationConnector().isControllerDefined()){
             SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(
@@ -160,7 +161,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                         tasksToSucceedToDeleteSGI.add(mgrSecurityGroupDelTask);
                     }
                 }
-                tasksToSucceedToDeleteSGI.addAll(addSGMemberRemoveHooksTask(session, sgi));
+                tasksToSucceedToDeleteSGI.addAll(addSGMemberRemoveHooksTask(em, sgi));
                 // Ensure removal of mapping for all DAIs before removing SGI.
                 this.tg.addTask(new DeleteSecurityGroupInterfaceTask(sgi), TaskGuard.ALL_PREDECESSORS_SUCCEEDED,
                         tasksToSucceedToDeleteSGI.toArray(new Task[0]));
@@ -175,11 +176,11 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     }
 
-    private void addSGMemberSyncJob(Session session, boolean isDeleteTg, VmDiscoveryCache vdc) {
+    private void addSGMemberSyncJob(EntityManager em, boolean isDeleteTg, VmDiscoveryCache vdc) {
         // add SG Member Sync task
         for (SecurityGroupMember sgm : this.sg.getSecurityGroupMembers()) {
             if (isDeleteTg) {
-                EntityManager.markDeleted(session, sgm);
+                OSCEntityManager.markDeleted(em, sgm);
             }
             if (sgm.getType() == SecurityGroupMemberType.VM) {
                 this.tg.appendTask(new SecurityGroupMemberVmCheckTask(sgm, sgm.getVm(), vdc),
@@ -194,7 +195,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         }
     }
 
-    private List<Task> addSGMemberRemoveHooksTask(Session session, SecurityGroupInterface sgiMarkedForDeletion) {
+    private List<Task> addSGMemberRemoveHooksTask(EntityManager em, SecurityGroupInterface sgiMarkedForDeletion) {
         List<Task> tasksAdded = new ArrayList<>();
         // add SG Member hook remove task
         VirtualSystem vs = sgiMarkedForDeletion.getVirtualSystem();
@@ -212,7 +213,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 }
                 for (VMPort port : ports) {
                     DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
-                            .findByVirtualSystemAndPort(session, vs, port);
+                            .findByVirtualSystemAndPort(em, vs, port);
                     VmPortHookRemoveTask hookRemoveTask = new VmPortHookRemoveTask(sgm, port, assignedRedirectedDai, vs
                             .getDistributedAppliance().getName());
                     this.tg.appendTask(hookRemoveTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);

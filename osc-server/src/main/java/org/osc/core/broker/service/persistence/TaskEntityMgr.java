@@ -16,17 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import static org.osc.core.broker.model.entities.job.TaskState.COMPLETED;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.job.TaskState;
 import org.osc.core.broker.job.TaskStatus;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -36,10 +39,10 @@ import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.dto.TaskFailureRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
 
-public class TaskEntityMgr extends EntityManager<TaskRecord> {
+public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
 
-    public TaskEntityMgr(Session session) {
-        super(TaskRecord.class, session);
+    public TaskEntityMgr(EntityManager em) {
+        super(TaskRecord.class, em);
     }
 
     public static TaskRecordDto fromEntity(TaskRecord tr) {
@@ -76,10 +79,17 @@ public class TaskEntityMgr extends EntityManager<TaskRecord> {
         return objects;
     }
 
-    @SuppressWarnings("unchecked")
     public List<TaskRecord> getTasksByJobId(Long jobId) {
-        return this.session.createCriteria(TaskRecord.class).add(Restrictions.eq("job.id", jobId))
-                .addOrder(Order.asc("dependencyOrder")).list();
+        CriteriaBuilder cb = this.em.getCriteriaBuilder();
+
+        CriteriaQuery<TaskRecord> query = cb.createQuery(TaskRecord.class);
+        Root<TaskRecord> from = query.from(TaskRecord.class);
+
+        query = query.select(from).where(
+                cb.equal(from.join("job").get("id"), jobId))
+                .orderBy(cb.asc(from.get("dependencyOrder")));
+
+        return this.em.createQuery(query).getResultList();
     }
 
     /**
@@ -90,24 +100,33 @@ public class TaskEntityMgr extends EntityManager<TaskRecord> {
      *
      * @return unique task failures since the from date
      */
-    public static List<TaskFailureRecordDto> getUniqueTaskFailureStrings(Date fromDate, Session session) {
+    public static List<TaskFailureRecordDto> getUniqueTaskFailureStrings(Date fromDate, EntityManager em) {
 
         List<TaskFailureRecordDto> taskFailures = null;
 
-        Criterion restriction = null;
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
+        Root<TaskRecord> root = query.from(TaskRecord.class);
+
+        Predicate restriction = null;
 
         if(fromDate != null) {
-            restriction = Restrictions.and(Restrictions.gt("completedTimestamp", fromDate), Restrictions.isNotNull("failReason"));
+            restriction = cb.and(
+                    cb.greaterThan(root.get("completedTimestamp"), fromDate),
+                    cb.isNotNull(root.get("failReason")));
         } else {
-            restriction = Restrictions.isNotNull("failReason");
+            restriction = cb.isNotNull(root.get("failReason"));
         }
-        List<?> results = session
-                .createCriteria(TaskRecord.class)
-                .add(restriction)
-                .setProjection(
-                        Projections.projectionList().add(Projections.groupProperty("failReason"))
-                                .add(Projections.rowCount())).list();
-        if (results != null) {
+
+        query = query.multiselect(root.get("failReason"), cb.count(root))
+            .where(restriction);
+
+        List<?> results = em
+                .createQuery(query)
+                .getResultList();
+
+        if (!results.isEmpty()) {
             taskFailures = new ArrayList<TaskFailureRecordDto>();
             for (Object row : results) {
                 Object[] rowArray = (Object[]) row;
@@ -119,9 +138,16 @@ public class TaskEntityMgr extends EntityManager<TaskRecord> {
 
     }
 
-    @SuppressWarnings("unchecked")
     public List<TaskRecord> getUncompletedTasks() {
-        return this.session.createCriteria(TaskRecord.class).add(Restrictions.ne("state", TaskState.COMPLETED)).list();
+        CriteriaBuilder cb = this.em.getCriteriaBuilder();
+
+        CriteriaQuery<TaskRecord> query = cb.createQuery(TaskRecord.class);
+        Root<TaskRecord> from = query.from(TaskRecord.class);
+
+        query = query.select(from).where(
+                cb.equal(from.get("state"), COMPLETED));
+
+        return this.em.createQuery(query).getResultList();
     }
 
 }

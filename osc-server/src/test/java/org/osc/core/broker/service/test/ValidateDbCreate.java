@@ -19,10 +19,11 @@ package org.osc.core.broker.service.test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +42,7 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 
 public class ValidateDbCreate {
 
@@ -53,15 +54,16 @@ public class ValidateDbCreate {
 
     @Test
     public void testDatabaseSanityAndValidation() {
-        Session session = null;
-        Transaction tx = null;
+        EntityManager session = null;
+        EntityTransaction tx = null;
 
         try {
-            SessionFactory sessionFactory = InMemDB.getSessionFactory();
-            session = sessionFactory.openSession();
+            EntityManagerFactory sessionFactory = InMemDB.getEntityManagerFactory();
+            session = sessionFactory.createEntityManager();
 
             // We must open a new transaction before doing anything with the DB
-            tx = session.beginTransaction();
+            tx = session.getTransaction();
+            tx.begin();
 
             addUserEntity(session);
             addReleaseInfoEntity(session);
@@ -95,20 +97,20 @@ public class ValidateDbCreate {
         }
     }
 
-    private void addDistributedApplianceInstanceEntity(Session session, VirtualSystem virtualSystem) {
+    private void addDistributedApplianceInstanceEntity(EntityManager em, VirtualSystem virtualSystem) {
         DistributedApplianceInstance distributedApplianceInst = new DistributedApplianceInstance(virtualSystem);
         distributedApplianceInst.setIpAddress("123.4.5.7");
         distributedApplianceInst.setName("Agent1");
 
-        EntityManager.create(session, distributedApplianceInst);
+        OSCEntityManager.create(em, distributedApplianceInst);
 
         // retrieve back and validate
-        distributedApplianceInst = (DistributedApplianceInstance) session.get(DistributedApplianceInstance.class,
+        distributedApplianceInst = em.find(DistributedApplianceInstance.class,
                 distributedApplianceInst.getId());
         assertNotNull(distributedApplianceInst);
     }
 
-    private VirtualSystem addVirtualSystemEntity(Session session, ApplianceSoftwareVersion applianceSwVer, VirtualizationConnector virtualizationCon, DistributedAppliance distributedAppliance, Domain domain) {
+    private VirtualSystem addVirtualSystemEntity(EntityManager em, ApplianceSoftwareVersion applianceSwVer, VirtualizationConnector virtualizationCon, DistributedAppliance distributedAppliance, Domain domain) {
         VirtualSystem virtualSystem = new VirtualSystem(distributedAppliance);
         virtualSystem.setDomain(domain);
         virtualSystem.setApplianceSoftwareVersion(applianceSwVer);
@@ -117,39 +119,39 @@ public class ValidateDbCreate {
         virtualSystem.setNsxServiceManagerId("nsx-servicemgr-4");
         virtualSystem.setVirtualizationConnector(virtualizationCon);
 
-        EntityManager.create(session, virtualSystem);
+        OSCEntityManager.create(em, virtualSystem);
 
         // retrieve back and validate
-        virtualSystem = (VirtualSystem) session.get(VirtualSystem.class, virtualSystem.getId());
+        virtualSystem = em.find(VirtualSystem.class, virtualSystem.getId());
         assertNotNull(virtualSystem);
         return virtualSystem;
     }
 
-    private Domain addDomainEntity(Session session, ApplianceManagerConnector applianceMgrCon) {
+    private Domain addDomainEntity(EntityManager em, ApplianceManagerConnector applianceMgrCon) {
         Domain domain = new Domain(applianceMgrCon);
         domain.setName("DC-1");
         domain.setMgrId("domain-id-3");
 
-        EntityManager.create(session, domain);
+        OSCEntityManager.create(em, domain);
 
         // retrieve back and validate
-        domain = (Domain) session.get(Domain.class, domain.getId());
+        domain = em.find(Domain.class, domain.getId());
         assertNotNull(domain);
         return domain;
     }
 
-    private JobRecord addJobRecord(Session session){
+    private JobRecord addJobRecord(EntityManager em){
         JobRecord jobRecord = new JobRecord();
         jobRecord.setName("testJob");
-        EntityManager.create(session, jobRecord);
+        OSCEntityManager.create(em, jobRecord);
 
         // retrieve back and validate
-        jobRecord = (JobRecord) session.get(JobRecord.class, jobRecord.getId());
+        jobRecord = em.find(JobRecord.class, jobRecord.getId());
         assertNotNull(jobRecord);
         return jobRecord;
     }
 
-    private DistributedAppliance addDistributedApplianceEntity(Session session, Appliance appliance, ApplianceManagerConnector applianceMgrCon, JobRecord jobRecord) {
+    private DistributedAppliance addDistributedApplianceEntity(EntityManager em, Appliance appliance, ApplianceManagerConnector applianceMgrCon, JobRecord jobRecord) {
         DistributedAppliance distributedAppliance = new DistributedAppliance(applianceMgrCon);
         distributedAppliance.setLastJob(jobRecord);
         distributedAppliance.getLastJob().setStatus(JobStatus.PASSED);
@@ -158,15 +160,15 @@ public class ValidateDbCreate {
         distributedAppliance.setAppliance(appliance);
         distributedAppliance.setApplianceVersion("1.0");
 
-        EntityManager.create(session, distributedAppliance);
+        OSCEntityManager.create(em, distributedAppliance);
 
         // retrieve back and validate
-        distributedAppliance = (DistributedAppliance) session.get(DistributedAppliance.class, distributedAppliance.getId());
+        distributedAppliance = em.find(DistributedAppliance.class, distributedAppliance.getId());
         assertNotNull(distributedAppliance);
         return distributedAppliance;
     }
 
-    private VirtualizationConnector addVirtualizationConnectorEntity(Session session) {
+    private VirtualizationConnector addVirtualizationConnectorEntity(EntityManager em) {
         VirtualizationConnector virtualizationCon = new VirtualizationConnector();
 
         virtualizationCon.setName("vmware-1");
@@ -179,15 +181,15 @@ public class ValidateDbCreate {
         virtualizationCon.setVirtualizationSoftwareVersion("12.3");
         virtualizationCon.setVirtualizationType(VirtualizationType.VMWARE);
 
-        EntityManager.create(session, virtualizationCon);
+        OSCEntityManager.create(em, virtualizationCon);
 
         // retrieve back and validate
-        virtualizationCon = (VirtualizationConnector) session.get(VirtualizationConnector.class, virtualizationCon.getId());
+        virtualizationCon = em.find(VirtualizationConnector.class, virtualizationCon.getId());
         assertNotNull(virtualizationCon);
         return virtualizationCon;
     }
 
-    private ApplianceManagerConnector addApplianceManagerConnectorEntity(Session session) {
+    private ApplianceManagerConnector addApplianceManagerConnectorEntity(EntityManager em) {
         ApplianceManagerConnector applianceMgrCon = new ApplianceManagerConnector();
 
         applianceMgrCon.setName("nsm-1");
@@ -197,15 +199,15 @@ public class ValidateDbCreate {
         applianceMgrCon.setPassword("pass123");
         applianceMgrCon.setIpAddress("172.34.5.677");
 
-        EntityManager.create(session, applianceMgrCon);
+        OSCEntityManager.create(em, applianceMgrCon);
 
         // retrieve back and validate
-        applianceMgrCon = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class, applianceMgrCon.getId());
+        applianceMgrCon = em.find(ApplianceManagerConnector.class, applianceMgrCon.getId());
         assertNotNull(applianceMgrCon);
         return applianceMgrCon;
     }
 
-    private ApplianceSoftwareVersion addApplianceSoftwareVersion(Session session, Appliance appliance) {
+    private ApplianceSoftwareVersion addApplianceSoftwareVersion(EntityManager em, Appliance appliance) {
         ApplianceSoftwareVersion applianceSwVer = new ApplianceSoftwareVersion(appliance);
 
         applianceSwVer.setApplianceSoftwareVersion("sw_1.0");
@@ -213,41 +215,41 @@ public class ValidateDbCreate {
         applianceSwVer.setVirtualizarionSoftwareVersion("vir_1.0");
         applianceSwVer.setVirtualizationType(VirtualizationType.VMWARE);
 
-        EntityManager.create(session, applianceSwVer);
+        OSCEntityManager.create(em, applianceSwVer);
 
         // retrieve back and validate
-        applianceSwVer = (ApplianceSoftwareVersion) session.get(ApplianceSoftwareVersion.class, applianceSwVer.getId());
+        applianceSwVer = em.find(ApplianceSoftwareVersion.class, applianceSwVer.getId());
         assertNotNull(applianceSwVer);
         return applianceSwVer;
     }
 
-    private Appliance addApplianceEntity(Session session) {
+    private Appliance addApplianceEntity(EntityManager em) {
         Appliance appliance = new Appliance();
 
         appliance.setManagerType(ManagerType.NSM.getValue());
         appliance.setModel("model-1");
         appliance.setManagerSoftwareVersion("1.2");
 
-        EntityManager.create(session, appliance);
+        OSCEntityManager.create(em, appliance);
 
         // retrieve back and validate
-        appliance = (Appliance) session.get(Appliance.class, appliance.getId());
+        appliance = em.find(Appliance.class, appliance.getId());
         assertNotNull(appliance);
         return appliance;
     }
 
-    private void addReleaseInfoEntity(Session session) {
+    private void addReleaseInfoEntity(EntityManager em) {
         ReleaseInfo releaseInfo = new ReleaseInfo();
 
         releaseInfo.setDbVersion(0);
-        EntityManager.create(session, releaseInfo);
+        OSCEntityManager.create(em, releaseInfo);
 
         // retrieve back and validate
-        releaseInfo = (ReleaseInfo) session.get(ReleaseInfo.class, releaseInfo.getId());
+        releaseInfo = em.find(ReleaseInfo.class, releaseInfo.getId());
         assertNotNull(releaseInfo);
     }
 
-    private void addUserEntity(Session session) {
+    private void addUserEntity(EntityManager em) {
         User user = new User();
 
         user.setFirstName("Trinh");
@@ -256,10 +258,10 @@ public class ValidateDbCreate {
         user.setRole(RoleType.ADMIN);
         user.setEmail("trinh_lee@mcafee.com");
 
-        EntityManager.create(session, user);
+        OSCEntityManager.create(em, user);
 
         // retrieve back and validate
-        user = (User) session.get(User.class, user.getId());
+        user = em.find(User.class, user.getId());
 
         assertNotNull(user);
     }

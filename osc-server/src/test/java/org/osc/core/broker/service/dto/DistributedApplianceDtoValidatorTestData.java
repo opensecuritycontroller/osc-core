@@ -28,6 +28,8 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.sdk.controller.TagEncapsulationType;
 
 public class DistributedApplianceDtoValidatorTestData {
+    static final Long REPLACE_WITH_DOMAIN_ID = -10L;
+    static final Long REPLACE_WITH_NULL = -1234L;
     static String EMPTY_VALUE_ERROR_MESSAGE = "should not have an empty value.";
     static String INVALID_FIELD_LENGTH_ERROR_MESSAGE = "length should not exceed 155 characters.";
     static String VALUE_IS_SET_ERROR_MESSAGE = "should not have a value set.";
@@ -38,6 +40,7 @@ public class DistributedApplianceDtoValidatorTestData {
     static Long VC_ID_OPENSTACK = 103L;
     static Long VC_ID_VMWARE = 104L;
     static String VC_NAME_OPENSTACK = "VC_OPENSTACK";
+    static String VC_NAME_VMWARE = "VC_VMWARE";
     static Long DA_ID_EXISTING_VC = 105L;
     static String DA_NAME_EXISTING_DA = "EXISTINGDA";
     static String DA_NAME_NEW_DA = "NEWDA";
@@ -46,7 +49,7 @@ public class DistributedApplianceDtoValidatorTestData {
     static Long DOMAIN_ID_NOT_FOUND = 106L;
     static Long DOMAIN_ID_INVALID_NAME = 107L;
     static Long DOMAIN_ID_VALID_NAME = 108L;
-    static Long MC_ID_VALID_MC = 111L;
+    static String MC_NAME_EXISTING_MC = "EXISTINGMC";
     static Long MC_ID_POLICY_MAPPING_NOT_SUPPORTED_MC = 112L;
     static String SW_VERSION_NOT_FOUND = "SW_VERSION_NOT_FOUND";
     static String SW_VERSION_EXISTING_VC = "SW_VERSION_EXISTING_VC";
@@ -157,7 +160,9 @@ public class DistributedApplianceDtoValidatorTestData {
         List<Object[]> result = new ArrayList<Object[]>();
 
         DistributedApplianceDto daDto = createDistributedApplianceDto();
-        ((VirtualSystemDto)daDto.getVirtualizationSystems().toArray()[0]).setVcId(null);
+        VirtualSystemDto virtualSystemDto = (VirtualSystemDto)daDto.getVirtualizationSystems().toArray()[0];
+        virtualSystemDto.setDomainId(1L);
+        virtualSystemDto.setVcId(REPLACE_WITH_NULL);
 
         result.add(new Object[] {daDto,  VmidcBrokerInvalidEntryException.class, "Virtualization Connector Id " + EMPTY_VALUE_ERROR_MESSAGE});
 
@@ -178,10 +183,12 @@ public class DistributedApplianceDtoValidatorTestData {
 
         // VMWARE VS SHOULD NOT have encapsulation type set
         ((VirtualSystemDto)vmWareDaDto.getVirtualizationSystems().toArray()[0]).setVcId(VC_ID_VMWARE);
+        ((VirtualSystemDto)vmWareDaDto.getVirtualizationSystems().toArray()[0]).setDomainId(-1L);
         ((VirtualSystemDto)vmWareDaDto.getVirtualizationSystems().toArray()[0]).setEncapsulationType(TagEncapsulationType.VLAN);
 
         // OPENSTACK VS SHOULD have encapsulation type set
         ((VirtualSystemDto)openStackDaDto.getVirtualizationSystems().toArray()[0]).setVcId(VC_ID_OPENSTACK);
+        ((VirtualSystemDto)openStackDaDto.getVirtualizationSystems().toArray()[0]).setDomainId(-1L);
         ((VirtualSystemDto)openStackDaDto.getVirtualizationSystems().toArray()[0]).setEncapsulationType(null);
 
         // OPENSTACK VS SHOULD NOT have encapsulation type set when manage does not support policy mapping
@@ -200,6 +207,7 @@ public class DistributedApplianceDtoValidatorTestData {
     static Object[] getInvalidApplianceSoftwareVersionTestData() {
         ((VirtualSystemDto)applianceSwVersionNotFoundDto.getVirtualizationSystems().toArray()[0]).setVcId(VC_ID_VMWARE);
         ((VirtualSystemDto)applianceSwVersionNotFoundDto.getVirtualizationSystems().toArray()[0]).setEncapsulationType(null);
+        ((VirtualSystemDto)applianceSwVersionNotFoundDto.getVirtualizationSystems().toArray()[0]).setDomainId(-1L);
 
         applianceSwVersionNotFoundDto.setApplianceSoftwareVersionName(SW_VERSION_NOT_FOUND);
 
@@ -210,6 +218,10 @@ public class DistributedApplianceDtoValidatorTestData {
 
     static Object[] getDaVcAlreadyExistsTestData() {
         daVcAlreadyExistsDto.setId(DA_ID_EXISTING_VC);
+        for (VirtualSystemDto virtualSystemDto : daVcAlreadyExistsDto.getVirtualizationSystems()) {
+            virtualSystemDto.setVcId(null);
+            virtualSystemDto.setDomainId(REPLACE_WITH_DOMAIN_ID);
+        }
 
         Object[] result =  new Object[] {daVcAlreadyExistsDto,  VmidcBrokerValidationException.class, "The composite key Distributed Appliance, Virtualization Connector already exists."};
 
@@ -221,6 +233,10 @@ public class DistributedApplianceDtoValidatorTestData {
         DistributedApplianceDto nullDomainIdDto = createDistributedApplianceDto();
         DistributedApplianceDto mcPolicyMappingNotSupported = createDistributedApplianceDto();
         mcPolicyMappingNotSupported.setMcId(MC_ID_POLICY_MAPPING_NOT_SUPPORTED_MC);
+        for (VirtualSystemDto virtualSystemDto : mcPolicyMappingNotSupported.getVirtualizationSystems()) {
+            virtualSystemDto.setVcId(null);
+            virtualSystemDto.setDomainId(REPLACE_WITH_DOMAIN_ID);
+        }
 
         setVirtualSystemDomain(domainNotFoundDto, DOMAIN_ID_NOT_FOUND);
         setVirtualSystemDomain(invalidDomainNameDto, DOMAIN_ID_INVALID_NAME);
@@ -236,19 +252,17 @@ public class DistributedApplianceDtoValidatorTestData {
 
     private static void setVirtualSystemDomain(DistributedApplianceDto daDto, Long domainId) {
         ((VirtualSystemDto)daDto.getVirtualizationSystems().toArray()[0]).setDomainId(domainId);
+        ((VirtualSystemDto)daDto.getVirtualizationSystems().toArray()[0]).setVcId(VC_ID_OPENSTACK);
     }
 
     static DistributedApplianceDto createDistributedApplianceDto() {
         DistributedApplianceDto daDto = new DistributedApplianceDto();
         daDto.setSecretKey("secretKey");
         daDto.setName("daName");
-        daDto.setApplianceId(APPLIANCE_ID_EXISTING);
-        daDto.setMcId(MC_ID_VALID_MC);
         daDto.setApplianceSoftwareVersionName(SW_VERSION_EXISTING_VC);
         Set<VirtualSystemDto> virtualSystems = new HashSet<VirtualSystemDto>();
         VirtualSystemDto virtualSystem = new VirtualSystemDto();
-        virtualSystem.setDomainId(DOMAIN_ID_VALID_NAME);
-        virtualSystem.setVcId(VC_ID_OPENSTACK);
+        virtualSystem.setVcId(-1L);
         virtualSystem.setEncapsulationType(TagEncapsulationType.VLAN);
 
         virtualSystems.add(virtualSystem);

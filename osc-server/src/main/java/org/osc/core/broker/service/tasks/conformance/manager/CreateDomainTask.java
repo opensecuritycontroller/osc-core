@@ -18,12 +18,13 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class CreateDomainTask extends TransactionalTask {
@@ -39,25 +40,25 @@ public class CreateDomainTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        log.debug("Start excecuting CreateDomainTask Task. Domain '" + domain.getName() + "'");
-        mc = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class, mc.getId());
-        Domain newDomain = new Domain(mc);
-        newDomain.setMgrId(domain.getMgrId());
-        newDomain.setName(domain.getName());
+        log.debug("Start excecuting CreateDomainTask Task. Domain '" + this.domain.getName() + "'");
+        this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId());
+        Domain newDomain = new Domain(this.mc);
+        newDomain.setMgrId(this.domain.getMgrId());
+        newDomain.setName(this.domain.getName());
 
-        EntityManager.create(session, newDomain);
+        OSCEntityManager.create(em, newDomain);
     }
 
     @Override
     public String getName() {
-        return "Create Domain '" + domain.getName() + "'";
+        return "Create Domain '" + this.domain.getName() + "'";
     }
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(mc);
+        return LockObjectReference.getObjectReferences(this.mc);
     }
 
 }

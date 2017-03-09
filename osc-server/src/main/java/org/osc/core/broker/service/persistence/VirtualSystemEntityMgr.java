@@ -20,13 +20,13 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Criteria;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -58,37 +58,28 @@ public class VirtualSystemEntityMgr {
         }
     }
 
-    public static VirtualSystem findById(Session session, Long id) {
+    public static VirtualSystem findById(EntityManager em, Long id) {
 
         // Initializing Entity Manager
-        EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
 
         return emgr.findByPrimaryKey(id);
     }
 
-    public static VirtualSystem findByNsxServiceInstanceIdAndVsmUuid(Session session, String serviceVsmUuid,
+    public static VirtualSystem findByNsxServiceInstanceIdAndVsmUuid(EntityManager em, String serviceVsmUuid,
             String serviceInstanceId) {
 
-        Criteria criteria = session.createCriteria(VirtualSystem.class)
-                .add(Restrictions.eq("nsxVsmUuid", serviceVsmUuid))
-                .add(Restrictions.eq("nsxServiceInstanceId", serviceInstanceId));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        @SuppressWarnings("unchecked")
-        List<VirtualSystem> list = criteria.setFirstResult(0).setMaxResults(1).list();
+        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
 
-        if (list == null || list.size() == 0) {
-            return null;
-        }
+        Root<VirtualSystem> root = query.from(VirtualSystem.class);
 
-        return list.get(0);
-    }
+        query = query.select(root)
+            .where(cb.equal(root.get("nsxVsmUuid"), serviceVsmUuid),
+                   cb.equal(root.get("nsxServiceInstanceId"), serviceInstanceId));
 
-    public static VirtualSystem findByNsxServiceId(Session session, String nsxServiceId) {
-        Criteria criteria = session.createCriteria(VirtualSystem.class)
-                .add(Restrictions.eq("nsxServiceId", nsxServiceId));
-
-        @SuppressWarnings("unchecked")
-        List<VirtualSystem> list = criteria.setFirstResult(0).setMaxResults(1).list();
+        List<VirtualSystem> list = em.createQuery(query).setMaxResults(1).getResultList();
 
         if (list == null || list.size() == 0) {
             return null;
@@ -97,14 +88,18 @@ public class VirtualSystemEntityMgr {
         return list.get(0);
     }
 
-    public static VirtualSystem findByDAAndVC(Session session, Long daId, Long vcId) {
+    public static VirtualSystem findByNsxServiceId(EntityManager em, String nsxServiceId) {
 
-        Criteria criteria = session.createCriteria(VirtualSystem.class).createAlias("virtualizationConnector", "vc")
-                .createAlias("distributedAppliance", "da").add(Restrictions.eq("vc.id", vcId))
-                .add(Restrictions.eq("da.id", daId));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        @SuppressWarnings("unchecked")
-        List<VirtualSystem> list = criteria.setFirstResult(0).setMaxResults(1).list();
+        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
+
+        Root<VirtualSystem> root = query.from(VirtualSystem.class);
+
+        query = query.select(root)
+            .where(cb.equal(root.get("nsxServiceId"), nsxServiceId));
+
+        List<VirtualSystem> list = em.createQuery(query).setMaxResults(1).getResultList();
 
         if (list == null || list.size() == 0) {
             return null;
@@ -113,17 +108,43 @@ public class VirtualSystemEntityMgr {
         return list.get(0);
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<VirtualSystem> listReferencedVSBySecurityGroup(Session session, Long sgId) {
+    public static VirtualSystem findByDAAndVC(EntityManager em, Long daId, Long vcId) {
 
-        Criteria criteria = session.createCriteria(VirtualSystem.class).createAlias("securityGroupInterfaces", "sgi")
-                .createAlias("sgi.securityGroups", "sg").add(Restrictions.eq("sg.id", sgId))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        return criteria.list();
+        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
+
+        Root<VirtualSystem> root = query.from(VirtualSystem.class);
+
+        query = query.select(root)
+            .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId),
+                   cb.equal(root.join("distributedAppliance").get("id"), daId));
+
+        List<VirtualSystem> list = em.createQuery(query).getResultList();
+
+        if (list == null || list.size() == 0) {
+            return null;
+        }
+
+        return list.get(0);
     }
 
-    public static List<VirtualSystemDto> findByMcApplianceAndSwVer(Session session, Long mcId, Long applianceId,
+    public static List<VirtualSystem> listReferencedVSBySecurityGroup(EntityManager em, Long sgId) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
+
+        Root<VirtualSystem> root = query.from(VirtualSystem.class);
+
+        query = query.select(root).distinct(true)
+            .where(cb.equal(root.join("securityGroupInterfaces")
+                    .join("securityGroups").get("id"), sgId));
+
+        return em.createQuery(query).getResultList();
+    }
+
+    public static List<VirtualSystemDto> findByMcApplianceAndSwVer(EntityManager em, Long mcId, Long applianceId,
             String applianceSwVer) {
 
         String hql = "SELECT VC.name AS vcName, VC.virtualizationType AS vcType, DO.name AS doName FROM ApplianceManagerConnector MC, Appliance A, ApplianceSoftwareVersion AV, VirtualizationConnector VC, Domain DO"
@@ -132,13 +153,12 @@ public class VirtualSystemEntityMgr {
                 + " AND VC.virtualizationType = AV.virtualizationType AND DO.applianceManagerConnector.id = :mcId"
                 + " ORDER BY vcName ASC";
 
-        Query query = session.createQuery(hql);
+        TypedQuery<Object[]> query = em.createQuery(hql, Object[].class);
         query.setParameter("mcId", mcId);
         query.setParameter("applianceId", applianceId);
         query.setParameter("applianceSwVer", applianceSwVer);
 
-        @SuppressWarnings("unchecked")
-        List<Object[]> ls = query.list();
+        List<Object[]> ls = query.getResultList();
 
         List<VirtualSystemDto> dtoList = new ArrayList<VirtualSystemDto>();
 
@@ -157,14 +177,18 @@ public class VirtualSystemEntityMgr {
 
     }
 
-    public static List<Long> listByVcId(Session session, Long vcId) {
+    public static List<Long> listByVcId(EntityManager em, Long vcId) {
 
-        Criteria criteria = session.createCriteria(VirtualSystem.class, "vs")
-                .createAlias("vs.virtualizationConnector", "vc").add(Restrictions.eq("vc.id", vcId))
-                .setProjection(Projections.property("id")).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        @SuppressWarnings("unchecked")
-        List<Long> list = criteria.list();
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
+
+        Root<VirtualSystem> root = query.from(VirtualSystem.class);
+
+        query = query.select(root.get("id")).distinct(true)
+            .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId));
+
+        List<Long> list = em.createQuery(query).getResultList();
 
         if (list == null || list.size() == 0) {
             return null;
@@ -173,14 +197,19 @@ public class VirtualSystemEntityMgr {
         return list;
     }
 
-    public static VirtualSystem findByNsxServiceProfileIdAndNsxIp(Session session, String serviceProfileId,
+    public static VirtualSystem findByNsxServiceProfileIdAndNsxIp(EntityManager em, String serviceProfileId,
             String nsxIpAddress) {
-        Criteria criteria = session.createCriteria(VirtualSystem.class, "vs")
-                .createAlias("vs.virtualizationConnector", "vc").createAlias("vs.securityGroupInterfaces", "sgi")
-                .add(Restrictions.eq("sgi.tag", serviceProfileId))
-                .add(Restrictions.eq("vc.controllerIpAddress", nsxIpAddress));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        return (VirtualSystem) criteria.uniqueResult();
+        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
+
+        Root<VirtualSystem> root = query.from(VirtualSystem.class);
+
+        query = query.select(root)
+            .where(cb.equal(root.join("securityGroupInterfaces").get("tag"), serviceProfileId),
+                   cb.equal(root.join("virtualizationConnector").get("controllerIpAddress"), nsxIpAddress));
+
+        return em.createQuery(query).getSingleResult();
     }
 
     /**
@@ -195,11 +224,12 @@ public class VirtualSystemEntityMgr {
      * @return Minimum and unique tag for given VS.
      */
     @SuppressWarnings("unchecked")
-    public static synchronized Long generateUniqueTag(Session session, VirtualSystem vs) {
-        vs = (VirtualSystem) session.get(VirtualSystem.class, vs.getId(), new LockOptions(LockMode.PESSIMISTIC_WRITE));
+    public static synchronized Long generateUniqueTag(EntityManager em, VirtualSystem vs) {
+        vs = em.find(VirtualSystem.class, vs.getId(),
+                LockModeType.PESSIMISTIC_WRITE);
         String sql = "SELECT CONVERT(SUBSTR(tag,LOCATE('-',tag)+1), LONG) AS tag_val "
                 + "FROM security_group_interface WHERE virtual_system_fk = " + vs.getId() + " ORDER BY tag_val";
-        List<Object> list = session.createSQLQuery(sql).list();
+        List<Object> list = em.createNativeQuery(sql).getResultList();
         // Start with 2 as 1 is reserved in some cases
         // TODO: arvindn For Barcelona, plumgrid requires tag's larger than 300. Remove once problem is fixed on
         // plumgrid side.

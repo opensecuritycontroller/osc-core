@@ -18,7 +18,8 @@ package org.osc.core.broker.service;
 
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
@@ -32,11 +33,11 @@ public class ListApplianceModelSwVersionComboService extends
 
     @Override
     public ListResponse<ApplianceModelSoftwareVersionDto> exec(ListApplianceModelSwVersionComboRequest request,
-            Session session) {
+            EntityManager em) {
 
         ManagerType mcType = request.getType();
 
-        List<ApplianceModelSoftwareVersionDto> ls = ApplianceSoftwareVersionEntityMgr.findByMcType(session, mcType);
+        List<ApplianceModelSoftwareVersionDto> ls = ApplianceSoftwareVersionEntityMgr.findByMcType(em, mcType);
         this.response.setList(ls);
 
         return this.response;

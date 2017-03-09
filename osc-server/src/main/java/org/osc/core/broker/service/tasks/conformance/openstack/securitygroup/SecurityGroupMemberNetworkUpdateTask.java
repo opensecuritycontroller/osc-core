@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jboss.logging.Logger;
 import org.jclouds.openstack.neutron.v2.domain.IP;
 import org.jclouds.openstack.neutron.v2.domain.Port;
@@ -35,7 +36,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -55,9 +56,9 @@ class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
+        this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
 
         Network network = this.sgm.getNetwork();
 
@@ -78,9 +79,9 @@ class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
                 // Check to see if the port belongs to one of our DAI. Only if the port does not belong to the DAI
                 // Add it to our DB for it to be protected later, so we prevent self inspection loop
                 DistributedApplianceInstance daiForPort = DistributedApplianceInstanceEntityMgr.getByOSServerId(
-                        session, osPort.getDeviceId());
+                        em, osPort.getDeviceId());
                 if (daiForPort == null) {
-                    VMPort vmPort = VMPortEntityManager.findByOpenstackId(session, osPort.getId());
+                    VMPort vmPort = VMPortEntityManager.findByOpenstackId(em, osPort.getId());
                     if (vmPort == null) {
                         // get list of IP address from port
                         List<String> ipAddresses = new ArrayList<>();
@@ -89,7 +90,7 @@ class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
                         }
                         vmPort = new VMPort(network, osPort.getMacAddress(), network.getOpenstackId(), osPort.getId(),
                                 ipAddresses);
-                        EntityManager.create(session, vmPort);
+                        OSCEntityManager.create(em, vmPort);
                         this.log.info("Creating port for Network '" + network.getName() + "' with Port:" + vmPort);
                     } else {
                         //Port exists check if it belongs to a VM
@@ -128,7 +129,7 @@ class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
                         }
                         // Port belongs to this network too.
                     }
-                    OpenstackUtil.discoverVmForPort(session, network.getRegion(), sg, osPort, vmPort);
+                    OpenstackUtil.discoverVmForPort(em, network.getRegion(), sg, osPort, vmPort);
                 }
             }
             // Any ports not listed from openstack but are in our database are stale and need to be removed(after hooks
@@ -142,7 +143,7 @@ class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
             }
         }
 
-        EntityManager.update(session, network);
+        OSCEntityManager.update(em, network);
     }
 
     @Override

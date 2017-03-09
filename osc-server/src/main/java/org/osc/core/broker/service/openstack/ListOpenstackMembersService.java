@@ -19,7 +19,8 @@ package org.osc.core.broker.service.openstack;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jclouds.openstack.neutron.v2.domain.Network;
 import org.jclouds.openstack.neutron.v2.domain.Subnet;
 import org.jclouds.openstack.v2_0.domain.Resource;
@@ -34,7 +35,7 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.openstack.request.ListOpenstackMembersRequest;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
@@ -52,16 +53,16 @@ public class ListOpenstackMembersService extends
     private VirtualizationConnector vc;
 
     @Override
-    public ListResponse<SecurityGroupMemberItemDto> exec(ListOpenstackMembersRequest request, Session session)
+    public ListResponse<SecurityGroupMemberItemDto> exec(ListOpenstackMembersRequest request, EntityManager em)
             throws Exception {
 
-        EntityManager<VirtualizationConnector> emgr = new EntityManager<>(VirtualizationConnector.class, session);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
         this.vc = emgr.findByPrimaryKey(request.getParentId());
         List<String> existingMemberIds = new ArrayList<>();
         // If current selected members is set to null, assume this is first load and populate existing member ids from
         // DB
         if (request.getCurrentSelectedMembers() == null && request.getId() != null) {
-            SecurityGroup sg = SecurityGroupEntityMgr.findById(session, request.getId());
+            SecurityGroup sg = SecurityGroupEntityMgr.findById(em, request.getId());
             for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
                 if (!sgm.getMarkedForDeletion()) {
                     existingMemberIds.add(getMemberOpenstackId(sgm));
@@ -78,7 +79,7 @@ public class ListOpenstackMembersService extends
 
         if (request.getType() == SecurityGroupMemberType.VM) {
 
-            List<String> existingSvaOsIds = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(session,
+            List<String> existingSvaOsIds = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(em,
                     this.vc.getId());
             existingMemberIds.addAll(existingSvaOsIds);
 

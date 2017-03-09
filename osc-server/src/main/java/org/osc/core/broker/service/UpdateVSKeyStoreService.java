@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.UpdateVSKeyStoreRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 
@@ -27,13 +28,13 @@ import org.osc.core.broker.service.response.EmptySuccessResponse;
 public class UpdateVSKeyStoreService extends ServiceDispatcher<UpdateVSKeyStoreRequest, EmptySuccessResponse> {
 
     @Override
-    public EmptySuccessResponse exec(UpdateVSKeyStoreRequest request, Session session) throws Exception {
+    public EmptySuccessResponse exec(UpdateVSKeyStoreRequest request, EntityManager em) throws Exception {
 
         EmptySuccessResponse response = new EmptySuccessResponse();
 
-        EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
 
-        VirtualSystem vs = validate(session, request, emgr);
+        VirtualSystem vs = validate(em, request, emgr);
 
         vs.setKeyStore(request.getKeyStore());
         emgr.update(vs);
@@ -41,7 +42,7 @@ public class UpdateVSKeyStoreService extends ServiceDispatcher<UpdateVSKeyStoreR
         return response;
     }
 
-    VirtualSystem validate(Session session, UpdateVSKeyStoreRequest request, EntityManager<VirtualSystem> emgr)
+    VirtualSystem validate(EntityManager em, UpdateVSKeyStoreRequest request, OSCEntityManager<VirtualSystem> emgr)
             throws Exception {
 
         Long vsId = request.getVsId();

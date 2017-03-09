@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.openstack;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.glance.v1_0.domain.Image.Status;
 import org.jclouds.openstack.glance.v1_0.domain.ImageDetails;
 import org.osc.core.broker.job.TaskGraph;
@@ -59,10 +60,10 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
 
-        this.vs = session.get(VirtualSystem.class, this.vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         LOG.info("Checking VS " + this.vs.getName() + " has the corresponding image uploaded in glance");
 

@@ -18,14 +18,15 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 /**
@@ -42,8 +43,8 @@ class ValidateSecurityGroupTenantTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        EntityManager<SecurityGroup> sgEmgr = new EntityManager<SecurityGroup>(SecurityGroup.class, session);
+    public void executeTransaction(EntityManager em) throws Exception {
+        OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
         this.securityGroup = sgEmgr.findByPrimaryKey(this.securityGroup.getId());
 
         this.log.info("Validating the Security Group tenant " + this.securityGroup.getTenantName() + " exists.");
@@ -54,13 +55,13 @@ class ValidateSecurityGroupTenantTask extends TransactionalTask {
             if (tenant == null) {
                 this.log.info("Security Group tenant " + this.securityGroup.getTenantName() + " Deleted from openstack. Marking Security Group for deletion.");
                 // Tenant was deleted, mark Security Group for deleting as well
-                EntityManager.markDeleted(session, this.securityGroup);
+                OSCEntityManager.markDeleted(em, this.securityGroup);
             } else {
                 // Sync the tenant name if needed
                 if (!tenant.getName().equals(this.securityGroup.getTenantName())) {
                     this.log.info("Security Group tenant name updated from " + this.securityGroup.getTenantName() + " to " + tenant.getName());
                     this.securityGroup.setTenantName(tenant.getName());
-                    EntityManager.update(session, this.securityGroup);
+                    OSCEntityManager.update(em, this.securityGroup);
                 }
             }
 

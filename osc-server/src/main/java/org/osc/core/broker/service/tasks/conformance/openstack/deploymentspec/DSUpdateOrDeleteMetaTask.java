@@ -24,8 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZoneDetails;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -42,7 +43,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
@@ -71,10 +72,10 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
 
-        EntityManager<DeploymentSpec> emgr = new EntityManager<DeploymentSpec>(DeploymentSpec.class, session);
+        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
         this.ds = emgr.findByPrimaryKey(this.ds.getId());
         VirtualSystem virtualSystem = this.ds.getVirtualSystem();
         if (this.ds.getMarkedForDeletion() || virtualSystem.getMarkedForDeletion()
@@ -89,11 +90,11 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             this.tg.appendTask(new MgrCheckDevicesMetaTask(virtualSystem));
             this.tg.appendTask(new DeleteDSFromDbTask(this.ds));
         } else {
-            buildDsUpdateTaskGraph(session);
+            buildDsUpdateTaskGraph(em);
         }
     }
 
-    private void buildDsUpdateTaskGraph(Session session) throws IOException, Exception {
+    private void buildDsUpdateTaskGraph(EntityManager em) throws IOException, Exception {
         log.info("Checking/Updating DS " + this.ds.getName());
 
         Set<AvailabilityZone> selectedAvailabilityZones = this.ds.getAvailabilityZones();
@@ -122,7 +123,7 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             } else if (selectedHosts.isEmpty() && !selectedAvailabilityZones.isEmpty()) {
                 log.info("Deploying based on availabilityZones");
 
-                conformToAzSelection(session, selectedAvailabilityZones, osAvailabilityZones, osHostSet);
+                conformToAzSelection(em, selectedAvailabilityZones, osAvailabilityZones, osHostSet);
 
             } else if ((!selectedHosts.isEmpty())) {
                 log.info("Deploying based on hosts");
@@ -131,7 +132,7 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             } else if (!selectedHostAggr.isEmpty()) {
                 log.info("Deploying based on host Aggregate selection");
                 // Get selected host set from host aggregates
-                Set<String> hostsToDeployTo = getHostsFromHostAggregateSelection(session, this.novaApi, selectedHostAggr);
+                Set<String> hostsToDeployTo = getHostsFromHostAggregateSelection(em, this.novaApi, selectedHostAggr);
 
                 // deploy to selected hosts
                 conformToHostsSelection(hostsToDeployTo, hostAvailabilityZoneMap, osHostSet);
@@ -143,7 +144,7 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         }
     }
 
-    private Set<String> getHostsFromHostAggregateSelection(Session session, JCloudNova novaApi,
+    private Set<String> getHostsFromHostAggregateSelection(EntityManager em, JCloudNova novaApi,
             Set<HostAggregate> dsHostAggr) throws IOException {
         Set<String> hostsToDeployTo = new HashSet<>();
         Iterator<HostAggregate> dsHostAggrIter = dsHostAggr.iterator();
@@ -156,15 +157,15 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 // Pigiback to update Host Aggr name in case it changed
                 if (!osHostAggr.getName().equals(dsHostAggrInstance.getName())) {
                     dsHostAggrInstance.setName(osHostAggr.getName());
-                    EntityManager.update(session, dsHostAggrInstance);
+                    OSCEntityManager.update(em, dsHostAggrInstance);
                 }
             } else {
                 // Host aggr has been deleted, delete the host aggr from ds
                 log.info(String.format("Host Aggregate %s(%s) has been deleted from openstack. Deleting from DS.",
                         dsHostAggrInstance.getName(), dsHostAggrInstance.getId()));
-                EntityManager.delete(session, dsHostAggrInstance);
+                OSCEntityManager.delete(em, dsHostAggrInstance);
                 dsHostAggrIter.remove();
-                EntityManager.update(session, this.ds);
+                OSCEntityManager.update(em, this.ds);
             }
         }
 
@@ -249,7 +250,7 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         return searchHosts(selectedHosts, hostName, false);
     }
 
-    private void conformToAzSelection(Session session, Set<AvailabilityZone> selectedAvailabilityZones,
+    private void conformToAzSelection(EntityManager em, Set<AvailabilityZone> selectedAvailabilityZones,
             List<AvailabilityZoneDetails> allAvailabilityZones, Collection<String> osHostSet) throws Exception {
         HostAvailabilityZoneMapping azHostMap = JCloudNova.getMapping(allAvailabilityZones);
         Set<String> dsAzDeletedFromOpenstack = new HashSet<>();
@@ -271,7 +272,7 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             }
 
             List<DistributedApplianceInstance> daisInZone = DistributedApplianceInstanceEntityMgr
-                    .listByDsIdAndAvailabilityZone(session, this.ds.getId(), az.getZone());
+                    .listByDsIdAndAvailabilityZone(em, this.ds.getId(), az.getZone());
 
             // For existing DAI in this zone, conform them
             if (daisInZone != null) {
@@ -297,7 +298,7 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         unConformedAzs.addAll(dsAzDeletedFromOpenstack);
         for (String unconformedAz : unConformedAzs) {
             List<DistributedApplianceInstance> daisInZone = DistributedApplianceInstanceEntityMgr
-                    .listByDsIdAndAvailabilityZone(session, this.ds.getId(), unconformedAz);
+                    .listByDsIdAndAvailabilityZone(em, this.ds.getId(), unconformedAz);
             if (daisInZone != null) {
                 for (DistributedApplianceInstance dai : daisInZone) {
                     this.tg.addTask(new DeleteSvaServerAndDAIMetaTask(this.ds.getRegion(), dai));

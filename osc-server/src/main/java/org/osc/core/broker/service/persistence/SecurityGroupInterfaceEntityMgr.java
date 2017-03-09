@@ -18,10 +18,11 @@ package org.osc.core.broker.service.persistence;
 
 import java.util.List;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
@@ -59,23 +60,35 @@ public class SecurityGroupInterfaceEntityMgr {
         dto.setOrder(sgi.getOrder());
     }
 
-    public static SecurityGroupInterface findSecurityGroupInterfacesByVsAndSecurityGroup(Session session,
+    public static SecurityGroupInterface findSecurityGroupInterfacesByVsAndSecurityGroup(EntityManager em,
             VirtualSystem vs, SecurityGroup sg) {
-        Criteria criteria = session.createCriteria(SecurityGroupInterface.class, "sgi")
-                .createAlias("sgi.securityGroups", "sg").add(Restrictions.eq("sg.id", sg.getId()))
-                .add(Restrictions.eq("sgi.virtualSystem", vs));
 
-        return (SecurityGroupInterface) criteria.uniqueResult();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroupInterface> query = cb.createQuery(SecurityGroupInterface.class);
+
+        Root<SecurityGroupInterface> root = query.from(SecurityGroupInterface.class);
+
+        query = query.select(root)
+                .where(cb.equal(root.join("securityGroups").get("id"), sg.getId()),
+                       cb.equal(root.get("virtualSystem"), vs));
+
+        return em.createQuery(query).getSingleResult();
     }
 
-    public static SecurityGroupInterface findSecurityGroupInterfaceByVsAndTag(Session session, VirtualSystem vs,
+    public static SecurityGroupInterface findSecurityGroupInterfaceByVsAndTag(EntityManager em, VirtualSystem vs,
             String tag) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Criteria criteria = session.createCriteria(SecurityGroupInterface.class)
-                .add(Restrictions.eq("virtualSystem", vs)).add(Restrictions.eq("tag", tag));
+        CriteriaQuery<SecurityGroupInterface> query = cb.createQuery(SecurityGroupInterface.class);
 
-        @SuppressWarnings("unchecked")
-        List<SecurityGroupInterface> list = criteria.setFirstResult(0).setMaxResults(1).list();
+        Root<SecurityGroupInterface> root = query.from(SecurityGroupInterface.class);
+
+        query = query.select(root)
+                .where(cb.equal(root.get("tag"), tag),
+                       cb.equal(root.get("virtualSystem"), vs));
+
+        List<SecurityGroupInterface> list = em.createQuery(query).setMaxResults(1).getResultList();
 
         if (list == null || list.size() == 0) {
             return null;
@@ -84,34 +97,9 @@ public class SecurityGroupInterfaceEntityMgr {
         return list.get(0);
     }
 
-    public static List<SecurityGroupInterface> listAllConfigurableSecurityGroupInterfaces(Session session,
-            Order[] orders) {
-        return listAllSecurityGroupInterfaces(session, true, orders);
-    }
-
-    public static List<SecurityGroupInterface> listAllNonConfigurableSecurityGroupInterfaces(Session session,
-            Order[] orders) {
-        return listAllSecurityGroupInterfaces(session, false, orders);
-
-    }
-
-    @SuppressWarnings("unchecked")
-    private static List<SecurityGroupInterface> listAllSecurityGroupInterfaces(Session session,
-            boolean userConfigurable, Order[] orders) {
-        Criteria criteria = session.createCriteria(SecurityGroupInterface.class)
-                .add(Restrictions.eq("isUserConfigurable", userConfigurable))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        if (orders != null) {
-            for (Order order : orders) {
-                criteria.addOrder(order);
-            }
-        }
-        return criteria.list();
-    }
-
-    public static SecurityGroupInterface findById(Session session, Long id) {
-        EntityManager<SecurityGroupInterface> emgr = new EntityManager<SecurityGroupInterface>(
-                SecurityGroupInterface.class, session);
+    public static SecurityGroupInterface findById(EntityManager em, Long id) {
+        OSCEntityManager<SecurityGroupInterface> emgr = new OSCEntityManager<SecurityGroupInterface>(
+                SecurityGroupInterface.class, em);
         return emgr.findByPrimaryKey(id);
     }
 

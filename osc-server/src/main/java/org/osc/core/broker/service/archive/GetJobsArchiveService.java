@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.archive;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.archive.JobsArchive;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.request.Request;
@@ -25,8 +26,8 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 public class GetJobsArchiveService extends ServiceDispatcher<Request, BaseDtoResponse<JobsArchiveDto>> {
 
     @Override
-    public BaseDtoResponse<JobsArchiveDto> exec(Request request, Session session) throws Exception {
-        JobsArchive jobsArchive = (JobsArchive) session.get(JobsArchive.class, 1L);
+    public BaseDtoResponse<JobsArchiveDto> exec(Request request, EntityManager em) throws Exception {
+        JobsArchive jobsArchive = em.find(JobsArchive.class, 1L);
 
         BaseDtoResponse<JobsArchiveDto> jobArchiveResponse = new BaseDtoResponse<JobsArchiveDto>();
         jobArchiveResponse.setDto(new JobsArchiveDto());

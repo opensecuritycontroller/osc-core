@@ -20,32 +20,33 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.hibernate.Session;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.RestoreUtil;
 import org.osc.core.util.KeyStoreProvider;
+import org.osc.core.util.ServerUtil;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
-import org.osc.core.util.ServerUtil;
 
 import com.mcafee.vmidc.server.Server;
 
 public class RestoreService extends BackupFileService<RestoreRequest, EmptySuccessResponse> {
 
     @Override
-    public EmptySuccessResponse exec(RestoreRequest request, Session session) throws Exception {
+    public EmptySuccessResponse exec(RestoreRequest request, EntityManager em) throws Exception {
     	File backupFile = request.getBkpFile();
     	String backupFilename = backupFile.getName();
     	Server.setInMaintenance(true);
     	DBConnectionParameters connectionParams = new DBConnectionParameters();
     	String oldDBPassword = connectionParams.getPassword();
-    	
+
     	// decrypt if needed
     	if (isValidEncryptedBackupFilename(backupFilename)) {
     		// hold reference to encrypted version to be able to delete it
@@ -72,11 +73,11 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     		// generate new - secure one
     		connectionParams.restoreDefaultPassword();
     	}
-    	
+
     	// restore h2 database to temporary file
     	RestoreUtil.restoreDataBase(backupFile, new File("tmp" + File.separator + ".").getAbsolutePath());
     	backupFile.delete();
-    	
+
     	File newDBFileTemp = new File("tmp" + File.separator + DATABASE_FILENAME);
         try {
         	// check if one can access db and get db version
@@ -147,32 +148,32 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     	public void parse(byte[] bytes) throws Exception {
     		// split encrypted backup bytes into fixed lenght password bytes and zip file bytes
     		byte[] passwordBytes = new byte[DB_PASSWORD_MAX_LENGTH];
-    		backupZipBytes = new byte[bytes.length - DB_PASSWORD_MAX_LENGTH];
-    		aesCTRkey = new byte[AES_KEY_SIZE];
+    		this.backupZipBytes = new byte[bytes.length - DB_PASSWORD_MAX_LENGTH];
+    		this.aesCTRkey = new byte[AES_KEY_SIZE];
 
     		try(ByteArrayInputStream decryptedBytesReader = new ByteArrayInputStream(bytes)) {
-				decryptedBytesReader.read(aesCTRkey);
+				decryptedBytesReader.read(this.aesCTRkey);
 				decryptedBytesReader.read(passwordBytes);
-    			decryptedBytesReader.read(backupZipBytes);
+    			decryptedBytesReader.read(this.backupZipBytes);
     		}
 
     		// trim zeroes from password
     		int endIdx = ArrayUtils.indexOf(passwordBytes, (byte)0);
     		passwordBytes = ArrayUtils.subarray(passwordBytes, 0, endIdx);
-    		dbPassword = new String(passwordBytes, "UTF-8");
+    		this.dbPassword = new String(passwordBytes, "UTF-8");
     	}
 
 		private void updateAESCTRKeyInKeystore() throws EncryptionException {
-			new AESCTREncryption().updateAESCTRKey(aesCTRkey);
+			new AESCTREncryption().updateAESCTRKey(this.aesCTRkey);
 		}
-    	
+
     	public String getDBPassword() {
-    		return dbPassword;
+    		return this.dbPassword;
     	}
-    	
+
     	public File writeBackupZipFile(String filePath) throws IOException {
-    		File backupZipFile = new File(FilenameUtils.removeExtension(filePath) + EXT_ZIP_BACKUP); 
-    		FileUtils.writeByteArrayToFile(backupZipFile, backupZipBytes);
+    		File backupZipFile = new File(FilenameUtils.removeExtension(filePath) + EXT_ZIP_BACKUP);
+    		FileUtils.writeByteArrayToFile(backupZipFile, this.backupZipBytes);
     		return backupZipFile;
     	}
     }

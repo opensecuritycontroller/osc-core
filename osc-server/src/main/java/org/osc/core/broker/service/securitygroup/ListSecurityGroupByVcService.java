@@ -19,7 +19,8 @@ package org.osc.core.broker.service.securitygroup;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -34,18 +35,18 @@ public class ListSecurityGroupByVcService extends ServiceDispatcher<BaseIdReques
     ListResponse<SecurityGroupDto> response = new ListResponse<SecurityGroupDto>();
 
     @Override
-    public ListResponse<SecurityGroupDto> exec(BaseIdRequest request, Session session) throws Exception {
+    public ListResponse<SecurityGroupDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
 
-        validate(session, request);
+        validate(em, request);
         // to do mapping
         List<SecurityGroupDto> dtoList = new ArrayList<SecurityGroupDto>();
 
-        for (SecurityGroup securityGroup : SecurityGroupEntityMgr.listSecurityGroupsByVcId(session, request.getId())) {
+        for (SecurityGroup securityGroup : SecurityGroupEntityMgr.listSecurityGroupsByVcId(em, request.getId())) {
 
             SecurityGroupDto dto = new SecurityGroupDto();
 
             SecurityGroupEntityMgr.fromEntity(securityGroup, dto);
-            SecurityGroupEntityMgr.generateDescription(session, dto);
+            SecurityGroupEntityMgr.generateDescription(em, dto);
 
             dtoList.add(dto);
         }
@@ -54,10 +55,10 @@ public class ListSecurityGroupByVcService extends ServiceDispatcher<BaseIdReques
         return this.response;
     }
 
-    protected void validate(Session session, BaseIdRequest request) throws Exception {
+    protected void validate(EntityManager em, BaseIdRequest request) throws Exception {
         BaseIdRequest.checkForNullId(request);
 
-        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(session, request.getId());
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, request.getId());
 
         if (vc == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector with Id: " + request.getId()

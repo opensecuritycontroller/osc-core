@@ -19,13 +19,14 @@ package org.osc.core.broker.service.openstack;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.openstack.request.BaseOpenStackRequest;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.response.ListResponse;
 
 public class ListRegionByVcIdService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>> {
@@ -33,10 +34,10 @@ public class ListRegionByVcIdService extends ServiceDispatcher<BaseOpenStackRequ
     private ListResponse<String> response = new ListResponse<String>();
 
     @Override
-    public ListResponse<String> exec(BaseOpenStackRequest request, Session session) throws Exception {
+    public ListResponse<String> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
         List<String> regions = new ArrayList<String>();
 
-        EntityManager<VirtualizationConnector> emgr = new EntityManager<VirtualizationConnector>(VirtualizationConnector.class, session);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(VirtualizationConnector.class, em);
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
         JCloudNova novaApi = new JCloudNova(new Endpoint(vc, request.getTenantName()));

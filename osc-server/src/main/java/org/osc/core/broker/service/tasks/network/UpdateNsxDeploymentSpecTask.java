@@ -19,9 +19,10 @@ package org.osc.core.broker.service.tasks.network;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
@@ -49,7 +50,7 @@ public class UpdateNsxDeploymentSpecTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         DeploymentSpecApi deploymentSpecApi = VMwareSdnApiFactory.createDeploymentSpecApi(this.vs);
         String imageName = this.vs.getApplianceSoftwareVersion().getImageUrl();
         if (this.deploySpec != null){

@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jboss.logging.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -55,10 +56,10 @@ class VmPortHookCreateTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.vmPort = (VMPort) session.get(VMPort.class, this.vmPort.getId());
-        this.dai = (DistributedApplianceInstance) session.get(DistributedApplianceInstance.class, this.dai.getId());
-        this.securityGroupInterface = (SecurityGroupInterface) session.get(SecurityGroupInterface.class,
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.vmPort = em.find(VMPort.class, this.vmPort.getId());
+        this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
+        this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
         VirtualSystem vs = this.dai.getVirtualSystem();
 

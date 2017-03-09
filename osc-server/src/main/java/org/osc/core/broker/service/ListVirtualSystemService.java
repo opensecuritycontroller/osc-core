@@ -18,7 +18,8 @@ package org.osc.core.broker.service;
 
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.ListVirtualSystemRequest;
@@ -29,13 +30,13 @@ public class ListVirtualSystemService extends ServiceDispatcher<ListVirtualSyste
     ListResponse<VirtualSystemDto> response = new ListResponse<VirtualSystemDto>();
 
     @Override
-    public ListResponse<VirtualSystemDto> exec(ListVirtualSystemRequest request, Session session) {
+    public ListResponse<VirtualSystemDto> exec(ListVirtualSystemRequest request, EntityManager em) {
 
         long mcId = request.getMcId();
         long applianceId = request.getApplianceId();
         String applianceSwVer = request.getApplianceSoftwareVersionName();
 
-        List<VirtualSystemDto> ls = VirtualSystemEntityMgr.findByMcApplianceAndSwVer(session, mcId, applianceId, applianceSwVer);
+        List<VirtualSystemDto> ls = VirtualSystemEntityMgr.findByMcApplianceAndSwVer(em, mcId, applianceId, applianceSwVer);
         this.response.setList(ls);
 
         return this.response;

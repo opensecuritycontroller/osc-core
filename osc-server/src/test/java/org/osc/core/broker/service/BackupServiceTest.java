@@ -16,27 +16,32 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+
+import javax.persistence.EntityManager;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 
-import static org.mockito.Mockito.*;
-
-import java.io.File;
-
-import static org.junit.Assert.*;
-
 public class BackupServiceTest {
-	
+
 	private BackupService target;
-	private Session sessionMock;
-	
+	private EntityManager em;
+
 	@Before
 	public void setUp() {
-		sessionMock = mock(Session.class);
-		target = mock(BackupService.class);
+		this.em = mock(EntityManager.class);
+		this.target = mock(BackupService.class);
 	}
 
 	@Test
@@ -50,63 +55,63 @@ public class BackupServiceTest {
 		String backupFilePath = "example/backup/file.dbb";
 		request.setBackupFileName(backupFilePath);
 		request.setBackupPassword("testPassword");
-		
-		when(target.exec(request, sessionMock)).thenCallRealMethod();
-		when(target.getBackupZipFileBytes(backupFilePath)).thenReturn(backupZipBytes);
-		when(target.appendDBPassword(backupZipBytes)).thenReturn(backupZipWithPasswordBytes);
-		when(target.appendAESCTRKey(backupZipWithPasswordBytes)).thenReturn(backupZipWithPasswordAndAESCTRBytes);
+
+		when(this.target.exec(request, this.em)).thenCallRealMethod();
+		when(this.target.getBackupZipFileBytes(backupFilePath)).thenReturn(backupZipBytes);
+		when(this.target.appendDBPassword(backupZipBytes)).thenReturn(backupZipWithPasswordBytes);
+		when(this.target.appendAESCTRKey(backupZipWithPasswordBytes)).thenReturn(backupZipWithPasswordAndAESCTRBytes);
 
 		// Act.
-		BackupResponse response = target.exec(request, sessionMock);
-		
+		BackupResponse response = this.target.exec(request, this.em);
+
 		// Assert.
-		verify(target, times(1)).ensureBackupFolderExists();
-		verify(target, times(1)).deleteBackupFiles();
-		verify(target, times(1)).createBackupZipFile(sessionMock, backupFilePath);
-		verify(target, times(1)).appendDBPassword(backupZipBytes);
-		verify(target, times(1)).encryptBackupFileBytes(backupZipWithPasswordAndAESCTRBytes, request.getBackupPassword());
+		verify(this.target, times(1)).ensureBackupFolderExists();
+		verify(this.target, times(1)).deleteBackupFiles();
+		verify(this.target, times(1)).createBackupZipFile(this.em, backupFilePath);
+		verify(this.target, times(1)).appendDBPassword(backupZipBytes);
+		verify(this.target, times(1)).encryptBackupFileBytes(backupZipWithPasswordAndAESCTRBytes, request.getBackupPassword());
 		assertTrue(response.isSuccess());
 	}
-	
+
 	@Test
 	public void testDeleteBackupFiles_withNoArguments_callsDeleteDefaultBackupFiles() {
 		// Arrange.
-		doCallRealMethod().when(target).deleteBackupFiles();
-		
+		doCallRealMethod().when(this.target).deleteBackupFiles();
+
 		// Act.
-		target.deleteBackupFiles();
-		
+		this.target.deleteBackupFiles();
+
 		// Assert.
-		verify(target, times(1)).deleteBackupFiles("BrokerServerDBBackup");
+		verify(this.target, times(1)).deleteBackupFiles("BrokerServerDBBackup");
 	}
-	
+
 	@Test
 	public void testDeleteBackupFiles_callsDeleteBothEncryptedAndZipFiles() {
 		// Arrange.
-		doCallRealMethod().when(target).deleteBackupFiles("BrokerServerDBBackup");
-		doCallRealMethod().when(target).resolveBackupZipPath("BrokerServerDBBackup");
-		doCallRealMethod().when(target).resolveEncryptedBackupPath("BrokerServerDBBackup");
-		
+		doCallRealMethod().when(this.target).deleteBackupFiles("BrokerServerDBBackup");
+		doCallRealMethod().when(this.target).resolveBackupZipPath("BrokerServerDBBackup");
+		doCallRealMethod().when(this.target).resolveEncryptedBackupPath("BrokerServerDBBackup");
+
 		// Act.
-		target.deleteBackupFiles("BrokerServerDBBackup");
-		
+		this.target.deleteBackupFiles("BrokerServerDBBackup");
+
 		// Assert.
-		verify(target, times(1)).deleteFile("backups" + File.separator + "BrokerServerDBBackup.zip");
-		verify(target, times(1)).deleteFile("backups" + File.separator + "BrokerServerDBBackup.dbb");
+		verify(this.target, times(1)).deleteFile("backups" + File.separator + "BrokerServerDBBackup.zip");
+		verify(this.target, times(1)).deleteFile("backups" + File.separator + "BrokerServerDBBackup.dbb");
 	}
-	
+
 	@Test
 	public void testAppendPasswordBytes_withGivenBytes_appendsPasswordProperly() throws Exception {
 		// Arrange.
 		byte[] testBytes = "someTestBytes".getBytes();
 		byte[] testDBPasswordBytes = "dbPasswordBytes".getBytes();
-		
-		when(target.appendDBPassword(testBytes)).thenCallRealMethod();
-		when(target.getDBPasswordBytes()).thenReturn(testDBPasswordBytes);
-		
+
+		when(this.target.appendDBPassword(testBytes)).thenCallRealMethod();
+		when(this.target.getDBPasswordBytes()).thenReturn(testDBPasswordBytes);
+
 		// Act.
-		byte[] testBytesWithDBPassword = target.appendDBPassword(testBytes);
-		
+		byte[] testBytesWithDBPassword = this.target.appendDBPassword(testBytes);
+
 		// Assert.
 		assertEquals(testBytesWithDBPassword.length, 160 /* max password length (fixed) */ + testBytes.length);
 	}

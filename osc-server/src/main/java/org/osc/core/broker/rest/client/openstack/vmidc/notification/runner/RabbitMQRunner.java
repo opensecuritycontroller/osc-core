@@ -19,8 +19,9 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification.runner;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -51,11 +52,11 @@ public class RabbitMQRunner implements BroadcastListener {
     private OsDeploymentSpecNotificationRunner deploymentSpecRunner;
 
     public RabbitMQRunner() {
-        Session session = null;
+        EntityManager em = null;
         try {
             BroadcasterUtil.register(this);
-            session = HibernateUtil.getSessionFactory().openSession();
-            List<VirtualizationConnector> vcList = VirtualizationConnectorEntityMgr.listByType(session,
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            List<VirtualizationConnector> vcList = VirtualizationConnectorEntityMgr.listByType(em,
                     VirtualizationType.OPENSTACK);
 
             // Iterate over all the VCs of Type Open Stack and start RabbitMQ connections with them.
@@ -81,8 +82,8 @@ public class RabbitMQRunner implements BroadcastListener {
             AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                     "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
 
@@ -90,13 +91,13 @@ public class RabbitMQRunner implements BroadcastListener {
 
     @Override
     public void receiveBroadcast(BroadcastMessage msg) {
-        Session session = null;
+        EntityManager em = null;
         VirtualizationConnector vc = null;
         try {
             if (msg.getReceiver().equals("VirtualizationConnector")) {
-                session = HibernateUtil.getSessionFactory().openSession();
+                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
                 if (msg.getEventType() != EventType.DELETED) {
-                    vc = VirtualizationConnectorEntityMgr.findById(session, msg.getEntityId());
+                    vc = VirtualizationConnectorEntityMgr.findById(em, msg.getEntityId());
                 } else {
                     vc = new VirtualizationConnector();
                     vc.setId(msg.getEntityId());
@@ -109,8 +110,8 @@ public class RabbitMQRunner implements BroadcastListener {
             AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                     "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }

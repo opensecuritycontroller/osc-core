@@ -18,8 +18,9 @@ package org.osc.core.broker.service;
 
 import java.io.File;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.UpgradeRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
@@ -31,7 +32,7 @@ public class UpgradeService extends ServiceDispatcher<UpgradeRequest, EmptySucce
     private static final Logger log = Logger.getLogger(UpgradeService.class);
 
     @Override
-    public EmptySuccessResponse exec(UpgradeRequest request, Session session) throws Exception {
+    public EmptySuccessResponse exec(UpgradeRequest request, EntityManager em) throws Exception {
         File uploadedFile = request.getUploadedFile();
         log.info("Upgrade Req (pid:" + ServerUtil.getCurrentPid() + "): uploaded File: "
                 + uploadedFile.getCanonicalPath());
