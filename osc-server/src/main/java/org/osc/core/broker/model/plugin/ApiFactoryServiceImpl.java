@@ -135,6 +135,9 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         ApplianceManagerApi api = this.managerApis.get(name);
 
         if (api == null) {
+            // ApplianceManagerApi is not a prototype service,
+            // but the single service instance is use-counted.
+            // We save the service object in the managerApis map, to avoid incrementing the count on each call.
             ComponentServiceObjects<ApplianceManagerApi> serviceObjs = this.managerRefs.get(name);
             if (serviceObjs == null) {
                 throw new VmidcException(String.format("Manager plugin not found for controller type: %s", name));
