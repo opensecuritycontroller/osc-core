@@ -23,7 +23,7 @@
     </exec>
     <exec executable="sudo" resultproperty="ovf.result">
       <arg value="make" />
-      <arg value="build-all-images=${build-all-images}"/>
+      <arg value="image-format=${image-format}"/>
       <arg value="buildNumber=${buildNumber}"/>
       <arg value="-j" />
       <arg value="--no-print-directory"/>

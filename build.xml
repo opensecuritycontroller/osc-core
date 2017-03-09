@@ -4,7 +4,7 @@
 >
 	<description>a vmidc deploy tool</description>
 
-	<property name="build-all-images" value="false" />
+	<property name="image-format" value="vmdk" />
 	<target name="ovf" depends="build,ovfOnly,ovfCopy" description="build all and generate vmidc ovf" />
 
 	<target name="build">
@@ -34,7 +34,7 @@
 			<arg value="centos" />
 			<arg value="--" />
 			<arg value="ant" />
-			<arg value="-Dbuild-all-images=${build-all-images}"/>
+			<arg value="-Dimage-format=${image-format}"/>
 			<arg value="-Dbranchname=${branchname}" />
 			<arg value="-DbuildNumber=${buildNumber}" />
 			<arg value="-DproductVersion=${productVersion}" />
@@ -53,7 +53,7 @@
 		<copy file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />
 		<copy file="${user.home}/.m2/repository/com/forcepoint/osc/security-mgr-smc-plugin/1.0/security-mgr-smc-plugin-1.0.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" />
 		<copy file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" tofile="Build${buildNumber}/NscSdnControllerPlugin.bar" />
-        <copy file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" tofile="Build${buildNumber}/VMwareNsxPlugin.bar" />
+		<copy file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" tofile="Build${buildNumber}/VMwareNsxPlugin.bar" />
 		<move file="osc-server-bom/OSC_disk-0.vmdk" tofile="Build${buildNumber}/OSC_disk-0.vmdk" />
 		<move file="osc-server-bom/OSC_disk-0.qcow2" tofile="Build${buildNumber}/OSC_disk-0.qcow2" quiet="true" failonerror="false" />
 		<move file="osc-server-bom/OSC_disk-0-raw.img" tofile="Build${buildNumber}/OSC_disk-0-raw.img" quiet="true" failonerror="false" />
