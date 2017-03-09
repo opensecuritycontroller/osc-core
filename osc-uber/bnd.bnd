@@ -12,7 +12,7 @@ Require-Capability: \
 # Automatically export packages annotated with @Version in package-info.java
 # The JPA and hibernate exports are temporary until Hibernate is extracted from the uber bundle
 -exportcontents: ${packages;VERSIONED}, \
- javax.persistence, org.hibernate.annotations;version=4.2.11,\
+    javax.persistence, org.hibernate.annotations;version=5.0.1,\
     org.hibernate.proxy;uses:="javassist.util.proxy", \
     javassist.util.proxy
   
@@ -39,6 +39,7 @@ Require-Capability: \
     @${antlr.dep},\
     @${atmosphere-runtime.dep},\
     @${c3p0.dep},\
+    @${classmate.dep},\
     @${commons-cli.dep},\
     @${commons-collections4.dep},\
     @${commons-io.dep},\
@@ -50,14 +51,13 @@ Require-Capability: \
     @${h2.dep},\
     @${hibernate-commons-annotations.dep},\
     @${hibernate-core.dep},\
-    @${hibernate-jpa-2.0-api.dep},\
+    @${hibernate-jpa-2.1-api.dep},\
     @${jackson-annotations.dep},\
     @${jackson-core.dep},\
     @${jackson-databind.dep},\
     @${jackson-dataformat-yaml.dep},\
     @${javassist.dep},\
     @${javax.mail.dep},\
-    @${jboss-transaction-api_1.1_spec.dep},\
     @${joda-time.dep},\
     @${json.dep},\
     @${jsoup.dep},\
@@ -118,6 +118,8 @@ import-websocket:\
 import-guava:\
   com.google.common.*;version="[16.0.1,20)"
 
+# Reflectively loaded classes, and ones where
+# the automatic version range is too restrictive
 import-extra:\
   org.ietf.jgss,\
   org.w3c.dom,\
@@ -128,6 +130,9 @@ import-extra:\
   javax.servlet,\
   javax.servlet.annotation,\
   javax.servlet.descriptor,\
+  javax.servlet.http,\
+  javax.transaction;version="[1.1,2)",\
+  javax.transaction.xa;version="[1.1,2)",\
   javax.servlet.http,\
   com.fasterxml.jackson.annotation
 
@@ -248,7 +253,31 @@ exclude-other:\
   !com.vividsolutions.jts.geom,\
   !com.vividsolutions.jts.io,\
   !commonj.work,\
+  !net.bytebuddy,\
+  !net.bytebuddy.asm,\
+  !net.bytebuddy.description,\
+  !net.bytebuddy.description.annotation,\
+  !net.bytebuddy.description.field,\
+  !net.bytebuddy.description.method,\
+  !net.bytebuddy.description.modifier,\
+  !net.bytebuddy.description.type,\
+  !net.bytebuddy.dynamic,\
+  !net.bytebuddy.dynamic.scaffold,\
+  !net.bytebuddy.dynamic.scaffold.subclass,\
+  !net.bytebuddy.implementation,\
+  !net.bytebuddy.implementation.auxiliary,\
+  !net.bytebuddy.implementation.bind.annotation,\
+  !net.bytebuddy.implementation.bytecode,\
+  !net.bytebuddy.implementation.bytecode.assign,\
+  !net.bytebuddy.implementation.bytecode.assign.primitive,\
+  !net.bytebuddy.implementation.bytecode.assign.reference,\
+  !net.bytebuddy.jar.asm,\
+  !net.bytebuddy.matcher,\
+  !net.bytebuddy.pool,\
   !oracle.sql,\
+  !org.apache.logging.log4j,\
+  !org.apache.logging.log4j.message,\
+  !org.apache.logging.log4j.spi,\
   !org.apache.lucene.analysis,\
   !org.apache.lucene.analysis.standard,\
   !org.apache.lucene.document,\

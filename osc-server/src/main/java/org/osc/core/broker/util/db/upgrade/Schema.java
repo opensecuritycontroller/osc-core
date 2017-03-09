@@ -24,8 +24,6 @@ import java.sql.Statement;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.util.db.DBConnectionParameters;
@@ -1204,13 +1202,14 @@ public class Schema {
         }; // end of schema array
     // @formatter:on
 
-    public static void generateDdlFile(Configuration configuration, String outputFile) {
-
-        SchemaExport export = new SchemaExport(configuration);
-        export.setOutputFile(outputFile);
-        export.setDelimiter(";");
-        export.execute(true, false, false, true);
-    }
+//    public static void generateDdlFile(Configuration configuration, String outputFile) {
+//
+//        SchemaExport export = new SchemaExport(configuration);
+//
+//        export.setOutputFile(outputFile);
+//        export.setDelimiter(";");
+//        export.execute(true, false, false, true);
+//    }
 
     @SuppressFBWarnings(value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
     public static void createSchema() throws SQLException, KeyStoreProviderException, IOException {

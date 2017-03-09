@@ -28,6 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -35,7 +36,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 
 @Entity
@@ -48,8 +48,8 @@ public class TaskRecord extends BaseEntity {
     private String name;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "job_fk", nullable = false)
-    @ForeignKey(name = "FK_TASK_JOB")
+    @JoinColumn(name = "job_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_TASK_JOB"))
     private JobRecord job;
 
     @Column(name = "fail_reason", length = 1024)

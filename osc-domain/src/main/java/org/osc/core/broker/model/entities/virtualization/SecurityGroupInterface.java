@@ -25,13 +25,13 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
@@ -57,8 +57,8 @@ public class SecurityGroupInterface extends BaseEntity {
     private String name;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "virtual_system_fk", nullable = false)
-    @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM")
+    @JoinColumn(name = "virtual_system_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM"))
     private VirtualSystem virtualSystem;
 
     /**
@@ -68,13 +68,12 @@ public class SecurityGroupInterface extends BaseEntity {
      */
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "virtual_system_policy_fk")
-    @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM_POLIC")
+    @JoinColumn(name = "virtual_system_policy_fk",
+            foreignKey = @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM_POLIC"))
     private VirtualSystemPolicy virtualSystemPolicy;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "policy_fk")
-    @ForeignKey(name = "FK_SGI_POLICY")
+    @JoinColumn(name = "policy_fk", foreignKey = @ForeignKey(name = "FK_SGI_POLICY"))
     private Policy policy;
 
     @Column(name = "nsx_vsm_uuid")

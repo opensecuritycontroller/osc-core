@@ -19,11 +19,11 @@ package org.osc.core.broker.model.entities.virtualization.openstack;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -41,13 +41,12 @@ public class OsImageReference extends BaseEntity {
     private String imageRefId;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vs_fk", nullable = false)
-    @ForeignKey(name = "FK_VS_OS_IMAGE_REFERENCE")
+    @JoinColumn(name = "vs_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_VS_OS_IMAGE_REFERENCE"))
     private VirtualSystem virtualSystem;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "asv_fk")
-    @ForeignKey(name = "FK_ASV_OS_IMAGE_REFERENCE")
+    @JoinColumn(name = "asv_fk", foreignKey = @ForeignKey(name = "FK_ASV_OS_IMAGE_REFERENCE"))
     private ApplianceSoftwareVersion applianceVersion;
 
     OsImageReference() {
