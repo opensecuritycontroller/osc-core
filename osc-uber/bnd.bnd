@@ -39,7 +39,6 @@ Require-Capability: \
     @${antlr.dep},\
     @${atmosphere-runtime.dep},\
     @${c3p0.dep},\
-    @${classmate.dep},\
     @${commons-cli.dep},\
     @${commons-collections4.dep},\
     @${commons-io.dep},\
@@ -86,7 +85,6 @@ Require-Capability: \
     @${vaadin-shared.dep},\
     @${vaadin-slf4j-jdk14.dep},\
     @${vaadin-themes.dep},\
-    @${validation-api.dep},\
     @${vijava.dep},\
     @${security-mgr-api.dep},\
     @${sdn-controller-api.dep},\
@@ -133,8 +131,8 @@ import-extra:\
   javax.servlet.http,\
   javax.transaction;version="[1.1,2)",\
   javax.transaction.xa;version="[1.1,2)",\
-  javax.servlet.http,\
-  com.fasterxml.jackson.annotation
+  com.fasterxml.jackson.annotation,\
+  org.hibernate.validator
 
 exclude-osgi:\
   !org.osgi.service.jdbc
@@ -178,8 +176,6 @@ exclude-tomcat:\
   !javax.ejb
 
 exclude-other:\
-  !com.fasterxml.classmate,\
-  !com.fasterxml.classmate.members,\
   !com.gargoylesoftware.htmlunit,\
   !com.gargoylesoftware.htmlunit.html,\
   !com.gargoylesoftware.htmlunit.javascript,\
@@ -275,9 +271,6 @@ exclude-other:\
   !net.bytebuddy.matcher,\
   !net.bytebuddy.pool,\
   !oracle.sql,\
-  !org.apache.logging.log4j,\
-  !org.apache.logging.log4j.message,\
-  !org.apache.logging.log4j.spi,\
   !org.apache.lucene.analysis,\
   !org.apache.lucene.analysis.standard,\
   !org.apache.lucene.document,\
