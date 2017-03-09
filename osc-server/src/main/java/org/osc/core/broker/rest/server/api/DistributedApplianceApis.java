@@ -51,6 +51,7 @@ import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osgi.service.component.annotations.Component;
 
 import com.sun.jersey.api.JResponse;
 import com.sun.jersey.spi.container.ResourceFilters;
@@ -62,6 +63,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+@Component(service = DistributedApplianceApis.class)
 @Api(tags = "Operations for Distributed Appliances", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/distributedAppliances")
 @ResourceFilters({ VmidcAuthFilter.class })

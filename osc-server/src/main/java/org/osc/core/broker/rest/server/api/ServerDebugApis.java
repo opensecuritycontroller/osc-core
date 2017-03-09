@@ -16,19 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import com.mcafee.vmidc.server.Server;
-import com.sun.jersey.spi.container.ResourceFilters;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.broker.job.lock.LockInformationDto;
-import org.osc.core.broker.job.lock.LockManager;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.util.db.DBConnectionParameters;
-import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.rest.client.RestBaseClient;
-import org.osc.core.rest.client.util.LoggingUtil;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
-import org.osc.core.util.LocalHostAuthFilter;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -40,13 +33,23 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.job.lock.LockInformationDto;
+import org.osc.core.broker.job.lock.LockManager;
+import org.osc.core.broker.rest.server.IscRestServlet;
+import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.rest.client.RestBaseClient;
+import org.osc.core.rest.client.util.LoggingUtil;
+import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
+import org.osc.core.util.LocalHostAuthFilter;
+import org.osgi.service.component.annotations.Component;
 
+import com.mcafee.vmidc.server.Server;
+import com.sun.jersey.spi.container.ResourceFilters;
+
+@Component(service = ServerDebugApis.class)
 @Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/serverDebug")
 @ResourceFilters(LocalHostAuthFilter.class)
 @Consumes(MediaType.TEXT_PLAIN)
@@ -144,7 +147,7 @@ public class ServerDebugApis {
 
         DBConnectionParameters params = new DBConnectionParameters();
         params.setConnectionURL(params.getConnectionURL() + "AUTO_SERVER=TRUE;");
-        
+
         try (Connection conn = HibernateUtil.getSQLConnection(params);
              Statement statement = conn.createStatement()) {
             try (ResultSet result = statement.executeQuery(sql)){
@@ -183,10 +186,10 @@ public class ServerDebugApis {
     public static StringBuilder exec(String sql) throws IOException, KeyStoreProviderException {
         StringBuilder output = new StringBuilder();
         output.append("Exec: ").append(sql).append("\n");
-        
+
         DBConnectionParameters params = new DBConnectionParameters();
         params.setConnectionURL(params.getConnectionURL() + "AUTO_SERVER=TRUE;");
-        
+
         try (Connection conn = HibernateUtil.getSQLConnection(params);
              Statement statement = conn.createStatement()) {
             boolean isResultSet = statement.execute(sql);

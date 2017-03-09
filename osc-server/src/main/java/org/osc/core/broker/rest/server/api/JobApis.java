@@ -41,6 +41,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.request.ListTaskRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
 import com.sun.jersey.api.JResponse;
 import com.sun.jersey.spi.container.ResourceFilters;
@@ -51,6 +52,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+@Component(service = JobApis.class)
 @Api(tags = "Operations for Jobs", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/jobs")
 @ResourceFilters({ VmidcAuthFilter.class })

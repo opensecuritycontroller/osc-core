@@ -52,6 +52,7 @@ import org.osc.core.broker.util.SessionUtil;
 import org.osc.sdk.manager.element.MgrChangeNotification;
 import org.osc.sdk.manager.element.MgrChangeNotification.ChangeType;
 import org.osc.sdk.manager.element.MgrChangeNotification.MgrObjectType;
+import org.osgi.service.component.annotations.Component;
 
 import com.sun.jersey.spi.container.ResourceFilters;
 
@@ -62,6 +63,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+@Component(service = ManagerApis.class)
 @Api(tags = "Operations for Manager Plugin", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(IscRestServlet.MANAGER_API_PATH_PREFIX)
 @ResourceFilters({ VmidcAuthFilter.class })

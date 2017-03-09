@@ -57,10 +57,12 @@ import org.osc.core.broker.service.request.NsxUpdateProfileRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osgi.service.component.annotations.Component;
 
 import com.mcafee.vmidc.server.Server;
 import com.sun.jersey.spi.container.ResourceFilters;
 
+@Component(service = NsxApis.class)
 @Path(IscRestServlet.NSX_API_PATH_PREFIX)
 @ResourceFilters({ NsxAuthFilter.class })
 public class NsxApis {

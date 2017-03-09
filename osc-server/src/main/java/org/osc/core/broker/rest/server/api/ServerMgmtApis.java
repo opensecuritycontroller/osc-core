@@ -16,15 +16,24 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import com.mcafee.vmidc.server.Server;
-import com.sun.jersey.api.JResponse;
-import com.sun.jersey.spi.container.ResourceFilters;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
+import java.io.File;
+import java.util.Date;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.IscRestServlet;
 import org.osc.core.broker.rest.server.VmidcAuthFilter;
@@ -42,29 +51,25 @@ import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
-import org.osc.core.util.LocalHostAuthFilter;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
+import org.osc.core.util.LocalHostAuthFilter;
 import org.osc.core.util.PKIUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
+import org.osgi.service.component.annotations.Component;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import java.io.File;
-import java.util.Date;
-import java.util.List;
+import com.mcafee.vmidc.server.Server;
+import com.sun.jersey.api.JResponse;
+import com.sun.jersey.spi.container.ResourceFilters;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+
+@Component(service = ServerMgmtApis.class)
 @Api(tags = "Operations for OSC server", authorizations = {@Authorization(value = "Basic Auth")})
 @Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/serverManagement")
 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

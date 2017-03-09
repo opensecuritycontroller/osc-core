@@ -48,6 +48,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osgi.service.component.annotations.Component;
 
 import com.sun.jersey.api.JResponse;
 import com.sun.jersey.spi.container.ResourceFilters;
@@ -59,6 +60,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+@Component(service = AlarmApis.class)
 @Api(tags = "Operations for Alarms", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/alarms")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

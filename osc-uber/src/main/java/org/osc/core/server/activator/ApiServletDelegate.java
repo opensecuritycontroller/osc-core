@@ -23,16 +23,34 @@ import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHIT
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.ws.rs.core.Application;
 
-import org.osc.core.broker.rest.server.IscRestServlet;
+import org.osc.core.broker.rest.server.api.AlarmApis;
+import org.osc.core.broker.rest.server.api.AlertApis;
+import org.osc.core.broker.rest.server.api.ApplianceApis;
+import org.osc.core.broker.rest.server.api.DistributedApplianceApis;
+import org.osc.core.broker.rest.server.api.DistributedApplianceInstanceApis;
+import org.osc.core.broker.rest.server.api.JobApis;
+import org.osc.core.broker.rest.server.api.ManagerApis;
+import org.osc.core.broker.rest.server.api.ManagerConnectorApis;
+import org.osc.core.broker.rest.server.api.ServerDebugApis;
+import org.osc.core.broker.rest.server.api.ServerMgmtApis;
+import org.osc.core.broker.rest.server.api.VirtualSystemApis;
+import org.osc.core.broker.rest.server.api.VirtualizationConnectorApis;
+import org.osc.core.broker.rest.server.api.proprietary.NsmMgrApis;
+import org.osc.core.broker.rest.server.api.proprietary.NsxApis;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 
@@ -44,19 +62,61 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
         HTTP_WHITEBOARD_TARGET + "=(" + ApiServletContext.FELIX_HTTP_NAME + "=" + ApiServletContext.OSC_API_NAME + ")"
 
 })
-public class ApiServletDelegate implements Servlet {
+public class ApiServletDelegate extends Application implements Servlet {
+    static final long serialVersionUID = 1L;
+
+    @Reference
+    private AlarmApis alarmApis;
+    @Reference
+    private AlertApis alertApis;
+    @Reference
+    private ApplianceApis applianceApis;
+    @Reference
+    private DistributedApplianceApis distributedApplianceApis;
+    @Reference
+    private DistributedApplianceInstanceApis distributedApplianceInstanceApis;
+    @Reference
+    private JobApis jobApis;
+    @Reference
+    private ManagerApis managerApis;
+    @Reference
+    private ManagerConnectorApis managerConnectorApis;
+    @Reference
+    private NsmMgrApis nsmMgrApis;
+    @Reference
+    private NsxApis nsxApis;
+    @Reference
+    private ServerDebugApis serverDebugApis;
+    @Reference
+    private ServerMgmtApis serverMgmtApis;
+    @Reference
+    private VirtualSystemApis virtualSystemApis;
+    @Reference
+    private VirtualizationConnectorApis virtualizationConnectorApis;
+
     /** The Jersey REST container */
     private ServletContainer container;
 
+    // override Application.getSingtons() to provide injected references
+    @Override
+    public Set<Object> getSingletons() {
+        return new HashSet<Object>(Arrays.asList(new Object[] { this.alarmApis, this.alertApis, this.applianceApis,
+                this.distributedApplianceApis, this.distributedApplianceInstanceApis, this.jobApis, this.managerApis,
+                this.managerConnectorApis, this.nsmMgrApis, this.nsxApis, this.serverDebugApis, this.serverMgmtApis,
+                this.virtualSystemApis, this.virtualizationConnectorApis }));
+    }
+
     @Activate
     void activate() {
-        this.container = new ServletContainer(IscRestServlet.class);
+        this.container = new ServletContainer(this);
     }
 
     @Override
     public void destroy() {
         this.container.destroy();
     }
+
+    // Servlet interface methods
 
     @Override
     public ServletConfig getServletConfig() {

@@ -43,9 +43,11 @@ import org.osc.core.broker.service.TagVmService;
 import org.osc.core.broker.service.UnTagVmService;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.util.SessionUtil;
+import org.osgi.service.component.annotations.Component;
 
 import com.sun.jersey.spi.container.ResourceFilters;
 
+@Component(service = NsmMgrApis.class)
 @Path(IscRestServlet.MGR_NSM_API_PATH_PREFIX)
 @ResourceFilters({ VmidcAuthFilter.class })
 @Consumes({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
