@@ -19,6 +19,7 @@ package org.osc.core.broker.model.plugin.manager;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
@@ -49,6 +50,7 @@ import org.osgi.util.tracker.ServiceTracker;
 public class ManagerApiFactory {
 
     public static final String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
+    private static final Logger log = Logger.getLogger(ManagerApiFactory.class);
 
     private static ApiFactoryService apiFactoryService;
     private static BundleContext bundleContext;
@@ -72,6 +74,7 @@ public class ManagerApiFactory {
             apiFactoryTracker.close();
         } catch (InterruptedException e) {
             // allow interrupted state to be cleared, apiFactoryService remains null
+            log.error("InterruptedException waiting for ApiFactoryService");
         }
 
         if (apiFactoryService == null) {

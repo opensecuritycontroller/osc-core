@@ -87,6 +87,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         if (name instanceof String) {
             refs.put((String) name, serviceObjs);
             this.log.info("add plugin: " + name);
+        } else {
+            this.log.warn(String.format("add plugin ignored as %s=%s", OSC_PLUGIN_NAME, name));
         }
     }
 
@@ -95,6 +97,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         if (name instanceof String) {
             refs.remove(name, serviceObjs);
             this.log.info("remove plugin: " + name);
+        } else {
+            this.log.warn(String.format("remove plugin ignored as %s=%s", OSC_PLUGIN_NAME, name));
         }
     }
 
@@ -166,6 +170,12 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         if (serviceObjs == null) {
             throw new VmidcException(String.format("Sdn plugin not found for controller type: %s", name));
         }
+        /*
+         * The SdnControllerApi is a prototype service: @Component(scope=ServiceScope.PROTOTYPE).
+         * This means that serviceObjs.getService() will return a new service instance
+         * on each call. We need to arrange for serviceObjs.ungetService() to be called.
+         * This is done by the autoCloseProxy.
+         */
         return autoCloseProxy(serviceObjs, SdnControllerApi.class);
     }
 

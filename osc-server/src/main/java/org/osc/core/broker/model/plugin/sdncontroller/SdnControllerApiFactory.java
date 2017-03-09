@@ -19,6 +19,7 @@ package org.osc.core.broker.model.plugin.sdncontroller;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
@@ -41,6 +42,7 @@ import org.osgi.util.tracker.ServiceTracker;
 public class SdnControllerApiFactory {
 
     public static final String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
+    private static final Logger log = Logger.getLogger(SdnControllerApiFactory.class);
 
     private static ApiFactoryService apiFactoryService;
     private static BundleContext bundleContext;
@@ -122,6 +124,7 @@ public class SdnControllerApiFactory {
             apiFactoryTracker.close();
         } catch (InterruptedException e) {
             // allow interrupted state to be cleared, apiFactoryService remains null
+            log.error("InterruptedException waiting for ApiFactoryService");
         }
 
         if (apiFactoryService == null) {
