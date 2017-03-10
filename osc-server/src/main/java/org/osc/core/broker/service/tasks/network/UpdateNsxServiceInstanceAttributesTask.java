@@ -24,6 +24,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
+import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
@@ -51,8 +52,8 @@ public class UpdateNsxServiceInstanceAttributesTask extends TransactionalTask {
         serviceInstanceApi.updateServiceInstance(
                 this.vs.getNsxServiceInstanceId(),
                 this.vs.getNsxServiceId(),
-                AgentAuthFilter.VMIDC_AGENT_LOGIN,
-                EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS),
+                NsxAuthFilter.VMIDC_NSX_LOGIN,
+                NsxAuthFilter.VMIDC_NSX_PASS,
                 ServerUtil.getServerIP(),
                 this.vs.getDistributedAppliance().getApplianceVersion(),
                 this.vs.getDistributedAppliance().getAppliance().getModel());
