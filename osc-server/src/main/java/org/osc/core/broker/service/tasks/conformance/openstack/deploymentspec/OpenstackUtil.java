@@ -58,7 +58,6 @@ import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.util.encryption.EncryptionException;
-import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.element.NetworkElement;
 
 public class OpenstackUtil {
@@ -82,21 +81,21 @@ public class OpenstackUtil {
         String domainId=null;
         Port port = null;
         try (
-             JCloudNeutron neutron = new JCloudNeutron(new Endpoint(vc, tenantName));
-             JCloudNova nova = new JCloudNova(new Endpoint(vc, tenantName))) {
+                JCloudNeutron neutron = new JCloudNeutron(new Endpoint(vc, tenantName));
+                JCloudNova nova = new JCloudNova(new Endpoint(vc, tenantName))) {
             Set<String> regions = nova.listRegions();
             outerloop:
-            for (String region : regions) {
-                for (NetworkElement elem : protectedPorts) {
-                    port = neutron.getPortById(region, elem.getElementId());
-                    if (port != null) {
-                        domainId = neutron.getNetworkPortRouterDeviceId(tenantId, region, port);
-                        if (domainId !=null) {
-                            break outerloop;
+                for (String region : regions) {
+                    for (NetworkElement elem : protectedPorts) {
+                        port = neutron.getPortById(region, elem.getElementId());
+                        if (port != null) {
+                            domainId = neutron.getNetworkPortRouterDeviceId(tenantId, region, port);
+                            if (domainId !=null) {
+                                break outerloop;
+                            }
                         }
                     }
                 }
-            }
         }
         return domainId;
     }
@@ -129,7 +128,7 @@ public class OpenstackUtil {
             }
             if (server.getStatus() != Status.ACTIVE) {
                 throw new VmidcException("VM with id: '" + vmId + "' is not in ready state (" + server.getStatus()
-                        + ")");
+                + ")");
             }
 
             i = MAX_DISCOVERY_RETRIES;
@@ -243,9 +242,7 @@ public class OpenstackUtil {
         } else {
 
             // No DS found that has deployments on that host. Our last resort is to try off-boxing
-
-            SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(vs, region);
-            if (!controller.isOffboxRedirectionSupported()) {
+            if (!SdnControllerApiFactory.supportsOffboxRedirection(vs)) {
                 // We did not find a DS with a host deployment, either exclusive or shared.
                 // And, our SDN controller does not support off-box traffic redirection.
                 throw new VmidcBrokerValidationException(

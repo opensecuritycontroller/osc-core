@@ -52,7 +52,7 @@ public class ApplianceManagerConnectorEntityMgr {
         mc.setId(dto.getId());
         mc.setName(dto.getName());
         mc.setManagerType(dto.getManagerType().getValue());
-        mc.setServiceType(ManagerApiFactory.createApplianceManagerApi(dto.getManagerType()).getServiceName());
+        mc.setServiceType(ManagerApiFactory.getServiceName(dto.getManagerType()));
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
         mc.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
