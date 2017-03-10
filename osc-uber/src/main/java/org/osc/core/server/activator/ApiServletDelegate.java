@@ -30,11 +30,11 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.osc.core.broker.rest.server.IscRestServlet;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
-import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 @Component(name = "api.servlet", service = Servlet.class, property = {
 
@@ -45,12 +45,13 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 })
 public class ApiServletDelegate implements Servlet {
+
     /** The Jersey REST container */
     private ServletContainer container;
 
     @Activate
     void activate() {
-        this.container = new ServletContainer(IscRestServlet.class);
+        this.container = new ServletContainer(new OscRestServlet());
     }
 
     @Override

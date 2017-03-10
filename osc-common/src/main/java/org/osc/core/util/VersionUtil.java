@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.Manifest;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.log4j.Logger;
 
 public class VersionUtil {
@@ -66,10 +67,11 @@ public class VersionUtil {
             return this.build;
         }
 
+        @JsonIgnore
         public Long getBuildNumber() {
             return Long.parseLong(this.build.split("-")[0]);
         }
-        
+
         public void setBuild(String build) {
             this.build = build;
         }
@@ -86,6 +88,7 @@ public class VersionUtil {
             return this.versionStr;
         }
 
+        @JsonIgnore
         public String getShortVersionStr() {
             if (this.major == null || this.minor == null) {
                 return null;
@@ -94,6 +97,7 @@ public class VersionUtil {
             return this.major.toString() + "." + this.minor.toString();
         }
 
+        @JsonIgnore
         public String getShortVersionStrWithBuild() {
             if (this.major == null || this.minor == null || this.build == null) {
                 return null;

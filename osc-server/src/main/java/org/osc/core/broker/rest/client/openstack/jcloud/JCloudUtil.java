@@ -25,7 +25,11 @@ import org.apache.log4j.Logger;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.http.HttpResponseException;
+import org.jclouds.openstack.glance.v1_0.GlanceApiMetadata;
+import org.jclouds.openstack.keystone.v2_0.KeystoneApiMetadata;
+import org.jclouds.openstack.neutron.v2.NeutronApiMetadata;
 import org.jclouds.openstack.nova.v2_0.NovaApi;
+import org.jclouds.openstack.nova.v2_0.NovaApiMetadata;
 import org.jclouds.openstack.nova.v2_0.domain.FloatingIP;
 import org.jclouds.openstack.nova.v2_0.extensions.FloatingIPApi;
 import org.jclouds.rest.ResourceNotFoundException;
@@ -65,11 +69,31 @@ public class JCloudUtil {
         } catch (URISyntaxException | MalformedURLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-
-        ContextBuilder contextBuilder = ContextBuilder.newBuilder(serviceName)
-                .endpoint(endpointURL)
-                .credentials(endPoint.getTenant() + ":" + endPoint.getUser(), endPoint.getPassword())
-                .overrides(OVERRIDES);
+        ContextBuilder contextBuilder = null;
+        if("openstack-neutron".equals(serviceName)) {
+             contextBuilder = ContextBuilder.newBuilder(new NeutronApiMetadata())
+                    .endpoint(endpointURL)
+                    .credentials(endPoint.getTenant() + ":" + endPoint.getUser(), endPoint.getPassword())
+                    .overrides(OVERRIDES);
+        }
+        if("openstack-keystone".equals(serviceName)) {
+             contextBuilder = ContextBuilder.newBuilder(new KeystoneApiMetadata())
+                    .endpoint(endpointURL)
+                    .credentials(endPoint.getTenant() + ":" + endPoint.getUser(), endPoint.getPassword())
+                    .overrides(OVERRIDES);
+        }
+        if("openstack-nova".equals(serviceName)) {
+             contextBuilder = ContextBuilder.newBuilder(new NovaApiMetadata())
+                    .endpoint(endpointURL)
+                    .credentials(endPoint.getTenant() + ":" + endPoint.getUser(), endPoint.getPassword())
+                    .overrides(OVERRIDES);
+        }
+        if("openstack-glance".equals(serviceName)) {
+             contextBuilder = ContextBuilder.newBuilder(new GlanceApiMetadata())
+                    .endpoint(endpointURL)
+                    .credentials(endPoint.getTenant() + ":" + endPoint.getUser(), endPoint.getPassword())
+                    .overrides(OVERRIDES);
+        }
 
         if (endPoint.isHttps()) {
             contextBuilder = configureSSLContext(contextBuilder, endPoint.getSslContext());

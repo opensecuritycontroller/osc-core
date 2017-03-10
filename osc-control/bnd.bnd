@@ -1,28 +1,41 @@
-# vmiDCControl
+# osc-control
+
+-include target/depend.bnd
 
 # include minimal contents for stand-alone jar
 # also avoids refering to jar by name
 -conditionalpackage:\
-    com.google.common.base,\
-    javax.ws.rs.*,\
-    org.apache.commons.cli.*,\
-    org.apache.commons.io.*,\
-    org.apache.log4j.*,\
     org.osc.core.broker.rest.server.model,\
     org.osc.core.rest.client.*,\
-    org.osc.core.util
+    org.osc.core.util,\
+    com.google.gson.*
 
-# jersey-bundle contains META-INF/services
-# so include it explicitly
--includeresource:\
-    @jersey-bundle-1.12.jar
-
-# dependencies embedded by -conditionalpackage
-xxx:\
-    @jsr311-api-1.1.1.jar,\
-    @commons-cli-1.2.jar,\
-    @commons-io-1.3.2.jar,\
-    @guava-17.0.jar,\
-    @log4j-1.2.17.jar
+-includeresource: \
+    @${log4j.dep},\
+    @${commons-cli.dep},\
+    @${commons-io.dep},\
+    @${guava.dep},\
+    @${aopalliance-repackaged.dep},\
+    @${osgi-resource-locator.dep},\
+    @${javax.ws.rs-api.dep},\
+    @${javax.annotation-api.dep},\
+    @${javax.inject.dep},\
+    @${javassist.dep},\
+    @${jersey-client.dep},\
+    @${jersey-common.dep},\
+    @${jersey-guava.dep},\
+    @${jersey-entity-filtering.dep},\
+    @${jersey-container-servlet-core.dep},\
+    @${jersey-server.dep},\
+    @${jackson-annotations.dep},\
+    @${jackson-core.dep},\
+    @${jackson-databind.dep},\
+    @${jackson-jaxrs-json-provider.dep},\
+    @${jackson-module-jaxb-annotations.dep},\
+    @${jackson-jaxrs-base.dep},\
+    @${hk2-locator.dep},\
+    @${hk2-utils.dep},\
+    @${hk2-api.dep},\
+	@${gson.dep}
 
 #

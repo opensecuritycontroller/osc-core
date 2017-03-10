@@ -17,18 +17,17 @@
 package org.osc.core.broker.rest.server.api;
 
 import com.mcafee.vmidc.server.Server;
-import com.sun.jersey.spi.container.ResourceFilters;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockInformationDto;
 import org.osc.core.broker.job.lock.LockManager;
-import org.osc.core.broker.rest.server.IscRestServlet;
+import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.rest.client.util.LoggingUtil;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
-import org.osc.core.util.LocalHostAuthFilter;
+import org.osc.core.rest.annotations.LocalHostAuth;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -47,10 +46,10 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-@Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/serverDebug")
-@ResourceFilters(LocalHostAuthFilter.class)
+@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/serverDebug")
 @Consumes(MediaType.TEXT_PLAIN)
 @Produces(MediaType.TEXT_PLAIN)
+@LocalHostAuth
 public class ServerDebugApis {
     private static final Logger logger = Logger.getLogger(ServerDebugApis.class);
 
