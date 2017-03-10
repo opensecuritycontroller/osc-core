@@ -23,7 +23,6 @@ import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHIT
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
@@ -116,10 +115,10 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
         super.property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true);
 
         // agent & server apis
-        super.getSingletons().addAll(Arrays.asList(new Object[] { this.alarmApis, this.alertApis, this.applianceApis,
-                this.distributedApplianceApis, this.distributedApplianceInstanceApis, this.jobApis, this.managerApis,
-                this.managerConnectorApis, this.nsmMgrApis, this.nsxApis, this.serverDebugApis, this.serverMgmtApis,
-                this.virtualSystemApis, this.virtualizationConnectorApis }));
+        super.registerInstances(this.alarmApis, this.alertApis, this.applianceApis, this.distributedApplianceApis,
+                this.distributedApplianceInstanceApis, this.jobApis, this.managerApis, this.managerConnectorApis,
+                this.nsmMgrApis, this.nsxApis, this.serverDebugApis, this.serverMgmtApis, this.virtualSystemApis,
+                this.virtualizationConnectorApis);
 
         this.container = new ServletContainer(this);
     }

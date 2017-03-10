@@ -18,6 +18,7 @@ package org.osc.core.broker.model.plugin.manager;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -60,7 +61,7 @@ public class ManagerType implements ManagerTypeElement {
     }
 
     public static Set<String> values() {
-        Set<String> values = new HashSet<>(managerTypes);
+        Set<String> values = new TreeSet<>(managerTypes);
         values.addAll(ManagerApiFactory.getManagerTypes());
         return values;
     }
