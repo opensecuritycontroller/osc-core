@@ -23,10 +23,8 @@ import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.ServiceInstanceApi;
 
