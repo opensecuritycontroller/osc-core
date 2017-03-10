@@ -16,7 +16,26 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.*;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_VC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DOMAIN_ID_INVALID_NAME;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.MC_ID_NOT_FOUND;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.MC_ID_POLICY_MAPPING_NOT_SUPPORTED_MC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.SW_VERSION_NOT_FOUND;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_NOT_FOUND;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_OPENSTACK;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_VMWARE;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.applianceSwVersionNotFoundDto;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getDaVcAlreadyExistsTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidApplianceIdTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidApplianceSoftwareVersionTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidDomainTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidEncapsulationTypeTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidMngrConnectorIdTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidNameTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidSecretKeyTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidSwVersionTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidVcIdTestData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidVirtualizationSystemsCollectionData;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,6 +87,7 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
 
         ApplianceManagerConnector mcPolicyMappingNotSupported = new ApplianceManagerConnector();
         ManagerType mgrTypePolicyMappingNotSupported = ManagerType.SMC;
+        ManagerType.addType(ManagerType.SMC.getValue());
         mcPolicyMappingNotSupported.setManagerType(mgrTypePolicyMappingNotSupported.getValue());
 
         Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_NOT_FOUND)).thenReturn(null);
