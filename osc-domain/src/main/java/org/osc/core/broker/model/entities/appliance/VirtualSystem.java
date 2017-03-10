@@ -30,6 +30,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
@@ -39,7 +40,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
@@ -57,18 +57,19 @@ public class VirtualSystem extends BaseEntity {
     private static final String TEMP_VS_NAME = "~temp~";
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "distributed_appliance_fk", nullable = false)
-    @ForeignKey(name = "FK_VS_DISTRIBUTED_APPLIANCE")
+    @JoinColumn(name = "distributed_appliance_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_VS_DISTRIBUTED_APPLIANCE"))
+
     private DistributedAppliance distributedAppliance;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "virtualization_connector_fk", nullable = false)
-    @ForeignKey(name = "FK_VS_VIRTUALIZATION_CONNECTOR")
+    @JoinColumn(name = "virtualization_connector_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_VS_VIRTUALIZATION_CONNECTOR"))
     private VirtualizationConnector virtualizationConnector;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "appliance_sw_version_fk", nullable = false)
-    @ForeignKey(name = "FK_VS_APPLIANCE_SW_VERSION")
+    @JoinColumn(name = "appliance_sw_version_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_VS_APPLIANCE_SW_VERSION"))
     private ApplianceSoftwareVersion applianceSoftwareVersion;
 
     @Column(name = "name", unique = true, nullable = false)
@@ -90,11 +91,11 @@ public class VirtualSystem extends BaseEntity {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID",
-    joinColumns = @JoinColumn(name = "virtual_system_fk"))
+    joinColumns = @JoinColumn(name = "virtual_system_fk"),
+    foreignKey = @ForeignKey(name = "FK_VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID"))
     @MapKeyColumn(name="host_version")
     @MapKeyEnumerated(EnumType.STRING)
     @Column(name = "nsx_deployment_spec_id")
-    @ForeignKey(name = "FK_VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID")
     private Map<VmwareSoftwareVersion, String> nsxDeploymentSpecIds = new HashMap<>();
 
     @Column(name = "nsx_vsm_uuid")
@@ -122,8 +123,8 @@ public class VirtualSystem extends BaseEntity {
     private Set<OsFlavorReference> osFlavorReference = new HashSet<OsFlavorReference>();
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "domain_fk", nullable = true)
-    @ForeignKey(name = "FK_AG_DOMAIN")
+    @JoinColumn(name = "domain_fk", nullable = true,
+            foreignKey = @ForeignKey(name = "FK_AG_DOMAIN"))
     private Domain domain;
 
     @Column(name = "mgr_id")

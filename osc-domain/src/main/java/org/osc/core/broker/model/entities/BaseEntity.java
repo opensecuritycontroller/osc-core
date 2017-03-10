@@ -30,7 +30,9 @@ import javax.persistence.Version;
 public class BaseEntity implements Serializable, IscEntity {
     private static final long serialVersionUID = 1L;
 
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // Hibernate 5 requires a sequence for AUTO generation. Using IDENTITY
+    // avoids this having to be created
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id")
     private Long id;

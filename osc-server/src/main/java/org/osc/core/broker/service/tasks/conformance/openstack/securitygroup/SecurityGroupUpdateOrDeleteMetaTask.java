@@ -50,7 +50,6 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecurityGroupTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
 import org.osc.sdk.controller.api.SdnControllerApi;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupElement;
 
@@ -142,7 +141,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         if (this.sg.getVirtualizationConnector().isControllerDefined()){
             SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(
                     this.sg.getVirtualizationConnector());
-            if (controller.isPortGroupSupported()){
+            if (SdnControllerApiFactory.supportsPortGroup(this.sg)){
                 this.tg.appendTask(new PortGroupCheckTask(this.sg, controller, isDeleteTg),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
@@ -155,9 +154,8 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
             if (sgi.getMarkedForDeletion() || isDeleteTg) {
                 VirtualSystem vs = sgi.getVirtualSystem();
-                ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(vs);
                 List<Task> tasksToSucceedToDeleteSGI = new ArrayList<>();
-                if (managerApi.isSecurityGroupSyncSupport()) {
+                if (ManagerApiFactory.syncsSecurityGroup(vs)) {
                     ManagerSecurityGroupApi mgrSgApi = ManagerApiFactory.createManagerSecurityGroupApi(vs);
                     ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(this.sg.getMgrId());
                     if (mepg != null) {

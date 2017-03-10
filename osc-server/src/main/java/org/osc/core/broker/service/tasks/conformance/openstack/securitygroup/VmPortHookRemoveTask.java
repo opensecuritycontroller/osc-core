@@ -81,7 +81,7 @@ class VmPortHookRemoveTask extends TransactionalTask {
                         this.dai.getInspectionIngressMacAddress());
                 DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                         this.dai.getInspectionEgressMacAddress());
-                if (controller.isPortGroupSupported()){
+                if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
                     String portGroupId = this.sgm.getSecurityGroup().getNetworkElementId();
                     PortGroup portGroup = new PortGroup();
                     portGroup.setPortGroupId(portGroupId);

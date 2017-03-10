@@ -23,6 +23,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -30,7 +31,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -75,16 +75,15 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
     private int instanceCount = 1;
 
     @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "last_job_id_fk")
-    @ForeignKey(name = "FK_DS_LAST_JOB")
+    @JoinColumn(name = "last_job_id_fk", foreignKey = @ForeignKey(name = "FK_DS_LAST_JOB"))
     private JobRecord lastJob;
 
     @Column(name = "shared", columnDefinition = "bit default 0")
     private boolean isShared;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vs_fk", nullable = false)
-    @ForeignKey(name = "FK_DEPLOYMENT_SPEC_VS")
+    @JoinColumn(name = "vs_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_DEPLOYMENT_SPEC_VS"))
     private VirtualSystem virtualSystem;
 
     @OneToMany(mappedBy = "deploymentSpec", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -100,8 +99,8 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
     private Set<HostAggregate> hostAggregates = new HashSet<HostAggregate>();
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "os_sg_reference_fk", nullable = true)
-    @ForeignKey(name = "FK_DS_OS_SG_REFERENCE")
+    @JoinColumn(name = "os_sg_reference_fk", nullable = true,
+            foreignKey = @ForeignKey(name = "FK_DS_OS_SG_REFERENCE"))
     private OsSecurityGroupReference osSecurityGroupReference;
 
     public DeploymentSpec(VirtualSystem virtualSystem, String region, String tenantId, String managementNetworkId,
@@ -254,10 +253,12 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
         this.floatingIpPoolName = floatingIpPoolName;
     }
 
+    @Override
     public JobRecord getLastJob() {
         return this.lastJob;
     }
 
+    @Override
     public void setLastJob(JobRecord lastJob) {
         this.lastJob = lastJob;
     }

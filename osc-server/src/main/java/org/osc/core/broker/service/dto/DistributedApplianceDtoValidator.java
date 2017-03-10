@@ -28,6 +28,7 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
@@ -138,8 +139,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
             HashMap<String, Object> nullFields = new HashMap<>();
             HashMap<String, Object> notNullFields = new HashMap<>();
 
-            boolean isPolicyMappingSupported =
-                    ManagerApiFactory.createApplianceManagerApi(mc.getManagerType()).isPolicyMappingSupported();
+            boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()));
 
             if (isPolicyMappingSupported) {
                 if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {

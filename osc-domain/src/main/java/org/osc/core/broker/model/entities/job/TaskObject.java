@@ -21,12 +21,12 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.ObjectType;
 
@@ -38,8 +38,8 @@ public class TaskObject extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "task_fk", nullable = false)
-    @ForeignKey(name = "FK_TASK_OBJECT_TASK")
+    @JoinColumn(name = "task_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_TASK_OBJECT_TASK"))
     private TaskRecord task;
 
     @Column(name = "name", nullable = false)

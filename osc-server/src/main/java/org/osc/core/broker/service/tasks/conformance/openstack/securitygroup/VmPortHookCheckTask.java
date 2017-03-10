@@ -93,7 +93,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                 if (this.sgm.getType().equals(SecurityGroupMemberType.SUBNET) && this.sgm.getSubnet().isProtectExternal()
                         && this.vmPort.getVm() == null) {
 
-                    if (SdnControllerApiFactory.createNetworkControllerApi(this.sgm).isOffboxRedirectionSupported()) {
+                    if (SdnControllerApiFactory.supportsOffboxRedirection(this.sgm.getSecurityGroup())) {
                         assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, this.sgm.getSubnet().getRegion(),
                                 tenantId, null, this.vs);
                     } else {
@@ -168,7 +168,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                 FailurePolicyType failurePolicyType = hook.getFailurePolicyType();
                 if (failurePolicyType != null
                         && org.osc.core.broker.model.entities.virtualization.FailurePolicyType.valueOf(failurePolicyType.name())
-                         != this.securityGroupInterface.getFailurePolicyType()) {
+                        != this.securityGroupInterface.getFailurePolicyType()) {
                     this.tg.appendTask(new VmPortHookFailurePolicyUpdateTask(this.vmPort, this.securityGroupInterface,
                             assignedRedirectedDai));
                 }
@@ -187,7 +187,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
             return sgm.getSubnet().getRegion();
         default:
             throw new VmidcBrokerValidationException("Openstack Id is not applicable for Members of type '" + sgm.getType()
-                    + "'");
+            + "'");
         }
     }
 

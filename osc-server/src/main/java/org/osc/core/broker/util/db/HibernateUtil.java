@@ -26,9 +26,9 @@ import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.User;
@@ -147,8 +147,9 @@ public class HibernateUtil {
 
             addAnnotatedClasses(configuration);
 
-            serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties())
-                    .buildServiceRegistry();
+            serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties())
+                    .build();
+
             sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 
             return sessionFactory;
