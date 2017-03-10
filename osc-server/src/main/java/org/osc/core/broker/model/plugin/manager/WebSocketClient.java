@@ -18,7 +18,6 @@ package org.osc.core.broker.model.plugin.manager;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 
 import javax.websocket.ClientEndpointConfig;

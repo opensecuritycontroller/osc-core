@@ -127,7 +127,7 @@ public class AddVirtualizationConnectorServiceTest {
         // Arrange.
         this.exception.expect(SslCertificatesExtendedException.class);
         ErrorTypeException exception = new ErrorTypeException("Error Thrown", ErrorType.CONTROLLER_EXCEPTION);
-        doThrow(new SslCertificatesExtendedException( exception, new ArrayList<CertificateResolverModel>())).when(this.validatorMock)
+        doThrow(new SslCertificatesExtendedException(exception, new ArrayList<CertificateResolverModel>())).when(this.validatorMock)
                 .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
         service.setForceAddSSLCertificates(true);
         
@@ -148,7 +148,7 @@ public class AddVirtualizationConnectorServiceTest {
 
         // Arrange.
         ErrorTypeException exception = new ErrorTypeException("Error Thrown", ErrorType.CONTROLLER_EXCEPTION);
-        doThrow(new SslCertificatesExtendedException( exception, new ArrayList<CertificateResolverModel>())).doNothing().when(this.validatorMock)
+        doThrow(new SslCertificatesExtendedException(exception, new ArrayList<CertificateResolverModel>())).doNothing().when(this.validatorMock)
                 .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
         service.setForceAddSSLCertificates(true);
         this.sessionStub.stubSaveEntity(new VirtualizationConnectorMatcher(this.id_100), this.id_100);

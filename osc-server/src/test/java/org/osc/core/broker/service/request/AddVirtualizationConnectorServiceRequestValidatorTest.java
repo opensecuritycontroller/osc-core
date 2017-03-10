@@ -74,7 +74,7 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     public void testValidate_WithValidVmwareRequest_ReturnsSuccess() throws Exception {
         // Arrange.
     	doNothing().when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
-    	doNothing().when(virtualizationConnectorUtil).checkVmwareConnection( any(DryRunRequest.class), any(VirtualizationConnector.class));
+        doNothing().when(virtualizationConnectorUtil).checkVmwareConnection(any(DryRunRequest.class), any(VirtualizationConnector.class));
     	
     	// Act.
         this.validator.validate(VirtualizationConnectorServiceData.VMWARE_REQUEST);
@@ -88,7 +88,7 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     public void testValidate_WithValidOpenStackRequest_ReturnsSuccess() throws Exception {
         // Arrange.
     	doNothing().when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
-    	doNothing().when(virtualizationConnectorUtil).checkOpenstackConnection( any(DryRunRequest.class), any(VirtualizationConnector.class));        
+        doNothing().when(virtualizationConnectorUtil).checkOpenstackConnection(any(DryRunRequest.class), any(VirtualizationConnector.class));
         
         // Act.
         this.validator.validate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST);

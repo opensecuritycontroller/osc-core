@@ -186,11 +186,11 @@ public class AddDistributedApplianceServiceTest {
         for (VirtualSystemDto vs: this.daDto.getVirtualizationSystems()) {
             vs.setId(123L);
             Assert.assertTrue(MessageFormat.format("The expected vs with id {0} was not found.", vs.getId()),
-                    Contains(response.getVirtualizationSystems(), vs));
+                    contains(response.getVirtualizationSystems(), vs));
         }
     }
 
-    private boolean Contains(Set<VirtualSystemDto> vsDtos, VirtualSystemDto expectedVsDto) {
+    private boolean contains(Set<VirtualSystemDto> vsDtos, VirtualSystemDto expectedVsDto) {
         if (vsDtos == null) {
             return false;
         }

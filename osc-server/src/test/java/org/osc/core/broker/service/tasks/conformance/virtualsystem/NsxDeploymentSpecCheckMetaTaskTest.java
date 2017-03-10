@@ -141,7 +141,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
         vds2.setOvfUrl(imageUrl);
         vds2.setHostVersion(VMWARE_6_STRING + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
         List<VersionedDeploymentSpec> versionedSpecsList = new ArrayList<VersionedDeploymentSpec>();
-        if (missingDS==null ){
+        if (missingDS==null){
             versionedSpecsList.add(vds);
             versionedSpecsList.add(vds2);
         } else if (missingDS.equals(ALL_DEPLOY_SPECS_MISSING)){
@@ -156,7 +156,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
         Mockito.doReturn(versionedSpecsList).when(this.deploymentSpecApiMock).getDeploymentSpecs(vs.getNsxServiceId());
     }
 
-    private void registerVersionedDeploymentSpecDbUpgrade( VirtualSystem vs, boolean outOfSync) throws Exception {
+    private void registerVersionedDeploymentSpecDbUpgrade(VirtualSystem vs, boolean outOfSync) throws Exception {
         VersionedDeploymentSpec vds = new VersionedDeploymentSpec();
         vds.setHostVersion(VMWARE_5_5_STRING + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
         List<VersionedDeploymentSpec> versionedSpecsList = new ArrayList<VersionedDeploymentSpec>();

@@ -63,27 +63,27 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
 
     //VS's
     private static VirtualSystem VS_1 = createBaseVS(101L, "vsName", CREATE_VC, createMC(101L, "MC_01"));
-    public static VirtualSystem VS_WITH_SGI_AND_NO_MANAGER_SGI_VS = CreateVSWithSgi(VS_1,SGI_NOT_MARK_FOR_DELETION_WITH_ID_VS_SGI);
+    public static VirtualSystem VS_WITH_SGI_AND_NO_MANAGER_SGI_VS = createVSWithSgi(VS_1,SGI_NOT_MARK_FOR_DELETION_WITH_ID_VS_SGI);
 
     private static VirtualSystem VS_2 = createBaseVS(102L, "vsName", CREATE_VC, createMC(102L, "MC_02"));
-    public static VirtualSystem VS_WITH_MANAGER_SGI_VS = CreateVSWithSgi(VS_2, SGI_NOT_MARK_FOR_DELETION_WITH_DIFFERENT_POLICY_ID_AND_TAG_VS_SGI);
+    public static VirtualSystem VS_WITH_MANAGER_SGI_VS = createVSWithSgi(VS_2, SGI_NOT_MARK_FOR_DELETION_WITH_DIFFERENT_POLICY_ID_AND_TAG_VS_SGI);
 
     private static VirtualSystem VS_3 = createBaseVS(103L, "vsName", CREATE_VC, createMC(103L, "MC_03"));
-    public static VirtualSystem VS_WITH_MANAGER_SGI_TO_BE_DELETED_VS = CreateVSWithSgi(VS_3, SGI_MARK_FOR_DELETION_VS_SGI);
+    public static VirtualSystem VS_WITH_MANAGER_SGI_TO_BE_DELETED_VS = createVSWithSgi(VS_3, SGI_MARK_FOR_DELETION_VS_SGI);
 
     //VS with multiple SGI's
     private static VirtualSystem VS_4 = createBaseVS(104L, "vsName", CREATE_VC, createMC(104L, "MC_04"));
-    public static VirtualSystem VS_WITH_SGI_NOT_MARK_FOR_DELETION_WITH_ID_VS_SGI_AND_SGI_MARK_FOR_DELETION_VS_SGI = CreateVSWithSgi(VS_4, SGI_NOT_MARK_FOR_DELETION_WITH_ID_VS_SGI, SGI_MARK_FOR_DELETION_VS_SGI);
+    public static VirtualSystem VS_WITH_SGI_NOT_MARK_FOR_DELETION_WITH_ID_VS_SGI_AND_SGI_MARK_FOR_DELETION_VS_SGI = createVSWithSgi(VS_4, SGI_NOT_MARK_FOR_DELETION_WITH_ID_VS_SGI, SGI_MARK_FOR_DELETION_VS_SGI);
 
     //DA's
     private static DistributedAppliance DA_1 = createBaseDA(1L, 105L, "vsName", CREATE_VC, createMC(5L, "MC_5"));
-    public static DistributedAppliance DA_WITH_SGI_AND_NO_MANAGER_SGI_DA = CreateDAWithSgi(DA_1, SGI_NOT_MARK_FOR_DELETION_WITH_ID_DA_SGI);
+    public static DistributedAppliance DA_WITH_SGI_AND_NO_MANAGER_SGI_DA = createDAWithSgi(DA_1, SGI_NOT_MARK_FOR_DELETION_WITH_ID_DA_SGI);
 
     private static DistributedAppliance DA_2 = createBaseDA(2L, 106L, "vsName", CREATE_VC, createMC(6L, "MC_6"));
-    public static DistributedAppliance DA_WITH_MANAGER_SGI_DA = CreateDAWithSgi(DA_2, SGI_NOT_MARK_FOR_DELETION_WITH_DIFFERENT_POLICY_ID_AND_TAG_DA_SGI);
+    public static DistributedAppliance DA_WITH_MANAGER_SGI_DA = createDAWithSgi(DA_2, SGI_NOT_MARK_FOR_DELETION_WITH_DIFFERENT_POLICY_ID_AND_TAG_DA_SGI);
 
     private static DistributedAppliance DA_3 = createBaseDA(3L, 107L, "vsName", CREATE_VC, createMC(7L, "MC_7"));
-    public static DistributedAppliance DA_WITH_MANAGER_SGI_TO_BE_DELETED_DA = CreateDAWithSgi(DA_3, SGI_MARK_FOR_DELETION_DA_SGI);
+    public static DistributedAppliance DA_WITH_MANAGER_SGI_TO_BE_DELETED_DA = createDAWithSgi(DA_3, SGI_MARK_FOR_DELETION_DA_SGI);
 
     private static VirtualizationConnector createVC(String vcName) {
         VirtualizationConnector vc = new VirtualizationConnector();
@@ -146,7 +146,7 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
         return vs;
     }
 
-    private static VirtualSystem CreateVSWithSgi(VirtualSystem vs, SecurityGroupInterface... interfaces) {
+    private static VirtualSystem createVSWithSgi(VirtualSystem vs, SecurityGroupInterface... interfaces) {
         Set<SecurityGroupInterface> set = new HashSet<>();
         for (SecurityGroupInterface sgi : interfaces) {
             set.add(sgi);
@@ -175,7 +175,7 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
         return da;
     }
 
-    private static DistributedAppliance CreateDAWithSgi(DistributedAppliance da, SecurityGroupInterface... interfaces) {
+    private static DistributedAppliance createDAWithSgi(DistributedAppliance da, SecurityGroupInterface... interfaces) {
         Set<SecurityGroupInterface> set = new HashSet<>();
         for (VirtualSystem vs : da.getVirtualSystems()) {
             for (SecurityGroupInterface sgi : interfaces) {

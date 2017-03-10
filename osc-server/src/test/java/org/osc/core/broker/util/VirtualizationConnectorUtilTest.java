@@ -114,7 +114,7 @@ public class VirtualizationConnectorUtilTest {
 		this.util.checkVmwareConnection(spyRequest, vc);
 
 		// Assert
-		verify(vmwareSdnApi, times(0)).checkStatus( any(VMwareSdnConnector.class));
+		verify(vmwareSdnApi, times(0)).checkStatus(any(VMwareSdnConnector.class));
 		verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
 		verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 
@@ -164,7 +164,7 @@ public class VirtualizationConnectorUtilTest {
 		// Assert
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-		verify(vmwareSdnApi, times(1)).checkStatus( any(VMwareSdnConnector.class));
+		verify(vmwareSdnApi, times(1)).checkStatus(any(VMwareSdnConnector.class));
 	}
 
 	@Test
@@ -191,7 +191,7 @@ public class VirtualizationConnectorUtilTest {
 		this.util.checkVmwareConnection(spyRequest, spyVc);
 		
 		//Assert
-		verify(vmwareSdnApi, times(1)).checkStatus( any(VMwareSdnConnector.class));
+		verify(vmwareSdnApi, times(1)).checkStatus(any(VMwareSdnConnector.class));
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 	}
@@ -220,7 +220,7 @@ public class VirtualizationConnectorUtilTest {
 		this.util.checkVmwareConnection(spyRequest, spyVc);
 		
 		//Assert
-		verify(vmwareSdnApi, times(1)).checkStatus( any(VMwareSdnConnector.class));
+		verify(vmwareSdnApi, times(1)).checkStatus(any(VMwareSdnConnector.class));
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 	}

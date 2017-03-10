@@ -124,11 +124,11 @@ public class DSUpdateOrDeleteMetaTaskTestData {
                     10L,
                     "DELETE_DAINAME");
 
-    private static DeploymentSpec createAllHostsInRegionData (Long dsId, String region) {
+    private static DeploymentSpec createAllHostsInRegionData(Long dsId, String region) {
         return createDeploymentSpec(dsId, region);
     }
 
-    private static DeploymentSpec createDsWithDaiAndHostSelectedData (Long dsId, String region, String daiHostName, String selectedHostName, String daiName) {
+    private static DeploymentSpec createDsWithDaiAndHostSelectedData(Long dsId, String region, String daiHostName, String selectedHostName, String daiName) {
         DeploymentSpec ds = createDeploymentSpec(dsId, region);
         DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM);
         dai.setOsHostName(daiHostName);
@@ -158,7 +158,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         return ds;
     }
 
-    private static DeploymentSpec createDsWithAvailabilityZoneSelectedData (Long dsId, String region, String daiHostName, String daiName, String selectedAzName, List<DistributedApplianceInstance> dais) {
+    private static DeploymentSpec createDsWithAvailabilityZoneSelectedData(Long dsId, String region, String daiHostName, String daiName, String selectedAzName, List<DistributedApplianceInstance> dais) {
         DeploymentSpec ds = createDeploymentSpec(dsId, region);
 
         AvailabilityZone az = new AvailabilityZone(ds, null, selectedAzName);

@@ -20,7 +20,6 @@ import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-import org.junit.runners.Parameterized;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -28,9 +27,6 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.request.VirtualizationConnectorDtoValidator;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.broker.util.SessionStub;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import junitparams.JUnitParamsRunner;
 
 /**
  * The base class for the {@link VirtualizationConnectorDtoValidator} unit tests.
