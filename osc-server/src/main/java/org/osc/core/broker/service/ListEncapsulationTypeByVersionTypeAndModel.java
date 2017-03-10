@@ -34,9 +34,10 @@ public class ListEncapsulationTypeByVersionTypeAndModel extends
     @Override
     public ListResponse<TagEncapsulationType> exec(ListEncapsulationTypeByVersionTypeAndModelRequest request,
             Session session) throws Exception {
+        String virtType = request.getVcType().name();
         List<org.osc.core.broker.model.entities.appliance.TagEncapsulationType> list = ApplianceSoftwareVersionEntityMgr.getEncapsulationByApplianceSoftwareVersion(
                 session, request.getAppliacneSoftwareVersion(), request.getAppliacneModel(),
-                VirtualizationType.valueOf(request.getVcType().name()));
+                virtType == null ? null : VirtualizationType.valueOf(virtType));
 
         if(list != null) {
             this.response.setList(list.stream()
