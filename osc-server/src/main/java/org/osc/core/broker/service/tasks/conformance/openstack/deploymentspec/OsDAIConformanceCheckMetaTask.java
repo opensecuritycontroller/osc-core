@@ -124,7 +124,7 @@ class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                         // Check if floating ip is assigned to SVA
                         this.tg.appendTask(new OsSvaCheckFloatingIpTask(this.dai));
 
-						// TODO: Future. Check if OS SG is assigned to DAI
+                        // TODO: Future. Check if OS SG is assigned to DAI
 
                     }
                     this.tg.addTask(new OsSvaStateCheckTask(this.dai));
@@ -155,11 +155,11 @@ class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                     this.dai.getInspectionEgressMacAddress());
 
             InspectionPortElement inspectionPort = null;
-            if (controller.isPortGroupSupported()){
+            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
                 String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
                         ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<NetworkElement>(
-                        Arrays.asList(ingressPort)));
+                                Arrays.asList(ingressPort)));
                 if (domainId != null){
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);

@@ -56,11 +56,11 @@ public class OnboardDAITask extends TransactionalTask {
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
-            if (controller.isPortGroupSupported()){
+            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
                 String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
                         ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<NetworkElement>(
-                        Arrays.asList(ingressPort)));
+                                Arrays.asList(ingressPort)));
                 ingressPort.setParentId(domainId);
                 egressPort.setParentId(domainId);
                 if (domainId != null){

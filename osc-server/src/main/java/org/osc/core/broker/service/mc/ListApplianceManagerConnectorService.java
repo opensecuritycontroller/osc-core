@@ -23,6 +23,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -51,9 +52,7 @@ ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<ApplianceManagerConnectorDt
                 ApplianceManagerConnectorDto.sanitizeManagerConnector(dto);
             }
 
-            // TODO : 2.6 - Move static Manager and SDN option calls to meta file definition and persist in DB.
-            boolean isPolicyMappingSupported =
-                    ManagerApiFactory.createApplianceManagerApi(mc.getManagerType()).isPolicyMappingSupported();
+            boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()));
 
             dto.setPolicyMappingSupported(isPolicyMappingSupported);
 

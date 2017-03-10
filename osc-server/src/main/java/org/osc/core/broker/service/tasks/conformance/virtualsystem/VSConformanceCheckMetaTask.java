@@ -227,8 +227,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         // Sync Manager Devices
         tg.appendTask(new MgrCheckDevicesMetaTask(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
-        if (this.vs.getMgrId() != null
-                && ManagerApiFactory.createApplianceManagerApi(this.vs).isSecurityGroupSyncSupport()) {
+        if (this.vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(this.vs)) {
             // Sync Manager Security Groups
             tg.appendTask(new MgrSecurityGroupCheckMetaTask(this.vs));
         }

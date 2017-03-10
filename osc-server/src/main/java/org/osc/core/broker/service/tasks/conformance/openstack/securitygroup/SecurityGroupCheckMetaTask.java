@@ -30,7 +30,6 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.util.ValidateUtil;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 
 public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
@@ -53,8 +52,7 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
             List<VirtualSystem> referencedVs = VirtualSystemEntityMgr.listReferencedVSBySecurityGroup(session,
                     this.sg.getId());
             for (VirtualSystem vs : referencedVs) {
-                ApplianceManagerApi applianceManagerApi = ManagerApiFactory.createApplianceManagerApi(vs);
-                if (vs.getMgrId() != null && applianceManagerApi.isPolicyMappingSupported()) {
+                if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {
                     this.tg.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask(vs),
                             TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 }
