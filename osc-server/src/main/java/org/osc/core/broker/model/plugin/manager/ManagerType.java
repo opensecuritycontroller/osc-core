@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.manager;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -36,6 +37,8 @@ public class ManagerType implements ManagerTypeElement {
     @ApiModelProperty(required = true, value = "Registered plugin names like NSM, SMC etc")
     private final String value;
 
+    private static Set<String> managerTypes = new HashSet<>();
+
     public ManagerType() {
         this.value = null;
     }
@@ -45,14 +48,21 @@ public class ManagerType implements ManagerTypeElement {
     }
 
     public static ManagerType fromText(String text) {
-        if (!values().contains(text)) {
+        if (!managerTypes.contains(text) && !values().contains(text)) {
             throw new IllegalArgumentException("No manager type found for '" + text + "'");
         }
         return new ManagerType(text);
     }
 
+    // only used from tests
+    public static void addType(String type) {
+        managerTypes.add(type);
+    }
+
     public static Set<String> values() {
-        return ManagerApiFactory.getManagerTypes();
+        Set<String> values = new HashSet<>(managerTypes);
+        values.addAll(ManagerApiFactory.getManagerTypes());
+        return values;
     }
 
     public String getValue() {

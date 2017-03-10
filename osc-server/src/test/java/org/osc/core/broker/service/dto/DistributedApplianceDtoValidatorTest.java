@@ -16,7 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.*;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.APPLIANCE_ID_EXISTING;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_DA;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_VC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_MISMATCHING_MC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_NAME_EXISTING_DA;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_NAME_NEW_DA;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.EMPTY_VALUE_ERROR_MESSAGE;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.MC_ID_VALID_MC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_OPENSTACK;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.createDistributedApplianceDto;
 
 import java.text.MessageFormat;
 
@@ -68,6 +77,7 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
         this.sessionStub.stubFindVirtualSystem(DA_ID_EXISTING_VC, VC_ID_OPENSTACK, new VirtualSystem());
 
         PowerMockito.mockStatic(ManagerApiFactory.class);
+        ManagerType.addType(mc.getManagerType());
         Mockito.when(ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()))).thenReturn(true);
     }
 
