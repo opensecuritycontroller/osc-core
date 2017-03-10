@@ -16,9 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.manager;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.POLICY_MAPPING_NOT_SUPPORTED_MC;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.POLICY_MAPPING_SUPPORTED_MC;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.PUBLIC_KEY;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.TEST_MANAGER_CONNECTORS;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.createMcPolicyMappingNotSupportedGraph;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.createMcPolicyMappingSupportedGraph;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +41,7 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
@@ -66,12 +74,12 @@ public class MCConformanceCheckMetaTaskTest {
             doReturn(mc).when(this.sessionMock).get(ApplianceManagerConnector.class, mc.getId());
         }
 
-        ApplianceManagerApi mcPolicyMappingSupportedApi = createApplianceManagerApi(true);
-        ApplianceManagerApi mcPolicyMappingNotSupportedApi = createApplianceManagerApi(false);
-
         PowerMockito.mockStatic(ManagerApiFactory.class);
-        when(ManagerApiFactory.createApplianceManagerApi(POLICY_MAPPING_NOT_SUPPORTED_MC.getManagerType())).thenReturn(mcPolicyMappingNotSupportedApi);
-        when(ManagerApiFactory.createApplianceManagerApi(POLICY_MAPPING_SUPPORTED_MC.getManagerType())).thenReturn(mcPolicyMappingSupportedApi);
+
+        setupApplianceManagerApiFactory(POLICY_MAPPING_SUPPORTED_MC.getManagerType(), true);
+        setupApplianceManagerApiFactory(POLICY_MAPPING_NOT_SUPPORTED_MC.getManagerType(), false);
+
+        when(ManagerApiFactory.syncsSecurityGroup(ManagerType.fromText(POLICY_MAPPING_SUPPORTED_MC.getManagerType()))).thenReturn(true);
     }
 
     @Test
@@ -94,10 +102,12 @@ public class MCConformanceCheckMetaTaskTest {
         });
     }
 
-    private ApplianceManagerApi createApplianceManagerApi(boolean isPolicyMappingSupported) throws Exception {
+    private void setupApplianceManagerApiFactory(String mgrType, boolean isPolicyMappingSupported) throws Exception {
+        ManagerType.addType(mgrType);
         ApplianceManagerApi mcApi = mock(ApplianceManagerApi.class);
-        when(mcApi.isPolicyMappingSupported()).thenReturn(isPolicyMappingSupported);
         when(mcApi.getPublicKey(any(ApplianceManagerConnectorElement.class))).thenReturn(PUBLIC_KEY);
-        return mcApi;
+
+        when(ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mgrType))).thenReturn(isPolicyMappingSupported);
+        when(ManagerApiFactory.createApplianceManagerApi(mgrType)).thenReturn(mcApi);
     }
 }

@@ -43,7 +43,6 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.util.SessionStub;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -100,11 +99,8 @@ public class DistributedApplianceDtoValidatorBaseTest {
 
         this.sessionStub.stubFindVirtualSystem(DA_ID_EXISTING_VC, VC_ID_OPENSTACK, new VirtualSystem());
 
-        ApplianceManagerApi applianceMgrPolicyMappingSupported = Mockito.mock(ApplianceManagerApi.class);
-        Mockito.when(applianceMgrPolicyMappingSupported.isPolicyMappingSupported()).thenReturn(true);
-
         PowerMockito.mockStatic(ManagerApiFactory.class);
-        Mockito.when(ManagerApiFactory.createApplianceManagerApi(mgrTypePolicyMappingSupported)).thenReturn(applianceMgrPolicyMappingSupported);
-        Mockito.when(ManagerApiFactory.createApplianceManagerApi(mgrTypePolicyMappingSupported.getValue())).thenReturn(applianceMgrPolicyMappingSupported);
+        ManagerType.addType(mcPolicyMappingSupported.getManagerType());
+        Mockito.when(ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mcPolicyMappingSupported.getManagerType()))).thenReturn(true);
     }
 }

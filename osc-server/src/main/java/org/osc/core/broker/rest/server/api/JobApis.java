@@ -27,8 +27,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -40,23 +40,21 @@ import org.osc.core.broker.service.persistence.JobEntityManager;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.request.ListTaskRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
-import org.osc.core.broker.service.response.ListResponse;
-import org.osgi.service.component.annotations.Component;
-
-import com.sun.jersey.api.JResponse;
-import com.sun.jersey.spi.container.ResourceFilters;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
+import org.osc.core.broker.service.response.ListResponse;
+
+import java.util.List;
 
 @Component(service = JobApis.class)
 @Api(tags = "Operations for Jobs", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/jobs")
-@ResourceFilters({ VmidcAuthFilter.class })
+@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/jobs")
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@OscAuth
 public class JobApis {
 
     private static final Logger logger = Logger.getLogger(JobApis.class);
@@ -68,13 +66,13 @@ public class JobApis {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @GET
-    public JResponse<List<JobRecordDto>> getJobs() {
+    public List<JobRecordDto> getJobs() {
 
         logger.info("Listing job records");
 
         try {
             ListResponse<JobRecordDto> res = new ListJobService().dispatch(null);
-            return JResponse.ok(res.getList()).build();
+            return res.getList();
         } catch (Exception e) {
             throw new VmidcRestServerException(Response.status(Status.INTERNAL_SERVER_ERROR), e.getMessage());
         }
@@ -117,7 +115,7 @@ public class JobApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @GET
     @Path("/{jobId}/tasks")
-    public JResponse<List<TaskRecordDto>> getJobTasks(@PathParam("jobId") Long jobId) {
+    public List<TaskRecordDto> getJobTasks(@PathParam("jobId") Long jobId) {
 
         logger.info("Listing task records for job id " + jobId);
 
@@ -127,7 +125,7 @@ public class JobApis {
             ListTaskService listService = new ListTaskService();
             ListResponse<TaskRecordDto> res = listService.dispatch(listRequest);
 
-            return JResponse.ok(res.getList()).build();
+            return res.getList();
         } catch (Exception e) {
             throw new VmidcRestServerException(Response.status(Status.INTERNAL_SERVER_ERROR), e.getMessage());
         }

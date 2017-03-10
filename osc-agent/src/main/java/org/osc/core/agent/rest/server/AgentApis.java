@@ -51,6 +51,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.agent.dpaipc.InterfaceEndpointMap;
 import org.osc.core.agent.server.Register;
 import org.osc.core.agent.server.Server;
+import org.osc.core.rest.annotations.AgentAuth;
 import org.osc.core.rest.client.agent.model.input.AgentSetInterfaceEndpointMapRequest;
 import org.osc.core.rest.client.agent.model.input.AgentUpdateConsolePasswordRequest;
 import org.osc.core.rest.client.agent.model.input.AgentUpdateInterfaceEndpointMapRequest;
@@ -66,12 +67,12 @@ import org.osc.core.rest.client.agent.model.output.AgentUpgradeResponse;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.util.ArchiveUtil;
 import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.LocalHostAuthFilter;
+import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.util.PKIUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
 
-import com.sun.jersey.spi.container.ResourceFilters;
+
 import org.osc.core.util.encryption.EncryptionException;
 
 @Path("/v1")
@@ -81,8 +82,8 @@ public class AgentApis {
 
     @Path("/status")
     @GET
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response getBasicStatus() {
         this.log.info("getBasicStatus() called");
 
@@ -92,11 +93,11 @@ public class AgentApis {
         return Response.status(Status.OK).entity(agentStatusResponse).build();
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/fullstatus")
     @GET
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response getFullStatus() {
         this.log.info("getFullStatus() called");
 
@@ -145,10 +146,10 @@ public class AgentApis {
         return agentStatusResponse;
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/getSupportBundle")
     @GET
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response getAgentSupportBundle() {
         try {
             String supportFileName = "AgentSupportBundle.zip";
@@ -166,7 +167,7 @@ public class AgentApis {
         }
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/uploadMgrFile/{fileName}")
     @PUT
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -246,11 +247,11 @@ public class AgentApis {
         }
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/register")
     @POST
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response triggerRegistration() {
         this.log.info("triggerRegistration() called");
 
@@ -265,10 +266,10 @@ public class AgentApis {
         return Response.status(Status.OK).entity("Registration triggered.").type(MediaType.TEXT_PLAIN).build();
     }
 
-    @ResourceFilters({ LocalHostAuthFilter.class })
+    @LocalHostAuth
     @Path("/upgradecomplete")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response upgradedAgentReady() {
         this.log.info("upgradedAgentReady (pid:" + ServerUtil.getCurrentPid() + "): Check pending upgrade agent");
         if (!Server.upgradeInProgress) {
@@ -298,10 +299,10 @@ public class AgentApis {
         return Response.status(Status.OK).build();
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/get-agent-vmidcserver-ip")
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response getCurrentServerIp() {
 
         AgentCurrentVmidcServerResponse agentCurrentVmidcServerResponse = new AgentCurrentVmidcServerResponse();
@@ -310,10 +311,10 @@ public class AgentApis {
         return Response.status(Status.OK).entity(agentCurrentVmidcServerResponse).build();
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/update-agent-vmidcserver-ip")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response updateServerIp(AgentUpdateVmidcServerRequest agentUpdateVmidcServerRequest) {
 
         Server.setVmidcServerIp(agentUpdateVmidcServerRequest.getVmidcServerIp());
@@ -325,10 +326,10 @@ public class AgentApis {
         return Response.status(Status.OK).build();
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/get-agent-vmidcserver-password")
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response getCurrentServerPassword() {
 
         AgentCurrentVmidcPasswordResponse agentCurrentVmidcPasswordResponse = new AgentCurrentVmidcPasswordResponse();
@@ -337,10 +338,10 @@ public class AgentApis {
         return Response.status(Status.OK).entity(agentCurrentVmidcPasswordResponse).build();
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/update-agent-vmidcserver-password")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response updateServerPassword(AgentUpdateVmidcPasswordRequest agentUpdateVmidcPasswordRequest) {
         Server.setVmidcServerPassword(agentUpdateVmidcPasswordRequest.getVmidcServerPassword());
         try {
@@ -358,10 +359,10 @@ public class AgentApis {
         return Response.status(Status.OK).build();
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/update-interface-endpoint-map")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response updateInterfaceEndpointMap(AgentUpdateInterfaceEndpointMapRequest request) {
         this.log.info("InterfaceEndpointMap update request: " + request);
 
@@ -370,10 +371,10 @@ public class AgentApis {
         return Response.status(Status.OK).build();
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/set-interface-endpoint-map")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response setInterfaceEndpointMap(AgentSetInterfaceEndpointMapRequest request) throws IOException {
         this.log.info("InterfaceEndpointMap set request: " + request);
 
@@ -387,11 +388,11 @@ public class AgentApis {
         return Response.status(Status.OK).build();
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/upgrade")
     @POST
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response upgradeAgent(AgentUpgradeRequest upgradeRequest) {
         this.log.info("================= Start agent upgrade =====================");
         this.log.info("Upgrade Request (pid:" + ServerUtil.getCurrentPid() + "): " + upgradeRequest);
@@ -541,11 +542,11 @@ public class AgentApis {
         return ServerUtil.startAgentProcess();
     }
 
-    @ResourceFilters({ AgentAuthFilter.class })
+    @AgentAuth
     @Path("/update-console-password")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response updateApplianceConsolePassword(AgentUpdateConsolePasswordRequest agentUpdateConsolePasswordRequest)
             throws Exception {
         this.log.info("updateApplianceConsolePassword() called");

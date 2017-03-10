@@ -26,6 +26,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.Service;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
+import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.EncryptionUtil;
@@ -53,10 +54,7 @@ public class CreateNsxServiceTask extends TransactionalTask {
         ServiceElement service = serviceApi.findService(this.vs.getDistributedAppliance().getName());
         String serviceId = service == null ? null : service.getId();
         if (serviceId == null) {
-            String serviceFunctionalityType = ManagerApiFactory
-                    .createApplianceManagerApi(
-                            this.vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                    .getNsxServiceName();
+            String serviceFunctionalityType = ManagerApiFactory.getExternalServiceName(this.vs);
 
             service = new Service(
                     null,
@@ -66,8 +64,8 @@ public class CreateNsxServiceTask extends TransactionalTask {
                     this.vs.getNsxServiceManagerId().toString(),
                     serviceFunctionalityType,
                     this.vs.getId().toString(),
-                    AgentAuthFilter.VMIDC_AGENT_LOGIN,
-                    EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS),
+                    NsxAuthFilter.VMIDC_NSX_LOGIN,
+                    NsxAuthFilter.VMIDC_NSX_PASS,
                     ServerUtil.getServerIP(),
                     this.vs.getApplianceSoftwareVersion().getAppliance().getModel(),
                     this.vs.getApplianceSoftwareVersion().getApplianceSoftwareVersion());

@@ -88,18 +88,14 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
         for (Entry<VirtualSystem, List<DistributedApplianceInstance>> entry : map.entrySet()){
             VirtualSystem vs = entry.getKey();
 
-            // TODO emanoel: IsAgentManaged is geing used as synonimous of isApplianceStatusSupported.
-            // This method will be remove from the API and made as an appropriate OSGi service property as part of another
-            // user story to come soon.
-            boolean isApplianceStatusSupported = ManagerApiFactory.createApplianceManagerApi(vs).isAgentManaged();
             List<DistributedApplianceInstance> list = entry.getValue();
-            if (isApplianceStatusSupported) {
+            if (ManagerApiFactory.providesDeviceStatus(vs)) {
                 ApplianceManagerConnector apmc = vs.getDistributedAppliance().getApplianceManagerConnector();
                 ManagerDeviceMemberApi agentApi =  ManagerApiFactory.createManagerDeviceMemberApi(apmc, vs);
 
                 List<DistributedApplianceInstanceElement> elements = list.stream()
-                    .map(DistributedApplianceInstanceElementImpl::new)
-                    .collect(Collectors.toList());
+                        .map(DistributedApplianceInstanceElementImpl::new)
+                        .collect(Collectors.toList());
 
                 agentStatusResponses.addAll(invokeRequest(elements, agentApi));
             } else {

@@ -24,17 +24,19 @@ import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHIT
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.ws.rs.core.Application;
 
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.osc.core.broker.rest.server.AgentAuthFilter;
+import org.osc.core.broker.rest.server.NsxAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.api.AlarmApis;
 import org.osc.core.broker.rest.server.api.AlertApis;
 import org.osc.core.broker.rest.server.api.ApplianceApis;
@@ -49,11 +51,12 @@ import org.osc.core.broker.rest.server.api.VirtualSystemApis;
 import org.osc.core.broker.rest.server.api.VirtualizationConnectorApis;
 import org.osc.core.broker.rest.server.api.proprietary.NsmMgrApis;
 import org.osc.core.broker.rest.server.api.proprietary.NsxApis;
+import org.osc.core.util.LocalHostAuthFilter;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import com.sun.jersey.spi.container.servlet.ServletContainer;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 @Component(name = "api.servlet", service = Servlet.class, property = {
 
@@ -63,7 +66,7 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
         HTTP_WHITEBOARD_TARGET + "=(" + ApiServletContext.FELIX_HTTP_NAME + "=" + ApiServletContext.OSC_API_NAME + ")"
 
 })
-public class ApiServletDelegate extends Application implements Servlet {
+public class ApiServletDelegate extends ResourceConfig implements Servlet {
     static final long serialVersionUID = 1L;
 
     @Reference
@@ -98,18 +101,26 @@ public class ApiServletDelegate extends Application implements Servlet {
     /** The Jersey REST container */
     private ServletContainer container;
 
-    // override Application.getSingletons() to provide injected references
-    @Override
-    public Set<Object> getSingletons() {
-        return Collections.unmodifiableSet(new HashSet<Object>(Arrays.asList(
-                new Object[] { this.alarmApis, this.alertApis, this.applianceApis, this.distributedApplianceApis,
-                        this.distributedApplianceInstanceApis, this.jobApis, this.managerApis,
-                        this.managerConnectorApis, this.nsmMgrApis, this.nsxApis, this.serverDebugApis,
-                        this.serverMgmtApis, this.virtualSystemApis, this.virtualizationConnectorApis })));
-    }
-
     @Activate
     void activate() {
+        //Json feature
+        super.register(JacksonJaxbJsonProvider.class);
+
+        //Auth Filters
+        super.register(AgentAuthFilter.class);
+        super.register(NsxAuthFilter.class);
+        super.register(LocalHostAuthFilter.class);
+        super.register(OscAuthFilter.class);
+
+        //Properties
+        super.property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true);
+
+        // agent & server apis
+        super.getSingletons().addAll(Arrays.asList(new Object[] { this.alarmApis, this.alertApis, this.applianceApis,
+                this.distributedApplianceApis, this.distributedApplianceInstanceApis, this.jobApis, this.managerApis,
+                this.managerConnectorApis, this.nsmMgrApis, this.nsxApis, this.serverDebugApis, this.serverMgmtApis,
+                this.virtualSystemApis, this.virtualizationConnectorApis }));
+
         this.container = new ServletContainer(this);
     }
 

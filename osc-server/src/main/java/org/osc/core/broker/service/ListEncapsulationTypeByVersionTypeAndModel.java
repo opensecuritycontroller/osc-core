@@ -34,13 +34,15 @@ public class ListEncapsulationTypeByVersionTypeAndModel extends
     @Override
     public ListResponse<TagEncapsulationType> exec(ListEncapsulationTypeByVersionTypeAndModelRequest request,
             Session session) throws Exception {
-        List<TagEncapsulationType> list = ApplianceSoftwareVersionEntityMgr.getEncapsulationByApplianceSoftwareVersion(
+        List<org.osc.core.broker.model.entities.appliance.TagEncapsulationType> list = ApplianceSoftwareVersionEntityMgr.getEncapsulationByApplianceSoftwareVersion(
                 session, request.getAppliacneSoftwareVersion(), request.getAppliacneModel(),
-                VirtualizationType.valueOf(request.getVcType().name()))
-                .stream()
-                .map(t -> TagEncapsulationType.valueOf(t.name()))
-                .collect(Collectors.toList());
-        this.response.setList(list);
+                VirtualizationType.valueOf(request.getVcType().name()));
+
+        if(list != null) {
+            this.response.setList(list.stream()
+                                  .map(t -> TagEncapsulationType.valueOf(t.name()))
+                                  .collect(Collectors.toList()));
+        }
 
         return this.response;
     }

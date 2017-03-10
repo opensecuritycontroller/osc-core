@@ -30,8 +30,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.rest.server.model.MgrFile;
@@ -54,8 +54,6 @@ import org.osc.sdk.manager.element.MgrChangeNotification.ChangeType;
 import org.osc.sdk.manager.element.MgrChangeNotification.MgrObjectType;
 import org.osgi.service.component.annotations.Component;
 
-import com.sun.jersey.spi.container.ResourceFilters;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -65,10 +63,10 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = ManagerApis.class)
 @Api(tags = "Operations for Manager Plugin", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(IscRestServlet.MANAGER_API_PATH_PREFIX)
-@ResourceFilters({ VmidcAuthFilter.class })
-@Consumes({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+@Path(OscRestServlet.MANAGER_API_PATH_PREFIX)
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@OscAuth
 public class ManagerApis {
 
     private static final Logger log = Logger.getLogger(ManagerApis.class);
@@ -82,7 +80,7 @@ public class ManagerApis {
     @Path("/notification")
     @POST
     public Response postNotification(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
-            @ApiParam(required = true) Notification notification) {
+                                     @ApiParam(required = true) Notification notification) {
         log.info("postNotification(): " + notification);
         return ManagerApis.triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
     }
@@ -100,9 +98,9 @@ public class ManagerApis {
     @Path("/propagateMgrFile/vs/{virtualSystemName}")
     @PUT
     public Response propagateMgrFile(@Context HttpHeaders headers,
-            @ApiParam(value = "Virtual System name to which file propagation is requested",
-            required = true) @PathParam("virtualSystemName") String virtualSystemName,
-            @ApiParam(value = "The File to propogate", required = true) MgrFile mgrFile) {
+                                     @ApiParam(value = "Virtual System name to which file propagation is requested",
+                                             required = true) @PathParam("virtualSystemName") String virtualSystemName,
+                                     @ApiParam(value = "The File to propogate", required = true) MgrFile mgrFile) {
 
         log.info("Propagate MgrFile for vsName: " + virtualSystemName);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -127,7 +125,7 @@ public class ManagerApis {
     @Path("/queryVmInfo")
     @POST
     public Response queryVMInfo(@Context HttpHeaders headers,
-            @ApiParam(required = true) QueryVmInfoRequest queryVmInfo) {
+                                @ApiParam(required = true) QueryVmInfoRequest queryVmInfo) {
 
         log.info("Query VM info request: " + queryVmInfo);
         SessionUtil.setUser(SessionUtil.getUsername(headers));

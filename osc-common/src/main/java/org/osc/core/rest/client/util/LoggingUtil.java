@@ -24,6 +24,7 @@ import java.util.Collection;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import org.osc.core.rest.client.annotations.VmidcLogHidden;
 
@@ -36,8 +37,6 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import com.sun.jersey.api.json.JSONJAXBContext;
-import com.sun.jersey.api.json.JSONMarshaller;
 
 public final class LoggingUtil {
 
@@ -133,17 +132,10 @@ public final class LoggingUtil {
 
         try {
             T clonedPojoItem = (T) gson.fromJson(gson.toJson(pojo), pojo.getClass());
-
-            StringWriter writer = new StringWriter();
             sanitizePojo(clonedPojoItem);
 
-            final JSONJAXBContext contextJ = new JSONJAXBContext(clonedPojoItem.getClass());
-            final JSONMarshaller marshaller = contextJ.createJSONMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            marshaller.marshallToJSON(clonedPojoItem, writer);
-
-            return writer.toString();
-
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(clonedPojoItem);
         } catch (Exception ex) {
             log.error("Problem converting the input to Json. This should not happen.", ex);
         }

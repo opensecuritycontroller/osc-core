@@ -23,8 +23,8 @@
 		<version>1.0</version>
 		<relativePath>..</relativePath>
 	</parent>
-	<artifactId>osc-uber-jersey</artifactId>
-	<name>org.osc.core:osc-uber-jersey</name>
+	<artifactId>osc-uber-jcloud</artifactId>
+	<name>org.osc.core:osc-uber-jcloud</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -141,6 +141,41 @@
 			<artifactId>jsr311-api</artifactId>
 			<version>1.1.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.jclouds</groupId>
+			<artifactId>jclouds-compute</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jclouds</groupId>
+			<artifactId>jclouds-core</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jclouds</groupId>
+			<artifactId>jclouds-scriptbuilder</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jclouds.labs</groupId>
+			<artifactId>openstack-neutron</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jclouds.labs</groupId>
+			<artifactId>openstack-glance</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jclouds.api</groupId>
+			<artifactId>openstack-keystone</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jclouds.api</groupId>
+			<artifactId>openstack-nova</artifactId>
+			<version>2.0.0</version>
+		</dependency>
 	</dependencies>
-	<version>1.12</version>
+	<version>1.0.0</version>
 </project>

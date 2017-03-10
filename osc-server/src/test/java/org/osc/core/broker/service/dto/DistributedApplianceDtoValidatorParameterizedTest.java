@@ -55,7 +55,6 @@ import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -88,6 +87,7 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
 
         ApplianceManagerConnector mcPolicyMappingNotSupported = new ApplianceManagerConnector();
         ManagerType mgrTypePolicyMappingNotSupported = ManagerType.SMC;
+        ManagerType.addType(ManagerType.SMC.getValue());
         mcPolicyMappingNotSupported.setManagerType(mgrTypePolicyMappingNotSupported.getValue());
 
         Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_NOT_FOUND)).thenReturn(null);
@@ -104,11 +104,7 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
 
         this.sessionStub.stubFindVirtualSystem(DA_ID_EXISTING_VC, VC_ID_OPENSTACK, new VirtualSystem());
 
-        ApplianceManagerApi applianceMgrPolicyMappingNotSupported = Mockito.mock(ApplianceManagerApi.class);
-        Mockito.when(applianceMgrPolicyMappingNotSupported.isPolicyMappingSupported()).thenReturn(false);
-
-        Mockito.when(ManagerApiFactory.createApplianceManagerApi(mgrTypePolicyMappingNotSupported)).thenReturn(applianceMgrPolicyMappingNotSupported);
-        Mockito.when(ManagerApiFactory.createApplianceManagerApi(mgrTypePolicyMappingNotSupported.getValue())).thenReturn(applianceMgrPolicyMappingNotSupported);
+        Mockito.when(ManagerApiFactory.syncsPolicyMapping(mgrTypePolicyMappingNotSupported)).thenReturn(false);
     }
 
     @Test

@@ -29,8 +29,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -45,9 +45,6 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osgi.service.component.annotations.Component;
 
-import com.sun.jersey.api.JResponse;
-import com.sun.jersey.spi.container.ResourceFilters;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -57,11 +54,12 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = DistributedApplianceInstanceApis.class)
 @Api(tags = "Operations for Distributed Appliance Instances", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/distributedApplianceInstances")
-@ResourceFilters({ VmidcAuthFilter.class })
+@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/distributedApplianceInstances")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@OscAuth
 public class DistributedApplianceInstanceApis {
+
     private static final Logger logger = Logger.getLogger(DistributedApplianceInstanceApis.class);
 
     @ApiOperation(value = "Lists All Distributed Appliance Instances",
@@ -71,7 +69,7 @@ public class DistributedApplianceInstanceApis {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @GET
-    public JResponse<List<DistributedApplianceInstanceDto>> listDistributedApplianceInstances(
+    public List<DistributedApplianceInstanceDto> listDistributedApplianceInstances(
             @Context HttpHeaders headers) {
 
         logger.info("Listing Distributed Appliance Instances");
@@ -81,7 +79,7 @@ public class DistributedApplianceInstanceApis {
         ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) ApiUtil
         .getListResponse(new ListDistributedApplianceInstanceService(), new BaseRequest<>(true));
 
-        return JResponse.ok(response.getList()).build();
+        return response.getList();
     }
 
     @ApiOperation(value = "Retrieves the Distributed Appliance Instance",
@@ -91,9 +89,9 @@ public class DistributedApplianceInstanceApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{distributedApplianceInstanceId}")
     @GET
-    public JResponse<DistributedApplianceInstanceDto> getDistributedApplianceInstance(@Context HttpHeaders headers,
-            @ApiParam(value = "The Id of the Distributed Appliance Instance",
-            required = true) @PathParam("distributedApplianceInstanceId") Long distributedApplianceInstanceId) {
+    public DistributedApplianceInstanceDto getDistributedApplianceInstance(@Context HttpHeaders headers,
+                                                                           @ApiParam(value = "The Id of the Distributed Appliance Instance",
+                                                                                   required = true) @PathParam("distributedApplianceInstanceId") Long distributedApplianceInstanceId) {
 
         logger.info("Getting Distributed Appliance Instance " + distributedApplianceInstanceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -103,7 +101,7 @@ public class DistributedApplianceInstanceApis {
         getDtoRequest.setEntityName("DistributedApplianceInstance");
         GetDtoFromEntityService<DistributedApplianceInstanceDto> getDtoService = new GetDtoFromEntityService<DistributedApplianceInstanceDto>();
 
-        return JResponse.ok(ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto()).build();
+        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Retrieves the Distributed Appliance Instances status",
@@ -113,13 +111,13 @@ public class DistributedApplianceInstanceApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/status")
     @PUT
-    public JResponse<GetAgentStatusResponseDto> getDistributedApplianceInstanceStatus(@Context HttpHeaders headers,
-            @ApiParam(value = "The Ids of the Distributed Appliance Instances to get status for",
-            required = true) DistributedApplianceInstancesRequest req) {
+    public GetAgentStatusResponseDto getDistributedApplianceInstanceStatus(@Context HttpHeaders headers,
+                                                                           @ApiParam(value = "The Ids of the Distributed Appliance Instances to get status for",
+                                                                                   required = true) DistributedApplianceInstancesRequest req) {
 
         logger.info("Getting Distributed Appliance Instance Status " + req);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return JResponse.ok(ApiUtil.submitRequestToService(new GetAgentStatusService(), req)).build();
+        return ApiUtil.submitRequestToService(new GetAgentStatusService(), req);
     }
 }

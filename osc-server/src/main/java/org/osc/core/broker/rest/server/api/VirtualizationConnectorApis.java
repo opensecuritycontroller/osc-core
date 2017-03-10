@@ -33,8 +33,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -70,9 +70,6 @@ import org.osc.core.broker.service.vc.VirtualizationConnectorRequest;
 import org.osc.core.broker.util.SessionUtil;
 import org.osgi.service.component.annotations.Component;
 
-import com.sun.jersey.api.JResponse;
-import com.sun.jersey.spi.container.ResourceFilters;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -82,10 +79,10 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = VirtualizationConnectorApis.class)
 @Api(tags = "Operations for Virtualization Connectors", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/virtualizationConnectors")
+@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/virtualizationConnectors")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@ResourceFilters({ VmidcAuthFilter.class })
+@OscAuth
 public class VirtualizationConnectorApis {
 
     private static final Logger logger = Logger.getLogger(VirtualizationConnectorApis.class);
@@ -97,7 +94,7 @@ public class VirtualizationConnectorApis {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @GET
-    public JResponse<List<VirtualizationConnectorDto>> getVirtualizationConnectors(@Context HttpHeaders headers) {
+    public List<VirtualizationConnectorDto> getVirtualizationConnectors(@Context HttpHeaders headers) {
 
         logger.info("Listing Virtualization Connectors");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -106,7 +103,7 @@ public class VirtualizationConnectorApis {
         ListResponse<VirtualizationConnectorDto> response = (ListResponse<VirtualizationConnectorDto>) ApiUtil
                 .getListResponse(new ListVirtualizationConnectorService(), new BaseRequest<>(true));
 
-        return JResponse.ok(response.getList()).build();
+        return response.getList();
     }
 
     @ApiOperation(value = "Retrieves the Virtualization Connector by Id",
@@ -116,8 +113,8 @@ public class VirtualizationConnectorApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}")
     @GET
-    public JResponse<VirtualizationConnectorDto> getVirtualizationConnector(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
+    public VirtualizationConnectorDto getVirtualizationConnector(@Context HttpHeaders headers,
+                                                                 @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
 
         logger.info("getting Virtualization Connector " + vcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -126,9 +123,9 @@ public class VirtualizationConnectorApis {
         getDtoRequest.setEntityId(vcId);
         getDtoRequest.setEntityName("VirtualizationConnector");
 
-        return JResponse.ok(ApiUtil
+        return ApiUtil
                 .submitBaseRequestToService(new GetDtoFromEntityService<VirtualizationConnectorDto>(), getDtoRequest)
-                .getDto()).build();
+                .getDto();
     }
 
     /**
@@ -147,12 +144,12 @@ public class VirtualizationConnectorApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @POST
     public Response createVirtualizationConnector(@Context HttpHeaders headers,
-            @ApiParam(required = true) VirtualizationConnectorRequest vcRequest) {
+                                                  @ApiParam(required = true) VirtualizationConnectorRequest vcRequest) {
 
         logger.info("Creating Virtualization Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new AddVirtualizationConnectorService(vcRequest.isForceAddSSLCertificates()),
-                new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
+        return ApiUtil.getResponseForBaseRequest(new AddVirtualizationConnectorService(),
+                new DryRunRequest<VirtualizationConnectorDto>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
 
     /**
@@ -174,20 +171,20 @@ public class VirtualizationConnectorApis {
     @Path("/{vcId}")
     @PUT
     public Response updateVirtualizationConnector(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(required = true) VirtualizationConnectorRequest vcRequest) {
+                                                  @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                                  @ApiParam(required = true) VirtualizationConnectorRequest vcRequest) {
 
         logger.info("Updating Virtualization Connector " + vcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setIdOrThrow(vcRequest, vcId, "Virtualization Connector");
-        return ApiUtil.getResponseForBaseRequest(new UpdateVirtualizationConnectorService(vcRequest.isForceAddSSLCertificates()),
-                new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
+        return ApiUtil.getResponseForBaseRequest(new UpdateVirtualizationConnectorService(),
+                new DryRunRequest<VirtualizationConnectorDto>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
 
     /**
      * Delete a Virtualization connector
      *
-     * @param vcDto
+     * @param vcId
      * @return
      */
     @ApiOperation(value = "Deletes a Virtualization Connector",
@@ -197,7 +194,7 @@ public class VirtualizationConnectorApis {
     @Path("/{vcId}")
     @DELETE
     public Response deleteVirtualizationConnector(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
+                                                  @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
 
         logger.info("Deleting Virtualization Connector " + vcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -206,7 +203,6 @@ public class VirtualizationConnectorApis {
     }
 
     // Security Group APIs
-
     @ApiOperation(value = "Lists Security Groups",
             notes = "Lists Security Groups owned by the Virtualization Connector",
             response = SecurityGroupDto.class,
@@ -215,14 +211,14 @@ public class VirtualizationConnectorApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}/securityGroups")
     @GET
-    public JResponse<List<SecurityGroupDto>> getSecurityGroupByVirtualiazationConnector(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
+    public List<SecurityGroupDto> getSecurityGroupByVirtualiazationConnector(@Context HttpHeaders headers,
+                                                                             @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
         logger.info("Listing Security groups");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         @SuppressWarnings("unchecked")
         ListResponse<SecurityGroupDto> response = (ListResponse<SecurityGroupDto>) ApiUtil
                 .getListResponse(new ListSecurityGroupByVcService(), new BaseIdRequest(vcId));
-        return JResponse.ok(response.getList()).build();
+        return response.getList();
     }
 
     @ApiOperation(value = "Retrieves a Security Group",
@@ -232,9 +228,9 @@ public class VirtualizationConnectorApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}/securityGroups/{sgId}")
     @GET
-    public JResponse<SecurityGroupDto> getSecurityGroup(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
+    public SecurityGroupDto getSecurityGroup(@Context HttpHeaders headers,
+                                             @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                             @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("getting Security Group " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
@@ -245,7 +241,7 @@ public class VirtualizationConnectorApis {
 
         ApiUtil.validateParentIdMatches(dto, vcId, "SecurityGroup");
 
-        return JResponse.ok(dto).build();
+        return dto;
     }
 
     @ApiOperation(value = "Creates a Security Group (Openstack Only)",
@@ -256,8 +252,8 @@ public class VirtualizationConnectorApis {
     @Path("/{vcId}/securityGroups")
     @POST
     public Response createSecurityGroup(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(required = true) SecurityGroupDto sgDto) {
+                                        @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                        @ApiParam(required = true) SecurityGroupDto sgDto) {
         logger.info("Creating Security Group ...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setIdAndParentIdOrThrow(sgDto, null, vcId, "Security Group");
@@ -274,9 +270,9 @@ public class VirtualizationConnectorApis {
     @Path("/{vcId}/securityGroups/{sgId}")
     @PUT
     public Response updateSecurityGroup(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
-            @ApiParam(required = true) SecurityGroupDto sgDto) {
+                                        @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                        @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
+                                        @ApiParam(required = true) SecurityGroupDto sgDto) {
         logger.info("Updating Security Group " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setIdAndParentIdOrThrow(sgDto, sgId, vcId, "Security Group");
@@ -293,8 +289,8 @@ public class VirtualizationConnectorApis {
     @Path("/{vcId}/securityGroups/{sgId}")
     @DELETE
     public Response deleteSecurityGroup(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
+                                        @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                        @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Deleting Security Group.. " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         return ApiUtil.getResponseForBaseRequest(new DeleteSecurityGroupService(),
@@ -310,8 +306,8 @@ public class VirtualizationConnectorApis {
     @Path("/{vcId}/securityGroups/{sgId}/force")
     @DELETE
     public Response forceDeleteSecurityGroup(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
+                                             @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                             @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Deleting Security Group.. " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         return ApiUtil.getResponseForBaseRequest(new DeleteSecurityGroupService(),
@@ -326,15 +322,14 @@ public class VirtualizationConnectorApis {
     @Path("/{vcId}/securityGroups/{sgId}/sync")
     @PUT
     public Response syncSecurityGroup(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
+                                      @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                      @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Sync Security Group" + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         return ApiUtil.getResponseForBaseRequest(new SyncSecurityGroupService(), new BaseIdRequest(sgId, vcId));
     }
 
     // Security Group member APIs
-
     @ApiOperation(value = "Lists Security Group Members",
             notes = "Lists Security Group Member owned by Security Group and Virtualization Connector provided.",
             response = SecurityGroupMemberItemDto.class,
@@ -343,9 +338,9 @@ public class VirtualizationConnectorApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}/securityGroups/{sgId}/members")
     @GET
-    public JResponse<Set<SecurityGroupMemberItemDto>> getSecurityGroupMembers(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
+    public Set<SecurityGroupMemberItemDto> getSecurityGroupMembers(@Context HttpHeaders headers,
+                                                                   @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                                                   @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Listing Members for Security Group - " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
@@ -360,7 +355,7 @@ public class VirtualizationConnectorApis {
         SetResponse<SecurityGroupMemberItemDto> memberList = (SetResponse<SecurityGroupMemberItemDto>) ApiUtil
                 .getSetResponse(new ListSecurityGroupMembersBySgService(), new BaseIdRequest(sgId));
 
-        return JResponse.ok(memberList.getSet()).build();
+        return memberList.getSet();
     }
 
     @ApiOperation(value = "Updates the Security Group Members (Openstack Only)",
@@ -371,9 +366,9 @@ public class VirtualizationConnectorApis {
     @Path("/{vcId}/securityGroups/{sgId}/members")
     @PUT
     public Response updateSecurityGroupMembers(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
-            @ApiParam(required = true) UpdateSecurityGroupMemberRequest sgUpdateRequest) {
+                                               @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                               @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
+                                               @ApiParam(required = true) UpdateSecurityGroupMemberRequest sgUpdateRequest) {
         logger.info("Updating Security Group " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
@@ -401,9 +396,9 @@ public class VirtualizationConnectorApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}/securityGroups/{sgId}/bindings")
     @GET
-    public JResponse<List<VirtualSystemPolicyBindingDto>> getVirtualSecurityPolicyBindings(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
+    public List<VirtualSystemPolicyBindingDto> getVirtualSecurityPolicyBindings(@Context HttpHeaders headers,
+                                                                                @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                                                                @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Listing Bindings for Security Group - " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
@@ -419,7 +414,7 @@ public class VirtualizationConnectorApis {
         ListResponse<VirtualSystemPolicyBindingDto> memberList = (ListResponse<VirtualSystemPolicyBindingDto>) ApiUtil
                 .getListResponse(new ListSecurityGroupBindingsBySgService(), new BaseIdRequest(sgId));
 
-        return JResponse.ok(memberList.getList()).build();
+        return memberList.getList();
     }
 
     @ApiOperation(value = "Set Security Group Bindings (Openstack Only)",
@@ -432,9 +427,9 @@ public class VirtualizationConnectorApis {
     @Path("/{vcId}/securityGroups/{sgId}/bindings")
     @PUT
     public Response updateVirtualSecurityPolicyBindings(@Context HttpHeaders headers,
-            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
-            @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
-            @ApiParam(value = "List of Bindings", required = true) Set<VirtualSystemPolicyBindingDto> bindings) {
+                                                        @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                                        @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
+                                                        @ApiParam(value = "List of Bindings", required = true) Set<VirtualSystemPolicyBindingDto> bindings) {
         logger.info("Update Bindings for Security Group - " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         BindSecurityGroupService bindService = new BindSecurityGroupService();

@@ -16,7 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.*;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.APPLIANCE_ID_EXISTING;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_DA;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_VC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_MISMATCHING_MC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_NAME_EXISTING_DA;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_NAME_NEW_DA;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.EMPTY_VALUE_ERROR_MESSAGE;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.MC_ID_VALID_MC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_OPENSTACK;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.createDistributedApplianceDto;
 
 import java.text.MessageFormat;
 
@@ -30,9 +39,10 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.service.dto.DistributedApplianceDto;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -49,6 +59,7 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
 
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
         mc.setId(MC_ID_VALID_MC);
+        mc.setManagerType(ManagerType.NSM.toString());
         this.existingDa = new DistributedAppliance(mc);
         this.existingDa.setId(DA_ID_EXISTING_DA);
 
@@ -64,6 +75,10 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
         this.sessionStub.stubIsExistingEntity(DistributedAppliance.class, "name", DA_NAME_NEW_DA, false);
 
         this.sessionStub.stubFindVirtualSystem(DA_ID_EXISTING_VC, VC_ID_OPENSTACK, new VirtualSystem());
+
+        PowerMockito.mockStatic(ManagerApiFactory.class);
+        ManagerType.addType(mc.getManagerType());
+        Mockito.when(ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()))).thenReturn(true);
     }
 
     @Test

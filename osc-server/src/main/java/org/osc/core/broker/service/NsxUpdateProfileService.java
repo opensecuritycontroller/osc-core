@@ -19,9 +19,9 @@ package org.osc.core.broker.service;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.job.JobQueuer;
+import org.osc.core.broker.job.JobQueuer.JobRequest;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
-import org.osc.core.broker.job.JobQueuer.JobRequest;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -69,7 +69,6 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
         if (vs.getMarkedForDeletion() || vs.getDistributedAppliance().getMarkedForDeletion()) {
             return;
         }
-
         LockObjectReference or = new LockObjectReference(vs.getDistributedAppliance());
         UnlockObjectTask ult = new UnlockObjectTask(or, LockType.WRITE_LOCK);
         LockRequest lockRequest = new LockRequest(or, ult);
@@ -79,12 +78,12 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
         tg.appendTask(new NsxServiceProfileCheckMetaTask(vs, serviceProfile));
 
         // If the appliance manager supports policy mapping then perform OSC->MC sync of security group interfaces
-        if (vs.getMgrId() != null && ManagerApiFactory.createApplianceManagerApi(vs).isPolicyMappingSupported()) {
+        if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {
             tg.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 
         // If the appliance manager supports security group sync then perform OSC->MC sync of security groups
-        if (vs.getMgrId() != null && ManagerApiFactory.createApplianceManagerApi(vs).isSecurityGroupSyncSupport()) {
+        if (vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(vs)) {
             tg.appendTask(new MgrSecurityGroupCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 
