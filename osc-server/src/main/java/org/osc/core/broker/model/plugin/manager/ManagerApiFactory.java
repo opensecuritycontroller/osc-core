@@ -16,9 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.manager;
 
+import static org.osc.sdk.manager.Constants.*;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -52,13 +55,26 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class ManagerApiFactory {
+import com.google.common.collect.ImmutableMap;
 
+public class ManagerApiFactory {
     public static final String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
 
-    private final static Logger log = Logger.getLogger(ManagerApiFactory.class);
+    private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES =
+            ImmutableMap.<String, Class<?>>builder()
+            .put(VENDOR_NAME, String.class)
+            .put(SERVICE_NAME, String.class)
+            .put(EXTERNAL_SERVICE_NAME, String.class)
+            .put(AUTHENTICATION_TYPE, String.class)
+            .put(NOTIFICATION_TYPE, String.class)
+            .put(SYNC_SECURITY_GROUP, Boolean.class)
+            .put(PROVIDE_DEVICE_STATUS, Boolean.class)
+            .put(SYNC_POLICY_MAPPING, Boolean.class)
+            .build();
 
-    private static HashMap<String, ApplianceManagerApi> plugins = new HashMap<String, ApplianceManagerApi>();
+    private final static Logger LOG = Logger.getLogger(ManagerApiFactory.class);
+
+    private static HashMap<String, ApplianceManagerApiContext> plugins = new HashMap<String, ApplianceManagerApiContext>();
 
     private static BundleContext bundleContext;
     private static ServiceTracker<InstallableManager, InstallableManager> installManagerTracker;
@@ -83,7 +99,7 @@ public class ManagerApiFactory {
 
         PluginTracker<ApplianceManagerApi> tracker;
         synchronized (pluginTrackers) {
-            tracker = new PluginTracker<>(bundleContext, ApplianceManagerApi.class, pluginType, installMgr, customizer);
+            tracker = new PluginTracker<>(bundleContext, ApplianceManagerApi.class, pluginType, REQUIRED_MANAGER_PLUGIN_PROPERTIES, installMgr, customizer);
             pluginTrackers.add(tracker);
         }
         tracker.open();
@@ -100,7 +116,7 @@ public class ManagerApiFactory {
         pluginServiceTracker = new ServiceTracker<ApplianceManagerApi, String>(bundleContext, ApplianceManagerApi.class, null) {
             @Override
             public String addingService(ServiceReference<ApplianceManagerApi> reference) {
-                Object nameObj = reference.getProperty("osc.plugin.name");
+                Object nameObj = reference.getProperty(PluginTracker.PROP_PLUGIN_NAME);
                 if (!(nameObj instanceof String)) {
                     return null;
                 }
@@ -108,9 +124,9 @@ public class ManagerApiFactory {
                 String name = (String) nameObj;
                 ApplianceManagerApi service = this.context.getService(reference);
 
-                ApplianceManagerApi existing = plugins.putIfAbsent(name, service);
+                ApplianceManagerApiContext existing = plugins.putIfAbsent(name, new ApplianceManagerApiContext(service, reference));
                 if (existing != null) {
-                    log.warn(String.format("Multiple plugin services of type %s available with name=%s", ApplianceManagerApi.class.getName(), name));
+                    LOG.warn(String.format("Multiple plugin services of type %s available with name=%s", ApplianceManagerApi.class.getName(), name));
                     this.context.ungetService(reference);
                     return null;
                 }
@@ -152,9 +168,9 @@ public class ManagerApiFactory {
     }
 
     public static ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception {
-        ApplianceManagerApi plugin = plugins.get(managerType.toString());
+        ApplianceManagerApiContext plugin = plugins.get(managerType.toString());
         if (plugin != null) {
-            return plugin;
+            return plugin.managerApi;
         } else {
             throw new VmidcException("Unsupported Manager type '" + managerType + "'");
         }
@@ -194,6 +210,43 @@ public class ManagerApiFactory {
     public static ManagerDomainApi createManagerDomainApi(ApplianceManagerConnector mc) throws Exception {
         return createApplianceManagerApi(mc.getManagerType())
                 .createManagerDomainApi(getApplianceManagerConnectorElement(mc));
+    }
+
+    public static Boolean syncsSecurityGroup(ManagerType managerType) throws Exception {
+        return (Boolean) getPluginProperty(managerType, SYNC_SECURITY_GROUP);
+    }
+
+    public static Boolean providesDeviceStatus(ManagerType managerType) throws Exception {
+        return (Boolean) getPluginProperty(managerType, PROVIDE_DEVICE_STATUS);
+    }
+
+    public static Boolean syncsPolicyMapping(ManagerType managerType) throws Exception {
+        return (Boolean) getPluginProperty(managerType, SYNC_POLICY_MAPPING);
+    }
+
+    public static String getNotificationType(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, NOTIFICATION_TYPE);
+    }
+
+    public static String getAuthenticationType(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, AUTHENTICATION_TYPE);
+    }
+
+    public static String getExternalServiceName(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, EXTERNAL_SERVICE_NAME);
+    }
+
+    public static String getServiceName(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, SERVICE_NAME);
+    }
+
+    private static Object getPluginProperty(ManagerType managerType, String propertyName) throws Exception {
+        ApplianceManagerApiContext plugin = plugins.get(managerType.toString());
+        if (plugin != null) {
+            return plugin.reference.getProperty(propertyName);
+        } else {
+            throw new VmidcException("Unsupported Manager type '" + managerType + "'");
+        }
     }
 
     public static ManagerDeviceMemberApi createManagerDeviceMemberApi(ApplianceManagerConnector mc, VirtualSystem vs) throws Exception {
@@ -259,5 +312,15 @@ public class ManagerApiFactory {
 
     private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs) throws EncryptionException {
         return getApplianceManagerConnectorElement(vs.getDistributedAppliance().getApplianceManagerConnector());
+    }
+
+    private static class ApplianceManagerApiContext {
+        private ApplianceManagerApi managerApi;
+        private ServiceReference<ApplianceManagerApi> reference;
+
+        ApplianceManagerApiContext(ApplianceManagerApi managerApi, ServiceReference<ApplianceManagerApi>  reference) {
+            this.managerApi = managerApi;
+            this.reference = reference;
+        }
     }
 }
