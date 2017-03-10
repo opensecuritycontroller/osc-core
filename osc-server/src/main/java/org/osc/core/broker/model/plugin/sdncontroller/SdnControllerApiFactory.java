@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.PluginTracker;
@@ -102,7 +103,7 @@ public class SdnControllerApiFactory {
             return sgm.getSubnet().getRegion();
         default:
             throw new VmidcBrokerValidationException("Openstack Id is not applicable for Members of type '" + sgm.getType()
-                    + "'");
+            + "'");
         }
     }
 
@@ -145,16 +146,20 @@ public class SdnControllerApiFactory {
         }
     }
 
-    public static Boolean supportsOffboxRedirection(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, SUPPORT_OFFBOX_REDIRECTION);
+    public static Boolean supportsOffboxRedirection(VirtualSystem vs) throws Exception {
+        return supportsOffboxRedirection(ControllerType.fromText(vs.getVirtualizationConnector().getControllerType()));
     }
 
-    public static Boolean supportsServiceFunctionChaining(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, SUPPORT_SFC);
+    public static Boolean supportsOffboxRedirection(SecurityGroup sg) throws Exception {
+        return supportsOffboxRedirection(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
     }
 
-    public static Boolean supportsFailurePolicy(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, SUPPORT_FAILURE_POLICY);
+    public static Boolean supportsServiceFunctionChaining(SecurityGroup sg) throws Exception {
+        return supportsServiceFunctionChaining(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+    }
+
+    public static Boolean supportsFailurePolicy(SecurityGroup sg) throws Exception {
+        return supportsFailurePolicy(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
     }
 
     public static Boolean usesProviderCreds(ControllerType controllerType) throws Exception {
@@ -165,17 +170,12 @@ public class SdnControllerApiFactory {
         return (Boolean) getPluginProperty(controllerType, QUERY_PORT_INFO);
     }
 
-    public static Boolean supportsPortGroup(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, SUPPORT_PORT_GROUP);
+    public static Boolean supportsPortGroup(VirtualSystem vs) throws Exception {
+        return supportsPortGroup(ControllerType.fromText(vs.getVirtualizationConnector().getControllerType()));
     }
 
-    private static Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception {
-        SdnControllerApiContext pluginContext = sdnControllerPlugins.get(controllerType.toString());
-        if (pluginContext != null) {
-            return pluginContext.reference.getProperty(propertyName);
-        } else {
-            throw new VmidcException("Unsupported controller type '" + controllerType + "'");
-        }
+    public static Boolean supportsPortGroup(SecurityGroup sg) throws Exception {
+        return supportsPortGroup(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
     }
 
     public static <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass, PluginType pluginType) throws ServiceUnavailableException, VmidcException {
@@ -321,6 +321,31 @@ public class SdnControllerApiFactory {
         SdnControllerApiContext(ServiceObjects<SdnControllerApi> sdnControllerServices, ServiceReference<SdnControllerApi>  reference) {
             this.sdnControllerServices = sdnControllerServices;
             this.reference = reference;
+        }
+    }
+
+    private static Boolean supportsFailurePolicy(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_FAILURE_POLICY);
+    }
+
+    private static Boolean supportsServiceFunctionChaining(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_SFC);
+    }
+
+    private static Boolean supportsOffboxRedirection(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_OFFBOX_REDIRECTION);
+    }
+
+    private static Boolean supportsPortGroup(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_PORT_GROUP);
+    }
+
+    private static Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception {
+        SdnControllerApiContext pluginContext = sdnControllerPlugins.get(controllerType.toString());
+        if (pluginContext != null) {
+            return pluginContext.reference.getProperty(propertyName);
+        } else {
+            throw new VmidcException("Unsupported controller type '" + controllerType + "'");
         }
     }
 }

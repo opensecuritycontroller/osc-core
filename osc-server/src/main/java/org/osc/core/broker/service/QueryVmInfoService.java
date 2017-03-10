@@ -26,6 +26,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
+import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
@@ -48,8 +49,8 @@ import com.vmware.vim25.mo.VirtualMachine;
 
 public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse> {
 
-     private static final Logger log =
-     Logger.getLogger(QueryVmInfoService.class);
+    private static final Logger log =
+            Logger.getLogger(QueryVmInfoService.class);
 
     @Override
     public QueryVmInfoResponse exec(QueryVmInfoRequest request, Session session) throws Exception {
@@ -176,7 +177,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                     neutron = new JCloudNeutron(new Endpoint(vc));
                     nova = new JCloudNova(new Endpoint(vc));
 
-                    if (controller.isSupportQueryPortInfo()) {
+                    if (SdnControllerApiFactory.providesTrafficPortInfo(ControllerType.fromText(vc.getControllerType()))) {
                         // Search using SDN controller
                         HashMap<String, FlowPortInfo> flowPortInfo = controller.queryPortInfo(request.flow);
 

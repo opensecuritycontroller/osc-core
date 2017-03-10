@@ -216,37 +216,32 @@ public class ManagerApiFactory {
         return (Boolean) getPluginProperty(managerType, SYNC_SECURITY_GROUP);
     }
 
-    public static Boolean providesDeviceStatus(ManagerType managerType) throws Exception {
-        return (Boolean) getPluginProperty(managerType, PROVIDE_DEVICE_STATUS);
+    public static Boolean syncsSecurityGroup(VirtualSystem vs) throws Exception {
+        return syncsSecurityGroup(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
+    public static Boolean providesDeviceStatus(VirtualSystem vs) throws Exception {
+        return providesDeviceStatus(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
     public static Boolean syncsPolicyMapping(ManagerType managerType) throws Exception {
         return (Boolean) getPluginProperty(managerType, SYNC_POLICY_MAPPING);
     }
 
-    public static String getNotificationType(ManagerType managerType) throws Exception {
-        return (String) getPluginProperty(managerType, NOTIFICATION_TYPE);
+    public static Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception {
+        return syncsPolicyMapping(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
-    public static String getAuthenticationType(ManagerType managerType) throws Exception {
-        return (String) getPluginProperty(managerType, AUTHENTICATION_TYPE);
-    }
-
-    public static String getExternalServiceName(ManagerType managerType) throws Exception {
-        return (String) getPluginProperty(managerType, EXTERNAL_SERVICE_NAME);
+    public static String getExternalServiceName(VirtualSystem vs) throws Exception {
+        return getExternalServiceName(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
     public static String getServiceName(ManagerType managerType) throws Exception {
         return (String) getPluginProperty(managerType, SERVICE_NAME);
     }
 
-    private static Object getPluginProperty(ManagerType managerType, String propertyName) throws Exception {
-        ApplianceManagerApiContext plugin = plugins.get(managerType.toString());
-        if (plugin != null) {
-            return plugin.reference.getProperty(propertyName);
-        } else {
-            throw new VmidcException("Unsupported Manager type '" + managerType + "'");
-        }
+    public static String getVendorName(VirtualSystem vs) throws Exception {
+        return getVendorName(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
     public static ManagerDeviceMemberApi createManagerDeviceMemberApi(ApplianceManagerConnector mc, VirtualSystem vs) throws Exception {
@@ -267,21 +262,21 @@ public class ManagerApiFactory {
     }
 
     public static boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception {
-        return createApplianceManagerApi(getDecryptedApplianceManagerConnector(mc).getManagerType()).getNotificationType()
-                .equals(ManagerNotificationSubscriptionType.CALLBACK_URL);
+        return getNotificationType(ManagerType.fromText(getDecryptedApplianceManagerConnector(mc).getManagerType()))
+                .equals(ManagerNotificationSubscriptionType.CALLBACK_URL.toString());
     }
 
     public static boolean isWebSocketNotifications(ApplianceManagerConnector mc) throws Exception {
-        return createApplianceManagerApi(getDecryptedApplianceManagerConnector(mc).getManagerType()).getNotificationType()
-                .equals(ManagerNotificationSubscriptionType.TRANSIENT_WEB_SOCKET);
+        return getNotificationType(ManagerType.fromText(getDecryptedApplianceManagerConnector(mc).getManagerType()))
+                .equals(ManagerNotificationSubscriptionType.TRANSIENT_WEB_SOCKET.toString());
     }
 
     public static boolean isBasicAuth(ManagerType mt) throws Exception {
-        return createApplianceManagerApi(mt).getAuthenticationType().equals(ManagerAuthenticationType.BASIC_AUTH);
+        return getAuthenticationType(mt).equals(ManagerAuthenticationType.BASIC_AUTH.toString());
     }
 
     public static boolean isKeyAuth(ManagerType mt) throws Exception {
-        return createApplianceManagerApi(mt).getAuthenticationType().equals(ManagerAuthenticationType.KEY_AUTH);
+        return getAuthenticationType(mt).equals(ManagerAuthenticationType.KEY_AUTH.toString());
     }
 
     public static void checkConnection(ApplianceManagerConnector mc) throws Exception {
@@ -321,6 +316,35 @@ public class ManagerApiFactory {
         ApplianceManagerApiContext(ApplianceManagerApi managerApi, ServiceReference<ApplianceManagerApi>  reference) {
             this.managerApi = managerApi;
             this.reference = reference;
+        }
+    }
+
+    private static String getNotificationType(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, NOTIFICATION_TYPE);
+    }
+
+    private static Boolean providesDeviceStatus(ManagerType managerType) throws Exception {
+        return (Boolean) getPluginProperty(managerType, PROVIDE_DEVICE_STATUS);
+    }
+
+    private static String getAuthenticationType(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, AUTHENTICATION_TYPE);
+    }
+
+    private static String getExternalServiceName(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, EXTERNAL_SERVICE_NAME);
+    }
+
+    private static String getVendorName(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, VENDOR_NAME);
+    }
+
+    private static Object getPluginProperty(ManagerType managerType, String propertyName) throws Exception {
+        ApplianceManagerApiContext plugin = plugins.get(managerType.toString());
+        if (plugin != null) {
+            return plugin.reference.getProperty(propertyName);
+        } else {
+            throw new VmidcException("Unsupported Manager type '" + managerType + "'");
         }
     }
 }

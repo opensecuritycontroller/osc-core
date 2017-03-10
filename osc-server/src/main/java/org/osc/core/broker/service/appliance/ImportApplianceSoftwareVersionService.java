@@ -111,15 +111,14 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                     org.osc.core.broker.model.entities.appliance.VirtualizationType.valueOf(
                             virtualizationType.name()), virtualizationVersion);
 
-            boolean isPolicyMappingSupported = ManagerApiFactory.createApplianceManagerApi(
-                    this.imageMetadata.getManagerType()).isPolicyMappingSupported();
+            boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(this.imageMetadata.getManagerType());
             if (av == null) {
 
                 ApplianceSoftwareVersion asv = ApplianceSoftwareVersionEntityMgr.findByImageUrl(session,
                         this.imageMetadata.getImageName());
                 if (asv != null) {
                     throw new VmidcBrokerValidationException("Image file: " + this.imageMetadata.getImageName()
-                            + " already exists. Cannot add an image with the same name.");
+                    + " already exists. Cannot add an image with the same name.");
                 }
 
                 ApplianceSoftwareVersionDto asvDto = new ApplianceSoftwareVersionDto();
@@ -261,8 +260,8 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
             return metaDataFile;
         } else {
             throw new VmidcBrokerValidationException(
-                VmidcMessages.getString(VmidcMessages_.UPLOAD_APPLIANCE_INVALID_METAFILE, ImageMetadata.META_FILE_NAME)
-            );
+                    VmidcMessages.getString(VmidcMessages_.UPLOAD_APPLIANCE_INVALID_METAFILE, ImageMetadata.META_FILE_NAME)
+                    );
         }
     }
 
@@ -273,8 +272,8 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
         } catch (JsonSyntaxException | IOException exception) {
             log.error("Error reading meta data file", exception);
             throw new VmidcBrokerValidationException(
-                VmidcMessages.getString(VmidcMessages_.UPLOAD_APPLIANCE_INVALID_METAFILE_SYNTAX, exception.getMessage())
-            );
+                    VmidcMessages.getString(VmidcMessages_.UPLOAD_APPLIANCE_INVALID_METAFILE_SYNTAX, exception.getMessage())
+                    );
         }
 
         if (tempImageMetadata == null) {

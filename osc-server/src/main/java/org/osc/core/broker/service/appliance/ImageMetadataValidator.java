@@ -59,8 +59,7 @@ public class ImageMetadataValidator {
             throw new VmidcBrokerValidationException(
                     "Invalid File Format. Invalid Manager Type and/or Virtualization Type and/or Virtualization Version and/or Encapsulation Type.");
         }
-        boolean isPolicyMappingSupported = ManagerApiFactory.createApplianceManagerApi(imageMetadata.getManagerType())
-                .isPolicyMappingSupported();
+        boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(imageMetadata.getManagerType());
 
         if (!imageMetadata.getEncapsulationTypes().isEmpty() && imageMetadata.getVirtualizationType().isVmware()) {
             throw new VmidcBrokerValidationException(
