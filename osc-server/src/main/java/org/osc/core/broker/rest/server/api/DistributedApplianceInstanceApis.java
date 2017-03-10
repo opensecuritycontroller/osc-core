@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
+import java.util.List;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -41,6 +43,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.GetAgentStatusResponseDto;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osgi.service.component.annotations.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -49,8 +52,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
-import java.util.List;
-
+@Component(service = DistributedApplianceInstanceApis.class)
 @Api(tags = "Operations for Distributed Appliance Instances", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/distributedApplianceInstances")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

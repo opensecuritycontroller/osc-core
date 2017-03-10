@@ -36,7 +36,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.mcafee.vmidc.server.Server;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.rest.client.nsx.model.Attribute;
@@ -45,7 +44,6 @@ import org.osc.core.broker.rest.client.nsx.model.FabricAgents;
 import org.osc.core.broker.rest.client.nsx.model.ServiceInstance;
 import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.rest.annotations.NsxAuth;
 import org.osc.core.broker.service.NsxDeleteAgentsService;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.NsxUpdateProfileContainerService;
@@ -58,8 +56,13 @@ import org.osc.core.broker.service.request.NsxUpdateProfileRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.rest.annotations.NsxAuth;
+import org.osgi.service.component.annotations.Component;
+
+import com.mcafee.vmidc.server.Server;
 
 
+@Component(service = NsxApis.class)
 @Path(OscRestServlet.NSX_API_PATH_PREFIX)
 @NsxAuth
 public class NsxApis {

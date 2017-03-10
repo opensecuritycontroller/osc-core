@@ -19,6 +19,7 @@ package org.osc.core.broker.model.plugin.sdncontroller;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -61,7 +62,7 @@ public class ControllerType {
     }
 
     public static Set<String> values() {
-        Set<String> values = new HashSet<>(controllerTypes);
+        Set<String> values = new TreeSet<>(controllerTypes);
         values.addAll(SdnControllerApiFactory.getControllerTypes());
         return values;
     }

@@ -30,11 +30,32 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.rest.server.AgentAuthFilter;
+import org.osc.core.broker.rest.server.NsxAuthFilter;
+import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.server.api.AlarmApis;
+import org.osc.core.broker.rest.server.api.AlertApis;
+import org.osc.core.broker.rest.server.api.ApplianceApis;
+import org.osc.core.broker.rest.server.api.DistributedApplianceApis;
+import org.osc.core.broker.rest.server.api.DistributedApplianceInstanceApis;
+import org.osc.core.broker.rest.server.api.JobApis;
+import org.osc.core.broker.rest.server.api.ManagerApis;
+import org.osc.core.broker.rest.server.api.ManagerConnectorApis;
+import org.osc.core.broker.rest.server.api.ServerDebugApis;
+import org.osc.core.broker.rest.server.api.ServerMgmtApis;
+import org.osc.core.broker.rest.server.api.VirtualSystemApis;
+import org.osc.core.broker.rest.server.api.VirtualizationConnectorApis;
+import org.osc.core.broker.rest.server.api.proprietary.NsmMgrApis;
+import org.osc.core.broker.rest.server.api.proprietary.NsxApis;
+import org.osc.core.util.LocalHostAuthFilter;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 @Component(name = "api.servlet", service = Servlet.class, property = {
 
@@ -44,20 +65,70 @@ import org.osgi.service.component.annotations.Component;
         HTTP_WHITEBOARD_TARGET + "=(" + ApiServletContext.FELIX_HTTP_NAME + "=" + ApiServletContext.OSC_API_NAME + ")"
 
 })
-public class ApiServletDelegate implements Servlet {
+public class ApiServletDelegate extends ResourceConfig implements Servlet {
+    static final long serialVersionUID = 1L;
+
+    @Reference
+    private AlarmApis alarmApis;
+    @Reference
+    private AlertApis alertApis;
+    @Reference
+    private ApplianceApis applianceApis;
+    @Reference
+    private DistributedApplianceApis distributedApplianceApis;
+    @Reference
+    private DistributedApplianceInstanceApis distributedApplianceInstanceApis;
+    @Reference
+    private JobApis jobApis;
+    @Reference
+    private ManagerApis managerApis;
+    @Reference
+    private ManagerConnectorApis managerConnectorApis;
+    @Reference
+    private NsmMgrApis nsmMgrApis;
+    @Reference
+    private NsxApis nsxApis;
+    @Reference
+    private ServerDebugApis serverDebugApis;
+    @Reference
+    private ServerMgmtApis serverMgmtApis;
+    @Reference
+    private VirtualSystemApis virtualSystemApis;
+    @Reference
+    private VirtualizationConnectorApis virtualizationConnectorApis;
 
     /** The Jersey REST container */
     private ServletContainer container;
 
     @Activate
     void activate() {
-        this.container = new ServletContainer(new OscRestServlet());
+        //Json feature
+        super.register(JacksonJaxbJsonProvider.class);
+
+        //Auth Filters
+        super.register(AgentAuthFilter.class);
+        super.register(NsxAuthFilter.class);
+        super.register(LocalHostAuthFilter.class);
+        super.register(OscAuthFilter.class);
+
+        //Properties
+        super.property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true);
+
+        // agent & server apis
+        super.registerInstances(this.alarmApis, this.alertApis, this.applianceApis, this.distributedApplianceApis,
+                this.distributedApplianceInstanceApis, this.jobApis, this.managerApis, this.managerConnectorApis,
+                this.nsmMgrApis, this.nsxApis, this.serverDebugApis, this.serverMgmtApis, this.virtualSystemApis,
+                this.virtualizationConnectorApis);
+
+        this.container = new ServletContainer(this);
     }
 
     @Override
     public void destroy() {
         this.container.destroy();
     }
+
+    // Servlet interface methods
 
     @Override
     public ServletConfig getServletConfig() {

@@ -59,6 +59,7 @@ import org.osc.core.broker.service.securityinterface.ListSecurityGroupInterfaceS
 import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.securityinterface.UpdateSecurityGroupInterfaceService;
 import org.osc.core.broker.util.SessionUtil;
+import org.osgi.service.component.annotations.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -67,6 +68,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+@Component(service = VirtualSystemApis.class)
 @Api(tags = "Operations for Virtual Systems", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/virtualSystems")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

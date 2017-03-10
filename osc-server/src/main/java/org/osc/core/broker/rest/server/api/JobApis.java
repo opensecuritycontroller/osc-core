@@ -28,7 +28,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -40,16 +39,17 @@ import org.osc.core.broker.service.persistence.JobEntityManager;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.request.ListTaskRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
+import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.rest.annotations.OscAuth;
+import org.osgi.service.component.annotations.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
-import org.osc.core.broker.service.response.ListResponse;
 
-import java.util.List;
-
+@Component(service = JobApis.class)
 @Api(tags = "Operations for Jobs", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/jobs")
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

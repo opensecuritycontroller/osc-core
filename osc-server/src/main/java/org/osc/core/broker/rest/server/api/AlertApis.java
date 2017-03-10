@@ -47,6 +47,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osgi.service.component.annotations.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -55,6 +56,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+@Component(service = AlertApis.class)
 @Api(tags = "Operations for Alerts", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/alerts")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

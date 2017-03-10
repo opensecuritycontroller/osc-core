@@ -35,7 +35,14 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.mcafee.vmidc.server.Server;
+
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.broker.service.AddSslCertificateService;
@@ -53,19 +60,14 @@ import org.osc.core.broker.rest.server.model.ServerStatusResponse;
 import org.osc.core.broker.service.BackupService;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 import org.osc.core.rest.annotations.LocalHostAuth;
+import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 import org.osc.core.util.PKIUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
+import org.osgi.service.component.annotations.Component;
 
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
+@Component(service = ServerMgmtApis.class)
 @Api(tags = "Operations for OSC server", authorizations = { @Authorization(value = "Basic Auth") })
 @Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/serverManagement")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
