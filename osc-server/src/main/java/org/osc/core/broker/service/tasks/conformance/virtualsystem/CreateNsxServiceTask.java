@@ -53,10 +53,7 @@ public class CreateNsxServiceTask extends TransactionalTask {
         ServiceElement service = serviceApi.findService(this.vs.getDistributedAppliance().getName());
         String serviceId = service == null ? null : service.getId();
         if (serviceId == null) {
-            String serviceFunctionalityType = ManagerApiFactory
-                    .createApplianceManagerApi(
-                            this.vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                    .getNsxServiceName();
+            String serviceFunctionalityType = ManagerApiFactory.getExternalServiceName(this.vs);
 
             service = new Service(
                     null,

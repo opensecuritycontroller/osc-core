@@ -32,7 +32,6 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxServiceProfileContainerCheckMetaTask;
 import org.osc.core.util.NetworkUtil;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 
 public class NsxUpdateProfileContainerService extends
 ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse> {
@@ -66,8 +65,7 @@ ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse> {
                 request.containerSet);
         tg.addTask(syncTask);
 
-        ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(vs);
-        if (vs.getMgrId() != null && managerApi.isSecurityGroupSyncSupport()) {
+        if (vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(vs)) {
             tg.addTask(new MgrSecurityGroupCheckMetaTask(vs), syncTask);
         }
 

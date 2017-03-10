@@ -48,7 +48,6 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.util.EventType;
 import org.osc.sdk.controller.FailurePolicyType;
-import org.osc.sdk.controller.api.SdnControllerApi;
 
 public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGroupRequest, BaseJobResponse> {
 
@@ -64,9 +63,6 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
         BaseJobResponse response = null;
 
         try {
-            SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.securityGroup
-                    .getVirtualizationConnector());
-
             unlockTask = LockUtil.tryLockSecurityGroup(this.securityGroup,
                     this.securityGroup.getVirtualizationConnector());
 
@@ -94,7 +90,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                 }
 
                 Policy policy = null;
-                boolean isPolicyMappingSupported = ManagerApiFactory.createApplianceManagerApi(vs).isPolicyMappingSupported();
+                boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(vs);
 
                 if (serviceToBindTo.getPolicyId() == null) {
                     if (isPolicyMappingSupported) {
@@ -114,7 +110,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                     }
                 }
 
-                if (controller.isFailurePolicySupported()) {
+                if (SdnControllerApiFactory.supportsFailurePolicy(this.securityGroup)){
                     // If failure policy is supported, failure policy is a required field
                     if (serviceToBindTo.getFailurePolicyType() == null
                             || serviceToBindTo.getFailurePolicyType() == FailurePolicyType.NA) {
@@ -130,8 +126,8 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                     }
                 }
 
-                FailurePolicyType failurePolicyType = controller.isFailurePolicySupported()
-                        ? serviceToBindTo.getFailurePolicyType() : FailurePolicyType.NA;
+                FailurePolicyType failurePolicyType =
+                        SdnControllerApiFactory.supportsFailurePolicy(this.securityGroup) ? serviceToBindTo.getFailurePolicyType() : FailurePolicyType.NA;
 
                         SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
                                 .findSecurityGroupInterfacesByVsAndSecurityGroup(session, vs, this.securityGroup);
@@ -237,9 +233,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
         }
 
         if (services.size() > 1) {
-            SdnControllerApi controller = SdnControllerApiFactory
-                    .createNetworkControllerApi(this.securityGroup.getVirtualizationConnector());
-            if (!controller.isServiceFunctionChainingSupported()) {
+            if (!SdnControllerApiFactory.supportsServiceFunctionChaining(this.securityGroup)){
                 throw new VmidcBrokerValidationException("SDN Controller Plugin of type '"
                         + this.securityGroup.getVirtualizationConnector().getControllerType()
                         + "' does not support more then one Service (Service Function Chaining)");

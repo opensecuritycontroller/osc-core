@@ -121,8 +121,8 @@ class OsSvaServerCreateTask extends TransactionalTask {
                     .getApplianceSoftwareVersion();
             CreatedServerDetails createdServer = null;
 
-            //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
-            if (controller != null &&  controller.getName().equals("Nuage")) {
+            //TODO: sjallapx Hack to workaround Nuage (the only SDN controller currently to return true to supportsPortGroup) SimpleDateFormat parse errors due to JCloud
+            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
                 createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
                         imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
                         ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),
@@ -150,7 +150,7 @@ class OsSvaServerCreateTask extends TransactionalTask {
                     DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
                             createdServer.getEgressInspectionMacAddr());
 
-                    if (controller.isPortGroupSupported()) {
+                    if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
                         String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
                                 ds.getVirtualSystem().getVirtualizationConnector(),
                                 new ArrayList<NetworkElement>(Arrays.asList(ingressPort)));

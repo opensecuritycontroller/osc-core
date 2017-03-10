@@ -16,19 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
-import com.vmware.vim25.InvalidLogin;
+import java.net.ConnectException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
 import org.jclouds.http.HttpResponseException;
 import org.jclouds.rest.AuthorizationException;
@@ -56,16 +52,20 @@ import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.rest.client.exception.RestClientException;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
-import org.osc.sdk.controller.api.SdnControllerApi;
 
-import java.net.ConnectException;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.util.BeanItem;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
+import com.vmware.vim25.InvalidLogin;
 
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
@@ -134,8 +134,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             ControllerType controllerTypeValue = ControllerType.fromText(BaseVCWindow.this.controllerType.getValue().toString());
 
             if (this.virtualizationType.getValue().toString().equals(VirtualizationType.OPENSTACK.toString()) && !controllerTypeValue.equals(ControllerType.NONE)) {
-                SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(controllerTypeValue);
-                if (!controller.isUsingProviderCreds()) {
+                if (!SdnControllerApiFactory.usesProviderCreds(controllerTypeValue)) {
                     this.controllerIP.validate();
                     ValidateUtil.checkForValidIpAddressFormat(this.controllerIP.getValue());
                     this.controllerUser.validate();
@@ -414,8 +413,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                         BaseVCWindow.this.sslCertificateAttrs.addAll(
                                 certificateResolverModels.stream().map(
                                         crm -> new SslCertificateAttr(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()
-                                )
-                        );
+                                                )
+                                );
                     }
                 }
                 @Override
@@ -525,8 +524,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             enableFields = true;
         } else if (!type.equals(ControllerType.NONE)) {
             try {
-                SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(type);
-                enableFields = !controller.isUsingProviderCreds();
+                enableFields = !SdnControllerApiFactory.usesProviderCreds(type);
             } catch (Exception e) {
                 log.error("Fail to get controller plugin instance", e);
             }
@@ -553,7 +551,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
             try {
                 this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                                            EncryptionUtil.encryptAESCTR(DEFAULT_RABBITMQ_USER_PASSWORD));
+                        EncryptionUtil.encryptAESCTR(DEFAULT_RABBITMQ_USER_PASSWORD));
             } catch (EncryptionException encryptionException) {
                 handleException(encryptionException);
             }
