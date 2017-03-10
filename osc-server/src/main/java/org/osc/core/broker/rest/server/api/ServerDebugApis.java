@@ -16,7 +16,22 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import com.mcafee.vmidc.server.Server;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
@@ -25,13 +40,13 @@ import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.rest.client.util.LoggingUtil;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
-import org.osc.core.rest.annotations.LocalHostAuth;
+import org.osgi.service.component.annotations.Component;
 
 import com.mcafee.vmidc.server.Server;
-import com.sun.jersey.spi.container.ResourceFilters;
 
 @Component(service = ServerDebugApis.class)
 @Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/serverDebug")

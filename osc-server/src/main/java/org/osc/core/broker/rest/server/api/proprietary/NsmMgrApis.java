@@ -30,7 +30,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.api.ApiUtil;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.rest.server.model.MgrFile;
@@ -43,22 +42,14 @@ import org.osc.core.broker.service.TagVmService;
 import org.osc.core.broker.service.UnTagVmService;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
 
-<<<<<<< HEAD
-import com.sun.jersey.spi.container.ResourceFilters;
-
 @Component(service = NsmMgrApis.class)
-@Path(IscRestServlet.MGR_NSM_API_PATH_PREFIX)
-@ResourceFilters({ VmidcAuthFilter.class })
-@Consumes({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-=======
 @Path(OscRestServlet.MGR_NSM_API_PATH_PREFIX)
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth
->>>>>>> master
 public class NsmMgrApis {
 
     private static final Logger log = Logger.getLogger(NsmMgrApis.class);
@@ -66,7 +57,7 @@ public class NsmMgrApis {
     @Path("/notification")
     @POST
     public Response postNotification(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
-                                     Notification notification) {
+            Notification notification) {
         log.info("postNotification(): " + notification);
         return ManagerApis.triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
     }
@@ -74,7 +65,7 @@ public class NsmMgrApis {
     @Path("/propagateMgrFile/vs/{vsName}")
     @PUT
     public Response propagateMgrFile(@Context HttpHeaders headers, @PathParam("vsName") String vsName,
-                                     MgrFile mgrFile) {
+            MgrFile mgrFile) {
 
         log.info("Propagate MgrFile for vsName: " + vsName);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
