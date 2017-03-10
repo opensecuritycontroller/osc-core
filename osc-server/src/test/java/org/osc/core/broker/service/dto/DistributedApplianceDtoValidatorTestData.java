@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.osc.core.broker.service.dto.DistributedApplianceDto;
-import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.sdk.controller.TagEncapsulationType;

@@ -118,7 +118,7 @@ public class SyncPolicyMetaTaskTest {
     private void registerMgrPolicies(ApplianceManagerConnector mc, String policyMgrId, List<ManagerPolicyElement> returnValue)
             throws Exception {
         ManagerPolicyApi mgrPolicyApi = mock(ManagerPolicyApi.class);
-        Mockito.<List<? extends ManagerPolicyElement>> when(mgrPolicyApi.getPolicyList(policyMgrId)).thenReturn(returnValue);
+        Mockito.<List<? extends ManagerPolicyElement>>when(mgrPolicyApi.getPolicyList(policyMgrId)).thenReturn(returnValue);
 
         when(ManagerApiFactory.createManagerPolicyApi(mc)).thenReturn(mgrPolicyApi);
     }

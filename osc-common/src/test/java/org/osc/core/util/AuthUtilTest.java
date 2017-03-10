@@ -27,9 +27,6 @@ import java.io.IOException;
 import java.security.KeyStore;
 import java.util.Properties;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class AuthUtilTest {
 
 	private HttpServletRequest mockHttpServletRequest;

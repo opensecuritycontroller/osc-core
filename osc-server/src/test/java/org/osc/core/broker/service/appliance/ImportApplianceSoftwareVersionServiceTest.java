@@ -61,7 +61,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest( {ServerUtil.class, FileUtils.class, FileUtil.class, ManagerApiFactory.class})
+@PrepareForTest({ ServerUtil.class, FileUtils.class, FileUtil.class, ManagerApiFactory.class })
 public class ImportApplianceSoftwareVersionServiceTest {
 
     private static final Long ASV_ID = 125L;

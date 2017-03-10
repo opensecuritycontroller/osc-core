@@ -38,7 +38,7 @@ public class DESDecryption {
         }
 
         try {
-            return fromEncryptedBytes( Base64.getDecoder().decode(cipherText) );
+            return fromEncryptedBytes(Base64.getDecoder().decode(cipherText));
         } catch(Exception e) {
             throw new EncryptionException("Failed to decrypt cipher text with 3DES", e);
         }
