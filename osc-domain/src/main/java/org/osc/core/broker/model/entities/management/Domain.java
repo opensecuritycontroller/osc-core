@@ -23,12 +23,12 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 
 @Entity
@@ -41,8 +41,8 @@ public class Domain extends BaseEntity {
     private String name;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "appliance_manager_connector_fk", nullable = false)
-    @ForeignKey(name = "FK_DO_APPLIANCE_MANAGER_CONNECTOR")
+    @JoinColumn(name = "appliance_manager_connector_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_DO_APPLIANCE_MANAGER_CONNECTOR"))
     private ApplianceManagerConnector applianceManagerConnector;
 
     @OneToMany(mappedBy = "domain", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

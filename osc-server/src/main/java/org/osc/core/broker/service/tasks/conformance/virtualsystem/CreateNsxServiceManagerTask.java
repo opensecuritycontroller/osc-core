@@ -88,7 +88,7 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
 
     public static String generateServiceManagerName(VirtualSystem vs) throws Exception {
         return "OSC " +
-                ManagerApiFactory.createApplianceManagerApi(vs).getVendorName() +
+                ManagerApiFactory.getVendorName(vs) +
                 " " + vs.getDistributedAppliance().getName();
     }
 }

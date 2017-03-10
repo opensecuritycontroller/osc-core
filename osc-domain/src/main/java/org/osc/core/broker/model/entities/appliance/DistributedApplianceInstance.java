@@ -25,6 +25,7 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.Lob;
@@ -33,7 +34,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
@@ -48,13 +48,13 @@ public class DistributedApplianceInstance extends BaseEntity {
     private String name;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "virtual_system_fk", nullable = false)
-    @ForeignKey(name = "FK_DAI_VIRTUAL_SYSTEM")
+    @JoinColumn(name = "virtual_system_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_DAI_VIRTUAL_SYSTEM"))
     private VirtualSystem virtualSystem;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "deployment_spec_fk", nullable = true)
-    @ForeignKey(name = "FK_DAI_DEPLOYMENT_SPEC")
+    @JoinColumn(name = "deployment_spec_fk", nullable = true,
+            foreignKey = @ForeignKey(name = "FK_DAI_DEPLOYMENT_SPEC"))
     private DeploymentSpec deploymentSpec;
 
     @Column(name = "ip_address")

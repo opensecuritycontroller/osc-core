@@ -32,9 +32,9 @@ public class NetworkUtil {
     static final List<String> validNetMasks = Arrays.asList("255.255.255.255", "255.255.255.254", "255.255.255.252",
             "255.255.255.248", "255.255.255.240", "255.255.255.224", "255.255.255.192", "255.255.255.128",
             "255.255.255.0", "255.255.254.0", "255.255.252.0", "255.255.248.0", "255.255.240.0", "255.255.224.0",
-            "255.255.192.0", "255.255.128.0", "255.255.0.0", "255.254.0.0", "255.252.0.0", "255.248.0.0",
-            "255.240.0.0", "255.224.0.0", "255.192.0.0", "255.128.0.0", "255.0.0.0", "254.0.0.0", "252.0.0.0",
-            "248.0.0.0", "240.0.0.0", "224.0.0.0", "192.0.0.0", "128.0.0.0", "0.0.0.0");
+            "255.255.192.0", "255.255.128.0", "255.255.0.0", "255.254.0.0", "255.252.0.0", "255.248.0.0", "255.240.0.0",
+            "255.224.0.0", "255.192.0.0", "255.128.0.0", "255.0.0.0", "254.0.0.0", "252.0.0.0", "248.0.0.0",
+            "240.0.0.0", "224.0.0.0", "192.0.0.0", "128.0.0.0", "0.0.0.0");
 
     public static String getHostIpAddress() throws SocketException, UnknownHostException {
         try {
@@ -43,13 +43,15 @@ public class NetworkUtil {
             InetAddress[] addrs = InetAddress.getAllByName(hostName);
 
             for (InetAddress addr : addrs) {
-                log.debug("addr.getHostAddress() = " + addr.getHostAddress());
-                log.debug("addr.getHostName() = " + addr.getHostName());
-                log.debug("addr.isAnyLocalAddress() = " + addr.isAnyLocalAddress());
-                log.debug("addr.isLinkLocalAddress() = " + addr.isLinkLocalAddress());
-                log.debug("addr.isLoopbackAddress() = " + addr.isLoopbackAddress());
-                log.debug("addr.isMulticastAddress() = " + addr.isMulticastAddress());
-                log.debug("addr.isSiteLocalAddress() = " + addr.isSiteLocalAddress());
+                if (log.isDebugEnabled()) {
+                    log.debug("addr.getHostAddress() = " + addr.getHostAddress());
+                    log.debug("addr.getHostName() = " + addr.getHostName());
+                    log.debug("addr.isAnyLocalAddress() = " + addr.isAnyLocalAddress());
+                    log.debug("addr.isLinkLocalAddress() = " + addr.isLinkLocalAddress());
+                    log.debug("addr.isLoopbackAddress() = " + addr.isLoopbackAddress());
+                    log.debug("addr.isMulticastAddress() = " + addr.isMulticastAddress());
+                    log.debug("addr.isSiteLocalAddress() = " + addr.isSiteLocalAddress());
+                }
 
                 if (!addr.isLoopbackAddress() && addr.isSiteLocalAddress()) {
                     return addr.getHostAddress();
@@ -69,14 +71,16 @@ public class NetworkUtil {
             Enumeration<InetAddress> eia = ni.getInetAddresses();
             while (eia.hasMoreElements()) {
                 InetAddress addr = eia.nextElement();
-                log.debug("===== Network Inteface Elements =====");
-                log.debug("addr.getHostAddress() = " + addr.getHostAddress());
-                log.debug("addr.getHostName() = " + addr.getHostName());
-                log.debug("addr.isAnyLocalAddress() = " + addr.isAnyLocalAddress());
-                log.debug("addr.isLinkLocalAddress() = " + addr.isLinkLocalAddress());
-                log.debug("addr.isLoopbackAddress() = " + addr.isLoopbackAddress());
-                log.debug("addr.isMulticastAddress() = " + addr.isMulticastAddress());
-                log.debug("addr.isSiteLocalAddress() = " + addr.isSiteLocalAddress());
+                if (log.isDebugEnabled()) {
+                    log.debug("===== Network Inteface Elements =====");
+                    log.debug("addr.getHostAddress() = " + addr.getHostAddress());
+                    log.debug("addr.getHostName() = " + addr.getHostName());
+                    log.debug("addr.isAnyLocalAddress() = " + addr.isAnyLocalAddress());
+                    log.debug("addr.isLinkLocalAddress() = " + addr.isLinkLocalAddress());
+                    log.debug("addr.isLoopbackAddress() = " + addr.isLoopbackAddress());
+                    log.debug("addr.isMulticastAddress() = " + addr.isMulticastAddress());
+                    log.debug("addr.isSiteLocalAddress() = " + addr.isSiteLocalAddress());
+                }
                 if (!addr.isLoopbackAddress() && addr.isSiteLocalAddress()) {
                     return addr.getHostAddress();
                 }
@@ -89,7 +93,8 @@ public class NetworkUtil {
      * Given a valid netmask returns the prefix length.
      *
      * @param netmask
-     * @throws IllegalArgumentException in case the netmask is not valid
+     * @throws IllegalArgumentException
+     *             in case the netmask is not valid
      * @return
      */
     public static int getPrefixLength(String netmask) {
@@ -102,7 +107,8 @@ public class NetworkUtil {
         int octet3 = Integer.parseInt(octets[2]);
         int octet4 = Integer.parseInt(octets[3]);
 
-        int mask = Integer.bitCount(octet1) + Integer.bitCount(octet2) + Integer.bitCount(octet3)+ Integer.bitCount(octet4);
+        int mask = Integer.bitCount(octet1) + Integer.bitCount(octet2) + Integer.bitCount(octet3)
+                + Integer.bitCount(octet4);
 
         return mask;
     }

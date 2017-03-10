@@ -40,6 +40,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
@@ -116,7 +117,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             tg.appendTask(new DAConformanceCheckMetaTask(da), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             // Sync MC security group interfaces only if the appliance manager supports policy mapping.
-            if (ManagerApiFactory.createApplianceManagerApi(mc.getManagerType()).isPolicyMappingSupported()) {
+            if (ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()))) {
                 tg.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask(da, mcReadUnlocktask),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
@@ -129,8 +130,8 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 @Override
                 public void completed(Job job) {
                     new TransactionalRunner<Void, CompleteJobTransactionInput>(new TransactionalRunner.SharedSessionHandler())
-                            .withTransactionalListener(new TransactionalBrodcastListener())
-                            .exec(new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class), new CompleteJobTransactionInput(da.getId(), job.getId()));
+                    .withTransactionalListener(new TransactionalBrodcastListener())
+                    .exec(new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class), new CompleteJobTransactionInput(da.getId(), job.getId()));
                 }
             });
             da.setLastJob((JobRecord) session.get(JobRecord.class, job.getId()));
@@ -205,8 +206,8 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             @Override
             public void completed(Job job) {
                 new TransactionalRunner<Void, CompleteJobTransactionInput>(new TransactionalRunner.SharedSessionHandler())
-                        .withTransactionalListener(new TransactionalBrodcastListener())
-                        .exec(new CompleteJobTransaction<ApplianceManagerConnector>(ApplianceManagerConnector.class), new CompleteJobTransactionInput(mc.getId(), job.getId()));
+                .withTransactionalListener(new TransactionalBrodcastListener())
+                .exec(new CompleteJobTransaction<ApplianceManagerConnector>(ApplianceManagerConnector.class), new CompleteJobTransactionInput(mc.getId(), job.getId()));
             }
         });
 

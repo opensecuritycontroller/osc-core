@@ -129,6 +129,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         addApi(serviceObjs, this.vmwareSdnRefs);
     }
 
+    // Manager Types ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception {
         final String name = managerType.getValue();
@@ -148,6 +150,17 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
 
         return api;
     }
+
+    @Override
+    public Object getPluginProperty(ManagerType managerType, String propertyName) throws Exception {
+        final String name = managerType.getValue();
+        if (!this.managerRefs.containsKey(name)) {
+            throw new VmidcException("Unsupported Manager type '" + name + "'");
+        }
+        return this.managerRefs.get(name).getServiceReference().getProperty(propertyName);
+    }
+
+    // Controller Types ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public VMwareSdnApi createVMwareSdnApi(VirtualizationConnector vc) throws VmidcException {
@@ -181,6 +194,16 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
          */
         return autoCloseProxy(serviceObjs, SdnControllerApi.class);
     }
+
+    @Override
+    public Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception {
+        final String name = controllerType.getValue();
+        if (!this.sdnControllerRefs.containsKey(name)) {
+            throw new VmidcException("Unsupported Controller type '" + name + "'");
+        }
+        return this.sdnControllerRefs.get(name).getServiceReference().getProperty(propertyName);
+    }
+
 
     /**
      * Create a proxy for an <code>AutoCloseable</code> prototype service, that automatically calls
@@ -222,12 +245,12 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
 
     @Override
     public <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
-            PluginType pluginType) {
+            PluginType pluginType, Map<String, Class<?>> requiredProperties) {
         if (customizer == null) {
             throw new IllegalArgumentException("Plugin tracker customizer may not be null");
         }
 
-        PluginTracker<T> tracker = new PluginTracker<>(this.context, pluginClass, pluginType, this.installableManager,
+        PluginTracker<T> tracker = new PluginTracker<>(this.context, pluginClass, pluginType, requiredProperties, this.installableManager,
                 customizer);
         synchronized (this.pluginTrackers) {
             this.pluginTrackers.add(tracker);

@@ -16,12 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import java.net.URI;
-import java.net.URL;
-import java.rmi.RemoteException;
-import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
+import com.rabbitmq.client.ShutdownSignalException;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -35,75 +30,80 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
-import org.osc.core.rest.client.crypto.SslCertificateResolver;
 import org.osc.core.rest.client.crypto.SslContextProvider;
+import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class VirtualizationConnectorUtil {
 
-	private static final Logger LOG = Logger.getLogger(VirtualizationConnectorUtil.class);
+    private static final Logger LOG = Logger.getLogger(VirtualizationConnectorUtil.class);
 
-	 private VimUtils vimUtils = null;
-	 private SslCertificateResolver sslCertificateResolver = null;
-	 private OsRabbitMQClient rabbitClient = null;
-	 private Endpoint endPoint = null;
-	 private JCloudKeyStone keystoneAPi = null;
+    private VimUtils vimUtils = null;
+    private X509TrustManagerFactory managerFactory = null;
+    private OsRabbitMQClient rabbitClient = null;
+    private Endpoint endPoint = null;
+    private JCloudKeyStone keystoneAPi = null;
 
-	 public void setVimUtils(VimUtils vimUtils) {
-			this.vimUtils = vimUtils;
-		}
+    public void setVimUtils(VimUtils vimUtils) {
+        this.vimUtils = vimUtils;
+    }
 
-	 /**
+    /**
      * Checks connection for vmware.
      *
      * @throws ErrorTypeException in case of controller/provider connection issues
      * @throws Exception          in case of any other issues
      */
     public void checkVmwareConnection(DryRunRequest<VirtualizationConnectorDto> request,
-                                             VirtualizationConnector vc) throws Exception, ErrorTypeException, SslCertificatesExtendedException {
+                                      VirtualizationConnector vc) throws Exception {
         if (!request.isSkipAllDryRun()) {
 
-        	if(this.sslCertificateResolver == null) {
-        		this.sslCertificateResolver = new SslCertificateResolver();
-        	}
+            ErrorTypeException errorTypeException = null;
+            final ArrayList<CertificateResolverModel> certificateResolverModels = new ArrayList<>();
 
-        	ErrorTypeException errorTypeException = null;
             // Check Connectivity with NSX if rest exception is not to be ignored
+
+            if (this.managerFactory == null) {
+                this.managerFactory = X509TrustManagerFactory.getInstance();
+            }
+
             if (!request.isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION)) {
+                initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "nsx");
                 try {
                     VMwareSdnApi vmwareSdnApi = SdnControllerApiFactory.createVMwareSdnApi(vc);
                     vmwareSdnApi.checkStatus(new VMwareSdnConnector(vc));
                 } catch (HttpException exception) {
-                	if(exception.getSatus() == null){
-                        URL url = new URL(exception.getResourcePath());
-                		this.sslCertificateResolver.fetchCertificatesFromURL(url, "nsx");
-                	}
+                    errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
                     LOG.warn("Rest Exception encountered when trying to add NSX info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
-                    errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
                 }
             }
 
             // Check Connectivity with vCenter
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
+                initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "vmware");
                 try {
-                    if(this.vimUtils == null) {
-                    	this.vimUtils = new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(), request.getDto().getProviderPassword());
+                    if (this.vimUtils == null) {
+                        this.vimUtils = new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(), request.getDto().getProviderPassword());
                     }
                 } catch (RemoteException remoteException) {
-                    this.sslCertificateResolver.fetchCertificatesFromURL(VimUtils.getServiceURL(request.getDto().getProviderIP()), "vmware");
+                    errorTypeException = new ErrorTypeException(remoteException, ErrorType.PROVIDER_EXCEPTION);
                     LOG.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, " +
                             "allowing user to either ignore or correct issue.");
-                    errorTypeException = new ErrorTypeException(remoteException, ErrorType.PROVIDER_EXCEPTION);
                 }
             }
 
-            if (!this.sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
-                throw new SslCertificatesExtendedException(errorTypeException, this.sslCertificateResolver.getCertificateResolverModels());
+            this.managerFactory.clearListener();
+
+            if (certificateResolverModels.size() > 0) {
+                throw new SslCertificatesExtendedException(errorTypeException, certificateResolverModels);
             } else if (errorTypeException != null) {
                 throw errorTypeException;
             }
@@ -111,62 +111,54 @@ public class VirtualizationConnectorUtil {
     }
 
 
-	/**
+    /**
      * Checks connection for openstack.
      *
      * @throws ErrorTypeException in case of keystone/controller/rabbitmq connection issues
      * @throws Exception          in case of any other issues
      */
     public void checkOpenstackConnection(DryRunRequest<VirtualizationConnectorDto> request,
-                                                VirtualizationConnector vc) throws Exception, ErrorTypeException, SslCertificatesExtendedException {
+                                         VirtualizationConnector vc) throws Exception {
         if (!request.isSkipAllDryRun()) {
-        	if(this.sslCertificateResolver == null) {
-        		this.sslCertificateResolver = new SslCertificateResolver();
-        	}
-        	ErrorTypeException errorTypeException = null;
+
+            ErrorTypeException errorTypeException = null;
+            final ArrayList<CertificateResolverModel> certificateResolverModels = new ArrayList<>();
+
+            if (this.managerFactory == null) {
+                this.managerFactory = X509TrustManagerFactory.getInstance();
+            }
+
             if (request.getDto().isControllerDefined() && !request.isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION)) {
+                initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstack");
                 try {
                     // Check NSC Connectivity and Credentials
                     try (SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(vc)) {
                         controller.getStatus();
                     }
-                } catch (Exception e) {
-                    VirtualizationConnectorDto vcDto = request.getDto();
-                    boolean isHttps = isHttps(vcDto.getProviderAttributes());
-                    if (isHttps && StringUtils.isNotEmpty(request.getDto().getControllerIP())) {
-                        URI uri = new URI("https", request.getDto().getControllerIP(), null, null);
-                        this.sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstack");
-                    }
+                } catch (Exception exception) {
+                    errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
                     LOG.warn("Exception encountered when trying to add SDN Controller info to Virtualization Connector, allowing user to either ignore or correct issue");
-                    errorTypeException = new ErrorTypeException(e, ErrorType.CONTROLLER_EXCEPTION);
                 }
             }
             // Check Connectivity with Key stone if https response exception is not to be ignored
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
-
+                initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstackkeystone");
                 try {
                     VirtualizationConnectorDto vcDto = request.getDto();
                     boolean isHttps = isHttps(vcDto.getProviderAttributes());
 
-                    if(this.endPoint == null) {
-                    	this.endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
-
-                            vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, new SslContextProvider().getSSLContext());
+                    if (this.endPoint == null) {
+                        this.endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
+                                vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, new SslContextProvider().getSSLContext());
                     }
-                    if(this.keystoneAPi == null) {
-                    	this.keystoneAPi = new JCloudKeyStone(this.endPoint);
+                    if (this.keystoneAPi == null) {
+                        this.keystoneAPi = new JCloudKeyStone(this.endPoint);
                     }
                     this.keystoneAPi.listTenants();
 
                 } catch (Exception exception) {
-                    VirtualizationConnectorDto vcDto = request.getDto();
-                    boolean isHttps = isHttps(vcDto.getProviderAttributes());
-                    if (isHttps) {
-                        URI uri = new URI("https", vcDto.getProviderIP(), null, null);
-                        this.sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "openstackkeystone");
-                    }
-                    LOG.warn("Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
                     errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
+                    LOG.warn("Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
                 } finally {
                     if (this.keystoneAPi != null) {
                         this.keystoneAPi.close();
@@ -175,9 +167,9 @@ public class VirtualizationConnectorUtil {
             }
 
             if (!request.isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION)) {
-
-                if( this.rabbitClient == null ) {
-                	this.rabbitClient = new OsRabbitMQClient(vc);
+                initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "rabbitmq");
+                if (this.rabbitClient == null) {
+                    this.rabbitClient = new OsRabbitMQClient(vc);
                 }
                 try {
                     this.rabbitClient.testConnection();
@@ -193,16 +185,16 @@ public class VirtualizationConnectorUtil {
                     } else {
                         errorTypeException = new ErrorTypeException(shutdownException, ErrorType.RABBITMQ_EXCEPTION);
                     }
-                } catch (Throwable e) {
-                    URI uri = new URI("https", null, this.rabbitClient.getServerIP(), this.rabbitClient.getPort(), null, null, null);
-                    this.sslCertificateResolver.fetchCertificatesFromURL(uri.toURL(), "rabbitmq");
+                } catch (Throwable exception) {
+                    errorTypeException = new ErrorTypeException(exception, ErrorType.RABBITMQ_EXCEPTION);
                     LOG.warn("Exception encountered when trying to connect to RabbitMQ, allowing user to either ignore or correct issue");
-                    errorTypeException = new ErrorTypeException(e, ErrorType.RABBITMQ_EXCEPTION);
                 }
             }
 
-            if (!this.sslCertificateResolver.getCertificateResolverModels().isEmpty()) {
-                throw new SslCertificatesExtendedException(errorTypeException, this.sslCertificateResolver.getCertificateResolverModels());
+            this.managerFactory.clearListener();
+
+            if (!certificateResolverModels.isEmpty()) {
+                throw new SslCertificatesExtendedException(errorTypeException, certificateResolverModels);
             } else if (errorTypeException != null) {
                 throw errorTypeException;
             }
@@ -210,9 +202,20 @@ public class VirtualizationConnectorUtil {
     }
 
     private static boolean isHttps(Map<String, String> attributes) {
-        String httpsValue = attributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS);
+        return attributes.containsKey(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS) &&
+                String.valueOf(true).equals(attributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS));
+    }
 
-        return httpsValue != null && httpsValue.equals(Boolean.TRUE.toString());
+    private void initSSLCertificatesListener(X509TrustManagerFactory managerFactory,
+                                             ArrayList<CertificateResolverModel> resolverList, String aliasPrefix) {
+        try {
+            managerFactory.setListener(model -> {
+                model.setAlias(aliasPrefix + "_" + model.getAlias());
+                resolverList.add(model);
+            });
+        } catch (Exception e1) {
+            LOG.error("Error occurred in TrustStoreManagerFactory", e1);
+        }
     }
 
 }

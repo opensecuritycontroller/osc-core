@@ -47,7 +47,6 @@ x-runproperties.debug: \
 	slf4j.api;version='[1.7.21,1.7.22)',\
 	slf4j.simple;version='[1.7.21,1.7.22)',\
 	osc-installer-simple;version='[1.0.0,1.0.1)',\
-	javassist;version='[3.20.0,3.20.1)',\
 	org.glassfish.hk2.api;version='[2.5.0,2.5.1)',\
 	org.glassfish.hk2.locator;version='[2.5.0,2.5.1)',\
 	org.glassfish.hk2.utils;version='[2.5.0,2.5.1)',\

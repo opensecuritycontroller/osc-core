@@ -272,5 +272,11 @@ public class TestCriteria implements Criteria {
     public void clearCriteria() {
         this.criteriaContent = new TestCriteriaContent();
     }
+
+    @Override
+    public Criteria addQueryHint(String arg0) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
 

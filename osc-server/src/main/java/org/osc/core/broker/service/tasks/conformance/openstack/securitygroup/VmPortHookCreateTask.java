@@ -74,7 +74,7 @@ class VmPortHookCreateTask extends TransactionalTask {
                     this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
-            if (controller.isPortGroupSupported()){
+            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
                 String portGroupId = this.securityGroupInterface.getSecurityGroup().getNetworkElementId();
                 if (portGroupId != null){
                     PortGroup portGroup = new PortGroup();

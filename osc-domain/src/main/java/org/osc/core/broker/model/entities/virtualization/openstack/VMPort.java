@@ -27,12 +27,12 @@ import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 
@@ -52,18 +52,16 @@ public class VMPort extends BaseEntity {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @Column(name = "ip_address")
-    @ForeignKey(name = "FK_VM_PORT_IP_ADDRESS")
-    @CollectionTable(name = "VM_PORT_IP_ADDRESS", joinColumns = @JoinColumn(name = "vm_port_fk"))
+    @CollectionTable(name = "VM_PORT_IP_ADDRESS", joinColumns = @JoinColumn(name = "vm_port_fk"),
+            foreignKey=@ForeignKey(name = "FK_VM_PORT_IP_ADDRESS"))
     private List<String> ipAddresses = new ArrayList<String>();
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vm_fk")
-    @ForeignKey(name = "FK_VMP_VM")
+    @JoinColumn(name = "vm_fk", foreignKey = @ForeignKey(name = "FK_VMP_VM"))
     private VM vm;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "network_fk")
-    @ForeignKey(name = "FK_VMP_NETWORK")
+    @JoinColumn(name = "network_fk", foreignKey = @ForeignKey(name = "FK_VMP_NETWORK"))
     private Network network;
 
     @Column(name = "parent_id", nullable = true, unique = false)
@@ -76,8 +74,7 @@ public class VMPort extends BaseEntity {
      * This also needs to be documented in release docs
      */
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "subnet_fk")
-    @ForeignKey(name = "FK_VMP_SUBNET")
+    @JoinColumn(name = "subnet_fk", foreignKey = @ForeignKey(name = "FK_VMP_SUBNET"))
     private Subnet subnet;
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "protectedPorts")

@@ -16,12 +16,21 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.sdncontroller;
 
+import static org.osc.sdk.controller.Constants.QUERY_PORT_INFO;
+import static org.osc.sdk.controller.Constants.SUPPORT_FAILURE_POLICY;
+import static org.osc.sdk.controller.Constants.SUPPORT_OFFBOX_REDIRECTION;
+import static org.osc.sdk.controller.Constants.SUPPORT_PORT_GROUP;
+import static org.osc.sdk.controller.Constants.SUPPORT_SFC;
+import static org.osc.sdk.controller.Constants.USE_PROVIDER_CREDS;
+
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -39,12 +48,24 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.google.common.collect.ImmutableMap;
+
 public class SdnControllerApiFactory {
 
     public static final String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
     private static final Logger log = Logger.getLogger(SdnControllerApiFactory.class);
 
     private static ApiFactoryService apiFactoryService;
+    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES =
+            ImmutableMap.<String, Class<?>>builder()
+            .put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class)
+            .put(SUPPORT_SFC, Boolean.class)
+            .put(SUPPORT_FAILURE_POLICY, Boolean.class)
+            .put(USE_PROVIDER_CREDS, Boolean.class)
+            .put(QUERY_PORT_INFO, Boolean.class)
+            .put(SUPPORT_PORT_GROUP, Boolean.class)
+            .build();
+
     private static BundleContext bundleContext;
 
     public static SdnControllerApi createNetworkControllerApi(VirtualSystem vs) throws Exception {
@@ -72,8 +93,8 @@ public class SdnControllerApiFactory {
         case SUBNET:
             return sgm.getSubnet().getRegion();
         default:
-            throw new VmidcBrokerValidationException(
-                    "Openstack Id is not applicable for Members of type '" + sgm.getType() + "'");
+            throw new VmidcBrokerValidationException("Openstack Id is not applicable for Members of type '" + sgm.getType()
+            + "'");
         }
     }
 
@@ -108,7 +129,39 @@ public class SdnControllerApiFactory {
 
     public static <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
             PluginType pluginType) throws ServiceUnavailableException, VmidcException {
-        return apiFactoryService.newPluginTracker(customizer, pluginClass, pluginType);
+        return apiFactoryService.newPluginTracker(customizer, pluginClass, pluginType, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES);
+    }
+
+    public static Boolean supportsOffboxRedirection(VirtualSystem vs) throws Exception {
+        return supportsOffboxRedirection(ControllerType.fromText(vs.getVirtualizationConnector().getControllerType()));
+    }
+
+    public static Boolean supportsOffboxRedirection(SecurityGroup sg) throws Exception {
+        return supportsOffboxRedirection(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+    }
+
+    public static Boolean supportsServiceFunctionChaining(SecurityGroup sg) throws Exception {
+        return supportsServiceFunctionChaining(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+    }
+
+    public static Boolean supportsFailurePolicy(SecurityGroup sg) throws Exception {
+        return supportsFailurePolicy(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+    }
+
+    public static Boolean usesProviderCreds(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, USE_PROVIDER_CREDS);
+    }
+
+    public static Boolean providesTrafficPortInfo(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, QUERY_PORT_INFO);
+    }
+
+    public static Boolean supportsPortGroup(VirtualSystem vs) throws Exception {
+        return supportsPortGroup(ControllerType.fromText(vs.getVirtualizationConnector().getControllerType()));
+    }
+
+    public static Boolean supportsPortGroup(SecurityGroup sg) throws Exception {
+        return supportsPortGroup(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
     }
 
     public static void init() throws Exception {
@@ -134,5 +187,25 @@ public class SdnControllerApiFactory {
 
     public static Set<String> getControllerTypes() {
         return apiFactoryService.getControllerTypes();
+    }
+
+    private static Boolean supportsFailurePolicy(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_FAILURE_POLICY);
+    }
+
+    private static Boolean supportsServiceFunctionChaining(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_SFC);
+    }
+
+    private static Boolean supportsOffboxRedirection(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_OFFBOX_REDIRECTION);
+    }
+
+    private static Boolean supportsPortGroup(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_PORT_GROUP);
+    }
+
+    private static Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception {
+        return apiFactoryService.getPluginProperty(controllerType, propertyName);
     }
 }

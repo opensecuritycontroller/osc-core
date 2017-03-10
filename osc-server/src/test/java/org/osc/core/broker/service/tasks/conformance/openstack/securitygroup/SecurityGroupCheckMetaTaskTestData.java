@@ -27,21 +27,23 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupUpdateOrDeleteMetaTask;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ValidateSecurityGroupTenantTask;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 
 class SecurityGroupCheckMetaTaskTestData {
+    public final static ManagerType POLICY_MAPPING_SUPPORTED_MGR_TYPE = ManagerType.NSM;
+    public final static ManagerType POLICY_MAPPING_NOT_SUPPORTED_MGR_TYPE = ManagerType.SMC;
+
     public static List<SecurityGroup> TEST_SECURITY_GROUPS = new ArrayList<SecurityGroup>();
 
     public static SecurityGroup NO_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(1L);
     public static SecurityGroup SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(2L);
     public static SecurityGroup MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(3L);
 
-    public static VirtualSystem MC_POLICY_MAPPING_NOT_SUPPORTED_VS = createVirtualSystem(101L);
-    public static VirtualSystem MC_POLICY_MAPPING_SUPPORTED_VS = createVirtualSystem(102L);
+    public static VirtualSystem MC_POLICY_MAPPING_NOT_SUPPORTED_VS = createVirtualSystem(101L, POLICY_MAPPING_NOT_SUPPORTED_MGR_TYPE);
+    public static VirtualSystem MC_POLICY_MAPPING_SUPPORTED_VS = createVirtualSystem(102L, POLICY_MAPPING_SUPPORTED_MGR_TYPE);
     public static List<VirtualSystem> MC_POLICY_MAPPING_SUPPORTED_VS_LIST =
-            Arrays.asList(MC_POLICY_MAPPING_SUPPORTED_VS, createVirtualSystem(103L));
+            Arrays.asList(MC_POLICY_MAPPING_SUPPORTED_VS, createVirtualSystem(103L, POLICY_MAPPING_SUPPORTED_MGR_TYPE));
 
     public static TaskGraph createNoMcPolicyMappingGraph(SecurityGroup sg) {
         TaskGraph expectedGraph = new TaskGraph();
@@ -76,9 +78,11 @@ class SecurityGroupCheckMetaTaskTestData {
         return sg;
     }
 
-    private static VirtualSystem createVirtualSystem(Long vsId) {
+    private static VirtualSystem createVirtualSystem(Long vsId, ManagerType mgrType) {
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
         mc.setName("MC_NAME");
+        mc.setManagerType(mgrType.toString());
+
         DistributedAppliance da = new DistributedAppliance(mc);
         da.setName("DA_NAME");
         VirtualSystem vs = new VirtualSystem(da);

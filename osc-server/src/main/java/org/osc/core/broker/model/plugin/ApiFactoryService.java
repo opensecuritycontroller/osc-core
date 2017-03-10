@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -40,6 +41,16 @@ public interface ApiFactoryService {
     ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception;
 
     /**
+     * gets specified property from {@code ApplianceManagerApi} instance for the specified manager type.
+     *
+     * @param managerType
+     * @param propertyName
+     * @return
+     * @throws Exception
+     */
+    Object getPluginProperty(ManagerType managerType, String propertyName) throws Exception;
+
+    /**
      * Creates a {@code SdnControllerApi} instance for the specified controller type.
      *
      * @param controllerType
@@ -47,6 +58,16 @@ public interface ApiFactoryService {
      * @throws Exception
      */
     SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception;
+
+    /**
+     * gets specified property from {@code SdnControllerApi} instance for the specified manager type.
+     *
+     * @param managerType
+     * @param propertyName
+     * @return
+     * @throws Exception
+     */
+    Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception;
 
     /**
      * Creates a {@code VMwareSdnApi} instance for the specified {@code VirtualizationConnector} type.
@@ -85,8 +106,10 @@ public interface ApiFactoryService {
      * @param customizer
      * @param pluginClass
      * @param pluginType
+     * @param requiredProperties
      * @return
      */
     <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
-            PluginType pluginType);
+            PluginType pluginType, Map<String, Class<?>> requiredProperties);
+
 }

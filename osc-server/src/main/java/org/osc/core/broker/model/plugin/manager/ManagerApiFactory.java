@@ -16,6 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.manager;
 
+import static org.osc.sdk.manager.Constants.AUTHENTICATION_TYPE;
+import static org.osc.sdk.manager.Constants.EXTERNAL_SERVICE_NAME;
+import static org.osc.sdk.manager.Constants.NOTIFICATION_TYPE;
+import static org.osc.sdk.manager.Constants.PROVIDE_DEVICE_STATUS;
+import static org.osc.sdk.manager.Constants.SERVICE_NAME;
+import static org.osc.sdk.manager.Constants.SYNC_POLICY_MAPPING;
+import static org.osc.sdk.manager.Constants.SYNC_SECURITY_GROUP;
+import static org.osc.sdk.manager.Constants.VENDOR_NAME;
+
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -47,18 +57,31 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class ManagerApiFactory {
+import com.google.common.collect.ImmutableMap;
 
+public class ManagerApiFactory {
     public static final String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
     private static final Logger log = Logger.getLogger(ManagerApiFactory.class);
 
     private static ApiFactoryService apiFactoryService;
     private static BundleContext bundleContext;
 
+    private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES =
+            ImmutableMap.<String, Class<?>>builder()
+            .put(VENDOR_NAME, String.class)
+            .put(SERVICE_NAME, String.class)
+            .put(EXTERNAL_SERVICE_NAME, String.class)
+            .put(AUTHENTICATION_TYPE, String.class)
+            .put(NOTIFICATION_TYPE, String.class)
+            .put(SYNC_SECURITY_GROUP, Boolean.class)
+            .put(PROVIDE_DEVICE_STATUS, Boolean.class)
+            .put(SYNC_POLICY_MAPPING, Boolean.class)
+            .build();
+
     public static PluginTracker<ApplianceManagerApi> newPluginTracker(
             PluginTrackerCustomizer<ApplianceManagerApi> customizer, PluginType pluginType)
             throws ServiceUnavailableException {
-        return apiFactoryService.newPluginTracker(customizer, ApplianceManagerApi.class, pluginType);
+        return apiFactoryService.newPluginTracker(customizer, ApplianceManagerApi.class, pluginType, REQUIRED_MANAGER_PLUGIN_PROPERTIES);
     }
 
     public static void init() throws Exception {
@@ -132,10 +155,42 @@ public class ManagerApiFactory {
                 .createManagerDomainApi(getApplianceManagerConnectorElement(mc));
     }
 
-    public static ManagerDeviceMemberApi createManagerDeviceMemberApi(ApplianceManagerConnector mc, VirtualSystem vs)
-            throws Exception {
-        return createApplianceManagerApi(mc.getManagerType()).createManagerDeviceMemberApi(
-                getApplianceManagerConnectorElement(mc), new VirtualSystemElementImpl(vs));
+    public static Boolean syncsSecurityGroup(ManagerType managerType) throws Exception {
+        return (Boolean) getPluginProperty(managerType, SYNC_SECURITY_GROUP);
+    }
+
+    public static Boolean syncsSecurityGroup(VirtualSystem vs) throws Exception {
+        return syncsSecurityGroup(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
+    public static Boolean providesDeviceStatus(VirtualSystem vs) throws Exception {
+        return providesDeviceStatus(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
+    public static Boolean syncsPolicyMapping(ManagerType managerType) throws Exception {
+        return (Boolean) getPluginProperty(managerType, SYNC_POLICY_MAPPING);
+    }
+
+    public static Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception {
+        return syncsPolicyMapping(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
+    public static String getExternalServiceName(VirtualSystem vs) throws Exception {
+        return getExternalServiceName(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
+    public static String getServiceName(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, SERVICE_NAME);
+    }
+
+    public static String getVendorName(VirtualSystem vs) throws Exception {
+        return getVendorName(ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
+    public static ManagerDeviceMemberApi createManagerDeviceMemberApi(ApplianceManagerConnector mc, VirtualSystem vs) throws Exception {
+        return createApplianceManagerApi(mc.getManagerType())
+                .createManagerDeviceMemberApi(getApplianceManagerConnectorElement(mc),
+                        new VirtualSystemElementImpl(vs));
     }
 
     public static ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc)
@@ -150,21 +205,21 @@ public class ManagerApiFactory {
     }
 
     public static boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception {
-        return createApplianceManagerApi(getDecryptedApplianceManagerConnector(mc).getManagerType())
-                .getNotificationType().equals(ManagerNotificationSubscriptionType.CALLBACK_URL);
+        return getNotificationType(ManagerType.fromText(getDecryptedApplianceManagerConnector(mc).getManagerType()))
+                .equals(ManagerNotificationSubscriptionType.CALLBACK_URL.toString());
     }
 
     public static boolean isWebSocketNotifications(ApplianceManagerConnector mc) throws Exception {
-        return createApplianceManagerApi(getDecryptedApplianceManagerConnector(mc).getManagerType())
-                .getNotificationType().equals(ManagerNotificationSubscriptionType.TRANSIENT_WEB_SOCKET);
+        return getNotificationType(ManagerType.fromText(getDecryptedApplianceManagerConnector(mc).getManagerType()))
+                .equals(ManagerNotificationSubscriptionType.TRANSIENT_WEB_SOCKET.toString());
     }
 
     public static boolean isBasicAuth(ManagerType mt) throws Exception {
-        return createApplianceManagerApi(mt).getAuthenticationType().equals(ManagerAuthenticationType.BASIC_AUTH);
+        return getAuthenticationType(mt).equals(ManagerAuthenticationType.BASIC_AUTH.toString());
     }
 
     public static boolean isKeyAuth(ManagerType mt) throws Exception {
-        return createApplianceManagerApi(mt).getAuthenticationType().equals(ManagerAuthenticationType.KEY_AUTH);
+        return getAuthenticationType(mt).equals(ManagerAuthenticationType.KEY_AUTH.toString());
     }
 
     public static void checkConnection(ApplianceManagerConnector mc) throws Exception {
@@ -199,5 +254,29 @@ public class ManagerApiFactory {
     private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs)
             throws EncryptionException {
         return getApplianceManagerConnectorElement(vs.getDistributedAppliance().getApplianceManagerConnector());
+    }
+
+    private static String getNotificationType(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, NOTIFICATION_TYPE);
+    }
+
+    private static Boolean providesDeviceStatus(ManagerType managerType) throws Exception {
+        return (Boolean) getPluginProperty(managerType, PROVIDE_DEVICE_STATUS);
+    }
+
+    private static String getAuthenticationType(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, AUTHENTICATION_TYPE);
+    }
+
+    private static String getExternalServiceName(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, EXTERNAL_SERVICE_NAME);
+    }
+
+    private static String getVendorName(ManagerType managerType) throws Exception {
+        return (String) getPluginProperty(managerType, VENDOR_NAME);
+    }
+
+    private static Object getPluginProperty(ManagerType managerType, String propertyName) throws Exception {
+        return apiFactoryService.getPluginProperty(managerType, propertyName);
     }
 }

@@ -28,7 +28,6 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 
 public class SecurityGroupMemberMapPropagateMetaTask extends TransactionalMetaTask {
 
@@ -47,8 +46,7 @@ public class SecurityGroupMemberMapPropagateMetaTask extends TransactionalMetaTa
         this.tg = new TaskGraph();
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
             VirtualSystem vs = sgi.getVirtualSystem();
-            ApplianceManagerApi managerApi = ManagerApiFactory.createApplianceManagerApi(vs);
-            if (vs.getMgrId() != null  && managerApi.isSecurityGroupSyncSupport()) {
+            if (vs.getMgrId() != null  && ManagerApiFactory.syncsSecurityGroup(vs)) {
                 // Sync SG members mapping to the manager directly
                 this.tg.addTask(new MgrSecurityGroupCheckMetaTask(vs, this.sg), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }

@@ -60,14 +60,11 @@ public class ApplianceAgentsJob implements Job {
                     ApplianceManagerConnector apmc = vs.getDistributedAppliance().getApplianceManagerConnector();
                     ManagerDeviceMemberApi agentApi =  ManagerApiFactory.createManagerDeviceMemberApi(apmc, vs);
 
-                    // TODO emanoel: IsAgentManaged is geing used as synonimous of isApplianceStatusSupported.
-                    // This method will be remove from the API and made as an appropriate OSGi service property as part of another
-                    // user story to come soon.
-                    if (ManagerApiFactory.createApplianceManagerApi(vs).isAgentManaged()) {
+                    if (ManagerApiFactory.providesDeviceStatus(vs)) {
                         List<ManagerDeviceMemberStatusElement> agentElems = agentApi.getFullStatus(
                                 vs.getDistributedApplianceInstances().stream()
-                                    .map(DistributedApplianceInstanceElementImpl::new)
-                                    .collect(Collectors.toList()));
+                                .map(DistributedApplianceInstanceElementImpl::new)
+                                .collect(Collectors.toList()));
                         for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
                             getAgentFullStatus(dai, agentElems);
                         }

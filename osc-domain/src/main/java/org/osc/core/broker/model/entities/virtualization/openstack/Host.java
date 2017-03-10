@@ -19,11 +19,11 @@ package org.osc.core.broker.model.entities.virtualization.openstack;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.ForeignKey;
 import org.osc.core.broker.model.entities.BaseEntity;
 
 @Entity
@@ -39,8 +39,8 @@ public class Host extends BaseEntity {
     private String name;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "ds_host_fk", nullable = false)
-    @ForeignKey(name = "FK_HOST_DS")
+    @JoinColumn(name = "ds_host_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_HOST_DS"))
     private DeploymentSpec deploymentSpec;
 
     public Host(DeploymentSpec deploymentSpec, String openstackId) {
