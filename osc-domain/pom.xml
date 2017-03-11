@@ -25,17 +25,6 @@
 	<artifactId>osc-domain</artifactId>
 	<name>org.osc.core:osc-domain</name>
 
-    <repositories>		
-    	<repository>
-			<id>osc-nexus</id>
-			<name>OSC Nexus</name>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<url>http://10.3.240.132:8082/nexus/content/repositories/releases/</url>
-		</repository>
-	</repositories>
-	
 	<dependencies>
 	    <dependency>
 	        <groupId>org.osgi</groupId>
