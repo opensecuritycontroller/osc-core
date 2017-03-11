@@ -18,7 +18,6 @@ package org.osc.core.server.control;
 
 import java.io.FileInputStream;
 import java.net.ConnectException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -38,11 +37,6 @@ import org.osc.core.util.LogUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.util.VersionUtil;
-
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
