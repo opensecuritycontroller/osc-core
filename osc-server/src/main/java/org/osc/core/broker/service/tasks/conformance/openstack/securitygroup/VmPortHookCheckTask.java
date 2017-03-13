@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -44,6 +45,7 @@ import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.element.InspectionHookElement;
+import org.osc.sdk.controller.element.NetworkElement;
 
 /**
  * This task just adds/update the hooks. If the SGI is marked for deletion, this task does not do anything.
@@ -73,16 +75,28 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
     @Override
     public void executeTransaction(Session session) throws Exception {
         this.tg = new TaskGraph();
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
+        this.sgm = session.get(SecurityGroupMember.class, this.sgm.getId());
 
-        this.securityGroupInterface = (SecurityGroupInterface) session.get(SecurityGroupInterface.class,
+        this.securityGroupInterface = session.get(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
-        this.vmPort = (VMPort) session.get(VMPort.class, this.vmPort.getId());
+        this.vmPort = session.get(VMPort.class, this.vmPort.getId());
 
         this.vs = this.securityGroupInterface.getVirtualSystem();
 
         DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
                 .findByVirtualSystemAndPort(session, this.vs, this.vmPort);
+
+        List<NetworkElement> sgmPorts = OpenstackUtil.getPorts(this.sgm);
+        String sgmDomainId = OpenstackUtil.extractDomainId(
+                this.sgm.getSecurityGroup().getTenantId(),
+                this.sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminTenantName(),
+                this.sgm.getSecurityGroup().getVirtualizationConnector(),
+                sgmPorts);
+
+        if (StringUtils.isBlank(sgmDomainId)) {
+            throw new VmidcBrokerValidationException(String.format("No router/domain was found attached to any of the networks of "
+                    + "the member %s of the security group %s.", this.sgm.getMemberName(), this.sgm.getSecurityGroup().getName()));
+        }
 
         if (!this.securityGroupInterface.getMarkedForDeletion()) {
             if (assignedRedirectedDai == null) {
@@ -94,16 +108,28 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                         && this.vmPort.getVm() == null) {
 
                     if (SdnControllerApiFactory.supportsOffboxRedirection(this.sgm.getSecurityGroup())) {
-                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, this.sgm.getSubnet().getRegion(),
-                                tenantId, null, this.vs);
+                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(
+                                session,
+                                this.vs,
+                                this.sgm.getSecurityGroup(),
+                                tenantId,
+                                getMemberRegion(this.sgm),
+                                sgmDomainId,
+                                null);
                     } else {
                         throw new VmidcBrokerValidationException(
                                 "Protecting External Traffic feature is not supported by your SDN controller. Please make sure your SDN controller supports offboxing");
                     }
 
                 } else {
-                    assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, getMemberRegion(this.sgm),
-                            tenantId, this.vmPort.getVm().getHost(), this.vs);
+                    assignedRedirectedDai = OpenstackUtil.findDeployedDAI(
+                            session,
+                            this.vs,
+                            this.sgm.getSecurityGroup(),
+                            tenantId,
+                            getMemberRegion(this.sgm),
+                            sgmDomainId,
+                            this.vmPort.getVm().getHost());
                 }
 
                 if (assignedRedirectedDai != null) {

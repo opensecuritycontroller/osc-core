@@ -127,14 +127,8 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     }
 
     private void buildTaskGraph(Session session, boolean isDeleteTg) throws Exception {
-        VmDiscoveryCache vdc;
-        if (isDeleteTg) {
-            vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(), this.sg.getVirtualizationConnector()
-                    .getProviderAdminTenantName());
-        } else {
-            vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(), this.sg.getVirtualizationConnector()
-                    .getProviderAdminTenantName());
-        }
+        VmDiscoveryCache vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(), this.sg.getVirtualizationConnector()
+                .getProviderAdminTenantName());
 
         // SGM Member sync with no task deferred
         addSGMemberSyncJob(session, isDeleteTg, vdc);
