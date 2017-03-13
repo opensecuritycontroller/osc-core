@@ -16,6 +16,12 @@
  *******************************************************************************/
 package org.osc.core.server.control;
 
+import java.io.FileInputStream;
+import java.net.ConnectException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -32,10 +38,9 @@ import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.util.VersionUtil;
 
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 
 public class ServerControl {
     private static final Logger log = Logger.getLogger(ServerControl.class);
@@ -217,7 +222,7 @@ public class ServerControl {
             log.warn("Checking pending server upgrade.");
 
             try {
-                restClient.putResource("upgradecomplete", null);
+                restClient.putResource("upgradecomplete", Entity.entity(null, MediaType.APPLICATION_JSON));
                 // If we made it to here, running server is in active upgrade mode
                 // It should be shutting down now. We'll wait till the old process
                 // goes away first by testing if we can get status.
@@ -272,6 +277,8 @@ public class ServerControl {
             }
 
             return true;
+        } catch (ProcessingException | ConnectException e1) {
+            log.warn("Fail to connect to running server: "+ e1.getMessage());
         } catch (Exception ex) {
             log.warn("Fail to connect to running server. Assuming not running: " + ex);
         }
@@ -282,4 +289,5 @@ public class ServerControl {
     private static ServerStatusResponse getServerStatusResponse(VmidcServerRestClient restClient) throws Exception {
         return restClient.getResource("status", ServerStatusResponse.class);
     }
+
 }

@@ -31,7 +31,7 @@ final class Path {
 		this.parts = Collections.unmodifiableList(parts);
 	}
 
-	public static final Path parse(String string) {
+	public static Path parse(String string) {
 		String[] splits = string.split(SLASH);
 		List<String> parts = new ArrayList<String>(splits.length);
 		for (String split : splits) {

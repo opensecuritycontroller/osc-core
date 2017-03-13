@@ -104,15 +104,21 @@ public class PluginResolveContextTest {
 	
 	static RequirementImpl createRequirement(String ns, String filter, String effective) {
 		Map<String, String> directives = new HashMap<>();
-		if (filter != null) directives.put("filter", "(foo=bar)");
-		if (effective != null) directives.put("effective", effective);
+        if (filter != null) {
+            directives.put("filter", "(foo=bar)");
+        }
+        if (effective != null) {
+            directives.put("effective", effective);
+        }
 		
 		return new RequirementImpl(ns, directives, Collections.emptyMap(), null);
 	}
 	
 	static CapabilityImpl createCapability(String ns, String effective, Map<String, Object> attrs) {
 		Map<String, String> directives = new HashMap<>();
-		if (effective != null) directives.put("effective", effective);
+        if (effective != null) {
+            directives.put("effective", effective);
+        }
 		
 		return new CapabilityImpl(ns, directives, attrs, null);
 	}

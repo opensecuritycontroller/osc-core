@@ -193,9 +193,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             dai.setPackets(agentStatus.getAgentDpaInfo().netXDpaRuntimeInfo.rx);
         }
 
-        if (dai.getVirtualSystem().getVirtualizationConnector().getVirtualizationType() ==
-                VirtualizationType.VMWARE)
-        {
+        if (dai.getVirtualSystem().getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
             NsxUpdateAgentsService.updateNsxAgentInfo(session, dai);
         }
 

@@ -43,8 +43,7 @@ import org.osc.core.broker.rest.client.nsx.model.ContainerSet;
 import org.osc.core.broker.rest.client.nsx.model.FabricAgents;
 import org.osc.core.broker.rest.client.nsx.model.ServiceInstance;
 import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
+import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.broker.service.NsxDeleteAgentsService;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.NsxUpdateProfileContainerService;
@@ -57,12 +56,15 @@ import org.osc.core.broker.service.request.NsxUpdateProfileRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.rest.annotations.NsxAuth;
+import org.osgi.service.component.annotations.Component;
 
 import com.mcafee.vmidc.server.Server;
-import com.sun.jersey.spi.container.ResourceFilters;
 
-@Path(IscRestServlet.NSX_API_PATH_PREFIX)
-@ResourceFilters({ NsxAuthFilter.class })
+
+@Component(service = NsxApis.class)
+@Path(OscRestServlet.NSX_API_PATH_PREFIX)
+@NsxAuth
 public class NsxApis {
 
     private static final Logger log = Logger.getLogger(NsxApis.class);
@@ -106,10 +108,10 @@ public class NsxApis {
 
     @Path("/agents")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response putAgents(@Context HttpHeaders headers, @Context HttpServletRequest request,
-            FabricAgents fabricAgents) throws Exception {
+                              FabricAgents fabricAgents) throws Exception {
 
         log.info("putAgents: " + fabricAgents.toString());
 
@@ -134,9 +136,9 @@ public class NsxApis {
 
     @Path("/agents/{agentIds}")
     @DELETE
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response deleteAgents(@Context HttpHeaders headers, @Context HttpServletRequest request,
-            @PathParam("agentIds") String agentIds) {
+                                 @PathParam("agentIds") String agentIds) {
 
         log.info("deleteAgents(): " + agentIds);
 
@@ -160,8 +162,8 @@ public class NsxApis {
 
     @Path("/si/serviceinstance")
     @POST
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response postServiceInstance(ServiceInstance serviceInstance) {
         log.info("postServiceInstance(): " + serviceInstance.toString());
         return Response.status(Status.OK).entity(new ServiceInstanceResponse()).build();
@@ -169,7 +171,7 @@ public class NsxApis {
 
     @Path("/si/serviceinstance/{serviceInstanceId}")
     @DELETE
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response deleteServiceInstance(@PathParam("serviceInstanceId") String serviceInstanceId) {
         log.info("deleteServiceInstance(): " + serviceInstanceId);
         return Response.status(Status.OK).entity(new ServiceInstanceResponse()).build();
@@ -177,7 +179,7 @@ public class NsxApis {
 
     @Path("/si/serviceinstance/{serviceInstanceId}")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response putServiceInstance(@PathParam("serviceInstanceId") String serviceInstanceId) {
         log.info("putServiceInstance(): " + serviceInstanceId);
         return Response.status(Status.OK).entity(new ServiceInstanceResponse()).build();
@@ -185,8 +187,8 @@ public class NsxApis {
 
     @Path("/si/serviceprofile/")
     @POST
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response postServiceProfile(ServiceProfile serviceProfile) {
         log.info("postServiceProfile(): " + serviceProfile);
         return Response.status(Status.OK).entity(new ServiceProfileResponse()).build();
@@ -194,7 +196,7 @@ public class NsxApis {
 
     @Path("/si/serviceprofile/{serviceProfileId}")
     @DELETE
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response deleteServiceProfile(@PathParam("serviceProfileId") String serviceProfileId) {
         log.info("deleteServiceProfile(): " + serviceProfileId);
         return Response.status(Status.OK).entity(new ServiceProfileResponse()).build();
@@ -202,9 +204,9 @@ public class NsxApis {
 
     @Path("/si/serviceprofile/{serviceProfileId}")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response putServiceProfile(@Context HttpHeaders headers,
-            @PathParam("serviceProfileId") String serviceProfileId, ServiceProfile serviceProfile) {
+                                      @PathParam("serviceProfileId") String serviceProfileId, ServiceProfile serviceProfile) {
 
         log.info("putServiceProfile(): " + serviceProfileId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -228,9 +230,9 @@ public class NsxApis {
 
     @Path("/si/serviceprofile/{serviceProfileId}/containerset")
     @PUT
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response putServiceProfileContainerset(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
-            @PathParam("serviceProfileId") String serviceProfileId, ContainerSet containerSet) {
+                                                  @PathParam("serviceProfileId") String serviceProfileId, ContainerSet containerSet) {
 
         log.info("putServiceProfileContainerset(): " + serviceProfileId + ", ContainerSet " + containerSet);
         SessionUtil.setUser(SessionUtil.getUsername(headers));

@@ -32,8 +32,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.alarm.AddAlarmService;
@@ -48,9 +48,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
-
-import com.sun.jersey.api.JResponse;
-import com.sun.jersey.spi.container.ResourceFilters;
+import org.osgi.service.component.annotations.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -59,11 +57,12 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+@Component(service = AlarmApis.class)
 @Api(tags = "Operations for Alarms", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/alarms")
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@ResourceFilters({ VmidcAuthFilter.class })
+@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/alarms")
+@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@OscAuth
 public class AlarmApis {
 
     private static final Logger logger = Logger.getLogger(AlarmApis.class);
@@ -72,7 +71,7 @@ public class AlarmApis {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @GET
-    public JResponse<List<AlarmDto>> getAlarms(@Context HttpHeaders headers) {
+    public List<AlarmDto> getAlarms(@Context HttpHeaders headers) {
 
         logger.info("Listing Alarms");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -81,7 +80,7 @@ public class AlarmApis {
         ListResponse<AlarmDto> response = (ListResponse<AlarmDto>) ApiUtil.getListResponse(new ListAlarmService(),
                 new BaseRequest<BaseDto>(true));
 
-        return JResponse.ok(response.getList()).build();
+        return response.getList();
     }
 
     @ApiOperation(value = "Retrieves an Alarm by Id", response = AlarmDto.class)
@@ -89,7 +88,7 @@ public class AlarmApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{alarmId}")
     @GET
-    public JResponse<AlarmDto> getAlarm(@Context HttpHeaders headers, @PathParam("alarmId") Long alarmId) {
+    public AlarmDto getAlarm(@Context HttpHeaders headers, @PathParam("alarmId") Long alarmId) {
 
         logger.info("getting Alarm " + alarmId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -99,7 +98,7 @@ public class AlarmApis {
         getDtoRequest.setEntityName("Alarm");
 
         GetDtoFromEntityService<AlarmDto> getDtoService = new GetDtoFromEntityService<AlarmDto>();
-        return JResponse.ok(ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto()).build();
+        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     /**
@@ -130,7 +129,7 @@ public class AlarmApis {
     @Path("/{alarmId}")
     @PUT
     public Response updateAlarm(@Context HttpHeaders headers, @PathParam("alarmId") Long alarmId,
-            @ApiParam(required = true) AlarmDto alarmDto) {
+                                @ApiParam(required = true) AlarmDto alarmDto) {
 
         logger.info("Updating Alarm " + alarmId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -141,7 +140,7 @@ public class AlarmApis {
     /**
      * Delete an Alarm
      *
-     * @param alarmDto
+     * @param alarmId
      * @return
      */
     @ApiOperation(value = "Deletes an Alarm by Id")

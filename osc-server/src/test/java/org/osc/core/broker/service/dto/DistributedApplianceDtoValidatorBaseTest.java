@@ -16,12 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.*;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.APPLIANCE_ID_EXISTING;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_VC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DOMAIN_ID_VALID_NAME;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.MC_ID_VALID_MC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.SW_VERSION_EXISTING_VC;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_OPENSTACK;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_NAME_OPENSTACK;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.daVcAlreadyExistsDto;
 
 import org.hibernate.Session;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -37,9 +43,6 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.util.SessionStub;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import junitparams.JUnitParamsRunner;
 
 /**
  * The base class for the {@link DistributedApplianceDtoValidator} unit tests.
@@ -93,6 +96,7 @@ public class DistributedApplianceDtoValidatorBaseTest {
         this.sessionStub.stubFindVirtualSystem(DA_ID_EXISTING_VC, VC_ID_OPENSTACK, new VirtualSystem());
 
         PowerMockito.mockStatic(ManagerApiFactory.class);
+        ManagerType.addType(mcPolicyMappingSupported.getManagerType());
         Mockito.when(ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mcPolicyMappingSupported.getManagerType()))).thenReturn(true);
     }
 }

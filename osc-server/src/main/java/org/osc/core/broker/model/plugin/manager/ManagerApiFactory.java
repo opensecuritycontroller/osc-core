@@ -16,11 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.manager;
 
-import static org.osc.sdk.manager.Constants.*;
+import static org.osc.sdk.manager.Constants.AUTHENTICATION_TYPE;
+import static org.osc.sdk.manager.Constants.EXTERNAL_SERVICE_NAME;
+import static org.osc.sdk.manager.Constants.NOTIFICATION_TYPE;
+import static org.osc.sdk.manager.Constants.PROVIDE_DEVICE_STATUS;
+import static org.osc.sdk.manager.Constants.SERVICE_NAME;
+import static org.osc.sdk.manager.Constants.SYNC_POLICY_MAPPING;
+import static org.osc.sdk.manager.Constants.SYNC_SECURITY_GROUP;
+import static org.osc.sdk.manager.Constants.VENDOR_NAME;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,11 +33,10 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.PluginTracker;
 import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
-import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
-import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.encryption.EncryptionException;
@@ -52,13 +55,16 @@ import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.google.common.collect.ImmutableMap;
 
 public class ManagerApiFactory {
     public static final String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
+    private static final Logger log = Logger.getLogger(ManagerApiFactory.class);
+
+    private static ApiFactoryService apiFactoryService;
+    private static BundleContext bundleContext;
 
     private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES =
             ImmutableMap.<String, Class<?>>builder()
@@ -72,108 +78,43 @@ public class ManagerApiFactory {
             .put(SYNC_POLICY_MAPPING, Boolean.class)
             .build();
 
-    private final static Logger LOG = Logger.getLogger(ManagerApiFactory.class);
-
-    private static HashMap<String, ApplianceManagerApiContext> plugins = new HashMap<String, ApplianceManagerApiContext>();
-
-    private static BundleContext bundleContext;
-    private static ServiceTracker<InstallableManager, InstallableManager> installManagerTracker;
-    private static List<PluginTracker<ApplianceManagerApi>> pluginTrackers = new LinkedList<>();
-    private static ServiceTracker<ApplianceManagerApi, String> pluginServiceTracker;
-
-    public static PluginTracker<ApplianceManagerApi> newPluginTracker(PluginTrackerCustomizer<ApplianceManagerApi> customizer, PluginType pluginType) throws ServiceUnavailableException {
-        if (customizer == null) {
-            throw new IllegalArgumentException("Plugin tracker customizer may not be null");
-        }
-
-        // TODO This is a horrible way to get hold of a service instance; if only we could use DS here.
-        InstallableManager installMgr = null;
-        try {
-            installMgr = installManagerTracker.waitForService(2000);
-        } catch (InterruptedException e) {
-            // allow interrupted state to be cleared, installMgr remains null
-        }
-        if (installMgr == null) {
-            throw new ServiceUnavailableException(InstallableManager.class.getName());
-        }
-
-        PluginTracker<ApplianceManagerApi> tracker;
-        synchronized (pluginTrackers) {
-            tracker = new PluginTracker<>(bundleContext, ApplianceManagerApi.class, pluginType, REQUIRED_MANAGER_PLUGIN_PROPERTIES, installMgr, customizer);
-            pluginTrackers.add(tracker);
-        }
-        tracker.open();
-
-        return tracker;
+    public static PluginTracker<ApplianceManagerApi> newPluginTracker(
+            PluginTrackerCustomizer<ApplianceManagerApi> customizer, PluginType pluginType)
+            throws ServiceUnavailableException {
+        return apiFactoryService.newPluginTracker(customizer, ApplianceManagerApi.class, pluginType, REQUIRED_MANAGER_PLUGIN_PROPERTIES);
     }
 
     public static void init() throws Exception {
         bundleContext = FrameworkUtil.getBundle(ManagerApiFactory.class).getBundleContext();
 
-        installManagerTracker = new ServiceTracker<>(bundleContext, InstallableManager.class, null);
-        installManagerTracker.open();
+        ServiceTracker<ApiFactoryService, ApiFactoryService> apiFactoryTracker = new ServiceTracker<>(bundleContext,
+                ApiFactoryService.class, null);
+        apiFactoryTracker.open();
 
-        pluginServiceTracker = new ServiceTracker<ApplianceManagerApi, String>(bundleContext, ApplianceManagerApi.class, null) {
-            @Override
-            public String addingService(ServiceReference<ApplianceManagerApi> reference) {
-                Object nameObj = reference.getProperty(PluginTracker.PROP_PLUGIN_NAME);
-                if (!(nameObj instanceof String)) {
-                    return null;
-                }
-
-                String name = (String) nameObj;
-                ApplianceManagerApi service = this.context.getService(reference);
-
-                ApplianceManagerApiContext existing = plugins.putIfAbsent(name, new ApplianceManagerApiContext(service, reference));
-                if (existing != null) {
-                    LOG.warn(String.format("Multiple plugin services of type %s available with name=%s", ApplianceManagerApi.class.getName(), name));
-                    this.context.ungetService(reference);
-                    return null;
-                }
-                ManagerType.addType(name);
-                return name;
-            }
-            @Override
-            public void removedService(ServiceReference<ApplianceManagerApi> reference, String name) {
-                if (plugins.remove(name) != null) {
-                    ManagerType.removeType(name);
-                }
-                this.context.ungetService(reference);
-            }
-        };
-        pluginServiceTracker.open();
-    }
-
-    public static void shutdown() {
-        pluginServiceTracker.close();
-        synchronized (pluginTrackers) {
-            while (!pluginTrackers.isEmpty()) {
-                PluginTracker<ApplianceManagerApi> tracker = pluginTrackers.remove(0);
-                try {
-                    tracker.close();
-                } catch (Exception e) {
-                }
-            }
+        // TODO This is a horrible way to get hold of a service instance; if only we could use DS here.
+        try {
+            apiFactoryService = apiFactoryTracker.waitForService(2000);
+            apiFactoryTracker.close();
+        } catch (InterruptedException e) {
+            // allow interrupted state to be cleared, apiFactoryService remains null
+            log.error("InterruptedException waiting for ApiFactoryService");
         }
-        installManagerTracker.close();
+
+        if (apiFactoryService == null) {
+            throw new ServiceUnavailableException(ApiFactoryService.class.getName());
+        }
     }
 
     public static Set<String> getManagerTypes() {
-        return plugins.keySet();
+        return apiFactoryService.getManagerTypes();
     }
 
     public static ApplianceManagerApi createApplianceManagerApi(String managerType) throws Exception {
         return createApplianceManagerApi(ManagerType.fromText(managerType));
-
     }
 
     public static ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception {
-        ApplianceManagerApiContext plugin = plugins.get(managerType.toString());
-        if (plugin != null) {
-            return plugin.managerApi;
-        } else {
-            throw new VmidcException("Unsupported Manager type '" + managerType + "'");
-        }
+        return apiFactoryService.createApplianceManagerApi(managerType);
     }
 
     public static ApplianceManagerApi createApplianceManagerApi(DistributedApplianceInstance dai) throws Exception {
@@ -181,16 +122,18 @@ public class ManagerApiFactory {
     }
 
     public static ApplianceManagerApi createApplianceManagerApi(VirtualSystem vs) throws Exception {
-        return createApplianceManagerApi(getDecryptedApplianceManagerConnector(vs.getDistributedAppliance().getApplianceManagerConnector()).getManagerType());
+        return createApplianceManagerApi(
+                getDecryptedApplianceManagerConnector(vs.getDistributedAppliance().getApplianceManagerConnector())
+                        .getManagerType());
     }
 
     public static ManagerDeviceApi createManagerDeviceApi(VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                .createManagerDeviceApi(getApplianceManagerConnectorElement(vs),
-                        new VirtualSystemElementImpl(vs));
+                .createManagerDeviceApi(getApplianceManagerConnectorElement(vs), new VirtualSystemElementImpl(vs));
     }
 
-    public static ManagerSecurityGroupInterfaceApi createManagerSecurityGroupInterfaceApi(VirtualSystem vs) throws Exception {
+    public static ManagerSecurityGroupInterfaceApi createManagerSecurityGroupInterfaceApi(VirtualSystem vs)
+            throws Exception {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
                 .createManagerSecurityGroupInterfaceApi(getApplianceManagerConnectorElement(vs),
                         new VirtualSystemElementImpl(vs));
@@ -250,15 +193,15 @@ public class ManagerApiFactory {
                         new VirtualSystemElementImpl(vs));
     }
 
-    public static ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc) throws Exception {
+    public static ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc)
+            throws Exception {
         return createApplianceManagerApi(mc.getManagerType())
                 .createManagerCallbackNotificationApi(getApplianceManagerConnectorElement(mc));
     }
 
     public static IscJobNotificationApi createIscJobNotificationApi(VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                .createIscJobNotificationApi(getApplianceManagerConnectorElement(vs),
-                        new VirtualSystemElementImpl(vs));
+                .createIscJobNotificationApi(getApplianceManagerConnectorElement(vs), new VirtualSystemElementImpl(vs));
     }
 
     public static boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception {
@@ -283,7 +226,8 @@ public class ManagerApiFactory {
         createApplianceManagerApi(mc.getManagerType()).checkConnection(getApplianceManagerConnectorElement(mc));
     }
 
-    private static ApplianceManagerConnector getDecryptedApplianceManagerConnector(ApplianceManagerConnector mc) throws EncryptionException {
+    private static ApplianceManagerConnector getDecryptedApplianceManagerConnector(ApplianceManagerConnector mc)
+            throws EncryptionException {
         ApplianceManagerConnector shallowClone = new ApplianceManagerConnector(mc);
         if (!StringUtils.isEmpty(shallowClone.getPassword())) {
             shallowClone.setPassword(EncryptionUtil.decryptAESCTR(shallowClone.getPassword()));
@@ -291,7 +235,8 @@ public class ManagerApiFactory {
         return shallowClone;
     }
 
-    public static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(ApplianceManagerConnector mc) throws EncryptionException {
+    public static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(ApplianceManagerConnector mc)
+            throws EncryptionException {
         ApplianceManagerConnector decryptedMc = getDecryptedApplianceManagerConnector(mc);
 
         // TODO emanoel: This will likely have some performance impact. We need to figure out an approach to keep these values cached on OSC
@@ -300,23 +245,15 @@ public class ManagerApiFactory {
         return new ApplianceManagerConnectorElementImpl(decryptedMc);
     }
 
-    static ManagerWebSocketNotificationApi createManagerWebSocketNotificationApi(ApplianceManagerConnector mc) throws Exception {
+    static ManagerWebSocketNotificationApi createManagerWebSocketNotificationApi(ApplianceManagerConnector mc)
+            throws Exception {
         return createApplianceManagerApi(mc.getManagerType())
                 .createManagerWebSocketNotificationApi(getApplianceManagerConnectorElement(mc));
     }
 
-    private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs) throws EncryptionException {
+    private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs)
+            throws EncryptionException {
         return getApplianceManagerConnectorElement(vs.getDistributedAppliance().getApplianceManagerConnector());
-    }
-
-    private static class ApplianceManagerApiContext {
-        private ApplianceManagerApi managerApi;
-        private ServiceReference<ApplianceManagerApi> reference;
-
-        ApplianceManagerApiContext(ApplianceManagerApi managerApi, ServiceReference<ApplianceManagerApi>  reference) {
-            this.managerApi = managerApi;
-            this.reference = reference;
-        }
     }
 
     private static String getNotificationType(ManagerType managerType) throws Exception {
@@ -340,11 +277,6 @@ public class ManagerApiFactory {
     }
 
     private static Object getPluginProperty(ManagerType managerType, String propertyName) throws Exception {
-        ApplianceManagerApiContext plugin = plugins.get(managerType.toString());
-        if (plugin != null) {
-            return plugin.reference.getProperty(propertyName);
-        } else {
-            throw new VmidcException("Unsupported Manager type '" + managerType + "'");
-        }
+        return apiFactoryService.getPluginProperty(managerType, propertyName);
     }
 }

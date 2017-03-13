@@ -32,8 +32,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.IscRestServlet;
-import org.osc.core.broker.rest.server.VmidcAuthFilter;
+import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.DeleteApplianceManagerConnectorService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -52,9 +52,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
-
-import com.sun.jersey.api.JResponse;
-import com.sun.jersey.spi.container.ResourceFilters;
+import org.osgi.service.component.annotations.Component;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -63,11 +61,12 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+@Component(service = ManagerConnectorApis.class)
 @Api(tags = "Operations for Manager Connectors", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(IscRestServlet.SERVER_API_PATH_PREFIX + "/applianceManagerConnectors")
+@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/applianceManagerConnectors")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@ResourceFilters({ VmidcAuthFilter.class })
+@OscAuth
 public class ManagerConnectorApis {
 
     private static final Logger logger = Logger.getLogger(ManagerConnectorApis.class);
@@ -79,7 +78,7 @@ public class ManagerConnectorApis {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @GET
-    public JResponse<List<ApplianceManagerConnectorDto>> getApplianceManagerConnectors(@Context HttpHeaders headers) {
+    public List<ApplianceManagerConnectorDto> getApplianceManagerConnectors(@Context HttpHeaders headers) {
 
         logger.info("Listing Appliance Manager Connectors");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -88,7 +87,7 @@ public class ManagerConnectorApis {
         ListResponse<ApplianceManagerConnectorDto> response = (ListResponse<ApplianceManagerConnectorDto>) ApiUtil
                 .getListResponse(new ListApplianceManagerConnectorService(), new BaseRequest<BaseDto>(true));
 
-        return JResponse.ok(response.getList()).build();
+        return response.getList();
     }
 
     @ApiOperation(value = "Retrieves the Manager Connector by Id",
@@ -98,9 +97,9 @@ public class ManagerConnectorApis {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @GET
-    public JResponse<ApplianceManagerConnectorDto> getApplianceManagerConnector(@Context HttpHeaders headers,
-            @ApiParam(value = "Id of the Appliance Manager Connector",
-                    required = true) @PathParam("applianceManagerConnectorId") Long amcId) {
+    public ApplianceManagerConnectorDto getApplianceManagerConnector(@Context HttpHeaders headers,
+                                                                     @ApiParam(value = "Id of the Appliance Manager Connector",
+                                                                             required = true) @PathParam("applianceManagerConnectorId") Long amcId) {
 
         logger.info("getting Appliance Manager Connector " + amcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -109,7 +108,7 @@ public class ManagerConnectorApis {
         getDtoRequest.setEntityId(amcId);
         getDtoRequest.setEntityName("ApplianceManagerConnector");
         GetDtoFromEntityService<ApplianceManagerConnectorDto> getDtoService = new GetDtoFromEntityService<ApplianceManagerConnectorDto>();
-        return JResponse.ok(ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto()).build();
+        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Creates an Manager Connector",
@@ -122,13 +121,13 @@ public class ManagerConnectorApis {
             response = ErrorCodeDto.class) })
     @POST
     public Response createApplianceManagerConnector(@Context HttpHeaders headers,
-            @ApiParam(required = true) ApplianceManagerConnectorRequest amcRequest) {
+                                                    @ApiParam(required = true) ApplianceManagerConnectorRequest amcRequest) {
 
         logger.info("Creating Appliance Manager Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponseForBaseRequest(new AddApplianceManagerConnectorService(amcRequest.isForceAddSSLCertificates()),
-                new DryRunRequest<>(amcRequest, amcRequest.isSkipRemoteValidation()));
+        return ApiUtil.getResponseForBaseRequest(new AddApplianceManagerConnectorService(),
+                new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
     }
 
     @ApiOperation(
@@ -143,17 +142,17 @@ public class ManagerConnectorApis {
     @Path("/{applianceManagerConnectorId}")
     @PUT
     public Response updateApplianceManagerConnector(@Context HttpHeaders headers,
-            @ApiParam(value = "Id of the Appliance Manager Connector",
-                    required = true) @PathParam("applianceManagerConnectorId") Long amcId,
-            @ApiParam(required = true) ApplianceManagerConnectorRequest amcRequest) {
+                                                    @ApiParam(value = "Id of the Appliance Manager Connector",
+                                                            required = true) @PathParam("applianceManagerConnectorId") Long amcId,
+                                                    @ApiParam(required = true) ApplianceManagerConnectorRequest amcRequest) {
 
         logger.info("Updating Appliance Manager Connector " + amcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         ApiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
 
-        return ApiUtil.getResponseForBaseRequest(new UpdateApplianceManagerConnectorService(amcRequest.isForceAddSSLCertificates()),
-                new DryRunRequest<>(amcRequest, amcRequest.isSkipRemoteValidation()));
+        return ApiUtil.getResponseForBaseRequest(new UpdateApplianceManagerConnectorService(),
+                new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
     }
 
     @ApiOperation(value = "Deletes an Manager Connector",
@@ -166,8 +165,8 @@ public class ManagerConnectorApis {
     @Path("/{applianceManagerConnectorId}")
     @DELETE
     public Response deleteApplianceManagerConnector(@Context HttpHeaders headers,
-            @ApiParam(value = "Id of the Appliance Manager Connector",
-                    required = true) @PathParam("applianceManagerConnectorId") Long amcId) {
+                                                    @ApiParam(value = "Id of the Appliance Manager Connector",
+                                                            required = true) @PathParam("applianceManagerConnectorId") Long amcId) {
 
         logger.info("Deleting Appliance Manager Connector " + amcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -183,9 +182,9 @@ public class ManagerConnectorApis {
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{applianceManagerConnectorId}/domains")
     @GET
-    public JResponse<List<DomainDto>> getApplianceManagerConnectorDomains(@Context HttpHeaders headers,
-            @ApiParam(value = "Id of the Appliance Manager Connector",
-                    required = true) @PathParam("applianceManagerConnectorId") Long amcId) {
+    public List<DomainDto> getApplianceManagerConnectorDomains(@Context HttpHeaders headers,
+                                                               @ApiParam(value = "Id of the Appliance Manager Connector",
+                                                                       required = true) @PathParam("applianceManagerConnectorId") Long amcId) {
 
         logger.info("Listing domains for Appliance Manager Connector " + amcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -193,7 +192,7 @@ public class ManagerConnectorApis {
         @SuppressWarnings("unchecked")
         ListResponse<DomainDto> response = (ListResponse<DomainDto>) ApiUtil
                 .getListResponse(new ListDomainsByMcIdService(), new BaseIdRequest(amcId));
-        return JResponse.ok(response.getList()).build();
+        return response.getList();
     }
 
 }

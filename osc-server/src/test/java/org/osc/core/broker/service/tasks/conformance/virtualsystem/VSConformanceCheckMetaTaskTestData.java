@@ -361,7 +361,7 @@ public class VSConformanceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new UpdateNsxServiceManagerTask(vs));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
-        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false ));
+        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
@@ -384,7 +384,7 @@ public class VSConformanceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
         expectedGraph.addTask(new UpdateNsxServiceAttributesTask(vs));
-        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, true ));
+        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, true));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         expectedGraph.appendTask(new NsxSecurityGroupInterfacesCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new NsxSecurityGroupsCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -410,7 +410,7 @@ public class VSConformanceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
-        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false ));
+        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.addTask(new UpdateNsxServiceInstanceAttributesTask(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
@@ -439,7 +439,7 @@ public class VSConformanceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
-        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false ));
+        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         VirtualSystemPolicy vsp = (VirtualSystemPolicy)vs.getVirtualSystemPolicies().toArray()[0];
         expectedGraph.appendTask(new DeleteDefaultServiceProfileTask(vsp));
@@ -473,7 +473,7 @@ public class VSConformanceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
-        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false ));
+        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         VirtualSystemPolicy vsp = (VirtualSystemPolicy)vs.getVirtualSystemPolicies().toArray()[0];
         expectedGraph.appendTask(new RegisterVendorTemplateTask(vsp));
@@ -506,7 +506,7 @@ public class VSConformanceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
-        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false ));
+        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         Policy policy = (Policy)vs.getDomain().getPolicies().toArray()[0];
         expectedGraph.appendTask(new RegisterVendorTemplateTask(vs, policy));
@@ -540,7 +540,7 @@ public class VSConformanceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
-        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false ));
+        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
@@ -570,7 +570,7 @@ public class VSConformanceCheckMetaTaskTestData {
     public static TaskGraph createVsPolicyNameOutOfSyncGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
-        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false ));
+        expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         VirtualSystemPolicy vsp = (VirtualSystemPolicy)vs.getVirtualSystemPolicies().toArray()[0];
         expectedGraph.appendTask(new UpdateVendorTemplateTask(vsp, vsp.getPolicy().getName()));

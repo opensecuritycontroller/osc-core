@@ -19,6 +19,7 @@ package org.osc.core.broker.model.plugin.sdncontroller;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -33,9 +34,9 @@ import io.swagger.annotations.ApiModelProperty;
 public class ControllerType {
     private final static String NONE_NAME = "NONE";
 
-    private static Set<String> controllerTypes = new HashSet<String>(Arrays.asList(NONE_NAME));
+    public final static ControllerType NONE = new ControllerType(NONE_NAME);
 
-    public final static ControllerType NONE = ControllerType.fromText(NONE_NAME);
+    private static Set<String> controllerTypes = new HashSet<>(Arrays.asList(NONE_NAME));
 
     @ApiModelProperty(required=true, value="Registered plugin names like NSC, MIDO-NET etc")
     private final String value;
@@ -48,31 +49,22 @@ public class ControllerType {
         this.value = value;
     }
 
-    public static void addTypes(Set<String> controllerTypes) {
-        ControllerType.controllerTypes.addAll(controllerTypes);
-    }
-
-    public static void addType(String controllerType) {
-        ControllerType.controllerTypes.add(controllerType);
-    }
-
-    public static void removeType(String controllerType) {
-        ControllerType.controllerTypes.remove(controllerType);
-    }
-
     public static ControllerType fromText(String text) {
-        if (!controllerTypes.contains(text)) {
+        if (!controllerTypes.contains(text) && !values().contains(text)) {
             throw new IllegalArgumentException("No SDN Controller plugin found for '" + text + "'.");
         }
         return new ControllerType(text);
     }
 
-    public static Set<String> values() {
-        return controllerTypes;
+    /* only used from test {@code VirtualizationConnectorServiceData} */
+    public static void addType(String type) {
+        controllerTypes.add(type);
     }
 
-    public static String valueOf(String value) {
-        return ControllerType.fromText(value).getValue();
+    public static Set<String> values() {
+        Set<String> values = new TreeSet<>(controllerTypes);
+        values.addAll(SdnControllerApiFactory.getControllerTypes());
+        return values;
     }
 
     public String getValue() {

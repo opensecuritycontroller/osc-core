@@ -17,8 +17,15 @@
 package org.osc.core.broker.service.tasks.conformance.manager;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.POLICY_MAPPING_NOT_SUPPORTED_MC;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.POLICY_MAPPING_SUPPORTED_MC;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.PUBLIC_KEY;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.TEST_MANAGER_CONNECTORS;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.createMcPolicyMappingNotSupportedGraph;
+import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.createMcPolicyMappingSupportedGraph;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,6 +103,7 @@ public class MCConformanceCheckMetaTaskTest {
     }
 
     private void setupApplianceManagerApiFactory(String mgrType, boolean isPolicyMappingSupported) throws Exception {
+        ManagerType.addType(mgrType);
         ApplianceManagerApi mcApi = mock(ApplianceManagerApi.class);
         when(mcApi.getPublicKey(any(ApplianceManagerConnectorElement.class))).thenReturn(PUBLIC_KEY);
 

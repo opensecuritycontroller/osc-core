@@ -155,7 +155,7 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         this.mgmtSubnetPrefixLength = dai.getMgmtSubnetPrefixLength();
         this.mgmtGateway = dai.getMgmtGateway();
 
-        this.isApplianceStatusEnabled = ManagerApiFactory.providesDeviceStatus(dai.getVirtualSystem());;
+        this.isApplianceStatusEnabled = ManagerApiFactory.providesDeviceStatus(dai.getVirtualSystem());
         this.discovered = this.isApplianceStatusEnabled ? (dai.getDiscovered() != null ? dai.getDiscovered().toString() : "") : "N/A";
         this.inspectionReady = this.isApplianceStatusEnabled ? (dai.getInspectionReady() != null ? dai.getInspectionReady().toString() : "") : "N/A";
         this.lastStatus = this.isApplianceStatusEnabled ? (dai.getLastStatus() != null ? dai.getLastStatus().toString() : "") : "N/A";

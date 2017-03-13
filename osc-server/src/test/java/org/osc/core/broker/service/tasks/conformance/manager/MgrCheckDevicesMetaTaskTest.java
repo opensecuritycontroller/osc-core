@@ -88,10 +88,10 @@ public class MgrCheckDevicesMetaTaskTest {
         ManagerDeviceApi mgrDeviceGroupNotSupportedApi = mock(ManagerDeviceApi.class);
         when(mgrDeviceGroupNotSupportedApi.isDeviceGroupSupported()).thenReturn(false);
 
-        Mockito.<List<? extends ManagerDeviceMemberElement>> when(mgrDeviceNoDaiApi.listDeviceMembers())
+        Mockito.<List<? extends ManagerDeviceMemberElement>>when(mgrDeviceNoDaiApi.listDeviceMembers())
                 .thenReturn(Arrays.asList(MGR_DEVICE_MEMBER_ELEMENT_NO_DAI));
 
-        Mockito.<List<? extends ManagerDeviceMemberElement>> when(mgrDeviceGroupSupportedApi.listDeviceMembers())
+        Mockito.<List<? extends ManagerDeviceMemberElement>>when(mgrDeviceGroupSupportedApi.listDeviceMembers())
                 .thenReturn(Arrays.asList(MGR_DEVICE_MEMBER_ELEMENT_WITH_DAI));
 
         PowerMockito.mockStatic(ManagerApiFactory.class);

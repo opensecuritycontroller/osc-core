@@ -254,7 +254,7 @@ public class EntityManager<T extends IscEntity> {
         Long count = (Long) criteria.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1)
                 .uniqueResult();
 
-        if ( (count != null) && (count > 0)) {
+        if ((count != null) && (count > 0)) {
 
             return true;
         }
@@ -273,7 +273,7 @@ public class EntityManager<T extends IscEntity> {
         Long count = (Long) criteria.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1)
                 .uniqueResult();
 
-        if ( (count != null) && (count > 0)) {
+        if ((count != null) && (count > 0)) {
 
             return true;
         }
@@ -289,7 +289,7 @@ public class EntityManager<T extends IscEntity> {
         Long count = (Long) criteria.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1)
                 .uniqueResult();
 
-        if ( (count != null) && (count > 0)) {
+        if ((count != null) && (count > 0)) {
 
             return true;
         }

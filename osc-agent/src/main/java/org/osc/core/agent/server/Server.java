@@ -16,8 +16,7 @@
  *******************************************************************************/
 package org.osc.core.agent.server;
 
-import com.sun.jersey.api.core.DefaultResourceConfig;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
+import com.google.common.collect.Sets;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
@@ -31,6 +30,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.servlet.ServletContainer;
 import org.osc.core.agent.dpaipc.DpaIpcClient;
 import org.osc.core.agent.rest.server.AgentApis;
 import org.osc.core.agent.rest.server.AgentAuthFilter;
@@ -39,6 +41,7 @@ import org.osc.core.rest.client.VmidcAgentServerRestClient;
 import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.FileUtil;
+import org.osc.core.util.LocalHostAuthFilter;
 import org.osc.core.util.LogUtil;
 import org.osc.core.util.ServerStatusResponseInjection;
 import org.osc.core.util.ServerUtil;
@@ -432,8 +435,17 @@ public class Server {
 
     private static void deployResfulServlet(String path, Class<?> servletClass, String servletName) {
         Context agentCtx = tomcat.addContext(path, new File(".").getAbsolutePath());
-        DefaultResourceConfig resourceConfig = new DefaultResourceConfig(servletClass);
-        Tomcat.addServlet(agentCtx, servletName, new ServletContainer(resourceConfig));
+        ResourceConfig rs = new ResourceConfig(
+                Sets.newHashSet(
+                        servletClass,
+                        AgentAuthFilter.class,
+                        LocalHostAuthFilter.class,
+                        com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class
+                )
+        );
+        rs.property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true);
+        ServletContainer servletContainer = new ServletContainer(rs);
+        Tomcat.addServlet(agentCtx, servletName, servletContainer);
         agentCtx.addServletMapping("/*", servletName);
     }
 
