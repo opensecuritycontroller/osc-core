@@ -16,10 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import static org.jclouds.openstack.glance.v1_0.options.CreateImageOptions.Builder.containerFormat;
-import static org.jclouds.openstack.glance.v1_0.options.CreateImageOptions.Builder.diskFormat;
-import static org.jclouds.openstack.glance.v1_0.options.CreateImageOptions.Builder.isPublic;
-import static org.jclouds.openstack.glance.v1_0.options.CreateImageOptions.Builder.property;
+import static org.jclouds.openstack.glance.v1_0.options.CreateImageOptions.Builder.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -63,6 +60,7 @@ class UploadImageToGlanceTask extends TransactionalTask {
         this.applianceSoftwareVersion = applianceSoftwareVersion;
         this.osEndPoint = osEndPoint;
         this.glanceImageName = glanceImageName;
+        this.name = getName();
     }
 
     @Override
@@ -107,7 +105,7 @@ class UploadImageToGlanceTask extends TransactionalTask {
     @Override
     public String getName() {
         return String.format("Uploading image '%s' to region '%s'", this.glanceImageName, this.region);
-    };
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {
