@@ -58,10 +58,11 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
             byte[] backupFileBytes = getBackupZipFileBytes(backupFileName);
             
             // concatenate zip file bytes with fixed length password bytes
-            byte[] backupFileWithDBPasswordBytes = appendDBPassword(backupFileBytes);
-            
+            byte[] backupData = appendDBPassword(backupFileBytes);
+            backupData = new AESCTREncryption().appendAESCTRKey(backupData);
+
             // encrypt the concatenation with AES-GCM
-            byte[] encryptedBackupFileBytes = encryptBackupFileBytes(backupFileWithDBPasswordBytes, request.getBackupPassword());
+            byte[] encryptedBackupFileBytes = encryptBackupFileBytes(backupData, request.getBackupPassword());
             
             // remove temporary backup zip
             deleteFile(resolveBackupZipPath(backupFileName));

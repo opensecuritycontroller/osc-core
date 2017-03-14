@@ -55,7 +55,17 @@ public class EncryptionUtilTest {
 		aad = "Some additional authentication data".getBytes();
 		new SecureRandom().nextBytes(iv);
 
-		AESCTREncryption.setKeyProvider(() -> { return "1234567890abcdef1234567890abcdef"; });
+		AESCTREncryption.setKeyProvider(new AESCTREncryption.KeyProvider() {
+			@Override
+			public String getKeyHex() throws EncryptionException {
+				return "1234567890abcdef1234567890abcdef";
+			}
+
+			@Override
+			public void updateKey(byte[] key) throws EncryptionException {
+				// dont do nothing
+			}
+		});//() -> { return "1234567890abcdef1234567890abcdef"; });
 
 		String test = EncryptionUtil.encryptAESCTR("helloworld");
 	}
