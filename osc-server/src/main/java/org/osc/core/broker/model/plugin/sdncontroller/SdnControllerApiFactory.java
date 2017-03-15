@@ -129,7 +129,11 @@ public class SdnControllerApiFactory {
 
     public static <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
             PluginType pluginType) throws ServiceUnavailableException, VmidcException {
-        return apiFactoryService.newPluginTracker(customizer, pluginClass, pluginType, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES);
+        Map<String, Class<?>> requiredProperties = null;
+        if (pluginClass == SdnControllerApi.class) {
+            requiredProperties = REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES;
+        }
+        return apiFactoryService.newPluginTracker(customizer, pluginClass, pluginType, requiredProperties);
     }
 
     public static Boolean supportsOffboxRedirection(VirtualSystem vs) throws Exception {
