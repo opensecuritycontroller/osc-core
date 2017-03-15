@@ -29,6 +29,9 @@ import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.RestoreUtil;
+import org.osc.core.util.KeyStoreProvider;
+import org.osc.core.util.encryption.AESCTREncryption;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.core.util.ServerUtil;
 
 import com.mcafee.vmidc.server.Server;
@@ -57,7 +60,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     			// write backup zip file with the same name
     			backupFile = backupData.writeBackupZipFile(FilenameUtils.removeExtension(backupFilename) + EXT_ZIP_BACKUP);
     			// update DB password (in keystore) with the one from backup blob
-    			connectionParams.updatePassword(backupData.getDBPassword());
+    			updateKeystore(connectionParams, backupData);
     		} catch(Exception e) {
     			Server.setInMaintenance(false);
     			throw e;
@@ -135,16 +138,21 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     }
 
     private class BackupData {
+    	private static final int AES_KEY_SIZE = 16;
+
     	private byte[] backupZipBytes;
     	private String dbPassword;
-    	
+    	private byte[] aesCTRkey;
+
     	public void parse(byte[] bytes) throws Exception {
     		// split encrypted backup bytes into fixed lenght password bytes and zip file bytes
     		byte[] passwordBytes = new byte[DB_PASSWORD_MAX_LENGTH];
     		backupZipBytes = new byte[bytes.length - DB_PASSWORD_MAX_LENGTH];
-    		
+    		aesCTRkey = new byte[AES_KEY_SIZE];
+
     		try(ByteArrayInputStream decryptedBytesReader = new ByteArrayInputStream(bytes)) {
-    			decryptedBytesReader.read(passwordBytes);
+				decryptedBytesReader.read(aesCTRkey);
+				decryptedBytesReader.read(passwordBytes);
     			decryptedBytesReader.read(backupZipBytes);
     		}
 
@@ -153,6 +161,10 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     		passwordBytes = ArrayUtils.subarray(passwordBytes, 0, endIdx);
     		dbPassword = new String(passwordBytes, "UTF-8");
     	}
+
+		private void updateAESCTRKeyInKeystore() throws EncryptionException {
+			new AESCTREncryption().updateAESCTRKey(aesCTRkey);
+		}
     	
     	public String getDBPassword() {
     		return dbPassword;
@@ -164,4 +176,9 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     		return backupZipFile;
     	}
     }
+
+	private void updateKeystore(DBConnectionParameters connectionParams,BackupData backupData) throws EncryptionException, KeyStoreProvider.KeyStoreProviderException {
+		connectionParams.updatePassword(backupData.getDBPassword());
+		backupData.updateAESCTRKeyInKeystore();
+	}
 }

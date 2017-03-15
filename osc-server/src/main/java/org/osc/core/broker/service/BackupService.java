@@ -26,6 +26,8 @@ import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
+import org.osc.core.util.encryption.AESCTREncryption;
+import org.osc.core.util.encryption.EncryptionException;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,10 +60,11 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
             byte[] backupFileBytes = getBackupZipFileBytes(backupFileName);
             
             // concatenate zip file bytes with fixed length password bytes
-            byte[] backupFileWithDBPasswordBytes = appendDBPassword(backupFileBytes);
-            
+            byte[] backupData = appendDBPassword(backupFileBytes);
+            backupData = appendAESCTRKey(backupData);
+
             // encrypt the concatenation with AES-GCM
-            byte[] encryptedBackupFileBytes = encryptBackupFileBytes(backupFileWithDBPasswordBytes, request.getBackupPassword());
+            byte[] encryptedBackupFileBytes = encryptBackupFileBytes(backupData, request.getBackupPassword());
             
             // remove temporary backup zip
             deleteFile(resolveBackupZipPath(backupFileName));
@@ -166,5 +169,9 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
         backupFileBytesBuffer.position(DB_PASSWORD_MAX_LENGTH);
         backupFileBytesBuffer.put(bytes);
         return backupFileBytesBuffer.array();
+    }
+
+    byte[] appendAESCTRKey(byte[] bytes) throws EncryptionException {
+        return new AESCTREncryption().appendAESCTRKey(bytes);
     }
 }
