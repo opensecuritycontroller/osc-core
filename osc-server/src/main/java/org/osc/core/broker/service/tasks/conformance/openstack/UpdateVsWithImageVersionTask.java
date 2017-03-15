@@ -35,6 +35,7 @@ public class UpdateVsWithImageVersionTask extends TransactionalTask {
 
     public UpdateVsWithImageVersionTask(VirtualSystem vs) {
         this.vs = vs;
+        this.name = getName();
     }
 
     @Override

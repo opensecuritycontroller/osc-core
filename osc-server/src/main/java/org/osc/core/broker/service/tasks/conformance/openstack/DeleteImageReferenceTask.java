@@ -37,6 +37,7 @@ public class DeleteImageReferenceTask  extends TransactionalTask {
     public DeleteImageReferenceTask(OsImageReference imageReference, VirtualSystem vs) {
         this.imageReference = imageReference;
         this.vs = vs;
+        this.name = getName();
     }
 
     @Override
@@ -58,7 +59,7 @@ public class DeleteImageReferenceTask  extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Deleting image with id: '%s'", this.imageReference.getImageRefId());
+        return "Deleting image with id " + this.imageReference.getImageRefId();
     }
 
     @Override

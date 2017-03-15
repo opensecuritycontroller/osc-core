@@ -41,11 +41,16 @@ all: OSC_disk-0.vmdk
 OSC_disk-0.vmdk: OSC_disk-0.img
 	./bin/qemu-img convert $< -O vmdk -c -o compat6,subformat=streamOptimized $@
 	chmod 0777 $@
-        ifeq ($(build-all-images), true)
-		./bin/qemu-img convert -f vmdk -O qcow2 $@ OSC_disk-0.qcow2
-		chmod 0777 OSC_disk-0.qcow2
-		mv -f OSC_disk-0.img OSC_disk-0-raw.img
-		chmod 0777 OSC_disk-0-raw.img
+        ifneq (,$(filter $(image-format),qcow2-only qcow2-vmdk))
+	./bin/qemu-img convert -f vmdk -O qcow2 $@ OSC_disk-0.qcow2
+	chmod 0777 OSC_disk-0.qcow2
+        ifeq ($(image-format), qcow2-only)
+	rm -f $@
+        endif
+        else ifneq (, $(filter $(image-format), raw-only))
+	mv -f OSC_disk-0.img OSC_disk-0-raw.img
+	chmod 0777 OSC_disk-0-raw.img
+	rm -f $@
         endif
 
 OSC_disk-0.img: make-image
