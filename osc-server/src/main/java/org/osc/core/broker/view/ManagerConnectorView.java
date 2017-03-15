@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
@@ -34,6 +35,7 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.SyncApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SyncApplianceManagerConnectorResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddManagerConnectorWindow;
@@ -55,6 +57,8 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     private static final long serialVersionUID = 1L;
 
     private static final Logger log = Logger.getLogger(ManagerConnectorView.class);
+
+    private final ConformService conformService = StaticRegistry.conformService();
 
     public ManagerConnectorView() {
 
@@ -85,7 +89,7 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
         log.info("Syncing MC " + mcId.toString());
         SyncApplianceManagerConnectorRequest request = new SyncApplianceManagerConnectorRequest();
         request.setId(mcId);
-        SyncManagerConnectorService service = new SyncManagerConnectorService();
+        SyncManagerConnectorService service = new SyncManagerConnectorService(this.conformService);
 
         try {
             SyncApplianceManagerConnectorResponse response = service.dispatch(request);

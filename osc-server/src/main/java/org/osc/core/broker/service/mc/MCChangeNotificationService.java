@@ -36,6 +36,12 @@ ServiceDispatcher<MCChangeNotificationRequest, BaseJobResponse> {
 
     private static final Logger log = Logger.getLogger(MCChangeNotificationService.class);
 
+    private final ConformService conformService;
+
+    public MCChangeNotificationService(ConformService conformService) {
+        this.conformService = conformService;
+    }
+
     @Override
     public BaseJobResponse exec(MCChangeNotificationRequest request, Session session) throws Exception {
 
@@ -51,14 +57,14 @@ ServiceDispatcher<MCChangeNotificationRequest, BaseJobResponse> {
                 session, mc);
 
         if (distributedAppliances.isEmpty()) {
-            response.setJobId(ConformService.startMCConformJob(mc, session).getId());
+            response.setJobId(this.conformService.startMCConformJob(mc, session).getId());
         } else if (request.notification.getObjectType() == MgrObjectType.DOMAIN) {
             // TODO: Future. Need to make this more efficient. Create a job that only
             // update domain/policy
         } else if (request.notification.getObjectType() == MgrObjectType.POLICY) {
 
             for (DistributedAppliance da : distributedAppliances) {
-                Long jobId = ConformService.startDAConformJob(session, da);
+                Long jobId = this.conformService.startDAConformJob(session, da);
                 response.setJobId(jobId);
                 log.info("Sync DA '" + da.getName() + "' job " + jobId + " triggered.");
             }

@@ -19,6 +19,7 @@ package org.osc.core.broker.window.update;
 import java.util.HashSet;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.UpdateDistributedApplianceService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
@@ -27,6 +28,7 @@ import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.DistributedApplianceView;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -54,6 +56,8 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
     final String CAPTION = "Edit Distributed Appliance";
 
     private final DistributedApplianceView daView;
+
+    private ConformService conformService = StaticRegistry.conformService();
 
     public UpdateDistributedApplianceWindow(DistributedApplianceView distributedApplianceView) throws Exception {
         super();
@@ -202,7 +206,7 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
 
             BaseRequest<DistributedApplianceDto> updateRequest = new BaseRequest<DistributedApplianceDto>();
             updateRequest.setDto(new DistributedApplianceDto());
-            UpdateDistributedApplianceService updateService = new UpdateDistributedApplianceService();
+            UpdateDistributedApplianceService updateService = new UpdateDistributedApplianceService(this.conformService);
 
             updateRequest.getDto().setId(this.currentDAObject.getId());
             updateRequest.getDto().setName(this.name.getValue().trim());

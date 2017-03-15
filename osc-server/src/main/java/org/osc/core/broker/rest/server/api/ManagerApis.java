@@ -31,13 +31,13 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.rest.server.model.QueryVmInfoRequest;
 import org.osc.core.broker.rest.server.model.TagVmRequest;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.PropagateVSMgrFileService;
 import org.osc.core.broker.service.QueryVmInfoService;
 import org.osc.core.broker.service.TagVmService;
@@ -49,10 +49,12 @@ import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.sdk.manager.element.MgrChangeNotification;
 import org.osc.sdk.manager.element.MgrChangeNotification.ChangeType;
 import org.osc.sdk.manager.element.MgrChangeNotification.MgrObjectType;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -71,6 +73,9 @@ public class ManagerApis {
 
     private static final Logger log = Logger.getLogger(ManagerApis.class);
 
+    @Reference
+    private ConformService conformService;
+
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
                     + "request is reported by and responds to the notification accordingly",
@@ -82,7 +87,7 @@ public class ManagerApis {
     public Response postNotification(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
                                      @ApiParam(required = true) Notification notification) {
         log.info("postNotification(): " + notification);
-        return ManagerApis.triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
+        return triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
     }
 
     @ApiOperation(value = "Propagate a Manager File to Appliance Instances",
@@ -153,7 +158,7 @@ public class ManagerApis {
         return ApiUtil.getResponse(new UnTagVmService(), tagVmRequest);
     }
 
-    public static Response triggerMcSync(String username, String ipAddress, Notification notification) {
+    public Response triggerMcSync(String username, String ipAddress, Notification notification) {
         ChangeType ct = ChangeType.UPDATED;
         MgrObjectType ot;
         if (notification.eventNotification.eventObject.equals("Admin Domain")) {
@@ -170,7 +175,7 @@ public class ManagerApis {
         return triggerMcSync(username, ipAddress, mgrNotification);
     }
 
-    private static Response triggerMcSync(String username, String ipAddress, MgrChangeNotification notification) {
+    private Response triggerMcSync(String username, String ipAddress, MgrChangeNotification notification) {
         try {
             BaseJobResponse response = triggerMcSyncService(username, ipAddress, notification);
             return Response.status(Status.OK).entity(response).build();
@@ -187,7 +192,7 @@ public class ManagerApis {
         }
     }
 
-    public static BaseJobResponse triggerMcSyncService(String username, String ipAddress,
+    public BaseJobResponse triggerMcSyncService(String username, String ipAddress,
             MgrChangeNotification notification) throws Exception {
         SessionUtil.setUser(username);
 
@@ -195,7 +200,7 @@ public class ManagerApis {
         request.mgrIpAddress = ipAddress;
         request.notification = notification;
 
-        MCChangeNotificationService service = new MCChangeNotificationService();
+        MCChangeNotificationService service = new MCChangeNotificationService(this.conformService);
         BaseJobResponse response = service.dispatch(request);
         return response;
     }

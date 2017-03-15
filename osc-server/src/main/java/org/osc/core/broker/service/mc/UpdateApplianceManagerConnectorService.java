@@ -61,10 +61,14 @@ public class UpdateApplianceManagerConnectorService extends
 
     private boolean forceAddSSLCertificates = false;
 
-    public UpdateApplianceManagerConnectorService() {
+    private final ConformService conformService;
+
+    public UpdateApplianceManagerConnectorService(ConformService conformService) {
+        this.conformService = conformService;
     }
 
-    public UpdateApplianceManagerConnectorService(boolean forceAddSSLCertificates) {
+    public UpdateApplianceManagerConnectorService(boolean forceAddSSLCertificates, ConformService conformService) {
+        this(conformService);
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
 
@@ -131,7 +135,7 @@ public class UpdateApplianceManagerConnectorService extends
 
         response.setId(mc.getId());
 
-        Long jobId = ConformService.startMCConformJob(mc, mcUnlock, session).getId();
+        Long jobId = this.conformService.startMCConformJob(mc, mcUnlock, session).getId();
         response.setJobId(jobId);
 
         return response;

@@ -32,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.internal.util.collections.Sets;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -47,12 +48,8 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.util.SessionStub;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(ConformService.class)
+@RunWith(MockitoJUnitRunner.class)
 public class AddDistributedApplianceServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -62,6 +59,9 @@ public class AddDistributedApplianceServiceTest {
 
     @Mock
     private DistributedApplianceDtoValidator validatorMock;
+
+    @Mock
+    private ConformService conformServiceMock;
 
     @InjectMocks
     private AddDistributedApplianceService service;
@@ -80,6 +80,7 @@ public class AddDistributedApplianceServiceTest {
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
+        this.conformServiceMock = this.service.getConformService();
 
         this.request = new BaseRequest<DistributedApplianceDto>();
         this.daDto = new DistributedApplianceDto();
@@ -168,8 +169,7 @@ public class AddDistributedApplianceServiceTest {
 
         this.sessionStub.stubSaveEntity(new VirtualSystemMatcher(this.vs), 123L);
         this.sessionStub.stubSaveEntity(new DistributedApplianceMatcher(this.da), daId);
-        PowerMockito.mockStatic(ConformService.class);
-        Mockito.when(ConformService.startDAConformJob(Mockito.any(Session.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)))).thenReturn(jobId);
+        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(Session.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)))).thenReturn(jobId);
 
         // Act.
         AddDistributedApplianceResponse response = this.service.dispatch(this.request);

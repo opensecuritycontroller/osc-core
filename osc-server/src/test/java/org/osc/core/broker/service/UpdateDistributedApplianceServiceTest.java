@@ -57,7 +57,7 @@ import com.google.common.collect.Sets;
 import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ConformService.class, LockUtil.class, ManagerApiFactory.class})
+@PrepareForTest({LockUtil.class, ManagerApiFactory.class})
 public class UpdateDistributedApplianceServiceTest {
     private static long JOB_ID = 12345L;
     private static String NEW_APPLIANCE_SW_VERSION = "NEWVERSION";
@@ -70,6 +70,9 @@ public class UpdateDistributedApplianceServiceTest {
 
     @Mock(name = "daValidator")
     private DistributedApplianceDtoValidator validatorMock;
+
+    @Mock
+    private ConformService conformServiceMock;
 
     @InjectMocks
     private UpdateDistributedApplianceService service;
@@ -92,6 +95,7 @@ public class UpdateDistributedApplianceServiceTest {
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
+        this.conformServiceMock = this.service.getConformService();
 
         this.vc = new VirtualizationConnector();
         this.vc.setId(1000L);
@@ -189,8 +193,7 @@ public class UpdateDistributedApplianceServiceTest {
                 softwareVersion);
         this.sessionStub.stubListByDaId(this.daDto.getId(), Lists.newArrayList(this.daDto.getId()));
 
-        PowerMockito.mockStatic(ConformService.class);
-        Mockito.when(ConformService.startDAConformJob(Mockito.any(Session.class),
+        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(Session.class),
                 (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)),
                 Mockito.any(UnlockObjectMetaTask.class))).thenReturn(JOB_ID);
 

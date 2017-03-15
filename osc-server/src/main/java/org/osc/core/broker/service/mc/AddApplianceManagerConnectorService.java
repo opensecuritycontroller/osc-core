@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
+import java.util.ArrayList;
+
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
@@ -41,8 +43,6 @@ import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 
-import java.util.ArrayList;
-
 public class AddApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
 
@@ -50,10 +50,14 @@ public class AddApplianceManagerConnectorService extends
 
     private boolean forceAddSSLCertificates = false;
 
-    public AddApplianceManagerConnectorService() {
+    private final ConformService conformService;
+
+    public AddApplianceManagerConnectorService(ConformService conformService) {
+        this.conformService = conformService;
     }
 
-    public AddApplianceManagerConnectorService(boolean forceAddSSLCertificates) {
+    public AddApplianceManagerConnectorService(boolean forceAddSSLCertificates, ConformService conformService) {
+        this(conformService);
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
 
@@ -88,7 +92,7 @@ public class AddApplianceManagerConnectorService extends
 
         BaseJobResponse response = new BaseJobResponse();
         response.setId(mc.getId());
-        Job job = ConformService.startMCConformJob(mc, mcUnlock, session);
+        Job job = this.conformService.startMCConformJob(mc, mcUnlock, session);
         response.setJobId(job.getId());
 
         return response;

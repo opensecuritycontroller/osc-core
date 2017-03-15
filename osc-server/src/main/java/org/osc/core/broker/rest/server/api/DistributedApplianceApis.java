@@ -33,7 +33,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.AddDistributedApplianceService;
 import org.osc.core.broker.service.ConformService;
@@ -51,7 +50,9 @@ import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -69,6 +70,9 @@ import io.swagger.annotations.Authorization;
 public class DistributedApplianceApis {
 
     private static final Logger logger = Logger.getLogger(DistributedApplianceApis.class);
+
+    @Reference
+    private ConformService conformService;
 
     @ApiOperation(value = "Lists All Distributed Appliances",
             notes = "Lists all the Distributed Appliances",
@@ -119,7 +123,7 @@ public class DistributedApplianceApis {
                                     @ApiParam(required = true) DistributedApplianceDto daDto) {
         logger.info("Creating Distributed Appliance...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new AddDistributedApplianceService(),
+        return ApiUtil.getResponseForBaseRequest(new AddDistributedApplianceService(this.conformService),
                 new BaseRequest<DistributedApplianceDto>(daDto));
     }
 
@@ -137,7 +141,7 @@ public class DistributedApplianceApis {
         logger.info("Updating Distributed Appliance " + distributedApplianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setIdOrThrow(daDto, distributedApplianceId, "DistributedAppliance");
-        return ApiUtil.getResponseForBaseRequest(new UpdateDistributedApplianceService(),
+        return ApiUtil.getResponseForBaseRequest(new UpdateDistributedApplianceService(this.conformService),
                 new BaseRequest<DistributedApplianceDto>(daDto));
     }
 
@@ -185,7 +189,7 @@ public class DistributedApplianceApis {
                                                      required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Sync Distributed Appliance " + distributedApplianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new ConformService(), new ConformRequest(distributedApplianceId));
+        return ApiUtil.getResponseForBaseRequest(this.conformService, new ConformRequest(distributedApplianceId));
     }
 
 }

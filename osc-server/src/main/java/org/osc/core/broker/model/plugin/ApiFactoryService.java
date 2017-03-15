@@ -19,13 +19,16 @@ package org.osc.core.broker.model.plugin;
 import java.util.Map;
 import java.util.Set;
 
+import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
+import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osgi.annotation.versioning.ConsumerType;
 
@@ -34,21 +37,38 @@ public interface ApiFactoryService {
     /**
      * Creates an {@code ApplianceManagerApi} instance for the specified manager type.
      *
-     * @param managerType
+     * @param managerName
      * @return
      * @throws Exception
      */
-    ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception;
+    ApplianceManagerApi createApplianceManagerApi(String managerName) throws Exception;
 
-    /**
-     * gets specified property from {@code ApplianceManagerApi} instance for the specified manager type.
-     *
-     * @param managerType
-     * @param propertyName
-     * @return
-     * @throws Exception
-     */
-    Object getPluginProperty(ManagerType managerType, String propertyName) throws Exception;
+    Boolean syncsPolicyMapping(ManagerType managerType) throws Exception;
+
+    Boolean syncsSecurityGroup(ManagerType managerType) throws Exception;
+
+    String getServiceName(ManagerType managerType) throws Exception;
+
+    String getNotificationType(ManagerType managerType) throws Exception;
+
+    Boolean providesDeviceStatus(ManagerType managerType) throws Exception;
+
+    String getAuthenticationType(ManagerType managerType) throws Exception;
+
+    boolean isBasicAuth(ManagerType mt) throws Exception;
+
+    boolean isKeyAuth(ManagerType mt) throws Exception;
+
+    String getExternalServiceName(ManagerType managerType) throws Exception;
+
+    String getVendorName(ManagerType managerType) throws Exception;
+
+    boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception;
+
+    boolean isWebSocketNotifications(ApplianceManagerConnector mc) throws Exception;
+
+    ApplianceManagerConnectorElement getApplianceManagerConnectorElement(ApplianceManagerConnector mc)
+            throws EncryptionException;
 
     /**
      * Creates a {@code SdnControllerApi} instance for the specified controller type.

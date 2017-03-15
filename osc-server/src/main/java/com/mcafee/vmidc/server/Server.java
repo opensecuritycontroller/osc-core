@@ -38,6 +38,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.Rabbi
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
@@ -57,6 +58,7 @@ import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.util.VersionUtil;
 import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -97,7 +99,6 @@ public class Server {
     private static volatile boolean inMaintenance = false;
     public static int scheduledSyncInterval = 60; // 60 minutes
     public static boolean devMode = false;
-
 
     public static void startServer() throws Exception {
         LogUtil.initLog4j();
@@ -261,8 +262,15 @@ public class Server {
         Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
         scheduler.start();
 
-        JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class).build();
-        JobDetail syncSgJob = JobBuilder.newJob(SyncSecurityGroupJob.class).build();
+        JobDataMap jobDataMap = new JobDataMap();
+        jobDataMap.put(ConformService.class.getName(), new Object());
+
+        JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class)
+                .usingJobData(jobDataMap)
+                .build();
+        JobDetail syncSgJob = JobBuilder.newJob(SyncSecurityGroupJob.class)
+                .usingJobData(jobDataMap)
+                .build();
         Trigger syncDaJobTrigger = TriggerBuilder.newTrigger().startNow().withSchedule(SimpleScheduleBuilder
                 .simpleSchedule().withIntervalInMinutes(Server.scheduledSyncInterval).repeatForever()).build();
 
@@ -309,7 +317,8 @@ public class Server {
             JobEngine.setJobThreadPoolSize(prop.getProperty("server.jobThreadPoolSize"));
             JobEngine.setTaskThreadPoolSize(prop.getProperty("server.taskThreadPoolSize"));
         } catch (Exception e) {
-            log.error("Warning: Parsing file failed " + Server.CONFIG_PROPERTIES_FILE + " (Error:" + e.getMessage() + ")");
+            log.error("Warning: Parsing file failed " + Server.CONFIG_PROPERTIES_FILE + " (Error:" + e.getMessage()
+                    + ")");
         }
     }
 
@@ -397,9 +406,11 @@ public class Server {
 
     // static methods to allow UiListenerDelegate to update session info
     private static List<HttpSession> sessions = new ArrayList<>();
+
     public static synchronized void addSession(HttpSession session) {
         sessions.add(session);
     }
+
     public static synchronized void removeSession(HttpSession session) {
         sessions.remove(session);
     }

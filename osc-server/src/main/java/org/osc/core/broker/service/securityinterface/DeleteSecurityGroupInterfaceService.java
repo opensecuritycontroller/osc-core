@@ -33,6 +33,12 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
     private static final Logger log = Logger.getLogger(DeleteSecurityGroupInterfaceService.class);
     private SecurityGroupInterface sgi = null;
 
+    private final ConformService conformService;
+
+    public DeleteSecurityGroupInterfaceService(ConformService conformService) {
+        this.conformService = conformService;
+    }
+
     @Override
     public BaseJobResponse exec(BaseIdRequest request, Session session) throws Exception {
         validate(session, request);
@@ -43,7 +49,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
 
         commitChanges(true);
 
-        Long jobId = ConformService.startDAConformJob(session, this.sgi.getVirtualSystem().getDistributedAppliance());
+        Long jobId = this.conformService.startDAConformJob(session, this.sgi.getVirtualSystem().getDistributedAppliance());
 
         BaseJobResponse response = new BaseJobResponse(this.sgi.getId());
         response.setJobId(jobId);
@@ -60,7 +66,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
             + "  is not found.");
         }
 
-        this.sgi = (SecurityGroupInterface) session.get(SecurityGroupInterface.class, request.getId());
+        this.sgi = session.get(SecurityGroupInterface.class, request.getId());
         if (this.sgi == null) {
             throw new VmidcBrokerValidationException("Traffic Policy Mapping with Id: " + request.getId()
             + "  is not found.");

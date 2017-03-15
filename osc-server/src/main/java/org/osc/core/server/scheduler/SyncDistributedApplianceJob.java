@@ -47,6 +47,7 @@ public class SyncDistributedApplianceJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
+        ConformService conformService = (ConformService) context.get(ConformService.class.getName());
         Session session = null;
         try {
             session = HibernateUtil.getSessionFactory().openSession();
@@ -71,8 +72,8 @@ public class SyncDistributedApplianceJob implements Job {
                                         SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
 
                                 try {
-                                    da = (DistributedAppliance) session.get(DistributedAppliance.class, da.getId());
-                                    ConformService.startDAConformJob(session, da, null, false);
+                                    da = session.get(DistributedAppliance.class, da.getId());
+                                    conformService.startDAConformJob(session, da, null, false);
                                 } catch (Exception ex) {
                                     AlertGenerator.processSystemFailureEvent(
                                             SystemFailureType.SCHEDULER_FAILURE,

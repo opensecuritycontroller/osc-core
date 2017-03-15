@@ -59,6 +59,18 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
 
     private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
 
+    private final ConformService conformService;
+
+    // FIXME - this is a work-around because mockito is creating too many mock instances
+    @Deprecated
+    ConformService getConformService() {
+        return this.conformService;
+    }
+
+    public UpdateDistributedApplianceService(ConformService conformService) {
+        this.conformService = conformService;
+    }
+
     @Override
     public BaseJobResponse exec(BaseRequest<DistributedApplianceDto> request, Session session)
             throws Exception {
@@ -109,7 +121,7 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
     }
 
     private Long startConformDAJob(DistributedAppliance da, Session session) throws Exception {
-        return ConformService.startDAConformJob(session, da, this.ult);
+        return this.conformService.startDAConformJob(session, da, this.ult);
     }
 
     /**
