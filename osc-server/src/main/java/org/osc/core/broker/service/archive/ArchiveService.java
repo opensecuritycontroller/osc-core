@@ -38,10 +38,16 @@ import org.osc.core.broker.service.response.Response;
 import org.osc.core.util.ArchiveUtil;
 
 import java.io.File;
+import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Archive service which performs job archive to CSV files.
@@ -75,141 +81,49 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
                     try {
                         // calculate threshold date
                         Period period = getPeriod(request);
-                        String sqlTimeString = calculateThresholdDate(period, "yyyy-MM-dd HH:mm:ss");
+                        Timestamp sqlTimeString = Timestamp.valueOf(calculateThresholdDate(period, "yyyy-MM-dd HH:mm:ss"));
                         String archiveFileName = calculateThresholdDate(period, "yyyy-MM-dd_HH-mm-ss");
 
                         String dir = "archive/" + archiveFileName + "/";
                         FileUtils.forceMkdir(new File(dir));
 
-                        String sql;
-                        int rows;
-                        try(Statement stmt = connection.createStatement()) {
-                            File cvsFile = new File(dir + "job.csv");
-                            sql = String.format(
-                                    "CALL CSVWRITE('%s', 'SELECT * FROM JOB WHERE completed_timestamp <= ''%s''', "
-                                            + " 'charset=UTF-8 fieldSeparator=,');", cvsFile.getAbsoluteFile(),
-                                    sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            rows = stmt.executeUpdate(sql);
-                            log.info("Rows archived: " + rows);
 
-                            cvsFile = new File(dir + "job_object.csv");
-                            sql = String.format("CALL CSVWRITE('%s', 'SELECT * FROM JOB_OBJECT WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= ''%s'')', "
-                                    + " 'charset=UTF-8 fieldSeparator=,');", cvsFile.getAbsoluteFile(), sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            rows = stmt.executeUpdate(sql);
-                            log.info("Rows archived: " + rows);
+                        //prepare callable statements to export files as .csv
+                        List<CallableStatement> cStatements = Arrays.asList(
+                                getCallableStatementForJob(connection, sqlTimeString, dir),
+                                getCallableStatementJobObject(connection, sqlTimeString, dir),
+                                getCallableStatementTask(connection, sqlTimeString, dir),
+                                getCallableStatementTaskPredecessor(connection, sqlTimeString, dir),
+                                getCallableStatementTaskSuccessor(connection, sqlTimeString, dir),
+                                getCallableStatementTaskChild(connection, sqlTimeString, dir),
+                                getCallableStatementTaskObject(connection, sqlTimeString, dir),
+                                getCallableStatementReleaseInfo(connection, sqlTimeString, dir),
+                                getCallableStatementAlert(connection, sqlTimeString, dir)
+                        );
 
-                            cvsFile = new File(dir + "task.csv");
-                            sql = String.format("CALL CSVWRITE('%s', 'SELECT * FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= ''%s'')', "
-                                    + " 'charset=UTF-8 fieldSeparator=,');", cvsFile.getAbsoluteFile(), sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            rows = stmt.executeUpdate(sql);
-                            log.info("Rows archived: " + rows);
+                        //prepare statements to clear tables
+                        List<PreparedStatement> pStatements = Arrays.asList(
+                                getPreparedStatementDeleteTaskObject(connection, sqlTimeString),
+                                getPreparedStatementDeleteTaskSuccessor(connection, sqlTimeString),
+                                getPreparedStatementDeleteTaskPredecessor(connection, sqlTimeString),
+                                getPreparedStatementDeleteTaskChild(connection, sqlTimeString),
+                                getPreparedStatementDeleteTask(connection, sqlTimeString),
+                                getPreparedStatementDeleteJobObject(connection, sqlTimeString),
+                                getPreparedStatementDeleteJob(connection, sqlTimeString),
+                                getPreparedStatementDeleteAlert(connection, sqlTimeString)
+                        );
 
-                            cvsFile = new File(dir + "task_predecessor.csv");
-                            sql = String.format("CALL CSVWRITE('%s', 'SELECT * FROM TASK_PREDECESSOR WHERE task_id IN "
-                                    + "(SELECT ID FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= ''%s''))', "
-                                    + " 'charset=UTF-8 fieldSeparator=,');", cvsFile.getAbsoluteFile(), sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            rows = stmt.executeUpdate(sql);
-                            log.info("Rows archived: " + rows);
-
-                            cvsFile = new File(dir + "task_successor.csv");
-                            sql = String.format("CALL CSVWRITE('%s', 'SELECT * FROM TASK_SUCCESSOR WHERE task_id IN "
-                                    + "(SELECT ID FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= ''%s''))', "
-                                    + " 'charset=UTF-8 fieldSeparator=,');", cvsFile.getAbsoluteFile(), sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            rows = stmt.executeUpdate(sql);
-                            log.info("Rows archived: " + rows);
-
-                            cvsFile = new File(dir + "task_child.csv");
-                            sql = String.format("CALL CSVWRITE('%s', 'SELECT * FROM TASK_CHILD WHERE task_id IN "
-                                    + "(SELECT ID FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= ''%s''))', "
-                                    + " 'charset=UTF-8 fieldSeparator=,');", cvsFile.getAbsoluteFile(), sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            rows = stmt.executeUpdate(sql);
-                            log.info("Rows archived: " + rows);
-
-                            cvsFile = new File(dir + "task_object.csv");
-                            sql = String.format("CALL CSVWRITE('%s', 'SELECT * FROM TASK_OBJECT WHERE task_fk IN "
-                                    + "(SELECT ID FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= ''%s''))', "
-                                    + " 'charset=UTF-8 fieldSeparator=,');", cvsFile.getAbsoluteFile(), sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            rows = stmt.executeUpdate(sql);
-                            log.info("Rows archived: " + rows);
-
-                            // db version for future meta data usage
-                            cvsFile = new File(dir + "release_info.csv");
-                            sql = String.format(
-                                    "CALL CSVWRITE('%s', 'SELECT * FROM RELEASE_INFO', 'charset=UTF-8 fieldSeparator=,');",
-                                    cvsFile.getAbsoluteFile());
-                            log.info("Execute sql: " + sql);
-                            rows = stmt.executeUpdate(sql);
-                            log.info("Rows archived: " + rows);
-
-                            // Archive alerts
-                            cvsFile = new File(dir + "alert.csv");
-                            sql = String.format(
-                                    "CALL CSVWRITE('%s', 'SELECT * FROM ALERT WHERE created_timestamp <= ''%s''', "
-                                            + " 'charset=UTF-8 fieldSeparator=,');", cvsFile.getAbsoluteFile(),
-                                    sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            rows = stmt.executeUpdate(sql);
-                            log.info("Rows archived: " + rows);
-
-                            sql = String.format("DELETE FROM TASK_OBJECT WHERE task_fk IN "
-                                    + "(SELECT ID FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= '%s')) ", sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            stmt.execute(sql);
-
-                            sql = String.format("DELETE FROM TASK_SUCCESSOR WHERE task_id IN "
-                                    + "(SELECT ID FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= '%s')) ", sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            stmt.execute(sql);
-
-                            sql = String.format("DELETE FROM TASK_PREDECESSOR WHERE task_id IN "
-                                    + "(SELECT ID FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= '%s')) ", sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            stmt.execute(sql);
-
-                            sql = String.format("DELETE FROM TASK_CHILD WHERE task_id IN "
-                                    + "(SELECT ID FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= '%s')) ", sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            stmt.execute(sql);
-
-                            sql = String.format("DELETE FROM TASK WHERE id IN (SELECT ID FROM TASK WHERE job_fk IN "
-                                    + "(SELECT ID FROM JOB WHERE completed_timestamp <= '%s')) ", sqlTimeString);
-                            log.info("Execute sql: " + sql);
-                            stmt.execute(sql);
-
-                            sql = String
-                                    .format("DELETE FROM JOB_OBJECT WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"
-                                            + sqlTimeString + "')");
-                            log.info("Execute sql: " + sql);
-                            stmt.execute(sql);
-
-                            sql = String.format("DELETE FROM JOB WHERE completed_timestamp <= '" + sqlTimeString + "'");
-                            log.info("Execute sql: " + sql);
-                            stmt.execute(sql);
-
-                            sql = String.format("DELETE FROM ALERT WHERE created_timestamp <= '" + sqlTimeString + "'");
-                            log.info("Execute sql: " + sql);
-                            stmt.execute(sql);
-
-                            ArchiveUtil.archive(dir, "archive/osc-archive-" + archiveFileName + ".zip");
-                            FileUtils.deleteDirectory(new File(dir));
+                        //Execute callable and then prepared statements
+                        for (CallableStatement cStmt : cStatements) {
+                            archive(cStmt);
                         }
+                        for (PreparedStatement pStmt : pStatements) {
+                            delete(pStmt);
+                        }
+
+                        ArchiveUtil.archive(dir, "archive/osc-archive-" + archiveFileName + ".zip");
+                        FileUtils.deleteDirectory(new File(dir));
+
                     } catch (Exception e) {
                         log.error("Error while archiving jobs", e);
                         AlertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
@@ -231,6 +145,158 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
 
         return new Response() {
         };
+    }
+
+    private PreparedStatement getPreparedStatementDeleteTaskObject(Connection connection, Timestamp sqlTimeString) throws SQLException {
+        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK_OBJECT WHERE task_fk IN "
+                + "(SELECT ID FROM TASK WHERE job_fk IN "
+                + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?)) ");
+        pStmt.setTimestamp(1, sqlTimeString);
+        return pStmt;
+    }
+
+    private PreparedStatement getPreparedStatementDeleteTaskSuccessor(Connection connection, Timestamp sqlTimeString) throws SQLException {
+        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK_SUCCESSOR WHERE task_id IN "
+                + "(SELECT ID FROM TASK WHERE job_fk IN "
+                + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?)) ");
+        pStmt.setTimestamp(1, sqlTimeString);
+        return pStmt;
+    }
+
+    private PreparedStatement getPreparedStatementDeleteTaskPredecessor(Connection connection, Timestamp sqlTimeString) throws SQLException {
+        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK_PREDECESSOR WHERE task_id IN "
+                + "(SELECT ID FROM TASK WHERE job_fk IN "
+                + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?))");
+        pStmt.setTimestamp(1, sqlTimeString);
+        return pStmt;
+    }
+
+    private PreparedStatement getPreparedStatementDeleteTaskChild(Connection connection, Timestamp sqlTimeString) throws SQLException {
+        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK_CHILD WHERE task_id IN "
+                + "(SELECT ID FROM TASK WHERE job_fk IN "
+                + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?))");
+        pStmt.setTimestamp(1, sqlTimeString);
+        return pStmt;
+    }
+
+    private PreparedStatement getPreparedStatementDeleteTask(Connection connection, Timestamp sqlTimeString) throws SQLException {
+        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK WHERE id IN (SELECT ID FROM TASK WHERE job_fk IN "
+                + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?))");
+        pStmt.setTimestamp(1, sqlTimeString);
+        return pStmt;
+    }
+
+    private PreparedStatement getPreparedStatementDeleteJobObject(Connection connection, Timestamp sqlTimeString) throws SQLException {
+        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM JOB_OBJECT WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= ?)");
+        pStmt.setTimestamp(1, sqlTimeString);
+        return pStmt;
+    }
+
+    private PreparedStatement getPreparedStatementDeleteJob(Connection connection, Timestamp sqlTimeString) throws SQLException {
+        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM JOB WHERE completed_timestamp <= ?");
+        pStmt.setTimestamp(1, sqlTimeString);
+        return pStmt;
+    }
+
+    private PreparedStatement getPreparedStatementDeleteAlert(Connection connection, Timestamp sqlTimeString) throws SQLException {
+        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM ALERT WHERE created_timestamp <= ?");
+        pStmt.setTimestamp(1, sqlTimeString);
+        return pStmt;
+    }
+
+    private CallableStatement getCallableStatementAlert(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+        File cvsFile = new File(dir + "alert.csv");
+        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
+        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        cs.setString(2, "SELECT * FROM ALERT WHERE created_timestamp <= '"+sqlTimeString+"'");
+        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
+        return cs;
+    }
+
+    private CallableStatement getCallableStatementReleaseInfo(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+        File cvsFile = new File(dir + "release_info.csv");
+        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
+        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        cs.setString(2, "SELECT * FROM RELEASE_INFO");
+        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
+        return cs;
+    }
+
+    private CallableStatement getCallableStatementTaskObject(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+        File cvsFile = new File(dir + "task_object.csv");
+        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
+        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        cs.setString(2, "SELECT * FROM TASK_OBJECT WHERE task_fk IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
+        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
+        return cs;
+    }
+
+    private CallableStatement getCallableStatementTaskChild(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+        File cvsFile = new File(dir + "task_child.csv");
+        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
+        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        cs.setString(2, "SELECT * FROM TASK_CHILD WHERE task_id IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
+        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
+        return cs;
+    }
+
+    private CallableStatement getCallableStatementTaskSuccessor(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+        File cvsFile = new File(dir + "task_successor.csv");
+        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
+        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        cs.setString(2, "SELECT * FROM TASK_SUCCESSOR WHERE task_id IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
+        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
+        return cs;
+    }
+
+    private CallableStatement getCallableStatementTaskPredecessor(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+        File cvsFile = new File(dir + "task_predecessor.csv");
+        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
+        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        cs.setString(2, "SELECT * FROM TASK_PREDECESSOR WHERE task_id IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
+        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
+        return cs;
+    }
+
+    private CallableStatement getCallableStatementTask(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+        File cvsFile = new File(dir + "task.csv");
+        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
+        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        cs.setString(2, "SELECT * FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"')");
+        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
+        return cs;
+    }
+
+    private CallableStatement getCallableStatementJobObject(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+        File cvsFile = new File(dir + "job_object.csv");
+        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
+        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        cs.setString(2, "SELECT * FROM JOB_OBJECT WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"')");
+        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
+        return cs;
+    }
+
+    private CallableStatement getCallableStatementForJob(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+        File cvsFile = new File(dir + "job.csv");
+        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
+        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        cs.setString(2, "SELECT * FROM JOB WHERE completed_timestamp <= '" + sqlTimeString+"'");
+        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
+        return cs;
+    }
+
+    private void archive(CallableStatement cs) throws SQLException {
+        log.info("Execute sql: " + cs.toString());
+        try(CallableStatement cStmt = cs) {
+            log.info("Rows archived: " + cStmt.executeUpdate());
+        }
+    }
+
+    private void delete(PreparedStatement ps) throws SQLException {
+        log.info("Execute sql: " + ps.toString());
+        try(PreparedStatement pStmt = ps) {
+            log.info("Rows deleted: " + pStmt.executeUpdate());
+        }
     }
 
     private String calculateThresholdDate(Period period, String datePattern){
