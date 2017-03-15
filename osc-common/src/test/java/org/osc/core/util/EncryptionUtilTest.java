@@ -65,7 +65,7 @@ public class EncryptionUtilTest {
 			public void updateKey(byte[] key) throws EncryptionException {
 				// dont do nothing
 			}
-		});//() -> { return "1234567890abcdef1234567890abcdef"; });
+		});
 
 		String test = EncryptionUtil.encryptAESCTR("helloworld");
 	}
