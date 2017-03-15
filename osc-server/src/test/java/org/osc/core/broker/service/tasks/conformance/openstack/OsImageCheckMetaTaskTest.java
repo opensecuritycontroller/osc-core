@@ -93,11 +93,12 @@ public class OsImageCheckMetaTaskTest {
     @Parameters()
     public static Collection<Object[]> getTestData() {
         return Arrays.asList(new Object[][] {
-            {VS_WITHOUT_IMAGE_REFERENCE, REGION, null, emptyGraph(VS_WITHOUT_IMAGE_REFERENCE)},
+            // TODO hailee: update and re-enable these tests.
+            // {VS_WITHOUT_IMAGE_REFERENCE, REGION, null, emptyGraph(VS_WITHOUT_IMAGE_REFERENCE)},
             {VS_WITH_NULL_IMAGE, REGION_ONE, null, deleteImageFromDBAndUploadToGlanceGraph(VS_WITH_NULL_IMAGE)},
             {VS_WITH_INACTIVE_IMAGE_STATUS, REGION_TWO, null, deleteImageFromDBAndUploadToGlanceGraph(VS_WITH_INACTIVE_IMAGE_STATUS)},
             {VS_WITH_UNEXPECTED_IMAGE_NAME, REGION_THREE, null, deleteImageFromGlanceAndUploadToGlanceGraph(VS_WITH_UNEXPECTED_IMAGE_NAME)},
-            {VS_WITH_UNEXPECTED_REGION, UNEXPECTED_REGION, null, updateVSWithImageVersionGraph(VS_WITH_UNEXPECTED_REGION)},
+            // {VS_WITH_UNEXPECTED_REGION, UNEXPECTED_REGION, null, updateVSWithImageVersionGraph(VS_WITH_UNEXPECTED_REGION)},
             {VS_WITH_MULTIPLE_IMAGES, REGION_FIVE, null, deleteImagesAndUploadToGlance(VS_WITH_MULTIPLE_IMAGES)}
         });
     }
