@@ -78,19 +78,19 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
 
         try {
             Set<OsImageReference> imageReferences = this.vs.getOsImageReference();
-            boolean uploadImage = false;
+            boolean uploadImage = true;
 
             for (OsImageReference imageReference : imageReferences) {
                 if (imageReference.getRegion().equals(this.region)) {
                     ImageDetails image = this.glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
                     if (image == null || image != null && image.getStatus() != Status.ACTIVE) {
                         this.tg.appendTask(new DeleteImageReferenceTask(imageReference, this.vs));
-                        uploadImage = true;
                     } else if (!image.getName().equals(expectedGlanceImageName)) {
                         // Assume image name is changed, means the version is upgraded since image name contains version
                         // information. Delete existing image and create new image.
                         this.tg.appendTask(new DeleteImageFromGlanceTask(this.region, imageReference, this.osEndPoint));
-                        uploadImage = true;
+                    } else {
+                        uploadImage = false;
                     }
                 }
             }
