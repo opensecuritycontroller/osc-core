@@ -29,6 +29,7 @@ import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.RestoreUtil;
+import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osc.core.util.ServerUtil;
@@ -137,6 +138,8 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     }
 
     private class BackupData {
+    	private static final int AES_KEY_SIZE = 16;
+
     	private byte[] backupZipBytes;
     	private String dbPassword;
     	private byte[] aesCTRkey;
@@ -145,7 +148,8 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     		// split encrypted backup bytes into fixed lenght password bytes and zip file bytes
     		byte[] passwordBytes = new byte[DB_PASSWORD_MAX_LENGTH];
     		backupZipBytes = new byte[bytes.length - DB_PASSWORD_MAX_LENGTH];
-    		
+    		aesCTRkey = new byte[AES_KEY_SIZE];
+
     		try(ByteArrayInputStream decryptedBytesReader = new ByteArrayInputStream(bytes)) {
 				decryptedBytesReader.read(aesCTRkey);
 				decryptedBytesReader.read(passwordBytes);
@@ -173,7 +177,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     	}
     }
 
-	private void updateKeystore(DBConnectionParameters connectionParams,BackupData backupData) throws EncryptionException{
+	private void updateKeystore(DBConnectionParameters connectionParams,BackupData backupData) throws EncryptionException, KeyStoreProvider.KeyStoreProviderException {
 		connectionParams.updatePassword(backupData.getDBPassword());
 		backupData.updateAESCTRKeyInKeystore();
 	}
