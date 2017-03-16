@@ -60,7 +60,9 @@ VMIDCSERVICE="securityBroker"
 VMIDCLOG="/opt/vmidc/bin/log/securityBroker.log"
 IPREGEX="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
 IPCIDRREGEX="^(((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(?:2[0-4]|1[0-9]|[0-9]))|dhcp)$"
-DOMAINREGEX="^[^\s]+$"
+#Modified Domain regex to accept null value and hence adopted new regex value for NTP_DOMAIN--which is not changed
+DOMAINREGEX="^$|^[^\s]+$"
+NTP_DOMAINREGEX="^[^\s]+$"
 HOSTNAMEREGEX="^[^\s]+$"
 
 
@@ -451,7 +453,7 @@ class SetNetworkPrompt(ExtendedCmd):
   def do_ntp(self, args):
     """<IP> [<IP> ...]:Set NTP Server(s)"""
     servers = args.split()
-    if validate2(servers, [IPREGEX, DOMAINREGEX], "Illegal ntp server %s"):
+    if validate2(servers, [IPREGEX, NTP_DOMAINREGEX], "Illegal ntp server %s"):
       replace("/etc/ntp.conf", collect("/etc/ntp.conf", None, "^server ", [], ["server " + s for s in servers]))
       replace("/etc/ntp/step-tickers", collect("/etc/ntp/step-tickers", None, ".*", [], servers))
       stop_service("ntpd")
