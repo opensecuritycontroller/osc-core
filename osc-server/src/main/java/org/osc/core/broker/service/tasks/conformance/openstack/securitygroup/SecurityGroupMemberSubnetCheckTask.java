@@ -45,7 +45,7 @@ class SecurityGroupMemberSubnetCheckTask extends TransactionalMetaTask {
     @Override
     public void executeTransaction(Session session) throws Exception {
         this.tg = new TaskGraph();
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
+        this.sgm = session.get(SecurityGroupMember.class, this.sgm.getId());
         this.subnet = this.sgm.getSubnet();
 
         boolean isControllerDefined = this.sgm.getSecurityGroup().getVirtualizationConnector().isControllerDefined();
@@ -54,8 +54,14 @@ class SecurityGroupMemberSubnetCheckTask extends TransactionalMetaTask {
 
         JCloudNeutron neutron = null;
 
+<<<<<<< HEAD
         try {
             neutron = new JCloudNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
+=======
+        try(SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(vc.getControllerType());
+                JCloudNeutron neutron = new JCloudNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName())); ) {
+            boolean isPortGroupSupported = SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup());
+>>>>>>> handle removed SdnApi methods
             org.jclouds.openstack.neutron.v2.domain.Subnet subnet = neutron.getSubnetById(this.subnet.getRegion(),
                     this.subnet.getOpenstackId());
 
