@@ -60,7 +60,8 @@ VMIDCSERVICE="securityBroker"
 VMIDCLOG="/opt/vmidc/bin/log/securityBroker.log"
 IPREGEX="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
 IPCIDRREGEX="^(((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(?:2[0-4]|1[0-9]|[0-9]))|dhcp)$"
-DOMAINREGEX="^[^\s]+$"
+#Modified Domain regex to accept null value(no arguments) 
+DOMAINREGEX="^$|^[^\s]+$"
 HOSTNAMEREGEX="^[^\s]+$"
 
 
