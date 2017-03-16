@@ -103,6 +103,12 @@ public class SecurityGroupInterface extends BaseEntity {
     @Column(name = "chain_order", columnDefinition = "bigint default 0", nullable = false)
     private Long order = 0L;
 
+    /**
+     * networkElementId Partner integration value like forwarding_policy_id or Neutron SFC related value
+     */
+    @Column(name = "network_elem_id")
+    private String networkElementId;
+
     public SecurityGroupInterface(VirtualSystemPolicy virtualSystemPolicy, String tag) {
         super();
         this.virtualSystemPolicy = virtualSystemPolicy;
@@ -243,5 +249,13 @@ public class SecurityGroupInterface extends BaseEntity {
 
     public void setOrder(long order) {
         this.order = order;
+    }
+
+    public String getNetworkElementId() {
+        return this.networkElementId;
+    }
+
+    public void setNetworkElementId(String networkElemId) {
+        this.networkElementId = networkElemId;
     }
 }

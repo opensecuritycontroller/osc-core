@@ -16,6 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.util.db.upgrade;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.h2.util.StringUtils;
@@ -28,17 +39,6 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
  * create a single record in ReleaseInfo database table to manage this.
@@ -48,7 +48,7 @@ public class ReleaseUpgradeMgr {
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
-    public static final int TARGET_DB_VERSION = 75;
+    public static final int TARGET_DB_VERSION = 76;
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
@@ -226,6 +226,8 @@ public class ReleaseUpgradeMgr {
                 upgrade73to74(stmt);
             case 74:
                 upgrade74to75(stmt);
+            case 75:
+                upgrade75to76(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -236,7 +238,12 @@ public class ReleaseUpgradeMgr {
                 log.error("Current DB version is unknown !!!");
         }
     }
-    
+
+    private static void upgrade75to76(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table SECURITY_GROUP_INTERFACE"
+                + " ADD COLUMN network_elem_id varchar(255);");
+    }
+
     private static void upgrade74to75(Statement stmt) throws SQLException, EncryptionException {
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN password;");
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN agent_version_str;");
@@ -245,12 +252,12 @@ public class ReleaseUpgradeMgr {
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN agent_type;");
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN is_policy_map_out_of_sync;");
     }
-    
+
     private static void upgrade73to74(Statement stmt) throws SQLException, EncryptionException {
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN mgmt_os_port_id varchar(255);");
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN mgmt_mac_address varchar(255);");
     }
-                
+
     /**
      * 3DES encrypted passwords -> AES-CTR encrypted passwords
      */

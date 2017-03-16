@@ -144,6 +144,10 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             if (SdnControllerApiFactory.supportsPortGroup(this.sg)){
                 this.tg.appendTask(new PortGroupCheckTask(this.sg, controller, isDeleteTg),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
+                    this.tg.appendTask(new PortGroupHookCheckTask( this.sg, sgi, isDeleteTg, vdc),
+                    TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                }
             }
         }
 
