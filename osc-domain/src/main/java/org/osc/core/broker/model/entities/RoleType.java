@@ -17,7 +17,7 @@
 package org.osc.core.broker.model.entities;
 
 public enum RoleType {
-    ADMIN("ADMIN"), SYSTEM_AGENT("SYSTEM_AGENT"), SYSTEM_NSX("SYSTEM_NSX");
+    ADMIN("ADMIN"), SYSTEM_NSX("SYSTEM_NSX");
 
     private final String text;
 
@@ -27,6 +27,6 @@ public enum RoleType {
 
     @Override
     public String toString() {
-        return text;
+        return this.text;
     }
 }

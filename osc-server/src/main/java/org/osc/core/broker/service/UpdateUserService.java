@@ -23,7 +23,6 @@ import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.dto.DtoValidator;
@@ -66,12 +65,6 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
             OscAuthFilter.OSC_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
             user.setRole(RoleType.ADMIN);
             response.setJobId(startPasswordPropagateMgrJob());
-
-        } else if (user.getLoginName().equals(AgentAuthFilter.VMIDC_AGENT_LOGIN)) {
-
-            AgentAuthFilter.VMIDC_AGENT_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
-            user.setRole(RoleType.SYSTEM_AGENT);
-            response.setJobId(startPasswordPropagateDaiJob());
 
         } else if (user.getLoginName().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
 
