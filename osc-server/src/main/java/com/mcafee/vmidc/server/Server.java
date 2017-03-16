@@ -43,6 +43,7 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
 import org.osc.core.broker.util.PasswordUtil;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
@@ -263,7 +264,7 @@ public class Server {
         scheduler.start();
 
         JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put(ConformService.class.getName(), new Object());
+        jobDataMap.put(ConformService.class.getName(), StaticRegistry.conformService());
 
         JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class)
                 .usingJobData(jobDataMap)
