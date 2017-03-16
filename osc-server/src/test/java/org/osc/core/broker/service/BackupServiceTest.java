@@ -45,7 +45,8 @@ public class BackupServiceTest {
 		BackupRequest request = new BackupRequest();
 		byte[] backupZipBytes = "Test zip bytes".getBytes();
 		byte[] backupZipWithPasswordBytes = "Test zip bytes with password".getBytes();
-		
+		byte[] backupZipWithPasswordAndAESCTRBytes = "Test zip bytes with password and AES-CTR key".getBytes();
+
 		String backupFilePath = "example/backup/file.dbb";
 		request.setBackupFileName(backupFilePath);
 		request.setBackupPassword("testPassword");
@@ -53,6 +54,7 @@ public class BackupServiceTest {
 		when(target.exec(request, sessionMock)).thenCallRealMethod();
 		when(target.getBackupZipFileBytes(backupFilePath)).thenReturn(backupZipBytes);
 		when(target.appendDBPassword(backupZipBytes)).thenReturn(backupZipWithPasswordBytes);
+		when(target.appendAESCTRKey(backupZipWithPasswordBytes)).thenReturn(backupZipWithPasswordAndAESCTRBytes);
 
 		// Act.
 		BackupResponse response = target.exec(request, sessionMock);
@@ -62,7 +64,7 @@ public class BackupServiceTest {
 		verify(target, times(1)).deleteBackupFiles();
 		verify(target, times(1)).createBackupZipFile(sessionMock, backupFilePath);
 		verify(target, times(1)).appendDBPassword(backupZipBytes);
-		verify(target, times(1)).encryptBackupFileBytes(backupZipWithPasswordBytes, request.getBackupPassword());
+		verify(target, times(1)).encryptBackupFileBytes(backupZipWithPasswordAndAESCTRBytes, request.getBackupPassword());
 		assertTrue(response.isSuccess());
 	}
 	

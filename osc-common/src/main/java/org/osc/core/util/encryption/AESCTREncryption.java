@@ -28,6 +28,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Properties;
@@ -135,6 +136,7 @@ public class AESCTREncryption {
 
     public interface KeyProvider {
         String getKeyHex() throws EncryptionException;
+        void updateKey(byte[] key) throws EncryptionException;
     }
 
     private class KeyFromKeystoreProvider implements KeyProvider {
@@ -148,12 +150,11 @@ public class AESCTREncryption {
                     throw new Exception("Keystore password not found in security properties file");
                 }
 
-                KeyStoreProvider keyStoreProvider = KeyStoreProvider.getInstance();
-                hexKey = keyStoreProvider.getPassword("AesCtrKey", aesCtrPassword);
+                hexKey = KeyStoreProvider.getInstance().getPassword("AesCtrKey", aesCtrPassword);
 
                 if (StringUtils.isBlank(hexKey)) {
                     hexKey = DatatypeConverter.printHexBinary(KeyGenerator.getInstance("AES").generateKey().getEncoded());
-                    keyStoreProvider.putPassword("AesCtrKey", hexKey, aesCtrPassword);
+                    KeyStoreProvider.getInstance().putPassword("AesCtrKey", hexKey, aesCtrPassword);
                 }
             } catch (Exception e) {
                 LOG.error("Error encrypting plainText", e);
@@ -161,6 +162,20 @@ public class AESCTREncryption {
             }
 
             return hexKey;
+        }
+
+        public void updateKey(byte[] key) throws EncryptionException {
+            String aesCtrPassword = loadKeystorePasswordForAESCTRKey();
+
+            if(StringUtils.isBlank(aesCtrPassword)) {
+                throw new EncryptionException("Keystore password not found in security properties file");
+            }
+
+            try {
+                KeyStoreProvider.getInstance().putPassword("AesCtrKey", DatatypeConverter.printHexBinary(key), aesCtrPassword);
+            } catch (KeyStoreProvider.KeyStoreProviderException e) {
+                throw new EncryptionException("Failed to put AES-CTR key in keystore", e);
+            }
         }
 
         private String loadKeystorePasswordForAESCTRKey() throws EncryptionException {
@@ -173,5 +188,18 @@ public class AESCTREncryption {
             }
             return properties.getProperty(PROPS_AESCTR_PASSWORD);
         }
+    }
+
+    public byte[] appendAESCTRKey(byte[] bytes) throws EncryptionException {
+        byte[] aesCTRKey = DatatypeConverter.parseHexBinary(keyProvider.getKeyHex());
+
+        ByteBuffer backupFileBytesBuffer = ByteBuffer.allocate(aesCTRKey.length + bytes.length);
+        backupFileBytesBuffer.put(aesCTRKey);
+        backupFileBytesBuffer.put(bytes);
+        return backupFileBytesBuffer.array();
+    }
+
+    public void updateAESCTRKey(byte[] bytes) throws EncryptionException {
+        keyProvider.updateKey(bytes);
     }
 }

@@ -39,7 +39,6 @@ public class OsImageCheckMetaTaskTestData {
     public static String REGION_THREE = "region_3";
     public static String REGION_FOUR = "region_4";
     public static String REGION_FIVE = "region_5";
-    public static String UNEXPECTED_REGION = "unexpected_region";
 
     public static String SINGLE_REF_ID = "ref_id";
     public static String REF_ID_ONE = "ref_id_1";
@@ -50,12 +49,19 @@ public class OsImageCheckMetaTaskTestData {
     public static VirtualSystem VS_WITH_NULL_IMAGE = createVirtualSystemWithImageReference(2L, REGION_ONE, SINGLE_REF_ID);
     public static VirtualSystem VS_WITH_INACTIVE_IMAGE_STATUS = createVirtualSystemWithImageReference(3L, REGION_TWO, SINGLE_REF_ID);
     public static VirtualSystem VS_WITH_UNEXPECTED_IMAGE_NAME = createVirtualSystemWithImageReference(4L, REGION_THREE, SINGLE_REF_ID);
-    public static VirtualSystem VS_WITH_UNEXPECTED_REGION = createVirtualSystemWithImageReference(5L, REGION_FOUR, SINGLE_REF_ID);
+    public static VirtualSystem VS_WITH_IMAGE_WITHOUT_VERSION = createVirtualSystemWithImageReference(5L, REGION_FOUR, SINGLE_REF_ID);
 
     public static VirtualSystem VS_WITH_MULTIPLE_IMAGES = createVirtualSystemWithMultipleImageReferences(6L);
 
-    public static TaskGraph emptyGraph(VirtualSystem vs) {
+    public static TaskGraph uploadImageGraph(VirtualSystem vs) {
+        ApplianceSoftwareVersion applianceSoftwareVersion = vs.getApplianceSoftwareVersion();
+        String expectedGlanceImageName = Joiner.on("-").join(applianceSoftwareVersion.getAppliance().getModel(),
+                applianceSoftwareVersion.getApplianceSoftwareVersion(), vs.getName(), applianceSoftwareVersion.getImageUrl());
+
         TaskGraph expectedGraph = new TaskGraph();
+
+        expectedGraph.appendTask(new UploadImageToGlanceTask(vs, REGION, expectedGlanceImageName, applianceSoftwareVersion, null),
+                TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
     }

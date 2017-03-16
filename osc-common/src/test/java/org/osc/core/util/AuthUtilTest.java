@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osc.core.util.encryption.AESCTREncryption;
+import org.osc.core.util.encryption.EncryptionException;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -46,7 +47,18 @@ public class AuthUtilTest {
 	public void setUp() throws Exception {
         mockRequest = Mockito.mock(ContainerRequestContext.class);
         uriInfo = Mockito.mock(UriInfo.class);
-		AESCTREncryption.setKeyProvider(() -> { return "A6EBBF1CDCC166710670DE15015EA0AF"; });
+		AESCTREncryption.setKeyProvider(new AESCTREncryption.KeyProvider() {
+			@Override
+			public String getKeyHex() throws EncryptionException {
+				return "A6EBBF1CDCC166710670DE15015EA0AF";
+			}
+
+			@Override
+			public void updateKey(byte[] key) throws EncryptionException {
+				// dont do nothing
+			}
+		});
+
 		encryptedPassword = EncryptionUtil.encryptAESCTR("admin123");
 	}
 
