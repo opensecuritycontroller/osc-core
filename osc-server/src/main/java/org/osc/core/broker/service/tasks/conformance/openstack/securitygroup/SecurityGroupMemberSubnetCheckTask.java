@@ -20,11 +20,14 @@ import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
+import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.sdk.controller.api.SdnControllerApi;
 
 class SecurityGroupMemberSubnetCheckTask extends TransactionalMetaTask {
 
@@ -51,34 +54,25 @@ class SecurityGroupMemberSubnetCheckTask extends TransactionalMetaTask {
         boolean isControllerDefined = this.sgm.getSecurityGroup().getVirtualizationConnector().isControllerDefined();
 
         SecurityGroup sg = this.sgm.getSecurityGroup();
+        VirtualizationConnector vc = sg.getVirtualizationConnector();
 
-        JCloudNeutron neutron = null;
-
-<<<<<<< HEAD
-        try {
-            neutron = new JCloudNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
-=======
         try(SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(vc.getControllerType());
                 JCloudNeutron neutron = new JCloudNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName())); ) {
             boolean isPortGroupSupported = SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup());
->>>>>>> handle removed SdnApi methods
+
             org.jclouds.openstack.neutron.v2.domain.Subnet subnet = neutron.getSubnetById(this.subnet.getRegion(),
                     this.subnet.getOpenstackId());
 
             if (subnet == null || this.sgm.getMarkedForDeletion()) {
-                if (isControllerDefined) {
+                if (isControllerDefined && !isPortGroupSupported) {
                     this.tg.addTask(new SecurityGroupMemberAllHooksRemoveTask(this.sgm));
                 }
                 this.tg.appendTask(new SecurityGroupMemberDeleteTask(this.sgm));
             } else {
                 this.tg.addTask(new SecurityGroupMemberSubnetUpdateTask(this.sgm, this.subnet.getName()));
-                if (isControllerDefined) {
+                if (isControllerDefined && !isPortGroupSupported) {
                 	this.tg.appendTask(new SecurityGroupMemberHookCheckTask(this.sgm, this.vdc));
                 }
-            }
-        } finally {
-            if (neutron != null) {
-                neutron.close();
             }
         }
 
