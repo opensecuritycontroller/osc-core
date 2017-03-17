@@ -136,7 +136,7 @@ public class AESCTREncryption {
 
     public interface KeyProvider {
         String getKeyHex() throws EncryptionException;
-        void updateKey(byte[] key) throws EncryptionException;
+        void updateKey(String keyHex) throws EncryptionException;
     }
 
     private class KeyFromKeystoreProvider implements KeyProvider {
@@ -164,7 +164,7 @@ public class AESCTREncryption {
             return hexKey;
         }
 
-        public void updateKey(byte[] key) throws EncryptionException {
+        public void updateKey(String keyHex) throws EncryptionException {
             String aesCtrPassword = loadKeystorePasswordForAESCTRKey();
 
             if(StringUtils.isBlank(aesCtrPassword)) {
@@ -172,7 +172,7 @@ public class AESCTREncryption {
             }
 
             try {
-                KeyStoreProvider.getInstance().putPassword("AesCtrKey", DatatypeConverter.printHexBinary(key), aesCtrPassword);
+                KeyStoreProvider.getInstance().putPassword("AesCtrKey", keyHex, aesCtrPassword);
             } catch (KeyStoreProvider.KeyStoreProviderException e) {
                 throw new EncryptionException("Failed to put AES-CTR key in keystore", e);
             }
@@ -190,16 +190,11 @@ public class AESCTREncryption {
         }
     }
 
-    public byte[] appendAESCTRKey(byte[] bytes) throws EncryptionException {
-        byte[] aesCTRKey = DatatypeConverter.parseHexBinary(keyProvider.getKeyHex());
-
-        ByteBuffer backupFileBytesBuffer = ByteBuffer.allocate(aesCTRKey.length + bytes.length);
-        backupFileBytesBuffer.put(aesCTRKey);
-        backupFileBytesBuffer.put(bytes);
-        return backupFileBytesBuffer.array();
+    public String getAESCTRKeyHex() throws EncryptionException {
+        return keyProvider.getKeyHex();
     }
 
-    public void updateAESCTRKey(byte[] bytes) throws EncryptionException {
-        keyProvider.updateKey(bytes);
+    public void updateAESCTRKey(String keyHex) throws EncryptionException {
+        keyProvider.updateKey(keyHex);
     }
 }

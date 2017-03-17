@@ -16,25 +16,24 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-
+import com.mcafee.vmidc.server.Server;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.Session;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.RestoreUtil;
+import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.util.KeyStoreProvider;
-import org.osc.core.util.encryption.AESCTREncryption;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osc.core.util.ServerUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
-import com.mcafee.vmidc.server.Server;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class RestoreService extends BackupFileService<RestoreRequest, EmptySuccessResponse> {
 
@@ -56,11 +55,13 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     			byte [] decryptedBLOB = decryptBackupFileBytes(FileUtils.readFileToByteArray(encryptedBackupFile), request.getPassword());
     			// parse backup blob
     			BackupData backupData = new BackupData();
-    			backupData.parse(decryptedBLOB);
+    			backupData.deserialize(decryptedBLOB);
     			// write backup zip file with the same name
     			backupFile = backupData.writeBackupZipFile(FilenameUtils.removeExtension(backupFilename) + EXT_ZIP_BACKUP);
     			// update DB password (in keystore) with the one from backup blob
     			updateKeystore(connectionParams, backupData);
+                // reload truststore from backup
+                updateTruststore(backupData);
     		} catch(Exception e) {
     			Server.setInMaintenance(false);
     			throw e;
@@ -137,48 +138,33 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
         return ServerUtil.startServerProcess();
     }
 
-    private class BackupData {
-    	private static final int AES_KEY_SIZE = 16;
-
-    	private byte[] backupZipBytes;
-    	private String dbPassword;
-    	private byte[] aesCTRkey;
-
-    	public void parse(byte[] bytes) throws Exception {
-    		// split encrypted backup bytes into fixed lenght password bytes and zip file bytes
-    		byte[] passwordBytes = new byte[DB_PASSWORD_MAX_LENGTH];
-    		backupZipBytes = new byte[bytes.length - DB_PASSWORD_MAX_LENGTH];
-    		aesCTRkey = new byte[AES_KEY_SIZE];
-
-    		try(ByteArrayInputStream decryptedBytesReader = new ByteArrayInputStream(bytes)) {
-				decryptedBytesReader.read(aesCTRkey);
-				decryptedBytesReader.read(passwordBytes);
-    			decryptedBytesReader.read(backupZipBytes);
-    		}
-
-    		// trim zeroes from password
-    		int endIdx = ArrayUtils.indexOf(passwordBytes, (byte)0);
-    		passwordBytes = ArrayUtils.subarray(passwordBytes, 0, endIdx);
-    		dbPassword = new String(passwordBytes, "UTF-8");
-    	}
-
-		private void updateAESCTRKeyInKeystore() throws EncryptionException {
-			new AESCTREncryption().updateAESCTRKey(aesCTRkey);
-		}
-    	
-    	public String getDBPassword() {
-    		return dbPassword;
-    	}
-    	
-    	public File writeBackupZipFile(String filePath) throws IOException {
-    		File backupZipFile = new File(FilenameUtils.removeExtension(filePath) + EXT_ZIP_BACKUP); 
-    		FileUtils.writeByteArrayToFile(backupZipFile, backupZipBytes);
-    		return backupZipFile;
-    	}
-    }
-
 	private void updateKeystore(DBConnectionParameters connectionParams,BackupData backupData) throws EncryptionException, KeyStoreProvider.KeyStoreProviderException {
-		connectionParams.updatePassword(backupData.getDBPassword());
+		connectionParams.updatePassword(backupData.dbPassword);
 		backupData.updateAESCTRKeyInKeystore();
 	}
+
+    private void updateTruststore(BackupData backupData) throws IOException {
+        // backup current truststore
+        File oldTruststore = new File(X509TrustManagerFactory.TRUSTSTORE_FILE);
+        if (oldTruststore.exists()) {
+            oldTruststore.renameTo(new File(X509TrustManagerFactory.TRUSTSTORE_FILE + ".bak"));
+        }
+
+        try {
+            // try to write new truststore
+            Files.write(Paths.get(X509TrustManagerFactory.TRUSTSTORE_FILE), backupData.truststoreData);
+        } catch (IOException e) {
+            // delete new truststore if exists
+            new File(X509TrustManagerFactory.TRUSTSTORE_FILE).delete();
+            // move old truststore
+            if (oldTruststore.exists()) {
+                oldTruststore.renameTo(new File(X509TrustManagerFactory.TRUSTSTORE_FILE));
+            }
+
+            throw e;
+        }
+
+        // delete truststore backup (exists in case of success)
+        new File(X509TrustManagerFactory.TRUSTSTORE_FILE + ".bak").delete();
+    }
 }
