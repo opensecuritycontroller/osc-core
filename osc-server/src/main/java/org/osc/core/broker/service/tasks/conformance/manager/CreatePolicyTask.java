@@ -47,6 +47,7 @@ public class CreatePolicyTask extends TransactionalTask {
 
         log.debug("Start excecuting CreatePolicyTask Task. Policy '" + this.policy.getName() + "'");
         this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId());
+        this.domain = em.find(Domain.class, this.domain.getId());
 
         Policy newPolicy = new Policy(this.mc, this.domain);
         newPolicy.setMgrPolicyId(this.policy.getMgrPolicyId());
