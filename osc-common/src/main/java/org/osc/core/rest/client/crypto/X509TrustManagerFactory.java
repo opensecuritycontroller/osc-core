@@ -17,19 +17,19 @@
 package org.osc.core.rest.client.crypto;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.KeyStoreProvider;
+import org.osc.core.util.encryption.EncryptionException;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.DatatypeConverter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -41,6 +41,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
+
+import static org.osc.core.util.encryption.AESCTREncryption.PROPS_AESCTR_PASSWORD;
 
 public final class X509TrustManagerFactory implements X509TrustManager {
 
@@ -49,7 +52,10 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     //:TODO combine with vmidckeystore as part of US11664
     // vmidctruststore stores public certificates needed to establish SSL connection
     private static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
-    private static final String TRUSTSTORE_PASSWORD = "abc12345";
+    // key entry to properties file that contains password
+    private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
+    // alias to truststore password entry in PKC#12 password
+    private static final String TRUSTSTORE_PASSWORD_ALIAS = "TRUSTSTORE_PASSWORD";
     // vmidckeystore stores private certificate used by application to enable HTTPS - it's also used to establish connection internally
     private static final String INTERNAL_KEYSTORE_FILE = "vmidcKeyStore.jks";
     private static final String INTERNAL_KEYSTORE_PASSWORD = "abc12345";
@@ -195,7 +201,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
             X509Certificate certificate = (X509Certificate) cf.generateCertificate(inputStream);
             String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
             this.keyStore.setCertificateEntry(newAlias, certificate);
-            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
+            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), getTruststorePassword());
         }
         reloadTrustManager();
     }
@@ -203,7 +209,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
         if (fingerprintNotExist(getSha1Fingerprint(certificate))) {
             this.keyStore.setCertificateEntry(newAlias, certificate);
-            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
+            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), getTruststorePassword());
             reloadTrustManager();
         } else {
             throw new Exception("Given certificate fingerprint already exists in trust store");
@@ -226,14 +232,14 @@ public final class X509TrustManagerFactory implements X509TrustManager {
             X509Certificate certificate = (X509Certificate) this.keyStore.getCertificate(oldAlias);
             removeEntry(oldAlias);
             addEntry(certificate, newAlias);
-            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
+            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), getTruststorePassword());
         }
     }
 
     public void removeEntry(String alias) throws Exception {
         reloadTrustManager();
         this.keyStore.deleteEntry(alias);
-        this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
+        this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), getTruststorePassword());
     }
 
     /**
@@ -264,5 +270,24 @@ public final class X509TrustManagerFactory implements X509TrustManager {
      */
     public interface CertificateInterceptor {
         void intercept(CertificateResolverModel model);
+    }
+
+    private char[] getTruststorePassword() throws Exception {
+        // password to keystore to retrieve truststore manager password
+        String passwordPassword;
+
+        Properties properties = new Properties();
+        try {
+            properties.load(getClass().getResourceAsStream(EncryptionUtil.SECURITY_PROPS_RESOURCE_PATH));
+        } catch (IOException e) {
+            throw new Exception("Failed to load truststore password.", e);
+        }
+        passwordPassword = properties.getProperty(TRUSTSTORE_PASSWORD_ENTRY_KEY);
+
+        if (StringUtils.isBlank(passwordPassword)) {
+            throw new Exception("No truststore password defined in properties.");
+        }
+
+        return KeyStoreProvider.getInstance().getPassword(TRUSTSTORE_PASSWORD_ALIAS,passwordPassword).toCharArray();
     }
 }
