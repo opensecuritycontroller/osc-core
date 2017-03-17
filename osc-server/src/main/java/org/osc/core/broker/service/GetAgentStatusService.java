@@ -90,23 +90,24 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
 
             List<DistributedApplianceInstance> list = entry.getValue();
             if (ManagerApiFactory.providesDeviceStatus(vs)) {
-                ApplianceManagerConnector apmc = vs.getDistributedAppliance().getApplianceManagerConnector();
-                ManagerDeviceMemberApi agentApi =  ManagerApiFactory.createManagerDeviceMemberApi(apmc, vs);
-
                 List<DistributedApplianceInstanceElement> elements = list.stream()
                         .map(DistributedApplianceInstanceElementImpl::new)
                         .collect(Collectors.toList());
 
-                agentStatusResponses.addAll(invokeRequest(elements, agentApi));
+                agentStatusResponses.addAll(invokeRequest(elements, vs));
             } else {
-                agentStatusResponses.addAll(createStatusNotSupportedResponses(list));
+                agentStatusResponses.addAll(createStatusNotSupportedResponses(
+                        list,
+                        vs.getDistributedAppliance().getApplianceManagerConnector()));
             }
         }
 
         return agentStatusResponses;
     }
 
-    private List<AgentStatusResponse> createStatusNotSupportedResponses(List<DistributedApplianceInstance> dais)  {
+    private List<AgentStatusResponse> createStatusNotSupportedResponses(
+            List<DistributedApplianceInstance> dais,
+            ApplianceManagerConnector mc)  {
         List<AgentStatusResponse> responses = new ArrayList<AgentStatusResponse>();
         for (DistributedApplianceInstance dai : dais) {
             AgentStatusResponse status = new AgentStatusResponse();
@@ -115,6 +116,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             status.setApplianceIp(dai.getIpAddress());
             status.setPublicIp(dai.getIpAddress());
             status.setVirtualServer(dai.getHostName());
+            status.setManagerIp(mc.getIpAddress());
             status.setStatusLines(Arrays.asList("The security manager for this appliance instance does not provide appliance status."));
             responses.add(status);
         }
@@ -123,18 +125,25 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
     }
 
     private List<AgentStatusResponse> invokeRequest(List<DistributedApplianceInstanceElement> dais,
-            final ManagerDeviceMemberApi agentApi) {
+            final VirtualSystem vs) throws Exception {
+        ApplianceManagerConnector mc = vs.getDistributedAppliance().getApplianceManagerConnector();
+        ManagerDeviceMemberApi agentApi =  ManagerApiFactory.createManagerDeviceMemberApi(mc, vs);
+
         List<AgentStatusResponse> agentStatusList = new ArrayList<>();
         try {
             List<ManagerDeviceMemberStatusElement> agentElems = agentApi.getFullStatus(dais);
-            handleResponse(this.session, agentStatusList, agentElems);
+            handleResponse(this.session, agentStatusList, agentElems, mc);
         } catch (Exception e) {
             LOG.error("Fail to retrieve agent info", e);
         }
         return agentStatusList;
     }
 
-    private static void handleResponse(Session session, List<AgentStatusResponse> agentStatusList, List<ManagerDeviceMemberStatusElement> agentElems) {
+    private static void handleResponse(
+            Session session,
+            List<AgentStatusResponse> agentStatusList,
+            List<ManagerDeviceMemberStatusElement> agentElems,
+            ApplianceManagerConnector mc) {
         for (ManagerDeviceMemberStatusElement agentElem : agentElems){
             AgentStatusResponse agentStatus = new AgentStatusResponse();
             VersionUtil.Version version = new VersionUtil.Version();
@@ -144,7 +153,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             agentStatus.setApplianceId(agentElem.getDistributedApplianceInstanceElement().getId());
             agentStatus.setApplianceName(agentElem.getDistributedApplianceInstanceElement().getName());
             agentStatus.setApplianceIp(agentElem.getApplianceIp());
-            agentStatus.setManagerIp(agentElem.getManagerIp());
+            agentStatus.setManagerIp(mc.getIpAddress());
             agentStatus.setApplianceGateway(agentElem.getApplianceGateway());
             agentStatus.setDiscovered(agentElem.isDiscovered().booleanValue());
             agentStatus.setInspectionReady(agentElem.isInspectionReady().booleanValue());
@@ -157,7 +166,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             agentStatus.setPublicIp(agentElem.getPublicIp());
             agentStatus.setBrokerIp(agentElem.getBrokerIp());
 
-            DistributedApplianceInstance dai = (DistributedApplianceInstance) session.get(DistributedApplianceInstance.class,
+            DistributedApplianceInstance dai = session.get(DistributedApplianceInstance.class,
                     agentElem.getDistributedApplianceInstanceElement().getId(),
                     new LockOptions(LockMode.PESSIMISTIC_WRITE));
 

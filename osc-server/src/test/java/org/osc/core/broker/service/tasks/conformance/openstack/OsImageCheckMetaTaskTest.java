@@ -33,12 +33,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
+
+import com.google.common.base.Joiner;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
@@ -93,11 +96,11 @@ public class OsImageCheckMetaTaskTest {
     @Parameters()
     public static Collection<Object[]> getTestData() {
         return Arrays.asList(new Object[][] {
-            {VS_WITHOUT_IMAGE_REFERENCE, REGION, null, emptyGraph(VS_WITHOUT_IMAGE_REFERENCE)},
+            {VS_WITHOUT_IMAGE_REFERENCE, REGION, null, uploadImageGraph(VS_WITHOUT_IMAGE_REFERENCE)},
             {VS_WITH_NULL_IMAGE, REGION_ONE, null, deleteImageFromDBAndUploadToGlanceGraph(VS_WITH_NULL_IMAGE)},
             {VS_WITH_INACTIVE_IMAGE_STATUS, REGION_TWO, null, deleteImageFromDBAndUploadToGlanceGraph(VS_WITH_INACTIVE_IMAGE_STATUS)},
             {VS_WITH_UNEXPECTED_IMAGE_NAME, REGION_THREE, null, deleteImageFromGlanceAndUploadToGlanceGraph(VS_WITH_UNEXPECTED_IMAGE_NAME)},
-            {VS_WITH_UNEXPECTED_REGION, UNEXPECTED_REGION, null, updateVSWithImageVersionGraph(VS_WITH_UNEXPECTED_REGION)},
+            {VS_WITH_IMAGE_WITHOUT_VERSION, REGION_FOUR, null, updateVSWithImageVersionGraph(VS_WITH_IMAGE_WITHOUT_VERSION)},
             {VS_WITH_MULTIPLE_IMAGES, REGION_FIVE, null, deleteImagesAndUploadToGlance(VS_WITH_MULTIPLE_IMAGES)}
         });
     }
@@ -112,6 +115,13 @@ public class OsImageCheckMetaTaskTest {
         }
         if(!hasExpectedName) {
             Mockito.doReturn("unexpected name").when(imageMock).getName();
+        } else {
+            ApplianceSoftwareVersion applianceSoftwareVersion = this.vs.getApplianceSoftwareVersion();
+
+            String expectedGlanceImageName = Joiner.on("-").join(applianceSoftwareVersion.getAppliance().getModel(),
+                    applianceSoftwareVersion.getApplianceSoftwareVersion(), this.vs.getName(),
+                    applianceSoftwareVersion.getImageUrl());
+            Mockito.doReturn(expectedGlanceImageName).when(imageMock).getName();
         }
     }
 }
