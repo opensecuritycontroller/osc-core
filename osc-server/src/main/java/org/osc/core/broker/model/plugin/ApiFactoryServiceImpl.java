@@ -85,18 +85,26 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
     private <T> void addApi(ComponentServiceObjects<T> serviceObjs, Map<String, ComponentServiceObjects<T>> refs) {
         Object name = serviceObjs.getServiceReference().getProperty(OSC_PLUGIN_NAME);
         if (name instanceof String) {
-            refs.put((String) name, serviceObjs);
             this.log.info("add plugin: " + name);
+            refs.put((String) name, serviceObjs);
         } else {
             this.log.warn(String.format("add plugin ignored as %s=%s", OSC_PLUGIN_NAME, name));
         }
     }
 
-    private <T> void removeApi(ComponentServiceObjects<T> serviceObjs, Map<String, ComponentServiceObjects<T>> refs) {
+    private <T> void removeApi(ComponentServiceObjects<T> serviceObjs, Map<String, ComponentServiceObjects<T>> refs,
+            Map<String, T> apis) {
         Object name = serviceObjs.getServiceReference().getProperty(OSC_PLUGIN_NAME);
         if (name instanceof String) {
-            refs.remove(name, serviceObjs);
             this.log.info("remove plugin: " + name);
+            refs.remove(name);
+
+            if (apis != null) {
+                T service = apis.remove(name);
+                if (service != null) {
+                    serviceObjs.ungetService(service);
+                }
+            }
         } else {
             this.log.warn(String.format("remove plugin ignored as %s=%s", OSC_PLUGIN_NAME, name));
         }
@@ -108,7 +116,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
     }
 
     void removeApplianceManagerApi(ComponentServiceObjects<ApplianceManagerApi> serviceObjs) {
-        removeApi(serviceObjs, this.managerRefs);
+        removeApi(serviceObjs, this.managerRefs, this.managerApis);
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -117,7 +125,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
     }
 
     void removeSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
-        removeApi(serviceObjs, this.sdnControllerRefs);
+        removeApi(serviceObjs, this.sdnControllerRefs, null);
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -126,7 +134,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
     }
 
     void removeVMwareSdnApi(ComponentServiceObjects<VMwareSdnApi> serviceObjs) {
-        addApi(serviceObjs, this.vmwareSdnRefs);
+        removeApi(serviceObjs, this.vmwareSdnRefs, this.vmwareSdnApis);
     }
 
     // Manager Types ///////////////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +212,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         return this.sdnControllerRefs.get(name).getServiceReference().getProperty(propertyName);
     }
 
-
     /**
      * Create a proxy for an <code>AutoCloseable</code> prototype service, that automatically calls
      * {@code ServiceObjects#ungetService(Object)} when {@code AutoCloseable#close()} is called.
@@ -250,8 +257,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
             throw new IllegalArgumentException("Plugin tracker customizer may not be null");
         }
 
-        PluginTracker<T> tracker = new PluginTracker<>(this.context, pluginClass, pluginType, requiredProperties, this.installableManager,
-                customizer);
+        PluginTracker<T> tracker = new PluginTracker<>(this.context, pluginClass, pluginType, requiredProperties,
+                this.installableManager, customizer);
         synchronized (this.pluginTrackers) {
             this.pluginTrackers.add(tracker);
         }
