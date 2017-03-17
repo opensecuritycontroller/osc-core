@@ -283,16 +283,13 @@ public class PKIUtil {
     }
 
     private static Certificate getCertificate(byte[] keyStoreBytes) throws Exception {
-
-        KeyStore keystore = KeyStore.getInstance("JKS");
-        keystore.load(new ByteArrayInputStream(keyStoreBytes), keyPass.toCharArray());
-        Key key = keystore.getKey(alias, keyPass.toCharArray());
-
-        if (key instanceof PrivateKey) {
+        try {
+            KeyStore keystore = KeyStore.getInstance("JKS");
+            keystore.load(new ByteArrayInputStream(keyStoreBytes), keyPass.toCharArray());
             return keystore.getCertificate(alias);
+        }catch (Exception e) {
+            throw new Exception("Failed to get certificate from key store");
         }
-
-        throw new Exception("Failed to get certificate from key store");
     }
 
     public static PublicKey getPubKey(byte[] keyStoreBytes) throws Exception {
