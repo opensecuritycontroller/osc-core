@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Order;
@@ -200,9 +201,11 @@ public class OSCEntityManager<T extends IscEntity> {
                 cb.equal(cb.lower(root.get(entityClassFieldName)),
                         cb.lower(cb.literal(fieldValue))));
 
-        List<T> list = this.em.createQuery(query).setMaxResults(1).getResultList();
-
-        return list.isEmpty() ? null : list.get(0);
+        try {
+            return this.em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
     public List<T> listByFieldName(String entityClassFieldName, Object fieldValue) {

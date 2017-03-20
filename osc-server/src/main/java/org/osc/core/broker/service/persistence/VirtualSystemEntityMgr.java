@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -209,7 +210,11 @@ public class VirtualSystemEntityMgr {
             .where(cb.equal(root.join("securityGroupInterfaces").get("tag"), serviceProfileId),
                    cb.equal(root.join("virtualizationConnector").get("controllerIpAddress"), nsxIpAddress));
 
-        return em.createQuery(query).getSingleResult();
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
     /**

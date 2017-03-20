@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -60,13 +61,11 @@ public class DistributedApplianceInstanceEntityMgr {
                 cb.equal(from.get("nsxAgentId"), nsxAgentId),
                 cb.equal(from.join("virtualSystem").join("virtualizationConnector").get("controllerIpAddress"), nsxIpAddress));
 
-        List<DistributedApplianceInstance> list = em.createQuery(query).setMaxResults(1).getResultList();
-
-        if (list == null || list.size() == 0) {
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
             return null;
         }
-
-        return list.get(0);
     }
 
     public static DistributedApplianceInstance findByOsHostNameAndOsTenantId(EntityManager em, String osHostName,
@@ -82,13 +81,11 @@ public class DistributedApplianceInstanceEntityMgr {
                 cb.equal(from.get("osHostName"), osHostName),
                 cb.equal(from.get("osTenantId"), osTenantId));
 
-        List<DistributedApplianceInstance> list = em.createQuery(query).setMaxResults(1).getResultList();
-
-        if (list == null || list.size() == 0) {
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
             return null;
         }
-
-        return list.get(0);
     }
 
     public static List<DistributedApplianceInstance> listByVsId(EntityManager em, Long vsId) {
@@ -233,13 +230,11 @@ public class DistributedApplianceInstanceEntityMgr {
         query = query.select(root).where(
                 cb.equal(root.get("ipAddress"), ipAddress));
 
-        List<DistributedApplianceInstance> list = em.createQuery(query).setMaxResults(1).getResultList();
-
-        if (list == null || list.size() == 0) {
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
             return null;
         }
-
-        return list.get(0);
     }
 
     public static List<DistributedApplianceInstance> listByDsIdAndAvailabilityZone(EntityManager em, Long dsId,
@@ -333,7 +328,11 @@ public class DistributedApplianceInstanceEntityMgr {
                 .where(cb.equal(root.join("virtualSystem").join("protectedPorts")
                         .get("id"), port.getId()));
 
-        return em.createQuery(query).getSingleResult();
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
 }

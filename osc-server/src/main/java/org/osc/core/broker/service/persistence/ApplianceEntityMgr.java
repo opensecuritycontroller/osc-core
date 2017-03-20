@@ -16,9 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import java.util.List;
-
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -77,8 +76,10 @@ public class ApplianceEntityMgr {
         query = query.select(root)
             .where(cb.equal(root.get("model"), model));
 
-
-        List<Appliance> list = em.createQuery(query).setMaxResults(1).getResultList();
-        return list.isEmpty() ? null : list.get(0);
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 }

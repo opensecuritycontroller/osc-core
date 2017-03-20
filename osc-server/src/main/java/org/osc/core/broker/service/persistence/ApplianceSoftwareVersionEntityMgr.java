@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -33,7 +34,6 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
-//import org.osc.sdk.controller.TagEncapsulationType;
 
 public class ApplianceSoftwareVersionEntityMgr {
 
@@ -101,9 +101,11 @@ public class ApplianceSoftwareVersionEntityMgr {
                        cb.equal(cb.upper(root.get("virtualizationSoftwareVersion")), vv.toUpperCase())
                    );
 
-        List<ApplianceSoftwareVersion> item = em.createQuery(query).setMaxResults(1).getResultList();
-
-        return item.isEmpty() ? null : item.get(0);
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
     public static ApplianceSoftwareVersion findByImageUrl(EntityManager em, String imageUrl) {
@@ -117,9 +119,11 @@ public class ApplianceSoftwareVersionEntityMgr {
         query = query.select(root)
                 .where(cb.equal(root.get("imageUrl"), imageUrl));
 
-        List<ApplianceSoftwareVersion> item = em.createQuery(query).setMaxResults(1).getResultList();
-
-        return item.isEmpty() ? null : item.get(0);
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
     public static boolean isExisting(EntityManager em, Long applianceId, String applianceSoftwareVersion,

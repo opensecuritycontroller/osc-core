@@ -19,6 +19,7 @@ package org.osc.core.broker.service.persistence;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -47,7 +48,11 @@ public class VMPortEntityManager {
         query = query.select(root)
             .where(cb.equal(root.get("openstackId"), id));
 
-        return em.createQuery(query).getSingleResult();
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
     /**

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -125,8 +126,11 @@ public class DeploymentSpecEntityMgr {
                        cb.equal(root.get("region"), region),
                        cb.equal(root.get("virtualSystem"), vs));
 
-        List<DeploymentSpec> list = em.createQuery(query).setMaxResults(1).getResultList();
-        return list.isEmpty() ? null : list.get(0);
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
 	public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemTenantAndRegion(EntityManager em,

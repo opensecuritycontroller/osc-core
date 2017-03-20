@@ -19,6 +19,7 @@ package org.osc.core.broker.service.persistence;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -73,7 +74,11 @@ public class SecurityGroupInterfaceEntityMgr {
                 .where(cb.equal(root.join("securityGroups").get("id"), sg.getId()),
                        cb.equal(root.get("virtualSystem"), vs));
 
-        return em.createQuery(query).getSingleResult();
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
     public static SecurityGroupInterface findSecurityGroupInterfaceByVsAndTag(EntityManager em, VirtualSystem vs,

@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.persistence;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -36,7 +37,11 @@ public class SubnetEntityManager {
         query = query.select(root)
             .where(cb.equal(root.get("openstackId"), id));
 
-        return em.createQuery(query).getSingleResult();
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
     public static Subnet findById(EntityManager em, Long id) {

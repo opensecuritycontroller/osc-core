@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -166,7 +167,11 @@ public class SecurityGroupEntityMgr {
                        cb.equal(root.get("mgrId"), mgrId))
                 .orderBy(cb.asc(root.get("name")));
 
-        return em.createQuery(query).getSingleResult();
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
     public static List<SecurityGroup> listSecurityGroupsByVsAndNoBindings(EntityManager em, VirtualSystem vs) {
