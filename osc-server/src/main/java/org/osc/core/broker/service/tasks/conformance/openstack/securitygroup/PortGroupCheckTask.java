@@ -19,7 +19,6 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.Session;
@@ -27,8 +26,6 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
@@ -49,13 +46,13 @@ public class PortGroupCheckTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(Session session) throws Exception {
-        this.sg = (SecurityGroup) session.get(SecurityGroup.class, this.sg.getId());
+        this.sg = session.get(SecurityGroup.class, this.sg.getId());
 
         Set<SecurityGroupMember> members = this.sg.getSecurityGroupMembers();
         List<NetworkElement> protectedPorts = new ArrayList<>();
 
         for (SecurityGroupMember sgm : members) {
-            protectedPorts.addAll(getPorts(sgm));
+            protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
         }
         String domainId = OpenstackUtil.extractDomainId(this.sg.getTenantId(), this.sg.getTenantName(),
                 this.sg.getVirtualizationConnector(), protectedPorts);
@@ -95,28 +92,6 @@ public class PortGroupCheckTask extends TransactionalTask {
                 }
             }
         }
-    }
-
-    private List<NetworkElement> getPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
-
-        Set<VMPort> ports;
-        switch (sgm.getType()) {
-        case VM:
-            ports = sgm.getVm().getPorts();
-            break;
-        case NETWORK:
-            ports = sgm.getNetwork().getPorts();
-            break;
-        case SUBNET:
-            ports = sgm.getSubnet().getPorts();
-            break;
-        default:
-            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
-        }
-
-        return ports.stream()
-                .map(NetworkElementImpl::new)
-                .collect(Collectors.toList());
     }
 
     @Override
