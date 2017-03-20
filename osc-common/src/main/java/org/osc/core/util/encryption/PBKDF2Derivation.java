@@ -38,7 +38,6 @@ public class PBKDF2Derivation {
     private static final int ITERATIONS_INDEX = 0;
     private static final int SALT_INDEX = 1;
     private static final int PBKDF2_INDEX = 2;
-    private int pbkdf2Iterations;
 
     public String derive(String plainText) throws EncryptionException {
         if (StringUtils.isBlank(plainText)) {
