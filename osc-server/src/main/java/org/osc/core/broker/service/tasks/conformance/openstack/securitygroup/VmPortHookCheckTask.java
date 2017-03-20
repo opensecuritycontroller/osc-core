@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -44,6 +45,7 @@ import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.element.InspectionHookElement;
+import org.osc.sdk.controller.element.NetworkElement;
 
 /**
  * This task just adds/update the hooks. If the SGI is marked for deletion, this task does not do anything.
@@ -73,6 +75,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
+
         this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
 
         this.securityGroupInterface = em.find(SecurityGroupInterface.class,
@@ -84,6 +87,18 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
         DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
                 .findByVirtualSystemAndPort(em, this.vs, this.vmPort);
 
+        List<NetworkElement> sgmPorts = OpenstackUtil.getPorts(this.sgm);
+        String sgmDomainId = OpenstackUtil.extractDomainId(
+                this.sgm.getSecurityGroup().getTenantId(),
+                this.sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminTenantName(),
+                this.sgm.getSecurityGroup().getVirtualizationConnector(),
+                sgmPorts);
+
+        if (StringUtils.isBlank(sgmDomainId)) {
+            throw new VmidcBrokerValidationException(String.format("No router/domain was found attached to any of the networks of "
+                    + "the member %s of the security group %s.", this.sgm.getMemberName(), this.sgm.getSecurityGroup().getName()));
+        }
+
         if (!this.securityGroupInterface.getMarkedForDeletion()) {
             if (assignedRedirectedDai == null) {
                 this.log.info("No assigned DAI found for port " + this.vmPort);
@@ -94,16 +109,28 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                         && this.vmPort.getVm() == null) {
 
                     if (SdnControllerApiFactory.supportsOffboxRedirection(this.sgm.getSecurityGroup())) {
-                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(em, this.sgm.getSubnet().getRegion(),
-                                tenantId, null, this.vs);
+                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(
+                                em,
+                                this.vs,
+                                this.sgm.getSecurityGroup(),
+                                tenantId,
+                                getMemberRegion(this.sgm),
+                                sgmDomainId,
+                                null);
                     } else {
                         throw new VmidcBrokerValidationException(
                                 "Protecting External Traffic feature is not supported by your SDN controller. Please make sure your SDN controller supports offboxing");
                     }
 
                 } else {
-                    assignedRedirectedDai = OpenstackUtil.findDeployedDAI(em, getMemberRegion(this.sgm),
-                            tenantId, this.vmPort.getVm().getHost(), this.vs);
+                    assignedRedirectedDai = OpenstackUtil.findDeployedDAI(
+                            em,
+                            this.vs,
+                            this.sgm.getSecurityGroup(),
+                            tenantId,
+                            getMemberRegion(this.sgm),
+                            sgmDomainId,
+                            this.vmPort.getVm().getHost());
                 }
 
                 if (assignedRedirectedDai != null) {
