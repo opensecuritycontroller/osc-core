@@ -35,9 +35,12 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.util.Base64;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 
@@ -116,51 +119,60 @@ public class PKIUtil {
         Path file = Paths.get(parentFolderName + File.separator + fileName);
         Path backup = Paths.get(parentFolderName + File.separator + fileName + ".org");
 
-        log.info("Start writing input stream to file: " + file.getFileName());
+        log.info("Start writing input stream to file: " + file);
 
-        try {
+        if(StringUtils.equals(String.valueOf(file.getFileName()),fileName)) {
             try {
-
                 if (Files.exists(file)) {
                     log.info("Renaming/backup existing file");
                     Files.move(file, backup, StandardCopyOption.REPLACE_EXISTING);
                 }
-                Files.copy(is,file);
-                log.info("Successfully wrote input stream to file '" + file.getFileName() + "'");
-            } catch (Exception ex) {
-                log.error("failed to write input stream to file", ex);
-                // undo when fails
-                Files.deleteIfExists(file);
-                Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                try {
+                    Files.copy(is, file);
+                    log.info("Successfully wrote input stream to file '" + file + "'");
+                } catch (Exception ex) {
+                    log.error("Failed to write input stream to file", ex);
+                    // undo when fails
+                    Files.deleteIfExists(file);
+                    Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                }
+                Files.deleteIfExists(backup);
+            } catch (Exception e) {
+                log.error("Failed to write input stream to file" + file, e);
             }
-        } catch (IOException e) {
-            log.error("Failed to delete file" + file.getFileName(), e);
+        } else {
+            log.warn("Filename: " + fileName + " is not valid");
         }
     }
 
     public static void writeBytesToFile(byte[] bytes, String parentFolderName, String fileName) {
 
-        log.info("Writing " + bytes.length + " bytes to file " + fileName);
-
         Path file = Paths.get(parentFolderName + File.separator + fileName);
         Path backup = Paths.get(parentFolderName + File.separator + fileName + ".org");
 
-        try {
+        log.info("Start writing " + bytes.length + " bytes to file " + file);
+
+        if(StringUtils.equals(String.valueOf(file.getFileName()),fileName)) {
             try {
                 if (Files.exists(file)) {
                     log.info("Renaming/backup existing file");
                     Files.move(file, backup, StandardCopyOption.REPLACE_EXISTING);
                 }
-                Files.write(file,bytes);
-                log.info("Successfully wrote " + bytes.length + " bytes to file '" + file.getFileName() + "'");
-            } catch (Exception ex) {
-                log.error("failed to convert bytes to file", ex);
-                // undo when fails
-                Files.deleteIfExists(file);
-                Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                try {
+                    Files.write(file, bytes);
+                    log.info("Successfully wrote " + bytes.length + " bytes to file '" + file + "'");
+                } catch (Exception ex) {
+                    log.error("Failed to convert bytes to file", ex);
+                    // undo when fails
+                    Files.deleteIfExists(file);
+                    Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                }
+                Files.deleteIfExists(backup);
+            } catch (Exception e) {
+                log.error("Failed to write bytes to file" + file, e);
             }
-        } catch (IOException e) {
-            log.error("Failed to delete file" + file.getFileName(), e);
+        } else {
+            log.warn("Filename: " + fileName + " is not valid");
         }
     }
 
@@ -280,5 +292,4 @@ public class PKIUtil {
 
         throw new Exception("Private key not found in key store.");
     }
-
 }
