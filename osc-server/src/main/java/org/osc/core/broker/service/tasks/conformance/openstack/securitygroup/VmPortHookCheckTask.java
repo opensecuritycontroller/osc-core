@@ -73,11 +73,12 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
     @Override
     public void executeTransaction(Session session) throws Exception {
         this.tg = new TaskGraph();
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
 
-        this.securityGroupInterface = (SecurityGroupInterface) session.get(SecurityGroupInterface.class,
+        this.sgm = session.get(SecurityGroupMember.class, this.sgm.getId());
+
+        this.securityGroupInterface = session.get(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
-        this.vmPort = (VMPort) session.get(VMPort.class, this.vmPort.getId());
+        this.vmPort = session.get(VMPort.class, this.vmPort.getId());
 
         this.vs = this.securityGroupInterface.getVirtualSystem();
 
@@ -94,7 +95,8 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                         && this.vmPort.getVm() == null) {
 
                     if (SdnControllerApiFactory.supportsOffboxRedirection(this.sgm.getSecurityGroup())) {
-                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, this.sgm.getSubnet().getRegion(),
+
+                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, getMemberRegion(this.sgm),
                                 tenantId, null, this.vs);
                     } else {
                         throw new VmidcBrokerValidationException(
