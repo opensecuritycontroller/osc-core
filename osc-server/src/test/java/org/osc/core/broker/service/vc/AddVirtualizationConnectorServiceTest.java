@@ -17,12 +17,7 @@
 package org.osc.core.broker.service.vc;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST;
 import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.VMWARE_REQUEST;
 
@@ -190,24 +185,4 @@ public class AddVirtualizationConnectorServiceTest {
         Assert.assertNotNull("Response shouldn't be null", response);
         Assert.assertEquals("Both VC id's should be equal", id, response.getId());
     }
-//
-//    private class VirtualizationConnectorMatcher extends ArgumentMatcher<Object> {
-//
-//        private Long id;
-//
-//        public VirtualizationConnectorMatcher(Long id) {
-//            this.id = id;
-//        }
-//
-//        @Override
-//        public boolean matches(Object object) {
-//            if (object == null || !(object instanceof VirtualizationConnector)) {
-//                return false;
-//            }
-//
-//            VirtualizationConnector vc = (VirtualizationConnector) object;
-//            return this.id != vc.getId();
-//        }
-//    }
-
 }
