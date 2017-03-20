@@ -75,7 +75,7 @@ public class SecurityGroupEntityMgr {
         CriteriaQuery<String> query = cb.createQuery(String.class);
 
         Root<DistributedAppliance> root = query.from(DistributedAppliance.class);
-        Join<DistributedAppliance, SecurityGroupInterface> sgi = root.join("securityGroupInterfaces");
+        Join<DistributedAppliance, SecurityGroupInterface> sgi = root.join("virtualSystems").join("securityGroupInterfaces");
         Join<SecurityGroupInterface, SecurityGroup> sgEntity = sgi.join("securityGroups");
 
         query = query.select(sgEntity.get("name"))
