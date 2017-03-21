@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.Policy;
@@ -44,9 +45,9 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
     private SecurityGroup sg;
 
     @Override
-    public ListResponse<VirtualSystemPolicyBindingDto> exec(BaseIdRequest request, Session session) throws Exception {
+    public ListResponse<VirtualSystemPolicyBindingDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
 
-        validate(session, request);
+        validate(em, request);
 
         // to do mapping
         List<VirtualSystemPolicyBindingDto> dtoList = new ArrayList<>();
@@ -114,10 +115,10 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
         return new ListResponse<>(dtoList);
     }
 
-    protected void validate(Session session, BaseIdRequest request) throws Exception {
+    protected void validate(EntityManager em, BaseIdRequest request) throws Exception {
         BaseIdRequest.checkForNullId(request);
 
-        this.sg = SecurityGroupEntityMgr.findById(session, request.getId());
+        this.sg = SecurityGroupEntityMgr.findById(em, request.getId());
 
         if (this.sg == null) {
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");

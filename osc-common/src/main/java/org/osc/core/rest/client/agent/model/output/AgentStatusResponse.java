@@ -30,8 +30,6 @@ import org.osc.core.util.VersionUtil.Version;
 public class AgentStatusResponse {
     private Version version;
     private Date currentServerTime;
-    private Long cpaUptime;
-    private String cpaPid;
 
     private String applianceIp;
     private String applianceGateway;
@@ -96,28 +94,12 @@ public class AgentStatusResponse {
         this.applianceName = applianceName;
     }
 
-    public String getCpaPid() {
-        return this.cpaPid;
-    }
-
-    public void setCpaPid(String cpaPid) {
-        this.cpaPid = cpaPid;
-    }
-
     public String getBrokerIp() {
         return this.brokerIp;
     }
 
     public void setBrokerIp(String brokerIp) {
         this.brokerIp = brokerIp;
-    }
-
-    public Long getCpaUptime() {
-        return this.cpaUptime;
-    }
-
-    public void setCpaUptime(Long cpaUptime) {
-        this.cpaUptime = cpaUptime;
     }
 
     public AgentDpaInfo getAgentDpaInfo() {
@@ -187,9 +169,9 @@ public class AgentStatusResponse {
     @Override
     public String toString() {
         return "AgentStatusResponse [version=" + this.version + ", currentServerTime=" + this.currentServerTime
-                + ", cpaUptime=" + this.cpaUptime + ", cpaPid=" + this.cpaPid + ", applianceIp=" + this.applianceIp
-                + ", applianceName=" + this.applianceName + ", virtualServerName=" + this.virtualServerName
-                + ", brokerIp=" + this.brokerIp + ", managerIp=" + this.managerIp + ", discovered=" + this.discovered
+                + ", applianceIp=" + this.applianceIp + ", applianceName=" + this.applianceName
+                + ", virtualServerName=" + this.virtualServerName + ", brokerIp=" + this.brokerIp
+                + ", managerIp=" + this.managerIp + ", discovered=" + this.discovered
                 + ", inspectionReady=" + this.inspectionReady + ", mgmtGateway=" + this.applianceGateway
                 + ", mgmtSubNetMask=" + this.applianceSubnetMask + ", statusLines=" + this.statusLines
                 + ", agentDpaInfo=" + this.agentDpaInfo + "]";

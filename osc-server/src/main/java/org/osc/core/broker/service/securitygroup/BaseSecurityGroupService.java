@@ -21,9 +21,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
@@ -41,8 +42,8 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.persistence.NetworkEntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SubnetEntityManager;
 import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
@@ -62,7 +63,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
     /**
      * Validates Virtualization connector and tenant exists
      */
-    protected void validateAndLoad(Session session, SecurityGroupDto dto) throws Exception {
+    protected void validateAndLoad(EntityManager em, SecurityGroupDto dto) throws Exception {
         SecurityGroupDto.checkForNullFields(dto);
         SecurityGroupDto.checkFieldLength(dto);
 
@@ -70,7 +71,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
             throw new VmidcBrokerValidationException("Virtualization Connector Id needs to be specified");
         }
 
-        this.vc = VirtualizationConnectorEntityMgr.findById(session, dto.getParentId());
+        this.vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
 
         if (this.vc == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector with Id: " + dto.getParentId()
@@ -125,18 +126,18 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
         }
     }
 
-    public static void addSecurityGroupMember(Session session, SecurityGroup securityGroup,
+    public static void addSecurityGroupMember(EntityManager em, SecurityGroup securityGroup,
             SecurityGroupMemberItemDto securityGroupMemberDto) throws VmidcBrokerValidationException {
         String openstackId = securityGroupMemberDto.getOpenstackId();
         SecurityGroupMemberType type = securityGroupMemberDto.getType();
         OsProtectionEntity entity = null;
 
         if (type == SecurityGroupMemberType.VM) {
-            entity = VMEntityManager.findByOpenstackId(session, openstackId);
+            entity = VMEntityManager.findByOpenstackId(em, openstackId);
         } else if (type == SecurityGroupMemberType.NETWORK) {
-            entity = NetworkEntityManager.findByOpenstackId(session, openstackId);
+            entity = NetworkEntityManager.findByOpenstackId(em, openstackId);
         } else if (type == SecurityGroupMemberType.SUBNET) {
-            entity = SubnetEntityManager.findByOpenstackId(session, openstackId);
+            entity = SubnetEntityManager.findByOpenstackId(em, openstackId);
         } else {
             throw new VmidcBrokerValidationException(String.format("Invalid Security Group Member Type ('%s')", type));
         }
@@ -158,9 +159,9 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                 throw new VmidcBrokerValidationException(String.format("Invalid Security Group Member Type ('%s')",
                         type));
             }
-            EntityManager.create(session, entity);
+            OSCEntityManager.create(em, entity);
             SecurityGroupMember securityGroupMember = new SecurityGroupMember(securityGroup, entity);
-            EntityManager.create(session, securityGroupMember);
+            OSCEntityManager.create(em, securityGroupMember);
         } else {
             log.info(type.toString() + " Already exists in DB: " + securityGroupMemberDto.getName());
 
@@ -176,7 +177,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                         if (sgm.getMarkedForDeletion()) {
                             log.info(type.toString() + ": " + securityGroupMemberDto.getName()
                                     + " Marked as deleted, marking undeleted.");
-                            EntityManager.unMarkDeleted(session, sgm);
+                            OSCEntityManager.unMarkDeleted(em, sgm);
                         }
                     } else {
                         // entity is part of another security group. Check if its an active member
@@ -191,7 +192,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                         // If entity is not already a member but its an 'in-active'(deleted) member in another security group
                         // create a SGM for it.
                         SecurityGroupMember securityGroupMember = new SecurityGroupMember(securityGroup, entity);
-                        EntityManager.create(session, securityGroupMember);
+                        OSCEntityManager.create(em, securityGroupMember);
                     }
                 }
 
@@ -199,7 +200,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                 if (entity.getType().equals(SecurityGroupMemberType.SUBNET)) {
                     // Update Protect External flag for every SG update
                     ((Subnet) entity).setProtectExternal(securityGroupMemberDto.isProtectExternal());
-                    EntityManager.update(session, entity);
+                    OSCEntityManager.update(em, entity);
                 }
 
             } else {
@@ -225,7 +226,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                 // If entity is indirect member of this and ONLY this security group, create a member for it.
                 if (securityGroups.size() == 1 && securityGroups.contains(securityGroup)) {
                     SecurityGroupMember securityGroupMember = new SecurityGroupMember(securityGroup, entity);
-                    EntityManager.create(session, securityGroupMember);
+                    OSCEntityManager.create(em, securityGroupMember);
                 } else {
                     StringBuilder securityGroupNamesBuilder = new StringBuilder();
                     for (SecurityGroup sg : securityGroups) {

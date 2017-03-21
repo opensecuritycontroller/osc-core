@@ -18,10 +18,11 @@ package org.osc.core.broker.service.persistence;
 
 import java.util.List;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
@@ -63,13 +64,21 @@ public class SecurityGroupMemberEntityMgr {
 
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<SecurityGroupMember> listActiveSecurityGroupMembersBySecurityGroup(Session session,
+    public static List<SecurityGroupMember> listActiveSecurityGroupMembersBySecurityGroup(EntityManager em,
             SecurityGroup sg) {
-        Criteria criteria = session.createCriteria(SecurityGroupMember.class)
-                .add(Restrictions.eq("markedForDeletion", false)).add(Restrictions.eq("securityGroup", sg))
-                .addOrder(Order.asc("type")).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroupMember> query = cb.createQuery(SecurityGroupMember.class);
+
+        Root<SecurityGroupMember> root = query.from(SecurityGroupMember.class);
+
+        query = query.select(root).distinct(true)
+            .where(cb.equal(root.get("markedForDeletion"), false),
+                   cb.equal(root.get("securityGroup"), sg))
+            .orderBy(cb.asc(root.get("type")));
+
+
+        return em.createQuery(query).getResultList();
     }
 
 }

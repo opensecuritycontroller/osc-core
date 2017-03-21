@@ -18,9 +18,10 @@ package org.osc.core.server.scheduler;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
@@ -28,7 +29,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.TransactionalRunner;
@@ -48,11 +49,12 @@ public class SyncSecurityGroupJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
-        Session session = null;
+        EntityManager em = null;
         try {
-            session = HibernateUtil.getSessionFactory().openSession();
-            EntityManager<SecurityGroup> emgr = new EntityManager<SecurityGroup>(SecurityGroup.class, session);
-            Transaction tx = session.beginTransaction();
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            OSCEntityManager<SecurityGroup> emgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
             List<SecurityGroup> sgs = emgr.listAll();
             tx.commit();
 
@@ -67,12 +69,12 @@ public class SyncSecurityGroupJob implements Job {
                             .exec(new TransactionalAction<Object, SecurityGroup>() {
 
                             @Override
-                            public Object run(Session session, SecurityGroup sg) {
+                            public Object run(EntityManager em, SecurityGroup sg) {
 
                                         SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
 
                                 try {
-                                    sg = (SecurityGroup) session.get(SecurityGroup.class, sg.getId());
+                                    sg = em.find(SecurityGroup.class, sg.getId());
                                     ConformService.startSecurityGroupConformanceJob(sg);
                                 } catch (Exception ex) {
                                     AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE,
@@ -96,8 +98,8 @@ public class SyncSecurityGroupJob implements Job {
 
         } finally {
 
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }

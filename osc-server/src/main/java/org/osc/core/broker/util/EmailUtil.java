@@ -36,9 +36,9 @@ import org.osc.core.util.ServerUtil;
 public class EmailUtil {
 
     /**
-     * 
+     *
      * This method will send an Email to receiver with Generated Alert Information
-     * 
+     *
      * @param smtpServer
      *            Mail server IP/FQDN
      * @param port
@@ -67,9 +67,9 @@ public class EmailUtil {
     }
 
     /**
-     * 
+     *
      * This method will create a new Mail Session
-     * 
+     *
      * @param smtpServer
      *            Mail server IP/FQDN
      * @param port
@@ -143,9 +143,9 @@ public class EmailUtil {
     }
 
     /**
-     * 
+     *
      * This method will send a test Email to validate email settings configured by user
-     * 
+     *
      * @param smtpServer
      *            Mail server IP/FQDN
      * @param port

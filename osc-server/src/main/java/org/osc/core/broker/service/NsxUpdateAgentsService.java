@@ -21,8 +21,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -37,7 +38,7 @@ import org.osc.core.broker.rest.server.api.proprietary.NsxApis.UpdatedAgents;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.NsxUpdateAgentsRequest;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
@@ -54,9 +55,9 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
     private static final Logger LOG = Logger.getLogger(NsxUpdateAgentsService.class);
 
     @Override
-    public NsxUpdateAgentsResponse exec(NsxUpdateAgentsRequest request, Session session) throws Exception {
+    public NsxUpdateAgentsResponse exec(NsxUpdateAgentsRequest request, EntityManager em) throws Exception {
 
-        validate(session, request);
+        validate(em, request);
 
         UpdatedAgents uas = new UpdatedAgents();
         List<UpdatedAgent> ual = new ArrayList<UpdatedAgent>();
@@ -72,21 +73,21 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
             ua.responseString = new Date().toString();
             ual.add(ua);
 
-            DistributedApplianceInstance dai = DistributedApplianceInstanceEntityMgr.findByNsxAgentIdAndNsxIp(session,
+            DistributedApplianceInstance dai = DistributedApplianceInstanceEntityMgr.findByNsxAgentIdAndNsxIp(em,
                     agent.agentId, request.nsxIpAddress);
 
             if (dai == null) {
                 String host = NetworkUtil.resolveIpToName(request.nsxIpAddress);
                 if (host != null) {
-                    dai = DistributedApplianceInstanceEntityMgr.findByNsxAgentIdAndNsxIp(session, agent.agentId, host);
+                    dai = DistributedApplianceInstanceEntityMgr.findByNsxAgentIdAndNsxIp(em, agent.agentId, host);
                 }
             }
 
             if (dai != null) {
-                updateNsxAgentInfo(session, dai, agent);
+                updateNsxAgentInfo(em, dai, agent);
             } else {
                 LOG.info("Unregistered deployed appliance detected (" + agent + "). Creating a new DAI.");
-                createNewDAI(session, agent);
+                createNewDAI(em, agent);
             }
         }
 
@@ -98,19 +99,19 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         return response;
     }
 
-    public static void updateNsxAgentInfo(Session session, DistributedApplianceInstance dai, String status) {
-        updateNsxAgentInfo(session, dai, null, status);
+    public static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, String status) {
+        updateNsxAgentInfo(em, dai, null, status);
     }
 
-    public static void updateNsxAgentInfo(Session session, DistributedApplianceInstance dai, AgentElement agent) {
-        updateNsxAgentInfo(session, dai, agent, null);
+    public static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent) {
+        updateNsxAgentInfo(em, dai, agent, null);
     }
 
-    public static void updateNsxAgentInfo(Session session, DistributedApplianceInstance dai) {
-        updateNsxAgentInfo(session, dai, null, null);
+    public static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai) {
+        updateNsxAgentInfo(em, dai, null, null);
     }
 
-    private static void updateNsxAgentInfo(Session session, DistributedApplianceInstance dai, AgentElement agent, String status) {
+    private static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent, String status) {
         // Locate and update DAI's NSX agent id, if not already set.
         if (dai.getNsxAgentId() == null) {
 
@@ -127,7 +128,7 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
                 dai.setMgmtGateway(agent.getGateway());
                 dai.setMgmtSubnetPrefixLength(agent.getSubnetPrefixLength());
                 LOG.info("Associate DAI " + dai.getName() + " with NSX agent " + dai.getNsxAgentId());
-                EntityManager.update(session, dai);
+                OSCEntityManager.update(em, dai);
             }
         }
 
@@ -194,7 +195,7 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         return null;
     }
 
-    private void validate(Session session, NsxUpdateAgentsRequest request) throws Exception {
+    private void validate(EntityManager em, NsxUpdateAgentsRequest request) throws Exception {
         if (request.fabricAgents == null) {
             throw new VmidcBrokerValidationException("Missing nsx agent list.");
         }
@@ -203,8 +204,8 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
             throw new VmidcBrokerValidationException("Missing nsx IP address.");
         }
 
-        EntityManager<VirtualizationConnector> emgr = new EntityManager<VirtualizationConnector>(
-                VirtualizationConnector.class, session);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
+                VirtualizationConnector.class, em);
         VirtualizationConnector vc = emgr.findByFieldName("controllerIpAddress", request.nsxIpAddress);
 
         if (vc == null) {
@@ -218,8 +219,8 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         }
     }
 
-    private void createNewDAI(Session session, Agent agent) throws Exception {
-        VirtualSystem vs = VirtualSystemEntityMgr.findByNsxServiceId(session,  agent.serviceId);
+    private void createNewDAI(EntityManager em, Agent agent) throws Exception {
+        VirtualSystem vs = VirtualSystemEntityMgr.findByNsxServiceId(em,  agent.serviceId);
 
         // If we can't find the VS, that means this is a zombie VS call.
         if (vs == null) {
@@ -243,36 +244,36 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
 
         dai.setName("Temporary" + UUID.randomUUID().toString());
 
-        dai = EntityManager.create(session, dai);
+        dai = OSCEntityManager.create(em, dai);
         LOG.info("Created new DAI " + dai);
 
         // Generate a unique, intuitive and immutable name
         String applianceName = vs.getName() + "-" + dai.getId().toString();
         dai.setName(applianceName);
 
-        EntityManager.update(session, dai);
+        OSCEntityManager.update(em, dai);
 
-        checkMemberDevice(dai, session);
+        checkMemberDevice(dai, em);
     }
 
-    private static void checkMemberDevice(DistributedApplianceInstance dai, Session session) throws Exception {
+    private static void checkMemberDevice(DistributedApplianceInstance dai, EntityManager em) throws Exception {
         try (ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(dai.getVirtualSystem())) {
             if (mgrApi.isDeviceGroupSupported()) {
-                MgrCreateMemberDeviceTask.createMemberDevice(session, dai, mgrApi);
+                MgrCreateMemberDeviceTask.createMemberDevice(em, dai, mgrApi);
             } else {
                 ManagerDeviceMemberElement mgrDeviceMember = mgrApi.findDeviceMemberByName(dai.getName());
                 if (mgrDeviceMember != null) {
-                    updateDAIManagerId(session, dai, mgrDeviceMember);
+                    updateDAIManagerId(em, dai, mgrDeviceMember);
                 }
             }
         }
     }
 
-    private static void updateDAIManagerId(Session session, DistributedApplianceInstance dai,
+    private static void updateDAIManagerId(EntityManager em, DistributedApplianceInstance dai,
             ManagerDeviceMemberElement mgrDeviceMember) {
         if (dai != null && !mgrDeviceMember.getId().equals(dai.getMgrDeviceId())) {
             dai.setMgrDeviceId(mgrDeviceMember.getId());
-            EntityManager.update(session, dai);
+            OSCEntityManager.update(em, dai);
         }
     }
 }

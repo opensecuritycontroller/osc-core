@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.manager;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockManager;
@@ -26,7 +27,7 @@ import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.LockUtil;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
@@ -44,22 +45,22 @@ public class MCDeleteMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         this.tg = new TaskGraph();
         log.info("Start executing MCConformanceCheckMetaTask task for MC '" + this.mc.getName() + "'");
 
         UnlockObjectTask mcUnlockTask = null;
         try {
-            this.mc = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class, this.mc.getId());
+            this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId());
 
             mcUnlockTask = LockUtil.lockMC(this.mc, LockType.WRITE_LOCK);
 
             // Add Persisted Url Change Notification Subscription
-            if (ManagerApiFactory.isPersistedUrlNotifications(mc)) {
+            if (ManagerApiFactory.isPersistedUrlNotifications(this.mc)) {
                 // Remove notification registrations
 
-                try (ManagerCallbackNotificationApi mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(mc)) {
+                try (ManagerCallbackNotificationApi mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(this.mc)) {
                     if (mgrApi.getDomainNotificationRegistration() != null) {
                         mgrApi.deleteRegisteredDomain();
                     }
@@ -71,10 +72,10 @@ public class MCDeleteMetaTask extends TransactionalMetaTask {
                 }
             }
 
-            EntityManager<ApplianceManagerConnector> appMgrEntityMgr = new EntityManager<>(ApplianceManagerConnector.class, session);
+            OSCEntityManager<ApplianceManagerConnector> appMgrEntityMgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
             ApplianceManagerConnector connector = appMgrEntityMgr.findByPrimaryKey(this.mc.getId());
 
-            SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(session);
+            SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
             sslCertificateAttrEntityMgr.removeCertificateList(connector.getSslCertificateAttrSet());
 
             appMgrEntityMgr.delete(this.mc.getId());

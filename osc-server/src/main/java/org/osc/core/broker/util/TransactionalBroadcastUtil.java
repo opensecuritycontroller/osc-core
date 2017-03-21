@@ -19,27 +19,28 @@ package org.osc.core.broker.util;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.view.util.BroadcasterUtil;
 import org.osc.core.broker.view.util.EventType;
 
 public class TransactionalBroadcastUtil {
 
-    public volatile static HashMap<Session, ArrayList<BroadcastMessage>> pendingBroadcastMap = new HashMap<Session, ArrayList<BroadcastMessage>>();
+    public volatile static HashMap<EntityManager, ArrayList<BroadcastMessage>> pendingBroadcastMap = new HashMap<>();
     private final static Logger log = Logger.getLogger(TransactionalBroadcastUtil.class);
 
-    public static synchronized void broadcast(Session session) {
-        if (pendingBroadcastMap.get(session) != null) {
+    public static synchronized void broadcast(EntityManager em) {
+        if (pendingBroadcastMap.get(em) != null) {
             try {
-                ArrayList<BroadcastMessage> list = pendingBroadcastMap.get(session);
+                ArrayList<BroadcastMessage> list = pendingBroadcastMap.get(em);
                 for (BroadcastMessage msg : list) {
                     log.debug("Broadcasting Message: " + msg.toString());
                     BroadcasterUtil.broadcast(msg);
                 }
                 // remove session from pendingBroadcastMap
-                TransactionalBroadcastUtil.removeSessionFromMap(session);
+                TransactionalBroadcastUtil.removeSessionFromMap(em);
 
             } catch (Exception ex) {
 
@@ -48,25 +49,25 @@ public class TransactionalBroadcastUtil {
         }
     }
 
-    public static synchronized void removeSessionFromMap(Session session) {
+    public static synchronized void removeSessionFromMap(EntityManager em) {
         log.debug("Removing Session from PendingBraodcastMap");
         try {
-            pendingBroadcastMap.remove(session);
+            pendingBroadcastMap.remove(em);
         } catch (Exception ex) {
             log.error("Removing Session from PendingBraodcastMap failed", ex);
         }
     }
 
-    public static synchronized void addMessageToMap(Session session, final Long entityId, String receiver,
+    public static synchronized void addMessageToMap(EntityManager em, final Long entityId, String receiver,
             EventType eventType) {
-        addMessageToMap(session, entityId, receiver, eventType, null);
+        addMessageToMap(em, entityId, receiver, eventType, null);
     }
-    public static synchronized void addMessageToMap(Session session, final Long entityId, String receiver,
+    public static synchronized void addMessageToMap(EntityManager em, final Long entityId, String receiver,
             EventType eventType, BaseDto dto) {
         BroadcastMessage msg = new BroadcastMessage(entityId, receiver, eventType, dto);
-        if (pendingBroadcastMap.get(session) == null) {
-            pendingBroadcastMap.put(session, new ArrayList<BroadcastMessage>());
+        if (pendingBroadcastMap.get(em) == null) {
+            pendingBroadcastMap.put(em, new ArrayList<BroadcastMessage>());
         }
-        pendingBroadcastMap.get(session).add(msg);
+        pendingBroadcastMap.get(em).add(msg);
     }
 }

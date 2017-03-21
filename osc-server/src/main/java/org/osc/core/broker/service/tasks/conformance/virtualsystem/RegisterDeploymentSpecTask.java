@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskInput;
 import org.osc.core.broker.job.TaskOutput;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -27,7 +28,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
@@ -54,14 +55,14 @@ public class RegisterDeploymentSpecTask extends TransactionalTask {
     public String deploymentSpecId;
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         LOG.debug("Start executing RegisterDeploymentSpec task for svcId: " + this.svcId);
 
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
         this.deploymentSpecId = createDeploymentSpec(this.version);
         this.vs.getNsxDeploymentSpecIds().put(this.version,
                 this.deploymentSpecId);
-        EntityManager.update(session, this.vs);
+        OSCEntityManager.update(em, this.vs);
     }
 
     private String createDeploymentSpec(VmwareSoftwareVersion softwareVersion)

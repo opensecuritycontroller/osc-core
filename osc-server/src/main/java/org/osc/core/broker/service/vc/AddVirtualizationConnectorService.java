@@ -18,14 +18,15 @@ package org.osc.core.broker.service.vc;
 
 import java.rmi.RemoteException;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.AddVirtualizationConnectorServiceRequestValidator;
@@ -54,12 +55,12 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
     void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
-    
+
     @Override
-    public BaseResponse exec(DryRunRequest<VirtualizationConnectorDto> request, Session session)
+    public BaseResponse exec(DryRunRequest<VirtualizationConnectorDto> request, EntityManager em)
             throws VmidcException, RestClientException, RemoteException, Exception {
         if (this.validator == null) {
-            this.validator = new AddVirtualizationConnectorServiceRequestValidator(session);
+            this.validator = new AddVirtualizationConnectorServiceRequestValidator(em);
         }
         try {
             this.validator.validate(request);
@@ -73,10 +74,10 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
         }
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-        EntityManager<VirtualizationConnector> vcEntityMgr = new EntityManager<>(VirtualizationConnector.class, session);
+        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
         vc = vcEntityMgr.create(vc);
 
-        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(session);
+        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
         vc.setSslCertificateAttrSet(certificateAttrEntityMgr.storeSSLEntries(vc.getSslCertificateAttrSet(), vc.getId()));
 
         vcEntityMgr.update(vc);

@@ -18,13 +18,14 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 
 /**
@@ -43,11 +44,11 @@ class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
 
-        EntityManager<DistributedApplianceInstance> daiEntityMgr = new EntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, session);
+        OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(
+                DistributedApplianceInstance.class, em);
         this.dai = daiEntityMgr.findByPrimaryKey(this.dai.getId());
 
         DeploymentSpec ds = this.dai.getDeploymentSpec();
@@ -55,7 +56,7 @@ class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         this.tg.appendTask(new DeleteSvaServerTask(ds.getRegion(), this.dai));
         this.tg.appendTask(new OsSvaCreateMetaTask(this.dai));
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(session, this.dai, this);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this);
     }
 
     @Override

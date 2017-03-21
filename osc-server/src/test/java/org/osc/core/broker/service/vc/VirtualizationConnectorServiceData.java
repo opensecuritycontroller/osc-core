@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import static org.osc.core.broker.model.entities.appliance.VirtualizationType.VMWARE;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +33,21 @@ public class VirtualizationConnectorServiceData {
     public static String OPENSTACK_NAME_ALREADY_EXISTS = "Openstack Name";
     public static String CONTROLLER_IP_ALREADY_EXISTS = "127.0.0.1";
     public static String PROVIDER_IP_ALREADY_EXISTS = "127.0.0.2";
+    public static String CONTROLLER_IP_ALREADY_EXISTS_2 = "127.0.0.3";
+    public static String PROVIDER_IP_ALREADY_EXISTS_2 = "127.0.0.4";
+
+    public static VirtualizationConnector createVirtualisationConnector(String name,
+            String controller, String provider) {
+        VirtualizationConnector vc = new VirtualizationConnector();
+        vc.setName(name);
+        vc.setControllerIpAddress(controller);
+        vc.setProviderIpAddress(provider);
+        vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+        vc.setProviderUsername("Natasha");
+        vc.setProviderPassword("********");
+        vc.setVirtualizationType(VMWARE);
+        return vc;
+    }
 
     public static DryRunRequest<VirtualizationConnectorDto> VMWARE_NAME_ALREADY_EXISTS_REQUEST = createVmWareRequest(
             VirtualizationType.VMWARE, VMWARE_NAME_ALREADY_EXISTS, "1.1.1.1", "controller user", "controller password",
@@ -84,10 +101,10 @@ public class VirtualizationConnectorServiceData {
 		VirtualizationConnectorDto dto = getVCDto(virtualizationType, name, controllerIp, controllerUser,
 				controllerPassword, providerIp, providerUser, providerPassword, version);
 		request.setDto(dto);
-        
+
         return request;
     }
-    
+
     private static VirtualizationConnectorDto getVCDto(VirtualizationType virtualizationType,
             String name,
             String controllerIp,
@@ -97,7 +114,7 @@ public class VirtualizationConnectorServiceData {
             String providerUser,
             String providerPassword,
             String version){
-    	
+
     	VirtualizationConnectorDto dto = new VirtualizationConnectorDto();
     	dto.setType(virtualizationType);
         dto.setName(name);
@@ -108,41 +125,41 @@ public class VirtualizationConnectorServiceData {
         dto.setProviderUser(providerUser);
         dto.setProviderPassword(providerPassword);
         dto.setSoftwareVersion(version);
-        
+
         return dto;
     }
 
     public static VirtualizationConnectorDto getVCDtoforVmware(){
-    	
+
     	return getVCDto(VirtualizationType.VMWARE, "Random VMWare name", "1.1.1.1", "controller user", "controller password",
                 "2.2.2.2", "provider user", "provider Password", "4.3");
     }
 
     public static VirtualizationConnectorDto getVCDtoforOpenStack(){
-    	
+
     	VirtualizationConnectorDto vcDto = getVCDto(VirtualizationType.OPENSTACK, "Random Openstack name", null, null, null, "2.2.2.2", "provider user",
                 "provider Password", "4.3");
     	setOpenStackParams(vcDto, "Tenant Demo", "RabbitMq User", "RabbitMq Password", "1111", null);
-    	
+
     	return vcDto;
     }
-    
+
     public static VirtualizationConnectorDto getVCDtoforOpenStackwithSDN(){
-    	
+
     	VirtualizationConnectorDto vcDto = getVCDto(VirtualizationType.OPENSTACK, "Random Openstack name", "1.1.1.1", "controller user", "controller password", "2.2.2.2", "provider user",
                 "provider Password", "4.3");
     	setOpenStackParams(vcDto, "Tenant Demo", "RabbitMq User", "RabbitMq Password", "1111", "NSC");
-    	
+
     	return vcDto;
     }
-    
+
     private static void setOpenStackParams(VirtualizationConnectorDto vcDto,
     		String tenantName,
             String rabbitMquser,
             String rabbitMqpassword,
             String rabbitMqport,
             String controllerTypeStr){
-    	
+
     	vcDto.setAdminTenantName(tenantName);
 
          Map<String, String> providerAttributes = new HashMap<>();
@@ -150,14 +167,14 @@ public class VirtualizationConnectorServiceData {
          providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, rabbitMqpassword);
          providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, rabbitMqport);
          vcDto.setProviderAttributes(providerAttributes);
-         
+
          if (controllerTypeStr != null && (!controllerTypeStr.isEmpty())) {
              ControllerType.addType(controllerTypeStr);
              ControllerType controllerType = ControllerType.fromText(controllerTypeStr);
              vcDto.setControllerType(controllerType);
          }
     }
-    
+
     private static DryRunRequest<VirtualizationConnectorDto> createOpenStackRequest(
             VirtualizationType virtualizationType,
             String name,
@@ -178,7 +195,7 @@ public class VirtualizationConnectorServiceData {
                 controllerUser, controllerPassword, providerIp, providerUser, providerPassword, version);
         VirtualizationConnectorDto dto = request.getDto();
         setOpenStackParams(dto, tenantName, rabbitMquser, rabbitMqpassword, rabbitMqport, controllerTypeStr);
-        
+
         return request;
     }
 
@@ -198,18 +215,18 @@ public class VirtualizationConnectorServiceData {
     }
 
 	public static DryRunRequest<VirtualizationConnectorDto> getVmwareRequest() {
-		
+
 		DryRunRequest<VirtualizationConnectorDto> request = new DryRunRequest<>();
 		request.setDto(getVCDtoforVmware());
-		
+
 		return request;
 	}
-	
+
 	public static DryRunRequest<VirtualizationConnectorDto> getOpenStackRequestwithSDN() {
-		
+
 		DryRunRequest<VirtualizationConnectorDto> request = new DryRunRequest<>();
 		request.setDto(getVCDtoforOpenStackwithSDN());
-		
+
 		return request;
 	}
 

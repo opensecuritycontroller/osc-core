@@ -30,7 +30,8 @@ import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanc
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,7 +53,7 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 @PowerMockRunnerDelegate(value = Parameterized.class)
 public class MCConformanceCheckMetaTaskTest {
     @Mock
-    public Session sessionMock;
+    public EntityManager em;
 
     @Mock
     public ApiFactoryService apiFactoryServiceMock;
@@ -71,7 +72,7 @@ public class MCConformanceCheckMetaTaskTest {
         MockitoAnnotations.initMocks(this);
 
         for (ApplianceManagerConnector mc: TEST_MANAGER_CONNECTORS) {
-            doReturn(mc).when(this.sessionMock).get(ApplianceManagerConnector.class, mc.getId());
+            doReturn(mc).when(this.em).find(ApplianceManagerConnector.class, mc.getId());
         }
 
         setupApplianceManagerApiFactory(POLICY_MAPPING_SUPPORTED_MC.getManagerType(), true);
@@ -86,7 +87,7 @@ public class MCConformanceCheckMetaTaskTest {
         MCConformanceCheckMetaTask task = new MCConformanceCheckMetaTask(this.mc, null, this.apiFactoryServiceMock);
 
         // Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         // Assert.
         TaskGraphHelper.validateTaskGraph(task, this.expectedGraph);

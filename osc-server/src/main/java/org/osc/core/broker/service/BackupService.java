@@ -16,12 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+
+import javax.persistence.EntityManager;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Session;
-import org.hibernate.jdbc.Work;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
@@ -29,19 +32,11 @@ import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 public class BackupService extends BackupFileService<BackupRequest, BackupResponse> {
 
 
     @Override
-    public BackupResponse exec(BackupRequest request, Session session) throws Exception {
+    public BackupResponse exec(BackupRequest request, EntityManager em) throws Exception {
         BackupResponse res = new BackupResponse();
         try {
         	// check for backup custom filename
@@ -54,8 +49,8 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
             deleteBackupFiles();
             
             // create temporary backup zip
-            createBackupZipFile(session, backupFileName);
-        	
+            createBackupZipFile(em, backupFileName);
+            
             // get zip file bytes
             byte[] backupFileBytes = getBackupZipFileBytes(backupFileName);
             
@@ -111,18 +106,12 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
         }
     }
 
-    void createBackupZipFile(Session session, String backupFileName) {
+    void createBackupZipFile(EntityManager em, String backupFileName) {
     	// create backup file
-        session.doWork(new Work() {
-            @Override
-            @SuppressFBWarnings(value="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
-            public void execute(Connection connection) throws SQLException {
-                log.info("Execute sql: " + "BACKUP TO '" + resolveBackupZipPath(backupFileName)  + "';");
-                try (Statement statement = connection.createStatement()) {
-                	statement.execute("BACKUP TO '" + resolveBackupZipPath(backupFileName) + "';");
-                }
-            }
-        });
+        String sql = "BACKUP TO '" + resolveBackupZipPath(backupFileName);
+        log.info("Execute sql: " + sql  + "';");
+
+        em.createNativeQuery(sql).executeUpdate();
     }
     
     void writeEncryptedBackupFile(String backupFileName, byte[] encryptedBackupFileBytes) throws IOException {

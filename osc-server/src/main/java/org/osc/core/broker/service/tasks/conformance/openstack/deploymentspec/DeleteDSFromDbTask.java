@@ -18,11 +18,12 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 class DeleteDSFromDbTask extends TransactionalTask {
@@ -41,10 +42,10 @@ class DeleteDSFromDbTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) {
+    public void executeTransaction(EntityManager em) {
         log.debug("Start Executing DeleteDSFromDb Task : " + this.ds.getId());
-        this.ds = (DeploymentSpec) session.get(DeploymentSpec.class, this.ds.getId());
-        EntityManager.delete(session, this.ds);
+        this.ds = em.find(DeploymentSpec.class, this.ds.getId());
+        OSCEntityManager.delete(em, this.ds);
     }
 
     @Override

@@ -20,15 +20,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
@@ -42,10 +43,10 @@ public class UpdateSecurityGroupService extends
     protected SecurityGroup securityGroup;
 
     @Override
-    public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, Session session) throws Exception {
+    public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, EntityManager em) throws Exception {
 
         SecurityGroupDto dto = request.getDto();
-        validateAndLoad(session, request);
+        validateAndLoad(em, request);
         UnlockObjectMetaTask unlockTask = null;
 
         try {
@@ -62,7 +63,7 @@ public class UpdateSecurityGroupService extends
                     validate(securityGroupMemberDto);
                     String openstackId = securityGroupMemberDto.getOpenstackId();
                     selectedMemberOsId.add(openstackId);
-                    addSecurityGroupMember(session, this.securityGroup, securityGroupMemberDto);
+                    addSecurityGroupMember(em, this.securityGroup, securityGroupMemberDto);
                 }
             }
 
@@ -74,12 +75,12 @@ public class UpdateSecurityGroupService extends
                 boolean isMemberSelected = selectedMemberOsId.contains(entityOpenstackId);
                 if (!isMemberSelected) {
                     log.info("Removing Member: " + sgMemberEntity.getMemberName());
-                    EntityManager.markDeleted(session, sgMemberEntity);
+                    OSCEntityManager.markDeleted(em, sgMemberEntity);
                 }
             }
 
             log.info("Updating SecurityGroup: " + this.securityGroup.toString());
-            EntityManager.update(session, this.securityGroup);
+            OSCEntityManager.update(em, this.securityGroup);
 
             commitChanges(true);
         } catch (Exception e) {
@@ -93,13 +94,13 @@ public class UpdateSecurityGroupService extends
 
     }
 
-    protected void validateAndLoad(Session session, AddOrUpdateSecurityGroupRequest request) throws Exception {
+    protected void validateAndLoad(EntityManager em, AddOrUpdateSecurityGroupRequest request) throws Exception {
         SecurityGroupDto dto = request.getDto();
         if(request.isApi() && dto.getName() == null) {
             // If update request is coming from API and name is not specified(its a required field),
             // assumes it a member update request. Load existing values from the DB and pass to service
             SecurityGroupDto.checkForNullIdFields(dto);
-            this.securityGroup = SecurityGroupEntityMgr.findById(session, dto.getId());
+            this.securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
 
             if (this.securityGroup == null) {
                 throw new VmidcBrokerValidationException("Security Group with Id: " + dto.getId() + "  is not found.");
@@ -107,10 +108,10 @@ public class UpdateSecurityGroupService extends
             SecurityGroupEntityMgr.fromEntity(this.securityGroup, dto);
 
         }
-        super.validateAndLoad(session, dto);
+        super.validateAndLoad(em, dto);
 
         if (this.securityGroup == null) {
-            this.securityGroup = SecurityGroupEntityMgr.findById(session, dto.getId());
+            this.securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
 
             if (this.securityGroup == null) {
                 throw new VmidcBrokerValidationException("Security Group with Id: " + dto.getId() + "  is not found.");

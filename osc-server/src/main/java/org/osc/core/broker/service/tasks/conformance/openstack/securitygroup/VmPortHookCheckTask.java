@@ -16,12 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.jboss.logging.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -36,7 +37,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.sdk.controller.DefaultInspectionPort;
@@ -44,6 +45,7 @@ import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.element.InspectionHookElement;
+import org.osc.sdk.controller.element.NetworkElement;
 
 /**
  * This task just adds/update the hooks. If the SGI is marked for deletion, this task does not do anything.
@@ -71,18 +73,31 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
 
-        this.securityGroupInterface = (SecurityGroupInterface) session.get(SecurityGroupInterface.class,
+        this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
+
+        this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
-        this.vmPort = (VMPort) session.get(VMPort.class, this.vmPort.getId());
+        this.vmPort = em.find(VMPort.class, this.vmPort.getId());
 
         this.vs = this.securityGroupInterface.getVirtualSystem();
 
         DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
-                .findByVirtualSystemAndPort(session, this.vs, this.vmPort);
+                .findByVirtualSystemAndPort(em, this.vs, this.vmPort);
+
+        List<NetworkElement> sgmPorts = OpenstackUtil.getPorts(this.sgm);
+        String sgmDomainId = OpenstackUtil.extractDomainId(
+                this.sgm.getSecurityGroup().getTenantId(),
+                this.sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminTenantName(),
+                this.sgm.getSecurityGroup().getVirtualizationConnector(),
+                sgmPorts);
+
+        if (StringUtils.isBlank(sgmDomainId)) {
+            throw new VmidcBrokerValidationException(String.format("No router/domain was found attached to any of the networks of "
+                    + "the member %s of the security group %s.", this.sgm.getMemberName(), this.sgm.getSecurityGroup().getName()));
+        }
 
         if (!this.securityGroupInterface.getMarkedForDeletion()) {
             if (assignedRedirectedDai == null) {
@@ -94,24 +109,36 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                         && this.vmPort.getVm() == null) {
 
                     if (SdnControllerApiFactory.supportsOffboxRedirection(this.sgm.getSecurityGroup())) {
-                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, this.sgm.getSubnet().getRegion(),
-                                tenantId, null, this.vs);
+                        assignedRedirectedDai = OpenstackUtil.findDeployedDAI(
+                                em,
+                                this.vs,
+                                this.sgm.getSecurityGroup(),
+                                tenantId,
+                                getMemberRegion(this.sgm),
+                                sgmDomainId,
+                                null);
                     } else {
                         throw new VmidcBrokerValidationException(
                                 "Protecting External Traffic feature is not supported by your SDN controller. Please make sure your SDN controller supports offboxing");
                     }
 
                 } else {
-                    assignedRedirectedDai = OpenstackUtil.findDeployedDAI(session, getMemberRegion(this.sgm),
-                            tenantId, this.vmPort.getVm().getHost(), this.vs);
+                    assignedRedirectedDai = OpenstackUtil.findDeployedDAI(
+                            em,
+                            this.vs,
+                            this.sgm.getSecurityGroup(),
+                            tenantId,
+                            getMemberRegion(this.sgm),
+                            sgmDomainId,
+                            this.vmPort.getVm().getHost());
                 }
 
                 if (assignedRedirectedDai != null) {
                     // Refresh pessimistically because dai might have been updated by a different transaction
-                    session.refresh(assignedRedirectedDai, new LockOptions(LockMode.PESSIMISTIC_WRITE));
+                    em.refresh(assignedRedirectedDai, LockModeType.PESSIMISTIC_WRITE);
                     this.vmPort.addDai(assignedRedirectedDai);
                     assignedRedirectedDai.addProtectedPort(this.vmPort);
-                    EntityManager.update(session, this.vmPort);
+                    OSCEntityManager.update(em, this.vmPort);
                 } else {
                     throw new VmidcBrokerValidationException(
                             "Couldn't find a relevant Distributed Appliance Instance to protect this Port "

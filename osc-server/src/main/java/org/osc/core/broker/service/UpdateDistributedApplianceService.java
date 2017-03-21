@@ -20,8 +20,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -40,7 +41,7 @@ import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -67,12 +68,12 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
     }
 
     @Override
-    public BaseJobResponse exec(BaseRequest<DistributedApplianceDto> request, Session session)
+    public BaseJobResponse exec(BaseRequest<DistributedApplianceDto> request, EntityManager em)
             throws Exception {
         DistributedAppliance da = null;
         DistributedApplianceDto daDto = request.getDto();
         if (this.validator == null) {
-            this.validator = new DistributedApplianceDtoValidator(session);
+            this.validator = new DistributedApplianceDtoValidator(em);
         }
 
         Long jobId = null;
@@ -81,29 +82,29 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
             this.ult = LockUtil.tryLockDA(da, da.getApplianceManagerConnector());
 
             // reload the associated appliance
-            Appliance a = ApplianceEntityMgr.findById(session, daDto.getApplianceId());
+            Appliance a = ApplianceEntityMgr.findById(em, daDto.getApplianceId());
 
-            updateVirtualSystems(session, daDto, da);
+            updateVirtualSystems(em, daDto, da);
 
             // Broadcast notifications to UI if appliance version has changed, so that Appliance Instances view is
             // refreshed to reflect the correct version
             if (!daDto.getApplianceSoftwareVersionName().equals(da.getApplianceVersion())) {
 
-                List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByDaId(session, da.getId());
+                List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByDaId(em, da.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(session, daiId,
+                        TransactionalBroadcastUtil.addMessageToMap(em, daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
             }
 
             DistributedApplianceEntityMgr.toEntity(a, da, daDto);
-            EntityManager.update(session, da);
+            OSCEntityManager.update(em, da);
 
             commitChanges(true);
 
-            jobId = startConformDAJob(da, session);
+            jobId = startConformDAJob(da, em);
         } catch (Exception e) {
             LockUtil.releaseLocks(this.ult);
             throw e;
@@ -115,14 +116,14 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
         return response;
     }
 
-    private Long startConformDAJob(DistributedAppliance da, Session session) throws Exception {
-        return this.conformService.startDAConformJob(session, da, this.ult);
+    private Long startConformDAJob(DistributedAppliance da, EntityManager em) throws Exception {
+        return this.conformService.startDAConformJob(em, da, this.ult);
     }
 
     /**
      * This function will figure out which VirtualSystem within the provided distributed appliance is new,
      * removed or unchanged and update them accordingly.
-     * @param session
+     * @param em
      *              The database session.
      * @param daDto
      *              The distributed appliance dto.
@@ -131,7 +132,7 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
      * @throws Exception
      *              When any of the database operation fails.
      */
-    private void updateVirtualSystems(Session session, DistributedApplianceDto daDto, DistributedAppliance da) throws Exception {
+    private void updateVirtualSystems(EntityManager em, DistributedApplianceDto daDto, DistributedAppliance da) throws Exception {
         // get the request list
         Set<VirtualSystemDto> reqVs = daDto.getVirtualizationSystems();
 
@@ -145,18 +146,18 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
 
         for (VirtualSystem vs : da.getVirtualSystems()) {
             if (!existingVsList.contains(vs.getId())) {
-                EntityManager.markDeleted(session, vs);
+                OSCEntityManager.markDeleted(em, vs);
             }
         }
 
-        EntityManager<VirtualSystem> vsEntityManager = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
-        EntityManager<Domain> domainEntityManager = new EntityManager<Domain>(Domain.class, session);
+        OSCEntityManager<VirtualSystem> vsEntityManager = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+        OSCEntityManager<Domain> domainEntityManager = new OSCEntityManager<Domain>(Domain.class, em);
 
         for (VirtualSystemDto vsDto : reqVs) {
-            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(session, vsDto.getVcId());
+            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, vsDto.getVcId());
 
             // load the corresponding app sw version from db
-            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(session, daDto
+            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(em, daDto
                     .getApplianceId(), daDto.getApplianceSoftwareVersionName(), vc.getVirtualizationType(), vc
                     .getVirtualizationSoftwareVersion());
 
@@ -176,7 +177,7 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
                 // generate key store and persist it as byte array in db
                 newVs.setKeyStore(PKIUtil.generateKeyStore());
 
-                EntityManager.create(session, newVs);
+                OSCEntityManager.create(em, newVs);
                 da.addVirtualSystem(newVs);
             } else {
                 VirtualSystem existingVs = vsEntityManager.findByPrimaryKey(vsDto.getId());
@@ -185,7 +186,7 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
                 // It is possible that the new version no longer support current encapsulation type,
                 // or user may want to change it.
                 existingVs.setApplianceSoftwareVersion(av);
-                EntityManager.update(session, existingVs);
+                OSCEntityManager.update(em, existingVs);
             }
         }
 
@@ -224,7 +225,7 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
             for (VirtualSystem vs : da.getVirtualSystems()) {
                 for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
                     dai.setApplianceConfig(null);
-                    EntityManager.update(session, dai);
+                    OSCEntityManager.update(em, dai);
                 }
             }
         }

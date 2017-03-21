@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.transactions;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.LastJobContainer;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.TransactionalRunner;
 
 /**
@@ -34,22 +35,21 @@ public class CompleteJobTransaction<T extends LastJobContainer> implements Trans
     }
 
     @Override
-    public Void run(Session session, CompleteJobTransactionInput param) throws Exception {
-        @SuppressWarnings("unchecked")
-        T entity = (T) session.get(this.entityType, param.getEntityId());
+    public Void run(EntityManager em, CompleteJobTransactionInput param) throws Exception {
+        T entity = em.find(this.entityType, param.getEntityId());
 
         if (entity == null) {
             throw new IllegalArgumentException(String.format("Entity with Id '%d' does not exist.", param.getEntityId()));
         }
 
-        JobRecord jobRecord = (JobRecord) session.get(JobRecord.class, param.getJobId());
+        JobRecord jobRecord = em.find(JobRecord.class, param.getJobId());
 
         if (jobRecord == null) {
             throw new IllegalArgumentException(String.format("Job record with id '%d' does not exist.", param.getJobId()));
         }
 
-        entity.setLastJob((JobRecord) session.get(JobRecord.class, param.getJobId()));
-        EntityManager.update(session, entity);
+        entity.setLastJob(em.find(JobRecord.class, param.getJobId()));
+        OSCEntityManager.update(em, entity);
 
         return null;
     }

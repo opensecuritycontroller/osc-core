@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 
@@ -27,9 +28,9 @@ public class AvailabilityZoneEntityMgr {
         dto.setRegion(entity.getRegion());
     }
 
-    public static AvailabilityZone findById(Session session, Long id) {
+    public static AvailabilityZone findById(EntityManager em, Long id) {
         // Initializing Entity Manager
-        EntityManager<AvailabilityZone> emgr = new EntityManager<AvailabilityZone>(AvailabilityZone.class, session);
+        OSCEntityManager<AvailabilityZone> emgr = new OSCEntityManager<AvailabilityZone>(AvailabilityZone.class, em);
         return emgr.findByPrimaryKey(id);
     }
 }

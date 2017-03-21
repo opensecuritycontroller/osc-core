@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks;
 
 import java.util.Set;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.osc.core.broker.job.MetaTask;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
@@ -34,33 +35,34 @@ public abstract class TransactionalMetaTask implements MetaTask {
 
     @Override
     public void execute() throws Exception {
-        Session session = HibernateUtil.getSessionFactory().openSession();
+        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
 
-        Transaction tx = null;
+        EntityTransaction tx = null;
         try {
-            tx = session.beginTransaction();
-            executeTransaction(session);
+            tx = em.getTransaction();
+            tx.begin();
+            executeTransaction(em);
             tx.commit();
-            TransactionalBroadcastUtil.broadcast(session);
+            TransactionalBroadcastUtil.broadcast(em);
 
         } catch (Exception ex) {
 
             if (tx != null) {
                 tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(session);
+                TransactionalBroadcastUtil.removeSessionFromMap(em);
             }
 
             throw ex;
 
         } finally {
 
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }
 
-    public abstract void executeTransaction(Session session) throws Exception;
+    public abstract void executeTransaction(EntityManager em) throws Exception;
 
     @Override
     public Set<LockObjectReference> getObjects() {
@@ -69,7 +71,7 @@ public abstract class TransactionalMetaTask implements MetaTask {
 
     @Override
     public String toString() {
-        return "[" + name + "]";
+        return "[" + this.name + "]";
     }
 
 }

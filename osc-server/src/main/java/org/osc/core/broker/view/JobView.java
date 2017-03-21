@@ -29,11 +29,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.NullInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.job.TaskGuard;
 import org.osc.core.broker.model.entities.job.TaskRecord;
@@ -351,7 +352,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
     }
 
     private StreamResource buildImageResource() throws IOException {
-        Session session = HibernateUtil.getSessionFactory().openSession();
+        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
         try {
             this.dotFile = new File("job-" + getParentItemId() + System.currentTimeMillis() + ".dot");
 
@@ -370,7 +371,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             out.println("node [color=black, fontcolor=black, fontname=\"Helvetica\", fontsize=11.0, shape=record, style=\"solid,filled\"]");
             out.println();
 
-            TaskEntityMgr emgr = new TaskEntityMgr(session);
+            TaskEntityMgr emgr = new TaskEntityMgr(em);
             for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
                 out.printf("node_%d [%n", tr.getId());
                 out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
@@ -446,8 +447,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             return imageResource;
 
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }

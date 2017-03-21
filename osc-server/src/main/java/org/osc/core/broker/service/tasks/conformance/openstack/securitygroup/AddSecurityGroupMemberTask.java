@@ -18,12 +18,13 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class AddSecurityGroupMemberTask extends TransactionalTask {
@@ -47,10 +48,10 @@ public class AddSecurityGroupMemberTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) {
-        this.securityGroup = (SecurityGroup) session.get(SecurityGroup.class, securityGroup.getId());
-        SecurityGroupMember securityGroupMember = new SecurityGroupMember(securityGroup, type, address);
-        EntityManager.create(session, securityGroupMember);
+    public void executeTransaction(EntityManager em) {
+        this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
+        SecurityGroupMember securityGroupMember = new SecurityGroupMember(this.securityGroup, this.type, this.address);
+        OSCEntityManager.create(em, securityGroupMember);
     }
 
     @Override

@@ -19,10 +19,12 @@ package org.osc.core.broker.service.persistence;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -32,12 +34,13 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
 public class DistributedApplianceInstanceEntityMgr {
 
-    public static boolean doesDAIExist(Session session) {
+    public static boolean doesDAIExist(EntityManager em) {
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class, "dai");
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
+        query = query.select(query.from(DistributedApplianceInstance.class));
 
-        @SuppressWarnings("unchecked")
-        List<DistributedApplianceInstance> list = criteria.setFirstResult(0).setMaxResults(1).list();
+        List<DistributedApplianceInstance> list = em.createQuery(query).setMaxResults(1).getResultList();
 
         if (list == null || list.size() == 0) {
             return false;
@@ -46,63 +49,72 @@ public class DistributedApplianceInstanceEntityMgr {
         return true;
     }
 
-    public static DistributedApplianceInstance findByNsxAgentIdAndNsxIp(Session session, String nsxAgentId,
+    public static DistributedApplianceInstance findByNsxAgentIdAndNsxIp(EntityManager em, String nsxAgentId,
             String nsxIpAddress) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class, "dai")
-                .createAlias("dai.virtualSystem", "vs").createAlias("vs.virtualizationConnector", "vc")
-                .add(Restrictions.eq("vc.controllerIpAddress", nsxIpAddress))
-                .add(Restrictions.eq("nsxAgentId", nsxAgentId));
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
 
-        @SuppressWarnings("unchecked")
-        List<DistributedApplianceInstance> list = criteria.setFirstResult(0).setMaxResults(1).list();
+        Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
 
-        if (list == null || list.size() == 0) {
+        query = query.select(from).where(
+                cb.equal(from.get("nsxAgentId"), nsxAgentId),
+                cb.equal(from.join("virtualSystem").join("virtualizationConnector").get("controllerIpAddress"), nsxIpAddress));
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
             return null;
         }
-
-        return list.get(0);
     }
 
-    public static DistributedApplianceInstance findByOsHostNameAndOsTenantId(Session session, String osHostName,
+    public static DistributedApplianceInstance findByOsHostNameAndOsTenantId(EntityManager em, String osHostName,
             String osTenantId) {
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class)
-                .add(Restrictions.eq("osHostName", osHostName)).add(Restrictions.eq("osTenantId", osTenantId));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        @SuppressWarnings("unchecked")
-        List<DistributedApplianceInstance> list = criteria.setFirstResult(0).setMaxResults(1).list();
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
 
-        if (list == null || list.size() == 0) {
+        Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
+
+        query = query.select(from).where(
+                cb.equal(from.get("osHostName"), osHostName),
+                cb.equal(from.get("osTenantId"), osTenantId));
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
             return null;
         }
-
-        return list.get(0);
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<DistributedApplianceInstance> listByVsId(Session session, Long vsId) {
+    public static List<DistributedApplianceInstance> listByVsId(EntityManager em, Long vsId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class, "dai")
-                .createAlias("dai.virtualSystem", "vs").add(Restrictions.eq("vs.id", vsId))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
+
+        Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
+
+        query = query.select(from).distinct(true).where(
+                cb.equal(from.join("virtualSystem").get("id"), vsId));
+
+        return em.createQuery(query).getResultList();
     }
 
     /**
      * Get DAI's by Id. If unable to find any DAI, throws VmidcBrokerValidationException.
-     * @param session
+     * @param em
      * @param daiIds
      * @return
      * @throws VmidcBrokerValidationException
      */
-    public static List<DistributedApplianceInstance> getByIds(Session session, List<Long> daiIds)
+    public static List<DistributedApplianceInstance> getByIds(EntityManager em, List<Long> daiIds)
             throws VmidcBrokerValidationException {
         List<DistributedApplianceInstance> daiList = new ArrayList<>();
         if (daiIds != null) {
             for (Long daiId : daiIds) {
                 // fetching DAIs based upon received DAI-DTOs
-                DistributedApplianceInstance dai = findById(session, daiId);
+                DistributedApplianceInstance dai = findById(em, daiId);
                 if (dai == null) {
                     throw new VmidcBrokerValidationException(
                             "Distributed Appliance Instance with ID " + daiId + " is not found.");
@@ -114,30 +126,19 @@ public class DistributedApplianceInstanceEntityMgr {
         return daiList;
     }
 
-    public static List<Long> listByMcId(Session session, Long mcId) {
+    public static List<Long> listByMcId(EntityManager em, Long mcId) {
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class, "dai")
-                .createAlias("dai.virtualSystem", "vs").createAlias("vs.distributedAppliance", "da")
-                .createAlias("da.applianceManagerConnector", "mc").add(Restrictions.eq("mc.id", mcId))
-                .setProjection(Projections.property("id")).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        @SuppressWarnings("unchecked")
-        List<Long> list = criteria.list();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        if (list == null || list.size() == 0) {
-            return null;
-        }
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
 
-        return list;
-    }
+        Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
 
-    public static List<Long> listByVcId(Session session, Long vcId) {
+        query = query.select(from.get("id")).distinct(true).where(
+                cb.equal(from.join("virtualSystem").join("distributedAppliance")
+                        .join("applianceManagerConnector").get("id"), mcId));
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class, "dai")
-                .createAlias("dai.virtualSystem", "vs").createAlias("vs.virtualizationConnector", "vc")
-                .add(Restrictions.eq("vc.id", vcId)).setProjection(Projections.property("id"))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        @SuppressWarnings("unchecked")
-        List<Long> list = criteria.list();
+        List<Long> list = em.createQuery(query).getResultList();
 
         if (list == null || list.size() == 0) {
             return null;
@@ -146,24 +147,19 @@ public class DistributedApplianceInstanceEntityMgr {
         return list;
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<String> listOsServerIdByVcId(Session session, Long vcId) {
+    public static List<Long> listByVcId(EntityManager em, Long vcId) {
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class, "dai")
-                .createAlias("dai.virtualSystem", "vs").createAlias("vs.virtualizationConnector", "vc")
-                .add(Restrictions.eq("vc.id", vcId)).setProjection(Projections.property("osServerId"))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
-    }
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-    public static List<Long> listByDaId(Session session, Long daId) {
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class, "dai")
-                .createAlias("dai.virtualSystem", "vs").createAlias("vs.distributedAppliance", "da")
-                .add(Restrictions.eq("da.id", daId)).setProjection(Projections.property("id"))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        @SuppressWarnings("unchecked")
-        List<Long> list = criteria.list();
+        Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
+
+        query = query.select(from.get("id")).distinct(true).where(
+                cb.equal(from.join("virtualSystem").join("virtualizationConnector")
+                        .get("id"), vcId));
+
+        List<Long> list = em.createQuery(query).getResultList();
 
         if (list == null || list.size() == 0) {
             return null;
@@ -172,47 +168,89 @@ public class DistributedApplianceInstanceEntityMgr {
         return list;
     }
 
-    public static DistributedApplianceInstance findById(Session session, Long id) {
+    public static List<String> listOsServerIdByVcId(EntityManager em, Long vcId) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<String> query = cb.createQuery(String.class);
+
+        Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
+
+        query = query.select(from.get("osServerId")).distinct(true).where(
+                cb.equal(from.join("virtualSystem").join("virtualizationConnector")
+                        .get("id"), vcId));
+
+        return em.createQuery(query).getResultList();
+    }
+
+    public static List<Long> listByDaId(EntityManager em, Long daId) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
+
+        Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
+
+        query = query.select(from.get("id")).distinct(true).where(
+                cb.equal(from.join("virtualSystem").join("distributedAppliance")
+                        .get("id"), daId));
+
+        List<Long> list = em.createQuery(query).getResultList();
+
+        if (list == null || list.size() == 0) {
+            return null;
+        }
+
+        return list;
+    }
+
+    public static DistributedApplianceInstance findById(EntityManager em, Long id) {
 
         // Initializing Entity Manager
-        EntityManager<DistributedApplianceInstance> emgr = new EntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, session);
+        OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
+                DistributedApplianceInstance.class, em);
 
         return emgr.findByPrimaryKey(id);
     }
 
-    public static DistributedApplianceInstance findByName(Session session, String name) {
+    public static DistributedApplianceInstance findByName(EntityManager em, String name) {
 
-        EntityManager<DistributedApplianceInstance> emgr = new EntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, session);
+        OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
+                DistributedApplianceInstance.class, em);
 
         return emgr.findByFieldName("name", name);
     }
 
-    public static DistributedApplianceInstance findByIpAddress(Session session, String ipAddress) {
+    public static DistributedApplianceInstance findByIpAddress(EntityManager em, String ipAddress) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class).add(
-                Restrictions.eq("ipAddress", ipAddress));
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
 
-        @SuppressWarnings("unchecked")
-        List<DistributedApplianceInstance> list = criteria.setFirstResult(0).setMaxResults(1).list();
+        Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
+        query = query.select(root).where(
+                cb.equal(root.get("ipAddress"), ipAddress));
 
-        if (list == null || list.size() == 0) {
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
             return null;
         }
-
-        return list.get(0);
     }
 
-    public static List<DistributedApplianceInstance> listByDsIdAndAvailabilityZone(Session session, Long dsId,
+    public static List<DistributedApplianceInstance> listByDsIdAndAvailabilityZone(EntityManager em, Long dsId,
             String availabilityZone) {
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class, "dai")
-                .createAlias("dai.deploymentSpec", "ds").add(Restrictions.eq("ds.id", dsId))
-                .add(Restrictions.eq("osAvailabilityZone", availabilityZone))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        @SuppressWarnings("unchecked")
-        List<DistributedApplianceInstance> list = criteria.list();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
+
+        Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.join("deploymentSpec").get("id"), dsId),
+                       cb.equal(root.get("osAvailabilityZone"), availabilityZone));
+
+        List<DistributedApplianceInstance> list = em.createQuery(query).getResultList();
 
         if (list == null || list.size() == 0) {
             return null;
@@ -221,14 +259,20 @@ public class DistributedApplianceInstanceEntityMgr {
         return list;
     }
 
-    public static List<DistributedApplianceInstance> listByDsAndHostName(Session session, DeploymentSpec ds,
+    public static List<DistributedApplianceInstance> listByDsAndHostName(EntityManager em, DeploymentSpec ds,
             String hostName) {
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class)
-                .add(Restrictions.eq("deploymentSpec", ds)).add(Restrictions.eq("osHostName", hostName))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        @SuppressWarnings("unchecked")
-        List<DistributedApplianceInstance> list = criteria.list();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
+
+        Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.get("deploymentSpec"), ds),
+                       cb.equal(root.get("osHostName"), hostName));
+
+        List<DistributedApplianceInstance> list = em.createQuery(query).getResultList();
 
         if (list == null || list.size() == 0) {
             return null;
@@ -237,31 +281,33 @@ public class DistributedApplianceInstanceEntityMgr {
         return list;
     }
 
-    public static boolean isReferencedByDistributedApplianceInstance(Session session, DistributedAppliance da) {
+    public static boolean isReferencedByDistributedApplianceInstance(EntityManager em, DistributedAppliance da) {
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class)
-                .createAlias("virtualSystem", "vs").createAlias("vs.distributedAppliance", "da")
-                .add(Restrictions.eq("da.id", da.getId()));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Long count = (Long) criteria.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1)
-                .uniqueResult();
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
 
-        if (count > 0) {
+        Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
 
-            return true;
-        }
+        query = query.select(root)
+                .where(cb.equal(root.join("virtualSystem").join("distributedAppliance")
+                        .get("id"), da.getId()));
 
-        return false;
-
+        return !em.createQuery(query).setMaxResults(1).getResultList().isEmpty();
     }
 
-    public static DistributedApplianceInstance getByOSServerId(Session session, String osServerId) {
+    public static DistributedApplianceInstance getByOSServerId(EntityManager em, String osServerId) {
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class).add(
-                Restrictions.eq("osServerId", osServerId));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        @SuppressWarnings("unchecked")
-        List<DistributedApplianceInstance> list = criteria.setFirstResult(0).setMaxResults(1).list();
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
+
+        Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
+
+        query = query.select(root)
+                .where(cb.equal(root.get("osServerId"), osServerId));
+
+        List<DistributedApplianceInstance> list = em.createQuery(query).getResultList();
 
         if (list == null || list.size() == 0) {
             return null;
@@ -270,13 +316,23 @@ public class DistributedApplianceInstanceEntityMgr {
         return list.get(0);
     }
 
-    public static DistributedApplianceInstance findByVirtualSystemAndPort(Session session, VirtualSystem vs, VMPort port) {
+    public static DistributedApplianceInstance findByVirtualSystemAndPort(EntityManager em, VirtualSystem vs, VMPort port) {
 
-        Criteria criteria = session.createCriteria(DistributedApplianceInstance.class)
-                .add(Restrictions.eq("virtualSystem", vs)).createAlias("protectedPorts", "ports")
-                .add(Restrictions.eq("ports.id", port.getId()));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        return (DistributedApplianceInstance) criteria.uniqueResult();
+        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
+
+        Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
+
+        query = query.select(root)
+                .where(cb.equal(root.join("virtualSystem").join("protectedPorts")
+                        .get("id"), port.getId()));
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
 }

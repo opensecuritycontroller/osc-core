@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.mgrfile;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -43,26 +44,26 @@ public class MgrFileChangePropagateTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         log.debug("Start executing mgrfile Propagating task");
 
-        tg = new TaskGraph();
+        this.tg = new TaskGraph();
 
-        for (DistributedApplianceInstance dai : daiList) {
-            tg.addTask(new MgrFileChangePropagateToDaiTask(dai, mgrFile, mgrFileName));
+        for (DistributedApplianceInstance dai : this.daiList) {
+            this.tg.addTask(new MgrFileChangePropagateToDaiTask(dai, this.mgrFile, this.mgrFileName));
         }
 
     }
 
     @Override
     public String getName() {
-        return "Propagating Manager File '" + mgrFileName + "' to DAIs";
+        return "Propagating Manager File '" + this.mgrFileName + "' to DAIs";
     }
 
     @Override
     public TaskGraph getTaskGraph() {
-        return tg;
+        return this.tg;
     }
 
 }

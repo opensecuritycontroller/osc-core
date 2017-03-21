@@ -20,16 +20,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.view.maintenance.ApplianceUploader;
@@ -39,11 +40,11 @@ public class DeleteApplianceSoftwareVersionService extends ServiceDispatcher<Bas
     private static final Logger log = Logger.getLogger(DeleteApplianceSoftwareVersionService.class);
 
     @Override
-    public EmptySuccessResponse exec(BaseIdRequest request, Session session) throws Exception {
+    public EmptySuccessResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
 
-        ApplianceSoftwareVersion av = (ApplianceSoftwareVersion) session.get(ApplianceSoftwareVersion.class,
+        ApplianceSoftwareVersion av = em.find(ApplianceSoftwareVersion.class,
                 request.getId());
-        validate(session, request, av);
+        validate(em, request, av);
 
         try {
             File imageFolder = new File(ApplianceUploader.getImageFolderPath());
@@ -63,13 +64,13 @@ public class DeleteApplianceSoftwareVersionService extends ServiceDispatcher<Bas
             log.error("File: " + av.getImageUrl() + " Not Found. Continuing with deleting the Record");
         }
 
-        EntityManager.delete(session, av);
+        OSCEntityManager.delete(em, av);
 
         EmptySuccessResponse response = new EmptySuccessResponse();
         return response;
     }
 
-    void validate(Session session, BaseIdRequest request, ApplianceSoftwareVersion av) throws Exception {
+    void validate(EntityManager em, BaseIdRequest request, ApplianceSoftwareVersion av) throws Exception {
 
         // entry must pre-exist in db
         if (av == null) { // note: we cannot use name here in error msg since
@@ -89,7 +90,7 @@ public class DeleteApplianceSoftwareVersionService extends ServiceDispatcher<Bas
             }
         }
 
-        if (DistributedApplianceEntityMgr.isReferencedByDistributedAppliance(session, av)) {
+        if (DistributedApplianceEntityMgr.isReferencedByDistributedAppliance(em, av)) {
 
             throw new VmidcBrokerInvalidRequestException(
                     "Cannot delete an Appliance Software Version that is referenced by a Distributed Appliance.");

@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.manager;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.management.Domain;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class DeleteDomainTask extends TransactionalTask {
@@ -33,16 +34,16 @@ public class DeleteDomainTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        log.debug("Start excecuting DeleteDomainTask Task. Domain '" + domain.getName() + "'");
-        domain = (Domain) session.get(Domain.class, domain.getId());
-        EntityManager.delete(session, domain);
+        log.debug("Start excecuting DeleteDomainTask Task. Domain '" + this.domain.getName() + "'");
+        this.domain = em.find(Domain.class, this.domain.getId());
+        OSCEntityManager.delete(em, this.domain);
     }
 
     @Override
     public String getName() {
-        return "Delete Domain '" + domain.getName() + "'";
+        return "Delete Domain '" + this.domain.getName() + "'";
     }
 
 }

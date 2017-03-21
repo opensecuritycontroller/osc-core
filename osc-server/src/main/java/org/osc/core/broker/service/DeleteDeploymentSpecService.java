@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -26,7 +27,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -38,10 +39,10 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
     private DeploymentSpec ds;
 
     @Override
-    public BaseJobResponse exec(BaseDeleteRequest request, Session session) throws Exception {
+    public BaseJobResponse exec(BaseDeleteRequest request, EntityManager em) throws Exception {
 
         BaseJobResponse response = new BaseJobResponse();
-        validateAndLoad(session, request);
+        validateAndLoad(em, request);
         Job job = null;
         UnlockObjectMetaTask dsUnlock = null;
 
@@ -58,9 +59,9 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
                         LockObjectReference.getObjectReferences(this.ds));
 
             } else {
-                EntityManager.markDeleted(session, this.ds);
+                OSCEntityManager.markDeleted(em, this.ds);
                 commitChanges(true);
-                job = ConformService.startDsConformanceJob(session, this.ds, dsUnlock);
+                job = ConformService.startDsConformanceJob(em, this.ds, dsUnlock);
             }
             response.setJobId(job.getId());
         } catch (Exception e) {
@@ -72,17 +73,17 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
 
     }
 
-    private void validateAndLoad(Session session, BaseDeleteRequest request) throws Exception {
+    private void validateAndLoad(EntityManager em, BaseDeleteRequest request) throws Exception {
         BaseDeleteRequest.checkForNullIdAndParentNullId(request);
 
-        VirtualSystem vs = VirtualSystemEntityMgr.findById(session, request.getParentId());
+        VirtualSystem vs = VirtualSystemEntityMgr.findById(em, request.getParentId());
 
         if (vs == null) {
             throw new VmidcBrokerValidationException("Virtual System with Id: " + request.getParentId()
                     + "  is not found.");
         }
 
-        this.ds = (DeploymentSpec) session.get(DeploymentSpec.class, request.getId());
+        this.ds = em.find(DeploymentSpec.class, request.getId());
 
         // entry must pre-exist in db
         if (this.ds == null) { // note: we cannot use name here in error msg since

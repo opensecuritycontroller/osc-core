@@ -19,10 +19,11 @@ package org.osc.core.broker.service.persistence;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.joda.time.DateTime;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
@@ -36,7 +37,6 @@ import org.osc.core.broker.model.entities.job.JobStatus;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.model.entities.job.TaskState;
 import org.osc.core.broker.model.entities.job.TaskStatus;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -57,16 +57,17 @@ public class DatabaseUtils {
 
         log.info("================= Creating default database objects ================");
 
-        Session session = null;
-        Transaction tx = null;
+        EntityManager em = null;
+        EntityTransaction tx = null;
 
         try {
-            SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-            session = sessionFactory.getCurrentSession();
-            tx = session.beginTransaction();
+            EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
+            em = emf.createEntityManager();
+            tx = em.getTransaction();
+            tx.begin();
 
-            createDefaultUsers(session);
-            createDefaultAlarms(session);
+            createDefaultUsers(em);
+            createDefaultAlarms(em);
 
             tx.commit();
 
@@ -79,23 +80,15 @@ public class DatabaseUtils {
         }
     }
 
-    private static void createDefaultUsers(Session session) throws EncryptionException {
-        EntityManager<User> userEmgr = new EntityManager<User>(User.class, session);
+    private static void createDefaultUsers(EntityManager em) throws EncryptionException {
+        OSCEntityManager<User> userEmgr = new OSCEntityManager<User>(User.class, em);
         User adminUser = userEmgr.findByFieldName("loginName", OscAuthFilter.OSC_DEFAULT_LOGIN);
         if (adminUser == null) {
             User user = new User();
             user.setLoginName(OscAuthFilter.OSC_DEFAULT_LOGIN);
             user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.ADMIN);
-            EntityManager.create(session, user);
-        }
-        User agentUser = userEmgr.findByFieldName("loginName", AgentAuthFilter.VMIDC_AGENT_LOGIN);
-        if (agentUser == null) {
-            User user = new User();
-            user.setLoginName(AgentAuthFilter.VMIDC_AGENT_LOGIN);
-            user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
-            user.setRole(RoleType.SYSTEM_AGENT);
-            EntityManager.create(session, user);
+            OSCEntityManager.create(em, user);
         }
         User nsxUser = userEmgr.findByFieldName("loginName", NsxAuthFilter.VMIDC_NSX_LOGIN);
         if (nsxUser == null) {
@@ -103,12 +96,12 @@ public class DatabaseUtils {
             user.setLoginName(NsxAuthFilter.VMIDC_NSX_LOGIN);
             user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.SYSTEM_NSX);
-            EntityManager.create(session, user);
+            OSCEntityManager.create(em, user);
         }
     }
 
-    private static void createDefaultAlarms(Session session) {
-        EntityManager<Alarm> alarmEmgr = new EntityManager<Alarm>(Alarm.class, session);
+    private static void createDefaultAlarms(EntityManager em) {
+        OSCEntityManager<Alarm> alarmEmgr = new OSCEntityManager<Alarm>(Alarm.class, em);
         Alarm alarm = alarmEmgr.findByFieldName("name", DEFAULT_JOB_FAILURE_ALARM_NAME);
         if (alarm == null) {
             Alarm defAlarm = new Alarm();
@@ -118,7 +111,7 @@ public class DatabaseUtils {
             defAlarm.setRegexMatch(".*");
             defAlarm.setSeverity(Severity.LOW);
             defAlarm.setAlarmAction(AlarmAction.NONE);
-            EntityManager.create(session, defAlarm);
+            OSCEntityManager.create(em, defAlarm);
         }
         alarm = alarmEmgr.findByFieldName("name", DEFAULT_SYSTEM_FAILURE_ALARM_NAME);
         if (alarm == null) {
@@ -129,7 +122,7 @@ public class DatabaseUtils {
             defAlarm.setRegexMatch(".*");
             defAlarm.setSeverity(Severity.HIGH);
             defAlarm.setAlarmAction(AlarmAction.NONE);
-            EntityManager.create(session, defAlarm);
+            OSCEntityManager.create(em, defAlarm);
         }
         alarm = alarmEmgr.findByFieldName("name", DEFAULT_DAI_FAILURE_ALARM_NAME);
         if (alarm == null) {
@@ -140,7 +133,7 @@ public class DatabaseUtils {
             defAlarm.setRegexMatch(".*");
             defAlarm.setSeverity(Severity.MEDIUM);
             defAlarm.setAlarmAction(AlarmAction.NONE);
-            EntityManager.create(session, defAlarm);
+            OSCEntityManager.create(em, defAlarm);
         }
     }
 
@@ -151,16 +144,17 @@ public class DatabaseUtils {
         Thread updateJobTaskStateThread = new Thread("UpdateJobThreadState-Thread") {
             @Override
             public void run() {
-                Session session = null;
-                Transaction tx = null;
+                EntityManager em = null;
+                EntityTransaction tx = null;
 
                 try {
-                    SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-                    session = sessionFactory.getCurrentSession();
-                    tx = session.beginTransaction();
+                    EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
+                    em = emf.createEntityManager();
+                    tx = em.getTransaction();
+                    tx.begin();
 
                     // In case we stopped server while jobs/tasks were running, we'll flagged them all aborted.
-                    List<TaskRecord> uncompletedTasks = new TaskEntityMgr(session).getUncompletedTasks();
+                    List<TaskRecord> uncompletedTasks = new TaskEntityMgr(em).getUncompletedTasks();
                     log.info("Marking " + uncompletedTasks.size() + " uncompleted Tasks as aborted");
                     for (TaskRecord task : uncompletedTasks) {
                         task.setState(TaskState.COMPLETED);
@@ -168,7 +162,7 @@ public class DatabaseUtils {
                         task.setCompletedTimestamp(new DateTime().toDate());
                     }
 
-                    List<JobRecord> uncompletedJobs = new JobEntityManager().getUncompletedJobs(session);
+                    List<JobRecord> uncompletedJobs = new JobEntityManager().getUncompletedJobs(em);
                     log.info("Marking " + uncompletedJobs.size() + " uncompleted Jobs as aborted");
                     for (JobRecord job : uncompletedJobs) {
                         job.setState(JobState.COMPLETED);

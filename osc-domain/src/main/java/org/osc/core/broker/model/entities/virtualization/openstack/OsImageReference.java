@@ -79,5 +79,4 @@ public class OsImageReference extends BaseEntity {
     public void setApplianceVersion(ApplianceSoftwareVersion applianceVersion) {
         this.applianceVersion = applianceVersion;
     }
-
 }

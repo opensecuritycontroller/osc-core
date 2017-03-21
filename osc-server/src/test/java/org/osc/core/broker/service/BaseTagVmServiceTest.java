@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
@@ -58,7 +59,7 @@ public abstract class BaseTagVmServiceTest {
     public ExpectedException exception = ExpectedException.none();
 
     @Mock
-    Session session;
+    EntityManager em;
 
     @Mock
     protected TagVmRequestValidator validatorMock;

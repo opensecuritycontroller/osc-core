@@ -16,23 +16,37 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 
 public class NetworkEntityManager {
 
-    public static Network findByOpenstackId(Session session, String id) {
+    public static Network findByOpenstackId(EntityManager em, String id) {
 
-        Criteria criteria = session.createCriteria(Network.class).add(Restrictions.eq("openstackId", id));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        return (Network) criteria.uniqueResult();
+        CriteriaQuery<Network> query = cb.createQuery(Network.class);
+
+        Root<Network> root = query.from(Network.class);
+
+        query = query.select(root)
+            .where(cb.equal(root.get("openstackId"), id));
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
-    public static Network findById(Session session, Long id) {
+    public static Network findById(EntityManager em, Long id) {
         // Initializing Entity Manager
-        EntityManager<Network> emgr = new EntityManager<Network>(Network.class, session);
+        OSCEntityManager<Network> emgr = new OSCEntityManager<Network>(Network.class, em);
 
         return emgr.findByPrimaryKey(id);
     }

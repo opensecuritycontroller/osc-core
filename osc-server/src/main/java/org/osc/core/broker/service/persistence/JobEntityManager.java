@@ -16,15 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import static org.osc.core.broker.model.entities.job.JobState.COMPLETED;
+import static org.osc.core.broker.model.entities.job.JobStatus.FAILED;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -65,26 +70,26 @@ public class JobEntityManager {
 
     public static Long getTaskCount(Long jobId) {
 
-        Session session = HibernateUtil.getSessionFactory().openSession();
+        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
 
         try {
-            Transaction tx = session.beginTransaction();
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
 
             String hql = "SELECT count(*) FROM TaskRecord WHERE job_fk = :jobId";
 
-            Query query = session.createQuery(hql);
+            TypedQuery<Long> query = em.createQuery(hql, Long.class);
             query.setParameter("jobId", jobId);
-            query.setFirstResult(0).setMaxResults(1).uniqueResult();
+            Long count = query.getSingleResult();
 
-            Long count = (Long) query.list().get(0);
             tx.commit();
 
             return count;
 
         } finally {
 
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
 
@@ -92,26 +97,26 @@ public class JobEntityManager {
 
     public static Long getCompletedTaskCount(Long jobId) {
 
-        Session session = HibernateUtil.getSessionFactory().openSession();
+        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
 
         try {
-            Transaction tx = session.beginTransaction();
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
 
             String hql = "SELECT count(*) FROM TaskRecord WHERE job_fk = :jobId AND state = 'COMPLETED'";
 
-            Query query = session.createQuery(hql);
+            TypedQuery<Long> query = em.createQuery(hql, Long.class);
             query.setParameter("jobId", jobId);
-            query.setFirstResult(0).setMaxResults(1).uniqueResult();
+            Long count = query.getSingleResult();
 
-            Long count = (Long) query.list().get(0);
             tx.commit();
 
             return count;
 
         } finally {
 
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }
@@ -122,13 +127,15 @@ public class JobEntityManager {
      *
      * @return total job count
      */
-    public static Long getTotalJobCount(Session session) {
+    public static Long getTotalJobCount(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Long totalJobCount = (Long) session.createCriteria(JobRecord.class).setProjection(Projections.rowCount())
-                .uniqueResult();
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
+
+        query = query.select(cb.count(query.from(JobRecord.class)));
+        Long totalJobCount = em.createQuery(query).getSingleResult();
 
         return totalJobCount;
-
     }
 
     /**
@@ -136,16 +143,28 @@ public class JobEntityManager {
      *
      * @return failed job count
      */
-    public static Long getTotalJobFailCount(Session session) {
-        Long totalJobFailCount = (Long) session.createCriteria(JobRecord.class)
-                .add(Restrictions.eq("status", JobStatus.FAILED)).setProjection(Projections.rowCount()).uniqueResult();
+    public static Long getTotalJobFailCount(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
+
+        Root<JobRecord> from = query.from(JobRecord.class);
+        query = query.select(cb.count(from))
+                .where(cb.equal(from.get("status"), FAILED));
+        Long totalJobFailCount = em.createQuery(query).getSingleResult();
 
         return totalJobFailCount;
     }
 
-    @SuppressWarnings("unchecked")
-    public List<JobRecord> getUncompletedJobs(Session session) {
-        return session.createCriteria(JobRecord.class).add(Restrictions.ne("state", JobState.COMPLETED)).list();
+    public List<JobRecord> getUncompletedJobs(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<JobRecord> query = cb.createQuery(JobRecord.class);
+
+        Root<JobRecord> from = query.from(JobRecord.class);
+        query = query.select(from)
+                .where(cb.notEqual(from.get("state"), COMPLETED));
+        return em.createQuery(query).getResultList();
     }
 
 }

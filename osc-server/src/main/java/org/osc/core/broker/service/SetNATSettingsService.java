@@ -16,9 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -38,7 +39,7 @@ public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSe
     }
 
     @Override
-    public BaseJobResponse exec(DryRunRequest<NATSettingsDto> request, Session session) throws Exception {
+    public BaseJobResponse exec(DryRunRequest<NATSettingsDto> request, EntityManager em) throws Exception {
         String oldServerIp = ServerUtil.getServerIP();
         String newServerIp = request.getDto().getPublicIPAddress();
 

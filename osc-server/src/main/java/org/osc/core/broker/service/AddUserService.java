@@ -16,12 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.dto.UserDtoValidator;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
 import org.osc.core.broker.service.request.AddUserRequest;
 import org.osc.core.broker.service.response.AddUserResponse;
@@ -30,12 +31,12 @@ public class AddUserService extends ServiceDispatcher<AddUserRequest, AddUserRes
     private DtoValidator<UserDto, User> validator;
 
     @Override
-    protected AddUserResponse exec(AddUserRequest request, Session session) throws Exception {
+    protected AddUserResponse exec(AddUserRequest request, EntityManager em) throws Exception {
         // Initializing Entity Manager
-        EntityManager<User> emgr = new EntityManager<User>(User.class, session);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
 
         if (this.validator == null) {
-            this.validator = new UserDtoValidator(session);
+            this.validator = new UserDtoValidator(em);
         }
 
         this.validator.validateForCreate(request);

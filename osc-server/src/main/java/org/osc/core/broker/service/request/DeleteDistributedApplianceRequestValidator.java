@@ -16,16 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
 public class DeleteDistributedApplianceRequestValidator implements RequestValidator<BaseDeleteRequest,DistributedAppliance> {
 
-    private Session session;
+    private EntityManager em;
 
-    public DeleteDistributedApplianceRequestValidator(Session session) {
-        this.session = session;
+    public DeleteDistributedApplianceRequestValidator(EntityManager em) {
+        this.em = em;
     }
 
     @Override
@@ -35,7 +36,7 @@ public class DeleteDistributedApplianceRequestValidator implements RequestValida
 
     @Override
     public DistributedAppliance validateAndLoad(BaseDeleteRequest request) throws Exception {
-        DistributedAppliance da = (DistributedAppliance) session.get(DistributedAppliance.class, request.getId());
+        DistributedAppliance da = this.em.find(DistributedAppliance.class, request.getId());
 
         // entry must pre-exist in db
         if (da == null) { // note: we cannot use name here in error msg since del req does not have name, only ID

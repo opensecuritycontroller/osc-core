@@ -30,11 +30,12 @@ import java.util.Arrays;
 
 public class PBKDF2Derivation {
     private static final Logger LOG = Logger.getLogger(AESCTREncryption.class);
+    private static final int PBKDF2_ITERATIONS = 4000;
     private static final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA1";
     private static final int PBKDF2_KEY_LENGTH = 24 * 8;
-    private static final int PBKDF2_ITERATIONS = 4000;
-    private static final int SALT_BYTES = 24;
 
+    private static final int SALT_BYTES = 24;
+    private static final int ITERATIONS_INDEX = 0;
     private static final int SALT_INDEX = 1;
     private static final int PBKDF2_INDEX = 2;
 
@@ -46,7 +47,7 @@ public class PBKDF2Derivation {
         try {
             char[] passwordChars = plainText.toCharArray();
             byte[] saltBytes = getSalt();
-            byte[] hashedPasswordBytes = pbkdf2(passwordChars, saltBytes);
+            byte[] hashedPasswordBytes = pbkdf2(passwordChars, saltBytes, PBKDF2_ITERATIONS);
 
             plainText = "";
 
@@ -70,10 +71,11 @@ public class PBKDF2Derivation {
 
         try {
             String[] params = validCipherText.split(":");
+            int iterations = DatatypeConverter.parseInt(params[ITERATIONS_INDEX]);
             byte[] salt = DatatypeConverter.parseHexBinary(params[SALT_INDEX]);
             byte[] hash = DatatypeConverter.parseHexBinary(params[PBKDF2_INDEX]);
 
-            byte[] testHash = pbkdf2(plainText.toCharArray(), salt);
+            byte[] testHash = pbkdf2(plainText.toCharArray(), salt, iterations);
 
             return ByteOperations.slowEquals(hash, testHash);
         } catch (Exception ex) {
@@ -83,8 +85,8 @@ public class PBKDF2Derivation {
         }
     }
 
-    private byte[] pbkdf2(char[] passwordChars, byte[] saltBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        PBEKeySpec pbeKeySpec = new PBEKeySpec(passwordChars, saltBytes, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH);
+    private byte[] pbkdf2(char[] passwordChars, byte[] saltBytes, int pbkdf2Iterations) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        PBEKeySpec pbeKeySpec = new PBEKeySpec(passwordChars, saltBytes, pbkdf2Iterations, PBKDF2_KEY_LENGTH);
         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM);
         SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
         pbeKeySpec.clearPassword();

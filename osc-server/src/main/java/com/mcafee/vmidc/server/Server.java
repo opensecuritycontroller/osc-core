@@ -35,7 +35,6 @@ import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.ConformService;
@@ -108,7 +107,7 @@ public class Server {
         try {
             log.warn("\n");
             log.warn("############ Starting " + Server.PRODUCT_NAME + " Server (pid:" + ServerUtil.getCurrentPid()
-                    + "). ############");
+            + "). ############");
             log.warn("############ Version: " + VersionUtil.getVersion().getVersionStr() + ". ############");
             log.warn("\n");
             ServerUtil.writePIDToFile(SERVER_PID_FILE);
@@ -141,7 +140,6 @@ public class Server {
             DatabaseUtils.createDefaultDB();
             DatabaseUtils.markRunningJobAborted();
 
-            PasswordUtil.initPasswordFromDb(AgentAuthFilter.VMIDC_AGENT_LOGIN);
             PasswordUtil.initPasswordFromDb(NsxAuthFilter.VMIDC_NSX_LOGIN);
             PasswordUtil.initPasswordFromDb(OscAuthFilter.OSC_DEFAULT_LOGIN);
 
@@ -171,7 +169,7 @@ public class Server {
                         startScheduler();
                     } catch (SchedulerException se) {
                         log.fatal("Cannot start scheduler (pid:" + ServerUtil.getCurrentPid()
-                                + ") due to system time change. Will reboot in 15 seconds", se);
+                        + ") due to system time change. Will reboot in 15 seconds", se);
                         handleFatalSystemError(se);
                     }
                 }

@@ -18,15 +18,16 @@ package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.Service;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
@@ -44,10 +45,10 @@ public class CreateNsxServiceTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         LOG.debug("Start executing CreateNsxServiceTask for vs " + this.vs.getId());
 
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
         ServiceApi serviceApi = VMwareSdnApiFactory.createServiceApi(this.vs);
         ServiceElement service = serviceApi.findService(this.vs.getDistributedAppliance().getName());
         String serviceId = service == null ? null : service.getId();
@@ -72,7 +73,7 @@ public class CreateNsxServiceTask extends TransactionalTask {
         }
 
         this.vs.setNsxServiceId(serviceId);
-        EntityManager.update(session, this.vs);
+        OSCEntityManager.update(em, this.vs);
     }
 
     @Override

@@ -20,14 +20,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
+import org.osc.core.broker.job.Job.JobCompletionListener;
+import org.osc.core.broker.job.Job.TaskChangeListener;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskNode;
-import org.osc.core.broker.job.Job.JobCompletionListener;
-import org.osc.core.broker.job.Job.TaskChangeListener;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -37,7 +38,7 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.mgrfile.MgrFileChangePropagateTask;
@@ -49,11 +50,11 @@ public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrF
     private static final Logger log = Logger.getLogger(PropagateVSMgrFileService.class);
 
     @Override
-    public BaseJobResponse exec(PropagateVSMgrFileRequest request, Session session) throws Exception {
+    public BaseJobResponse exec(PropagateVSMgrFileRequest request, EntityManager em) throws Exception {
 
         BaseJobResponse response = new BaseJobResponse();
 
-        List<DistributedApplianceInstance> daiList = validate(session, request);
+        List<DistributedApplianceInstance> daiList = validate(em, request);
 
         Long jobId = startMgrfilePropagateJob(request, daiList);
         response.setJobId(jobId);
@@ -61,7 +62,7 @@ public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrF
         return response;
     }
 
-    private List<DistributedApplianceInstance> validate(Session session, PropagateVSMgrFileRequest request)
+    private List<DistributedApplianceInstance> validate(EntityManager em, PropagateVSMgrFileRequest request)
             throws Exception {
 
         String vsName = request.getVsName();
@@ -70,7 +71,7 @@ public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrF
             throw new VmidcBrokerValidationException("Invalid Virtual System Name.");
         }
 
-        EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
         Long vsId = VirtualSystem.getVsIdFromName(vsName);
         VirtualSystem vs = emgr.findByPrimaryKey(vsId);
 
@@ -89,8 +90,8 @@ public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrF
         List<DistributedApplianceInstance> daiList = new ArrayList<DistributedApplianceInstance>();
         if (request.getDaiList() != null && !request.getDaiList().isEmpty()) {
 
-            EntityManager<DistributedApplianceInstance> daiEmgr = new EntityManager<DistributedApplianceInstance>(
-                    DistributedApplianceInstance.class, session);
+            OSCEntityManager<DistributedApplianceInstance> daiEmgr = new OSCEntityManager<DistributedApplianceInstance>(
+                    DistributedApplianceInstance.class, em);
 
             for (String daiName : request.getDaiList()) {
                 DistributedApplianceInstance dai = daiEmgr.findByFieldName("name", daiName);
@@ -107,7 +108,7 @@ public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrF
 
         } else {
 
-            daiList = DistributedApplianceInstanceEntityMgr.listByVsId(session, vsId);
+            daiList = DistributedApplianceInstanceEntityMgr.listByVsId(em, vsId);
             if (daiList == null || daiList.isEmpty()) {
                 throw new VmidcException("VSS '" + vs.getName() + "' does not have members.");
             }
@@ -161,7 +162,7 @@ public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrF
                             IscJobNotificationApi mgrApi = null;
                             try {
                                 mgrApi = ManagerApiFactory.createIscJobNotificationApi(vs);
-                                
+
                                 if (!taskNode.getState().isTerminalState()) {
                                     return;
                                 }
@@ -189,7 +190,7 @@ public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrF
                                     mgrApi.close();
                                 }
                             }
-                            
+
                         }
                     });
         }

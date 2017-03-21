@@ -18,15 +18,16 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 /**
@@ -43,8 +44,8 @@ class ValidateDSTenantTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        EntityManager<DeploymentSpec> dsEmgr = new EntityManager<DeploymentSpec>(DeploymentSpec.class, session);
+    public void executeTransaction(EntityManager em) throws Exception {
+        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
         this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
 
         if (!this.ds.getMarkedForDeletion()) {
@@ -58,14 +59,14 @@ class ValidateDSTenantTask extends TransactionalTask {
                     this.log.info("DS tenant " + this.ds.getTenantName()
                             + " Deleted from openstack. Marking DS for deletion.");
                     // Tenant was deleted, mark ds for deleting as well
-                    EntityManager.markDeleted(session, this.ds);
+                    OSCEntityManager.markDeleted(em, this.ds);
                 } else {
                     // Sync the tenant name if needed
                     if (!tenant.getName().equals(this.ds.getTenantName())) {
                         this.log.info("DS tenant name updated from " + this.ds.getTenantName() + " to "
                                 + tenant.getName());
                         this.ds.setTenantName(tenant.getName());
-                        EntityManager.update(session, this.ds);
+                        OSCEntityManager.update(em, this.ds);
                     }
                 }
 

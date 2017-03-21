@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jboss.logging.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
@@ -27,7 +28,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class SecurityGroupMemberDeleteTask extends TransactionalTask {
@@ -41,8 +42,8 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
 
         if (this.sgm.getType() == SecurityGroupMemberType.VM) {
             VM vm = this.sgm.getVm();
@@ -54,13 +55,13 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
                 int totalVmPorts = vm.getPorts().size();
                 for (VMPort vmport : vm.getPorts()) {
                     if (vmport.getNetwork() == null) {
-                        EntityManager.delete(session, vmport);
+                        OSCEntityManager.delete(em, vmport);
                         portsDeleted++;
                     }
                 }
                 if (portsDeleted == totalVmPorts) {
                     // Only if all ports were deleted, delete the VM.
-                    EntityManager.delete(session, vm);
+                    OSCEntityManager.delete(em, vm);
                 }
             } else {
                 vm.getSecurityGroupMembers().remove(this.sgm);
@@ -76,15 +77,15 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
                 for (VMPort vmPort : network.getPorts()) {
                     // If the VM was created on behalf of this port, delete it.
                     VM vm = vmPort.getVm();
-                    EntityManager.delete(session, vmPort);
+                    OSCEntityManager.delete(em, vmPort);
                     if (vm != null) {
                         vm.removePort(vmPort);
                         if (vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 0) {
-                            EntityManager.delete(session, vm);
+                            OSCEntityManager.delete(em, vm);
                         }
                     }
                 }
-                EntityManager.delete(session, network);
+                OSCEntityManager.delete(em, network);
             }
             this.log.info("Deleting Security Group member from " + this.sgm.getSecurityGroup().getName());
             network.getSecurityGroupMembers().remove(this.sgm);
@@ -97,20 +98,20 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
                 for (VMPort vmPort : subnet.getPorts()) {
                     // If the VM was created on behalf of this port, delete it.
                     VM vm = vmPort.getVm();
-                    EntityManager.delete(session, vmPort);
+                    OSCEntityManager.delete(em, vmPort);
                     if (vm != null) {
                         vm.removePort(vmPort);
                         if (vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 0) {
-                            EntityManager.delete(session, vm);
+                            OSCEntityManager.delete(em, vm);
                         }
                     }
                 }
-                EntityManager.delete(session, subnet);
+                OSCEntityManager.delete(em, subnet);
             }
             this.log.info("Deleting Security Group member from " + this.sgm.getSecurityGroup().getName());
             subnet.getSecurityGroupMembers().remove(this.sgm);
         }
-        EntityManager.delete(session, this.sgm);
+        OSCEntityManager.delete(em, this.sgm);
     }
 
     @Override

@@ -19,7 +19,8 @@ package org.osc.core.broker.service.dto;
 import java.util.HashMap;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -33,26 +34,26 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.util.ValidateUtil;
 
 public class DistributedApplianceDtoValidator implements DtoValidator<DistributedApplianceDto, DistributedAppliance> {
-    private Session session;
+    private EntityManager em;
     private final static String ENCAPSULATION_TYPE_FIELD = "Encapsulation Type";
     private final static String DOMAIN_ID_FIELD = "Domain Id";
 
-    public DistributedApplianceDtoValidator(Session session) {
-        this.session = session;
+    public DistributedApplianceDtoValidator(EntityManager em) {
+        this.em = em;
     }
 
     @Override
     public void validateForCreate(DistributedApplianceDto dto) throws Exception {
         validate(dto);
 
-        EntityManager<DistributedAppliance> emgr = new EntityManager<DistributedAppliance>(DistributedAppliance.class,
-                this.session);
+        OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
+                this.em);
 
         if (emgr.isExisting("name", dto.getName())) {
             throw new VmidcBrokerValidationException("Distributed Appliance Name: " + dto.getName()
@@ -64,7 +65,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
     public DistributedAppliance validateForUpdate(DistributedApplianceDto dto) throws Exception {
         BaseDto.checkForNullId(dto);
 
-        DistributedAppliance da = (DistributedAppliance) this.session.get(DistributedAppliance.class, dto.getId());
+        DistributedAppliance da = this.em.find(DistributedAppliance.class, dto.getId());
 
         if (da == null) {
 
@@ -109,15 +110,15 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
                     "The associated Virtualization System must be selected for this Distributed Appliance.");
         }
 
-        Appliance a = ApplianceEntityMgr.findById(this.session, dto.getApplianceId());
+        Appliance a = ApplianceEntityMgr.findById(this.em, dto.getApplianceId());
 
         if (a == null) {
             throw new VmidcBrokerValidationException(
                     "The associated Appliance must be selected for this Distributed Appliance.");
         }
 
-        EntityManager<ApplianceManagerConnector> mcMgr = new EntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, this.session);
+        OSCEntityManager<ApplianceManagerConnector> mcMgr = new OSCEntityManager<ApplianceManagerConnector>(
+                ApplianceManagerConnector.class, this.em);
         ApplianceManagerConnector mc = mcMgr.findByPrimaryKey(dto.getMcId());
 
         if (mc == null) {
@@ -128,7 +129,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
         for (VirtualSystemDto vsDto : dto.getVirtualizationSystems()) {
             VirtualSystemDto.checkForNullFields(vsDto);
 
-            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(this.session, vsDto.getVcId());
+            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(this.em, vsDto.getVcId());
 
             if (vc == null) {
                 throw new VmidcBrokerValidationException(
@@ -157,7 +158,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
             ValidateUtil.checkForNullFields(notNullFields);
             ValidateUtil.validateFieldsAreNull(nullFields);
 
-            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(this.session,
+            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(this.em,
                     dto.getApplianceId(), dto.getApplianceSoftwareVersionName(), vc.getVirtualizationType(),
                     vc.getVirtualizationSoftwareVersion());
 
@@ -166,13 +167,13 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
                         "Incompatible Distributed Appliance and The associated Appliance Software Version.");
             }
 
-            if (forCreate && VirtualSystemEntityMgr.findByDAAndVC(this.session, dto.getId(), vsDto.getVcId()) != null) {
+            if (forCreate && VirtualSystemEntityMgr.findByDAAndVC(this.em, dto.getId(), vsDto.getVcId()) != null) {
                 throw new VmidcBrokerValidationException(
                         "The composite key Distributed Appliance, Virtualization Connector already exists.");
             }
 
             if (isPolicyMappingSupported) {
-                EntityManager<Domain> em = new EntityManager<Domain>(Domain.class, this.session);
+                OSCEntityManager<Domain> em = new OSCEntityManager<Domain>(Domain.class, this.em);
                 Domain domain = em.findByPrimaryKey(vsDto.getDomainId());
 
                 if (domain == null) {

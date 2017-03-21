@@ -16,12 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.SyncApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.response.SyncApplianceManagerConnectorResponse;
 
@@ -35,17 +36,17 @@ public class SyncManagerConnectorService extends
     }
 
     @Override
-    public SyncApplianceManagerConnectorResponse exec(SyncApplianceManagerConnectorRequest request, Session session)
+    public SyncApplianceManagerConnectorResponse exec(SyncApplianceManagerConnectorRequest request, EntityManager em)
             throws Exception {
 
-        EntityManager<ApplianceManagerConnector> emgr = new EntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
+                ApplianceManagerConnector.class, em);
 
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(request.getId());
 
         validate(request, mc);
 
-        Long jobId = this.conformService.startMCConformJob(mc, session).getId();
+        Long jobId = this.conformService.startMCConformJob(mc, em).getId();
 
         SyncApplianceManagerConnectorResponse response = new SyncApplianceManagerConnectorResponse();
         response.setJobId(jobId);

@@ -19,7 +19,8 @@ package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -46,18 +47,18 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         this.tg = new TaskGraph();
 
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         ServiceProfileApi serviceProfileApi = VMwareSdnApiFactory.createServiceProfileApi(this.vs);
 
         //List<ServiceProfile> serviceProfiles = spa.getServiceProfilesByServiceId();
         List<ServiceProfileElement> serviceProfiles = serviceProfileApi.getServiceProfiles(this.vs.getNsxServiceId());
         for (ServiceProfileElement serviceProfile : serviceProfiles) {
-            processServiceProfile(session, serviceProfileApi, this.tg, this.vs, serviceProfile);
+            processServiceProfile(em, serviceProfileApi, this.tg, this.vs, serviceProfile);
         }
 
         // Delete any dangling interfaces
@@ -75,19 +76,19 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         }
     }
 
-    public static void processServiceProfile(Session session, TaskGraph tg, VirtualSystem vs,
+    public static void processServiceProfile(EntityManager em, TaskGraph tg, VirtualSystem vs,
             ServiceProfile serviceProfile) throws Exception {
 
         ServiceProfileApi serviceProfileApi = VMwareSdnApiFactory.createServiceProfileApi(vs);
 
-        processServiceProfile(session, serviceProfileApi, tg, vs, serviceProfile);
+        processServiceProfile(em, serviceProfileApi, tg, vs, serviceProfile);
     }
 
-    private static void processServiceProfile(Session session, ServiceProfileApi serviceProfileApi,
+    private static void processServiceProfile(EntityManager em, ServiceProfileApi serviceProfileApi,
             TaskGraph tg, VirtualSystem vs, ServiceProfileElement serviceProfile) throws Exception {
 
         // Locate the relevant Security Group in our DB associate with this Service Profile
-        SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(session, vs,
+        SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(em, vs,
                 serviceProfile.getId());
 
         // Check if there are any NSX objects associated with this Service Profile.
@@ -104,7 +105,7 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         } else {
             // NSX bindings exists. Ensure we have it in our db and update it if necessary
 
-            VirtualSystemPolicy vsp = VirtualSystemPolicyEntityMgr.findVirtualSystemPolicyByNsxId(session, vs,
+            VirtualSystemPolicy vsp = VirtualSystemPolicyEntityMgr.findVirtualSystemPolicyByNsxId(em, vs,
                     serviceProfile);
 
             if (sgi == null) {

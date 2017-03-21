@@ -22,19 +22,19 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.junit.Test;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.service.PropagateVSMgrFileService;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.client.RestBaseClient;
@@ -152,8 +152,8 @@ public class TestNsmApis {
 
             System.out.println("===== Start Test verify agent pubkey");
 
-            Session session = null;
-            Transaction tx = null;
+            EntityManager em = null;
+            EntityTransaction tx = null;
 
             byte[] ks_1 = null;
             PublicKey pubkey_1 = null;
@@ -162,14 +162,15 @@ public class TestNsmApis {
             // get pubkey and keystore for record #1
             try {
 
-                SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-                session = sessionFactory.getCurrentSession();
+                EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
+                em = emf.createEntityManager();
 
                 // We must open a new transaction before doing anything with the
                 // DB
-                tx = session.beginTransaction();
+                tx = em.getTransaction();
+                tx.begin();
 
-                EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+                OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
                 VirtualSystem vs = emgr.findByPrimaryKey(new Long(97));
 
                 ks_1 = vs.getKeyStore();
@@ -198,14 +199,15 @@ public class TestNsmApis {
             // get pubkey and keystore for record #2
             try {
 
-                SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-                session = sessionFactory.getCurrentSession();
+                EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
+                em = emf.createEntityManager();
 
                 // We must open a new transaction before doing anything with the
                 // DB
-                tx = session.beginTransaction();
+                tx = em.getTransaction();
+                tx.begin();
 
-                EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+                OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
                 VirtualSystem vs = emgr.findByPrimaryKey(new Long(165));
 
                 ks_2 = vs.getKeyStore();
@@ -278,20 +280,21 @@ public class TestNsmApis {
 
             System.out.println("===== Start Test creating nsm pub key");
 
-            Session session = null;
-            Transaction tx = null;
+            EntityManager em = null;
+            EntityTransaction tx = null;
 
             try {
 
-                SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-                session = sessionFactory.getCurrentSession();
+                EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
+                em = emf.createEntityManager();
 
                 // We must open a new transaction before doing anything with the
                 // DB
-                tx = session.beginTransaction();
+                tx = em.getTransaction();
+                tx.begin();
 
-                EntityManager<ApplianceManagerConnector> emgr = new EntityManager<ApplianceManagerConnector>(
-                        ApplianceManagerConnector.class, session);
+                OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
+                        ApplianceManagerConnector.class, em);
                 ApplianceManagerConnector mc = emgr.findByPrimaryKey(1L);
                 byte[] pubKey = "abcdef".getBytes();
                 mc.setPublicKey(pubKey);
