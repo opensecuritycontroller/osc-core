@@ -28,6 +28,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -180,8 +181,8 @@ public class AESCTREncryption {
 
         private String loadKeystorePasswordForAESCTRKey() throws EncryptionException {
             Properties properties = new Properties();
-            try {
-                properties.load(getClass().getResourceAsStream(EncryptionUtil.SECURITY_PROPS_RESOURCE_PATH));
+            try(InputStream is =getClass().getResourceAsStream(EncryptionUtil.SECURITY_PROPS_RESOURCE_PATH)) {
+                properties.load(is);
             } catch (IOException e) {
                 LOG.error("Error loading key from properties", e);
                 throw new EncryptionException("Failed to load keystore password.", e);
