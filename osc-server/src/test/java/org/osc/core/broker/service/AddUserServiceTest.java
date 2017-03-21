@@ -117,23 +117,4 @@ public class AddUserServiceTest {
                 this.em.createQuery("Select u.id from User u where u.loginName = 'userName'").getSingleResult(),
                         response.getId());
     }
-
-//    private class UserLoginMatcher extends ArgumentMatcher<Object> {
-//        private String loginName;
-//
-//        UserLoginMatcher(String loginName) {
-//            this.loginName = loginName;
-//        }
-//
-//        @Override
-//        public boolean matches(Object object) {
-//            if (object == null || !(object instanceof User)) {
-//                return false;
-//            }
-//
-//            User providedUser = (User) object;
-//
-//            return this.loginName.equals(providedUser.getLoginName());
-//        }
-//    }
 }
