@@ -17,22 +17,27 @@
 package org.osc.core.broker.rest.server.api;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import com.mcafee.vmidc.server.Server;
 
@@ -104,21 +109,28 @@ public class ServerMgmtApis {
     @Path("/backup-db")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @POST
-    public Response getDbBackupFile(BackupRequest request) {
+    public Response getDbBackupFile(@Context HttpHeaders headers, @ApiParam(required = true) BackupRequest request) {
 
-        try {
-            BackupService bkpservice = new BackupService();
-            bkpservice.dispatch(request);
-            byte[] docStream = PKIUtil.readBytesFromFile(bkpservice.getEncryptedBackupFile());
-
-            return Response.ok(docStream, MediaType.APPLICATION_OCTET_STREAM)
-                    .header("content-disposition", "attachment; filename = vmiDCServerDBBackup.zip").build();
-
-        } catch (Exception e) {
-
-            logger.error("Failed to backup vmiDCServer Database ", e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
+        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        logger.info(SessionUtil.getCurrentUser()+" is generating backap DB");
+        StreamingOutput fileStream = new StreamingOutput() {
+            @Override
+            public void write(OutputStream output) throws IOException, WebApplicationException {
+                try {
+                    BackupService bkpservice = new BackupService();
+                    bkpservice.dispatch(request);
+                    byte[] data = PKIUtil.readBytesFromFile(bkpservice.getEncryptedBackupFile(request.getBackupFileName()));
+                    output.write(data);
+                    output.flush();
+                } catch (Exception e) {
+                    throw new InternalServerErrorException("Backup could not be generated",e);
+                }
+            }
+        };
+        return Response
+                .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM)
+                .header("content-disposition", "attachment; filename = oscServerDBBackup.zip")
+                .build();
     }
 
     @LocalHostAuth
