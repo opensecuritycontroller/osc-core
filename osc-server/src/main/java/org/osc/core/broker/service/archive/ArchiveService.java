@@ -16,11 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.service.archive;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.File;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.jdbc.Work;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
@@ -32,22 +41,12 @@ import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.util.ArchiveUtil;
 
-import java.io.File;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Archive service which performs job archive to CSV files.
@@ -60,24 +59,23 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
     }
 
     @Override
-    public Response exec(final BaseRequest<JobsArchiveDto> request, Session session) throws Exception {
+    @SuppressFBWarnings(value="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
+    public Response exec(final BaseRequest<JobsArchiveDto> request, EntityManager em) throws Exception {
         try {
             JobsArchive jobsArchive = null;
 
             // Job Archive process could be invoked on demand or on schedule.
             // the request Dto ID suggests which one was invoked.
             if (request.getDto().getId() != null) {
-                jobsArchive = (JobsArchive) session.get(JobsArchive.class, 1L);
+                jobsArchive = em.find(JobsArchive.class, 1L);
 
                 // If on schedule job archiving, load parameters from db
                 request.getDto().setThresholdUnit(jobsArchive.getThresholdUnit());
                 request.getDto().setThresholdValue(jobsArchive.getThresholdValue());
             }
 
-            session.doWork(new Work() {
-                @Override
-                @SuppressFBWarnings(value="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
-                public void execute(Connection connection) throws SQLException {
+            Connection connection = em.unwrap(Connection.class);
+
                     try {
                         // calculate threshold date
                         Period period = getPeriod(request);
@@ -131,12 +129,10 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
                                 "Failure during archiving operation " + e.getMessage());
                     }
 
-                }
-            });
 
             if (jobsArchive != null) {
                 jobsArchive.setLastTriggerTimestamp(new Date());
-                EntityManager.update(session, jobsArchive);
+                OSCEntityManager.update(em, jobsArchive);
             }
 
         } catch (Exception e) {

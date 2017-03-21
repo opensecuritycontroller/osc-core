@@ -19,7 +19,8 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -41,15 +42,15 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.sg = (SecurityGroup) session.get(SecurityGroup.class, this.sg.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
         this.tg = new TaskGraph();
         this.tg.addTask(new ValidateSecurityGroupTenantTask(this.sg));
         this.tg.appendTask(new SecurityGroupUpdateOrDeleteMetaTask(this.sg));
 
         if (!ValidateUtil.isEmpty(this.sg.getSecurityGroupInterfaces())) {
-            List<VirtualSystem> referencedVs = VirtualSystemEntityMgr.listReferencedVSBySecurityGroup(session,
+            List<VirtualSystem> referencedVs = VirtualSystemEntityMgr.listReferencedVSBySecurityGroup(em,
                     this.sg.getId());
             for (VirtualSystem vs : referencedVs) {
                 if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {

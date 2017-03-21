@@ -20,9 +20,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.model.entities.appliance.Appliance;
+import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
@@ -40,8 +45,6 @@ public class DSUpdateOrDeleteMetaTaskTestData {
     public static String HS_1_1 = "HS_1_1";
     public static String REGION_1 = "REGION_1";
 
-    private static VirtualSystem VIRTUALSYSTEM = new VirtualSystem();
-
     public static List<DistributedApplianceInstance> UPDATE_AZ_SELECTED_DAIS =
             new ArrayList<>();
     public static List<DistributedApplianceInstance> UPDATE_DAI_HOST_NOT_IN_AZ_DAIS =
@@ -53,12 +56,12 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static DeploymentSpec UPDATE_NO_HOST_SELECTED_DS =
             createAllHostsInRegionData(
-                    1L,
+                    "UPDATE_NO_HOST_SELECTED_DS",
                     REGION_1);
 
     public static DeploymentSpec UPDATE_DAI_HOST_SELECTED_DS =
             createDsWithDaiAndHostSelectedData(
-                    2L,
+                    "UPDATE_DAI_HOST_SELECTED_DS",
                     REGION_1,
                     HS_1_1,
                     HS_1_1,
@@ -66,7 +69,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static DeploymentSpec UPDATE_DAI_HOST_NOT_SELECTED_DS =
             createDsWithDaiAndHostSelectedData(
-                    3L,
+                    "UPDATE_DAI_HOST_NOT_SELECTED_DS",
                     REGION_1,
                     "UPDATE_DAI_HOST_NOT_SELECTED_DAI_HOSTNAME",
                     HS_1_1,
@@ -74,7 +77,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static DeploymentSpec UPDATE_AZ_SELECTED_DS =
             createDsWithAvailabilityZoneSelectedData(
-                    4L,
+                    "UPDATE_AZ_SELECTED_DS",
                     REGION_1,
                     HS_1_1,
                     "UPDATE_AZ_SELECTED_DAINAME",
@@ -83,7 +86,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static DeploymentSpec UPDATE_DAI_HOST_NOT_IN_AZ_DS =
             createDsWithAvailabilityZoneSelectedData(
-                    5L,
+                    "UPDATE_DAI_HOST_NOT_IN_AZ_DS",
                     REGION_1,
                     "UPDATE_DAI_NOT_IN_AZ_HOSTNAME",
                     "UPDATE_DAI_NOT_IN_AZ_DAINAME",
@@ -92,7 +95,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static DeploymentSpec UPDATE_OPENSTACK_AZ_NOT_SELECTED_DS =
             createDsWithAvailabilityZoneSelectedData(
-                    6L,
+                    "UPDATE_OPENSTACK_AZ_NOT_SELECTED_DS",
                     REGION_1,
                     "UPDATE_DAI_NOT_IN_AZ_HOSTNAME",
                     "UPDATE_DAI_NOT_IN_AZ_DAINAME",
@@ -101,13 +104,13 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static DeploymentSpec UPDATE_HOST_AGGREGATE_SELECTED_DS =
             createDsWithHostAggregateSelectedData(
-                    7L,
+                    "UPDATE_HOST_AGGREGATE_SELECTED_DS",
                     REGION_1,
                     "UPDATE_HOST_AGGREGATE_SELECTED_HA_ID");
 
     public static DeploymentSpec UPDATE_DAI_HOST_AGGREGATE_NOT_SELECTED_DS =
             createDsWithDaiAndHostAggregateSelectedData(
-                    8L,
+                    "UPDATE_DAI_HOST_AGGREGATE_NOT_SELECTED_DS",
                     REGION_1,
                     "UPDATE_DAI_HOST_AGGREGATE_NOT_SELECTED_HOSTNAME",
                     "UPDATE_DAI_HOST_AGGREGATE_NOT_SELECTED_DAINAME",
@@ -116,79 +119,90 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static DeploymentSpec DELETE_DS_WITHOUT_SG_REFERENCE =
             createDsForDeletionWithoutSgReferenceData(
-                    9L,
+                    "DELETE_DS_WITHOUT_SG_REFERENCE",
                     "DELETE_DAINAME");
 
     public static DeploymentSpec DELETE_DS_WITH_SG_REFERENCE =
             createDsForDeletionWithSgReferenceData(
-                    10L,
+                    "DELETE_DS_WITH_SG_REFERENCE",
                     "DELETE_DAINAME");
 
-    private static DeploymentSpec createAllHostsInRegionData(Long dsId, String region) {
-        return createDeploymentSpec(dsId, region);
+    private static DeploymentSpec createAllHostsInRegionData (String dsName, String region) {
+        return createDeploymentSpec(dsName, region);
     }
 
-    private static DeploymentSpec createDsWithDaiAndHostSelectedData(Long dsId, String region, String daiHostName, String selectedHostName, String daiName) {
-        DeploymentSpec ds = createDeploymentSpec(dsId, region);
-        DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM);
+    private static DeploymentSpec createDsWithDaiAndHostSelectedData (String dsName, String region, String daiHostName, String selectedHostName, String daiName) {
+        DeploymentSpec ds = createDeploymentSpec(dsName, region);
+        DistributedApplianceInstance dai = new DistributedApplianceInstance(ds.getVirtualSystem());
+        dai.setDeploymentSpec(ds);
         dai.setOsHostName(daiHostName);
         dai.setName(daiName);
 
         ds.setDistributedApplianceInstances(Sets.newHashSet(dai));
+        ds.getVirtualSystem().addDistributedApplianceInstance(dai);
 
-        Host host = new Host();
+        Host host = new Host(ds, dsName + "_openstackId");
         host.setName(selectedHostName);
         ds.setHosts(Sets.newHashSet(host));
 
         return ds;
     }
 
-    private static DeploymentSpec createDsForDeletionWithoutSgReferenceData(Long dsId, String daiName) {
-        DeploymentSpec ds = createDsWithDaiAndHostSelectedData(dsId, null, null, null, daiName);
+    private static DeploymentSpec createDsForDeletionWithoutSgReferenceData(String dsName, String daiName) {
+        DeploymentSpec ds = createDsWithDaiAndHostSelectedData(dsName, REGION_1, "foo", "bar", daiName);
         ds.setMarkedForDeletion(true);
 
         return ds;
     }
 
-    private static DeploymentSpec createDsForDeletionWithSgReferenceData(Long dsId, String daiName) {
-        DeploymentSpec ds = createDsWithDaiAndHostSelectedData(dsId, null, null, null, daiName);
-        ds.setOsSecurityGroupReference(new OsSecurityGroupReference(null, null, null));
+    private static DeploymentSpec createDsForDeletionWithSgReferenceData(String dsName, String daiName) {
+        DeploymentSpec ds = createDsWithDaiAndHostSelectedData(dsName, REGION_1, "foo", "bar", daiName);
+        ds.setOsSecurityGroupReference(new OsSecurityGroupReference(dsName + "_sgRefId",
+                dsName + "_sgRefName", ds));
         ds.setMarkedForDeletion(true);
 
         return ds;
     }
 
-    private static DeploymentSpec createDsWithAvailabilityZoneSelectedData(Long dsId, String region, String daiHostName, String daiName, String selectedAzName, List<DistributedApplianceInstance> dais) {
-        DeploymentSpec ds = createDeploymentSpec(dsId, region);
+    private static DeploymentSpec createDsWithAvailabilityZoneSelectedData (String dsName, String region, String daiHostName, String daiName, String selectedAzName, List<DistributedApplianceInstance> dais) {
+        DeploymentSpec ds = createDeploymentSpec(dsName, region);
 
-        AvailabilityZone az = new AvailabilityZone(ds, null, selectedAzName);
+        AvailabilityZone az = new AvailabilityZone(ds, region, selectedAzName);
         ds.setAvailabilityZones(Sets.newHashSet(az));
 
-        DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM);
+        DistributedApplianceInstance dai = new DistributedApplianceInstance(ds.getVirtualSystem());
+        dai.setDeploymentSpec(ds);
         dai.setOsHostName(daiHostName);
+        dai.setOsAvailabilityZone(selectedAzName);
         dai.setName(daiName);
+
+        ds.setDistributedApplianceInstances(Sets.newHashSet(dai));
+        ds.getVirtualSystem().addDistributedApplianceInstance(dai);
 
         dais.add(dai);
         return ds;
     }
 
-    private static DeploymentSpec createDsWithHostAggregateSelectedData(Long dsId, String region, String hostAggregateOSId) {
-        DeploymentSpec ds = createDeploymentSpec(dsId, region);
+    private static DeploymentSpec createDsWithHostAggregateSelectedData(String dsName, String region, String hostAggregateOSId) {
+        DeploymentSpec ds = createDeploymentSpec(dsName, region);
 
         HostAggregate ha = new HostAggregate(ds, hostAggregateOSId);
+        ha.setName(dsName + "_ha");
 
         ds.setHostAggregates(Sets.newHashSet(ha));
         return ds;
     }
 
-    private static DeploymentSpec createDsWithDaiAndHostAggregateSelectedData(Long dsId, String region, String daiHostName, String daiName, String hostAggregateOSId, List<DistributedApplianceInstance> dais) {
-        DeploymentSpec ds = createDsWithHostAggregateSelectedData(dsId, region, hostAggregateOSId);
-        DistributedApplianceInstance dai = new DistributedApplianceInstance(VIRTUALSYSTEM);
+    private static DeploymentSpec createDsWithDaiAndHostAggregateSelectedData(String dsName, String region, String daiHostName, String daiName, String hostAggregateOSId, List<DistributedApplianceInstance> dais) {
+        DeploymentSpec ds = createDsWithHostAggregateSelectedData(dsName, region, hostAggregateOSId);
+        DistributedApplianceInstance dai = new DistributedApplianceInstance(ds.getVirtualSystem());
+        dai.setDeploymentSpec(ds);
         dai.setOsHostName(daiHostName);
         dai.setName(daiName);
 
         dais.add(dai);
         ds.setDistributedApplianceInstances(Sets.newHashSet(dai));
+        ds.getVirtualSystem().addDistributedApplianceInstance(dai);
 
         return ds;
     }
@@ -257,14 +271,54 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         return expectedGraph;
     }
 
-    private static DeploymentSpec createDeploymentSpec(Long dsId, String region) {
+    private static DeploymentSpec createDeploymentSpec(String baseName, String region) {
         VirtualizationConnector vc = new VirtualizationConnector();
-        vc.setName("vc_name");
-        VirtualSystem vs = new VirtualSystem(new DistributedAppliance());
-        vs.setId(150L);
+        vc.setName(baseName + "_vc");
+        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+        vc.setProviderIpAddress(baseName + "_providerIp");
+        vc.setProviderUsername("Natasha");
+        vc.setProviderPassword("********");
+
+        ApplianceManagerConnector mc = new ApplianceManagerConnector();
+        mc.setIpAddress(baseName + "_mcIp");
+        mc.setName(baseName + "_mc");
+        mc.setServiceType("foobar");
+        mc.setManagerType("buzz");
+
+        Domain domain = new Domain(mc);
+        domain.setName(baseName + "_domain");
+
+        Appliance app = new Appliance();
+        app.setManagerSoftwareVersion("fizz");
+        app.setManagerType("buzz");
+        app.setModel(baseName + "_model");
+
+        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
+        asv.setApplianceSoftwareVersion("softwareVersion");
+        asv.setImageUrl(baseName + "_image");
+        asv.setVirtualizarionSoftwareVersion(vc.getVirtualizationSoftwareVersion());
+        asv.setVirtualizationType(vc.getVirtualizationType());
+
+        DistributedAppliance da = new DistributedAppliance(mc);
+        da.setName(baseName + "_da");
+        da.setApplianceVersion("foo");
+        da.setAppliance(app);
+
+        VirtualSystem vs = new VirtualSystem(da);
+        vs.setApplianceSoftwareVersion(asv);
+        vs.setDomain(domain);
         vs.setVirtualizationConnector(vc);
-        DeploymentSpec ds = new DeploymentSpec(vs, region, null, null,null, null);
-        ds.setId(dsId);
+        vs.setMarkedForDeletion(false);
+        vs.setName(baseName + "_vs");
+        vs.setMgrId(baseName + "_mgrId");
+
+        DeploymentSpec ds = new DeploymentSpec(vs, region, baseName + "_tenantId",
+                baseName + "_mnId",baseName + "_inId", null);
+        ds.setName(baseName + "_ds");
+        ds.setTenantName(baseName + "_tenantName");
+        ds.setManagementNetworkName(baseName + "_mnName");
+        ds.setInspectionNetworkName(baseName + "_inName");
 
         TEST_DEPLOYMENT_SPECS.add(ds);
         return ds;

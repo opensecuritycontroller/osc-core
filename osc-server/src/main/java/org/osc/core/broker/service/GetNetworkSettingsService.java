@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.request.GetNetworkSettingsRequest;
 import org.osc.core.broker.service.response.GetNetworkSettingsResponse;
@@ -25,7 +26,7 @@ import org.osc.core.broker.util.network.NetworkSettingsApi;
 public class GetNetworkSettingsService extends ServiceDispatcher<GetNetworkSettingsRequest, GetNetworkSettingsResponse> {
 
     @Override
-    public GetNetworkSettingsResponse exec(GetNetworkSettingsRequest request, Session session) throws Exception {
+    public GetNetworkSettingsResponse exec(GetNetworkSettingsRequest request, EntityManager em) throws Exception {
 
         NetworkSettingsApi api = new NetworkSettingsApi();
         NetworkSettingsDto nsd = api.getNetworkSettings();

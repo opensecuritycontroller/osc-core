@@ -16,12 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securityinterface;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -34,26 +35,26 @@ BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJo
     private SecurityGroupInterface sgi;
 
     @Override
-    public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, Session session) throws Exception {
+    public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
 
         SecurityGroupInterfaceDto dto = request.getDto();
-        validateAndLoad(session, dto);
+        validateAndLoad(em, dto);
 
         SecurityGroupInterfaceEntityMgr.toEntity(this.sgi, dto, this.policy, SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Updating SecurityGroupInterface: " + this.sgi.toString());
-        EntityManager.update(session, this.sgi);
+        OSCEntityManager.update(em, this.sgi);
         commitChanges(true);
 
-        Long jobId = ConformService.startDAConformJob(session, this.sgi.getVirtualSystem().getDistributedAppliance());
+        Long jobId = ConformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
         return new BaseJobResponse(this.sgi.getId(), jobId);
     }
 
     @Override
-    protected void validateAndLoad(Session session, SecurityGroupInterfaceDto dto) throws Exception {
-        super.validateAndLoad(session, dto);
+    protected void validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
+        super.validateAndLoad(em, dto);
 
-        this.sgi = SecurityGroupInterfaceEntityMgr.findById(session, dto.getId());
+        this.sgi = SecurityGroupInterfaceEntityMgr.findById(em, dto.getId());
 
         if (this.sgi == null) {
             throw new VmidcBrokerValidationException(
@@ -71,7 +72,7 @@ BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJo
         }
 
         SecurityGroupInterface existingSGI = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(
-                session, this.vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString());
+                em, this.vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString());
 
         if (existingSGI != null && !existingSGI.equals(this.sgi)) {
             throw new VmidcBrokerValidationException("A Traffic Policy Mapping: " + existingSGI.getName()

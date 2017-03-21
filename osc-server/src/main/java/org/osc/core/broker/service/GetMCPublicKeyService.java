@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.GetMCPublicKeyRequest;
 import org.osc.core.broker.service.response.GetMCPublicKeyResponse;
 
@@ -27,11 +28,11 @@ import org.osc.core.broker.service.response.GetMCPublicKeyResponse;
 public class GetMCPublicKeyService extends ServiceDispatcher<GetMCPublicKeyRequest, GetMCPublicKeyResponse> {
 
     @Override
-    public GetMCPublicKeyResponse exec(GetMCPublicKeyRequest request, Session session) throws Exception {
+    public GetMCPublicKeyResponse exec(GetMCPublicKeyRequest request, EntityManager em) throws Exception {
 
         GetMCPublicKeyResponse response = new GetMCPublicKeyResponse();
 
-        ApplianceManagerConnector mc = validate(session, request);
+        ApplianceManagerConnector mc = validate(em, request);
 
         byte[] publicKey = mc.getPublicKey();
 
@@ -40,7 +41,7 @@ public class GetMCPublicKeyService extends ServiceDispatcher<GetMCPublicKeyReque
         return response;
     }
 
-    ApplianceManagerConnector validate(Session session, GetMCPublicKeyRequest request) throws Exception {
+    ApplianceManagerConnector validate(EntityManager em, GetMCPublicKeyRequest request) throws Exception {
 
         Long mcId = request.getMcId();
 
@@ -50,8 +51,8 @@ public class GetMCPublicKeyService extends ServiceDispatcher<GetMCPublicKeyReque
         }
 
         // retrieve existing entry from db
-        EntityManager<ApplianceManagerConnector> emgr = new EntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
+                ApplianceManagerConnector.class, em);
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(mcId);
 
         if (mc == null) {

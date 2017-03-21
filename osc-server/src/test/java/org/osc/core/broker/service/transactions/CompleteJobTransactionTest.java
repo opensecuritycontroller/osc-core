@@ -16,9 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.transactions;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,7 +42,7 @@ public class CompleteJobTransactionTest {
         }
     }
 
-    private Session sessionMock;
+    private EntityManager em;
     private long existingEntityId = 1;
     private long existingJobId = 2;
     private long missingEntityId = 3;
@@ -50,15 +54,15 @@ public class CompleteJobTransactionTest {
     private JobRecord testLastJobRecord;
 
     private void init() {
-        this.sessionMock = mock(Session.class);
+        this.em = mock(EntityManager.class);
         this.target= new CompleteJobTransaction<TestEntityWithLastJob>(TestEntityWithLastJob.class);
         this.testEntity = mock(TestEntityWithLastJob.class);
         this.testLastJobRecord = new JobRecord();
 
-        when(this.sessionMock.get(TestEntityWithLastJob.class, this.existingEntityId)).thenReturn(this.testEntity);
-        when(this.sessionMock.get(JobRecord.class, this.existingJobId)).thenReturn(this.testLastJobRecord);
-        when(this.sessionMock.get(TestEntityWithLastJob.class, this.missingEntityId)).thenReturn(null);
-        when(this.sessionMock.get(JobRecord.class, this.missingJobId)).thenReturn(null);
+        when(this.em.find(TestEntityWithLastJob.class, this.existingEntityId)).thenReturn(this.testEntity);
+        when(this.em.find(JobRecord.class, this.existingJobId)).thenReturn(this.testLastJobRecord);
+        when(this.em.find(TestEntityWithLastJob.class, this.missingEntityId)).thenReturn(null);
+        when(this.em.find(JobRecord.class, this.missingJobId)).thenReturn(null);
     }
 
     @Before
@@ -72,7 +76,7 @@ public class CompleteJobTransactionTest {
     @Test
     public void testRun_WithValidInput_UpdatesEntityProperly() throws Exception {
         // Act.
-        this.target.run(this.sessionMock,new CompleteJobTransactionInput(this.existingEntityId, this.existingJobId));
+        this.target.run(this.em,new CompleteJobTransactionInput(this.existingEntityId, this.existingJobId));
 
         // Assert.
         verify(this.testEntity, times(1)).setLastJob(this.testLastJobRecord);
@@ -84,7 +88,7 @@ public class CompleteJobTransactionTest {
         this.expectException.expect(IllegalArgumentException.class);
 
         // Act.
-        this.target.run(this.sessionMock,new CompleteJobTransactionInput(this.missingEntityId, this.existingJobId));
+        this.target.run(this.em,new CompleteJobTransactionInput(this.missingEntityId, this.existingJobId));
     }
 
     @Test
@@ -93,6 +97,6 @@ public class CompleteJobTransactionTest {
         this.expectException.expect(IllegalArgumentException.class);
 
         // Act.
-        this.target.run(this.sessionMock,new CompleteJobTransactionInput(this.existingEntityId, this.missingJobId));
+        this.target.run(this.em,new CompleteJobTransactionInput(this.existingEntityId, this.missingJobId));
     }
 }

@@ -20,14 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteMemberDeviceTask;
 import org.osc.sdk.sdn.api.AgentApi;
@@ -44,9 +45,9 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         if (this.vs.getNsxServiceInstanceId() == null) {
             return;
@@ -78,16 +79,16 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
                     dai.setNsxHostVsmUuid(agent.getHostVsmId());
                     dai.setMgmtGateway(agent.getGateway());
                     dai.setMgmtSubnetPrefixLength(agent.getSubnetPrefixLength());
-                    EntityManager.update(session, dai);
+                    OSCEntityManager.update(em, dai);
                 }
-                NsxUpdateAgentsService.updateNsxAgentInfo(session, dai, agent);
+                NsxUpdateAgentsService.updateNsxAgentInfo(em, dai, agent);
             }
         }
 
         // Delete any DAIs deemed invalid
         for (DistributedApplianceInstance dai : daiToBeDeleted) {
             this.vs.removeDistributedApplianceInstance(dai);
-            EntityManager.delete(session, dai);
+            OSCEntityManager.delete(em, dai);
         }
     }
 

@@ -19,9 +19,10 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.neutron.v2.domain.IP;
 import org.jclouds.openstack.neutron.v2.domain.Network;
 import org.jclouds.openstack.neutron.v2.domain.Port;
@@ -33,7 +34,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 
 public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
@@ -48,9 +49,9 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
+        this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         Endpoint endPoint = new Endpoint(ds);
@@ -104,7 +105,7 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
                     mgmtSubnetPrefixLength,
                     mgmtSubnet.getGatewayIp()));
 
-            EntityManager.update(session, this.dai);
+            OSCEntityManager.update(em, this.dai);
         }
     }
 

@@ -16,15 +16,36 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
-import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.DA_WITH_MANAGER_SGI_DA;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.DA_WITH_MANAGER_SGI_TO_BE_DELETED_DA;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.DA_WITH_SGI_AND_NO_MANAGER_SGI_DA;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.MGR_SGI;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.MGR_SGI_AND_MGR_SGI_TO_BE_DELETED_LIST;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.MGR_SGI_AND_SGI_WITH_SAME_NAME;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.MGR_SGI_TO_BE_DELETED;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.SGI_NOT_MARK_FOR_DELETION_WITH_DIFFERENT_POLICY_ID_AND_TAG_DA_SGI;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.SGI_NOT_MARK_FOR_DELETION_WITH_DIFFERENT_POLICY_ID_AND_TAG_VS_SGI;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.SGI_NOT_MARK_FOR_DELETION_WITH_ID_DA_SGI;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.SGI_NOT_MARK_FOR_DELETION_WITH_ID_VS_SGI;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.TEST_DISTRIBUTED_APPLIANCE;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.TEST_VIRTUAL_SYSTEMS;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.VS_WITH_MANAGER_SGI_TO_BE_DELETED_VS;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.VS_WITH_MANAGER_SGI_VS;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.VS_WITH_SGI_AND_NO_MANAGER_SGI_VS;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.VS_WITH_SGI_NOT_MARK_FOR_DELETION_WITH_ID_VS_SGI_AND_SGI_MARK_FOR_DELETION_VS_SGI;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.createAndDeleteStaleMgrSecurityGroupInterfaceGraph;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.deleteMgrSecurityGroupGraph;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.updateMgrSecurityGroupInterfaceGraph;
+import static org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfaceCheckMetaTaskTestData.vsWithMultipleSgiGraph;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,7 +71,7 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 @PrepareForTest({ ManagerApiFactory.class })
 public class MgrSecurityGroupInterfaceCheckMetaTaskTest {
     @Mock
-    public Session sessionMock;
+    public EntityManager em;
 
     private VirtualSystem vs;
     private DistributedAppliance da;
@@ -85,11 +106,11 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTest {
         MockitoAnnotations.initMocks(this);
 
         for (VirtualSystem vs : TEST_VIRTUAL_SYSTEMS) {
-            Mockito.when(this.sessionMock.get(VirtualSystem.class, vs.getId())).thenReturn(vs);
+            Mockito.when(this.em.find(VirtualSystem.class, vs.getId())).thenReturn(vs);
         }
 
         for (DistributedAppliance da : TEST_DISTRIBUTED_APPLIANCE) {
-            Mockito.when(this.sessionMock.get(DistributedAppliance.class, da.getId())).thenReturn(da);
+            Mockito.when(this.em.find(DistributedAppliance.class, da.getId())).thenReturn(da);
         }
 
         PowerMockito.mockStatic(ManagerApiFactory.class);
@@ -114,7 +135,7 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTest {
         }
 
         // Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         // Assert.
         TaskGraphHelper.validateTaskGraph(task, this.expectedGraph);

@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.manager;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
@@ -35,12 +36,12 @@ public class MgrDeleteMemberDeviceTask extends TransactionalTask {
     public MgrDeleteMemberDeviceTask(VirtualSystem vs, ManagerDeviceMemberElement device) {
         this.vs = vs;
         this.device = device;
-        this.deviceName = device.getName(); 
+        this.deviceName = device.getName();
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        deleteMemberDevice(this.vs, device);
+    public void executeTransaction(EntityManager em) throws Exception {
+        deleteMemberDevice(this.vs, this.device);
     }
 
     public static boolean deleteMemberDevice(DistributedApplianceInstance dai) throws Exception {

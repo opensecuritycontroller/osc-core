@@ -51,7 +51,7 @@ public class WebSocketClientEndPoint extends Endpoint {
     }
 
     public Session getActiveSession() {
-        return activeSession;
+        return this.activeSession;
     }
 
     @Override
@@ -79,7 +79,7 @@ public class WebSocketClientEndPoint extends Endpoint {
                                 + WebSocketClientEndPoint.this.mc.getName() + "-"
                                 + WebSocketClientEndPoint.this.mc.getIpAddress() + "'");
                         AlertGenerator.processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
-                                new LockObjectReference(mc), "Failed to process notification from Manager: '"
+                                new LockObjectReference(WebSocketClientEndPoint.this.mc), "Failed to process notification from Manager: '"
                                         + WebSocketClientEndPoint.this.mc.getName() + "-"
                                         + WebSocketClientEndPoint.this.mc.getIpAddress() + "'");
                     } finally {

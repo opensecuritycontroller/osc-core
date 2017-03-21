@@ -36,7 +36,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,7 +67,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
     private static final String VMWARE_6_STRING = "6";
 
     @Mock
-    public Session sessionMock;
+    public EntityManager em;
 
     private static String DEFAULT_IMAGE_URL = "DEFAULT_IMAGE_URL";
     private static String ALL_DEPLOY_SPECS_MISSING = "ALL";
@@ -93,7 +94,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
         PowerMockito.mockStatic(VMwareSdnApiFactory.class);
 
         for (VirtualSystem vs: TEST_VIRTUAL_SYSTEMS) {
-            Mockito.doReturn(vs).when(this.sessionMock).get(VirtualSystem.class, vs.getId());
+            Mockito.doReturn(vs).when(this.em).find(VirtualSystem.class, vs.getId());
         }
 
         stubRegisterDeploySpecsForANewDistributedAppliance(VMWARE_NEW_DIST_APPL_NO_DEPLOYMENT_SPEC_VS);//0
@@ -120,7 +121,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
         NsxDeploymentSpecCheckMetaTask task = new NsxDeploymentSpecCheckMetaTask(this.vs, this.updateNsxServiceAttributesScheduled);
 
         // Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         // Assert.
         TaskGraphHelper.validateTaskGraph(task, this.expectedGraph);

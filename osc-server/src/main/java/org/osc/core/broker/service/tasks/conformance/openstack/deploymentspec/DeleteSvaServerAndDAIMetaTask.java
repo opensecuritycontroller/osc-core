@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -50,9 +51,9 @@ class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
+        this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
 
         if (this.dai.getProtectedPorts() != null && !this.dai.getProtectedPorts().isEmpty()) {
             throw new VmidcBrokerValidationException("Server is being actively used to protect other servers");

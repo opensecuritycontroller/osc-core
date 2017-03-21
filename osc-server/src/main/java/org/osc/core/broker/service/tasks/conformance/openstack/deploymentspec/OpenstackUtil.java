@@ -25,9 +25,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.neutron.v2.domain.Port;
 import org.jclouds.openstack.nova.v2_0.domain.InterfaceAttachment;
 import org.jclouds.openstack.nova.v2_0.domain.PortState;
@@ -59,7 +60,7 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.util.encryption.EncryptionException;
@@ -185,7 +186,7 @@ public class OpenstackUtil {
      * @throws VmidcBrokerValidationException if there are no valid DAI/SVA's available with the provided criteria.
      */
     public static DistributedApplianceInstance findDeployedDAI(
-            Session session,
+            EntityManager em,
             VirtualSystem vs,
             SecurityGroup sg,
             String tenantId,
@@ -399,10 +400,10 @@ public class OpenstackUtil {
      *            the current task. This is used to determine the current job so we can schedule the SG sync at the
      *            end of the current job.
      */
-    public static void scheduleSecurityGroupJobsRelatedToDai(Session session, DistributedApplianceInstance dai,
+    public static void scheduleSecurityGroupJobsRelatedToDai(EntityManager em, DistributedApplianceInstance dai,
             Task task) {
         // Check if existing SG members
-        Set<SecurityGroup> sgs = SecurityGroupEntityMgr.listByDai(session, dai);
+        Set<SecurityGroup> sgs = SecurityGroupEntityMgr.listByDai(em, dai);
 
         if (!sgs.isEmpty()) {
             Job job = JobEngine.getEngine().getJobByTask(task);
@@ -457,7 +458,7 @@ public class OpenstackUtil {
      *            VM port
      * @throws IOException
      */
-    public static void discoverVmForPort(Session session, String region, SecurityGroup sg, Port osPort, VMPort vmPort)
+    public static void discoverVmForPort(EntityManager em, String region, SecurityGroup sg, Port osPort, VMPort vmPort)
             throws IOException, EncryptionException {
 
         JCloudNova nova = null;
@@ -465,15 +466,15 @@ public class OpenstackUtil {
             nova = new JCloudNova(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
             Server osVm = nova.getServer(region, osPort.getDeviceId());
             if (null == osVm) {
-                EntityManager.delete(session, vmPort);
+                OSCEntityManager.delete(em, vmPort);
                 //TODO sridhar handle stale VM delete ?
                 return;
 
             }
-            VM vm = VMEntityManager.findByOpenstackId(session, osPort.getDeviceId());
+            VM vm = VMEntityManager.findByOpenstackId(em, osPort.getDeviceId());
             if (vm == null) {
                 vm = new VM(region, osPort.getDeviceId(), osVm.getName());
-                EntityManager.create(session, vm);
+                OSCEntityManager.create(em, vm);
             }
             vmPort.setVm(vm);
             // Update vm host if needed
@@ -481,10 +482,10 @@ public class OpenstackUtil {
             if (serverExtendedAttributes != null && serverExtendedAttributes.getHypervisorHostName() != null) {
                 if (!serverExtendedAttributes.getHypervisorHostName().equals(vm.getHost())) {
                     vm.setHost(serverExtendedAttributes.getHypervisorHostName());
-                    EntityManager.update(session, vm);
+                    OSCEntityManager.update(em, vm);
                 }
             }
-            EntityManager.update(session, vmPort);
+            OSCEntityManager.update(em, vmPort);
         } finally {
             if (nova != null) {
                 nova.close();

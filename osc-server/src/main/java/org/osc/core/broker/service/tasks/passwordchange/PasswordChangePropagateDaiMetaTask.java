@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.passwordchange;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
@@ -45,12 +46,12 @@ public class PasswordChangePropagateDaiMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         log.debug("Start executing Password Change Propagate DAI task");
 
         this.tg = new TaskGraph();
-        for (DistributedAppliance da : DistributedApplianceEntityMgr.listAllActive(session)) {
+        for (DistributedAppliance da : DistributedApplianceEntityMgr.listAllActive(em)) {
 
             TaskGraph propagateTaskGraph = new TaskGraph();
 

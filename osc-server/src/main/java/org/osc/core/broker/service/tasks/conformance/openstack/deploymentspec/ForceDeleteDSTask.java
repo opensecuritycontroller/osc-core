@@ -18,14 +18,15 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class ForceDeleteDSTask extends TransactionalTask {
@@ -44,29 +45,29 @@ public class ForceDeleteDSTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) {
+    public void executeTransaction(EntityManager em) {
         log.info("Force Deleting Deployment Specification: " + this.ds.getName());
         // load deployment spec from database to avoid lazy loading issues
-        this.ds = DeploymentSpecEntityMgr.findById(session, this.ds.getId());
+        this.ds = DeploymentSpecEntityMgr.findById(em, this.ds.getId());
 
         // remove DAI(s) for this ds
         for (DistributedApplianceInstance dai : this.ds.getDistributedApplianceInstances()) {
             for (VMPort port : dai.getProtectedPorts()) {
                 dai.removeProtectedPort(port);
             }
-            EntityManager.delete(session, dai);
+            OSCEntityManager.delete(em, dai);
         }
 
         // remove the sg reference from database
-        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(session,
+        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(em,
                 this.ds.getVirtualSystem(), this.ds.getTenantId(), this.ds.getRegion()).size() <= 1;
 
         if (osSgCanBeDeleted) {
-            EntityManager.delete(session, this.ds.getOsSecurityGroupReference());
+            OSCEntityManager.delete(em, this.ds.getOsSecurityGroupReference());
         }
 
         // delete DS from the database
-        EntityManager.delete(session, this.ds);
+        OSCEntityManager.delete(em, this.ds);
     }
 
     @Override

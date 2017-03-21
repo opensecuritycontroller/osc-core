@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securitygroup;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -29,7 +30,7 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -42,8 +43,8 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
     private SecurityGroup securityGroup = null;
 
     @Override
-    public BaseJobResponse exec(BaseDeleteRequest request, Session session) throws Exception {
-        validate(session, request);
+    public BaseJobResponse exec(BaseDeleteRequest request, EntityManager em) throws Exception {
+        validate(em, request);
 
         UnlockObjectMetaTask unlockTask = null;
         Job deleteSecurityGroupJob = null;
@@ -63,9 +64,9 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
             } else {
 
                 // Mark this security Group for Deletion and Trigger  Sync Job
-                EntityManager.markDeleted(session, this.securityGroup);
+                OSCEntityManager.markDeleted(em, this.securityGroup);
                 commitChanges(true);
-                deleteSecurityGroupJob = ConformService.startSecurityGroupConformanceJob(session, this.securityGroup,
+                deleteSecurityGroupJob = ConformService.startSecurityGroupConformanceJob(em, this.securityGroup,
                         unlockTask, false);
             }
             response.setJobId(deleteSecurityGroupJob.getId());
@@ -77,17 +78,17 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
         return response;
     }
 
-    private void validate(Session session, BaseDeleteRequest request) throws Exception {
+    private void validate(EntityManager em, BaseDeleteRequest request) throws Exception {
         BaseDeleteRequest.checkForNullIdAndParentNullId(request);
 
-        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(session, request.getParentId());
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, request.getParentId());
 
         if (vc == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector with Id: " + request.getParentId()
                     + "  is not found.");
         }
 
-        this.securityGroup = (SecurityGroup) session.get(SecurityGroup.class, request.getId());
+        this.securityGroup = em.find(SecurityGroup.class, request.getId());
         if (this.securityGroup == null) {
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");
         }

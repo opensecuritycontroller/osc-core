@@ -18,12 +18,13 @@ package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceInstanceApi;
 
@@ -38,17 +39,17 @@ public class RegisterServiceInstanceTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         LOG.debug("Start executing GetServiceInstanceTask");
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         ServiceInstanceApi serviceInstanceApi = VMwareSdnApiFactory.createServiceInstanceApi(this.vs);
         String serviceInstanceId = serviceInstanceApi.createServiceInstance(this.vs.getDistributedAppliance().getName() + "-GlobalInstance", this.vs.getNsxServiceId());
 
         // persist the svcInstanceId
         this.vs.setNsxServiceInstanceId(serviceInstanceId);
-        EntityManager.update(session, this.vs);
+        OSCEntityManager.update(em, this.vs);
     }
 
     @Override

@@ -20,11 +20,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.Appliance;
@@ -39,7 +40,7 @@ import org.osc.core.util.encryption.EncryptionException;
 
 public class DistributedApplianceEntityMgr {
 
-    public static DistributedAppliance createEntity(Session session, DistributedApplianceDto dto, Appliance a,
+    public static DistributedAppliance createEntity(EntityManager em, DistributedApplianceDto dto, Appliance a,
             DistributedAppliance da) throws EncryptionException {
 
         toEntity(a, da, dto);
@@ -90,42 +91,52 @@ public class DistributedApplianceEntityMgr {
         dto.setVirtualizationSystems(ls);
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<DistributedAppliance> listAllActive(Session session) {
-        Criteria criteria = session.createCriteria(DistributedAppliance.class)
-                .add(Restrictions.eq("markedForDeletion", false)).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<DistributedAppliance> listAllActive(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DistributedAppliance> query = cb.createQuery(DistributedAppliance.class);
+
+        Root<DistributedAppliance> root = query.from(DistributedAppliance.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.get("markedForDeletion"), false));
+
+        return em.createQuery(query).getResultList();
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<DistributedAppliance> listActiveByManagerConnector(Session session, ApplianceManagerConnector mc) {
-        Criteria criteria = session.createCriteria(DistributedAppliance.class)
-                .add(Restrictions.eq("markedForDeletion", false)).add(Restrictions.eq("applianceManagerConnector", mc))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<DistributedAppliance> listActiveByManagerConnector(EntityManager em, ApplianceManagerConnector mc) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<DistributedAppliance> query = cb.createQuery(DistributedAppliance.class);
+
+        Root<DistributedAppliance> root = query.from(DistributedAppliance.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.get("markedForDeletion"), false),
+                       cb.equal(root.get("applianceManagerConnector"), mc));
+
+        return em.createQuery(query).getResultList();
     }
 
-    public static DistributedAppliance findById(Session session, Long id) {
+    public static DistributedAppliance findById(EntityManager em, Long id) {
 
         // Initializing Entity Manager
-        EntityManager<DistributedAppliance> emgr = new EntityManager<DistributedAppliance>(DistributedAppliance.class,
-                session);
+        OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
+                em);
 
         return emgr.findByPrimaryKey(id);
     }
 
-    public static boolean isCompositeKeyExisting(Session session, String mcName, String vcName, long avID) {
+    public static boolean isCompositeKeyExisting(EntityManager em, String mcName, String vcName, long avID) {
 
         String hql = "SELECT count(*) FROM VirtualSystem VS WHERE VS.cluster.domain.applianceManagerConnector.name = :mcName AND "
                 + "VS.virtualizationConnector.name = :vcName AND VS.applianceSoftwareVersion.id = :avID";
 
-        Query query = session.createQuery(hql);
+        TypedQuery<Long> query = em.createQuery(hql, Long.class);
         query.setParameter("mcName", mcName);
         query.setParameter("vcName", vcName);
         query.setParameter("avID", avID);
-        query.setFirstResult(0).setMaxResults(1).uniqueResult();
-
-        Long count = (Long) query.list().get(0);
+        Long count = query.getSingleResult();
 
         if (count > 0) {
 
@@ -136,31 +147,26 @@ public class DistributedApplianceEntityMgr {
 
     }
 
-    public static boolean isReferencedByDistributedAppliance(Session session, ApplianceManagerConnector mc) {
+    public static boolean isReferencedByDistributedAppliance(EntityManager em, ApplianceManagerConnector mc) {
 
-        Criteria criteria = session.createCriteria(DistributedAppliance.class)
-                .createAlias("applianceManagerConnector", "amc").add(Restrictions.eq("amc.id", mc.getId()));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Long count = (Long) criteria.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1)
-                .uniqueResult();
+        CriteriaQuery<DistributedAppliance> query = cb.createQuery(DistributedAppliance.class);
 
-        if (count > 0) {
+        Root<DistributedAppliance> root = query.from(DistributedAppliance.class);
 
-            return true;
-        }
+        query = query.select(root)
+                .where(cb.equal(root.join("applianceManagerConnector").get("id"), mc.getId()));
 
-        return false;
-
+        return !em.createQuery(query).setMaxResults(1).getResultList().isEmpty();
     }
 
-    public static boolean isReferencedByDistributedAppliance(Session session, ApplianceSoftwareVersion av) {
+    public static boolean isReferencedByDistributedAppliance(EntityManager em, ApplianceSoftwareVersion av) {
 
         String hql = "SELECT count(*) FROM DistributedAppliance DA, VirtualSystem VS WHERE VS.distributedAppliance.id = DA.id AND VS.applianceSoftwareVersion.id = :appSwVerId";
-        Query query = session.createQuery(hql);
+        TypedQuery<Long> query = em.createQuery(hql, Long.class);
         query.setParameter("appSwVerId", av.getId());
-        query.setFirstResult(0).setMaxResults(1).uniqueResult();
-
-        Long count = (Long) query.list().get(0);
+        Long count = query.getSingleResult();
 
         if (count > 0) {
 

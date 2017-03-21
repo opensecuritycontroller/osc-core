@@ -19,7 +19,8 @@ package org.osc.core.broker.service.tasks.conformance.securitygroup;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -29,7 +30,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.rest.client.nsx.model.ContainerSet;
 import org.osc.core.broker.rest.client.nsx.model.ContainerSet.Container;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.tasks.InfoTask;
@@ -68,16 +69,16 @@ public class NsxServiceProfileContainerCheckMetaTask extends TransactionalMetaTa
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
 
         if (this.sgi == null) {
-            this.sgi = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(session, this.vs, this.tag);
+            this.sgi = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(em, this.vs, this.tag);
         } else {
-            this.sgi = (SecurityGroupInterface) session.get(SecurityGroupInterface.class, this.sgi.getId());
+            this.sgi = em.find(SecurityGroupInterface.class, this.sgi.getId());
         }
 
-        List<SecurityGroup> sgs = SecurityGroupEntityMgr.findByNsxServiceProfileIdAndVs(session,
+        List<SecurityGroup> sgs = SecurityGroupEntityMgr.findByNsxServiceProfileIdAndVs(em,
                 this.sgi.getVirtualSystem(), this.sgi.getTag());
 
         for (Container container : this.containerSet.getList()) {
@@ -88,16 +89,16 @@ public class NsxServiceProfileContainerCheckMetaTask extends TransactionalMetaTa
                 sg = new SecurityGroup(this.sgi.getVirtualSystem().getVirtualizationConnector(), container.getId());
                 sg.setName(container.getName());
                 sg.addSecurityGroupInterface(this.sgi);
-                EntityManager.create(session, sg);
+                OSCEntityManager.create(em, sg);
                 this.sgi.addSecurityGroup(sg);
-                EntityManager.update(session, this.sgi);
+                OSCEntityManager.update(em, this.sgi);
             } else {
                 if (!sg.getName().equals(container.getName())) {
                     this.tg.appendTask(new InfoTask(String.format("Renaming Security Group from '%s' to '%s'",
                             sg.getName(), container.getName())));
 
                     sg.setName(container.getName());
-                    EntityManager.update(session, sg);
+                    OSCEntityManager.update(em, sg);
                 }
             }
 

@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.security.KeyStore;
@@ -28,17 +30,17 @@ import java.util.Properties;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.persistence.EntityManager;
 import javax.xml.bind.DatatypeConverter;
 
-import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class BackupFileServiceTest {
 	private enum Operation { Encryption, Decryption }
@@ -60,7 +62,7 @@ public class BackupFileServiceTest {
 			extends BackupFileService<TestBackupFileServiceRequest, TestBackupFileServiceResponse> {
 
 		@Override
-		protected TestBackupFileServiceResponse exec(TestBackupFileServiceRequest request, Session session)
+		protected TestBackupFileServiceResponse exec(TestBackupFileServiceRequest request, EntityManager em)
 				throws Exception {
 			TestBackupFileServiceResponse response = new TestBackupFileServiceResponse();
 
@@ -92,7 +94,7 @@ public class BackupFileServiceTest {
 	}
 
 	@Mock
-	private Session sessionMock;
+	private EntityManager em;
 	@Mock
 	private KeyStoreProvider keyStoreProviderMock;
 	private KeyStoreProvider.KeyStoreFactory testKeyStoreFactory = new TestKeyStoreFactory();
@@ -157,11 +159,11 @@ public class BackupFileServiceTest {
 		// Act.
         // encrypt backup using service
 		testRequest.operation = Operation.Encryption;
-		TestBackupFileServiceResponse response = this.target.exec(testRequest, this.sessionMock);
+		TestBackupFileServiceResponse response = this.target.exec(testRequest, this.em);
 		testRequest.backupFileBytes = response.encryptedBackupFileBytes;
 		testRequest.operation = Operation.Decryption;
 		// decrypt backup using service
-		TestBackupFileServiceResponse response1 = this.target.exec(testRequest, this.sessionMock);
+		TestBackupFileServiceResponse response1 = this.target.exec(testRequest, this.em);
 
 		// Assert.
 		// ensure that decrypted bytes equal the original ones
@@ -181,12 +183,12 @@ public class BackupFileServiceTest {
 
 		// Act.
         // encrypt backup using service
-		TestBackupFileServiceResponse response = this.target.exec(testRequest, this.sessionMock);
+		TestBackupFileServiceResponse response = this.target.exec(testRequest, this.em);
 		testRequest.password = "InvalidPassword";
 		testRequest.operation = Operation.Decryption;
 		testRequest.backupFileBytes = response.encryptedBackupFileBytes;
 		// decrypt backup using service
-		TestBackupFileServiceResponse response1 = this.target.exec(testRequest, this.sessionMock);
+		TestBackupFileServiceResponse response1 = this.target.exec(testRequest, this.em);
 
 		// Assert.
 		// ensure that decrypted bytes equal the original ones

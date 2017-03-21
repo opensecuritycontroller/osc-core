@@ -19,9 +19,10 @@ package org.osc.core.broker.service.mc;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -38,7 +39,7 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
@@ -70,13 +71,13 @@ public class UpdateApplianceManagerConnectorService extends
 
 
     @Override
-    public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, Session session) throws Exception {
+    public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em) throws Exception {
 
         BaseDto.checkForNullId(request.getDto());
 
         BaseJobResponse response = new BaseJobResponse();
 
-        EntityManager<ApplianceManagerConnector> emgr = new EntityManager<>(ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
 
         // retrieve existing entry from db
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(request.getDto().getId());
@@ -84,11 +85,11 @@ public class UpdateApplianceManagerConnectorService extends
         Set<SslCertificateAttr> persistentSslCertificatesSet = mc.getSslCertificateAttrSet();
 
         try {
-            validate(session, request, mc, emgr);
+            validate(em, request, mc, emgr);
         } catch (Exception e) {
             if (e instanceof SslCertificatesExtendedException && this.forceAddSSLCertificates) {
                 request = internalSSLCertificatesFetch(request, (SslCertificatesExtendedException) e);
-                validate(session, request, mc, emgr);
+                validate(em, request, mc, emgr);
             } else {
                 throw e;
             }
@@ -101,7 +102,7 @@ public class UpdateApplianceManagerConnectorService extends
             mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
 
             updateApplianceManagerConnector(request, mc);
-            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(session);
+            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em);
             mc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet(), request.getDto().getId(), persistentSslCertificatesSet));
             emgr.update(mc);
 
@@ -109,10 +110,10 @@ public class UpdateApplianceManagerConnectorService extends
             // reflect the correct MC name
             if (!request.getDto().getName().equals(mcName)) {
 
-                List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByMcId(session, mc.getId());
+                List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByMcId(em, mc.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(session, daiId,
+                        TransactionalBroadcastUtil.addMessageToMap(em, daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
@@ -131,7 +132,7 @@ public class UpdateApplianceManagerConnectorService extends
 
         response.setId(mc.getId());
 
-        Long jobId = ConformService.startMCConformJob(mc, mcUnlock, session).getId();
+        Long jobId = ConformService.startMCConformJob(mc, mcUnlock, em).getId();
         response.setJobId(jobId);
 
         return response;
@@ -153,8 +154,8 @@ public class UpdateApplianceManagerConnectorService extends
         return request;
     }
 
-    private void validate(Session session, DryRunRequest<ApplianceManagerConnectorDto> request,
-                          ApplianceManagerConnector existingMc, EntityManager<ApplianceManagerConnector> emgr) throws Exception {
+    private void validate(EntityManager em, DryRunRequest<ApplianceManagerConnectorDto> request,
+                          ApplianceManagerConnector existingMc, OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
         // check for null/empty values
         ApplianceManagerConnectorDto.checkForNullFields(request.getDto(), request.isApi());
@@ -193,7 +194,7 @@ public class UpdateApplianceManagerConnectorService extends
 
         // check for the deployed appliances by this particular manager
         if (!request.isIgnoreErrorsAndCommit(ErrorType.IP_CHANGED_EXCEPTION)
-                && DistributedApplianceEntityMgr.isReferencedByDistributedAppliance(session, existingMc)
+                && DistributedApplianceEntityMgr.isReferencedByDistributedAppliance(em, existingMc)
                 && !existingMc.getIpAddress().equals(request.getDto().getIpAddress())) {
 
             throw new ErrorTypeException(VmidcMessages.getString(VmidcMessages_.MC_WARNING_IPUPDATE),

@@ -18,13 +18,14 @@ package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceApi;
 import org.osc.sdk.sdn.api.ServiceInstanceApi;
@@ -47,9 +48,9 @@ public class ValidateNsxTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
         ServiceManagerApi serviceManagerApi = VMwareSdnApiFactory.createServiceManagerApi(this.vs);
         // Handle service name change. Should not be interpret as a service removal
         ServiceManagerElement svcMgr = null;
@@ -114,7 +115,7 @@ public class ValidateNsxTask extends TransactionalTask {
                 if (!isNsxVendorTemplateInSync(vsp, templateId)) {
                     LOG.info("Vendor template for policy '" + vsp.getPolicy().getName() + "' was out of sync");
                     vsp.setNsxVendorTemplateId(templateId);
-                    EntityManager.update(session, vsp);
+                    OSCEntityManager.update(em, vsp);
                 }
             }
         } else {
@@ -125,7 +126,7 @@ public class ValidateNsxTask extends TransactionalTask {
             this.vs.getVirtualSystemPolicies().clear();
         }
 
-        EntityManager.update(session, this.vs);
+        OSCEntityManager.update(em, this.vs);
     }
 
     private void setNsxServiceManager(ServiceManagerElement svcMgr) {

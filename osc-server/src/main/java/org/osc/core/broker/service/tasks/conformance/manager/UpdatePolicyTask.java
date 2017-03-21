@@ -18,11 +18,12 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.Policy;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class UpdatePolicyTask extends TransactionalTask {
@@ -38,22 +39,22 @@ public class UpdatePolicyTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        log.debug("Start excecuting UpdatePolicyTask Task. Policy '" + policy.getName() + "'");
-        policy = (Policy) session.get(Policy.class, policy.getId());
-        policy.setName(newName);
-        EntityManager.update(session, policy);
+        log.debug("Start excecuting UpdatePolicyTask Task. Policy '" + this.policy.getName() + "'");
+        this.policy = em.find(Policy.class, this.policy.getId());
+        this.policy.setName(this.newName);
+        OSCEntityManager.update(em, this.policy);
     }
 
     @Override
     public String getName() {
-        return "Update Policy '" + policy.getName() + "' in Domain '" + policy.getDomain().getName() + "'";
+        return "Update Policy '" + this.policy.getName() + "' in Domain '" + this.policy.getDomain().getName() + "'";
     }
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(policy.getApplianceManagerConnector());
+        return LockObjectReference.getObjectReferences(this.policy.getApplianceManagerConnector());
     }
 
 }

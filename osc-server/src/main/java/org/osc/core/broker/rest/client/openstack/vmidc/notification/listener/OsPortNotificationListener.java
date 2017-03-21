@@ -18,8 +18,9 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification.listener;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
@@ -65,12 +66,12 @@ public class OsPortNotificationListener extends OsNotificationListener {
     private TransactionalRunner.TransactionalAction<Void, Void> getTranscationalAction(final String eventType, final String message) {
         return new TransactionalRunner.TransactionalAction<Void, Void>() {
             @Override
-            public Void run(Session session, Void param) throws Exception {
+            public Void run(EntityManager em, Void param) throws Exception {
                 if (eventType.contains(OsNotificationEventState.DELETE.toString())
                         || eventType.contains(OsNotificationEventState.INTERFACE_DELETE.toString())) {
-                    handleSGPortDeletionMessages(session, message);
+                    handleSGPortDeletionMessages(em, message);
                 } else {
-                    handleSGPortMessages(session, message);
+                    handleSGPortMessages(em, message);
                 }
                 return null;
             }
@@ -89,12 +90,12 @@ public class OsPortNotificationListener extends OsNotificationListener {
         };
     }
 
-    private void handleSGPortMessages(Session session, String message) throws Exception {
+    private void handleSGPortMessages(EntityManager em, String message) throws Exception {
         SecurityGroup sg = (SecurityGroup) this.entity;
         String keyValue;
 
         // load this entity from database to avoid any lazy loading issues
-        sg = SecurityGroupEntityMgr.findById(session, sg.getId());
+        sg = SecurityGroupEntityMgr.findById(em, sg.getId());
 
         if (sg.isProtectAll()) {
             // If protect all then check tenant id in context
@@ -121,7 +122,7 @@ public class OsPortNotificationListener extends OsNotificationListener {
                 if (keyValue != null) {
                     //TODO: Test the concurrency scenario when SG Sync is running and we receive a notification..
 
-                    Subnet subnet = SubnetEntityManager.findByOpenstackId(session, keyValue);
+                    Subnet subnet = SubnetEntityManager.findByOpenstackId(em, keyValue);
                     String deviceOwner = OsNotificationUtil.getPropertyFromNotificationMessage(message,
                             OsNotificationKeyType.DEVICE_OWNER.toString());
                     if ((subnet.isProtectExternal() && deviceOwner.startsWith("compute:"))
@@ -135,37 +136,37 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
         if (keyValue != null) {
             // start SG sync as the port is relevant to this SG object...
-            triggerSGSync(sg, session);
+            triggerSGSync(sg, em);
         }
 
     }
 
-    private void handleSGPortDeletionMessages(Session session, String message) throws Exception {
-        SecurityGroup sg = (SecurityGroup) session.get(SecurityGroup.class, this.entity.getId());
+    private void handleSGPortDeletionMessages(EntityManager em, String message) throws Exception {
+        SecurityGroup sg = em.find(SecurityGroup.class, this.entity.getId());
         if (!this.objectIdList.isEmpty()) {
             if (!sg.isProtectAll()) {
                 String portId = OsNotificationUtil.getPropertyFromNotificationMessage(message,
                         OsNotificationKeyType.PORT_ID.toString());
-                VMPort port = VMPortEntityManager.findByOpenstackId(session, portId);
+                VMPort port = VMPortEntityManager.findByOpenstackId(em, portId);
                 if (port != null &&
                         ((port.getNetwork() != null && this.objectIdList.contains(port.getNetwork().getOpenstackId()))
                         || (port.getVm() != null && this.objectIdList.contains(port.getVm().getOpenstackId()))
                         || (port.getSubnet() != null && this.objectIdList.contains(port.getSubnet().getOpenstackId())))) {
-                    triggerSGSync(sg, session);
+                    triggerSGSync(sg, em);
                 }
 
             } else {
                 String tenantId = OsNotificationUtil.getPropertyFromNotificationMessage(message,
                         OsNotificationKeyType.CONTEXT_TENANT_ID.toString());
                 if (this.objectIdList.contains(tenantId)) {
-                    triggerSGSync(sg, session);
+                    triggerSGSync(sg, em);
                 }
             }
         }
 
     }
 
-    private void triggerSGSync(SecurityGroup sg, Session session) throws Exception {
+    private void triggerSGSync(SecurityGroup sg, EntityManager em) throws Exception {
         log.info("Running SG sync based on OS Port notification received.");
         // Message is related to registered Security Group. Trigger sync
         ConformService.startSecurityGroupConformanceJob(sg);

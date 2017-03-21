@@ -18,12 +18,13 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
@@ -39,23 +40,23 @@ public class MgrCreateMemberDeviceTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        this.dai = (DistributedApplianceInstance) session.get(DistributedApplianceInstance.class, this.dai.getId());
+        this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
 
-        createMemberDevice(session, this.dai);
+        createMemberDevice(em, this.dai);
     }
 
-    public static void createMemberDevice(Session session, DistributedApplianceInstance dai) throws Exception {
+    public static void createMemberDevice(EntityManager em, DistributedApplianceInstance dai) throws Exception {
         ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(dai.getVirtualSystem());
         try {
-            createMemberDevice(session, dai, mgrApi);
+            createMemberDevice(em, dai, mgrApi);
         } finally {
             mgrApi.close();
         }
     }
 
-    public static void createMemberDevice(Session session, DistributedApplianceInstance dai, ManagerDeviceApi mgrApi)
+    public static void createMemberDevice(EntityManager em, DistributedApplianceInstance dai, ManagerDeviceApi mgrApi)
             throws Exception {
         try {
             String mgrDeviceId = mgrApi.createDeviceMember(dai.getName(), dai.getHostName(), dai.getIpAddress(),
@@ -65,7 +66,7 @@ public class MgrCreateMemberDeviceTask extends TransactionalTask {
 
             updateApplianceConfigIfNeeded(dai, mgrApi);
 
-            EntityManager.update(session, dai);
+            OSCEntityManager.update(em, dai);
 
         } catch (Exception e) {
 
@@ -80,7 +81,7 @@ public class MgrCreateMemberDeviceTask extends TransactionalTask {
 
                 updateApplianceConfigIfNeeded(dai, mgrApi);
 
-                EntityManager.update(session, dai);
+                OSCEntityManager.update(em, dai);
             } else {
                 throw e;
             }

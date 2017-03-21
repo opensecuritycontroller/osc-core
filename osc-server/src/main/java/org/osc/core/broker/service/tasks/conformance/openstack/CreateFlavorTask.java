@@ -18,15 +18,16 @@ package org.osc.core.broker.service.tasks.conformance.openstack;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 class CreateFlavorTask extends TransactionalTask {
@@ -48,9 +49,9 @@ class CreateFlavorTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        EntityManager<VirtualSystem> vsEntityMgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
-        EntityManager<ApplianceSoftwareVersion> asvEntiyMgr = new EntityManager<ApplianceSoftwareVersion>(ApplianceSoftwareVersion.class, session);
+    public void executeTransaction(EntityManager em) throws Exception {
+        OSCEntityManager<VirtualSystem> vsEntityMgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+        OSCEntityManager<ApplianceSoftwareVersion> asvEntiyMgr = new OSCEntityManager<ApplianceSoftwareVersion>(ApplianceSoftwareVersion.class, em);
 
         this.vs = vsEntityMgr.findByPrimaryKey(this.vs.getId());
         this.applianceSoftwareVersion = asvEntiyMgr.findByPrimaryKey(this.applianceSoftwareVersion.getId());
@@ -66,7 +67,7 @@ class CreateFlavorTask extends TransactionalTask {
 
             this.vs.addOsFlavorReference(new OsFlavorReference(this.vs, this.region, flavorId));
 
-            EntityManager.update(session, this.vs);
+            OSCEntityManager.update(em, this.vs);
         } finally {
             nova.close();
         }

@@ -16,18 +16,19 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.model;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.RequestValidator;
 
 public class TagVmRequestValidator implements RequestValidator<TagVmRequest, DistributedApplianceInstance> {
 
-    private Session session;
+    private EntityManager em;
 
-    public TagVmRequestValidator(Session session) {
-        this.session = session;
+    public TagVmRequestValidator(EntityManager em) {
+        this.em = em;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class TagVmRequestValidator implements RequestValidator<TagVmRequest, Dis
             throw new VmidcBrokerValidationException("Null request or invalid Appliance Instance Name.");
         }
 
-        EntityManager<DistributedApplianceInstance> emgr = new EntityManager<>(DistributedApplianceInstance.class, session);
+        OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<>(DistributedApplianceInstance.class, this.em);
         DistributedApplianceInstance dai = emgr.findByFieldName("name", request.getApplianceInstanceName());
 
         if (dai == null) {

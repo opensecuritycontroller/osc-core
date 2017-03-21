@@ -16,18 +16,25 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.model;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.osc.core.broker.model.entities.appliance.Appliance;
+import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.util.SessionStub;
+import org.osc.core.broker.service.test.InMemDB;
 
 public class TagVmRequestValidatorTest {
 
@@ -37,33 +44,78 @@ public class TagVmRequestValidatorTest {
     private static final TagVmRequest VALID_REQUEST = createRequest(VALID_APPLIANCE_NAME);
     private static final TagVmRequest INVALID_REQUEST = createRequest(INVALID_APPLIANCE_NAME);
 
-    private static final DistributedApplianceInstance DISTRIBUTED_APPLIANCE_INSTANCE = new DistributedApplianceInstance(createVirtualSystem());
+    private static final DistributedApplianceInstance DISTRIBUTED_APPLIANCE_INSTANCE = createDistributedApplianceInstance();
 
-    @Mock
-    Session session;
+    EntityManager em;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     private TagVmRequestValidator validator;
-    private SessionStub sessionStub;
 
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        this.sessionStub = new SessionStub(this.session);
+        this.em = InMemDB.getEntityManagerFactory().createEntityManager();
 
-        this.validator = new TagVmRequestValidator(this.session);
+        this.validator = new TagVmRequestValidator(this.em);
+    }
 
-        this.sessionStub.stubFindByFieldName("name", INVALID_APPLIANCE_NAME, null);
-        this.sessionStub.stubFindByFieldName("name", VALID_APPLIANCE_NAME, DISTRIBUTED_APPLIANCE_INSTANCE);
+    @After
+    public void testTearDown() {
+        InMemDB.shutdown();
+    }
+
+    private static DistributedApplianceInstance createDistributedApplianceInstance() {
+        DistributedApplianceInstance dai = new DistributedApplianceInstance(createVirtualSystem());
+
+        dai.setName(VALID_APPLIANCE_NAME);
+
+        return dai;
     }
 
     private static VirtualSystem createVirtualSystem() {
 
         VirtualSystem virtualSystem = new VirtualSystem();
         virtualSystem.setId(1L);
+
+        Appliance app = new Appliance();
+        app.setManagerSoftwareVersion("fizz");
+        app.setManagerType("buzz");
+        app.setModel("fizzbuzz");
+
+        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
+        asv.setApplianceSoftwareVersion("foo");
+        asv.setImageUrl("bar");
+        asv.setVirtualizarionSoftwareVersion("baz");
+        asv.setVirtualizationType(VirtualizationType.OPENSTACK);
+
+        virtualSystem.setApplianceSoftwareVersion(asv);
+
+        ApplianceManagerConnector amc = new ApplianceManagerConnector();
+        amc.setManagerType("buzz");
+        amc.setIpAddress("127.0.0.1");
+        amc.setName("Steve");
+        amc.setServiceType("foobar");
+
+        DistributedAppliance da = new DistributedAppliance(amc);
+        da.addVirtualSystem(virtualSystem);
+        da.setAppliance(app);
+        da.setApplianceVersion("foobarbaz");
+        da.setName("Tony");
+
+        virtualSystem.setDistributedAppliance(da);
+
+        VirtualizationConnector vc = new VirtualizationConnector();
+        vc.setName("Clint");
+        vc.setProviderIpAddress("127.0.0.1");
+        vc.setProviderUsername("Natasha");
+        vc.setProviderPassword("********");
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
+
+        virtualSystem.setVirtualizationConnector(vc);
+
         return virtualSystem;
     }
 
@@ -108,6 +160,22 @@ public class TagVmRequestValidatorTest {
 
     @Test
     public void testExec_WithValidRequest_ExpectsSuccess() throws Exception {
+        // Arrange.
+        this.em.getTransaction().begin();
+        this.em.persist(DISTRIBUTED_APPLIANCE_INSTANCE.getVirtualSystem()
+                .getVirtualizationConnector());
+        this.em.persist(DISTRIBUTED_APPLIANCE_INSTANCE.getVirtualSystem()
+                .getApplianceSoftwareVersion().getAppliance());
+        this.em.persist(DISTRIBUTED_APPLIANCE_INSTANCE.getVirtualSystem()
+                .getApplianceSoftwareVersion());
+        this.em.persist(DISTRIBUTED_APPLIANCE_INSTANCE.getVirtualSystem()
+                .getDistributedAppliance().getApplianceManagerConnector());
+        this.em.persist(DISTRIBUTED_APPLIANCE_INSTANCE.getVirtualSystem()
+                .getDistributedAppliance());
+        this.em.persist(DISTRIBUTED_APPLIANCE_INSTANCE.getVirtualSystem());
+        this.em.persist(DISTRIBUTED_APPLIANCE_INSTANCE);
+        this.em.getTransaction().commit();
+
         // Act.
         DistributedApplianceInstance loadedDistributedApplianceInstance = this.validator.validateAndLoad(VALID_REQUEST);
 

@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
@@ -34,12 +35,12 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.Not
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.OsNotificationListener;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.BroadcastMessage;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil;
-import org.osc.core.broker.view.util.EventType;
 import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
+import org.osc.core.broker.view.util.EventType;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -57,19 +58,19 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
     private static final Logger log = Logger.getLogger(OsDeploymentSpecNotificationRunner.class);
 
     public OsDeploymentSpecNotificationRunner() {
-        Session session = null;
+        EntityManager em = null;
         try {
             BroadcasterUtil.register(this);
-            session = HibernateUtil.getSessionFactory().openSession();
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
 
-            EntityManager<DeploymentSpec> dsEmgr = new EntityManager<DeploymentSpec>(DeploymentSpec.class, session);
+            OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
             List<DeploymentSpec> dsList = dsEmgr.listAll();
             for (DeploymentSpec ds : dsList) {
                 addListener(ds);
             }
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }
@@ -91,10 +92,10 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         if (msg.getEventType() == EventType.DELETED) {
             removeListener(msg.getEntityId());
         } else {
-            Session session = null;
+            EntityManager em = null;
             try {
-                session = HibernateUtil.getSessionFactory().openSession();
-                DeploymentSpec ds = DeploymentSpecEntityMgr.findById(session, msg.getEntityId());
+                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+                DeploymentSpec ds = DeploymentSpecEntityMgr.findById(em, msg.getEntityId());
                 if (ds != null) {
                     // if DS is deleted after update notification was sent
                     if (msg.getEventType() == EventType.ADDED) {
@@ -109,8 +110,8 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                     }
                 }
             } finally {
-                if (session != null) {
-                    session.close();
+                if (em != null) {
+                    em.close();
                 }
             }
         }

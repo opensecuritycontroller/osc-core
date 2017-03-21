@@ -16,16 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.jclouds.openstack.neutron.v2.domain.SecurityGroup;
+import javax.persistence.EntityManager;
 
+import org.apache.log4j.Logger;
+import org.jclouds.openstack.neutron.v2.domain.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class DeleteOsSecurityGroupTask extends TransactionalTask {
@@ -44,18 +44,18 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         int count = MAX_ATTEMPTS;
 
-        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(session,
+        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(em,
                 this.ds.getVirtualSystem(), this.ds.getTenantId(), this.ds.getRegion()).size() <= 1;
 
         if (osSgCanBeDeleted) {
             this.log.info(String.format("Deleting Openstack Security Group with id '%s' from region '%s'",
                     this.sgReference.getSgRefId(), this.ds.getRegion()));
 
-            this.sgReference = (OsSecurityGroupReference) session.get(OsSecurityGroupReference.class,
+            this.sgReference = em.find(OsSecurityGroupReference.class,
                     this.sgReference.getId());
 
             Endpoint endPoint = new Endpoint(this.ds);
@@ -69,7 +69,7 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
                             success = neutron.deleteSecurityGroupById(this.ds.getRegion(),
                                     this.sgReference.getSgRefId());
                         } catch (IllegalStateException ex) {
-                            log.info(" Openstack Security Group id:" + this.sgReference.getSgRefId() + " in use.");
+                            this.log.info(" Openstack Security Group id:" + this.sgReference.getSgRefId() + " in use.");
                             Thread.sleep(SLEEP_RETRIES);
                         } finally {
                             if (--count <= 0) {
@@ -83,10 +83,10 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
 
             for (DeploymentSpec ds : this.sgReference.getDeploymentSpecs()) {
                 ds.setOsSecurityGroupReference(null);
-                EntityManager.update(session, ds);
+                OSCEntityManager.update(em, ds);
             }
             this.sgReference.getDeploymentSpecs().clear();
-            EntityManager.delete(session, this.sgReference);
+            OSCEntityManager.delete(em, this.sgReference);
         }
     }
 

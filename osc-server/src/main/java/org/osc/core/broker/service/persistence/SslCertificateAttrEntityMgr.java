@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import org.hibernate.Session;
-import org.osc.core.broker.model.entities.SslCertificateAttr;
-import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,13 +23,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class SslCertificateAttrEntityMgr extends EntityManager<SslCertificateAttr> {
+import javax.persistence.EntityManager;
+
+import org.osc.core.broker.model.entities.SslCertificateAttr;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
+import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+
+public class SslCertificateAttrEntityMgr extends OSCEntityManager<SslCertificateAttr> {
 
     public static final String replaceTimestampPattern = "\\_([0-9]+)";
     private static final String genericAliasNamePattern = "^([a-zA-Z_]+)\\_([0-9]+)$";
 
-    public SslCertificateAttrEntityMgr(Session session) {
-        super(SslCertificateAttr.class, session);
+    public SslCertificateAttrEntityMgr(EntityManager em) {
+        super(SslCertificateAttr.class, em);
     }
 
     public static SslCertificateAttr createEntity(SslCertificateAttrDto dto) throws Exception {
@@ -137,7 +138,7 @@ public class SslCertificateAttrEntityMgr extends EntityManager<SslCertificateAtt
     }
 
     public boolean removeAlias(String alias) throws Exception {
-        Optional<SslCertificateAttr> foundObject = Optional.ofNullable(this.findByFieldName("alias", alias));
+        Optional<SslCertificateAttr> foundObject = Optional.ofNullable(findByFieldName("alias", alias));
         X509TrustManagerFactory managerFactory = X509TrustManagerFactory.getInstance();
         foundObject.ifPresent(sslCertificateAttr -> delete(sslCertificateAttr.getId()));
         managerFactory.removeEntry(alias);

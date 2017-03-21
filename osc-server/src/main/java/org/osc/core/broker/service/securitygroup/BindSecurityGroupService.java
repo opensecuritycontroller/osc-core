@@ -21,8 +21,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
@@ -36,7 +37,7 @@ import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.ActionNotSupportedException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
@@ -56,9 +57,9 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
     private SecurityGroup securityGroup;
 
     @Override
-    public BaseJobResponse exec(BindSecurityGroupRequest request, Session session) throws Exception {
+    public BaseJobResponse exec(BindSecurityGroupRequest request, EntityManager em) throws Exception {
 
-        validateAndLoad(session, request);
+        validateAndLoad(em, request);
         UnlockObjectMetaTask unlockTask = null;
         BaseJobResponse response = null;
 
@@ -76,7 +77,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
             // For all services selected, create or update the security group interfaces
             for (VirtualSystemPolicyBindingDto serviceToBindTo : servicesToBindTo) {
                 Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
-                VirtualSystem vs = VirtualSystemEntityMgr.findById(session, virtualSystemId);
+                VirtualSystem vs = VirtualSystemEntityMgr.findById(em, virtualSystemId);
 
                 if (vs == null) {
                     throw new VmidcBrokerValidationException(
@@ -102,7 +103,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                             "Service to bind: " + serviceToBindTo + " is associated with a manager that does not support "
                                     + "policy mapping and it should not have a policy id.");
                 } else {
-                    policy = PolicyEntityMgr.findById(session, serviceToBindTo.getPolicyId());
+                    policy = PolicyEntityMgr.findById(em, serviceToBindTo.getPolicyId());
 
                     if (policy == null) {
                         throw new VmidcBrokerValidationException(
@@ -130,10 +131,10 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                         SdnControllerApiFactory.supportsFailurePolicy(this.securityGroup) ? serviceToBindTo.getFailurePolicyType() : FailurePolicyType.NA;
 
                         SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
-                                .findSecurityGroupInterfacesByVsAndSecurityGroup(session, vs, this.securityGroup);
+                                .findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
                         if (sgi == null) {
                             // If the policy is null the tag should also be null
-                            Long tag = policy == null ? null : VirtualSystemEntityMgr.generateUniqueTag(session, vs);
+                            Long tag = policy == null ? null : VirtualSystemEntityMgr.generateUniqueTag(em, vs);
                             String tagString = tag == null ? null : SecurityGroupInterface.ISC_TAG_PREFIX + tag;
 
                             // Create a new security group interface for this service
@@ -148,11 +149,11 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                             SecurityGroupInterfaceEntityMgr.toEntity(sgi, this.securityGroup, serviceToBindTo.getName());
 
                             log.info("Creating security group interface " + sgi.getName());
-                            EntityManager.create(session, sgi);
+                            OSCEntityManager.create(em, sgi);
 
                             this.securityGroup.addSecurityGroupInterface(sgi);
                             sgi.addSecurityGroup(this.securityGroup);
-                            EntityManager.update(session, this.securityGroup);
+                            OSCEntityManager.update(em, this.securityGroup);
                         } else {
                             if (hasServiceChanged(sgi, serviceToBindTo, policy, order)) {
                                 log.info("Updating Security group interface " + sgi.getName());
@@ -161,7 +162,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                                         failurePolicyType.name()));
                                 sgi.setOrder(order);
                             }
-                            EntityManager.update(session, sgi);
+                            OSCEntityManager.update(em, sgi);
                         }
 
                         order++;
@@ -172,14 +173,14 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                 boolean isServiceSelected = isServiceSelected(servicesToBindTo, sgi.getVirtualSystem().getId());
                 if (!isServiceSelected || sgi.getMarkedForDeletion()) {
                     log.info("Marking service " + sgi.getName() + " for deletion");
-                    EntityManager.markDeleted(session, sgi);
+                    OSCEntityManager.markDeleted(em, sgi);
                 }
             }
 
-            TransactionalBroadcastUtil.addMessageToMap(session, this.securityGroup.getId(),
+            TransactionalBroadcastUtil.addMessageToMap(em, this.securityGroup.getId(),
                     this.securityGroup.getClass().getSimpleName(), EventType.UPDATED);
 
-            Job job = ConformService.startBindSecurityGroupConformanceJob(session, this.securityGroup, unlockTask);
+            Job job = ConformService.startBindSecurityGroupConformanceJob(em, this.securityGroup, unlockTask);
 
             response = new BaseJobResponse(job.getId());
 
@@ -208,10 +209,10 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
         return false;
     }
 
-    protected void validateAndLoad(Session session, BindSecurityGroupRequest request) throws Exception {
+    protected void validateAndLoad(EntityManager em, BindSecurityGroupRequest request) throws Exception {
         BindSecurityGroupRequest.checkForNullFields(request);
 
-        this.securityGroup = SecurityGroupEntityMgr.findById(session, request.getSecurityGroupId());
+        this.securityGroup = SecurityGroupEntityMgr.findById(em, request.getSecurityGroupId());
 
         if (this.securityGroup == null) {
             throw new VmidcBrokerValidationException(
@@ -266,9 +267,9 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                     // We are always expected to find the other service
                     VirtualSystemPolicyBindingDto otherService = findDuplicateServiceByOrder(services, serviceToBindTo);
                     Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
-                    VirtualSystem vs = VirtualSystemEntityMgr.findById(session, virtualSystemId);
+                    VirtualSystem vs = VirtualSystemEntityMgr.findById(em, virtualSystemId);
                     Long otherVirtualSystemId = otherService.getVirtualSystemId();
-                    VirtualSystem otherVs = VirtualSystemEntityMgr.findById(session, otherVirtualSystemId);
+                    VirtualSystem otherVs = VirtualSystemEntityMgr.findById(em, otherVirtualSystemId);
 
                     if (vs == null || otherVs == null) {
                         throw new VmidcBrokerValidationException("Virtual System with Id: " + vs == null
@@ -276,9 +277,9 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                     }
 
                     SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
-                            .findSecurityGroupInterfacesByVsAndSecurityGroup(session, vs, this.securityGroup);
+                            .findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
                     SecurityGroupInterface otherSgi = SecurityGroupInterfaceEntityMgr
-                            .findSecurityGroupInterfacesByVsAndSecurityGroup(session, otherVs, this.securityGroup);
+                            .findSecurityGroupInterfacesByVsAndSecurityGroup(em, otherVs, this.securityGroup);
 
                     // if either of the SGI's are not marked for deleting, we should fail because of duplicate order
                     if (!sgi.getMarkedForDeletion() && !otherSgi.getMarkedForDeletion()) {

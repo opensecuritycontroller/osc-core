@@ -25,15 +25,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.LockModeType;
+
 import org.apache.log4j.Logger;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.joda.time.DateTime;
 import org.osc.core.broker.job.Job.TaskChangeListener;
 import org.osc.core.broker.model.entities.job.TaskRecord;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -130,12 +130,14 @@ public class TaskNode implements Runnable, TaskElement {
     }
 
     private void persistState() {
-        Session session = HibernateUtil.getSessionFactory().getCurrentSession();
-        Transaction tx = null;
+        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = null;
         try {
-            tx = session.beginTransaction();
-            this.taskRecord = (TaskRecord) session.get(TaskRecord.class, this.taskRecord.getId(), new LockOptions(
-                    LockMode.PESSIMISTIC_WRITE));
+            tx = em.getTransaction();
+            tx.begin();
+
+            this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
+                    LockModeType.PESSIMISTIC_WRITE);
 
             this.taskRecord.setState(
                     toEntityType(org.osc.core.broker.model.entities.job.TaskState.class,
@@ -146,16 +148,16 @@ public class TaskNode implements Runnable, TaskElement {
 
             this.taskRecord.setName(getSafeTaskName());
 
-            EntityManager.update(session, this.taskRecord);
+            OSCEntityManager.update(em, this.taskRecord);
             tx.commit();
-            TransactionalBroadcastUtil.broadcast(session);
+            TransactionalBroadcastUtil.broadcast(em);
 
         } catch (Exception e) {
 
             log.error("Fail to update TaskRecord " + this, e);
             if (tx != null) {
                 tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(session);
+                TransactionalBroadcastUtil.removeSessionFromMap(em);
             }
         }
     }
@@ -217,11 +219,12 @@ public class TaskNode implements Runnable, TaskElement {
     }
 
     private void persistStatus() {
-        Session session = HibernateUtil.getSessionFactory().getCurrentSession();
-        Transaction tx = session.beginTransaction();
+        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
         try {
-            this.taskRecord = (TaskRecord) session.get(TaskRecord.class, this.taskRecord.getId(), new LockOptions(
-                    LockMode.PESSIMISTIC_WRITE));
+            tx.begin();
+            this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
+                    LockModeType.PESSIMISTIC_WRITE);
 
             this.taskRecord.setStatus(
                     toEntityType(org.osc.core.broker.model.entities.job.TaskStatus.class,
@@ -233,16 +236,16 @@ public class TaskNode implements Runnable, TaskElement {
                     this.taskRecord.setFailReason(this.failReason.toString());
                 }
             }
-            EntityManager.update(session, this.taskRecord);
+            OSCEntityManager.update(em, this.taskRecord);
             tx.commit();
-            TransactionalBroadcastUtil.broadcast(session);
+            TransactionalBroadcastUtil.broadcast(em);
 
         } catch (Exception e) {
 
             log.error("Fail to update TaskRecord " + this, e);
             if (tx != null) {
                 tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(session);
+                TransactionalBroadcastUtil.removeSessionFromMap(em);
             }
         }
     }

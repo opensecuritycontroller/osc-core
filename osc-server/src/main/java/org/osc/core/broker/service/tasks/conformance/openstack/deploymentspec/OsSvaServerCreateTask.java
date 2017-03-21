@@ -21,8 +21,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -39,7 +40,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova.CreatedServerDetails;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDeploymentSpecNotificationRunner;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
@@ -91,8 +92,8 @@ class OsSvaServerCreateTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         VirtualSystem vs = ds.getVirtualSystem();
@@ -102,7 +103,7 @@ class OsSvaServerCreateTask extends TransactionalTask {
         JCloudNova nova = new JCloudNova(endPoint);
         SdnControllerApi controller = null;
         try {
-            this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
+            this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
             if (vc.isControllerDefined()){
                 controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
             }
@@ -166,7 +167,7 @@ class OsSvaServerCreateTask extends TransactionalTask {
 
             this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getOsServerId());
 
-            EntityManager.update(session, this.dai);
+            OSCEntityManager.update(em, this.dai);
 
         } finally {
             nova.close();

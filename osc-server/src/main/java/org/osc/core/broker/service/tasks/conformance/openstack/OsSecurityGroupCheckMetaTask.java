@@ -22,10 +22,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.apache.log4j.Logger;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.jclouds.openstack.neutron.v2.domain.Rule;
 import org.jclouds.openstack.neutron.v2.domain.RuleDirection;
 import org.jclouds.openstack.neutron.v2.domain.RuleEthertype;
@@ -39,7 +39,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 
 import com.google.common.base.Predicate;
@@ -59,10 +59,10 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        DeploymentSpec ds = (DeploymentSpec) session.get(DeploymentSpec.class, this.ds.getId(),
-                new LockOptions().setLockMode(LockMode.PESSIMISTIC_WRITE));
+        DeploymentSpec ds = em.find(DeploymentSpec.class, this.ds.getId(),
+                LockModeType.PESSIMISTIC_WRITE);
         VirtualSystem vs = ds.getVirtualSystem();
         log.info(
                 "Checking if VS" + vs.getName() + " has the corresponding Openstack Security Group");
@@ -72,7 +72,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
             // Check if the VS have ds or dds with os security group reference
             OsSecurityGroupReference sgReference = null;
             List<DeploymentSpec> dss = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(
-                    session, ds.getVirtualSystem(), ds.getTenantId(), ds.getRegion());
+                    em, ds.getVirtualSystem(), ds.getTenantId(), ds.getRegion());
             for (DeploymentSpec depSpec : dss) {
                 if (depSpec.getOsSecurityGroupReference() != null) {
                     sgReference = depSpec.getOsSecurityGroupReference();
@@ -101,7 +101,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                         if (sg == null) {
                             // remove the ds from the collection, delete the stale os sg reference from the database and create a new OS SG
                             iterator.remove();
-                            EntityManager.delete(session, sgReference);
+                            OSCEntityManager.delete(em, sgReference);
                             //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
                             if (!isNuageController) {
                                 this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
@@ -109,9 +109,9 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                         } else {
                             syncSGRules(sg, neutron);
                             sgReference.setSgRefName(sg.getName());
-                            EntityManager.update(session, sgReference);
+                            OSCEntityManager.update(em, sgReference);
                             ds.setOsSecurityGroupReference(sgReference);
-                            EntityManager.update(session, ds);
+                            OSCEntityManager.update(em, ds);
                         }
                     }
                 }

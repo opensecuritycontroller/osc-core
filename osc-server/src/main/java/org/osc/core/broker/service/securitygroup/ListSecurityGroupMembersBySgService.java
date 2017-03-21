@@ -19,7 +19,8 @@ package org.osc.core.broker.service.securitygroup;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -35,14 +36,14 @@ public class ListSecurityGroupMembersBySgService extends
     private SecurityGroup sg;
 
     @Override
-    public SetResponse<SecurityGroupMemberItemDto> exec(BaseIdRequest request, Session session) throws Exception {
+    public SetResponse<SecurityGroupMemberItemDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
 
-        validate(session, request);
+        validate(em, request);
         // to do mapping
         Set<SecurityGroupMemberItemDto> dtoList = new HashSet<SecurityGroupMemberItemDto>();
 
         for (SecurityGroupMember securityGroupMember : SecurityGroupMemberEntityMgr
-                .listActiveSecurityGroupMembersBySecurityGroup(session, this.sg)) {
+                .listActiveSecurityGroupMembersBySecurityGroup(em, this.sg)) {
 
             SecurityGroupMemberItemDto dto = new SecurityGroupMemberItemDto();
 
@@ -54,10 +55,10 @@ public class ListSecurityGroupMembersBySgService extends
         return new SetResponse<>(dtoList);
     }
 
-    protected void validate(Session session, BaseIdRequest request) throws Exception {
+    protected void validate(EntityManager em, BaseIdRequest request) throws Exception {
         BaseIdRequest.checkForNullId(request);
 
-        this.sg = SecurityGroupEntityMgr.findById(session, request.getId());
+        this.sg = SecurityGroupEntityMgr.findById(em, request.getId());
 
         if (this.sg == null) {
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");

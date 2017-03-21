@@ -28,26 +28,26 @@ public class VirtualizationConnectorDtoValidatorTest extends VirtualizationConne
 
     @Test
     public void testValidate_WhenVcRequest_ReturnsSuccessful() throws Exception {
-        	        
+
         // Act.
         this.dtoValidator.validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
-        
+
         //Assert
         Assert.assertTrue(true);
     }
-    
+
     @Test
     public void testValidate_WhenVcNameExistsRequest_ThrowsValidationException() throws Exception {
     	// Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage("Virtualization Connector Name: " + VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS_REQUEST.getDto().getName() + " already exists.");
-        
+
         // Act.
         this.dtoValidator.validateForCreate(VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS_REQUEST.getDto());
-        
-        
+
+
     }
-    
+
     @Test
     public void testValidate_WhenControllerIpExists_ThrowsValidationException() throws Exception {
         // Arrange.
@@ -57,7 +57,7 @@ public class VirtualizationConnectorDtoValidatorTest extends VirtualizationConne
         // Act.
         this.dtoValidator.validateForCreate(VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS_VMWARE_REQUEST.getDto());
     }
-    
+
     @Test
     public void testValidate_WhenVmwareProviderIpExists_ThrowsValidationException() throws Exception {
         // Arrange.
@@ -66,6 +66,6 @@ public class VirtualizationConnectorDtoValidatorTest extends VirtualizationConne
 
         // Act.
         this.dtoValidator.validateForCreate(VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS_VMWARE_REQUEST.getDto());
-    }    
+    }
 
 }

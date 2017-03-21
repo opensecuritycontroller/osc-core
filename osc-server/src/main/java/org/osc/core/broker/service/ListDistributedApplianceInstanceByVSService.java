@@ -19,7 +19,8 @@ package org.osc.core.broker.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -31,9 +32,9 @@ public class ListDistributedApplianceInstanceByVSService extends
     ListResponse<DistributedApplianceInstanceDto> response = new ListResponse<DistributedApplianceInstanceDto>();
 
     @Override
-    public ListResponse<DistributedApplianceInstanceDto> exec(BaseIdRequest request, Session session) throws Exception {
+    public ListResponse<DistributedApplianceInstanceDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
         List<DistributedApplianceInstanceDto> dtoList = new ArrayList<DistributedApplianceInstanceDto>();
-        for (DistributedApplianceInstance dai : DistributedApplianceInstanceEntityMgr.listByVsId(session,
+        for (DistributedApplianceInstance dai : DistributedApplianceInstanceEntityMgr.listByVsId(em,
                 request.getId())) {
             DistributedApplianceInstanceDto dto = new DistributedApplianceInstanceDto(dai);
             dtoList.add(dto);

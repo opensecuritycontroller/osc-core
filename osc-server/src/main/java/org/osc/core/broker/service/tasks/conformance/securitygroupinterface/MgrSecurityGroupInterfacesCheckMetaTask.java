@@ -16,9 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
-import com.google.common.base.Objects;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockManager;
@@ -38,8 +41,7 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupInterfaceElement;
 
-import java.util.List;
-import java.util.Set;
+import com.google.common.base.Objects;
 
 public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTask {
     private static final Logger log = Logger.getLogger(MgrSecurityGroupInterfacesCheckMetaTask.class);
@@ -73,17 +75,17 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         boolean isLockProvided = true;
 
         this.tg = new TaskGraph();
 
         ApplianceManagerConnector mc = null;
         if (this.da != null) {
-            this.da = (DistributedAppliance) session.get(DistributedAppliance.class, this.da.getId());
+            this.da = em.find(DistributedAppliance.class, this.da.getId());
             mc = this.da.getApplianceManagerConnector();
         } else {
-            this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+            this.vs = em.find(VirtualSystem.class, this.vs.getId());
             mc = this.vs.getDistributedAppliance().getApplianceManagerConnector();
         }
 
@@ -105,10 +107,10 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
             this.tg = new TaskGraph();
             if (this.da != null) {
                 for (VirtualSystem vs : this.da.getVirtualSystems()) {
-                    this.tg.addTaskGraph(syncSecurityGroupInterfaces(session, vs));
+                    this.tg.addTaskGraph(syncSecurityGroupInterfaces(em, vs));
                 }
             } else {
-                this.tg.addTaskGraph(syncSecurityGroupInterfaces(session, this.vs));
+                this.tg.addTaskGraph(syncSecurityGroupInterfaces(em, this.vs));
             }
 
             if (this.tg.isEmpty() && !isLockProvided) {
@@ -133,7 +135,7 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         }
     }
 
-    public static TaskGraph syncSecurityGroupInterfaces(Session session, VirtualSystem vs) throws Exception {
+    public static TaskGraph syncSecurityGroupInterfaces(EntityManager em, VirtualSystem vs) throws Exception {
 
         TaskGraph tg = new TaskGraph();
         if (vs.getId() == null) {

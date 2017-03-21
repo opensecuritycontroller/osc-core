@@ -16,33 +16,34 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.ValidateUtil;
 
 public class VirtualizationConnectorDtoValidator
 		implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
 
-	private Session session;
+	private EntityManager em;
 	private static final Logger LOG = Logger.getLogger(VirtualizationConnectorDtoValidator.class);
-	
-	public VirtualizationConnectorDtoValidator(Session session) {
-		this.session = session;
+
+	public VirtualizationConnectorDtoValidator(EntityManager em) {
+		this.em = em;
 	}
 
 	@Override
 	public void validateForCreate(VirtualizationConnectorDto dto) throws Exception {
 		// Initializing Entity Manager
-        EntityManager<VirtualizationConnector> emgr = new EntityManager<>(
-                VirtualizationConnector.class, this.session);
-        
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(
+                VirtualizationConnector.class, this.em);
+
         VirtualizationConnectorDto.checkForNullFields(dto);
         VirtualizationConnectorDto.checkFieldLength(dto);
 

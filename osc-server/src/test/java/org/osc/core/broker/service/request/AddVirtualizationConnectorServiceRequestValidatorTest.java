@@ -22,7 +22,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,14 +49,14 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class AddVirtualizationConnectorServiceRequestValidatorTest {
 
     @Mock
-    private Session sessionMock;
-    
+    private EntityManager em;
+
     @Mock
     private DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> dtoValidator;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
-    
+
     @Mock
     private VirtualizationConnectorUtil virtualizationConnectorUtil;
 
@@ -71,32 +72,34 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testValidate_WithValidVmwareRequest_ReturnsSuccess() throws Exception {
         // Arrange.
     	doNothing().when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
-        doNothing().when(virtualizationConnectorUtil).checkVmwareConnection(any(DryRunRequest.class), any(VirtualizationConnector.class));
-    	
+        doNothing().when(this.virtualizationConnectorUtil).checkVmwareConnection(any(DryRunRequest.class), any(VirtualizationConnector.class));
+
     	// Act.
         this.validator.validate(VirtualizationConnectorServiceData.VMWARE_REQUEST);
-        
-        // Assert.        
+
+        // Assert.
         verify(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
-        
+
     }
-    
+
     @Test
+    @SuppressWarnings("unchecked")
     public void testValidate_WithValidOpenStackRequest_ReturnsSuccess() throws Exception {
         // Arrange.
     	doNothing().when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
-        doNothing().when(virtualizationConnectorUtil).checkOpenstackConnection(any(DryRunRequest.class), any(VirtualizationConnector.class));
-        
+        doNothing().when(this.virtualizationConnectorUtil).checkOpenstackConnection(any(DryRunRequest.class), any(VirtualizationConnector.class));
+
         // Act.
         this.validator.validate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST);
-        
-        // Assert.        
+
+        // Assert.
         verify(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
     }
-    
+
     @Test
     public void testValidate_WithNullRequest_ThrowsNullPointerException() throws Exception {
         // Arrange.
@@ -111,27 +114,27 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
         // Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
         doThrow(VmidcBrokerValidationException.class).when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
-        
+
         // Act.
         this.validator.validate(VirtualizationConnectorServiceData.VMWARE_REQUEST);
-        
-        // Assert.        
+
+        // Assert.
         verify(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
     }
-    
+
     @Test
     public void testValidate_WithInvalidOpenStackRequest_ThrowsValidationException() throws Exception {
         // Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
         doThrow(VmidcBrokerValidationException.class).when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
-        
+
         // Act.
         this.validator.validate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST);
-        
-        // Assert.        
+
+        // Assert.
         verify(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
     }
-    
+
     @Test
     public void testValidate_WithValidateAndLoadRequest_ThrowsUnsupportedException() throws Exception {
         // Arrange.
