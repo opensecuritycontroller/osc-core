@@ -102,7 +102,7 @@ public class ManagerApiFactory {
     }
 
     public static ApplianceManagerApi createApplianceManagerApi(String managerName) throws Exception {
-        return apiFactoryService.createApplianceManagerApi(managerName);
+        return apiFactoryService.createApplianceManagerApi(ManagerType.fromText(managerName));
     }
 
     public static ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception {

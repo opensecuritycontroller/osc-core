@@ -106,6 +106,6 @@ public class MCConformanceCheckMetaTaskTest {
         when(mcApi.getPublicKey(any(ApplianceManagerConnectorElement.class))).thenReturn(PUBLIC_KEY);
 
         when(this.apiFactoryServiceMock.syncsPolicyMapping(ManagerType.fromText(mgrType))).thenReturn(isPolicyMappingSupported);
-        when(this.apiFactoryServiceMock.createApplianceManagerApi(mgrType)).thenReturn(mcApi);
+        when(this.apiFactoryServiceMock.createApplianceManagerApi(ManagerType.fromText(mgrType))).thenReturn(mcApi);
     }
 }

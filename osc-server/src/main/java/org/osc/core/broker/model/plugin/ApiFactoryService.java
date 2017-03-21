@@ -41,7 +41,7 @@ public interface ApiFactoryService {
      * @return
      * @throws Exception
      */
-    ApplianceManagerApi createApplianceManagerApi(String managerName) throws Exception;
+    ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception;
 
     Boolean syncsPolicyMapping(ManagerType managerType) throws Exception;
 
@@ -55,9 +55,9 @@ public interface ApiFactoryService {
 
     String getAuthenticationType(ManagerType managerType) throws Exception;
 
-    boolean isBasicAuth(ManagerType mt) throws Exception;
+    boolean isBasicAuth(ManagerType managerType) throws Exception;
 
-    boolean isKeyAuth(ManagerType mt) throws Exception;
+    boolean isKeyAuth(ManagerType managerType) throws Exception;
 
     String getExternalServiceName(ManagerType managerType) throws Exception;
 

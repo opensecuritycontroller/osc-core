@@ -161,7 +161,11 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
     // Manager Types ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ApplianceManagerApi createApplianceManagerApi(String name) throws Exception {
+    public ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception {
+        return createApplianceManagerApi(managerType.getValue());
+    }
+
+    private ApplianceManagerApi createApplianceManagerApi(String name) throws Exception {
         ApplianceManagerApi api = this.managerApis.get(name);
 
         if (api == null) {

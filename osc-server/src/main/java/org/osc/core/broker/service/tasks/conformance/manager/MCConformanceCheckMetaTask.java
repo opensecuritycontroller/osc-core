@@ -63,7 +63,8 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
      * If unlock task is not provided(null) then we acquire a write lock and RELEASE it after the tasks are finished.
      * </p>
      */
-    public MCConformanceCheckMetaTask(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask, ApiFactoryService apiFactoryService) {
+    public MCConformanceCheckMetaTask(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask,
+            ApiFactoryService apiFactoryService) {
         this.mc = mc;
         this.mcUnlockTask = mcUnlockTask;
         this.name = getName();
@@ -84,12 +85,12 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
                 this.mcUnlockTask = LockUtil.lockMC(this.mc, LockType.WRITE_LOCK);
             } else {
                 // Upgrade to write lock. Will no op if we already have write lock
-                boolean upgradeLockSucceeded = LockManager.getLockManager().upgradeLockWithWait(
-                        new LockRequest(this.mcUnlockTask));
+                boolean upgradeLockSucceeded = LockManager.getLockManager()
+                        .upgradeLockWithWait(new LockRequest(this.mcUnlockTask));
                 if (!upgradeLockSucceeded) {
-                    throw new VmidcBrokerInvalidRequestException("Fail to gain write lock for '"
-                            + this.mcUnlockTask.getObjectRef().getType() + "' with name '"
-                            + this.mcUnlockTask.getObjectRef().getName() + "'.");
+                    throw new VmidcBrokerInvalidRequestException(
+                            "Fail to gain write lock for '" + this.mcUnlockTask.getObjectRef().getType()
+                                    + "' with name '" + this.mcUnlockTask.getObjectRef().getName() + "'.");
                 }
             }
 
@@ -132,8 +133,10 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
     private TaskGraph syncPublicKey(Session session) throws Exception {
         TaskGraph tg = new TaskGraph();
 
-        ApplianceManagerApi applianceManagerApi = this.apiFactoryService.createApplianceManagerApi(this.mc.getManagerType());
-        byte[] bytes = applianceManagerApi.getPublicKey(this.apiFactoryService.getApplianceManagerConnectorElement(this.mc));
+        ApplianceManagerApi applianceManagerApi = this.apiFactoryService
+                .createApplianceManagerApi(ManagerType.fromText(this.mc.getManagerType()));
+        byte[] bytes = applianceManagerApi
+                .getPublicKey(this.apiFactoryService.getApplianceManagerConnectorElement(this.mc));
         if (bytes != null && (this.mc.getPublicKey() == null || !Arrays.equals(this.mc.getPublicKey(), bytes))) {
             tg.addTask(new SyncMgrPublicKeyTask(this.mc, bytes));
         }
@@ -185,14 +188,13 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
         return tg;
     }
 
-	private static boolean isOutOfSyncRegistration(ManagerNotificationRegistrationElement registration) {
-		if (registration.getPassword() == null
-				|| !registration.getPassword().equals(OscAuthFilter.OSC_DEFAULT_PASS)) {
-			return true;
-		}
-		if (registration.getIpAddress() == null || !registration.getIpAddress().equals(ServerUtil.getServerIP())) {
-			return true;
-		}
+    private static boolean isOutOfSyncRegistration(ManagerNotificationRegistrationElement registration) {
+        if (registration.getPassword() == null || !registration.getPassword().equals(OscAuthFilter.OSC_DEFAULT_PASS)) {
+            return true;
+        }
+        if (registration.getIpAddress() == null || !registration.getIpAddress().equals(ServerUtil.getServerIP())) {
+            return true;
+        }
 
         return false;
     }
