@@ -43,7 +43,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-
 public class PKIUtil {
 
     private static final Logger log = Logger.getLogger(PKIUtil.class);
@@ -116,8 +115,12 @@ public class PKIUtil {
 
     public static void writeInputStreamToFile(InputStream is, String parentFolderName, String fileName) {
 
-        Path file = Paths.get(parentFolderName + File.separator + fileName);
-        Path backup = Paths.get(parentFolderName + File.separator + fileName + ".org");
+        StringBuilder sb = new StringBuilder(parentFolderName)
+                .append(File.separator)
+                .append(fileName);
+
+        Path file = Paths.get(sb.toString());
+        Path backup = Paths.get(sb.append(".org").toString());
 
         log.info("Start writing input stream to file: " + file);
 
@@ -133,8 +136,9 @@ public class PKIUtil {
                 } catch (Exception ex) {
                     log.error("Failed to write input stream to file", ex);
                     // undo when fails
-                    Files.deleteIfExists(file);
-                    Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                    if (Files.exists(backup)) {
+                        Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                    }
                 }
                 Files.deleteIfExists(backup);
             } catch (Exception e) {
@@ -147,8 +151,12 @@ public class PKIUtil {
 
     public static void writeBytesToFile(byte[] bytes, String parentFolderName, String fileName) {
 
-        Path file = Paths.get(parentFolderName + File.separator + fileName);
-        Path backup = Paths.get(parentFolderName + File.separator + fileName + ".org");
+        StringBuilder sb = new StringBuilder(parentFolderName)
+                .append(File.separator)
+                .append(fileName);
+
+        Path file = Paths.get(sb.toString());
+        Path backup = Paths.get(sb.append(".org").toString());
 
         log.info("Start writing " + bytes.length + " bytes to file " + file);
 
@@ -164,8 +172,9 @@ public class PKIUtil {
                 } catch (Exception ex) {
                     log.error("Failed to convert bytes to file", ex);
                     // undo when fails
-                    Files.deleteIfExists(file);
-                    Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                    if (Files.exists(backup)) {
+                        Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                    }
                 }
                 Files.deleteIfExists(backup);
             } catch (Exception e) {

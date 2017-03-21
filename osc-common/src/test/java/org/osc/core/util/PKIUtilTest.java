@@ -95,13 +95,13 @@ public class PKIUtilTest {
 
     @Test
     public void writeBytesToFile_fileNotExists_expectedSuccess(){
-
+        //Arrange.
         Path file = Paths.get(DIR_PATH + File.separator+ FILE_NAME);
         Path backup = Paths.get(DIR_PATH + File.separator+ FILE_NAME + ".org");
         Writer logs = getLogs();
-
+        //Act.
         PKIUtil.writeBytesToFile(FILE_TEXT.getBytes(), DIR_PATH, FILE_NAME);
-
+        //Assert.
         Assert.assertTrue("File should exist: "+file, Files.exists(file));
         Assert.assertFalse("File should not exist: "+file, Files.exists(backup));
         Assert.assertTrue("Logs should contatin message: " + succesMessageBytes,logs.toString().contains(succesMessageBytes));
@@ -110,14 +110,14 @@ public class PKIUtilTest {
 
     @Test
     public void writeBytesToFile_fileExists_expectedSuccess() throws IOException {
-
+        //Arrange.
         Path file = Paths.get(DIR_PATH + File.separator+ FILE_NAME);
         Path backup = Paths.get(DIR_PATH + File.separator+ FILE_NAME + ".org");
         Writer logs = getLogs();
-
+        //Act.
         Files.write(file,FILE_TEXT.getBytes());
         PKIUtil.writeBytesToFile(FILE_TEXT.getBytes(), DIR_PATH, FILE_NAME);
-
+        //Assert.
         Assert.assertTrue("File should exist: "+file, Files.exists(file));
         Assert.assertFalse("File should not exist: "+file, Files.exists(backup));
         Assert.assertTrue("Logs should contatin message: " + succesMessageBytes,logs.toString().contains(succesMessageBytes));
@@ -126,14 +126,13 @@ public class PKIUtilTest {
 
     @Test
     public void writeBytesToFile_fileNotExists_expectedFailOnMoveFileToBackup() throws Exception {
-
+        //Arrange.
         Path file = Paths.get(DIR_PATH + File.separator+ FILE_NAME);
         Path backup = Paths.get(INVALID_DIR_PATH + File.separator+ FILE_NAME + ".org");
         Writer logs = getLogs();
-
-
+        //Act.
         PKIUtil.writeBytesToFile(FILE_TEXT.getBytes(), INVALID_DIR_PATH, FILE_NAME);
-
+        //Assert.
         Assert.assertFalse("File should not exist: "+file, Files.exists(file));
         Assert.assertFalse("File should not exist: "+file, Files.exists(backup));
         Assert.assertTrue("Logs should contatin message: " + failedMessageBytes,logs.toString().contains(failedMessageBytes));
@@ -142,13 +141,13 @@ public class PKIUtilTest {
 
     @Test
     public void writeInputStreamToFile_fileNotExists_expectedSuccess() throws IOException {
-
+        //Arrange.
         Path file = Paths.get(DIR_PATH + File.separator+ FILE_NAME);
         Path backup = Paths.get(DIR_PATH + File.separator+ FILE_NAME + ".org");
         Writer logs = getLogs();
-
+        //Act.
         PKIUtil.writeInputStreamToFile(IOUtils.toInputStream(FILE_TEXT, "UTF-8"), DIR_PATH, FILE_NAME);
-
+        //Assert.
         Assert.assertTrue("File should exist: "+file, Files.exists(file));
         Assert.assertFalse("File should not exist: "+file, Files.exists(backup));
         Assert.assertTrue("Logs should contatin message: " + succesMessageInputStream,logs.toString().contains(succesMessageInputStream));
@@ -157,14 +156,14 @@ public class PKIUtilTest {
 
     @Test
     public void writeInputStreamToFile_fileExists_expectedSuccess() throws IOException {
-
+        //Arrange.
         Path file = Paths.get(DIR_PATH + File.separator+ FILE_NAME);
         Path backup = Paths.get(DIR_PATH + File.separator+ FILE_NAME + ".org");
         Writer logs = getLogs();
-
+        //Act.
         Files.write(file,FILE_TEXT.getBytes());
         PKIUtil.writeInputStreamToFile(IOUtils.toInputStream(FILE_TEXT, "UTF-8"), DIR_PATH, FILE_NAME);
-
+        //Assert.
         Assert.assertTrue("File should exist: "+file, Files.exists(file));
         Assert.assertFalse("File should not exist: "+file, Files.exists(backup));
         Assert.assertTrue("Logs should contatin message: " + succesMessageInputStream,logs.toString().contains(succesMessageInputStream));
@@ -173,14 +172,13 @@ public class PKIUtilTest {
 
     @Test
     public void writeInputStreamToFile_fileNotExists_expectedFailOnMoveFileToBackup() throws IOException {
-
+        //Arrange.
         Path file = Paths.get(DIR_PATH + File.separator+ FILE_NAME);
         Path backup = Paths.get(INVALID_DIR_PATH + File.separator+ FILE_NAME + ".org");
         Writer logs = getLogs();
-
-
+        //Act.
         PKIUtil.writeInputStreamToFile(IOUtils.toInputStream(FILE_TEXT, "UTF-8"), INVALID_DIR_PATH, FILE_NAME);
-
+        //Assert.
         Assert.assertFalse("File should not exist: "+file, Files.exists(file));
         Assert.assertFalse("File should not exist: "+file, Files.exists(backup));
         Assert.assertTrue("Logs should contatin message: " + failedMessageInputStream,logs.toString().contains(failedMessageInputStream));
@@ -189,13 +187,13 @@ public class PKIUtilTest {
 
     @Test
     public void writeInputStreamToFile_fileNotExistsAndPathTraversalInFileName_expectedFail() throws IOException {
-
+        //Arrange.
         Path file = Paths.get(DIR_PATH + File.separator + FILE_NAME_WITH_TRAVERSAL);
         Path backup = Paths.get(DIR_PATH + File.separator+ FILE_NAME_WITH_TRAVERSAL + ".org");
         Writer logs = getLogs();
-
+        //Act.
         PKIUtil.writeInputStreamToFile(IOUtils.toInputStream(FILE_TEXT, "UTF-8"), DIR_PATH, FILE_NAME_WITH_TRAVERSAL);
-
+        //Assert.
         Assert.assertFalse("File should exist: "+file, Files.exists(file));
         Assert.assertFalse("File should not exist: "+file, Files.exists(backup));
         Assert.assertFalse("Logs should contatin message: " + succesMessageInputStream,logs.toString().contains(succesMessageInputStream));
@@ -205,13 +203,13 @@ public class PKIUtilTest {
 
     @Test
     public void writeBytesToFile_fileNotExistsAndPathTraversalInFileName_expectedFail() throws IOException {
-
+        //Arrange.
         Path file = Paths.get(DIR_PATH + File.separator + FILE_NAME_WITH_TRAVERSAL);
         Path backup = Paths.get(DIR_PATH + File.separator+ FILE_NAME_WITH_TRAVERSAL + ".org");
         Writer logs = getLogs();
-
+        //Act.
         PKIUtil.writeBytesToFile(FILE_TEXT.getBytes(), DIR_PATH, FILE_NAME_WITH_TRAVERSAL);
-
+        //Assert.
         Assert.assertFalse("File should exist: "+file, Files.exists(file));
         Assert.assertFalse("File should not exist: "+file, Files.exists(backup));
         Assert.assertFalse("Logs should contatin message: " + succesMessageInputStream,logs.toString().contains(succesMessageInputStream));
