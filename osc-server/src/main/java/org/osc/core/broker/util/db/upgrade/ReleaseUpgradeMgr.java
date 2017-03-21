@@ -16,18 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.util.db.upgrade;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.h2.util.StringUtils;
-import org.hibernate.HibernateException;
-import org.osc.core.broker.model.entities.ReleaseInfo;
-import org.osc.core.broker.model.entities.archive.FreqType;
-import org.osc.core.broker.model.entities.archive.ThresholdType;
-import org.osc.core.broker.util.db.DBConnectionParameters;
-import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -38,6 +26,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.h2.util.StringUtils;
+import org.osc.core.broker.model.entities.ReleaseInfo;
+import org.osc.core.broker.model.entities.archive.FreqType;
+import org.osc.core.broker.model.entities.archive.ThresholdType;
+import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
@@ -92,7 +91,7 @@ public class ReleaseUpgradeMgr {
                 // make sure to update the ReleaseInfo record with the TARGET DB VERSION
                 // use switch statement without break statement (fall-thru flow) to force incremental upgrade chain.
 
-                try (Connection connection = HibernateUtil.getSQLConnection(new DBConnectionParameters());
+                try (Connection connection = HibernateUtil.getSQLConnection();
                      Statement stmt = connection.createStatement()) {
                     connection.setAutoCommit(false);
 
@@ -238,11 +237,11 @@ public class ReleaseUpgradeMgr {
                 log.error("Current DB version is unknown !!!");
         }
     }
-    
+
     private static void upgrade75to76(Statement stmt) throws SQLException, EncryptionException {
         execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_AGENT';");
     }
-    
+
     private static void upgrade74to75(Statement stmt) throws SQLException, EncryptionException {
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN password;");
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN agent_version_str;");
@@ -251,12 +250,12 @@ public class ReleaseUpgradeMgr {
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN agent_type;");
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN is_policy_map_out_of_sync;");
     }
-    
+
     private static void upgrade73to74(Statement stmt) throws SQLException, EncryptionException {
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN mgmt_os_port_id varchar(255);");
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN mgmt_mac_address varchar(255);");
     }
-                
+
     /**
      * 3DES encrypted passwords -> AES-CTR encrypted passwords
      */
@@ -1775,7 +1774,7 @@ public class ReleaseUpgradeMgr {
     private static ReleaseInfo getCurrentReleaseInfo() throws Exception {
         ReleaseInfo releaseInfo = null;
 
-        try (Connection connection = HibernateUtil.getSQLConnection(new DBConnectionParameters())) {
+        try (Connection connection = HibernateUtil.getSQLConnection()) {
             if (tableExists(connection, "RELEASE_INFO")) {
                 releaseInfo = getDbVersion(connection);
             }
@@ -1783,7 +1782,7 @@ public class ReleaseUpgradeMgr {
         return releaseInfo;
     }
 
-    private static boolean tableExists(Connection connection, final String tableName) throws HibernateException, SQLException {
+    private static boolean tableExists(Connection connection, final String tableName) throws SQLException {
         boolean tableExists;
         DatabaseMetaData metadata = connection.getMetaData();
         try (ResultSet resultSet = metadata.getTables(null, null, tableName, null)) {

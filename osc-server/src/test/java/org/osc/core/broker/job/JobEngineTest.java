@@ -177,7 +177,7 @@ public class JobEngineTest {
         verifyJobPersistence(this.job);
     }
 
-    private void verifyJobPersistence(Job job) {
+    private void verifyJobPersistence(Job job) throws Exception {
         EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
         EntityTransaction tx = em.getTransaction();
         try {

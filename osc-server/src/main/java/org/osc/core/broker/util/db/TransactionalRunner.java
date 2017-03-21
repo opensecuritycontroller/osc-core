@@ -20,6 +20,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.exceptions.VmidcException;
 
 /**
  * TransactionalRunner ensures that the execution of given logic is secured by transaction and DB changes will be
@@ -33,8 +34,10 @@ public class TransactionalRunner<T, S> {
 
     /** Interface that can provide and closeSession hibernate session */
     public interface SessionHandler {
-        /** Obtains hibernate session */
-        EntityManager getEntityManager();
+        /** Obtains hibernate session
+         * @throws VmidcException
+         * @throws InterruptedException */
+        EntityManager getEntityManager() throws InterruptedException, VmidcException;
         /** Recycles hibernate session **/
         void closeSession(EntityManager em);
     }
@@ -46,7 +49,7 @@ public class TransactionalRunner<T, S> {
         private EntityManager em;
 
         @Override
-        public EntityManager getEntityManager() {
+        public EntityManager getEntityManager() throws InterruptedException, VmidcException {
             if(this.em == null) {
                 this.em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             }
@@ -62,7 +65,7 @@ public class TransactionalRunner<T, S> {
     public static class ExclusiveSessionHandler implements SessionHandler {
 
         @Override
-        public EntityManager getEntityManager() {
+        public EntityManager getEntityManager() throws InterruptedException, VmidcException {
             return HibernateUtil.getEntityManagerFactory().createEntityManager();
         }
 

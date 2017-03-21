@@ -17,11 +17,10 @@
 package org.osc.core.broker.service;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.persistence.PersistenceException;
 
 import org.apache.log4j.Logger;
-import org.hibernate.HibernateException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.osc.core.broker.service.exceptions.VmidcDbConcurrencyException;
@@ -56,8 +55,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
         }
 
         if (this.em == null) {
-            EntityManagerFactory emf = getEntityManagerFactory();
-            this.em = emf.createEntityManager();
+            this.em = getEntityManager();
         }
 
         // add session with empty list in pendingBroadcastMessageMap
@@ -91,10 +89,12 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
      * Created for the testing the class. Which helps to create the mock object of SessionFactory.
      *
      * @return
+     * @throws VmidcException
+     * @throws InterruptedException
      */
     @VisibleForTesting
-    protected EntityManagerFactory getEntityManagerFactory() {
-        return HibernateUtil.getEntityManagerFactory();
+    protected EntityManager getEntityManager() throws InterruptedException, VmidcException {
+        return HibernateUtil.getEntityManagerFactory().createEntityManager();
     }
 
     /**
@@ -145,7 +145,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
                 this.tx.rollback();
                 TransactionalBroadcastUtil.removeSessionFromMap(em);
             }
-        } catch (HibernateException he) {
+        } catch (PersistenceException he) {
             log.error("Error rolling back database transaction", he);
         }
 

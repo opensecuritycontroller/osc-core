@@ -242,6 +242,47 @@
 			<version>1.10.1</version>
 			<scope>runtime</scope>
 		</dependency>
+		
+		<!-- OSGi runtime for JPA -->
+		<dependency>
+			<groupId>org.apache.aries.jpa</groupId>
+			<artifactId>org.apache.aries.jpa.container</artifactId>
+			<version>2.6.0</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.aries.tx-control</groupId>
+			<artifactId>tx-control-service-local</artifactId>
+			<version>0.0.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.aries.tx-control</groupId>
+			<artifactId>tx-control-provider-jpa-local</artifactId>
+			<version>0.0.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		
+		<!-- OSGi enabled Hibernate dependencies for use at runtime -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-osgi</artifactId>
+			<version>5.2.8.Final</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.servicemix.bundles</groupId>
+			<artifactId>org.apache.servicemix.bundles.antlr</artifactId>
+			<version>2.7.7_5</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.servicemix.bundles</groupId>
+			<artifactId>org.apache.servicemix.bundles.dom4j</artifactId>
+			<version>1.6.1_5</version>
+			<scope>runtime</scope>
+		</dependency>
+		
 	</dependencies>
 	<build>
 		<plugins>

@@ -34,6 +34,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.Not
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.OsNotificationListener;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.util.BroadcastMessage;
@@ -58,7 +59,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
     private static final Logger log = Logger.getLogger(OsSecurityGroupNotificationRunner.class);
 
-    public OsSecurityGroupNotificationRunner() {
+    public OsSecurityGroupNotificationRunner() throws InterruptedException, VmidcException {
         EntityManager em = null;
         try {
             BroadcasterUtil.register(this);
@@ -108,6 +109,8 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                 } else if (msg.getEventType() == EventType.UPDATED) {
                     updateListeners(sg);
                 }
+            } catch (Exception e) {
+                log.error("An error occurred updating the Security Group Listeners", e);
             } finally {
                 if (em != null) {
                     em.close();

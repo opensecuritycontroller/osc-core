@@ -21,7 +21,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -290,7 +289,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
         }
     }
 
-    private void refreshGraph() throws IOException {
+    private void refreshGraph() throws Exception {
         StreamResource imageResource = buildImageResource();
         this.embeddedImage.setIcon(imageResource);
     }
@@ -308,7 +307,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 public void buttonClick(ClickEvent event) {
                     try {
                         refreshGraph();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         ViewUtil.showError("Error while building task graph DOT file.", e);
                     }
                 }
@@ -351,9 +350,10 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
         }
     }
 
-    private StreamResource buildImageResource() throws IOException {
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+    private StreamResource buildImageResource() throws Exception {
+        EntityManager em = null;
         try {
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             this.dotFile = new File("job-" + getParentItemId() + System.currentTimeMillis() + ".dot");
 
             PrintWriter out = new PrintWriter(new FileWriter(this.dotFile));

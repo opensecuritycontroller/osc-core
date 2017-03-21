@@ -44,8 +44,10 @@ public class NsxAgentsJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = null;
+
         try {
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             EntityTransaction tx = em.getTransaction();
             tx.begin();
             OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(

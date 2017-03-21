@@ -38,7 +38,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockInformationDto;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.client.RestBaseClient;
@@ -144,15 +143,12 @@ public class ServerDebugApis {
         StringBuilder output = new StringBuilder();
         output.append("Query: ").append(sql).append("\n");
 
-        DBConnectionParameters params = new DBConnectionParameters();
-        params.setConnectionURL(params.getConnectionURL() + "AUTO_SERVER=TRUE;");
-
-        try (Connection conn = HibernateUtil.getSQLConnection(params);
+        try (Connection conn = HibernateUtil.getSQLConnection();
              Statement statement = conn.createStatement()) {
             try (ResultSet result = statement.executeQuery(sql)){
                 processResultSetForQuery(output, result);
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             output.append(ExceptionUtils.getStackTrace(ex));
         }
 
@@ -186,16 +182,13 @@ public class ServerDebugApis {
         StringBuilder output = new StringBuilder();
         output.append("Exec: ").append(sql).append("\n");
 
-        DBConnectionParameters params = new DBConnectionParameters();
-        params.setConnectionURL(params.getConnectionURL() + "AUTO_SERVER=TRUE;");
-
-        try (Connection conn = HibernateUtil.getSQLConnection(params);
+        try (Connection conn = HibernateUtil.getSQLConnection();
              Statement statement = conn.createStatement()) {
             boolean isResultSet = statement.execute(sql);
             if (!isResultSet) {
                 output.append(statement.getUpdateCount()).append(" rows affected.\n");
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             output.append(ExceptionUtils.getStackTrace(ex));
         }
         return output;

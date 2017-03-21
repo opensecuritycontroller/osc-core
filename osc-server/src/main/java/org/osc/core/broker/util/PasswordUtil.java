@@ -22,12 +22,13 @@ import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 
 public class PasswordUtil {
 
-    public static void initPasswordFromDb(String loginName) {
+    public static void initPasswordFromDb(String loginName) throws InterruptedException, VmidcException {
 
         EntityManager session = HibernateUtil.getEntityManagerFactory().createEntityManager();
         User user;

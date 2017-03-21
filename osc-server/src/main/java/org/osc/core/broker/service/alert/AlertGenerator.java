@@ -19,7 +19,6 @@ package org.osc.core.broker.service.alert;
 import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
@@ -48,7 +47,6 @@ import org.osc.core.broker.util.db.HibernateUtil;
 public class AlertGenerator implements JobCompletionListener {
 
     private static final Logger log = Logger.getLogger(AlertGenerator.class);
-    private static final EntityManagerFactory sessionFactory = HibernateUtil.getEntityManagerFactory();
 
     @Override
     public void completed(Job job) {
@@ -84,7 +82,7 @@ public class AlertGenerator implements JobCompletionListener {
 
         try {
 
-            em = sessionFactory.createEntityManager();
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             tx = em.getTransaction();
             tx.begin();
 

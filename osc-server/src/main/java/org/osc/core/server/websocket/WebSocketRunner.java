@@ -25,6 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -51,21 +52,43 @@ public class WebSocketRunner implements BroadcastListener {
 
     private List<ApplianceManagerConnector> amcs = new ArrayList<>();
     private ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-    private EntityManager em = null;
+//    private EntityManager em = null;
     private int count = MAX_TRIES;
 
     public WebSocketRunner() {
         BroadcasterUtil.register(this);
-        this.em = HibernateUtil.getEntityManagerFactory().createEntityManager();
 
-        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, this.em);
+        EntityManager em = null;
+        EntityTransaction tx = null;
+
+        try {
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+
+            tx = em.getTransaction();
+            tx.begin();
+
+            OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
+                    ApplianceManagerConnector.class, em);
+
+            this.amcs.addAll(emgr.listAll());
+
+            tx.commit();
+            this.ses.schedule(new WebSocketRunnable(), TRY_WAIT_MS, TimeUnit.MILLISECONDS);
+        } catch (Exception ex) {
+            log.error("Create DB encountered runtime exception: ", ex);
+            if (tx != null && tx.isActive()) {
+                tx.rollback();
+            }
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
+
         /*
          * Server started/restarted will add all SMCs in this Map and will invoke Web Socket Client for each one
          * of them.
          */
-        this.amcs.addAll(emgr.listAll());
-        this.ses.schedule(new WebSocketRunnable(), TRY_WAIT_MS, TimeUnit.MILLISECONDS);
     }
 
     private class WebSocketRunnable implements Runnable {
@@ -118,7 +141,7 @@ public class WebSocketRunner implements BroadcastListener {
                     log.info("Initialised websockets for all plugins");
                 }
                 WebSocketRunner.this.ses.shutdown();
-                WebSocketRunner.this.em.close();
+//                WebSocketRunner.this.em.close();
             } else {
                 WebSocketRunner.this.ses.schedule(this, TRY_WAIT_MS, TimeUnit.MILLISECONDS);
             }

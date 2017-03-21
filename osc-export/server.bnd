@@ -18,6 +18,8 @@
 	osgi.identity;filter:='(osgi.identity=slf4j.simple)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.metatype)',\
 	osgi.identity;filter:='(&(osgi.identity=org.apache.felix.resolver)(version>=1.10.1))',\
+	osgi.identity;filter:='(osgi.identity=org.hibernate.osgi)',\
+	osgi.identity;filter:='(osgi.identity=com.fasterxml.jackson.module.jackson-module-jaxb-annotations)',\
 	${hk2}
 
 # These initial requirement are NOT needed by the server, but are to work-around a startup ordering issue

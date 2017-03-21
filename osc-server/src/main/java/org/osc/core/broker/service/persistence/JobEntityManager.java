@@ -37,6 +37,7 @@ import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.job.JobObject;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.service.dto.JobRecordDto;
+import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.db.HibernateUtil;
 
 public class JobEntityManager {
@@ -68,7 +69,7 @@ public class JobEntityManager {
         return objects;
     }
 
-    public static Long getTaskCount(Long jobId) {
+    public static Long getTaskCount(Long jobId) throws InterruptedException, VmidcException {
 
         EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
 
@@ -95,7 +96,7 @@ public class JobEntityManager {
 
     }
 
-    public static Long getCompletedTaskCount(Long jobId) {
+    public static Long getCompletedTaskCount(Long jobId) throws InterruptedException, VmidcException {
 
         EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
 

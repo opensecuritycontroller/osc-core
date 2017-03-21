@@ -26,7 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.archive.ThresholdType;
-import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 
@@ -1212,8 +1212,8 @@ public class Schema {
 //    }
 
     @SuppressFBWarnings(value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
-    public static void createSchema() throws SQLException, KeyStoreProviderException, IOException {
-        try (Connection connection = HibernateUtil.getSQLConnection(new DBConnectionParameters());
+    public static void createSchema() throws SQLException, KeyStoreProviderException, IOException, InterruptedException, VmidcException {
+        try (Connection connection = HibernateUtil.getSQLConnection();
              Statement stmt = connection.createStatement()) {
 
         	connection.setAutoCommit(false);
