@@ -59,13 +59,8 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
 
     private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
 
-    private final ConformService conformService;
-
-    // FIXME - this is a work-around because mockito is creating too many mock instances
-    @Deprecated
-    ConformService getConformService() {
-        return this.conformService;
-    }
+    // BEWARE: don't make this final as it  breaks @InjectMocks
+    private ConformService conformService;
 
     public UpdateDistributedApplianceService(ConformService conformService) {
         this.conformService = conformService;

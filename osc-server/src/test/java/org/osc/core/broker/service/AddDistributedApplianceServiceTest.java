@@ -80,7 +80,6 @@ public class AddDistributedApplianceServiceTest {
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
-        this.conformServiceMock = this.service.getConformService();
 
         this.request = new BaseRequest<DistributedApplianceDto>();
         this.daDto = new DistributedApplianceDto();

@@ -95,7 +95,6 @@ public class UpdateDistributedApplianceServiceTest {
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
-        this.conformServiceMock = this.service.getConformService();
 
         this.vc = new VirtualizationConnector();
         this.vc.setId(1000L);
