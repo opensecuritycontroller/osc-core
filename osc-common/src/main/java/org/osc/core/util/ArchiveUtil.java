@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.util;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -31,7 +33,9 @@ import org.apache.log4j.Logger;
 public class ArchiveUtil {
 
     private static final Logger log = Logger.getLogger(ArchiveUtil.class);
-
+    static final int BUFFER_SIZE = 1024;
+    static final long FILE_SIZE = 0x6400000l;//size 1GB
+    static final int FILE_LIMIT = 1024;
     /**
      * @param inputDir   Input Directory name
      * @param outputFile Desired output file name
@@ -53,7 +57,7 @@ public class ArchiveUtil {
      */
     private static void addToArchive(File inputDir, ZipOutputStream zos) throws IOException {
         File[] fileList = FileUtil.getFileListFromDirectory(inputDir.getPath());
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[BUFFER_SIZE];
 
         for (File element : fileList) {
 
@@ -81,26 +85,44 @@ public class ArchiveUtil {
      * @throws IOException
      */
     public static void unzip(String inputFile, String destination) throws IOException {
+        FileInputStream fis = new FileInputStream(inputFile);
+        ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
+        ZipEntry entry;
+        int entries = 0;
+        long total = BUFFER_SIZE;
         log.info("Extracting " + inputFile + " into " + destination);
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(inputFile))) {
-            ZipEntry zipEntry = zis.getNextEntry();
-            while (zipEntry != null) {
-                String fileName = zipEntry.getName();
-                log.info("Extracting " + fileName);
-                File file = new File(destination + File.separator + fileName);
-                // create folder as needed
-                file.getParentFile().mkdirs();
-                try (FileOutputStream fos = new FileOutputStream(file)) {
-                    int length;
-                    byte[] buffer = new byte[1024];
-                    while ((length = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, length);
-                    }
+        try {
+            while ((entry = zis.getNextEntry()) != null) {
+                int count;
+                byte data[] = new byte[BUFFER_SIZE];
+                // Write the files to the disk, but ensure that the filename is valid,
+                // and that the file is not insanely big
+                String name = validateFilename(entry.getName(), ".");
+                if (entry.isDirectory()) {
+                    new File(name).mkdir();
+                    continue;
                 }
-                zipEntry = zis.getNextEntry();
+                FileOutputStream fos = new FileOutputStream(name);
+                BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER_SIZE);
+                count = zis.read(data, 0, BUFFER_SIZE);
+                while (total <= FILE_SIZE && count != -1) {
+                    dest.write(data, 0, count);
+                    total += count;
+                    count = zis.read(data, 0, BUFFER_SIZE);
+                }
+                dest.flush();
+                dest.close();
+                zis.closeEntry();
+                entries++;
+                if (entries > FILE_LIMIT) {
+                    throw new IllegalStateException("Archive has too many files.");
+                }
+                if (total > FILE_SIZE) {
+                    throw new IllegalStateException("Archive is too big.");
+                }
             }
-            zis.closeEntry();
-            log.info("Extraction successful! " + inputFile);
+        } finally {
+            zis.close();
         }
     }
 
@@ -123,6 +145,28 @@ public class ArchiveUtil {
             zis.closeEntry();
         }
         return files;
+    }
+
+    /**
+     * Returns the files included within the zip file
+     *
+     * @param filename the zip file
+     * @param intendedDir the zip potential location
+     * @return name of the file
+     * @throws IllegalStateException if name is incorrect
+     */
+    private static String validateFilename(String filename, String intendedDir)
+            throws java.io.IOException {
+        File f = new File(filename);
+        File iD = new File(intendedDir);
+        String canPath = f.getCanonicalPath();
+        String canID = iD.getCanonicalPath();
+
+        if (canPath.startsWith(canID)) {
+            return canPath;
+        } else {
+            throw new IllegalStateException("File is not inside extract directory.");
+        }
     }
 
 }
