@@ -36,7 +36,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.internal.util.collections.Sets;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -53,8 +52,11 @@ import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({HibernateUtil.class})
 public class AddDistributedApplianceServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
