@@ -146,7 +146,7 @@ public class UpdateDistributedApplianceServiceTest {
         }).when(this.validatorMock)
         .validateForUpdate(Mockito.argThat(new DistributedApplianceDtoMatcher(this.daDto.getName())));
 
-        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(Session.class),
+        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(EntityManager.class),
                 (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)),
                 Mockito.any(UnlockObjectMetaTask.class))).thenReturn(JOB_ID);
 

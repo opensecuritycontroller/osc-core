@@ -50,12 +50,9 @@ import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
-
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AddDistributedApplianceServiceTest {
@@ -192,7 +189,7 @@ public class AddDistributedApplianceServiceTest {
         // Arrange.
         Long jobId = new Long(1234L);
 
-        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(Session.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)))).thenReturn(jobId);
+        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(EntityManager.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.daDto.getName())))).thenReturn(jobId);
 
         // Act.
         AddDistributedApplianceResponse response = this.service.dispatch(this.request);

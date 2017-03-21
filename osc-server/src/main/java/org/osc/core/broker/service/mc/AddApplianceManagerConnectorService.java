@@ -93,7 +93,7 @@ public class AddApplianceManagerConnectorService extends
 
         BaseJobResponse response = new BaseJobResponse();
         response.setId(mc.getId());
-        Job job = this.onformService.startMCConformJob(mc, mcUnlock, em);
+        Job job = this.conformService.startMCConformJob(mc, mcUnlock, em);
         response.setJobId(job.getId());
 
         return response;
