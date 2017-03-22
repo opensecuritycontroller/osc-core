@@ -16,10 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.SetNATSettingsService;
 import org.osc.core.broker.service.SetNetworkSettingsService;
 import org.osc.core.broker.service.UpgradeService;
+import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
+import org.osc.core.broker.service.mc.SyncManagerConnectorService;
+import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,10 +42,13 @@ import com.mcafee.vmidc.server.Server;
 public class StaticRegistry {
 
     @Reference
-    private ConformService conformService;
+    private ApiFactoryService apiFactoryService;
 
     @Reference
     private Server server;
+
+    @Reference
+    private ConformService conformService;
 
     @Reference
     private SetNetworkSettingsService setNetworkSettingsService;
@@ -52,6 +59,15 @@ public class StaticRegistry {
     @Reference
     private UpgradeService upgradeService;
 
+    @Reference
+    private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
+
+    @Reference
+    private UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService;
+
+    @Reference
+    private SyncManagerConnectorService syncManagerConnectorService;
+
     private static StaticRegistry instance = null;
 
     @Activate
@@ -59,12 +75,16 @@ public class StaticRegistry {
         instance = this;
     }
 
-    public static ConformService conformService() {
-        return instance.conformService;
+    public static ApiFactoryService apiFactoryService() {
+        return instance.apiFactoryService;
     }
 
     public static Server server() {
         return instance.server;
+    }
+
+    public static ConformService conformService() {
+        return instance.conformService;
     }
 
     public static SetNetworkSettingsService setNetworkSettingsService() {
@@ -77,7 +97,18 @@ public class StaticRegistry {
 
     public static UpgradeService upgradeService() {
         return instance.upgradeService;
+    }
 
+    public static AddApplianceManagerConnectorService addApplianceManagerConnectorService() {
+        return instance.addApplianceManagerConnectorService;
+    }
+
+    public static UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService() {
+        return instance.updateApplianceManagerConnectorService;
+    }
+
+    public static SyncManagerConnectorService syncManagerConnectorService() {
+        return instance.syncManagerConnectorService;
     }
 
 }

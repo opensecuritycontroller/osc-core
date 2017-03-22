@@ -101,19 +101,15 @@ public class ManagerApiFactory {
         return apiFactoryService.getManagerTypes();
     }
 
-    public static ApplianceManagerApi createApplianceManagerApi(String managerName) throws Exception {
+    private static ApplianceManagerApi createApplianceManagerApi(String managerName) throws Exception {
         return apiFactoryService.createApplianceManagerApi(ManagerType.fromText(managerName));
-    }
-
-    public static ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception {
-        return createApplianceManagerApi(managerType.getValue());
     }
 
     public static ApplianceManagerApi createApplianceManagerApi(DistributedApplianceInstance dai) throws Exception {
         return createApplianceManagerApi(dai.getVirtualSystem());
     }
 
-    public static ApplianceManagerApi createApplianceManagerApi(VirtualSystem vs) throws Exception {
+    private static ApplianceManagerApi createApplianceManagerApi(VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(
                 getDecryptedApplianceManagerConnector(vs.getDistributedAppliance().getApplianceManagerConnector())
                         .getManagerType());
@@ -147,12 +143,8 @@ public class ManagerApiFactory {
                 .createManagerDomainApi(getApplianceManagerConnectorElement(mc));
     }
 
-    public static Boolean syncsSecurityGroup(ManagerType managerType) throws Exception {
-        return apiFactoryService.syncsSecurityGroup(managerType);
-    }
-
     public static Boolean syncsSecurityGroup(VirtualSystem vs) throws Exception {
-        return syncsSecurityGroup(
+        return apiFactoryService.syncsSecurityGroup(
                 ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 

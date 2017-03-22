@@ -34,7 +34,6 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteApplianceManagerConnectorService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDomainsByMcIdService;
@@ -74,7 +73,10 @@ public class ManagerConnectorApis {
     private static final Logger logger = Logger.getLogger(ManagerConnectorApis.class);
 
     @Reference
-    private ConformService conformService;
+    private AddApplianceManagerConnectorService addService;
+
+    @Reference
+    private UpdateApplianceManagerConnectorService updateService;
 
     @ApiOperation(value = "Lists All Manager Connectors",
             notes = "Password/API Key information is not returned as it is sensitive information",
@@ -131,7 +133,7 @@ public class ManagerConnectorApis {
         logger.info("Creating Appliance Manager Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponseForBaseRequest(new AddApplianceManagerConnectorService(this.conformService),
+        return ApiUtil.getResponseForBaseRequest(this.addService,
                 new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
     }
 
@@ -156,7 +158,7 @@ public class ManagerConnectorApis {
 
         ApiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
 
-        return ApiUtil.getResponseForBaseRequest(new UpdateApplianceManagerConnectorService(this.conformService),
+        return ApiUtil.getResponseForBaseRequest(this.updateService,
                 new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
     }
 

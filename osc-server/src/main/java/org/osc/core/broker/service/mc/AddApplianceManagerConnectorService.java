@@ -43,7 +43,10 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = AddApplianceManagerConnectorService.class)
 public class AddApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
 
@@ -51,16 +54,8 @@ public class AddApplianceManagerConnectorService extends
 
     private boolean forceAddSSLCertificates = false;
 
-    private final ConformService conformService;
-
-    public AddApplianceManagerConnectorService(ConformService conformService) {
-        this.conformService = conformService;
-    }
-
-    public AddApplianceManagerConnectorService(boolean forceAddSSLCertificates, ConformService conformService) {
-        this(conformService);
-        this.forceAddSSLCertificates = forceAddSSLCertificates;
-    }
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em)

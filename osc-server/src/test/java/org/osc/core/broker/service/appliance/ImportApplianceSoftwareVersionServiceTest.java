@@ -50,6 +50,7 @@ import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.image.ImageMetadata;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
@@ -100,6 +101,9 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
     @Mock
     private ImageMetadata imageMetaData;
+
+    @Mock
+    private ApiFactoryService apiFactoryService;
 
     @InjectMocks
     private ImportApplianceSoftwareVersionService service;
@@ -155,11 +159,10 @@ public class ImportApplianceSoftwareVersionServiceTest {
         when(mockExistingMatchingAppliance.getId()).thenReturn(APPLIANCE_ID);
 
         ApplianceManagerApi applianceMgrPolicyMappingSupported = Mockito.mock(ApplianceManagerApi.class);
+
         PowerMockito.mockStatic(ManagerApiFactory.class);
-        Mockito.when(ManagerApiFactory.createApplianceManagerApi(ManagerType.NSM))
+        Mockito.when(this.apiFactoryService.createApplianceManagerApi(ManagerType.NSM))
                 .thenReturn(applianceMgrPolicyMappingSupported);
-        Mockito.when(ManagerApiFactory.createApplianceManagerApi(ManagerType.NSM.getValue()))
-            .thenReturn(applianceMgrPolicyMappingSupported);
     }
 
     @After
