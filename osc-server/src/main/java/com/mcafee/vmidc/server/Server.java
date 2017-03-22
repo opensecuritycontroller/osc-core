@@ -429,7 +429,7 @@ public class Server {
         Runtime.getRuntime().halt(0);
     }
 
-    // static methods to allow UiListenerDelegate to update session info
+    // allow UiListenerDelegate to update session info
     private List<HttpSession> sessions = new ArrayList<>();
 
     public synchronized void addSession(HttpSession session) {
