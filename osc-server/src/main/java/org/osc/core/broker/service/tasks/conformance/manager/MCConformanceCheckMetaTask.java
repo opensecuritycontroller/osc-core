@@ -30,6 +30,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.server.OscAuthFilter;
@@ -49,6 +50,7 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 	private ApplianceManagerConnector mc;
 	private TaskGraph tg;
 	private UnlockObjectTask mcUnlockTask;
+	private ApiFactoryService apiFactoryService;
 
 	/**
 	 * Start MC conformance task. A write lock exists for the duration of this task and any tasks kicked off by this
@@ -61,10 +63,11 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 	 * If unlock task is not provided(null) then we acquire a write lock and RELEASE it after the tasks are finished.
 	 * </p>
 	 */
-	public MCConformanceCheckMetaTask(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask) {
+	public MCConformanceCheckMetaTask(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask, ApiFactoryService apiFactoryService) {
 		this.mc = mc;
 		this.mcUnlockTask = mcUnlockTask;
 		this.name = getName();
+		this.apiFactoryService = apiFactoryService;
 	}
 
 	@Override
@@ -91,11 +94,11 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 			}
 
 			this.tg.addTaskGraph(syncPublicKey(em));
-			if (ManagerApiFactory.isPersistedUrlNotifications(this.mc)) {
+			if (this.apiFactoryService.isPersistedUrlNotifications(this.mc)) {
 				this.tg.addTaskGraph(syncPersistedUrlNotification(em, this.mc));
 			}
 
-			if (ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(this.mc.getManagerType()))) {
+			if (this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(this.mc.getManagerType()))) {
 				Task syncDomains = new SyncDomainMetaTask(this.mc);
 				this.tg.addTask(syncDomains);
 
@@ -128,8 +131,9 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 	private TaskGraph syncPublicKey(EntityManager em) throws Exception {
 		TaskGraph tg = new TaskGraph();
 
-		ApplianceManagerApi applianceManagerApi = ManagerApiFactory.createApplianceManagerApi(this.mc.getManagerType());
-		byte[] bytes = applianceManagerApi.getPublicKey(ManagerApiFactory.getApplianceManagerConnectorElement(this.mc));
+                ApplianceManagerApi applianceManagerApi = this.apiFactoryService.createApplianceManagerApi(ManagerType.fromText(this.mc.getManagerType()));
+                byte[] bytes = applianceManagerApi.getPublicKey(this.apiFactoryService.getApplianceManagerConnectorElement(this.mc));
+
 		if (bytes != null && (this.mc.getPublicKey() == null || !Arrays.equals(this.mc.getPublicKey(), bytes))) {
 			tg.addTask(new SyncMgrPublicKeyTask(this.mc, bytes));
 		}
@@ -181,14 +185,13 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 		return tg;
 	}
 
-	private static boolean isOutOfSyncRegistration(ManagerNotificationRegistrationElement registration) {
-		if (registration.getPassword() == null
-				|| !registration.getPassword().equals(OscAuthFilter.OSC_DEFAULT_PASS)) {
-			return true;
-		}
-		if (registration.getIpAddress() == null || !registration.getIpAddress().equals(ServerUtil.getServerIP())) {
-			return true;
-		}
+    private static boolean isOutOfSyncRegistration(ManagerNotificationRegistrationElement registration) {
+        if (registration.getPassword() == null || !registration.getPassword().equals(OscAuthFilter.OSC_DEFAULT_PASS)) {
+            return true;
+        }
+        if (registration.getIpAddress() == null || !registration.getIpAddress().equals(ServerUtil.getServerIP())) {
+            return true;
+        }
 
         return false;
     }

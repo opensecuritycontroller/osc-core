@@ -32,6 +32,11 @@ public class AddSecurityGroupInterfaceService extends
 BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJobResponse> {
 
     private static final Logger log = Logger.getLogger(AddSecurityGroupInterfaceService.class);
+    private ConformService conformService;
+
+    public AddSecurityGroupInterfaceService(ConformService conformService) {
+        this.conformService = conformService;
+    }
 
     @Override
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
@@ -52,7 +57,7 @@ BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJo
 
         commitChanges(true);
 
-        Long jobId = ConformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
+        Long jobId = this.conformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
 
         BaseJobResponse response = new BaseJobResponse(sgi.getId());
         response.setJobId(jobId);

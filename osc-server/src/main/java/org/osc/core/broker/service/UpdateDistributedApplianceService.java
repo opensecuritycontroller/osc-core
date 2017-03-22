@@ -60,6 +60,13 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
 
     private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
 
+    // BEWARE: don't make this final as it  breaks @InjectMocks
+    private ConformService conformService;
+
+    public UpdateDistributedApplianceService(ConformService conformService) {
+        this.conformService = conformService;
+    }
+
     @Override
     public BaseJobResponse exec(BaseRequest<DistributedApplianceDto> request, EntityManager em)
             throws Exception {
@@ -110,7 +117,7 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
     }
 
     private Long startConformDAJob(DistributedAppliance da, EntityManager em) throws Exception {
-        return ConformService.startDAConformJob(em, da, this.ult);
+        return this.conformService.startDAConformJob(em, da, this.ult);
     }
 
     /**

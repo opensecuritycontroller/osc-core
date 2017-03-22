@@ -17,6 +17,7 @@
 package org.osc.core.broker.view.securityinterface;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.policy.PolicyDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.securityinterface.AddSecurityGroupInterfaceService;
@@ -37,8 +38,11 @@ public class AddSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfaceW
 
     final String CAPTION = "Add Policy Mapping";
 
-    public AddSecurityGroupInterfaceWindow(Long vsId) throws Exception {
+    private final ConformService conformService;
+
+    public AddSecurityGroupInterfaceWindow(Long vsId, ConformService conformService) throws Exception {
         super(vsId);
+        this.conformService = conformService;
         createWindow(this.CAPTION);
     }
 
@@ -70,7 +74,7 @@ public class AddSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfaceW
                 BaseRequest<SecurityGroupInterfaceDto> req = new BaseRequest<SecurityGroupInterfaceDto>();
                 req.setDto(dto);
 
-                AddSecurityGroupInterfaceService addService = new AddSecurityGroupInterfaceService();
+                AddSecurityGroupInterfaceService addService = new AddSecurityGroupInterfaceService(this.conformService);
                 addService.dispatch(req);
 
                 close();

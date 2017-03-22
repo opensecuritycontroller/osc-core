@@ -61,7 +61,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.google.common.collect.Sets;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ConformService.class, HibernateUtil.class, LockUtil.class, ManagerApiFactory.class})
+@PrepareForTest({HibernateUtil.class, LockUtil.class, ManagerApiFactory.class})
 public class UpdateDistributedApplianceServiceTest {
     private static long JOB_ID = 12345L;
     private static String NEW_APPLIANCE_SW_VERSION = "NEWVERSION";
@@ -73,6 +73,9 @@ public class UpdateDistributedApplianceServiceTest {
 
     @Mock(name = "daValidator")
     private DistributedApplianceDtoValidator validatorMock;
+
+    @Mock
+    private ConformService conformServiceMock;
 
     @InjectMocks
     private UpdateDistributedApplianceService service;
@@ -143,8 +146,7 @@ public class UpdateDistributedApplianceServiceTest {
         }).when(this.validatorMock)
         .validateForUpdate(Mockito.argThat(new DistributedApplianceDtoMatcher(this.daDto.getName())));
 
-        PowerMockito.mockStatic(ConformService.class);
-        Mockito.when(ConformService.startDAConformJob(Mockito.any(EntityManager.class),
+        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(EntityManager.class),
                 (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)),
                 Mockito.any(UnlockObjectMetaTask.class))).thenReturn(JOB_ID);
 

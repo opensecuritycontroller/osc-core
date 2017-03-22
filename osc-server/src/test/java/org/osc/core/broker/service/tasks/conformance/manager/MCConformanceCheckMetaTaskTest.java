@@ -41,22 +41,22 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-@PrepareForTest({ManagerApiFactory.class})
 public class MCConformanceCheckMetaTaskTest {
     @Mock
     public EntityManager em;
+
+    @Mock
+    public ApiFactoryService apiFactoryServiceMock;
 
     private ApplianceManagerConnector mc;
 
@@ -75,18 +75,16 @@ public class MCConformanceCheckMetaTaskTest {
             doReturn(mc).when(this.em).find(ApplianceManagerConnector.class, mc.getId());
         }
 
-        PowerMockito.mockStatic(ManagerApiFactory.class);
-
         setupApplianceManagerApiFactory(POLICY_MAPPING_SUPPORTED_MC.getManagerType(), true);
         setupApplianceManagerApiFactory(POLICY_MAPPING_NOT_SUPPORTED_MC.getManagerType(), false);
 
-        when(ManagerApiFactory.syncsSecurityGroup(ManagerType.fromText(POLICY_MAPPING_SUPPORTED_MC.getManagerType()))).thenReturn(true);
+        when(this.apiFactoryServiceMock.syncsSecurityGroup(ManagerType.fromText(POLICY_MAPPING_SUPPORTED_MC.getManagerType()))).thenReturn(true);
     }
 
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        MCConformanceCheckMetaTask task = new MCConformanceCheckMetaTask(this.mc, null);
+        MCConformanceCheckMetaTask task = new MCConformanceCheckMetaTask(this.mc, null, this.apiFactoryServiceMock);
 
         // Act.
         task.executeTransaction(this.em);
@@ -108,7 +106,7 @@ public class MCConformanceCheckMetaTaskTest {
         ApplianceManagerApi mcApi = mock(ApplianceManagerApi.class);
         when(mcApi.getPublicKey(any(ApplianceManagerConnectorElement.class))).thenReturn(PUBLIC_KEY);
 
-        when(ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mgrType))).thenReturn(isPolicyMappingSupported);
-        when(ManagerApiFactory.createApplianceManagerApi(mgrType)).thenReturn(mcApi);
+        when(this.apiFactoryServiceMock.syncsPolicyMapping(ManagerType.fromText(mgrType))).thenReturn(isPolicyMappingSupported);
+        when(this.apiFactoryServiceMock.createApplianceManagerApi(ManagerType.fromText(mgrType))).thenReturn(mcApi);
     }
 }

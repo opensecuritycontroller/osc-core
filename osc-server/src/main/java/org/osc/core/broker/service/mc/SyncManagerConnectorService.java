@@ -29,6 +29,12 @@ import org.osc.core.broker.service.response.SyncApplianceManagerConnectorRespons
 public class SyncManagerConnectorService extends
         ServiceDispatcher<SyncApplianceManagerConnectorRequest, SyncApplianceManagerConnectorResponse> {
 
+    private final ConformService conformService;
+
+    public SyncManagerConnectorService(ConformService conformService) {
+        this.conformService = conformService;
+    }
+
     @Override
     public SyncApplianceManagerConnectorResponse exec(SyncApplianceManagerConnectorRequest request, EntityManager em)
             throws Exception {
@@ -40,7 +46,7 @@ public class SyncManagerConnectorService extends
 
         validate(request, mc);
 
-        Long jobId = ConformService.startMCConformJob(mc, em).getId();
+        Long jobId = this.conformService.startMCConformJob(mc, em).getId();
 
         SyncApplianceManagerConnectorResponse response = new SyncApplianceManagerConnectorResponse();
         response.setJobId(jobId);

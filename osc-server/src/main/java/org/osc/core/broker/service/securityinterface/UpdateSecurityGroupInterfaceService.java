@@ -34,6 +34,12 @@ BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJo
 
     private SecurityGroupInterface sgi;
 
+    private final ConformService conformService;
+
+    public UpdateSecurityGroupInterfaceService(ConformService conformService) {
+        this.conformService = conformService;
+    }
+
     @Override
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
 
@@ -46,7 +52,7 @@ BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJo
         OSCEntityManager.update(em, this.sgi);
         commitChanges(true);
 
-        Long jobId = ConformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
+        Long jobId = this.conformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
         return new BaseJobResponse(this.sgi.getId(), jobId);
     }
 

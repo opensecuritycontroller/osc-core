@@ -51,10 +51,14 @@ public class AddApplianceManagerConnectorService extends
 
     private boolean forceAddSSLCertificates = false;
 
-    public AddApplianceManagerConnectorService() {
+    private final ConformService conformService;
+
+    public AddApplianceManagerConnectorService(ConformService conformService) {
+        this.conformService = conformService;
     }
 
-    public AddApplianceManagerConnectorService(boolean forceAddSSLCertificates) {
+    public AddApplianceManagerConnectorService(boolean forceAddSSLCertificates, ConformService conformService) {
+        this(conformService);
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
 
@@ -89,7 +93,7 @@ public class AddApplianceManagerConnectorService extends
 
         BaseJobResponse response = new BaseJobResponse();
         response.setId(mc.getId());
-        Job job = ConformService.startMCConformJob(mc, mcUnlock, em);
+        Job job = this.conformService.startMCConformJob(mc, mcUnlock, em);
         response.setJobId(job.getId());
 
         return response;

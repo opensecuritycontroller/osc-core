@@ -34,6 +34,12 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
     private static final Logger log = Logger.getLogger(DeleteSecurityGroupInterfaceService.class);
     private SecurityGroupInterface sgi = null;
 
+    private final ConformService conformService;
+
+    public DeleteSecurityGroupInterfaceService(ConformService conformService) {
+        this.conformService = conformService;
+    }
+
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
         validate(em, request);
@@ -44,7 +50,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
 
         commitChanges(true);
 
-        Long jobId = ConformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
+        Long jobId = this.conformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
 
         BaseJobResponse response = new BaseJobResponse(this.sgi.getId());
         response.setJobId(jobId);

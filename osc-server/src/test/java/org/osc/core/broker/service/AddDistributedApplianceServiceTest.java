@@ -56,7 +56,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ConformService.class, HibernateUtil.class})
+@PrepareForTest({HibernateUtil.class})
 public class AddDistributedApplianceServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -65,6 +65,9 @@ public class AddDistributedApplianceServiceTest {
 
     @Mock
     private DistributedApplianceDtoValidator validatorMock;
+
+    @Mock
+    private ConformService conformServiceMock;
 
     @InjectMocks
     private AddDistributedApplianceService service;
@@ -188,8 +191,7 @@ public class AddDistributedApplianceServiceTest {
         // Arrange.
         Long jobId = new Long(1234L);
 
-        PowerMockito.mockStatic(ConformService.class);
-        Mockito.when(ConformService.startDAConformJob(Mockito.any(EntityManager.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.daDto.getName())))).thenReturn(jobId);
+        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(EntityManager.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.daDto.getName())))).thenReturn(jobId);
 
         // Act.
         AddDistributedApplianceResponse response = this.service.dispatch(this.request);

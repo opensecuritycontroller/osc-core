@@ -17,10 +17,12 @@
 package org.osc.core.broker.view.securityinterface;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.policy.PolicyDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.securityinterface.UpdateSecurityGroupInterfaceService;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.sdk.controller.FailurePolicyType;
 
@@ -37,6 +39,8 @@ public class UpdateSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfa
     private final SecurityGroupInterfaceDto dto;
 
     final String CAPTION = "Update Policy Mapping";
+
+    private ConformService conformService = StaticRegistry.conformService();
 
     public UpdateSecurityGroupInterfaceWindow(SecurityGroupInterfaceDto dto) throws Exception {
         super(dto.getParentId());
@@ -85,7 +89,7 @@ public class UpdateSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfa
                 BaseRequest<SecurityGroupInterfaceDto> req = new BaseRequest<SecurityGroupInterfaceDto>();
                 req.setDto(newDto);
 
-                UpdateSecurityGroupInterfaceService updateService = new UpdateSecurityGroupInterfaceService();
+                UpdateSecurityGroupInterfaceService updateService = new UpdateSecurityGroupInterfaceService(this.conformService);
                 updateService.dispatch(req);
 
                 close();
