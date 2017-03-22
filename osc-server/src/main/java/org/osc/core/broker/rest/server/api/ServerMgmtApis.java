@@ -112,7 +112,7 @@ public class ServerMgmtApis {
     public Response getDbBackupFile(@Context HttpHeaders headers, @ApiParam(required = true) BackupRequest request) {
 
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        logger.info(SessionUtil.getCurrentUser()+" is generating backap DB");
+        logger.info(SessionUtil.getCurrentUser()+" is generating a backap of the database");
         StreamingOutput fileStream = new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {
