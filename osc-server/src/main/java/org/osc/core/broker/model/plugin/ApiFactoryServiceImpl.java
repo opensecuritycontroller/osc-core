@@ -250,7 +250,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
     }
 
     @Override
-    public boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception {
+    public Boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception {
         return getNotificationType(ManagerType.fromText(getDecryptedApplianceManagerConnector(mc).getManagerType()))
                 .equals(ManagerNotificationSubscriptionType.CALLBACK_URL.toString());
     }

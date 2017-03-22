@@ -94,11 +94,11 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 			}
 
 			this.tg.addTaskGraph(syncPublicKey(em));
-			if (ManagerApiFactory.isPersistedUrlNotifications(this.mc)) {
+			if (this.apiFactoryService.isPersistedUrlNotifications(this.mc)) {
 				this.tg.addTaskGraph(syncPersistedUrlNotification(em, this.mc));
 			}
 
-			if (ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(this.mc.getManagerType()))) {
+			if (this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(this.mc.getManagerType()))) {
 				Task syncDomains = new SyncDomainMetaTask(this.mc);
 				this.tg.addTask(syncDomains);
 

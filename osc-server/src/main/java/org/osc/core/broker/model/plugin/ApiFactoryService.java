@@ -63,7 +63,7 @@ public interface ApiFactoryService {
 
     String getVendorName(ManagerType managerType) throws Exception;
 
-    boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception;
+    Boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception;
 
     boolean isWebSocketNotifications(ApplianceManagerConnector mc) throws Exception;
 
