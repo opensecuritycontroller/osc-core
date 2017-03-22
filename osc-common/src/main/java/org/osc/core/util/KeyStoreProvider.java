@@ -159,10 +159,10 @@ public final class KeyStoreProvider {
 	}
 	
 	private String getKeyStorePassword() throws KeyStoreProviderException {
-        try {
+        try(InputStream is = getClass().getResourceAsStream(SECURITY_PROPS_RESOURCE_PATH)) {
         	LOG.info("Obtaining keystore password ...");
         	Properties properties = new Properties();
-        	properties.load(getClass().getResourceAsStream(SECURITY_PROPS_RESOURCE_PATH));
+        	properties.load(is);
         	String keystorePassword = properties.getProperty(KEYSTORE_PASSWORD_ALIAS);
         	
         	if(StringUtils.isBlank(keystorePassword)) {
