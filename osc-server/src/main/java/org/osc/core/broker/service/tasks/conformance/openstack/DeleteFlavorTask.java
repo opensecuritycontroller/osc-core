@@ -49,7 +49,10 @@ public class DeleteFlavorTask extends TransactionalTask {
         } finally {
             nova.close();
         }
-        OSCEntityManager.delete(em, this.flavorReference);
+        // We have to find the entity again as the one reference by
+        // this.flavorReference is detached.
+        OSCEntityManager.delete(em, em.find(OsFlavorReference.class,
+                this.flavorReference.getId()));
 
     }
 
