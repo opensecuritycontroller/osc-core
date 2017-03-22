@@ -26,6 +26,7 @@ import javax.servlet.http.HttpSessionListener;
 import org.atmosphere.cpr.SessionSupport;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
@@ -38,6 +39,9 @@ public class UiListenerDelegate implements HttpSessionListener {
 
     private HttpSessionListener delegate;
 
+    @Reference
+    Server server;
+
     @Activate
     void activate() {
         this.delegate = new SessionSupport();
@@ -46,13 +50,13 @@ public class UiListenerDelegate implements HttpSessionListener {
     @Override
     public void sessionCreated(HttpSessionEvent se) {
         this.delegate.sessionCreated(se);
-        Server.addSession(se.getSession());
+        this.server.addSession(se.getSession());
     }
 
     @Override
     public void sessionDestroyed(HttpSessionEvent se) {
         this.delegate.sessionDestroyed(se);
-        Server.removeSession(se.getSession());
+        this.server.removeSession(se.getSession());
     }
 
 }

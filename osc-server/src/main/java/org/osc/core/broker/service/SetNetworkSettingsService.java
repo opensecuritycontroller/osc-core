@@ -29,12 +29,18 @@ import org.osc.core.broker.service.tasks.network.IpChangePropagateMetaTask;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.util.NetworkUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = SetNetworkSettingsService.class)
 public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSettingsRequest, SetNetworkSettingsResponse> {
 
     private static final Logger log = Logger.getLogger(SetNetworkSettingsService.class);
+
+    @Reference
+    private Server server;
 
     @Override
     public SetNetworkSettingsResponse exec(SetNetworkSettingsRequest request, EntityManager em) throws Exception {
@@ -54,8 +60,8 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
 
         if(isIpChanged) {
             // If IP is changed, these connections are no longer valid, shutdown so they get restarted again.
-            Server.shutdownRabbitMq();
-            Server.shutdownWebsocket();
+            this.server.shutdownRabbitMq();
+            this.server.shutdownWebsocket();
         }
 
         networkSettingsApi.setNetworkSettings(networkSettingsDto);
@@ -66,8 +72,8 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
          */
         if (isIpChanged) {
             response.setJobId(startIpPropagateJob());
-            Server.startRabbitMq();
-            Server.startWebsocket();
+            this.server.startRabbitMq();
+            this.server.startWebsocket();
         }
 
         return response;

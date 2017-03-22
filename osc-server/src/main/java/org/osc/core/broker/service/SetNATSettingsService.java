@@ -25,12 +25,18 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = SetNATSettingsService.class)
 public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSettingsDto>, BaseJobResponse> {
 
     private static final Logger log = Logger.getLogger(SetNATSettingsService.class);
+
+    @Reference
+    private Server server;
 
     void validate(DryRunRequest<NATSettingsDto> req) throws Exception {
         NATSettingsDto.checkForNullFields(req.getDto());
@@ -43,7 +49,7 @@ public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSe
         String oldServerIp = ServerUtil.getServerIP();
         String newServerIp = request.getDto().getPublicIPAddress();
 
-        Server.saveServerProp(Server.ISC_PUBLIC_IP, newServerIp);
+        this.server.saveServerProp(Server.ISC_PUBLIC_IP, newServerIp);
         // Update ServerUtil attribute as well
         ServerUtil.setServerIP(newServerIp);
         log.info("Successfully updated Server Public IP Address..");

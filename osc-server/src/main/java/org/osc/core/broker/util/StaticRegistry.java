@@ -16,11 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.SetNATSettingsService;
+import org.osc.core.broker.service.SetNetworkSettingsService;
+import org.osc.core.broker.service.UpgradeService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import com.mcafee.vmidc.server.Server;
 
 /**
  * This registry is a work-around to temporarily allow some static calls to remain after they have been removed from the
@@ -37,7 +41,16 @@ public class StaticRegistry {
     private ConformService conformService;
 
     @Reference
-    private ManagerApis managerApis;
+    private Server server;
+
+    @Reference
+    private SetNetworkSettingsService setNetworkSettingsService;
+
+    @Reference
+    private SetNATSettingsService setNATSettingsService;
+
+    @Reference
+    private UpgradeService upgradeService;
 
     private static StaticRegistry instance = null;
 
@@ -50,8 +63,21 @@ public class StaticRegistry {
         return instance.conformService;
     }
 
-    public static ManagerApis managerApis() {
-        return instance.managerApis;
+    public static Server server() {
+        return instance.server;
+    }
+
+    public static SetNetworkSettingsService setNetworkSettingsService() {
+        return instance.setNetworkSettingsService;
+    }
+
+    public static SetNATSettingsService setNATSettingsService() {
+        return instance.setNATSettingsService;
+    }
+
+    public static UpgradeService upgradeService() {
+        return instance.upgradeService;
+
     }
 
 }
