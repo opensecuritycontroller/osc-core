@@ -107,9 +107,8 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
 
     void createBackupZipFile(EntityManager em, String backupFileName) {
     	// create backup file
-        String sql = "BACKUP TO '" + resolveBackupZipPath(backupFileName);
-        log.info("Execute sql: " + sql  + "';");
-
+        String sql = "BACKUP TO '" + resolveBackupZipPath(backupFileName) + "'";
+        log.info("Execute sql: " + sql);
         em.createNativeQuery(sql).executeUpdate();
     }
     
