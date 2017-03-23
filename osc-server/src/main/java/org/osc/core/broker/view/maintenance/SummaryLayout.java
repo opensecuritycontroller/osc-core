@@ -63,7 +63,6 @@ public class SummaryLayout extends FormLayout {
     private Table summarytable = null;
     private CheckBox checkbox = null;
     private Button download = null;
-    //private boolean logBundle = true;
 
     private Server server = StaticRegistry.server();
 

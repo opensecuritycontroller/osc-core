@@ -78,7 +78,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private PasswordField apiKey = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private AddApplianceManagerConnectorService addService = StaticRegistry.addApplianceManagerConnectorService();
+    private AddApplianceManagerConnectorService addMCService = StaticRegistry.addApplianceManagerConnectorService();
 
     public AddManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
         this.mcView = mcView;
@@ -221,7 +221,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         // calling add MC service
         BaseJobResponse addResponse;
         log.info("adding manager connector - " + this.name.getValue().trim());
-        addResponse = this.addService.dispatch(addRequest);
+        addResponse = this.addMCService.dispatch(addRequest);
         // adding returned ID to the request DTO object
         addRequest.getDto().setId(addResponse.getId());
         // adding new object to the parent table

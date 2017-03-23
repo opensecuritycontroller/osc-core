@@ -77,7 +77,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     private BeanItem<ApplianceManagerConnectorDto> currentMCObject = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private UpdateApplianceManagerConnectorService updateService = StaticRegistry.updateApplianceManagerConnectorService();
+    private UpdateApplianceManagerConnectorService updateMCService = StaticRegistry.updateApplianceManagerConnectorService();
 
     public UpdateManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
         this.mcView = mcView;
@@ -209,7 +209,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
         log.debug("Updating manager connector - " + this.name.getValue().trim());
         // no response needed for update request
-        BaseJobResponse response = this.updateService.dispatch(updateRequest);
+        BaseJobResponse response = this.updateMCService.dispatch(updateRequest);
 
         // updating bean in the table container
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "name")

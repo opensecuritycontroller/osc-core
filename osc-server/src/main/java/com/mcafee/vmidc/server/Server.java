@@ -457,7 +457,7 @@ public class Server {
         return Server.apiPort;
     }
 
-    public static void setApiPort(Integer port) {
+    private void setApiPort(Integer port) {
         Server.apiPort = port;
     }
 
