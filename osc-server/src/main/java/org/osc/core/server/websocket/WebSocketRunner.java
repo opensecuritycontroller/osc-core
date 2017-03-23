@@ -33,6 +33,7 @@ import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.WebSocketClient;
+import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
@@ -53,8 +54,10 @@ public class WebSocketRunner implements BroadcastListener {
     private List<ApplianceManagerConnector> amcs = new ArrayList<>();
     private ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
     private int count = MAX_TRIES;
+    private ManagerApis managerApis;
 
-    public WebSocketRunner() {
+    public WebSocketRunner(ManagerApis managerApis) {
+        this.managerApis = managerApis;
         BroadcasterUtil.register(this);
 
         EntityManager em = null;
@@ -192,7 +195,7 @@ public class WebSocketRunner implements BroadcastListener {
              * This case we will add SMC in existing Map and launch a new Web socket client for newly added MC.
              */
 
-            this.webSocketConnections.put(mc.getId(), new WebSocketClient(mc));
+            this.webSocketConnections.put(mc.getId(), new WebSocketClient(mc, this.managerApis));
 
         } else if (event == EventType.UPDATED && ManagerApiFactory.isWebSocketNotifications(mc)) {
 
@@ -206,7 +209,7 @@ public class WebSocketRunner implements BroadcastListener {
 
                 closeAndRemove(mc.getId());
                 // Add new one based on the new Updated MC object
-                this.webSocketConnections.put(mc.getId(), new WebSocketClient(mc));
+                this.webSocketConnections.put(mc.getId(), new WebSocketClient(mc, this.managerApis));
             }
 
         } else { // DELETED

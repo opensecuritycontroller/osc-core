@@ -16,11 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import org.osc.core.broker.rest.server.api.ManagerApis;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DeleteUserService;
+import org.osc.core.broker.service.SetNATSettingsService;
+import org.osc.core.broker.service.SetNetworkSettingsService;
+import org.osc.core.broker.service.UpgradeService;
+import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
+import org.osc.core.broker.service.mc.SyncManagerConnectorService;
+import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import com.mcafee.vmidc.server.Server;
 
 /**
  * This registry is a work-around to temporarily allow some static calls to remain after they have been removed from the
@@ -34,10 +43,34 @@ import org.osgi.service.component.annotations.Reference;
 public class StaticRegistry {
 
     @Reference
+    private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private Server server;
+
+    @Reference
     private ConformService conformService;
 
     @Reference
-    private ManagerApis managerApis;
+    private SetNetworkSettingsService setNetworkSettingsService;
+
+    @Reference
+    private SetNATSettingsService setNATSettingsService;
+
+    @Reference
+    private UpgradeService upgradeService;
+
+    @Reference
+    private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
+
+    @Reference
+    private UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService;
+
+    @Reference
+    private SyncManagerConnectorService syncManagerConnectorService;
+
+    @Reference
+    private DeleteUserService deleteUserService;
 
     private static StaticRegistry instance = null;
 
@@ -46,12 +79,44 @@ public class StaticRegistry {
         instance = this;
     }
 
+    public static ApiFactoryService apiFactoryService() {
+        return instance.apiFactoryService;
+    }
+
+    public static Server server() {
+        return instance.server;
+    }
+
     public static ConformService conformService() {
         return instance.conformService;
     }
 
-    public static ManagerApis managerApis() {
-        return instance.managerApis;
+    public static SetNetworkSettingsService setNetworkSettingsService() {
+        return instance.setNetworkSettingsService;
+    }
+
+    public static SetNATSettingsService setNATSettingsService() {
+        return instance.setNATSettingsService;
+    }
+
+    public static UpgradeService upgradeService() {
+        return instance.upgradeService;
+    }
+
+    public static AddApplianceManagerConnectorService addApplianceManagerConnectorService() {
+        return instance.addApplianceManagerConnectorService;
+    }
+
+    public static UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService() {
+        return instance.updateApplianceManagerConnectorService;
+    }
+
+    public static SyncManagerConnectorService syncManagerConnectorService() {
+        return instance.syncManagerConnectorService;
+    }
+
+    public static DeleteUserService deleteUserService() {
+        return instance.deleteUserService;
     }
 
 }

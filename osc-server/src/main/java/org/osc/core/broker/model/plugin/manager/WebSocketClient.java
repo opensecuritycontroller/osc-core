@@ -18,6 +18,7 @@ package org.osc.core.broker.model.plugin.manager;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 
 import javax.websocket.ClientEndpointConfig;
@@ -34,6 +35,7 @@ import org.glassfish.tyrus.container.grizzly.client.GrizzlyClientSocket;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.exception.ClientResponseNotOkException;
@@ -65,6 +67,7 @@ public class WebSocketClient {
     }
 
     private final static Logger log = Logger.getLogger(WebSocketClient.class);
+    private final ManagerApis managerApis;
 
     /**
      * @param mc
@@ -81,9 +84,10 @@ public class WebSocketClient {
      *             Throws exception like {@link DeploymentException}, {@link IOException}, {@link URISyntaxException}
      *             etc..
      */
-    public WebSocketClient(final ApplianceManagerConnector mc) throws Exception {
+    public WebSocketClient(final ApplianceManagerConnector mc, ManagerApis managerApis) throws Exception {
 
         this.mc = mc;
+        this.managerApis = managerApis;
         this.initThread = new Thread("WebSocketClient - " + this.mc.getName()) {
             @Override
             public void run() {
@@ -128,7 +132,7 @@ public class WebSocketClient {
 
     private void connect() throws Exception {
         this.mgrApi = getMgrAPI();
-        this.clientEndpoint = new WebSocketClientEndPoint(this.mc, this.mgrApi);
+        this.clientEndpoint = new WebSocketClientEndPoint(this.mc, this.mgrApi, this.managerApis);
         this.client = ClientManager.createClient();
         if (this.mgrApi.isHttps()) {
             SSLEngineConfigurator sslEngineConfigurator = new SSLEngineConfigurator(new SslContextProvider().getSSLContext(), true,

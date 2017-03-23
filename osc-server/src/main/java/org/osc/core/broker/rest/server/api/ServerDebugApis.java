@@ -44,6 +44,7 @@ import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.rest.client.util.LoggingUtil;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
@@ -55,10 +56,13 @@ import com.mcafee.vmidc.server.Server;
 public class ServerDebugApis {
     private static final Logger logger = Logger.getLogger(ServerDebugApis.class);
 
+    @Reference
+    Server server;
+
     @Path("/lock")
     @GET
     public Response getCurrentLockInfomation() {
-        if(!Server.devMode) {
+        if(!this.server.getDevMode()) {
             return Response.status(Status.NOT_FOUND).build();
         }
 
@@ -75,7 +79,7 @@ public class ServerDebugApis {
     @Path("/query")
     @POST
     public Response queryDb(String sql) {
-        if(!Server.devMode) {
+        if(!this.server.getDevMode()) {
             return Response.status(Status.NOT_FOUND).build();
         }
         try {
@@ -92,7 +96,7 @@ public class ServerDebugApis {
     @Path("/exec")
     @POST
     public Response execDb(String sql) {
-        if(!Server.devMode) {
+        if(!this.server.getDevMode()) {
             return Response.status(Status.NOT_FOUND).build();
         }
         try {
@@ -110,8 +114,8 @@ public class ServerDebugApis {
     @PUT
     public Response reloadDevMode() {
         try {
-            Server.devMode = Boolean.valueOf(Server.loadServerProp(Server.DEV_MODE_PROPERTY_KEY, "false"));
-            return Response.ok(String.valueOf(Server.devMode)).build();
+            this.server.setDevMode(Boolean.valueOf(this.server.loadServerProp(Server.DEV_MODE_PROPERTY_KEY, "false")));
+            return Response.ok(String.valueOf(this.server.getDevMode())).build();
 
         } catch (Exception e) {
 
@@ -123,7 +127,7 @@ public class ServerDebugApis {
     @Path("/rest-logging")
     @POST
     public Response enableLogging(String enable) {
-        if(!Server.devMode) {
+        if(!this.server.getDevMode()) {
             return Response.status(Status.NOT_FOUND).build();
         }
         try {

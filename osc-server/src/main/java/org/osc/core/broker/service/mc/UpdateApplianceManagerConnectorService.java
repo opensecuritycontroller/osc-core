@@ -54,7 +54,10 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.EventType;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = UpdateApplianceManagerConnectorService.class)
 public class UpdateApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
 
@@ -62,17 +65,8 @@ public class UpdateApplianceManagerConnectorService extends
 
     private boolean forceAddSSLCertificates = false;
 
-    private final ConformService conformService;
-
-    public UpdateApplianceManagerConnectorService(ConformService conformService) {
-        this.conformService = conformService;
-    }
-
-    public UpdateApplianceManagerConnectorService(boolean forceAddSSLCertificates, ConformService conformService) {
-        this(conformService);
-        this.forceAddSSLCertificates = forceAddSSLCertificates;
-    }
-
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em) throws Exception {

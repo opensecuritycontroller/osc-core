@@ -26,7 +26,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.request.DryRunRequest;
@@ -79,7 +78,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private PasswordField apiKey = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private ConformService conformService = StaticRegistry.conformService();
+    private AddApplianceManagerConnectorService addMCService = StaticRegistry.addApplianceManagerConnectorService();
 
     public AddManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
         this.mcView = mcView;
@@ -220,10 +219,9 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
 
         addRequest.addErrorsToIgnore(errorTypesToIgnore);
         // calling add MC service
-        AddApplianceManagerConnectorService addService = new AddApplianceManagerConnectorService(this.conformService);
         BaseJobResponse addResponse;
         log.info("adding manager connector - " + this.name.getValue().trim());
-        addResponse = addService.dispatch(addRequest);
+        addResponse = this.addMCService.dispatch(addRequest);
         // adding returned ID to the request DTO object
         addRequest.getDto().setId(addResponse.getId());
         // adding new object to the parent table

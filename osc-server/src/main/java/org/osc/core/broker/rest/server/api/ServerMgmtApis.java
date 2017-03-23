@@ -39,38 +39,39 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
-import com.mcafee.vmidc.server.Server;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
+import org.osc.core.broker.rest.server.model.ServerStatusResponse;
 import org.osc.core.broker.service.AddSslCertificateService;
+import org.osc.core.broker.service.BackupService;
 import org.osc.core.broker.service.DeleteSslCertificateService;
 import org.osc.core.broker.service.ListSslCertificatesService;
 import org.osc.core.broker.service.dto.SslCertificateDto;
 import org.osc.core.broker.service.request.AddSslEntryRequest;
+import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.rest.annotations.OscAuth;
-import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.rest.server.model.ServerStatusResponse;
-import org.osc.core.broker.service.BackupService;
-import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.rest.annotations.LocalHostAuth;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 import org.osc.core.util.PKIUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+import com.mcafee.vmidc.server.Server;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 @Component(service = ServerMgmtApis.class)
 @Api(tags = "Operations for OSC server", authorizations = { @Authorization(value = "Basic Auth") })
@@ -79,6 +80,9 @@ import org.osgi.service.component.annotations.Component;
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 public class ServerMgmtApis {
     private static final Logger logger = Logger.getLogger(ServerMgmtApis.class);
+
+    @Reference
+    Server server;
 
     @ApiOperation(value = "Get server status",
             notes = "Returns server status information",
@@ -139,7 +143,7 @@ public class ServerMgmtApis {
     public Response upgradeServerReady() {
 
         logger.info("upgradedServerReady (pid:" + ServerUtil.getCurrentPid() + "): Check pending upgrade server.");
-        if (!Server.isInMaintenance()) {
+        if (!this.server.isInMaintenance()) {
             logger.info("upgradedServerReady (pid:" + ServerUtil.getCurrentPid() + "): No pending upgrade.");
             return Response.status(Status.BAD_REQUEST).build();
         }
@@ -160,7 +164,7 @@ public class ServerMgmtApis {
                         logger.info("Original Server file exists, deleting original server.");
                         originalServerFile.delete();
                     }
-                    Server.stopServer();
+                    ServerMgmtApis.this.server.stopServer();
                 } catch (Exception e) {
                     logger.error("upgradedServerReady (pid:" + ServerUtil.getCurrentPid()
                             + "): Shutting down Tomcat after upgrade experienced failures", e);

@@ -28,6 +28,7 @@ import org.json.JSONException;
 import org.osc.core.broker.service.BackupService;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -62,7 +63,8 @@ public class SummaryLayout extends FormLayout {
     private Table summarytable = null;
     private CheckBox checkbox = null;
     private Button download = null;
-    //private boolean logBundle = true;
+
+    private Server server = StaticRegistry.server();
 
     private static final Logger log = Logger.getLogger(SummaryLayout.class);
 
@@ -83,7 +85,7 @@ public class SummaryLayout extends FormLayout {
 
         HorizontalLayout actionContainer = new HorizontalLayout();
         actionContainer.addComponent(createDownloadButton());
-        if (Server.devMode) {
+        if (this.server.getDevMode()) {
             actionContainer.addComponent(createShutdownButton());
         }
         actionContainer.addComponent(createRestartButton());
@@ -100,7 +102,7 @@ public class SummaryLayout extends FormLayout {
                 Thread shutdownThread = new Thread("Stop-Server-Thread") {
                     @Override
                     public void run() {
-                        Server.stopServer();
+                        SummaryLayout.this.server.stopServer();
                     }
                 };
                 shutdownThread.start();
@@ -120,7 +122,7 @@ public class SummaryLayout extends FormLayout {
                 ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.SUMMARY_RESTART_STARTED), null,
                         Notification.Type.TRAY_NOTIFICATION);
                 ViewUtil.showServerRestartProgress();
-                Server.restart();
+                SummaryLayout.this.server.restart();
             }
         });
 

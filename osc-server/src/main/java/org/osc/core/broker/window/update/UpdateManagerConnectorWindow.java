@@ -25,7 +25,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osc.core.broker.service.request.DryRunRequest;
@@ -78,7 +77,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     private BeanItem<ApplianceManagerConnectorDto> currentMCObject = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private ConformService conformService = StaticRegistry.conformService();
+    private UpdateApplianceManagerConnectorService updateMCService = StaticRegistry.updateApplianceManagerConnectorService();
 
     public UpdateManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
         this.mcView = mcView;
@@ -208,11 +207,9 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
         updateRequest.addErrorsToIgnore(this.errorTypesToIgnore);
 
-        UpdateApplianceManagerConnectorService updateService = new UpdateApplianceManagerConnectorService(this.conformService);
-
         log.debug("Updating manager connector - " + this.name.getValue().trim());
         // no response needed for update request
-        BaseJobResponse response = updateService.dispatch(updateRequest);
+        BaseJobResponse response = this.updateMCService.dispatch(updateRequest);
 
         // updating bean in the table container
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "name")

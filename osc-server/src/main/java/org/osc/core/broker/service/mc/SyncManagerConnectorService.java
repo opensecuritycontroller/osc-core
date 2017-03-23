@@ -25,15 +25,15 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.SyncApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.response.SyncApplianceManagerConnectorResponse;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = SyncManagerConnectorService.class)
 public class SyncManagerConnectorService extends
         ServiceDispatcher<SyncApplianceManagerConnectorRequest, SyncApplianceManagerConnectorResponse> {
 
-    private final ConformService conformService;
-
-    public SyncManagerConnectorService(ConformService conformService) {
-        this.conformService = conformService;
-    }
+    @Reference
+    private ConformService conformService;
 
     @Override
     public SyncApplianceManagerConnectorResponse exec(SyncApplianceManagerConnectorRequest request, EntityManager em)

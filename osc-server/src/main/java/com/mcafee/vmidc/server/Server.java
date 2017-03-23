@@ -37,12 +37,12 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
 import org.osc.core.broker.util.PasswordUtil;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
@@ -57,6 +57,9 @@ import org.osc.core.util.LogUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.util.VersionUtil;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -73,6 +76,7 @@ import org.xml.sax.SAXException;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.server.VaadinSession;
 
+@Component(immediate = true, service = Server.class)
 public class Server {
     // Need to change the package name of Server class to org.osc.core.server
 
@@ -83,7 +87,6 @@ public class Server {
     private static final Logger log = Logger.getLogger(Server.class);
 
     private static final Integer DEFAULT_API_PORT = 8090;
-    private static final Integer DEFAULT_UI_PORT = 443;
     public static final String CONFIG_PROPERTIES_FILE = "vmidcServer.conf";
     private static final String SERVER_PID_FILE = "server.pid";
 
@@ -92,15 +95,42 @@ public class Server {
     public static final String ISC_PUBLIC_IP = "publicIP";
     public static final String DEV_MODE_PROPERTY_KEY = "devMode";
 
-    public static WebSocketRunner wsRunner = null;
-    public static RabbitMQRunner rabbitMQRunner = null;
-    private static Integer apiPort = DEFAULT_API_PORT;
-    private static Integer uiPort = DEFAULT_UI_PORT;
-    private static volatile boolean inMaintenance = false;
-    public static int scheduledSyncInterval = 60; // 60 minutes
-    public static boolean devMode = false;
+    private WebSocketRunner wsRunner = null;
+    private RabbitMQRunner rabbitMQRunner = null;
 
-    public static void startServer() throws Exception {
+    // static to avoid many trivial references
+    private static Integer apiPort = DEFAULT_API_PORT;
+    private static volatile boolean inMaintenance = false;
+
+    private int scheduledSyncInterval = 60; // 60 minutes
+    private boolean devMode = false;
+
+    @Reference
+    private ConformService conformService;
+
+    @Reference
+    private ManagerApis managerApis;
+
+    private Thread thread;
+
+    @Activate
+    void activate() {
+        Runnable server = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    startServer();
+                } catch (Exception e) {
+                    log.error("startServer failed", e);
+                }
+            }
+        };
+
+        this.thread = new Thread(server, "Start-Server");
+        this.thread.start();
+    }
+
+    private void startServer() throws Exception {
         LogUtil.initLog4j();
         loadServerProps();
 
@@ -256,25 +286,21 @@ public class Server {
         return env;
     }
 
-    private static void startScheduler() throws SchedulerException {
+    private void startScheduler() throws SchedulerException {
         log.warn("Starting scheduler (pid:" + ServerUtil.getCurrentPid() + ")");
         Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
         scheduler.start();
 
         JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put(ConformService.class.getName(), StaticRegistry.conformService());
+        jobDataMap.put(ConformService.class.getName(), this.conformService);
 
-        JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class)
-                .usingJobData(jobDataMap)
-                .build();
-        JobDetail syncSgJob = JobBuilder.newJob(SyncSecurityGroupJob.class)
-                .usingJobData(jobDataMap)
-                .build();
+        JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class).usingJobData(jobDataMap).build();
+        JobDetail syncSgJob = JobBuilder.newJob(SyncSecurityGroupJob.class).usingJobData(jobDataMap).build();
         Trigger syncDaJobTrigger = TriggerBuilder.newTrigger().startNow().withSchedule(SimpleScheduleBuilder
-                .simpleSchedule().withIntervalInMinutes(Server.scheduledSyncInterval).repeatForever()).build();
+                .simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
 
         Trigger syncSgJobTrigger = TriggerBuilder.newTrigger().startNow().withSchedule(SimpleScheduleBuilder
-                .simpleSchedule().withIntervalInMinutes(Server.scheduledSyncInterval).repeatForever()).build();
+                .simpleSchedule().withIntervalInMinutes(this.scheduledSyncInterval).repeatForever()).build();
 
         scheduler.scheduleJob(syncDaJob, syncDaJobTrigger);
         scheduler.scheduleJob(syncSgJob, syncSgJobTrigger);
@@ -284,7 +310,7 @@ public class Server {
         ArchiveScheduledJob.maybeScheduleArchiveJob();
     }
 
-    private static void stopScheduler() {
+    private void stopScheduler() {
         log.warn("Stopping scheduler (pid:" + ServerUtil.getCurrentPid() + ")");
         try {
             // Grab the Scheduler instance from the Factory
@@ -298,7 +324,7 @@ public class Server {
         }
     }
 
-    static void loadServerProps() {
+    void loadServerProps() {
         Properties prop;
         try {
             prop = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
@@ -308,9 +334,9 @@ public class Server {
         }
 
         try {
-            Server.setApiPort(Integer.valueOf(prop.getProperty("server.port", DEFAULT_API_PORT.toString())));
-            Server.scheduledSyncInterval = Integer.parseInt(prop.getProperty("server.syncJobport", "60"));
-            Server.devMode = Boolean.valueOf(prop.getProperty(DEV_MODE_PROPERTY_KEY, "false"));
+            setApiPort(Integer.valueOf(prop.getProperty("server.port", DEFAULT_API_PORT.toString())));
+            this.scheduledSyncInterval = Integer.parseInt(prop.getProperty("server.syncJobport", "60"));
+            this.devMode = Boolean.valueOf(prop.getProperty(DEV_MODE_PROPERTY_KEY, "false"));
             //set ISC public IP in Server Util
             ServerUtil.setServerIP(prop.getProperty(ISC_PUBLIC_IP, ""));
             JobEngine.setJobThreadPoolSize(prop.getProperty("server.jobThreadPoolSize"));
@@ -321,7 +347,7 @@ public class Server {
         }
     }
 
-    public static String loadServerProp(String propName, String defaultValue) {
+    public String loadServerProp(String propName, String defaultValue) {
         Properties properties = new Properties();
         try {
             properties = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
@@ -332,7 +358,7 @@ public class Server {
         return properties.getProperty(propName, defaultValue);
     }
 
-    public static void saveServerProp(String propName, String value) {
+    public void saveServerProp(String propName, String value) {
         Properties prop;
 
         try {
@@ -351,7 +377,7 @@ public class Server {
         }
     }
 
-    private static void addShutdownHook() {
+    private void addShutdownHook() {
         log.warn(Server.PRODUCT_NAME + " Server: Shutdown Hook...");
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -361,7 +387,7 @@ public class Server {
         });
     }
 
-    public static void stopServer() {
+    public void stopServer() {
         System.out.print(Server.PRODUCT_NAME + ": Server shutdown...");
         log.warn(Server.PRODUCT_NAME + ": Shutdown server...(pid:" + ServerUtil.getCurrentPid() + ")");
 
@@ -403,21 +429,21 @@ public class Server {
         Runtime.getRuntime().halt(0);
     }
 
-    // static methods to allow UiListenerDelegate to update session info
-    private static List<HttpSession> sessions = new ArrayList<>();
+    // allow UiListenerDelegate to update session info
+    private List<HttpSession> sessions = new ArrayList<>();
 
-    public static synchronized void addSession(HttpSession session) {
-        sessions.add(session);
+    public synchronized void addSession(HttpSession session) {
+        this.sessions.add(session);
     }
 
-    public static synchronized void removeSession(HttpSession session) {
-        sessions.remove(session);
+    public synchronized void removeSession(HttpSession session) {
+        this.sessions.remove(session);
     }
 
     // Close vaadin sessions associated to the given loginName,
     // or all sessions if loginName is null.
-    public static synchronized void closeUserVaadinSessions(String loginName) {
-        for (HttpSession session : sessions) {
+    public synchronized void closeUserVaadinSessions(String loginName) {
+        for (HttpSession session : this.sessions) {
             for (VaadinSession vaadinSession : VaadinSession.getAllSessions(session)) {
                 Object userName = vaadinSession.getAttribute("user");
                 if (loginName == null || loginName.equals(userName)) {
@@ -428,25 +454,37 @@ public class Server {
     }
 
     public static Integer getApiPort() {
-        return apiPort;
+        return Server.apiPort;
     }
 
-    public static void setApiPort(Integer port) {
+    private void setApiPort(Integer port) {
         Server.apiPort = port;
     }
 
-    public static Integer getUiPort() {
-        return uiPort;
+    public boolean getDevMode() {
+        return this.devMode;
     }
 
-    public static void restart() {
+    public void setDevMode(boolean devMode) {
+        this.devMode = devMode;
+    }
+
+    public int getScheduledSyncInterval(int ssInterval) {
+        return this.scheduledSyncInterval;
+    }
+
+    public void setScheduledSyncInterval(int ssInterval) {
+        this.scheduledSyncInterval = ssInterval;
+    }
+
+    public void restart() {
         Thread restartThread = new Thread("Restart-Server-Thread") {
             @Override
             public void run() {
                 Server.inMaintenance = true;
                 try {
                     log.info("Restarting server.");
-                    boolean successStarted = Server.startNewServer();
+                    boolean successStarted = startNewServer();
                     if (!successStarted) {
                         throw new Exception("Fail to start new server process.");
                     }
@@ -460,47 +498,47 @@ public class Server {
         restartThread.start();
     }
 
-    public static void shutdownRabbitMq() {
-        Server.rabbitMQRunner.shutdown();
+    public void shutdownRabbitMq() {
+        this.rabbitMQRunner.shutdown();
         log.info("Shutdown of RabbitMQ succeeded");
-        Server.rabbitMQRunner = null;
+        this.rabbitMQRunner = null;
     }
 
-    public static void shutdownWebsocket() {
-        Server.wsRunner.shutdown();
+    public void shutdownWebsocket() {
+        this.wsRunner.shutdown();
         log.info("Shutdown of WebSocket succeeded");
-        Server.wsRunner = null;
+        this.wsRunner = null;
     }
 
-    public static void startRabbitMq() {
-        rabbitMQRunner = new RabbitMQRunner();
+    public void startRabbitMq() {
+        this.rabbitMQRunner = new RabbitMQRunner();
         log.info("Started RabbitMQ Runner");
     }
 
-    public static void startWebsocket() {
+    public void startWebsocket() {
         /*
          * Calling web Socket Runner here.
          * This class is responsible for creating web socket communication with all existing SMCs upon server
          * start/restart
          */
-        wsRunner = new WebSocketRunner();
+        this.wsRunner = new WebSocketRunner(this.managerApis);
         log.info("Started Web Socket Runner");
     }
 
     public static boolean isInMaintenance() {
-        return inMaintenance;
+        return Server.inMaintenance;
     }
 
     public static void setInMaintenance(boolean inMaintenance) {
         Server.inMaintenance = inMaintenance;
     }
 
-    private static boolean startNewServer() {
+    private boolean startNewServer() {
         log.info("Restart (pid:" + ServerUtil.getCurrentPid() + "): Start new vmidc server.");
         return ServerUtil.startServerProcess(2000, null, true);
     }
 
-    private static void handleFatalSystemError(Throwable e) {
+    private void handleFatalSystemError(Throwable e) {
         if (!ServerUtil.isWindows()) {
             Long reboots = Long.valueOf(loadServerProp("server.reboots", "0"));
             log.warn("Reboot count " + reboots);

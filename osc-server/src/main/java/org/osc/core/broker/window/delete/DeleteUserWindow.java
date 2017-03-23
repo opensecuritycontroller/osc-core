@@ -37,10 +37,12 @@ public class DeleteUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private static final Logger log = Logger.getLogger(DeleteUserWindow.class);
     final String CAPTION = "Delete User";
 
-    private UserView userView = null;
+    private final UserView userView;
+    private final DeleteUserService deleteUserService;
 
-    public DeleteUserWindow(UserView userView) throws Exception {
+    public DeleteUserWindow(UserView userView, DeleteUserService deleteUserService) throws Exception {
         this.userView = userView;
+        this.deleteUserService = deleteUserService;
         createWindow(this.CAPTION);
     }
 
@@ -66,13 +68,12 @@ public class DeleteUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         // Delete MC service has no response so not needed.
         try {
             delRequest.setId(this.userView.getParentItemId());
-            DeleteUserService du = new DeleteUserService();
 
             log.info("deleting User - "
                     + this.userView.getParentContainer().getItem(this.userView.getParentItemId())
                             .getItemProperty("loginName").getValue().toString());
 
-            du.dispatch(delRequest);
+            this.deleteUserService.dispatch(delRequest);
 
             // deleting a row from the table reference provided
             this.userView.getParentContainer().removeItem(delRequest.getId());

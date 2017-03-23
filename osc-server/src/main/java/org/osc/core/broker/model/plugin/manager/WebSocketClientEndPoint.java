@@ -31,7 +31,6 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.MgrChangeNotification;
 
@@ -46,12 +45,12 @@ public class WebSocketClientEndPoint extends Endpoint {
 
     private ManagerApis managerApis;
 
-    public WebSocketClientEndPoint(ApplianceManagerConnector mc, ManagerWebSocketNotificationApi mgrApi)
-            throws Exception {
+    public WebSocketClientEndPoint(ApplianceManagerConnector mc, ManagerWebSocketNotificationApi mgrApi,
+            ManagerApis managerApis) throws Exception {
         super();
         this.mc = mc;
         this.mgrApi = mgrApi;
-        this.managerApis = StaticRegistry.managerApis();
+        this.managerApis = managerApis;
     }
 
     public Session getActiveSession() {
@@ -74,8 +73,9 @@ public class WebSocketClientEndPoint extends Endpoint {
                         MgrChangeNotification mgrChangeNotification = WebSocketClientEndPoint.this.mgrApi
                                 .translateMessage(text);
                         if (mgrChangeNotification != null) {
-                            WebSocketClientEndPoint.this.managerApis.triggerMcSyncService(OscAuthFilter.OSC_DEFAULT_LOGIN,
-                                    WebSocketClientEndPoint.this.mc.getIpAddress(), mgrChangeNotification);
+                            WebSocketClientEndPoint.this.managerApis.triggerMcSyncService(
+                                    OscAuthFilter.OSC_DEFAULT_LOGIN, WebSocketClientEndPoint.this.mc.getIpAddress(),
+                                    mgrChangeNotification);
                         }
 
                     } catch (Exception ex) {
@@ -83,7 +83,8 @@ public class WebSocketClientEndPoint extends Endpoint {
                                 + WebSocketClientEndPoint.this.mc.getName() + "-"
                                 + WebSocketClientEndPoint.this.mc.getIpAddress() + "'");
                         AlertGenerator.processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
-                                new LockObjectReference(WebSocketClientEndPoint.this.mc), "Failed to process notification from Manager: '"
+                                new LockObjectReference(WebSocketClientEndPoint.this.mc),
+                                "Failed to process notification from Manager: '"
                                         + WebSocketClientEndPoint.this.mc.getName() + "-"
                                         + WebSocketClientEndPoint.this.mc.getIpAddress() + "'");
                     } finally {
@@ -94,8 +95,7 @@ public class WebSocketClientEndPoint extends Endpoint {
 
         } catch (IOException e1) {
             log.error("Failed to subscribe notification from Manager: '" + this.mc.getName() + "'");
-            AlertGenerator.processSystemFailureEvent(
-                    SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
+            AlertGenerator.processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
                     "Failed to subscribe notification from Manager: '" + this.mc.getName() + "-"
                             + this.mc.getIpAddress() + "' (" + e1.getMessage() + ")");
         }

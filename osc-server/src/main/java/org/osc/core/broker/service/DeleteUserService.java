@@ -26,10 +26,16 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.DeleteUserRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = DeleteUserService.class)
 public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, EmptySuccessResponse> {
+
+    @Reference
+    private Server server;
 
     @Override
     public EmptySuccessResponse exec(DeleteUserRequest request, EntityManager em) throws Exception {
@@ -41,7 +47,7 @@ public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, Empt
         OSCEntityManager.delete(em, user);
 
         // If a user is deleted itself, all the sessions associated with that user should be ended
-        Server.closeUserVaadinSessions(user.getLoginName());
+        this.server.closeUserVaadinSessions(user.getLoginName());
 
         return new EmptySuccessResponse();
     }
