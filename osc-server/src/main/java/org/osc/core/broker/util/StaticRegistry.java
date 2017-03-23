@@ -18,6 +18,7 @@ package org.osc.core.broker.util;
 
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DeleteUserService;
 import org.osc.core.broker.service.SetNATSettingsService;
 import org.osc.core.broker.service.SetNetworkSettingsService;
 import org.osc.core.broker.service.UpgradeService;
@@ -68,6 +69,9 @@ public class StaticRegistry {
     @Reference
     private SyncManagerConnectorService syncManagerConnectorService;
 
+    @Reference
+    private DeleteUserService deleteUserService;
+
     private static StaticRegistry instance = null;
 
     @Activate
@@ -109,6 +113,10 @@ public class StaticRegistry {
 
     public static SyncManagerConnectorService syncManagerConnectorService() {
         return instance.syncManagerConnectorService;
+    }
+
+    public static DeleteUserService deleteUserService() {
+        return instance.deleteUserService;
     }
 
 }

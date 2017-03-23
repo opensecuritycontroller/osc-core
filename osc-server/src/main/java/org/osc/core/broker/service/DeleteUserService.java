@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
-@Component
+@Component(service = DeleteUserService.class)
 public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, EmptySuccessResponse> {
 
     @Reference
