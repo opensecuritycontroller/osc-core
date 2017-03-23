@@ -39,6 +39,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.request.DeleteDistributedApplianceRequestValidator;
@@ -84,6 +85,9 @@ public class DeleteDistributedApplianceServiceTest {
 
     @Mock
     private DeleteDistributedApplianceRequestValidator validatorMock;
+
+    @Mock
+    private ApiFactoryService apiFactoryService;
 
     private JobEngine jobEngine;
 
@@ -135,11 +139,11 @@ public class DeleteDistributedApplianceServiceTest {
 
         TaskGraph taskGraphWithDeleteTaskAndVsTasks = new TaskGraph();
         TaskGraph vmWareVsDeleteTaskGraph = new TaskGraph();
-        vmWareVsDeleteTaskGraph.addTask(new ValidateNsxTask(vmWareVirtualSystem));
-        vmWareVsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(vmWareVirtualSystem));
+        vmWareVsDeleteTaskGraph.addTask(new ValidateNsxTask(vmWareVirtualSystem, this.apiFactoryService));
+        vmWareVsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(vmWareVirtualSystem, this.apiFactoryService));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(vmWareVsDeleteTaskGraph);
         TaskGraph openStackVsDeleteTaskGraph = new TaskGraph();
-        openStackVsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(openStackVirtualSystem));
+        openStackVsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(openStackVirtualSystem, this.apiFactoryService));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(openStackVsDeleteTaskGraph);
         taskGraphWithDeleteTaskAndVsTasks.appendTask(new DeleteDAFromDbTask(VALID_DA_WITH_SYSTEMS), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         taskGraphWithDeleteTaskAndVsTasks.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -192,7 +196,7 @@ public class DeleteDistributedApplianceServiceTest {
     @Test
     public void testStartDeleteDAJob_WithoutUnlockObjectMetaTask_ExpectsSuccess() throws Exception {
         // Act
-        DeleteDistributedApplianceService.startDeleteDAJob(VALID_DA, null);
+        this.deleteDistributedApplianceService.startDeleteDAJob(VALID_DA, null);
 
         // Assert
         PowerMockito.verifyStatic(Mockito.times(1));

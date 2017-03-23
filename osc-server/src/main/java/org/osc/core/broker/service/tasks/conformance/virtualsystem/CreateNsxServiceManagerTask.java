@@ -23,7 +23,7 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.ServiceManager;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
@@ -39,9 +39,11 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(CreateNsxServiceManagerTask.class);
 
     private VirtualSystem vs;
+    private final ApiFactoryService apiFactoryService;
 
-    public CreateNsxServiceManagerTask(VirtualSystem vs) {
+    public CreateNsxServiceManagerTask(VirtualSystem vs, ApiFactoryService apiFactoryService) {
         this.vs = vs;
+        this.apiFactoryService = apiFactoryService;
         this.name = getName();
     }
 
@@ -54,7 +56,7 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
         ServiceManagerElement serviceManager = null;
         ServiceManagerApi serviceManagerApi = VMwareSdnApiFactory.createServiceManagerApi(this.vs);
 
-        String serviceManagerName = generateServiceManagerName(this.vs);
+        String serviceManagerName = this.apiFactoryService.generateServiceManagerName(this.vs);
 
         ServiceManager input = new ServiceManager(
                 serviceManagerName,
@@ -87,9 +89,9 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
         return LockObjectReference.getObjectReferences(this.vs);
     }
 
-    public static String generateServiceManagerName(VirtualSystem vs) throws Exception {
-        return "OSC " +
-                ManagerApiFactory.getVendorName(vs) +
-                " " + vs.getDistributedAppliance().getName();
-    }
+//    public String generateServiceManagerName(VirtualSystem vs) throws Exception {
+//        return "OSC " +
+//                ManagerApiFactory.getVendorName(vs) +
+//                " " + vs.getDistributedAppliance().getName();
+//    }
 }

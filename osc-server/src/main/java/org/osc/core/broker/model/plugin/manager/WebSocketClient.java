@@ -35,6 +35,7 @@ import org.glassfish.tyrus.container.grizzly.client.GrizzlyClientSocket;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.rest.client.crypto.SslContextProvider;
@@ -68,6 +69,7 @@ public class WebSocketClient {
 
     private final static Logger log = Logger.getLogger(WebSocketClient.class);
     private final ManagerApis managerApis;
+    private final ApiFactoryService apiFactoryService;
 
     /**
      * @param mc
@@ -84,10 +86,11 @@ public class WebSocketClient {
      *             Throws exception like {@link DeploymentException}, {@link IOException}, {@link URISyntaxException}
      *             etc..
      */
-    public WebSocketClient(final ApplianceManagerConnector mc, ManagerApis managerApis) throws Exception {
+    public WebSocketClient(final ApplianceManagerConnector mc, ManagerApis managerApis, ApiFactoryService apiFactoryService) throws Exception {
 
         this.mc = mc;
         this.managerApis = managerApis;
+        this.apiFactoryService = apiFactoryService;
         this.initThread = new Thread("WebSocketClient - " + this.mc.getName()) {
             @Override
             public void run() {
@@ -119,7 +122,7 @@ public class WebSocketClient {
 
     private ManagerWebSocketNotificationApi getMgrAPI() throws Exception {
         //create manager API
-        return ManagerApiFactory.createManagerWebSocketNotificationApi(this.mc);
+        return this.apiFactoryService.createManagerWebSocketNotificationApi(this.mc);
     }
 
     private ClientEndpointConfig getClientEndpointConfig() {

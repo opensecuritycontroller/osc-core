@@ -26,6 +26,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
@@ -34,13 +35,15 @@ public class DAConformanceCheckMetaTask extends TransactionalMetaTask {
 
     private DistributedAppliance da;
     private TaskGraph tg;
+    private final ApiFactoryService apiFactoryService;
 
     /**
      * Kicks off DA conformance. Assumes the appropriate locks have been acquired already.
      * @param da
      */
-    public DAConformanceCheckMetaTask(DistributedAppliance da) {
+    public DAConformanceCheckMetaTask(DistributedAppliance da, ApiFactoryService apiFactoryService) {
         this.da = da;
+        this.apiFactoryService = apiFactoryService;
         this.name = getName();
     }
 
@@ -53,12 +56,12 @@ public class DAConformanceCheckMetaTask extends TransactionalMetaTask {
         for (VirtualSystem vs : this.da.getVirtualSystems()) {
             TaskGraph vsTaskGraph = new TaskGraph();
             if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-                vsTaskGraph.addTask(new ValidateNsxTask(vs));
+                vsTaskGraph.addTask(new ValidateNsxTask(vs, this.apiFactoryService));
             }
             if (vs.getMarkedForDeletion()) {
-                vsTaskGraph.appendTask(new VSConformanceCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                vsTaskGraph.appendTask(new VSConformanceCheckMetaTask(vs, this.apiFactoryService), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             } else {
-                vsTaskGraph.appendTask(new VSConformanceCheckMetaTask(vs));
+                vsTaskGraph.appendTask(new VSConformanceCheckMetaTask(vs, this.apiFactoryService));
             }
             this.tg.addTaskGraph(vsTaskGraph);
         }

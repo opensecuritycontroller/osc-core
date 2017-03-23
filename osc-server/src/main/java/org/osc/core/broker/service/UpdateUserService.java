@@ -24,6 +24,7 @@ import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.dto.DtoValidator;
@@ -37,13 +38,19 @@ import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateD
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateMgrMetaTask;
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateNsxMetaTask;
 import org.osc.core.util.EncryptionUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = UpdateUserService.class)
 public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, UpdateUserResponse> {
 
     private static final Logger log = Logger.getLogger(UpdateUserService.class);
     private DtoValidator<UserDto, User> validator;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public UpdateUserResponse exec(UpdateUserRequest request, EntityManager em) throws Exception {
@@ -77,13 +84,13 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
         return response;
     }
 
-    public static Long startPasswordPropagateNsxJob() throws Exception {
+    public Long startPasswordPropagateNsxJob() throws Exception {
 
         log.info("Start propagating new password to all NSX managers");
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new PasswordChangePropagateNsxMetaTask());
+        tg.addTask(new PasswordChangePropagateNsxMetaTask(this.apiFactoryService));
 
         Job job = JobEngine.getEngine().submit("Update NSX manager(s) " + Server.SHORT_PRODUCT_NAME + " Password", tg,
                 null);

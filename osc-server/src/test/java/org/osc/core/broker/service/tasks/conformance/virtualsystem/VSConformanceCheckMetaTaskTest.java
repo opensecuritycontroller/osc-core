@@ -77,6 +77,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.service.LockUtil;
@@ -101,6 +102,10 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 public class VSConformanceCheckMetaTaskTest {
     @Mock
     public EntityManager em;
+
+    @Mock
+    private ApiFactoryService apiFactoryService;
+
 
     private ServiceManagerApi serviceManagerApiMock;
     private ServiceApi serviceApiMock;
@@ -146,8 +151,9 @@ public class VSConformanceCheckMetaTaskTest {
         registerService(UPDATE_VMWARE_SERVICE_PASSWORD_OUT_OF_SYNC_VS.getNsxServiceId(), DEFAULT_SERVICE_NAME, DEFAULT_SERVICE_IP, "passwordOutOfSync");
         registerService(UPDATE_VMWARE_VSPOLICY_NAME_OUT_OF_SYNC_VS.getNsxServiceId(), DEFAULT_SERVICE_NAME, DEFAULT_SERVICE_IP, DEFAULT_SERVICE_PASSWORD);
 
-        PowerMockito.spy(CreateNsxServiceManagerTask.class);
-        PowerMockito.doReturn(DEFAULT_SERVICEMANAGER_NAME).when(CreateNsxServiceManagerTask.class, "generateServiceManagerName", Mockito.any(VirtualSystem.class));
+//        PowerMockito.spy(CreateNsxServiceManagerTask.class);
+//        PowerMockito.doReturn(DEFAULT_SERVICEMANAGER_NAME).when(CreateNsxServiceManagerTask.class, "generateServiceManagerName", Mockito.any(VirtualSystem.class));
+        Mockito.when(this.apiFactoryService.generateServiceManagerName(Mockito.any(VirtualSystem.class))).thenReturn(DEFAULT_SERVICEMANAGER_NAME);
 
         PowerMockito.spy(LockUtil.class);
         PowerMockito.doReturn(UPDATE_OPENSTACK_NO_DEPLOYMENT_SPEC_TASK).when(LockUtil.class, "tryLockDS",
@@ -177,7 +183,7 @@ public class VSConformanceCheckMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousVirtualSystems_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        VSConformanceCheckMetaTask task = new VSConformanceCheckMetaTask(this.vs);
+        VSConformanceCheckMetaTask task = new VSConformanceCheckMetaTask(this.vs, this.apiFactoryService);
 
         // Act.
         task.executeTransaction(this.em);
@@ -188,6 +194,7 @@ public class VSConformanceCheckMetaTaskTest {
 
     @Parameters()
     public static Collection<Object[]> getTestData() throws EncryptionException {
+        try {
         return Arrays.asList(new Object[][] {
             {UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS, createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS), false},
             {UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS,  createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS), false},
@@ -213,6 +220,11 @@ public class VSConformanceCheckMetaTaskTest {
             {DELETE_OPENSTACK_WITH_OS_IMAGE_REF_VS,  createDeleteOpenStackWithOSImageRefGraph(DELETE_OPENSTACK_WITH_OS_IMAGE_REF_VS), false},
             {DELETE_OPENSTACK_WITH_OS_FLAVOR_REF_VS,  createDeleteOpenStackWithOSFlavorRefGraph(DELETE_OPENSTACK_WITH_OS_FLAVOR_REF_VS), false},
         });
+        }
+        catch (Throwable t) {
+            t.printStackTrace();
+            return null;
+        }
     }
 
     private void registerServiceManager(String smId, String name, String url, String password) throws Exception {

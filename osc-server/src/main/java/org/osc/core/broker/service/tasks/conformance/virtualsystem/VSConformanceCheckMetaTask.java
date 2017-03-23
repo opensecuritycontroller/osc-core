@@ -34,6 +34,7 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
@@ -76,9 +77,11 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
     private VirtualSystem vs;
     private TaskGraph tg;
+    private final ApiFactoryService apiFactoryService;
 
-    public VSConformanceCheckMetaTask(VirtualSystem vs) {
+    public VSConformanceCheckMetaTask(VirtualSystem vs, ApiFactoryService apiFactoryService) {
         this.vs = vs;
+        this.apiFactoryService = apiFactoryService;
         this.name = getName();
     }
 
@@ -159,10 +162,10 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
             // Sync service manager
             if (this.vs.getNsxServiceManagerId() == null) {
-                tg.addTask(new CreateNsxServiceManagerTask(this.vs));
+                tg.addTask(new CreateNsxServiceManagerTask(this.vs, this.apiFactoryService));
             } else {
                 if (isNsxServiceManagerOutOfSync(this.vs)) {
-                    tg.addTask(new UpdateNsxServiceManagerTask(this.vs));
+                    tg.addTask(new UpdateNsxServiceManagerTask(this.vs, this.apiFactoryService));
                 }
             }
 
@@ -242,7 +245,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         ServiceManagerElement serviceManager = serviceManagerApi.getServiceManager(vs.getNsxServiceManagerId());
 
         // Check name
-        if (!serviceManager.getName().equals(CreateNsxServiceManagerTask.generateServiceManagerName(vs))) {
+        if (!serviceManager.getName().equals(this.apiFactoryService.generateServiceManagerName(vs))) {
             LOG.info("Service Manager name is out of sync");
             return true;
         }

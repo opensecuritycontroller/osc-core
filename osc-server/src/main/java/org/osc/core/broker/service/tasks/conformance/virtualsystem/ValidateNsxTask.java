@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -40,10 +41,11 @@ public class ValidateNsxTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(ValidateNsxTask.class);
 
     private VirtualSystem vs;
+    private final ApiFactoryService apiFactoryService;
 
-    public ValidateNsxTask(VirtualSystem vs) {
-
+    public ValidateNsxTask(VirtualSystem vs, ApiFactoryService apiFactoryService) {
         this.vs = vs;
+        this.apiFactoryService = apiFactoryService;
         this.name = getName();
     }
 
@@ -58,7 +60,7 @@ public class ValidateNsxTask extends TransactionalTask {
             svcMgr = serviceManagerApi.getServiceManager(this.vs.getNsxServiceManagerId());
         }
         if (svcMgr == null) {
-            svcMgr = serviceManagerApi.findServiceManager(CreateNsxServiceManagerTask.generateServiceManagerName(this.vs));
+            svcMgr = serviceManagerApi.findServiceManager(this.apiFactoryService.generateServiceManagerName(this.vs));
         }
         String svcMgrId = svcMgr == null ? null : svcMgr.getId();
         if (!isNsxServiceManagerInSync(svcMgrId)) {

@@ -41,6 +41,7 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.client.nsx.model.Service;
 import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
@@ -359,7 +360,7 @@ public class VSConformanceCheckMetaTaskTestData {
 
     public static TaskGraph createServiceManagerOutOfSyncGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new UpdateNsxServiceManagerTask(vs));
+        expectedGraph.addTask(new UpdateNsxServiceManagerTask(vs, mockApiFactoryService()));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
         expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
@@ -380,9 +381,18 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
+    private static ApiFactoryService apiFactoryService;
+
+    private static ApiFactoryService mockApiFactoryService() {
+        if (apiFactoryService == null) {
+            apiFactoryService = Mockito.mock(ApiFactoryService.class);
+        }
+        return apiFactoryService;
+    }
+
     public static TaskGraph createServiceOutOfSyncGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
+        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs, mockApiFactoryService()));
         expectedGraph.addTask(new UpdateNsxServiceAttributesTask(vs));
         expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, true));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
@@ -408,7 +418,7 @@ public class VSConformanceCheckMetaTaskTestData {
 
     public static TaskGraph createServiceInstanceOutOfSyncGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
+        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs, mockApiFactoryService()));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
         expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.addTask(new UpdateNsxServiceInstanceAttributesTask(vs));
@@ -437,7 +447,7 @@ public class VSConformanceCheckMetaTaskTestData {
 
     public static TaskGraph createVsPolicyMarkedForDeletionGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
+        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs, mockApiFactoryService()));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
         expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
@@ -471,7 +481,7 @@ public class VSConformanceCheckMetaTaskTestData {
 
     public static TaskGraph createVsPolicyWithoutTemplateGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
+        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs, mockApiFactoryService()));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
         expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
@@ -504,7 +514,7 @@ public class VSConformanceCheckMetaTaskTestData {
 
     public static TaskGraph createDomainPolicyOnlyGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
+        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs, mockApiFactoryService()));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
         expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
@@ -538,7 +548,7 @@ public class VSConformanceCheckMetaTaskTestData {
 
     public static TaskGraph createVsPolicyWithoutServiceIdGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
+        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs, mockApiFactoryService()));
         expectedGraph.appendTask(new CreateNsxServiceTask(vs));
         expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
@@ -569,7 +579,7 @@ public class VSConformanceCheckMetaTaskTestData {
 
     public static TaskGraph createVsPolicyNameOutOfSyncGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs));
+        expectedGraph.addTask(new CreateNsxServiceManagerTask(vs, mockApiFactoryService()));
         expectedGraph.appendTask(new NsxDeploymentSpecCheckMetaTask(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         VirtualSystemPolicy vsp = (VirtualSystemPolicy)vs.getVirtualSystemPolicies().toArray()[0];

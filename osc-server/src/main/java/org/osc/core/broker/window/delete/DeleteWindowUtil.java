@@ -19,6 +19,7 @@ package org.osc.core.broker.window.delete;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDeploymentSpecService;
 import org.osc.core.broker.service.DeleteDistributedApplianceService;
 import org.osc.core.broker.service.ForceDeleteVirtualSystemService;
@@ -39,7 +40,6 @@ import org.osc.core.broker.service.securitygroup.SecurityGroupDto;
 import org.osc.core.broker.service.securityinterface.DeleteSecurityGroupInterfaceService;
 import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.vc.DeleteVirtualizationConnectorService;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
@@ -102,7 +102,7 @@ public class DeleteWindowUtil {
 
     }
 
-    public static void deleteDistributedAppliance(final DistributedApplianceDto dto) {
+    public static void deleteDistributedAppliance(final DistributedApplianceDto dto, DeleteDistributedApplianceService deleteDistributedApplianceService) {
         final VmidcWindow<? extends OkCancelButtonModel> deleteWindow;
         if (dto.isMarkForDeletion()) {
             deleteWindow = WindowUtil.createForceDeleteWindow("Delete Distributed Appliance ",
@@ -132,7 +132,7 @@ public class DeleteWindowUtil {
 
                     delRequest.setId(dto.getId());
                     log.info("deleting Distributed Appliance - " + dto.getName());
-                    DeleteDistributedApplianceService daDeleteService = new DeleteDistributedApplianceService();
+                    DeleteDistributedApplianceService daDeleteService = deleteDistributedApplianceService;
                     BaseJobResponse response = daDeleteService.dispatch(delRequest);
                     deleteWindow.close();
 
@@ -175,7 +175,7 @@ public class DeleteWindowUtil {
         ViewUtil.addWindow(deleteWindow);
     }
 
-    public static void deleteSecurityGroupInterface(final SecurityGroupInterfaceDto dto) {
+    public static void deleteSecurityGroupInterface(final SecurityGroupInterfaceDto dto, ConformService conformService) {
 
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow(
                 "Delete Security Group interface", "Delete Security Group interface  - " + dto.getName());
@@ -196,7 +196,7 @@ public class DeleteWindowUtil {
                     delRequest.setId(dto.getId());
                     log.info("deleting Security Group interface - " + dto.getName());
 
-                    DeleteSecurityGroupInterfaceService deleteService = new DeleteSecurityGroupInterfaceService(StaticRegistry.conformService());
+                    DeleteSecurityGroupInterfaceService deleteService = new DeleteSecurityGroupInterfaceService(conformService);
                     deleteService.dispatch(delRequest);
                     deleteWindow.close();
                 } catch (Exception e) {

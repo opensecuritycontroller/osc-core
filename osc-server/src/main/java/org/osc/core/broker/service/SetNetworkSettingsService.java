@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.request.SetNetworkSettingsRequest;
 import org.osc.core.broker.service.response.SetNetworkSettingsResponse;
@@ -41,6 +42,9 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
 
     @Reference
     private Server server;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public SetNetworkSettingsResponse exec(SetNetworkSettingsRequest request, EntityManager em) throws Exception {
@@ -94,13 +98,13 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
 
     }
 
-    public static Long startIpPropagateJob() throws Exception {
+    public Long startIpPropagateJob() throws Exception {
 
         log.info("Start propagating new IP(" + NetworkUtil.getHostIpAddress() + ") to all NSX managers and DAIs");
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new IpChangePropagateMetaTask());
+        tg.addTask(new IpChangePropagateMetaTask(this.apiFactoryService));
 
         Job job = JobEngine.getEngine().submit(
                 "Updating " + Server.SHORT_PRODUCT_NAME

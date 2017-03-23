@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.ServiceManager;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
@@ -36,9 +37,11 @@ public class UpdateNsxServiceManagerTask extends TransactionalTask {
     final Logger log = Logger.getLogger(UpdateNsxServiceManagerTask.class);
 
     private VirtualSystem vs;
+    private final ApiFactoryService apiFactoryService;
 
-    public UpdateNsxServiceManagerTask(VirtualSystem vs) {
+    public UpdateNsxServiceManagerTask(VirtualSystem vs, ApiFactoryService apiFactoryService) {
         this.vs = vs;
+        this.apiFactoryService = apiFactoryService;
         this.name = getName();
     }
 
@@ -53,10 +56,10 @@ public class UpdateNsxServiceManagerTask extends TransactionalTask {
         serviceManager.setPassword(NsxAuthFilter.VMIDC_NSX_PASS);
         serviceManager.setVerifyPassword(NsxAuthFilter.VMIDC_NSX_PASS);
 
-        serviceManager.setVendorName(CreateNsxServiceManagerTask.generateServiceManagerName(this.vs));
-        serviceManager.setVendorId(CreateNsxServiceManagerTask.generateServiceManagerName(this.vs));
+        serviceManager.setVendorName(this.apiFactoryService.generateServiceManagerName(this.vs));
+        serviceManager.setVendorId(this.apiFactoryService.generateServiceManagerName(this.vs));
 
-        serviceManager.setName(CreateNsxServiceManagerTask.generateServiceManagerName(this.vs));
+        serviceManager.setName(this.apiFactoryService.generateServiceManagerName(this.vs));
         serviceManager.setDescription(ServiceManager.VENDOR_DESCRIPTION);
         serviceManagerApi.updateServiceManager(serviceManager);
     }
