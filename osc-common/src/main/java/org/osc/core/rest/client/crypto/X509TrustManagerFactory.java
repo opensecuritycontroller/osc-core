@@ -53,7 +53,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     private static final String KEYSTORE_TYPE = "JKS";
     //:TODO combine with vmidckeystore as part of US11664
     // vmidctruststore stores public certificates needed to establish SSL connection
-    private static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
+    public static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
     // key entry to properties file that contains password
     private static final String TRUSTSTORE_PASSWORD_ENTRY_KEY = "truststore.password";
     // alias to truststore password entry in PKC#12 password
