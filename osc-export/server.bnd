@@ -18,6 +18,13 @@
 	osgi.identity;filter:='(osgi.identity=slf4j.simple)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.metatype)',\
 	osgi.identity;filter:='(&(osgi.identity=org.apache.felix.resolver)(version>=1.10.1))',\
+	osgi.identity;filter:='(osgi.identity=org.glassfish.jersey.containers.jersey-container-servlet)',\
+	osgi.identity;filter:='(osgi.identity=org.glassfish.jersey.ext.jersey-bean-validation)',\
+	osgi.identity;filter:='(osgi.identity=org.glassfish.jersey.media.jersey-media-json-jackson)',\
+	osgi.identity;filter:='(osgi.identity=org.glassfish.jersey.media.jersey-media-jaxb)',\
+	osgi.identity;filter:='(osgi.identity=com.fasterxml.jackson.module.jackson-module-jaxb-annotations)',\
+	osgi.identity;filter:='(osgi.identity=org.glassfish.web.javax.el)',\
+	osgi.identity;filter:='(osgi.identity=org.hibernate.javax.persistence.hibernate-jpa-2.1-api)',\
 	${hk2}
 
 # These initial requirement are NOT needed by the server, but are to work-around a startup ordering issue
@@ -31,7 +38,11 @@ hk2:\
 
 -runblacklist:\
     osgi.identity;filter:='(osgi.identity=com.sun.jersey.bundle)',\
-    osgi.identity;filter:='(osgi.identity=javax.ws.rs.jsr311-api)'
+    osgi.identity;filter:='(osgi.identity=javax.ws.rs.jsr311-api)',\
+    osgi.identity;filter:='(osgi.identity=jclouds-scriptbuilder)',\
+    osgi.identity;filter:='(osgi.identity=openstack-glance)',\
+    osgi.identity;filter:='(osgi.identity=openstack-neutron)',\
+    osgi.identity;filter:='(osgi.identity=openstack-nova)',\
 
 
 
@@ -58,4 +69,3 @@ hk2:\
     org.apache.geronimo.specs.geronimo-jta_1.1_spec;version=1.1.1
     
 #end
-
