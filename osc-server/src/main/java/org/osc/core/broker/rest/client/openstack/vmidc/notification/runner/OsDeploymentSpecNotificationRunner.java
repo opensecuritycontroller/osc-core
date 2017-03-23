@@ -34,6 +34,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.NotificationListenerFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.OsNotificationListener;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
+import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.BroadcastMessage;
@@ -57,7 +58,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
 
     private static final Logger log = Logger.getLogger(OsDeploymentSpecNotificationRunner.class);
 
-    public OsDeploymentSpecNotificationRunner() {
+    public OsDeploymentSpecNotificationRunner() throws InterruptedException, VmidcException {
         EntityManager em = null;
         try {
             BroadcasterUtil.register(this);
@@ -109,6 +110,9 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                         }
                     }
                 }
+            } catch (Exception e) {
+                log.error("An error occurred updating the Deployment Spec listeners", e);
+                throw new RuntimeException("Failed to consume a broadcast message", e);
             } finally {
                 if (em != null) {
                     em.close();

@@ -106,7 +106,7 @@ public class TransactionalRunnerTest {
     }
 
     @Test
-    public void testExec_WithValidTransactionalLogic_ExpectsSessionRecycled() {
+    public void testExec_WithValidTransactionalLogic_ExpectsSessionRecycled() throws Exception {
         // Act.
         this.target.exec(this.logicMock);
 

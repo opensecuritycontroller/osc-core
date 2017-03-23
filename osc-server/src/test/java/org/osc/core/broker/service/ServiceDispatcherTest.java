@@ -17,7 +17,6 @@
 package org.osc.core.broker.service;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
@@ -28,16 +27,13 @@ import org.osc.core.broker.service.response.Response;
 
 public class ServiceDispatcherTest {
 
-    private EntityManagerFactory mockEMF;
     private EntityManager mockEM;
     private EntityTransaction mockedTransaction;
 
     @Before
     public void setUp() {
-        this.mockEMF = Mockito.mock(EntityManagerFactory.class);
         this.mockEM = Mockito.mock(EntityManager.class);
         this.mockedTransaction = Mockito.mock(EntityTransaction.class);
-        Mockito.when(this.mockEMF.createEntityManager()).thenReturn(this.mockEM);
         Mockito.when(this.mockEM.getTransaction()).thenReturn(this.mockedTransaction);
     }
 
@@ -51,8 +47,8 @@ public class ServiceDispatcherTest {
             }
 
             @Override
-            protected EntityManagerFactory getEntityManagerFactory() {
-                return ServiceDispatcherTest.this.mockEMF;
+            protected EntityManager getEntityManager() {
+                return ServiceDispatcherTest.this.mockEM;
             }
 
         };
@@ -65,8 +61,8 @@ public class ServiceDispatcherTest {
         ServiceDispatcher<?, ?> mockServiceDispatcher = new ServiceDispatcher<Request, Response>() {
 
             @Override
-            protected EntityManagerFactory getEntityManagerFactory() {
-                return ServiceDispatcherTest.this.mockEMF;
+            protected EntityManager getEntityManager() {
+                return ServiceDispatcherTest.this.mockEM;
             }
 
             @Override

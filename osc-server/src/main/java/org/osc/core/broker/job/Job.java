@@ -126,10 +126,11 @@ public class Job implements Runnable, JobElement {
     }
 
     private void persistStatus() {
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = null;
         EntityTransaction tx = null;
 
         try {
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             tx = em.getTransaction();
             tx.begin();
             this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
@@ -394,10 +395,11 @@ public class Job implements Runnable, JobElement {
     }
 
     private void persistState() {
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = null;
         EntityTransaction tx = null;
 
         try {
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             tx = em.getTransaction();
             tx.begin();
 

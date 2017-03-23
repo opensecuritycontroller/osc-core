@@ -130,9 +130,10 @@ public class TaskNode implements Runnable, TaskElement {
     }
 
     private void persistState() {
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = null;
         EntityTransaction tx = null;
         try {
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             tx = em.getTransaction();
             tx.begin();
 
@@ -219,9 +220,11 @@ public class TaskNode implements Runnable, TaskElement {
     }
 
     private void persistStatus() {
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-        EntityTransaction tx = em.getTransaction();
+        EntityManager em = null;
+        EntityTransaction tx = null;
         try {
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            tx = em.getTransaction();
             tx.begin();
             this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
                     LockModeType.PESSIMISTIC_WRITE);

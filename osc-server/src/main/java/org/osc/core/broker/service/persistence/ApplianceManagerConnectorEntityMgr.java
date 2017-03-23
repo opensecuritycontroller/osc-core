@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -98,13 +97,13 @@ public class ApplianceManagerConnectorEntityMgr {
     }
 
     public static boolean isManagerTypeUsed(String managerType) {
-        EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
         EntityTransaction tx = null;
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = null;
 
         Long count1 = 0L;
         Long count2 = 0L;
         try {
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             tx = em.getTransaction();
             tx.begin();
 
