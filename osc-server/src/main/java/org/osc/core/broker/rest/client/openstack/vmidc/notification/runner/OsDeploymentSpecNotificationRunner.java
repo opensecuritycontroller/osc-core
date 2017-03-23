@@ -112,6 +112,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                 }
             } catch (Exception e) {
                 log.error("An error occurred updating the Deployment Spec listeners", e);
+                throw new RuntimeException("Failed to consume a broadcast message", e);
             } finally {
                 if (em != null) {
                     em.close();

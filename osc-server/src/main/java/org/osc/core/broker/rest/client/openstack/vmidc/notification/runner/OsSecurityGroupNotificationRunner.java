@@ -111,6 +111,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                 }
             } catch (Exception e) {
                 log.error("An error occurred updating the Security Group Listeners", e);
+                throw new RuntimeException("Failed to consume a broadcast message", e);
             } finally {
                 if (em != null) {
                     em.close();

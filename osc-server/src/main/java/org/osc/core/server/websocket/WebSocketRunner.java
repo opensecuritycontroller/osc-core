@@ -52,7 +52,6 @@ public class WebSocketRunner implements BroadcastListener {
 
     private List<ApplianceManagerConnector> amcs = new ArrayList<>();
     private ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-//    private EntityManager em = null;
     private int count = MAX_TRIES;
 
     public WebSocketRunner() {
@@ -141,7 +140,6 @@ public class WebSocketRunner implements BroadcastListener {
                     log.info("Initialised websockets for all plugins");
                 }
                 WebSocketRunner.this.ses.shutdown();
-//                WebSocketRunner.this.em.close();
             } else {
                 WebSocketRunner.this.ses.schedule(this, TRY_WAIT_MS, TimeUnit.MILLISECONDS);
             }

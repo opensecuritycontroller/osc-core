@@ -37,7 +37,11 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.jdbc.DataSourceFactory;
 import org.osgi.service.jpa.EntityManagerFactoryBuilder;
 
-
+/**
+ * This component provides a single OSGi service which offers access to
+ * ready-configured database resources. Database access must not be set
+ * up manually by other components.
+ */
 @Component(service=DBConnectionManager.class, configurationPid="org.osc.core.broker.util.db",
 configurationPolicy=ConfigurationPolicy.REQUIRE)
 public class DBConnectionManager {
