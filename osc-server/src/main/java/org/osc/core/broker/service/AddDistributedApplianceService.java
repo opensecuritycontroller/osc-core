@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -36,7 +37,7 @@ import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
@@ -47,34 +48,41 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, AddDistributedApplianceR
 
     private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
 
+    // BEWARE: don't make this final as it  breaks @InjectMocks
+    private ConformService conformService;
+
+    public AddDistributedApplianceService(ConformService conformService) {
+        this.conformService = conformService;
+    }
+
     @Override
-    public AddDistributedApplianceResponse exec(BaseRequest<DistributedApplianceDto> request, Session session)
+    public AddDistributedApplianceResponse exec(BaseRequest<DistributedApplianceDto> request, EntityManager em)
             throws Exception {
 
-        EntityManager<ApplianceManagerConnector> mcMgr = new EntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> mcMgr = new OSCEntityManager<ApplianceManagerConnector>(
+                ApplianceManagerConnector.class, em);
 
         DistributedApplianceDto daDto = request.getDto();
 
         if (this.validator == null) {
-            this.validator = new DistributedApplianceDtoValidator(session);
+            this.validator = new DistributedApplianceDtoValidator(em);
         }
 
         this.validator.validateForCreate(daDto);
 
         ApplianceManagerConnector mc = mcMgr.findByPrimaryKey(daDto.getMcId());
-        Appliance a = ApplianceEntityMgr.findById(session, daDto.getApplianceId());
+        Appliance a = ApplianceEntityMgr.findById(em, daDto.getApplianceId());
 
         DistributedAppliance da = new DistributedAppliance(mc);
 
-        List<VirtualSystem> vsList = getVirtualSystems(session, request.getDto(), da);
+        List<VirtualSystem> vsList = getVirtualSystems(em, request.getDto(), da);
 
         // creating new entry in the db using entity manager object
-        DistributedApplianceEntityMgr.createEntity(session, request.getDto(), a, da);
-        EntityManager.create(session, da);
+        DistributedApplianceEntityMgr.createEntity(em, request.getDto(), a, da);
+        OSCEntityManager.create(em, da);
 
         for (VirtualSystem vs : vsList) {
-            EntityManager.create(session, vs);
+            OSCEntityManager.create(em, vs);
             // Ensure name field is populated is assigned after DB id had been allocated
             vs.getName();
             da.addVirtualSystem(vs);
@@ -88,33 +96,33 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, AddDistributedApplianceR
 
         commitChanges(true);
 
-        Long jobId = startConformDAJob(da, session);
+        Long jobId = startConformDAJob(da, em);
 
         response.setJobId(jobId);
 
         return response;
     }
 
-    private Long startConformDAJob(DistributedAppliance da, Session session) throws Exception {
-        return ConformService.startDAConformJob(session, da);
+    private Long startConformDAJob(DistributedAppliance da, EntityManager em) throws Exception {
+        return this.conformService.startDAConformJob(em, da);
     }
 
-    List<VirtualSystem> getVirtualSystems(Session session, DistributedApplianceDto daDto, DistributedAppliance da) throws Exception {
+    List<VirtualSystem> getVirtualSystems(EntityManager em, DistributedApplianceDto daDto, DistributedAppliance da) throws Exception {
         List<VirtualSystem> vsList = new ArrayList<VirtualSystem>();
 
         // build the list of associated VirtualSystems for this DA
         Set<VirtualSystemDto> vsDtoList = daDto.getVirtualizationSystems();
 
         for (VirtualSystemDto vsDto : vsDtoList) {
-            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(session, vsDto.getVcId());
+            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, vsDto.getVcId());
 
             // load the corresponding app sw version from db
-            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(session,
+            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(em,
                     daDto.getApplianceId(), daDto.getApplianceSoftwareVersionName(), vc.getVirtualizationType(),
                     vc.getVirtualizationSoftwareVersion());
 
-            EntityManager<Domain> em = new EntityManager<Domain>(Domain.class, session);
-            Domain domain = vsDto.getDomainId() == null ? null : em.findByPrimaryKey(vsDto.getDomainId());
+            OSCEntityManager<Domain> oscEm = new OSCEntityManager<Domain>(Domain.class, em);
+            Domain domain = vsDto.getDomainId() == null ? null : oscEm.findByPrimaryKey(vsDto.getDomainId());
 
             VirtualSystem vs = new VirtualSystem(da);
 

@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.GetVSPublicKeyRequest;
 import org.osc.core.broker.service.response.GetVSPublicKeyResponse;
 import org.osc.core.util.PKIUtil;
@@ -28,13 +29,13 @@ import org.osc.core.util.PKIUtil;
 public class GetVSPublicKeyService extends ServiceDispatcher<GetVSPublicKeyRequest, GetVSPublicKeyResponse> {
 
     @Override
-    public GetVSPublicKeyResponse exec(GetVSPublicKeyRequest request, Session session) throws Exception {
+    public GetVSPublicKeyResponse exec(GetVSPublicKeyRequest request, EntityManager em) throws Exception {
 
         GetVSPublicKeyResponse response = new GetVSPublicKeyResponse();
 
-        EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
 
-        VirtualSystem vs = validate(session, request, emgr);
+        VirtualSystem vs = validate(em, request, emgr);
 
         byte[] keystore = vs.getKeyStore();
         byte[] pubkey = PKIUtil.extractCertificate(keystore);
@@ -44,7 +45,7 @@ public class GetVSPublicKeyService extends ServiceDispatcher<GetVSPublicKeyReque
         return response;
     }
 
-    VirtualSystem validate(Session session, GetVSPublicKeyRequest request, EntityManager<VirtualSystem> emgr)
+    VirtualSystem validate(EntityManager em, GetVSPublicKeyRequest request, OSCEntityManager<VirtualSystem> emgr)
             throws Exception {
 
         Long vsId = request.getVsId();

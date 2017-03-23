@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -44,9 +45,9 @@ public class DAConformanceCheckMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        this.da = (DistributedAppliance) session.get(DistributedAppliance.class, this.da.getId());
+        this.da = em.find(DistributedAppliance.class, this.da.getId());
 
         this.tg = new TaskGraph();
         for (VirtualSystem vs : this.da.getVirtualSystems()) {

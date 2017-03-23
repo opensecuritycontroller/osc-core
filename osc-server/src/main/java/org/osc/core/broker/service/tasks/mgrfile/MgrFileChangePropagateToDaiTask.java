@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.mgrfile;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
@@ -48,7 +49,7 @@ public class MgrFileChangePropagateToDaiTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         VmidcAgentStreamingApi agentApi = new VmidcAgentStreamingApi(this.dai.getIpAddress(), 8090,
                 AgentAuthFilter.VMIDC_AGENT_LOGIN, AgentAuthFilter.VMIDC_AGENT_PASS);
@@ -63,7 +64,7 @@ public class MgrFileChangePropagateToDaiTask extends TransactionalTask {
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(dai);
+        return LockObjectReference.getObjectReferences(this.dai);
     }
 
 }

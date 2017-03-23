@@ -21,10 +21,11 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.appliance.ImportFileRequest;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -40,21 +41,21 @@ public class ImportSdnControllerPluginService extends ServiceDispatcher<ImportFi
 
     private File barFile = null;
     private String deploymentName;
-    
+
     @Override
-    public BaseResponse exec(ImportFileRequest request, Session session) throws Exception {
+    public BaseResponse exec(ImportFileRequest request, EntityManager em) throws Exception {
         BaseResponse response = new BaseResponse();
 
         File tmpUploadFolder = new File(request.getUploadPath());
-        
-        validate(session, request, tmpUploadFolder);
-        
-        File pluginTarget = new File(SdnControllerApiFactory.SDN_CONTROLLER_PLUGINS_DIRECTORY, deploymentName);
+
+        validate(em, request, tmpUploadFolder);
+
+        File pluginTarget = new File(SdnControllerApiFactory.SDN_CONTROLLER_PLUGINS_DIRECTORY, this.deploymentName);
 
         FileUtils.copyFile(this.barFile, pluginTarget);
-        
+
         cleanTmpFolder(tmpUploadFolder);
-        
+
         return response;
     }
 
@@ -67,8 +68,8 @@ public class ImportSdnControllerPluginService extends ServiceDispatcher<ImportFi
             // Not throwing exception since AddApplianceSoftwareVersionService succeeded
         }
     }
-    
-    private void validate(Session session, ImportFileRequest request, File tmpUploadFolder) throws Exception {
+
+    private void validate(EntityManager em, ImportFileRequest request, File tmpUploadFolder) throws Exception {
 
         if (!ServerUtil.isEnoughSpace()) {
             throw new VmidcException(VmidcMessages.getString("upload.plugin.sdncontroller.nospace"));
@@ -87,16 +88,16 @@ public class ImportSdnControllerPluginService extends ServiceDispatcher<ImportFi
             throw new VmidcBrokerValidationException(
                     "Invalid upload folder. Should contain single .bar file.");
         }
-        
+
         try (JarFile jar = new JarFile(this.barFile)) {
 			Manifest manifest = jar.getManifest();
 			Attributes attributes = manifest.getMainAttributes();
 			String symbolicName = attributes.getValue("Deployment-SymbolicName");
-			
+
 			if (symbolicName == null) {
 				throw new VmidcBrokerValidationException("uploaded file does not contain Deployment-SymbolicName: " + this.barFile);
 			}
-			
+
 			this.deploymentName = symbolicName + ".bar";
         }
 

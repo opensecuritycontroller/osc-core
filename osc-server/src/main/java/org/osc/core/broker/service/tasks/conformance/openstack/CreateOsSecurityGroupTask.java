@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.neutron.v2.domain.Rule;
 import org.jclouds.openstack.neutron.v2.domain.RuleDirection;
 import org.jclouds.openstack.neutron.v2.domain.RuleEthertype;
@@ -31,7 +32,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class CreateOsSecurityGroupTask extends TransactionalTask {
@@ -49,21 +50,21 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        this.ds = (DeploymentSpec) session.get(DeploymentSpec.class, this.ds.getId());
+        this.ds = em.find(DeploymentSpec.class, this.ds.getId());
 
         JCloudNeutron neutron = new JCloudNeutron(this.osEndPoint);
         try {
-            this.log.info("Creating Openstack Security Group " + sgName + " in tenant " + this.ds.getTenantName()
+            this.log.info("Creating Openstack Security Group " + this.sgName + " in tenant " + this.ds.getTenantName()
                     + " for region " + this.ds.getRegion());
 
-            SecurityGroup securityGroup = neutron.createSecurityGroup(sgName, this.ds.getRegion());
+            SecurityGroup securityGroup = neutron.createSecurityGroup(this.sgName, this.ds.getRegion());
             neutron.addSecurityGroupRules(securityGroup, this.ds.getRegion(), createSecurityGroupRules());
-            OsSecurityGroupReference sgRef = new OsSecurityGroupReference(securityGroup.getId(), sgName, this.ds);
+            OsSecurityGroupReference sgRef = new OsSecurityGroupReference(securityGroup.getId(), this.sgName, this.ds);
             this.ds.setOsSecurityGroupReference(sgRef);
 
-            EntityManager.create(session, sgRef);
+            OSCEntityManager.create(em, sgRef);
 
         } finally {
             neutron.close();
@@ -79,7 +80,7 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Creating Openstack Security Group '%s' in tenant '%s' for region '%s'", sgName, this.ds.getTenantName(), this.ds.getRegion());
+        return String.format("Creating Openstack Security Group '%s' in tenant '%s' for region '%s'", this.sgName, this.ds.getTenantName(), this.ds.getRegion());
     };
 
     @Override

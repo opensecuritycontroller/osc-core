@@ -20,7 +20,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZone;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -29,7 +30,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.openstack.request.BaseOpenStackRequest;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.util.encryption.EncryptionException;
 
@@ -39,10 +40,10 @@ public class ListAvailabilityZonesService extends
     private ListResponse<AvailabilityZoneDto> response = new ListResponse<AvailabilityZoneDto>();
 
     @Override
-    public ListResponse<AvailabilityZoneDto> exec(BaseOpenStackRequest request, Session session) throws IOException, EncryptionException {
+    public ListResponse<AvailabilityZoneDto> exec(BaseOpenStackRequest request, EntityManager em) throws IOException, EncryptionException {
         List<AvailabilityZoneDto> azList = new ArrayList<AvailabilityZoneDto>();
         // Initializing Entity Manager
-        EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();

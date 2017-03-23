@@ -19,8 +19,9 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -48,12 +49,12 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         this.tg = new TaskGraph();
         log.info("Start executing SyncPolicyMetaTask task for MC '" + this.mc.getName() + "'");
 
-        this.mc = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class, this.mc.getId());
+        this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId());
 
         Set<Domain> domains = this.mc.getDomains();
 
@@ -87,7 +88,7 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
                 if (mgrPolicy == null) {
 
                     // Need to delete the associated VirtualSystemPolicy entries first
-                    List<VirtualSystemPolicy> vsPolicies = VirtualSystemPolicyEntityMgr.listVSPolicyByPolicyId(session,
+                    List<VirtualSystemPolicy> vsPolicies = VirtualSystemPolicyEntityMgr.listVSPolicyByPolicyId(em,
                             policy.getId());
 
                     if (vsPolicies != null) {

@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance.securitygroup;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
@@ -38,8 +39,8 @@ public class DeleteMgrSecurityGroupTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         ManagerSecurityGroupApi mgrApi = ManagerApiFactory.createManagerSecurityGroupApi(this.vs);
         try {

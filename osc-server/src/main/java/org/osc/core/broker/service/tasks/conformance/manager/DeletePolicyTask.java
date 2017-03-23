@@ -18,11 +18,12 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.Policy;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemPolicyEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
@@ -37,28 +38,28 @@ public class DeletePolicyTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        log.info("Start excecuting DeletePolicyTask Task. Policy '" + policy.getName() + "'");
-        Long policyId = policy.getId();
+    public void executeTransaction(EntityManager em) throws Exception {
+        log.info("Start excecuting DeletePolicyTask Task. Policy '" + this.policy.getName() + "'");
+        Long policyId = this.policy.getId();
 
         // If we've removed the last virtual system policies,
         // we can now delete the policy.
 
-        List<VirtualSystemPolicy> vsps = VirtualSystemPolicyEntityMgr.listVSPolicyByPolicyId(session, policy.getId());
+        List<VirtualSystemPolicy> vsps = VirtualSystemPolicyEntityMgr.listVSPolicyByPolicyId(em, this.policy.getId());
         if (vsps == null || vsps.isEmpty()) {
-            log.info("Deleting policy '" + policy.getName() + "'");
+            log.info("Deleting policy '" + this.policy.getName() + "'");
 
-            policy = (Policy) session.get(Policy.class, policyId);
+            this.policy = em.find(Policy.class, policyId);
             // We're assuming it is ok to delete the policy as Manager will ensure
             // it is not referenced by any security group.
-            EntityManager.delete(session, policy);
+            OSCEntityManager.delete(em, this.policy);
         }
 
     }
 
     @Override
     public String getName() {
-        return "Delete Policy '" + policy.getName() + "' from Domain '" + policy.getDomain().getName() + "'";
+        return "Delete Policy '" + this.policy.getName() + "' from Domain '" + this.policy.getDomain().getName() + "'";
     }
 
 }

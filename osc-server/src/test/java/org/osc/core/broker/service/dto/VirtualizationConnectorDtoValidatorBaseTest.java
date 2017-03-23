@@ -16,17 +16,27 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import org.hibernate.Session;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS_2;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS_2;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.createVirtualisationConnector;
+
+import javax.persistence.EntityManager;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.junit.runners.Parameterized;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.request.VirtualizationConnectorDtoValidator;
-import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
-import org.osc.core.broker.util.SessionStub;
+import org.osc.core.broker.service.test.InMemDB;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import junitparams.JUnitParamsRunner;
 
 /**
  * The base class for the {@link VirtualizationConnectorDtoValidator} unit tests.
@@ -38,29 +48,49 @@ import org.osc.core.broker.util.SessionStub;
  */
 public class VirtualizationConnectorDtoValidatorBaseTest {
 
-    @Mock
-    private Session sessionMock;
+    private EntityManager em;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @InjectMocks
     protected VirtualizationConnectorDtoValidator dtoValidator;
 
     @Before
     public void testInitialize() {
         MockitoAnnotations.initMocks(this);
-        
-        SessionStub sessionStub = new SessionStub(this.sessionMock);
 
-        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "name",
-                VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS, true);
-        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "name",
-                VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS, true);
-        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "controllerIpAddress",
-                VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS, true);
-        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "providerIpAddress",
-                VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS, true);
-        
+        this.em = InMemDB.getEntityManagerFactory().createEntityManager();
+
+        populateDatabase();
+//
+//        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "name",
+//                VMWARE_NAME_ALREADY_EXISTS, true);
+//        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "name",
+//                OPENSTACK_NAME_ALREADY_EXISTS, true);
+//        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "controllerIpAddress",
+//                CONTROLLER_IP_ALREADY_EXISTS, true);
+//        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "providerIpAddress",
+//                PROVIDER_IP_ALREADY_EXISTS, true);
+
+        this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em);
+
+    }
+
+    @After
+    public void testTearDown() {
+        InMemDB.shutdown();
+    }
+
+    private void populateDatabase() {
+       this.em.getTransaction().begin();
+
+       this.em.persist(createVirtualisationConnector(VMWARE_NAME_ALREADY_EXISTS,
+               CONTROLLER_IP_ALREADY_EXISTS, PROVIDER_IP_ALREADY_EXISTS));
+
+       this.em.persist(createVirtualisationConnector(OPENSTACK_NAME_ALREADY_EXISTS,
+               CONTROLLER_IP_ALREADY_EXISTS_2, PROVIDER_IP_ALREADY_EXISTS_2));
+
+       this.em.getTransaction().commit();
+
     }
 }

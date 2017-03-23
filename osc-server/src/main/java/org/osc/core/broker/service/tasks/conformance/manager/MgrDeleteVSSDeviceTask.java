@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -39,12 +40,12 @@ public class MgrDeleteVSSDeviceTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        vs = (VirtualSystem) session.get(VirtualSystem.class, vs.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(vs);
+        ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.vs);
         try {
-            for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
+            for (DistributedApplianceInstance dai : this.vs.getDistributedApplianceInstances()) {
                 // Delete individual device
                 MgrDeleteMemberDeviceTask.deleteMemberDevice(mgrApi, dai);
             }
@@ -58,7 +59,7 @@ public class MgrDeleteVSSDeviceTask extends TransactionalTask {
     }
 
     private void deleteDevice(ManagerDeviceApi mgrApi) throws Exception {
-        if (vs.getMgrId() == null) {
+        if (this.vs.getMgrId() == null) {
             return;
         }
 
@@ -68,24 +69,24 @@ public class MgrDeleteVSSDeviceTask extends TransactionalTask {
         } catch (Exception ex) {
 
             try {
-                ManagerDeviceElement device = mgrApi.getDeviceById(vs.getMgrId());
+                ManagerDeviceElement device = mgrApi.getDeviceById(this.vs.getMgrId());
                 if (device != null) {
                     throw ex;
                 }
             } catch (Exception e) {
-                log.info("Fail to load Device: " + vs.getMgrId() + ". Assume already deleted.");
+                log.info("Fail to load Device: " + this.vs.getMgrId() + ". Assume already deleted.");
             }
         }
     }
 
     @Override
     public String getName() {
-        return "Delete Manager VSS Device '" + vs.getName() + "'";
+        return "Delete Manager VSS Device '" + this.vs.getName() + "'";
     }
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(vs);
+        return LockObjectReference.getObjectReferences(this.vs);
     }
 
 }

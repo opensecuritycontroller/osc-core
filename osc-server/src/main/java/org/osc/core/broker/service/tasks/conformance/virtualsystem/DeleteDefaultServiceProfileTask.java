@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
@@ -37,10 +38,10 @@ public class DeleteDefaultServiceProfileTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         log.debug("Start excecuting DeleteDefaultServiceProfileTask");
 
-        this.vsp = (VirtualSystemPolicy) session.get(VirtualSystemPolicy.class, this.vsp.getId());
+        this.vsp = em.find(VirtualSystemPolicy.class, this.vsp.getId());
         ServiceProfileApi serviceProfileApi = VMwareSdnApiFactory.createServiceProfileApi(this.vsp.getVirtualSystem());
         serviceProfileApi.deleteServiceProfile(this.vsp.getVirtualSystem().getNsxServiceId(), this.vsp.getNsxVendorTemplateId());
         log.debug("Deleted service profile of the service: " + this.vsp.getVirtualSystem().getNsxServiceId() + " for vendor template: " + this.vsp.getNsxVendorTemplateId());

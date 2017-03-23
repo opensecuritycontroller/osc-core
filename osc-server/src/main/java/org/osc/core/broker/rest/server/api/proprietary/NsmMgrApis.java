@@ -44,6 +44,7 @@ import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service = NsmMgrApis.class)
 @Path(OscRestServlet.MGR_NSM_API_PATH_PREFIX)
@@ -54,12 +55,15 @@ public class NsmMgrApis {
 
     private static final Logger log = Logger.getLogger(NsmMgrApis.class);
 
+    @Reference
+    private ManagerApis managerApis;
+
     @Path("/notification")
     @POST
     public Response postNotification(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
             Notification notification) {
         log.info("postNotification(): " + notification);
-        return ManagerApis.triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
+        return this.managerApis.triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
     }
 
     @Path("/propagateMgrFile/vs/{vsName}")

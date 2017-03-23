@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.email;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.events.EmailSettings;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.persistence.EmailSettingsEntityMgr;
@@ -26,8 +27,8 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 public class GetEmailSettingsService extends ServiceDispatcher<Request, BaseDtoResponse<EmailSettingsDto>> {
 
     @Override
-    public BaseDtoResponse<EmailSettingsDto> exec(Request request, Session session) throws Exception {
-        EmailSettings emailSettings = (EmailSettings) session.get(EmailSettings.class, 1L);
+    public BaseDtoResponse<EmailSettingsDto> exec(Request request, EntityManager em) throws Exception {
+        EmailSettings emailSettings = em.find(EmailSettings.class, 1L);
         BaseDtoResponse<EmailSettingsDto> emailSettingsResponse = new BaseDtoResponse<EmailSettingsDto>();
 
         if (emailSettings != null) {

@@ -192,11 +192,12 @@ public final class X509TrustManagerFactory implements X509TrustManager {
 
     public void addEntry(File file) throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        try (FileInputStream inputStream = new FileInputStream(file)) {
+        try (FileInputStream inputStream = new FileInputStream(file);
+            FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
             X509Certificate certificate = (X509Certificate) cf.generateCertificate(inputStream);
             String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
             this.keyStore.setCertificateEntry(newAlias, certificate);
-            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
+            this.keyStore.store(outputStream, TRUSTSTORE_PASSWORD.toCharArray());
         }
         reloadTrustManager();
     }
@@ -227,7 +228,9 @@ public final class X509TrustManagerFactory implements X509TrustManager {
             X509Certificate certificate = (X509Certificate) this.keyStore.getCertificate(oldAlias);
             removeEntry(oldAlias);
             addEntry(certificate, newAlias);
-            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
+            try(FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
+                this.keyStore.store(outputStream, TRUSTSTORE_PASSWORD.toCharArray());
+            }
         }
     }
 

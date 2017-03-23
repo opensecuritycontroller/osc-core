@@ -16,11 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.UpdateMCPublicKeyRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 
@@ -28,21 +29,21 @@ import org.osc.core.broker.service.response.EmptySuccessResponse;
 public class UpdateMCPublicKeyService extends ServiceDispatcher<UpdateMCPublicKeyRequest, EmptySuccessResponse> {
 
     @Override
-    public EmptySuccessResponse exec(UpdateMCPublicKeyRequest request, Session session) throws Exception {
+    public EmptySuccessResponse exec(UpdateMCPublicKeyRequest request, EntityManager em) throws Exception {
 
         EmptySuccessResponse response = new EmptySuccessResponse();
 
-        EntityManager<ApplianceManagerConnector> emgr = new EntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
+                ApplianceManagerConnector.class, em);
 
-        ApplianceManagerConnector mc = validate(session, request);
+        ApplianceManagerConnector mc = validate(em, request);
         mc.setPublicKey(request.getPublicKey());
         emgr.update(mc);
 
         return response;
     }
 
-    ApplianceManagerConnector validate(Session session, UpdateMCPublicKeyRequest request) throws Exception {
+    ApplianceManagerConnector validate(EntityManager em, UpdateMCPublicKeyRequest request) throws Exception {
 
         Long mcId = request.getMcId();
         byte[] publicKey = request.getPublicKey();
@@ -60,8 +61,8 @@ public class UpdateMCPublicKeyService extends ServiceDispatcher<UpdateMCPublicKe
         }
 
         // retrieve existing entry from db
-        EntityManager<ApplianceManagerConnector> emgr = new EntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
+                ApplianceManagerConnector.class, em);
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(mcId);
 
         if (mc == null) {

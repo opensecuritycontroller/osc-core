@@ -19,7 +19,6 @@ package org.osc.core.broker.service;
 import com.mcafee.vmidc.server.Server;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.hibernate.Session;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
@@ -30,6 +29,7 @@ import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.encryption.EncryptionException;
 
+import javax.persistence.EntityManager;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,13 +38,13 @@ import java.nio.file.Paths;
 public class RestoreService extends BackupFileService<RestoreRequest, EmptySuccessResponse> {
 
     @Override
-    public EmptySuccessResponse exec(RestoreRequest request, Session session) throws Exception {
+    public EmptySuccessResponse exec(RestoreRequest request, EntityManager em) throws Exception {
     	File backupFile = request.getBkpFile();
     	String backupFilename = backupFile.getName();
     	Server.setInMaintenance(true);
     	DBConnectionParameters connectionParams = new DBConnectionParameters();
     	String oldDBPassword = connectionParams.getPassword();
-    	
+
     	// decrypt if needed
     	if (isValidEncryptedBackupFilename(backupFilename)) {
     		// hold reference to encrypted version to be able to delete it
@@ -73,11 +73,11 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     		// generate new - secure one
     		connectionParams.restoreDefaultPassword();
     	}
-    	
+
     	// restore h2 database to temporary file
     	RestoreUtil.restoreDataBase(backupFile, new File("tmp" + File.separator + ".").getAbsolutePath());
     	backupFile.delete();
-    	
+
     	File newDBFileTemp = new File("tmp" + File.separator + DATABASE_FILENAME);
         try {
         	// check if one can access db and get db version
@@ -139,7 +139,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     }
 
 	private void updateKeystore(DBConnectionParameters connectionParams,BackupData backupData) throws EncryptionException, KeyStoreProvider.KeyStoreProviderException {
-		connectionParams.updatePassword(backupData.dbPassword);
+		connectionParams.updatePassword(backupData.getDbPassword());
 		backupData.updateAESCTRKeyInKeystore();
 	}
 
@@ -152,7 +152,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
 
         try {
             // try to write new truststore
-            Files.write(Paths.get(X509TrustManagerFactory.TRUSTSTORE_FILE), backupData.truststoreData);
+            Files.write(Paths.get(X509TrustManagerFactory.TRUSTSTORE_FILE), backupData.getTruststoreData());
         } catch (IOException e) {
             // delete new truststore if exists
             new File(X509TrustManagerFactory.TRUSTSTORE_FILE).delete();

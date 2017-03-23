@@ -23,8 +23,12 @@ import java.util.List;
 import org.mockito.Mockito;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
+import org.osc.core.broker.model.entities.appliance.Appliance;
+import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
@@ -38,55 +42,70 @@ public class SyncPolicyMetaTaskTestData {
 
     public static ManagerPolicyElement MGR_POLICY = createManagerPolicyElement("MGR_POLICY", "ID");
 
-    private static Policy CREATED_POLICY_FROM_MGR_POLICY = createPolicy("MGR_POLICY", "ID", null, true);
-    private static Policy POLICY_WITH_MGR_POLICY = createPolicy("POLICY_WITH_MGR_POLICY", "ID", 2L, true);
-    public static Policy POLICY_WITHOUT_MGR_POLICY = createPolicy("POLICY_WITHOUT_MGR_POLICY", null, 3L, false);
-    public static Policy POLICY_WITH_VS_POLICY = createPolicy("POLICY_WITH_VS_POLICY", null, 1L, false);
+    private static Policy CREATED_POLICY_FROM_MGR_POLICY = createPolicy("MGR_POLICY", "ID", null);
+    private static Policy POLICY_WITH_MGR_POLICY = createPolicy("POLICY_WITH_MGR_POLICY", "ID", null);
+    private static Policy POLICY_WITH_MGR_POLICY_2 = createPolicy("POLICY_WITH_MGR_POLICY_2", "ID", null);
+    private static Policy POLICY_WITH_MGR_POLICY_3 = createPolicy("POLICY_WITH_MGR_POLICY_3", "ID", null);
+    public static Policy POLICY_WITHOUT_MGR_POLICY = createPolicy("POLICY_WITHOUT_MGR_POLICY", "ID", null);
+    public static Policy POLICY_WITHOUT_MGR_POLICY_2 = createPolicy("POLICY_WITHOUT_MGR_POLICY_2", "ID", null);
+    public static Policy POLICY_WITHOUT_MGR_POLICY_3 = createPolicy("POLICY_WITHOUT_MGR_POLICY_3", "ID", null);
+    public static Policy POLICY_WITH_VS_POLICY = createPolicy("POLICY_WITH_VS_POLICY", "anotherID", null);
+    public static Policy POLICY_WITH_VS_POLICY_2 = createPolicy("POLICY_WITH_VS_POLICY_2", "ID", null);
+    public static Policy POLICY_WITH_VS_POLICY_3 = createPolicy("POLICY_WITH_VS_POLICY_3", "ID", null);
 
     public static Domain DOMAIN_WITHOUT_MGR_POLICY = createDomain("DOMAIN_WITHOUT_MGR_POLICY", POLICY_WITHOUT_MGR_POLICY);
-    private static Domain DOMAIN_WITH_VS_POLICY = createDomain("DOMAIN_WITH_VS_POLICY", POLICY_WITH_VS_POLICY);
+    public static Domain DOMAIN_WITHOUT_MGR_POLICY_2 = createDomain("DOMAIN_WITHOUT_MGR_POLICY_2", POLICY_WITHOUT_MGR_POLICY_2);
+    public static Domain DOMAIN_WITHOUT_MGR_POLICY_3 = createDomain("DOMAIN_WITHOUT_MGR_POLICY_3", POLICY_WITHOUT_MGR_POLICY_3);
+    public static Domain DOMAIN_WITH_VS_POLICY = createDomain("DOMAIN_WITH_VS_POLICY", POLICY_WITH_VS_POLICY);
+    private static Domain DOMAIN_WITH_VS_POLICY_2 = createDomain("DOMAIN_WITH_VS_POLICY_2", POLICY_WITH_VS_POLICY_2);
+    private static Domain DOMAIN_WITH_VS_POLICY_3 = createDomain("DOMAIN_WITH_VS_POLICY_3", POLICY_WITH_VS_POLICY_3);
     public static Domain DOMAIN_WITHOUT_POLICY = createDomain("DOMAIN_WITHOUT_POLICY", null);
+    public static Domain DOMAIN_WITHOUT_POLICY_2 = createDomain("DOMAIN_WITHOUT_POLICY_2", null);
+    public static Domain DOMAIN_WITHOUT_POLICY_3 = createDomain("DOMAIN_WITHOUT_POLICY_3", null);
     public static Domain DOMAIN_WITH_POLICY = createDomain("DOMAIN_WITH_POLICY", POLICY_WITH_MGR_POLICY);
+    public static Domain DOMAIN_WITH_POLICY_2 = createDomain("DOMAIN_WITH_POLICY_2", POLICY_WITH_MGR_POLICY_2);
+    public static Domain DOMAIN_WITH_POLICY_3 = createDomain("DOMAIN_WITH_POLICY_3", POLICY_WITH_MGR_POLICY_3);
 
-    public static VirtualSystemPolicy VS_POLICY = createVSPolicy("vc_name", POLICY_WITH_VS_POLICY, 1L);
 
     // Test data for DOMAIN_WITH_MULTIPLE_POLICIES_MC
     public static ManagerPolicyElement MGR_POLICY_1 = createManagerPolicyElement("MGR_POLICY_1", "ID_1");
-    public static Policy POLICY_WITHOUT_MGR_POLICY_1 = createPolicy("POLICY_WITHOUT_MGR_POLICY_1", null, 13L, false);
-    public static Policy POLICY_WITH_VS_POLICY_1 = createPolicy("POLICY_WITH_VS_POLICY_1", null, 12L, false);
-    private static Policy POLICY_WITH_MGR_POLICY_1 = createPolicy("POLICY_WITH_MGR_POLICY_1", "ID_1", 11L, true);
-    public static VirtualSystemPolicy VS_POLICY_1 = createVSPolicy("vc_name_1", POLICY_WITH_VS_POLICY_1, 12L);
+    public static Policy POLICY_WITHOUT_MGR_POLICY_1 = createPolicy("POLICY_WITHOUT_MGR_POLICY_1", "ID", 13L);
+    public static Policy POLICY_WITH_VS_POLICY_1 = createPolicy("POLICY_WITH_VS_POLICY_1", "ID", 12L);
+    private static Policy POLICY_WITH_MGR_POLICY_1 = createPolicy("POLICY_WITH_MGR_POLICY_1", "ID_1", 11L);
     private static List<Policy> ALL_POLICIES_FOR_SINGLE_DOMAIN =
             new ArrayList<Policy>(Arrays.asList(POLICY_WITH_MGR_POLICY_1, POLICY_WITHOUT_MGR_POLICY_1, POLICY_WITH_VS_POLICY_1));
-    private static Domain DOMAIN_WITH_POLICIES = createDomainWithPolicies("DOMAIN_WITH_POLICIES", ALL_POLICIES_FOR_SINGLE_DOMAIN);
+    public static Domain DOMAIN_WITH_POLICIES = createDomainWithPolicies("DOMAIN_WITH_POLICIES", ALL_POLICIES_FOR_SINGLE_DOMAIN);
 
     private static List<Domain> DOMAINS_WITH_POLICIES =
-            new ArrayList<Domain>(Arrays.asList(DOMAIN_WITHOUT_MGR_POLICY, DOMAIN_WITH_VS_POLICY, DOMAIN_WITH_POLICY));
+            new ArrayList<Domain>(Arrays.asList(DOMAIN_WITHOUT_MGR_POLICY_2, DOMAIN_WITH_VS_POLICY_2, DOMAIN_WITH_POLICY_2));
     private static List<Domain> DOMAINS_WITHOUT_MGR_POLICIES =
-            new ArrayList<Domain>(Arrays.asList(DOMAIN_WITHOUT_POLICY, DOMAIN_WITH_VS_POLICY, DOMAIN_WITHOUT_MGR_POLICY));
+            new ArrayList<Domain>(Arrays.asList(DOMAIN_WITHOUT_POLICY_3, DOMAIN_WITH_VS_POLICY_3, DOMAIN_WITHOUT_MGR_POLICY_3));
     private static List<Policy> POLICIES_WITHOUT_MGR_POLICIES =
-            new ArrayList<Policy>(Arrays.asList(POLICY_WITHOUT_MGR_POLICY, POLICY_WITH_VS_POLICY));
+            new ArrayList<Policy>(Arrays.asList(POLICY_WITHOUT_MGR_POLICY_2, POLICY_WITH_VS_POLICY_2));
     private static List<Policy> ALL_POLICIES =
-            new ArrayList<Policy>(Arrays.asList(POLICY_WITHOUT_MGR_POLICY, POLICY_WITH_VS_POLICY, POLICY_WITH_MGR_POLICY));
+            new ArrayList<Policy>(Arrays.asList(POLICY_WITHOUT_MGR_POLICY_3, POLICY_WITH_VS_POLICY_3, POLICY_WITH_MGR_POLICY_2));
 
     public static ApplianceManagerConnector NO_DOMAIN_MC =
-            createMC(null, null);
+            createMC("NO_DOMAIN_MC", null, null);
     public static ApplianceManagerConnector NO_MGR_POLICY_MC =
-            createMC(DOMAIN_WITHOUT_POLICY, null);
+            createMC("NO_MGR_POLICY_MC", DOMAIN_WITHOUT_POLICY, null);
     public static ApplianceManagerConnector MGR_POLICY_WITHOUT_POLICY_MC =
-            createMC(DOMAIN_WITHOUT_POLICY, null);
+            createMC("MGR_POLICY_WITHOUT_POLICY_MC", DOMAIN_WITHOUT_POLICY_2, null);
     public static ApplianceManagerConnector MGR_POLICY_WITH_POLICY_MC =
-            createMC(DOMAIN_WITH_POLICY, POLICY_WITH_MGR_POLICY);
+            createMC("MGR_POLICY_WITH_POLICY_MC", DOMAIN_WITH_POLICY, POLICY_WITH_MGR_POLICY);
     public static ApplianceManagerConnector POLICY_WITHOUT_MGR_POLICY_MC =
-            createMC(DOMAIN_WITHOUT_MGR_POLICY, POLICY_WITHOUT_MGR_POLICY);
+            createMC("POLICY_WITHOUT_MGR_POLICY_MC", DOMAIN_WITHOUT_MGR_POLICY, POLICY_WITHOUT_MGR_POLICY);
     public static ApplianceManagerConnector POLICY_WITH_VS_POLICY_MC =
-            createMC(DOMAIN_WITH_VS_POLICY, POLICY_WITH_VS_POLICY);
+            createMC("POLICY_WITH_VS_POLICY_MC", DOMAIN_WITH_VS_POLICY, POLICY_WITH_VS_POLICY);
     public static ApplianceManagerConnector DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC =
-            createMCWithSets(DOMAINS_WITH_POLICIES, ALL_POLICIES);
+            createMCWithSets("DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC", DOMAINS_WITH_POLICIES, ALL_POLICIES);
     public static ApplianceManagerConnector DOMAINS_WITHOUT_POLICIES_AND_WITH_ORPHAN_POLICIES_MC =
-            createMCWithSets(DOMAINS_WITHOUT_MGR_POLICIES, POLICIES_WITHOUT_MGR_POLICIES);
+            createMCWithSets("DOMAINS_WITHOUT_POLICIES_AND_WITH_ORPHAN_POLICIES_MC", DOMAINS_WITHOUT_MGR_POLICIES, POLICIES_WITHOUT_MGR_POLICIES);
     public static ApplianceManagerConnector DOMAIN_WITH_MULTIPLE_POLICIES_MC =
-            createMCWithSets(Arrays.asList(DOMAIN_WITH_POLICIES), ALL_POLICIES);
+            createMCWithSets("DOMAIN_WITH_MULTIPLE_POLICIES_MC", Arrays.asList(DOMAIN_WITH_POLICIES), ALL_POLICIES_FOR_SINGLE_DOMAIN);
+
+    public static VirtualSystemPolicy VS_POLICY = createVSPolicy("vc_name", POLICY_WITH_VS_POLICY, POLICY_WITH_VS_POLICY_MC);
+    public static VirtualSystemPolicy VS_POLICY_1 = createVSPolicy("vc_name_1", POLICY_WITH_VS_POLICY_1, DOMAIN_WITH_MULTIPLE_POLICIES_MC);
 
     public static TaskGraph emptyGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
@@ -96,7 +115,11 @@ public class SyncPolicyMetaTaskTestData {
 
     public static TaskGraph createPolicyGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new CreatePolicyTask(mc, DOMAIN_WITHOUT_POLICY, CREATED_POLICY_FROM_MGR_POLICY));
+        Policy policy = new Policy(mc, DOMAIN_WITHOUT_POLICY_2);
+        policy.setName("MGR_POLICY");
+        policy.setMgrPolicyId("ID");
+
+        expectedGraph.appendTask(new CreatePolicyTask(mc, DOMAIN_WITHOUT_POLICY_2, policy));
 
         return expectedGraph;
     }
@@ -152,15 +175,20 @@ public class SyncPolicyMetaTaskTestData {
         return expectedGraph;
     }
 
-    private static ApplianceManagerConnector createBaseMC() {
+    private static ApplianceManagerConnector createBaseMC(String baseName) {
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
+        mc.setIpAddress(baseName + "_mcIp");
+        mc.setName(baseName + "_mc");
+        mc.setServiceType("foobar");
+        mc.setManagerType("buzz");
+
         TEST_MCS.add(mc);
 
         return mc;
     }
 
-    private static ApplianceManagerConnector createMC(Domain domain, Policy policy) {
-        ApplianceManagerConnector mc = createBaseMC();
+    private static ApplianceManagerConnector createMC(String baseName, Domain domain, Policy policy) {
+        ApplianceManagerConnector mc = createBaseMC(baseName);
         if (domain != null) {
             mc.addDomain(domain);
         }
@@ -171,8 +199,8 @@ public class SyncPolicyMetaTaskTestData {
         return mc;
     }
 
-    private static ApplianceManagerConnector createMCWithSets(List<Domain> domains, List<Policy> policies) {
-        ApplianceManagerConnector mc = createBaseMC();
+    private static ApplianceManagerConnector createMCWithSets(String baseName, List<Domain> domains, List<Policy> policies) {
+        ApplianceManagerConnector mc = createBaseMC(baseName);
         for (Domain domain : domains) {
             mc.addDomain(domain);
         }
@@ -191,13 +219,11 @@ public class SyncPolicyMetaTaskTestData {
         return managerPolicy;
     }
 
-    private static Policy createPolicy(String policyName, String policyMgrId, Long policyId, Boolean mgrPolicyExists) {
+    private static Policy createPolicy(String policyName, String policyMgrId, Long policyId) {
         Policy policy = new Policy();
         policy.setName(policyName);
         policy.setId(policyId);
-        if(mgrPolicyExists) {
-            policy.setMgrPolicyId(policyMgrId);
-        }
+        policy.setMgrPolicyId(policyMgrId);
 
         return policy;
     }
@@ -224,16 +250,36 @@ public class SyncPolicyMetaTaskTestData {
         return domain;
     }
 
-    private static VirtualSystemPolicy createVSPolicy(String policyName, Policy policy, Long policyId) {
+    private static VirtualSystemPolicy createVSPolicy(String policyName, Policy policy, ApplianceManagerConnector mc) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(policyName);
-        VirtualSystem vs = new VirtualSystem();
-        vs.setId(policyId);
+        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+        vc.setProviderIpAddress("127.0.0.1");
+        vc.setProviderUsername("Natasha");
+        vc.setProviderPassword("********");
+
+        Appliance app = new Appliance();
+        app.setManagerSoftwareVersion("fizz");
+        app.setManagerType("buzz");
+        app.setModel(policyName + "_model");
+
+        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
+        asv.setApplianceSoftwareVersion("softwareVersion");
+        asv.setImageUrl(policyName + "_image");
+        asv.setVirtualizarionSoftwareVersion(vc.getVirtualizationSoftwareVersion());
+        asv.setVirtualizationType(vc.getVirtualizationType());
+
+        DistributedAppliance da = new DistributedAppliance(mc);
+        da.setName(policyName + "_da");
+        da.setApplianceVersion("foo");
+        da.setAppliance(app);
+
+        VirtualSystem vs = new VirtualSystem(da);
+        vs.setApplianceSoftwareVersion(asv);
         vs.setVirtualizationConnector(vc);
 
         VirtualSystemPolicy vsPolicy = new VirtualSystemPolicy();
-        vsPolicy.setId(policyId);
-        policy.setId(policyId);
         vsPolicy.setPolicy(policy);
 
         vs.addVirtualSystemPolicy(vsPolicy);

@@ -21,15 +21,53 @@ import org.apache.commons.io.FilenameUtils;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 public final class BackupData implements Serializable {
     private static final long serialVersionUID = 4948762505615010097L;
+    private String aesCTRKeyHex;
+    private String dbPassword;
+    private byte[] dbData;
+    private byte[] truststoreData;
 
-    public String aesCTRKeyHex;
-    public String dbPassword;
-    public byte[] dbData;
-    public byte[] truststoreData;
+    public String getAesCTRKeyHex() {
+        return aesCTRKeyHex;
+    }
+
+    public void setAesCTRKeyHex(String aesCTRKeyHex) {
+        this.aesCTRKeyHex = aesCTRKeyHex;
+    }
+
+    public String getDbPassword() {
+        return dbPassword;
+    }
+
+    public void setDbPassword(String dbPassword) {
+        this.dbPassword = dbPassword;
+    }
+
+    public byte[] getDbData() {
+        return dbData;
+    }
+
+    public void setDbData(byte[] dbData) {
+        this.dbData = dbData;
+    }
+
+    public byte[] getTruststoreData() {
+        return truststoreData;
+    }
+
+    public void setTruststoreData(byte[] truststoreData) {
+        this.truststoreData = truststoreData;
+    }
 
     public void deserialize(byte[] bytes) throws Exception {
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);

@@ -18,11 +18,12 @@ package org.osc.core.broker.service.tasks.conformance.deleteda;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class DeleteDAFromDbTask extends TransactionalTask {
@@ -37,14 +38,14 @@ public class DeleteDAFromDbTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return "Delete Distributed Appliance '" + da.getName() + "'";
+        return "Delete Distributed Appliance '" + this.da.getName() + "'";
     }
 
     @Override
-    public void executeTransaction(Session session) {
-        log.debug("Start Executing DeleteDAFromDb Task for DA: " + da.getId());
-        da = (DistributedAppliance) session.get(DistributedAppliance.class, da.getId());
-        EntityManager.delete(session, da);
+    public void executeTransaction(EntityManager em) {
+        log.debug("Start Executing DeleteDAFromDb Task for DA: " + this.da.getId());
+        this.da = em.find(DistributedAppliance.class, this.da.getId());
+        OSCEntityManager.delete(em, this.da);
     }
 
     @Override

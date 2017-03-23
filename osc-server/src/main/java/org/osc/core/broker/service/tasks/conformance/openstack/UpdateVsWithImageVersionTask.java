@@ -18,14 +18,14 @@ package org.osc.core.broker.service.tasks.conformance.openstack;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.apache.log4j.Logger;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class UpdateVsWithImageVersionTask extends TransactionalTask {
@@ -39,9 +39,9 @@ public class UpdateVsWithImageVersionTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.vs = (VirtualSystem)session.get(VirtualSystem.class, this.vs.getId(),
-                new LockOptions().setLockMode(LockMode.PESSIMISTIC_WRITE));
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.vs = em.find(VirtualSystem.class, this.vs.getId(),
+                LockModeType.PESSIMISTIC_WRITE);
 
         LOG.info("Updating image references to virtual system " + this.vs.getName());
 
@@ -58,7 +58,7 @@ public class UpdateVsWithImageVersionTask extends TransactionalTask {
         }
 
         if(needsUpdate) {
-            EntityManager.update(session, this.vs);
+            OSCEntityManager.update(em, this.vs);
             LOG.info("Updating virtual system " + this.vs.getName());
         }
     }

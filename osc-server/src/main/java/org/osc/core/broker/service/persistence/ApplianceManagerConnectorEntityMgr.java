@@ -19,12 +19,13 @@ package org.osc.core.broker.service.persistence;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.Appliance;
@@ -78,36 +79,52 @@ public class ApplianceManagerConnectorEntityMgr {
         dto.setSslCertificateAttrSet(mc.getSslCertificateAttrSet().stream().collect(Collectors.toSet()));
     }
 
-    public static ApplianceManagerConnector findById(Session session, Long id) {
+    public static ApplianceManagerConnector findById(EntityManager em, Long id) {
 
         // Initializing Entity Manager
-        EntityManager<ApplianceManagerConnector> emgr = new EntityManager<>(ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
 
         return emgr.findByPrimaryKey(id);
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<ApplianceManagerConnector> listByManagerType(Session session, ManagerType type) {
-        Criteria criteria = session.createCriteria(ApplianceManagerConnector.class)
-                .add(Restrictions.eq("managerType", type.toString()))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<ApplianceManagerConnector> listByManagerType(EntityManager em, ManagerType type) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<ApplianceManagerConnector> cq = cb.createQuery(ApplianceManagerConnector.class);
+        Root<ApplianceManagerConnector> from = cq.from(ApplianceManagerConnector.class);
+        cq = cq.select(from).distinct(true)
+                .where(cb.equal(from.get("managerType"), type.getValue()));
+        return em.createQuery(cq).getResultList();
     }
 
     public static boolean isManagerTypeUsed(String managerType) {
-        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-        Transaction tx = null;
-        Session session = sessionFactory.openSession();
+        EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
+        EntityTransaction tx = null;
+        EntityManager em = emf.createEntityManager();
 
         Long count1 = 0L;
         Long count2 = 0L;
         try {
-            tx = session.beginTransaction();
-            Criteria criteria1 = session.createCriteria(ApplianceManagerConnector.class).add(Restrictions.eq("managerType", managerType));
-            count1 = (Long) criteria1.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1).uniqueResult();
+            tx = em.getTransaction();
+            tx.begin();
 
-            Criteria criteria2 = session.createCriteria(Appliance.class).add(Restrictions.eq("managerType", managerType));
-            count2 = (Long) criteria2.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1).uniqueResult();
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Long> cq;
+            Root<?> from;
+
+            cq = cb.createQuery(Long.class);
+            from = cq.from(ApplianceManagerConnector.class);
+            cq = cq.select(cb.count(from))
+                    .where(cb.equal(from.get("managerType"), managerType));
+
+            count1 = em.createQuery(cq).getSingleResult();
+
+            cq = cb.createQuery(Long.class);
+            from = cq.from(Appliance.class);
+            cq = cq.select(cb.count(from))
+                    .where(cb.equal(from.get("managerType"), managerType));
+
+            count2 = em.createQuery(cq).getSingleResult();
 
             tx.commit();
         } catch (Exception e) {
@@ -116,8 +133,8 @@ public class ApplianceManagerConnectorEntityMgr {
             }
         }
 
-        if (session != null) {
-            session.close();
+        if (em != null) {
+            em.close();
         }
 
         return count1 > 0 || count2 > 0;

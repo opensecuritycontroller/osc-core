@@ -19,7 +19,8 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jboss.logging.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
@@ -29,7 +30,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnControllerApi;
 
@@ -44,8 +45,8 @@ class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
 
         Set<VMPort> ports = new HashSet<>();
 
@@ -73,7 +74,7 @@ class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
                         + "' And port: '" + port.getElementId() + "'");
                 controller.removeAllInspectionHooks(new NetworkElementImpl(port));
                 port.removeAllDais();
-                EntityManager.update(session, port);
+                OSCEntityManager.update(em, port);
             }
         } finally {
             controller.close();

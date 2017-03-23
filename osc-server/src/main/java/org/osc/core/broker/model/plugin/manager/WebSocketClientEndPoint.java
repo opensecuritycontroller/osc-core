@@ -31,6 +31,7 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.MgrChangeNotification;
 
@@ -43,15 +44,18 @@ public class WebSocketClientEndPoint extends Endpoint {
     private final ManagerWebSocketNotificationApi mgrApi;
     private Session activeSession = null;
 
+    private ManagerApis managerApis;
+
     public WebSocketClientEndPoint(ApplianceManagerConnector mc, ManagerWebSocketNotificationApi mgrApi)
             throws Exception {
         super();
         this.mc = mc;
         this.mgrApi = mgrApi;
+        this.managerApis = StaticRegistry.managerApis();
     }
 
     public Session getActiveSession() {
-        return activeSession;
+        return this.activeSession;
     }
 
     @Override
@@ -70,7 +74,7 @@ public class WebSocketClientEndPoint extends Endpoint {
                         MgrChangeNotification mgrChangeNotification = WebSocketClientEndPoint.this.mgrApi
                                 .translateMessage(text);
                         if (mgrChangeNotification != null) {
-                            ManagerApis.triggerMcSyncService(OscAuthFilter.OSC_DEFAULT_LOGIN,
+                            WebSocketClientEndPoint.this.managerApis.triggerMcSyncService(OscAuthFilter.OSC_DEFAULT_LOGIN,
                                     WebSocketClientEndPoint.this.mc.getIpAddress(), mgrChangeNotification);
                         }
 
@@ -79,7 +83,7 @@ public class WebSocketClientEndPoint extends Endpoint {
                                 + WebSocketClientEndPoint.this.mc.getName() + "-"
                                 + WebSocketClientEndPoint.this.mc.getIpAddress() + "'");
                         AlertGenerator.processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
-                                new LockObjectReference(mc), "Failed to process notification from Manager: '"
+                                new LockObjectReference(WebSocketClientEndPoint.this.mc), "Failed to process notification from Manager: '"
                                         + WebSocketClientEndPoint.this.mc.getName() + "-"
                                         + WebSocketClientEndPoint.this.mc.getIpAddress() + "'");
                     } finally {

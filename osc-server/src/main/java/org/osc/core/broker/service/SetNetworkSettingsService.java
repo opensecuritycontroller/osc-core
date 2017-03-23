@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -36,7 +37,7 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
     private static final Logger log = Logger.getLogger(SetNetworkSettingsService.class);
 
     @Override
-    public SetNetworkSettingsResponse exec(SetNetworkSettingsRequest request, Session session) throws Exception {
+    public SetNetworkSettingsResponse exec(SetNetworkSettingsRequest request, EntityManager em) throws Exception {
 
         NetworkSettingsApi networkSettingsApi = new NetworkSettingsApi();
         NetworkSettingsDto networkSettingsDto = new NetworkSettingsDto();

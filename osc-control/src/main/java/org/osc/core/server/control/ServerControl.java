@@ -181,8 +181,8 @@ public class ServerControl {
 
     private static void loadServerProps() {
         Properties prop = new Properties();
-        try {
-            prop.load(new FileInputStream(ServerControl.CONFIG_PROPERTIES_FILE));
+        try(FileInputStream fis = new FileInputStream(ServerControl.CONFIG_PROPERTIES_FILE)) {
+            prop.load(fis);
             ServerControl.apiPort = Integer.valueOf(prop.getProperty("server.port", DEFAULT_API_PORT.toString()));
             //set ISC public IP in Server Util
             ServerUtil.setServerIP(prop.getProperty(ISC_PUBLIC_IP, ""));

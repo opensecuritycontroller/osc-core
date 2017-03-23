@@ -18,13 +18,13 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.apache.log4j.Logger;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class SyncMgrPublicKeyTask extends TransactionalTask {
@@ -40,14 +40,14 @@ public class SyncMgrPublicKeyTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         log.debug("Start excecuting SyncMgrPublicKeyTask Task. MC: '" + this.mc.getName() + "'");
 
-        this.mc = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class, this.mc.getId(),
-                new LockOptions(LockMode.PESSIMISTIC_WRITE));
+        this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId(),
+                LockModeType.PESSIMISTIC_WRITE);
 
-        this.mc.setPublicKey(bytes);
-        EntityManager.update(session, this.mc);
+        this.mc.setPublicKey(this.bytes);
+        OSCEntityManager.update(em, this.mc);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class SyncMgrPublicKeyTask extends TransactionalTask {
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(mc);
+        return LockObjectReference.getObjectReferences(this.mc);
     }
 
 }

@@ -18,11 +18,12 @@ package org.osc.core.broker.service.tasks.conformance;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.PKIUtil;
 
@@ -37,24 +38,24 @@ public class GenerateVSSKeysTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         log.debug("Start executing GetServiceInstanceTask");
-        vs = (VirtualSystem) session.get(VirtualSystem.class, vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         // generate and persist keys
-        vs.setKeyStore(PKIUtil.generateKeyStore());
-        EntityManager.update(session, vs);
+        this.vs.setKeyStore(PKIUtil.generateKeyStore());
+        OSCEntityManager.update(em, this.vs);
     }
 
     @Override
     public String getName() {
-        return "Register Service Instance '" + vs.getVirtualizationConnector().getName() + "'";
+        return "Register Service Instance '" + this.vs.getVirtualizationConnector().getName() + "'";
     }
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(vs);
+        return LockObjectReference.getObjectReferences(this.vs);
     }
 
 }

@@ -16,7 +16,27 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.*;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.AZ_1;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.DELETE_DS_WITHOUT_SG_REFERENCE;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.DELETE_DS_WITH_SG_REFERENCE;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.HS_1_1;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.REGION_1;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_AZ_SELECTED_DS;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_DAI_HOST_AGGREGATE_NOT_SELECTED_DS;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_DAI_HOST_NOT_IN_AZ_DS;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_DAI_HOST_NOT_SELECTED_DS;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_DAI_HOST_SELECTED_DS;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_HOST_AGGREGATE_SELECTED_DS;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_NO_HOST_SELECTED_DS;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_OPENSTACK_AZ_NOT_SELECTED_DS;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createAZSelectedGraph;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createAllHostsInRegionGraph;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDAIHostAggregateNotSelectedGraph;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDAIHostNotSelectedGraph;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDAIHostSelectedGraph;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDaiHostNotInAZSelectedGraph;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDeleteDsGraph;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createOpenStackAZNotSelectedGraph;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,10 +44,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jclouds.openstack.nova.v2_0.domain.HostAggregate;
 import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZoneDetails;
 import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZoneDetails.HostService;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,18 +59,18 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
-import org.osc.core.broker.util.SessionStub;
+import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.test.util.TaskGraphHelper;
 
 import com.google.gwt.thirdparty.guava.common.collect.Sets;
 
 @RunWith(Parameterized.class)
 public class DSUpdateOrDeleteMetaTaskTest {
-    @Mock
-    public Session sessionMock;
+
+    public EntityManager em;
 
     @Mock
     public JCloudNova novaApiMock;
@@ -56,8 +78,6 @@ public class DSUpdateOrDeleteMetaTaskTest {
     private DeploymentSpec ds;
 
     private TaskGraph expectedGraph;
-
-    private SessionStub sessionStub;
 
     public DSUpdateOrDeleteMetaTaskTest(DeploymentSpec ds, TaskGraph tg) {
         this.ds = ds;
@@ -67,11 +87,10 @@ public class DSUpdateOrDeleteMetaTaskTest {
     @Before
     public void testInitialize() throws Exception{
         MockitoAnnotations.initMocks(this);
-        this.sessionStub = new SessionStub(this.sessionMock);
 
-        for (DeploymentSpec ds: TEST_DEPLOYMENT_SPECS) {
-            Mockito.doReturn(ds).when(this.sessionMock).get(DeploymentSpec.class, ds.getId());
-        }
+        this.em = InMemDB.getEntityManagerFactory().createEntityManager();
+
+        populateDatabase();
 
         List<AvailabilityZoneDetails> osAvailabilityZones1 = Arrays.asList(createAvailableZoneDetails(AZ_1, Arrays.asList(HS_1_1)));
         HostAggregate ha = Mockito.mock(HostAggregate.class);
@@ -83,30 +102,52 @@ public class DSUpdateOrDeleteMetaTaskTest {
         Mockito.doReturn(ha).when(this.novaApiMock).getHostAggregateById(
                 REGION_1,
                 ((org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate)UPDATE_HOST_AGGREGATE_SELECTED_DS.getHostAggregates().toArray()[0]).getOpenstackId());
-
-        this.sessionStub.listByDsIdAndAvailabilityZone(
-                UPDATE_AZ_SELECTED_DS.getId(),
-                ((AvailabilityZone)UPDATE_AZ_SELECTED_DS.getAvailabilityZones().toArray()[0]).getZone(),
-                UPDATE_AZ_SELECTED_DAIS);
-
-        this.sessionStub.listByDsIdAndAvailabilityZone(
-                UPDATE_DAI_HOST_NOT_IN_AZ_DS.getId(),
-                ((AvailabilityZone)UPDATE_DAI_HOST_NOT_IN_AZ_DS.getAvailabilityZones().toArray()[0]).getZone(),
-                UPDATE_DAI_HOST_NOT_IN_AZ_DAIS);
-
-        this.sessionStub.listByDsIdAndAvailabilityZone(
-                UPDATE_OPENSTACK_AZ_NOT_SELECTED_DS.getId(),
-                ((AvailabilityZone)UPDATE_OPENSTACK_AZ_NOT_SELECTED_DS.getAvailabilityZones().toArray()[0]).getZone(),
-                UPDATE_OPENSTACK_AZ_NOT_SELECTED_DAIS);
     }
 
+    @After
+    public void testTearDown() {
+        InMemDB.shutdown();
+    }
+
+    private void populateDatabase() {
+       this.em.getTransaction().begin();
+
+       this.em.persist(this.ds.getVirtualSystem()
+               .getVirtualizationConnector());
+       this.em.persist(this.ds.getVirtualSystem()
+               .getDistributedAppliance().getApplianceManagerConnector());
+       this.em.persist(this.ds.getVirtualSystem()
+               .getDistributedAppliance().getAppliance());
+       this.em.persist(this.ds.getVirtualSystem().getDistributedAppliance());
+       this.em.persist(this.ds.getVirtualSystem().getApplianceSoftwareVersion());
+       this.em.persist(this.ds.getVirtualSystem().getDomain());
+       this.em.persist(this.ds.getVirtualSystem());
+       for(DistributedApplianceInstance dai : this.ds.getVirtualSystem().getDistributedApplianceInstances()) {
+           this.em.persist(dai);
+       }
+
+       if(this.ds.getOsSecurityGroupReference() != null) {
+           this.em.persist(this.ds.getOsSecurityGroupReference());
+       }
+
+       this.em.persist(this.ds);
+
+
+       // We have to do this crazy thing because HostAggregates
+       // change their hashcodes once persisted...
+       this.ds.getHostAggregates().clear();
+       this.em.refresh(this.ds);
+
+       this.em.getTransaction().commit();
+
+    }
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
         DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask(this.ds, this.novaApiMock);
 
         // Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         // Assert.
         TaskGraphHelper.validateTaskGraph(task, this.expectedGraph);

@@ -16,15 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.service.test;
 
+import javax.persistence.EntityManagerFactory;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 
-class InMemDB {
+public class InMemDB {
     private static ServiceRegistry serviceRegistry;
-    private static SessionFactory sessionFactory = init();
+    private static SessionFactory sessionFactory;
 
     static SessionFactory init() {
 
@@ -50,13 +52,16 @@ class InMemDB {
         }
     }
 
-    static SessionFactory getSessionFactory() {
+    public static EntityManagerFactory getEntityManagerFactory() {
+        if(sessionFactory == null) {
+            sessionFactory = init();
+        }
         return sessionFactory;
     }
 
-    static void shutdown() {
+    public static void shutdown() {
         // Close caches and connection pools
-        getSessionFactory().close();
+        getEntityManagerFactory().close();
         InMemDB.serviceRegistry = null; // for faster garbage collection cleanup
         InMemDB.sessionFactory = null;
     }

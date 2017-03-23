@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
@@ -27,9 +28,9 @@ import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.persistence.HostAggregateEntityMgr;
 import org.osc.core.broker.service.persistence.HostEntityMgr;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
@@ -38,11 +39,11 @@ public abstract class BaseDeploymentSpecService<I extends Request, O extends Res
 
     protected VirtualSystem vs;
 
-    protected void validate(Session session, DeploymentSpecDto dto) throws Exception {
+    protected void validate(EntityManager em, DeploymentSpecDto dto) throws Exception {
         DeploymentSpecDto.checkForNullFields(dto);
         DeploymentSpecDto.checkFieldLength(dto);
 
-        this.vs = VirtualSystemEntityMgr.findById(session, dto.getParentId());
+        this.vs = VirtualSystemEntityMgr.findById(em, dto.getParentId());
 
         if (this.vs == null || this.vs.getMarkedForDeletion()) {
             throw new VmidcBrokerValidationException(
@@ -76,21 +77,21 @@ public abstract class BaseDeploymentSpecService<I extends Request, O extends Res
                 "'%s' attribute cannot be updated for Deployment Spec '%s'", attributeType, dsName));
     }
 
-    protected HostAggregate createHostAggregate(Session session, HostAggregateDto haDto, DeploymentSpec ds) {
+    protected HostAggregate createHostAggregate(EntityManager em, HostAggregateDto haDto, DeploymentSpec ds) {
         HostAggregate ha = new HostAggregate(ds, haDto.getOpenstackId());
         HostAggregateEntityMgr.toEntity(ha, haDto);
-        return EntityManager.create(session, ha);
+        return OSCEntityManager.create(em, ha);
     }
 
-    protected AvailabilityZone createAvailabilityZone(Session session, AvailabilityZoneDto azDto, DeploymentSpec ds) {
+    protected AvailabilityZone createAvailabilityZone(EntityManager em, AvailabilityZoneDto azDto, DeploymentSpec ds) {
         AvailabilityZone az = new AvailabilityZone(ds, azDto.getRegion(), azDto.getZone());
-        return EntityManager.create(session, az);
+        return OSCEntityManager.create(em, az);
     }
 
-    protected Host createHost(Session session, HostDto hostDto, DeploymentSpec ds) {
+    protected Host createHost(EntityManager em, HostDto hostDto, DeploymentSpec ds) {
         Host hs = new Host(ds, hostDto.getOpenstackId());
         HostEntityMgr.toEntity(hs, hostDto);
-        return EntityManager.create(session, hs);
+        return OSCEntityManager.create(em, hs);
     }
 
 }

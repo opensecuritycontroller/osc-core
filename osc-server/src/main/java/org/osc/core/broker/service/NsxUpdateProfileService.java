@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.JobQueuer;
 import org.osc.core.broker.job.JobQueuer.JobRequest;
 import org.osc.core.broker.job.TaskGraph;
@@ -43,17 +44,17 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
     private static final Logger log = Logger.getLogger(NsxUpdateProfileService.class);
 
     @Override
-    public EmptySuccessResponse exec(NsxUpdateProfileRequest request, Session session) throws Exception {
+    public EmptySuccessResponse exec(NsxUpdateProfileRequest request, EntityManager em) throws Exception {
 
-        startServiceProfileSyncJob(session, request.serviceProfile);
+        startServiceProfileSyncJob(em, request.serviceProfile);
 
         return new EmptySuccessResponse();
     }
 
-    private void startServiceProfileSyncJob(Session session, ServiceProfile serviceProfile) throws Exception {
+    private void startServiceProfileSyncJob(EntityManager em, ServiceProfile serviceProfile) throws Exception {
         TaskGraph tg = new TaskGraph();
 
-        VirtualSystem vs = VirtualSystemEntityMgr.findByNsxServiceInstanceIdAndVsmUuid(session,
+        VirtualSystem vs = VirtualSystemEntityMgr.findByNsxServiceInstanceIdAndVsmUuid(em,
                 serviceProfile.getServiceInstance().vsmUuid, serviceProfile.getServiceInstance().objectId);
 
         // If we cant find the VS, that means this is a zombie VS call.
