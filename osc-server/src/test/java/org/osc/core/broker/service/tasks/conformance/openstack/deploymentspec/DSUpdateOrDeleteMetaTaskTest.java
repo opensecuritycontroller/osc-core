@@ -16,27 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.AZ_1;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.DELETE_DS_WITHOUT_SG_REFERENCE;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.DELETE_DS_WITH_SG_REFERENCE;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.HS_1_1;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.REGION_1;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_AZ_SELECTED_DS;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_DAI_HOST_AGGREGATE_NOT_SELECTED_DS;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_DAI_HOST_NOT_IN_AZ_DS;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_DAI_HOST_NOT_SELECTED_DS;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_DAI_HOST_SELECTED_DS;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_HOST_AGGREGATE_SELECTED_DS;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_NO_HOST_SELECTED_DS;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.UPDATE_OPENSTACK_AZ_NOT_SELECTED_DS;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createAZSelectedGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createAllHostsInRegionGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDAIHostAggregateNotSelectedGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDAIHostNotSelectedGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDAIHostSelectedGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDaiHostNotInAZSelectedGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createDeleteDsGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.createOpenStackAZNotSelectedGraph;
+import static org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSUpdateOrDeleteMetaTaskTestData.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,6 +35,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -63,17 +44,28 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.TaskGraphHelper;
+import org.osc.core.test.util.TestTransactionControl;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 import com.google.gwt.thirdparty.guava.common.collect.Sets;
 
-@RunWith(Parameterized.class)
+@RunWith(PowerMockRunner.class)
+@PowerMockRunnerDelegate(value = Parameterized.class)
+@PrepareForTest({HibernateUtil.class})
 public class DSUpdateOrDeleteMetaTaskTest {
 
     public EntityManager em;
 
     @Mock
     public JCloudNova novaApiMock;
+
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
+    private TestTransactionControl txControl;
 
     private DeploymentSpec ds;
 
@@ -89,6 +81,12 @@ public class DSUpdateOrDeleteMetaTaskTest {
         MockitoAnnotations.initMocks(this);
 
         this.em = InMemDB.getEntityManagerFactory().createEntityManager();
+
+        this.txControl.setEntityManager(this.em);
+
+        PowerMockito.mockStatic(HibernateUtil.class);
+        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
 
         populateDatabase();
 
@@ -147,7 +145,7 @@ public class DSUpdateOrDeleteMetaTaskTest {
         DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask(this.ds, this.novaApiMock);
 
         // Act.
-        task.executeTransaction(this.em);
+        task.execute();
 
         // Assert.
         TaskGraphHelper.validateTaskGraph(task, this.expectedGraph);

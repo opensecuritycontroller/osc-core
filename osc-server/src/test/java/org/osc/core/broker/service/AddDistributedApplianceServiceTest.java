@@ -20,7 +20,6 @@ import java.text.MessageFormat;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
 
 import org.junit.After;
@@ -30,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
 import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -51,17 +51,21 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.test.util.TestTransactionControl;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({HibernateUtil.class})
+@PrepareForTest(HibernateUtil.class)
 public class AddDistributedApplianceServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     private EntityManager em;
+
+    @Mock(answer=Answers.CALLS_REAL_METHODS)
+    TestTransactionControl txControl;
 
     @Mock
     private DistributedApplianceDtoValidator validatorMock;
@@ -87,12 +91,14 @@ public class AddDistributedApplianceServiceTest {
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        EntityManagerFactory entityManagerFactory = InMemDB.getEntityManagerFactory();
+        this.em = InMemDB.getEntityManagerFactory().createEntityManager();
+
+        this.txControl.setEntityManager(this.em);
 
         PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getEntityManagerFactory()).thenReturn(entityManagerFactory);
+        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
 
-        this.em = entityManagerFactory.createEntityManager();
 
         populateDatabase();
 

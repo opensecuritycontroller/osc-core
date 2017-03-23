@@ -54,6 +54,7 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.vaadin.data.util.BeanContainer;
@@ -351,10 +352,9 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
         }
     }
 
+    @SuppressWarnings("resource")
     private StreamResource buildImageResource() throws Exception {
-        EntityManager em = null;
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             this.dotFile = new File("job-" + getParentItemId() + System.currentTimeMillis() + ".dot");
 
             PrintWriter out = new PrintWriter(new FileWriter(this.dotFile));
@@ -372,57 +372,61 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             out.println("node [color=black, fontcolor=black, fontname=\"Helvetica\", fontsize=11.0, shape=record, style=\"solid,filled\"]");
             out.println();
 
-            TaskEntityMgr emgr = new TaskEntityMgr(em);
-            for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
-                out.printf("node_%d [%n", tr.getId());
-                out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
-                if(org.osc.core.broker.job.TaskState.valueOf(tr.getState().name()).isTerminalState()) {
-                    if (tr.getStatus().equals(TaskStatus.PASSED)) {
-                        if (tr.getChildren().isEmpty()) {
-                            out.printf("  fillcolor=%s fontcolor=white%n", "green4");
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            HibernateUtil.getTransactionControl().required(() -> {
+                TaskEntityMgr emgr = new TaskEntityMgr(em);
+                for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
+                    out.printf("node_%d [%n", tr.getId());
+                    out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
+                    if(org.osc.core.broker.job.TaskState.valueOf(tr.getState().name()).isTerminalState()) {
+                        if (tr.getStatus().equals(TaskStatus.PASSED)) {
+                            if (tr.getChildren().isEmpty()) {
+                                out.printf("  fillcolor=%s fontcolor=white%n", "green4");
+                            } else {
+                                out.printf("  fillcolor=%s%n fontname=\"Helvetica-Bold\"", "green");
+                            }
+                        } else if (tr.getStatus().equals(TaskStatus.FAILED)) {
+                            out.printf("  fillcolor=%s%n", "red");
+                        } else if (tr.getStatus().equals(TaskStatus.SKIPPED)) {
+                            out.printf("  fillcolor=%s%n", "gray");
                         } else {
-                            out.printf("  fillcolor=%s%n fontname=\"Helvetica-Bold\"", "green");
+                            out.printf("  fillcolor=%s%n", "white");
                         }
-                    } else if (tr.getStatus().equals(TaskStatus.FAILED)) {
-                        out.printf("  fillcolor=%s%n", "red");
-                    } else if (tr.getStatus().equals(TaskStatus.SKIPPED)) {
-                        out.printf("  fillcolor=%s%n", "gray");
                     } else {
-                        out.printf("  fillcolor=%s%n", "white");
+                        if (tr.getState().equals(TaskState.QUEUED)) {
+                            out.printf("  fillcolor=%s%n", "orange");
+                        } else if (tr.getState().equals(TaskState.PENDING)) {
+                            out.printf("  fillcolor=%s%n", "lightblue");
+                        } else if (tr.getState().equals(TaskState.NOT_RUNNING)) {
+                            out.printf("  fillcolor=%s%n", "white");
+                        } else {
+                            out.printf("  fillcolor=%s%n", "yellow");
+                        }
                     }
-                } else {
-                    if (tr.getState().equals(TaskState.QUEUED)) {
-                        out.printf("  fillcolor=%s%n", "orange");
-                    } else if (tr.getState().equals(TaskState.PENDING)) {
-                        out.printf("  fillcolor=%s%n", "lightblue");
-                    } else if (tr.getState().equals(TaskState.NOT_RUNNING)) {
-                        out.printf("  fillcolor=%s%n", "white");
-                    } else {
-                        out.printf("  fillcolor=%s%n", "yellow");
+                    if (!tr.getChildren().isEmpty()) {
+                        out.printf("  style=\"rounded,filled\"%n");
                     }
-                }
-                if (!tr.getChildren().isEmpty()) {
-                    out.printf("  style=\"rounded,filled\"%n");
-                }
-                out.println("]");
-                out.println();
-            }
-
-            for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
-                String executionDependencyAttr = "[color=black arrowhead=empty]";
-                if (tr.getTaskGaurd().equals(TaskGuard.ALL_ANCESTORS_SUCCEEDED)) {
-                    executionDependencyAttr = "[color=magenta arrowhead=normal]";
-                } else if (tr.getTaskGaurd().equals(TaskGuard.ALL_PREDECESSORS_SUCCEEDED)) {
-                    executionDependencyAttr = "[color=black arrowhead=normal]";
-                }
-                for (TaskRecord tr1 : tr.getPredecessors()) {
-                    out.printf("node_%s -> node_%s %s", tr1.getId(), tr.getId(), executionDependencyAttr);
+                    out.println("]");
+                    out.println();
                 }
 
-                for (TaskRecord tr1 : tr.getChildren()) {
-                    out.printf("node_%s -> node_%s %s", tr1.getId(), tr.getId(), "[color=gray arrowhead=none style=dashed]");
+                for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
+                    String executionDependencyAttr = "[color=black arrowhead=empty]";
+                    if (tr.getTaskGaurd().equals(TaskGuard.ALL_ANCESTORS_SUCCEEDED)) {
+                        executionDependencyAttr = "[color=magenta arrowhead=normal]";
+                    } else if (tr.getTaskGaurd().equals(TaskGuard.ALL_PREDECESSORS_SUCCEEDED)) {
+                        executionDependencyAttr = "[color=black arrowhead=normal]";
+                    }
+                    for (TaskRecord tr1 : tr.getPredecessors()) {
+                        out.printf("node_%s -> node_%s %s", tr1.getId(), tr.getId(), executionDependencyAttr);
+                    }
+
+                    for (TaskRecord tr1 : tr.getChildren()) {
+                        out.printf("node_%s -> node_%s %s", tr1.getId(), tr.getId(), "[color=gray arrowhead=none style=dashed]");
+                    }
                 }
-            }
+                return null;
+            });
 
             out.println("}");
 
@@ -447,10 +451,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             imageResource.setCacheTime(0);
             return imageResource;
 
-        } finally {
-            if (em != null) {
-                em.close();
-            }
+        } catch (ScopedWorkException swe) {
+            throw swe.as(Exception.class);
         }
     }
 

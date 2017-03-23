@@ -17,10 +17,10 @@
 package org.osc.core.broker.service.tasks;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.transaction.control.ScopedWorkException;
+import org.osgi.service.transaction.control.TransactionControl;
 
 public abstract class TransactionalTask extends BaseTask {
 
@@ -30,30 +30,17 @@ public abstract class TransactionalTask extends BaseTask {
 
     @Override
     public void execute() throws Exception {
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-
-        EntityTransaction tx = null;
+        EntityManager em = HibernateUtil.getTransactionalEntityManager();
+        TransactionControl txControl = HibernateUtil.getTransactionControl();
         try {
-            tx = em.getTransaction();
-            tx.begin();
-            executeTransaction(em);
-            tx.commit();
-            TransactionalBroadcastUtil.broadcast(em);
-
-        } catch (Exception ex) {
-
-            if (tx != null) {
-                tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(em);
-            }
-
-            throw ex;
-
-        } finally {
-
-            if (em != null) {
-                em.close();
-            }
+            txControl.required(() -> {
+                    executeTransaction(em);
+                    return null;
+                });
+        } catch (ScopedWorkException e) {
+            // Unwrap the ScopedWorkException to get the cause from
+            // the scoped work (i.e. the executeTransaction() call.
+            throw e.as(Exception.class);
         }
     }
 

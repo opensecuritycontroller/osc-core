@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
 
 import org.apache.log4j.Logger;
@@ -35,9 +34,10 @@ import org.osc.core.broker.job.Job.TaskChangeListener;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.manager.element.TaskElement;
+import org.osgi.service.transaction.control.ScopedWorkException;
+import org.osgi.service.transaction.control.TransactionControl;
 
 /**
  *
@@ -130,36 +130,32 @@ public class TaskNode implements Runnable, TaskElement {
     }
 
     private void persistState() {
-        EntityManager em = null;
-        EntityTransaction tx = null;
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            TransactionControl txControl = HibernateUtil.getTransactionControl();
+            txControl.required(() -> {
+                    this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
+                            LockModeType.PESSIMISTIC_WRITE);
 
-            this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
-                    LockModeType.PESSIMISTIC_WRITE);
+                    this.taskRecord.setState(
+                            toEntityType(org.osc.core.broker.model.entities.job.TaskState.class,
+                                    getState()));
+                    this.taskRecord.setCompletedTimestamp(safeDate(getCompletedTimestamp()));
+                    this.taskRecord.setQueuedTimestamp(safeDate(getQueuedTimestamp()));
+                    this.taskRecord.setStartedTimestamp(safeDate(getStartedTimestamp()));
 
-            this.taskRecord.setState(
-                    toEntityType(org.osc.core.broker.model.entities.job.TaskState.class,
-                            getState()));
-            this.taskRecord.setCompletedTimestamp(safeDate(getCompletedTimestamp()));
-            this.taskRecord.setQueuedTimestamp(safeDate(getQueuedTimestamp()));
-            this.taskRecord.setStartedTimestamp(safeDate(getStartedTimestamp()));
+                    this.taskRecord.setName(getSafeTaskName());
 
-            this.taskRecord.setName(getSafeTaskName());
-
-            OSCEntityManager.update(em, this.taskRecord);
-            tx.commit();
-            TransactionalBroadcastUtil.broadcast(em);
-
+                    OSCEntityManager.update(em, this.taskRecord);
+                    return null;
+                });
+        } catch (ScopedWorkException e) {
+            // Unwrap the ScopedWorkException to get the cause from
+            // the scoped work (i.e. the executeTransaction() call.
+            log.error("Fail to update TaskRecord " + this, e.getCause());
         } catch (Exception e) {
-
+            // TODO remove when EM and TX are injected
             log.error("Fail to update TaskRecord " + this, e);
-            if (tx != null) {
-                tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(em);
-            }
         }
     }
 
@@ -220,36 +216,33 @@ public class TaskNode implements Runnable, TaskElement {
     }
 
     private void persistStatus() {
-        EntityManager em = null;
-        EntityTransaction tx = null;
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
-            this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
-                    LockModeType.PESSIMISTIC_WRITE);
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            TransactionControl txControl = HibernateUtil.getTransactionControl();
+            txControl.required(() -> {
+                    this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
+                            LockModeType.PESSIMISTIC_WRITE);
 
-            this.taskRecord.setStatus(
-                    toEntityType(org.osc.core.broker.model.entities.job.TaskStatus.class,
-                            getStatus()));
-            if (this.failReason != null) {
-                if (this.failReason.getMessage() != null) {
-                    this.taskRecord.setFailReason(this.failReason.getMessage());
-                } else {
-                    this.taskRecord.setFailReason(this.failReason.toString());
-                }
-            }
-            OSCEntityManager.update(em, this.taskRecord);
-            tx.commit();
-            TransactionalBroadcastUtil.broadcast(em);
-
+                    this.taskRecord.setStatus(
+                            toEntityType(org.osc.core.broker.model.entities.job.TaskStatus.class,
+                                    getStatus()));
+                    if (this.failReason != null) {
+                        if (this.failReason.getMessage() != null) {
+                            this.taskRecord.setFailReason(this.failReason.getMessage());
+                        } else {
+                            this.taskRecord.setFailReason(this.failReason.toString());
+                        }
+                    }
+                    OSCEntityManager.update(em, this.taskRecord);
+                    return null;
+                });
+        } catch (ScopedWorkException e) {
+            // Unwrap the ScopedWorkException to get the cause from
+            // the scoped work (i.e. the executeTransaction() call.
+            log.error("Fail to update TaskRecord " + this, e.getCause());
         } catch (Exception e) {
-
+            // TODO remove when EM and TX are injected
             log.error("Fail to update TaskRecord " + this, e);
-            if (tx != null) {
-                tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(em);
-            }
         }
     }
 

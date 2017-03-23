@@ -25,6 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
@@ -48,13 +49,15 @@ import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAFromDbTask
 import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteDATask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
+import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.TaskGraphMatcher;
+import org.osc.core.test.util.TestTransactionControl;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({LockUtil.class, JobEngine.class})
+@PrepareForTest({LockUtil.class, JobEngine.class, HibernateUtil.class})
 public class DeleteDistributedApplianceServiceTest {
 
     private static final Long VALID_ID = 1L;
@@ -82,6 +85,9 @@ public class DeleteDistributedApplianceServiceTest {
     @Mock
     EntityTransaction tx;
 
+    @Mock(answer=Answers.CALLS_REAL_METHODS)
+    TestTransactionControl txControl;
+
     @Mock
     private DeleteDistributedApplianceRequestValidator validatorMock;
 
@@ -95,6 +101,12 @@ public class DeleteDistributedApplianceServiceTest {
         MockitoAnnotations.initMocks(this);
 
         Mockito.when(this.em.getTransaction()).thenReturn(this.tx);
+
+        this.txControl.setEntityManager(this.em);
+
+        PowerMockito.mockStatic(HibernateUtil.class);
+        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
 
         VALID_DA_WITH_SYSTEMS.setName("name");
         VirtualizationConnector openStackVirtualizationConnector = new VirtualizationConnector();
@@ -157,7 +169,7 @@ public class DeleteDistributedApplianceServiceTest {
         this.exception.expect(VmidcBrokerValidationException.class);
 
         // Act
-        this.deleteDistributedApplianceService.exec(INVALID_REQUEST, this.em);
+        this.deleteDistributedApplianceService.dispatch(INVALID_REQUEST);
     }
 
     @Test
@@ -166,27 +178,30 @@ public class DeleteDistributedApplianceServiceTest {
         this.exception.expect(NullPointerException.class);
 
         // Act
-        this.deleteDistributedApplianceService.exec(UNLOCKABLE_DA_REQUEST, this.em);
+        this.deleteDistributedApplianceService.dispatch(UNLOCKABLE_DA_REQUEST);
     }
 
     @Test
     public void testExec_WithForceDeleteRequest_ExpectsSuccess() throws Exception {
         // Act
-        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.exec(VALID_REQUEST_FORCE_DELETE, this.em);
+        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.dispatch(VALID_REQUEST_FORCE_DELETE);
 
         // Assert
         Assert.assertEquals("The received JobID in force delete case is different than expected.", JOB_ID, baseJobResponse.getJobId());
-        Mockito.verify(this.tx, Mockito.times(0)).begin();
+        Mockito.verify(this.tx, Mockito.times(1)).begin();
+        Mockito.verify(this.tx, Mockito.times(1)).commit();
     }
 
     @Test
     public void testExec_WithNonForceDeleteRequestAndValidDA_ExpectsSuccess() throws Exception {
         // Act
-        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.exec(VALID_REQUEST_NOT_FORCE_DELETE, this.em);
+        BaseJobResponse baseJobResponse = this.deleteDistributedApplianceService.dispatch(VALID_REQUEST_NOT_FORCE_DELETE);
 
         // Assert
         Assert.assertEquals("The received JobID in non force delete case is different than expected.", JOB_ID, baseJobResponse.getJobId());
-        Mockito.verify(this.tx, Mockito.times(1)).begin();
+        // The task commits part way then runs another transaction
+        Mockito.verify(this.tx, Mockito.times(2)).begin();
+        Mockito.verify(this.tx, Mockito.times(2)).commit();
     }
 
     @Test

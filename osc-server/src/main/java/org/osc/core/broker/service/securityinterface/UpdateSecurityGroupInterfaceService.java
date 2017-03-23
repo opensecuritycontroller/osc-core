@@ -50,10 +50,11 @@ BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJo
 
         log.info("Updating SecurityGroupInterface: " + this.sgi.toString());
         OSCEntityManager.update(em, this.sgi);
-        commitChanges(true);
-
-        Long jobId = this.conformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
-        return new BaseJobResponse(this.sgi.getId(), jobId);
+        chain(() -> {
+            Long jobId = this.conformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
+            return new BaseJobResponse(this.sgi.getId(), jobId);
+        });
+        return null;
     }
 
     @Override

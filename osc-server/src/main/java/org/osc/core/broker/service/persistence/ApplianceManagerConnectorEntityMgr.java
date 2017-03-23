@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -97,46 +96,34 @@ public class ApplianceManagerConnectorEntityMgr {
     }
 
     public static boolean isManagerTypeUsed(String managerType) {
-        EntityTransaction tx = null;
-        EntityManager em = null;
 
-        Long count1 = 0L;
-        Long count2 = 0L;
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            return HibernateUtil.getTransactionControl().required(() -> {
+                CriteriaBuilder cb = em.getCriteriaBuilder();
+                CriteriaQuery<Long> cq;
+                Root<?> from;
 
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Long> cq;
-            Root<?> from;
+                cq = cb.createQuery(Long.class);
+                from = cq.from(ApplianceManagerConnector.class);
+                cq = cq.select(cb.count(from))
+                        .where(cb.equal(from.get("managerType"), managerType));
 
-            cq = cb.createQuery(Long.class);
-            from = cq.from(ApplianceManagerConnector.class);
-            cq = cq.select(cb.count(from))
-                    .where(cb.equal(from.get("managerType"), managerType));
+                Long count1 = em.createQuery(cq).getSingleResult();
 
-            count1 = em.createQuery(cq).getSingleResult();
+                cq = cb.createQuery(Long.class);
+                from = cq.from(Appliance.class);
+                cq = cq.select(cb.count(from))
+                        .where(cb.equal(from.get("managerType"), managerType));
 
-            cq = cb.createQuery(Long.class);
-            from = cq.from(Appliance.class);
-            cq = cq.select(cb.count(from))
-                    .where(cb.equal(from.get("managerType"), managerType));
+                Long count2 = em.createQuery(cq).getSingleResult();
 
-            count2 = em.createQuery(cq).getSingleResult();
-
-            tx.commit();
+                return count1 > 0 || count2 > 0;
+            });
         } catch (Exception e) {
-            if (tx != null) {
-                tx.rollback();
-            }
+            return true;
         }
 
-        if (em != null) {
-            em.close();
-        }
-
-        return count1 > 0 || count2 > 0;
     }
 
 }

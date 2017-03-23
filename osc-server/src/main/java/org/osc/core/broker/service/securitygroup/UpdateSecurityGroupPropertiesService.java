@@ -47,15 +47,22 @@ public class UpdateSecurityGroupPropertiesService extends UpdateSecurityGroupSer
             log.info("Updating SecurityGroup properties: " + this.securityGroup.toString());
             OSCEntityManager.update(em, this.securityGroup);
 
-            commitChanges(true);
+            UnlockObjectMetaTask forLambda = unlockTask;
+            chain(() -> {
+                try {
+                    Job job = ConformService.startSecurityGroupConformanceJob(this.securityGroup, forLambda);
+
+                    return new BaseJobResponse(this.securityGroup.getId(), job.getId());
+                } catch (Exception e) {
+                    LockUtil.releaseLocks(forLambda);
+                    throw e;
+                }
+            });
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
             throw e;
         }
 
-        Job job = ConformService.startSecurityGroupConformanceJob(this.securityGroup, unlockTask);
-
-        return new BaseJobResponse(this.securityGroup.getId(), job.getId());
-
+        return null;
     }
 }

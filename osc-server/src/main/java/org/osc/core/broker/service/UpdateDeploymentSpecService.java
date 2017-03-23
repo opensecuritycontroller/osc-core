@@ -76,16 +76,22 @@ public class UpdateDeploymentSpecService extends
                 }
             }
             OSCEntityManager.update(em, this.ds);
-
-            commitChanges(true);
+            UnlockObjectMetaTask forLambda = dsUnlock;
+            chain(() -> {
+                try {
+                    Job job = ConformService.startDsConformanceJob(em, this.ds, forLambda);
+                    return new BaseJobResponse(this.ds.getId(), job.getId());
+                } catch (Exception e) {
+                    LockUtil.releaseLocks(forLambda);
+                    throw e;
+                }
+            });
         } catch (Exception e) {
             LockUtil.releaseLocks(dsUnlock);
             throw e;
         }
 
-        Job job = ConformService.startDsConformanceJob(em, this.ds, dsUnlock);
-        return new BaseJobResponse(this.ds.getId(), job.getId());
-
+        return null;
     }
 
     @Override

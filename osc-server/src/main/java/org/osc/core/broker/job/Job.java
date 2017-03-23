@@ -28,7 +28,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
 
 import org.apache.log4j.Logger;
@@ -45,11 +44,12 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.sdk.manager.element.JobElement;
+import org.osgi.service.transaction.control.ScopedWorkException;
+import org.osgi.service.transaction.control.TransactionControl;
 
 /**
  *
@@ -126,31 +126,23 @@ public class Job implements Runnable, JobElement {
     }
 
     private void persistStatus() {
-        EntityManager em = null;
-        EntityTransaction tx = null;
 
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
-            this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
-            this.jobRecord.setStatus(getEntityStatus());
-            OSCEntityManager.update(em, this.jobRecord);
-            tx.commit();
-            TransactionalBroadcastUtil.broadcast(em);
-
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            TransactionControl txControl = HibernateUtil.getTransactionControl();
+            txControl.required(() -> {
+                    this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
+                    this.jobRecord.setStatus(getEntityStatus());
+                    OSCEntityManager.update(em, this.jobRecord);
+                    return null;
+                });
+        } catch (ScopedWorkException e) {
+            // Unwrap the ScopedWorkException to get the cause from
+            // the scoped work (i.e. the executeTransaction() call.
+            log.error("Fail to update JobRecord " + this, e.getCause());
         } catch (Exception e) {
-
+            // TODO remove when EM and TX are injected
             log.error("Fail to update JobRecord " + this, e);
-            if (tx != null) {
-                tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(em);
-            }
-
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 
@@ -395,37 +387,27 @@ public class Job implements Runnable, JobElement {
     }
 
     private void persistState() {
-        EntityManager em = null;
-        EntityTransaction tx = null;
-
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            TransactionControl txControl = HibernateUtil.getTransactionControl();
+            txControl.required(() -> {
+                    this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
 
-            this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
-
-            this.jobRecord.setState(getEntityState());
-            this.jobRecord.setQueuedTimestamp(getQueuedTimestamp());
-            this.jobRecord.setStartedTimestamp(getStartedTimestamp());
-            this.jobRecord.setCompletedTimestamp(getCompletedTimestamp());
-            this.jobRecord.setFailureReason(getFailureReason());
-            OSCEntityManager.update(em, this.jobRecord);
-            tx.commit();
-            TransactionalBroadcastUtil.broadcast(em);
-
+                    this.jobRecord.setState(getEntityState());
+                    this.jobRecord.setQueuedTimestamp(getQueuedTimestamp());
+                    this.jobRecord.setStartedTimestamp(getStartedTimestamp());
+                    this.jobRecord.setCompletedTimestamp(getCompletedTimestamp());
+                    this.jobRecord.setFailureReason(getFailureReason());
+                    OSCEntityManager.update(em, this.jobRecord);
+                    return null;
+                });
+        } catch (ScopedWorkException e) {
+            // Unwrap the ScopedWorkException to get the cause from
+            // the scoped work (i.e. the executeTransaction() call.
+            log.error("Fail to update JobRecord " + this, e.getCause());
         } catch (Exception e) {
-
+            // TODO remove when EM and TX are injected
             log.error("Fail to update JobRecord " + this, e);
-            if (tx != null) {
-                tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(em);
-            }
-
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 
@@ -587,59 +569,47 @@ public class Job implements Runnable, JobElement {
     }
 
     synchronized void persistJob() throws Exception {
-        EntityManager em = null;
-        EntityTransaction tx = null;
-
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            TransactionControl txControl = HibernateUtil.getTransactionControl();
+            txControl.required(() -> {
+                    JobRecord jobRecord = getJobRecord();
 
-            JobRecord jobRecord = getJobRecord();
+                    if (jobRecord == null) {
+                        jobRecord = new JobRecord();
+                        jobRecord.setSubmittedBy(SessionUtil.getCurrentUser());
+                        jobRecord.setName(getName());
+                        jobRecord.setState(getEntityState());
+                        jobRecord.setStatus(getEntityStatus());
 
-            if (jobRecord == null) {
-                jobRecord = new JobRecord();
-                jobRecord.setSubmittedBy(SessionUtil.getCurrentUser());
-                jobRecord.setName(getName());
-                jobRecord.setState(getEntityState());
-                jobRecord.setStatus(getEntityStatus());
+                        String contextUser = SessionUtil.getCurrentUser();
+                        jobRecord.setCreatedBy(contextUser);
+                        jobRecord.setCreatedTimestamp(new Date());
 
-                String contextUser = SessionUtil.getCurrentUser();
-                jobRecord.setCreatedBy(contextUser);
-                jobRecord.setCreatedTimestamp(new Date());
+                        if (this.objects != null) {
+                            // Add object references only on creation to ensure uniqueness
+                            for (LockObjectReference lor : this.objects) {
+                                JobObject jobObject = new JobObject(jobRecord, lor.getName(),
+                                        toEntityType(ObjectType.class, lor.getType()), lor.getId());
+                                jobRecord.addObject(jobObject);
+                            }
+                        }
 
-                if (this.objects != null) {
-                    // Add object references only on creation to ensure uniqueness
-                    for (LockObjectReference lor : this.objects) {
-                        JobObject jobObject = new JobObject(jobRecord, lor.getName(),
-                                toEntityType(ObjectType.class, lor.getType()), lor.getId());
-                        jobRecord.addObject(jobObject);
+                        OSCEntityManager.create(em, jobRecord);
+
+                        setJobStore(jobRecord);
                     }
-                }
 
-                OSCEntityManager.create(em, jobRecord);
-
-                setJobStore(jobRecord);
-            }
-
-            persistTaskGraph(em);
-
-            tx.commit();
-            TransactionalBroadcastUtil.broadcast(em);
-
-        } catch (Exception ex) {
-
-            if (tx != null) {
-                tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(em);
-            }
-            throw ex;
-
-        } finally {
-
-            if (em != null) {
-                em.close();
-            }
+                    persistTaskGraph(em);
+                    return null;
+                });
+        } catch (ScopedWorkException e) {
+            // Unwrap the ScopedWorkException to get the cause from
+            // the scoped work (i.e. the executeTransaction() call.
+            throw e.as(Exception.class);
+        } catch (Exception e) {
+            // TODO remove when EM and TX are injected
+            log.error("Fail to create JobRecord " + this, e);
         }
     }
 

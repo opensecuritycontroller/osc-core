@@ -36,6 +36,7 @@ import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
 import org.osc.core.broker.view.util.EventType;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 /**
  *
@@ -52,12 +53,13 @@ public class RabbitMQRunner implements BroadcastListener {
     private OsDeploymentSpecNotificationRunner deploymentSpecRunner;
 
     public RabbitMQRunner() {
-        EntityManager em = null;
         try {
             BroadcasterUtil.register(this);
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            List<VirtualizationConnector> vcList = VirtualizationConnectorEntityMgr.listByType(em,
-                    VirtualizationType.OPENSTACK);
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            List<VirtualizationConnector> vcList =
+                    HibernateUtil.getTransactionControl().required(() ->
+                    VirtualizationConnectorEntityMgr.listByType(em,
+                            VirtualizationType.OPENSTACK));
 
             // Iterate over all the VCs of Type Open Stack and start RabbitMQ connections with them.
 
@@ -78,26 +80,25 @@ public class RabbitMQRunner implements BroadcastListener {
             this.deploymentSpecRunner = new OsDeploymentSpecNotificationRunner();
 
         } catch (Exception e) {
+            if(e instanceof ScopedWorkException) {
+                e = (Exception) e.getCause();
+            }
             log.error("Exception during initializing RabbitMQ clients", e);
             AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                     "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
 
     }
 
     @Override
     public void receiveBroadcast(BroadcastMessage msg) {
-        EntityManager em = null;
         VirtualizationConnector vc = null;
         try {
             if (msg.getReceiver().equals("VirtualizationConnector")) {
-                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
                 if (msg.getEventType() != EventType.DELETED) {
-                    vc = VirtualizationConnectorEntityMgr.findById(em, msg.getEntityId());
+                    EntityManager em = HibernateUtil.getTransactionalEntityManager();
+                    vc = HibernateUtil.getTransactionControl().required(() ->
+                        VirtualizationConnectorEntityMgr.findById(em, msg.getEntityId()));
                 } else {
                     vc = new VirtualizationConnector();
                     vc.setId(msg.getEntityId());
@@ -105,14 +106,13 @@ public class RabbitMQRunner implements BroadcastListener {
                 updateVCNotificationThreadMap(vc, msg.getEventType());
             }
         } catch (Exception e) {
+            if(e instanceof ScopedWorkException) {
+                e = (Exception) e.getCause();
+            }
             log.error("Failed to create RabbitMQ Client for given Open Stack " + vc.getId() + " due to "
                     + e.getMessage());
             AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                     "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 

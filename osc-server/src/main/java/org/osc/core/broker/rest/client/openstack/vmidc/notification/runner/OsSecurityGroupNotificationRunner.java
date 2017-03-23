@@ -42,6 +42,7 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
 import org.osc.core.broker.view.util.EventType;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -60,20 +61,18 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
     private static final Logger log = Logger.getLogger(OsSecurityGroupNotificationRunner.class);
 
     public OsSecurityGroupNotificationRunner() throws InterruptedException, VmidcException {
-        EntityManager em = null;
         try {
             BroadcasterUtil.register(this);
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-
-            OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
-            List<SecurityGroup> sgList = sgEmgr.listAll();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            List<SecurityGroup> sgList = HibernateUtil.getTransactionControl().required(() -> {
+                OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
+                return sgEmgr.listAll();
+            });
             for (SecurityGroup sg : sgList) {
                 addListener(sg);
             }
-        } finally {
-            if (em != null) {
-                em.close();
-            }
+        } catch (ScopedWorkException swe) {
+            throw swe.asRuntimeException();
         }
     }
 
@@ -94,10 +93,10 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         if (msg.getEventType() == EventType.DELETED) {
             removeListener(msg.getEntityId());
         } else {
-            EntityManager em = null;
             try {
-                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-                SecurityGroup sg = SecurityGroupEntityMgr.findById(em, msg.getEntityId());
+                EntityManager em = HibernateUtil.getTransactionalEntityManager();
+                SecurityGroup sg = HibernateUtil.getTransactionControl().required(() ->
+                    SecurityGroupEntityMgr.findById(em, msg.getEntityId()));
                 if (sg == null) {
                     log.error("Processing " + msg.getEventType() + " notification for Security Group ("
                             + msg.getEntityId() + ") but couldn't find it in the DB");
@@ -109,13 +108,12 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                 } else if (msg.getEventType() == EventType.UPDATED) {
                     updateListeners(sg);
                 }
+            } catch (ScopedWorkException e) {
+                log.error("An error occurred updating the Security Group Listeners", e.getCause());
+                throw e.asRuntimeException();
             } catch (Exception e) {
                 log.error("An error occurred updating the Security Group Listeners", e);
                 throw new RuntimeException("Failed to consume a broadcast message", e);
-            } finally {
-                if (em != null) {
-                    em.close();
-                }
             }
         }
     }

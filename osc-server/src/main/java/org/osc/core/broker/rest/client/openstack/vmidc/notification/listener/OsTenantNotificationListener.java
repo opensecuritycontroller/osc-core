@@ -35,6 +35,7 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class OsTenantNotificationListener extends OsNotificationListener {
 
@@ -54,16 +55,22 @@ public class OsTenantNotificationListener extends OsNotificationListener {
                     OsNotificationKeyType.RESOURCE_INFO.toString());
             if (keyValue != null) {
                 log.info(" [Identity] : message received - " + message);
-                EntityManager em = null;
                 try {
-                    em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-                    if (this.entity instanceof SecurityGroup) {
-                        handleSGMessages(em, keyValue);
-                    } else if (this.entity instanceof DeploymentSpec) {
-                        handleDSMessages(em, keyValue);
-                    }
+                    EntityManager em = HibernateUtil.getTransactionalEntityManager();
+
+                    HibernateUtil.getTransactionControl().required(() -> {
+                        if (this.entity instanceof SecurityGroup) {
+                            handleSGMessages(em, keyValue);
+                        } else if (this.entity instanceof DeploymentSpec) {
+                            handleDSMessages(em, keyValue);
+                        }
+                        return null;
+                    });
 
                 } catch (Exception e) {
+                    if(e instanceof ScopedWorkException) {
+                        e = (Exception) e.getCause();
+                    }
                     log.error("Failed post notification processing  - " + this.vc.getControllerIpAddress(), e);
                     AlertGenerator
                             .processSystemFailureEvent(
@@ -72,10 +79,6 @@ public class OsTenantNotificationListener extends OsNotificationListener {
                                             this.vc)),
                                     "Fail to process Openstack Tenant (" + keyValue + ") notification ("
                                             + e.getMessage() + ")");
-                } finally {
-                    if (em != null) {
-                        em.close();
-                    }
                 }
             }
         }

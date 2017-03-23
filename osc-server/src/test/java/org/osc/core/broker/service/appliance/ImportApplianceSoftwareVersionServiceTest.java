@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -55,6 +54,7 @@ import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.test.util.TestTransactionControl;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil.Version;
@@ -89,6 +89,9 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
     private EntityManager em;
 
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
+    private TestTransactionControl txControl;
+
     @Mock
     private ImageMetadataValidator imageMetaDataValidator;
 
@@ -110,12 +113,14 @@ public class ImportApplianceSoftwareVersionServiceTest {
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        EntityManagerFactory entityManagerFactory = InMemDB.getEntityManagerFactory();
+        this.em = InMemDB.getEntityManagerFactory().createEntityManager();
+
+        this.txControl.setEntityManager(this.em);
 
         PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getEntityManagerFactory()).thenReturn(entityManagerFactory);
+        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
 
-        this.em = entityManagerFactory.createEntityManager();
 
         File mockMetaDataFile = mock(File.class);
         File mockPayloadFile = mock(File.class);
@@ -349,56 +354,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
         // Act.
         this.service.dispatch(new ImportFileRequest(""));
     }
-
-//    private class ApplianceSoftwareVersionMatcher extends ArgumentMatcher<Object> {
-//
-//        private ImageMetadata imageMetaData;
-//
-//        public ApplianceSoftwareVersionMatcher(ImageMetadata imageMetaData) {
-//            this.imageMetaData = imageMetaData;
-//        }
-//
-//        @Override
-//        public boolean matches(Object argument) {
-//            if (argument == null || !(argument instanceof ApplianceSoftwareVersion)) {
-//                return false;
-//            }
-//            ApplianceSoftwareVersion otherAsv = (ApplianceSoftwareVersion) argument;
-//
-//            return (otherAsv.getAppliance().getId().equals(APPLIANCE_ID)
-//                    && otherAsv.getApplianceSoftwareVersion().equals(this.imageMetaData.getSoftwareVersion())
-//                    && otherAsv.getVirtualizationType().equals(this.imageMetaData.getVirtualizationType())
-//                    && otherAsv.getVirtualizarionSoftwareVersion().equals(this.imageMetaData.getVirtualizationVersionString())
-//                    && otherAsv.getImageUrl().equals(this.imageMetaData.getImageName())
-//                    && otherAsv.getMinCpus() == this.imageMetaData.getMinCpus()
-//                    && otherAsv.getMemoryInMb() == this.imageMetaData.getMemoryInMb()
-//                    && otherAsv.getDiskSizeInGb() == this.imageMetaData.getDiskSizeInGb()
-//                    && otherAsv.hasAdditionalNicForInspection() == this.imageMetaData.hasAdditionalNicForInspection()
-//                    && CollectionUtils.isEqualCollection(otherAsv.getEncapsulationTypes(), this.imageMetaData.getEncapsulationTypes())
-//                    && otherAsv.getImageProperties().equals(this.imageMetaData.getImageProperties())
-//                    && otherAsv.getConfigProperties().equals(this.imageMetaData.getConfigProperties()));
-//        }
-//
-//    }
-
-//    private class ApplianceMatcher extends ArgumentMatcher<Object> {
-//
-//        private String model;
-//
-//        public ApplianceMatcher(String model) {
-//            this.model = model;
-//        }
-//        @Override
-//        public boolean matches(Object argument) {
-//            if (argument == null || !(argument instanceof Appliance)) {
-//                return false;
-//            }
-//            Appliance otherAppliance = (Appliance) argument;
-//
-//            return this.model.equals(otherAppliance.getModel());
-//        }
-//
-//    }
 
     private void verifySuccessfulImport(BaseResponse response, Long id) throws IOException, Exception {
         // Verify Space check is made

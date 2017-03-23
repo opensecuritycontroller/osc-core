@@ -40,9 +40,7 @@ import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformance
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
-import org.osc.core.broker.util.db.TransactionalBrodcastListener;
-import org.osc.core.broker.util.db.TransactionalRunner;
+import org.osc.core.broker.util.db.HibernateUtil;
 
 public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse> {
 
@@ -81,11 +79,15 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
                         @Override
                         public void completed(Job job) {
                             if (!job.getStatus().isSuccessful()) {
-                                new TransactionalRunner<Void, CompleteJobTransactionInput>(new TransactionalRunner.SharedSessionHandler())
-                                        .withTransactionalListener(new TransactionalBrodcastListener())
-                                        .exec(new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class), new CompleteJobTransactionInput(da.getId(), job.getId()));
+                                try {
+                                    HibernateUtil.getTransactionControl().required(() ->
+                                        new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class)
+                                        .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
+                                } catch (Exception e) {
+                                    log.error("A serious error occurred in the Job Listener", e);
+                                    throw new RuntimeException("No Transactional resources are available", e);
+                                }
                             }
-
                         }
                     });
             log.info("Done submitting with jobId: " + job.getId());
@@ -104,7 +106,6 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
             this.validator = new DeleteDistributedApplianceRequestValidator(em);
         }
 
-        Long jobId;
         UnlockObjectMetaTask ult = null;
         BaseJobResponse response = new BaseJobResponse();
 
@@ -117,18 +118,26 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
                 tg.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 Job job = JobEngine.getEngine().submit("Force Delete Distributed Appliance '" + da.getName() + "'", tg,
                         LockObjectReference.getObjectReferences(da));
-                jobId = job.getId();
+                response.setJobId(job.getId());
 
             } else {
                 OSCEntityManager.markDeleted(em, da);
-                commitChanges(true);
-                jobId = startDeleteDAJob(da, ult).getId();
+                UnlockObjectMetaTask forLambda = ult;
+                chain(() -> {
+                    try {
+                        BaseJobResponse result = new BaseJobResponse();
+                        Job job = startDeleteDAJob(da, forLambda);
+                        result.setJobId(job.getId());
+                        return result;
+                    } catch (Exception e) {
+                        LockUtil.releaseLocks(forLambda);
+                        throw e;
+                    }
+                });
             }
-            response.setJobId(jobId);
 
         } catch (Exception ex) {
             LockUtil.releaseLocks(ult);
-            TransactionalBroadcastUtil.removeSessionFromMap(em);
             throw ex;
         }
 

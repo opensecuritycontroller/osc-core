@@ -19,12 +19,13 @@ package org.osc.core.broker.util.db;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.service.transaction.control.TransactionControl;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class HibernateUtil {
@@ -45,6 +46,7 @@ public class HibernateUtil {
         DBConnectionManager mgr = tracker.waitForService(10000);
 
         if(mgr == null){
+            log.error("No Database Manager Service could be found");
             throw new VmidcException("No Database Manager Service could be found");
         }
         return mgr;
@@ -56,10 +58,16 @@ public class HibernateUtil {
         manager.replaceDefaultDBPassword();
     }
 
-    public static EntityManagerFactory getEntityManagerFactory() throws InterruptedException, VmidcException {
+    public static EntityManager getTransactionalEntityManager() throws InterruptedException, VmidcException {
         DBConnectionManager manager = getConnectionManager();
 
-        return manager.getEmf();
+        return manager.getTransactionalEntityManager();
+    }
+
+    public static TransactionControl getTransactionControl() throws InterruptedException, VmidcException {
+        DBConnectionManager manager = getConnectionManager();
+
+        return manager.getTransactionControl();
     }
 
     private static void ensureInitialized() {

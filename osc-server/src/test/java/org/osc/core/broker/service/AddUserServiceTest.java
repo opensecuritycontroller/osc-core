@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,6 +27,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -38,6 +38,7 @@ import org.osc.core.broker.service.request.AddUserRequest;
 import org.osc.core.broker.service.response.AddUserResponse;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.test.util.TestTransactionControl;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -49,6 +50,9 @@ public class AddUserServiceTest {
     public ExpectedException exception = ExpectedException.none();
 
     private EntityManager em;
+
+    @Mock(answer=Answers.CALLS_REAL_METHODS)
+    TestTransactionControl txControl;
 
     @Mock
     private UserDtoValidator validatorMock;
@@ -62,12 +66,14 @@ public class AddUserServiceTest {
     public void testInitialize() throws Exception{
         MockitoAnnotations.initMocks(this);
 
-        EntityManagerFactory entityManagerFactory = InMemDB.getEntityManagerFactory();
+        this.em = InMemDB.getEntityManagerFactory().createEntityManager();
+
+        this.txControl.setEntityManager(this.em);
 
         PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getEntityManagerFactory()).thenReturn(entityManagerFactory);
+        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
 
-        this.em = entityManagerFactory.createEntityManager();
 
         this.invalidUserRequest = new AddUserRequest();
         this.invalidUserRequest.setLoginName("invalidUserName");

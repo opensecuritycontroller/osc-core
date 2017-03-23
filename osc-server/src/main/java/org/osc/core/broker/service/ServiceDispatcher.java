@@ -16,9 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import java.util.concurrent.Callable;
+
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceException;
 
 import org.apache.log4j.Logger;
 import org.hibernate.StaleObjectStateException;
@@ -30,9 +30,10 @@ import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.transaction.control.ScopedWorkException;
+import org.osgi.service.transaction.control.TransactionControl;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.mcafee.vmidc.server.Server;
@@ -40,8 +41,9 @@ import com.mcafee.vmidc.server.Server;
 public abstract class ServiceDispatcher<I extends Request, O extends Response> {
 
     private static final Logger log = Logger.getLogger(ServiceDispatcher.class);
-    private EntityTransaction tx = null;
     private EntityManager em = null;
+
+    private Callable<O> secondaryDispatch;
 
     // generalized method to dispatch incoming requests to the appropriate
     // service handler
@@ -58,31 +60,36 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
             this.em = getEntityManager();
         }
 
-        // add session with empty list in pendingBroadcastMessageMap
+        TransactionControl txControl = getTransactionControl();
+
         O response = null;
         try {
+            // calling service in a transaction
+            response = txControl.required(() -> exec(request, this.em));
+        } catch (ScopedWorkException e) {
 
-            // Initializing transaction
-            this.tx = this.em.getTransaction();
-            this.tx.begin();
-            // calling service implementation
-            response = exec(request, this.em);
+            handleException((Exception) e.getCause());
 
-            // if no exception, commit the transaction
-            commitChanges(false);
+        }
 
-        } catch (Exception e) {
-
-            handleException(this.em, e);
-
-        } finally {
-            if (this.em != null && this.em.isOpen()) {
-                this.em.close();
+        if(this.secondaryDispatch != null) {
+            try {
+                // calling the second step of this service in a transaction
+                response = txControl.required(this.secondaryDispatch);
+            } catch (ScopedWorkException e) {
+                handleException((Exception) e.getCause());
             }
         }
 
         log.info("Service response: " + response);
         return response;
+    }
+
+    protected void chain(Callable<O> toCall) {
+        if(this.secondaryDispatch != null) {
+            throw new IllegalStateException("An additional transactional step has already been added");
+        }
+        this.secondaryDispatch = toCall;
     }
 
     /**
@@ -94,43 +101,24 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
      */
     @VisibleForTesting
     protected EntityManager getEntityManager() throws InterruptedException, VmidcException {
-        return HibernateUtil.getEntityManagerFactory().createEntityManager();
+        return HibernateUtil.getTransactionalEntityManager();
     }
 
     /**
-     * Commits the open transaction and wraps exceptions as appropriate.
+     * Created for the testing the class. Which helps to create the mock object of SessionFactory.
      *
-     * Generally the commits are handled automatically by the service, but in some case we might need to commit
-     * the transaction before we start a long running operation(like a job).
-     *
-     * @param startNewTransaction
-     *            starts a new transaction if set to true. If set to false, commits the transaction and
-     *            closes the session.
-     *
+     * @return
+     * @throws VmidcException
+     * @throws InterruptedException
      */
-    protected void commitChanges(boolean startNewTransaction) throws Exception {
-        try {
-            if (this.tx != null) {
-                this.tx.commit();
-            }
-            this.tx = null;
-            TransactionalBroadcastUtil.broadcast(this.em);
-            if (startNewTransaction) {
-                this.tx = this.em.getTransaction();
-                this.tx.begin();
-            } else {
-                if (this.em.isOpen()) {
-                    this.em.close();
-                }
-            }
-        } catch (Exception e) {
-            handleException(this.em, e);
-        }
+    @VisibleForTesting
+    protected TransactionControl getTransactionControl() throws InterruptedException, VmidcException {
+        return HibernateUtil.getTransactionControl();
     }
 
     protected abstract O exec(I request, EntityManager em) throws Exception;
 
-    private void handleException(EntityManager em, Exception e) throws VmidcDbConstraintViolationException,
+    private void handleException(Exception e) throws VmidcDbConstraintViolationException,
     VmidcDbConcurrencyException, Exception {
         if(e instanceof SslCertificatesExtendedException){
             throw e;
@@ -138,15 +126,6 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
             log.warn("Service request failed (logically): " + e.getMessage());
         } else {
             log.error("Service request failed (unexpectedly): " + e.getMessage(), e);
-        }
-
-        try {
-            if (this.tx != null) {
-                this.tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(em);
-            }
-        } catch (PersistenceException he) {
-            log.error("Error rolling back database transaction", he);
         }
 
         if (e instanceof ConstraintViolationException) {

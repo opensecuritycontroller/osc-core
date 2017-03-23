@@ -177,7 +177,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                 }
             }
 
-            TransactionalBroadcastUtil.addMessageToMap(em, this.securityGroup.getId(),
+            TransactionalBroadcastUtil.addMessageToMap(this.securityGroup.getId(),
                     this.securityGroup.getClass().getSimpleName(), EventType.UPDATED);
 
             Job job = ConformService.startBindSecurityGroupConformanceJob(em, this.securityGroup, unlockTask);

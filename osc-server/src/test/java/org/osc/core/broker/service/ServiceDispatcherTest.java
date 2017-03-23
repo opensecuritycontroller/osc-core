@@ -21,20 +21,29 @@ import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Answers;
 import org.mockito.Mockito;
+import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
+import org.osc.core.test.util.TestTransactionControl;
+import org.osgi.service.transaction.control.TransactionControl;
 
 public class ServiceDispatcherTest {
 
     private EntityManager mockEM;
     private EntityTransaction mockedTransaction;
 
+    private TestTransactionControl mockedTxControl;
+
     @Before
     public void setUp() {
         this.mockEM = Mockito.mock(EntityManager.class);
         this.mockedTransaction = Mockito.mock(EntityTransaction.class);
         Mockito.when(this.mockEM.getTransaction()).thenReturn(this.mockedTransaction);
+
+        this.mockedTxControl = Mockito.mock(TestTransactionControl.class, Answers.CALLS_REAL_METHODS.get());
+        this.mockedTxControl.setEntityManager(this.mockEM);
     }
 
     @Test
@@ -51,8 +60,13 @@ public class ServiceDispatcherTest {
                 return ServiceDispatcherTest.this.mockEM;
             }
 
+            @Override
+            protected TransactionControl getTransactionControl() throws InterruptedException, VmidcException {
+                return ServiceDispatcherTest.this.mockedTxControl;
+            }
         };
         mockServiceDispatcher.dispatch(null);
+        Mockito.verify(this.mockedTransaction).begin();
         Mockito.verify(this.mockedTransaction).commit();
     }
 
@@ -63,6 +77,11 @@ public class ServiceDispatcherTest {
             @Override
             protected EntityManager getEntityManager() {
                 return ServiceDispatcherTest.this.mockEM;
+            }
+
+            @Override
+            protected TransactionControl getTransactionControl() throws InterruptedException, VmidcException {
+                return ServiceDispatcherTest.this.mockedTxControl;
             }
 
             @Override

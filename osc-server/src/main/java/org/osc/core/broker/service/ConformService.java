@@ -19,7 +19,6 @@ package org.osc.core.broker.service;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
@@ -59,12 +58,11 @@ import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.Sec
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.broker.util.db.TransactionalBrodcastListener;
-import org.osc.core.broker.util.db.TransactionalRunner;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.transaction.control.ScopedWorkException;
+import org.osgi.service.transaction.control.TransactionControl;
 
 @Component(service = ConformService.class)
 public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> {
@@ -136,9 +134,14 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
                 @Override
                 public void completed(Job job) {
-                    new TransactionalRunner<Void, CompleteJobTransactionInput>(new TransactionalRunner.SharedSessionHandler())
-                    .withTransactionalListener(new TransactionalBrodcastListener())
-                    .exec(new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class), new CompleteJobTransactionInput(da.getId(), job.getId()));
+                    try {
+                        HibernateUtil.getTransactionControl().required(() ->
+                            new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class)
+                            .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(mc.getId(), job.getId())));
+                    } catch (Exception e) {
+                        log.error("A serious error occurred in the Job Listener", e);
+                        throw new RuntimeException("No Transactional resources are available", e);
+                    }
                 }
             });
             da.setLastJob(em.find(JobRecord.class, job.getId()));
@@ -180,7 +183,6 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         }
 
         Long jobId = startDAConformJob(em, da);
-        commitChanges(false);
 
         BaseJobResponse response = new BaseJobResponse();
         response.setJobId(jobId);
@@ -212,12 +214,14 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
                     @Override
                     public void completed(Job job) {
-                        new TransactionalRunner<Void, CompleteJobTransactionInput>(
-                                new TransactionalRunner.SharedSessionHandler())
-                                        .withTransactionalListener(new TransactionalBrodcastListener())
-                                        .exec(new CompleteJobTransaction<ApplianceManagerConnector>(
-                                                ApplianceManagerConnector.class),
-                                                new CompleteJobTransactionInput(mc.getId(), job.getId()));
+                        try {
+                            HibernateUtil.getTransactionControl().required(() ->
+                                new CompleteJobTransaction<ApplianceManagerConnector>(ApplianceManagerConnector.class)
+                                .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(mc.getId(), job.getId())));
+                        } catch (Exception e) {
+                            log.error("A serious error occurred in the Job Listener", e);
+                            throw new RuntimeException("No Transactional resources are available", e);
+                        }
                     }
                 });
 
@@ -307,31 +311,35 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     }
 
     public static void updateDSJob(EntityManager em, final DeploymentSpec ds, Job job) {
+
+        //TODO it would be more sensible to inject the transactional entitymanager
+        // and make this decision using if(txControl.activeTransaction()) {...}
+
         if (em != null) {
             ds.setLastJob(em.find(JobRecord.class, job.getId()));
             OSCEntityManager.update(em, ds);
 
         } else {
-            EntityTransaction tx = null;
 
             try {
-                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-                tx = em.getTransaction();
-                tx.begin();
-
-                DeploymentSpec ds1 = DeploymentSpecEntityMgr.findById(em, ds.getId());
-                if (ds1 != null) {
-                    ds1.setLastJob(em.find(JobRecord.class, job.getId()));
-                    OSCEntityManager.update(em, ds1);
-                }
-                tx.commit();
-                TransactionalBroadcastUtil.broadcast(em);
-            } catch (Exception ex) {
-                log.error("Fail to update DS job status.", ex);
-                if (tx != null) {
-                    tx.rollback();
-                    TransactionalBroadcastUtil.removeSessionFromMap(em);
-                }
+                EntityManager txEm = HibernateUtil.getTransactionalEntityManager();
+                TransactionControl txControl = HibernateUtil.getTransactionControl();
+                txControl.required(() -> {
+                        DeploymentSpec ds1 = DeploymentSpecEntityMgr.findById(txEm, ds.getId());
+                        if (ds1 != null) {
+                            ds1.setLastJob(txEm.find(JobRecord.class, job.getId()));
+                            OSCEntityManager.update(txEm, ds1);
+                        }
+                        return null;
+                    });
+            } catch (ScopedWorkException e) {
+                // Unwrap the ScopedWorkException to get the cause from
+                // the scoped work (i.e. the executeTransaction() call.
+                log.error("Fail to update DS job status.", e.getCause());
+            } catch (Exception e) {
+                // TODO remove when EM and TX are injected
+                log.error("Fail to update DS job status.", e);
+                throw new RuntimeException("There was a problem with the DsConformance Job", e);
             }
         }
     }
@@ -427,33 +435,37 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     }
 
     public static void updateSGJob(EntityManager em, final SecurityGroup sg, Job job) {
+
+        //TODO it would be more sensible to inject the transactional entitymanager
+        // and make this decision using if(txControl.activeTransaction()) {...}
+
         if (em != null) {
             sg.setLastJob(em.find(JobRecord.class, job.getId()));
             OSCEntityManager.update(em, sg);
         } else {
-            EntityTransaction tx = null;
+
             try {
-                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-                tx = em.getTransaction();
-                tx.begin();
+                EntityManager txEm = HibernateUtil.getTransactionalEntityManager();
+                TransactionControl txControl = HibernateUtil.getTransactionControl();
+                txControl.required(() -> {
+                    SecurityGroup securityGroupEntity = SecurityGroupEntityMgr.findById(txEm, sg.getId());
+                    if (securityGroupEntity != null) {
 
-                SecurityGroup securityGroupEntity = SecurityGroupEntityMgr.findById(em, sg.getId());
-                if (securityGroupEntity != null) {
+                        securityGroupEntity = txEm.find(SecurityGroup.class, sg.getId());
 
-                    securityGroupEntity = em.find(SecurityGroup.class, sg.getId());
-
-                    securityGroupEntity.setLastJob(em.find(JobRecord.class, job.getId()));
-                    OSCEntityManager.update(em, securityGroupEntity);
-                }
-
-                tx.commit();
-                TransactionalBroadcastUtil.broadcast(em);
-            } catch (Exception ex) {
-                log.error("Fail to update SG job status.", ex);
-                if (tx != null) {
-                    tx.rollback();
-                    TransactionalBroadcastUtil.removeSessionFromMap(em);
-                }
+                        securityGroupEntity.setLastJob(txEm.find(JobRecord.class, job.getId()));
+                        OSCEntityManager.update(txEm, securityGroupEntity);
+                    }
+                        return null;
+                    });
+            } catch (ScopedWorkException e) {
+                // Unwrap the ScopedWorkException to get the cause from
+                // the scoped work (i.e. the executeTransaction() call.
+                log.error("Fail to update SG job status.", e.getCause());
+            } catch (Exception e) {
+                // TODO remove when EM and TX are injected
+                log.error("Fail to update SG job status.", e);
+                throw new RuntimeException("There was a problem with the SGConformance Job", e);
             }
         }
     }

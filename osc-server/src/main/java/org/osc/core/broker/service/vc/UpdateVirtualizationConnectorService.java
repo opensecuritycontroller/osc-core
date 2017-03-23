@@ -114,14 +114,14 @@ public class UpdateVirtualizationConnectorService
                 List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByVcId(em, vc.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(em, daiId,
+                        TransactionalBroadcastUtil.addMessageToMap(daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
                 List<Long> vsIds = VirtualSystemEntityMgr.listByVcId(em, vc.getId());
                 if (vsIds != null) {
                     for (Long vsId : vsIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(em, vsId, VirtualSystem.class.getSimpleName(),
+                        TransactionalBroadcastUtil.addMessageToMap(vsId, VirtualSystem.class.getSimpleName(),
                                 EventType.UPDATED);
                     }
                 }

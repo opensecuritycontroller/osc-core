@@ -148,7 +148,13 @@
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
 			<version>6.0.0</version>
-		
+		    <scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.aries.tx-control</groupId>
+			<artifactId>tx-control-api</artifactId>
+			<version>0.0.2</version>
+		    <scope>provided</scope>
 		</dependency>
 
 		<!-- Vaadin Dependencies -->
