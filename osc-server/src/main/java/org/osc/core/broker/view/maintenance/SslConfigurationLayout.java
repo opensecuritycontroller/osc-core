@@ -86,6 +86,8 @@ public class SslConfigurationLayout extends FormLayout {
         this.sslConfigTable.addContainerProperty("Valid until", Date.class, null);
         this.sslConfigTable.addContainerProperty("Algorithm type", String.class, null);
         this.sslConfigTable.addContainerProperty("Delete", Button.class, null);
+        this.sslConfigTable.setColumnCollapsingAllowed(true);
+        this.sslConfigTable.setColumnCollapsed("Issuer", true);
         buildSslConfigurationTable();
 
         Panel sslConfigTablePanel = new Panel();
