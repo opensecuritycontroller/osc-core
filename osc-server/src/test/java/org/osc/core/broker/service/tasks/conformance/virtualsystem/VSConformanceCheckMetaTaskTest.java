@@ -151,8 +151,6 @@ public class VSConformanceCheckMetaTaskTest {
         registerService(UPDATE_VMWARE_SERVICE_PASSWORD_OUT_OF_SYNC_VS.getNsxServiceId(), DEFAULT_SERVICE_NAME, DEFAULT_SERVICE_IP, "passwordOutOfSync");
         registerService(UPDATE_VMWARE_VSPOLICY_NAME_OUT_OF_SYNC_VS.getNsxServiceId(), DEFAULT_SERVICE_NAME, DEFAULT_SERVICE_IP, DEFAULT_SERVICE_PASSWORD);
 
-//        PowerMockito.spy(CreateNsxServiceManagerTask.class);
-//        PowerMockito.doReturn(DEFAULT_SERVICEMANAGER_NAME).when(CreateNsxServiceManagerTask.class, "generateServiceManagerName", Mockito.any(VirtualSystem.class));
         Mockito.when(this.apiFactoryService.generateServiceManagerName(Mockito.any(VirtualSystem.class))).thenReturn(DEFAULT_SERVICEMANAGER_NAME);
 
         PowerMockito.spy(LockUtil.class);
@@ -194,7 +192,6 @@ public class VSConformanceCheckMetaTaskTest {
 
     @Parameters()
     public static Collection<Object[]> getTestData() throws EncryptionException {
-        try {
         return Arrays.asList(new Object[][] {
             {UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS, createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS), false},
             {UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS,  createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS), false},
@@ -220,11 +217,6 @@ public class VSConformanceCheckMetaTaskTest {
             {DELETE_OPENSTACK_WITH_OS_IMAGE_REF_VS,  createDeleteOpenStackWithOSImageRefGraph(DELETE_OPENSTACK_WITH_OS_IMAGE_REF_VS), false},
             {DELETE_OPENSTACK_WITH_OS_FLAVOR_REF_VS,  createDeleteOpenStackWithOSFlavorRefGraph(DELETE_OPENSTACK_WITH_OS_FLAVOR_REF_VS), false},
         });
-        }
-        catch (Throwable t) {
-            t.printStackTrace();
-            return null;
-        }
     }
 
     private void registerServiceManager(String smId, String name, String url, String password) throws Exception {

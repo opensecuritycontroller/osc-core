@@ -89,9 +89,4 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
         return LockObjectReference.getObjectReferences(this.vs);
     }
 
-//    public String generateServiceManagerName(VirtualSystem vs) throws Exception {
-//        return "OSC " +
-//                ManagerApiFactory.getVendorName(vs) +
-//                " " + vs.getDistributedAppliance().getName();
-//    }
 }
