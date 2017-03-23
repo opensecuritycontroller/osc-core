@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -34,12 +35,12 @@ public class SyncDeploymentSpecService extends
     private DeploymentSpec ds;
 
     @Override
-    public BaseJobResponse exec(BaseRequest<DeploymentSpecDto> request, Session session) throws Exception {
+    public BaseJobResponse exec(BaseRequest<DeploymentSpecDto> request, EntityManager em) throws Exception {
 
         BaseJobResponse response = new BaseJobResponse();
 
         UnlockObjectMetaTask unlockTask = null;
-        validate(session, request.getDto());
+        validate(em, request.getDto());
 
         try {
 
@@ -50,7 +51,7 @@ public class SyncDeploymentSpecService extends
 
             // Lock the DS with a write lock and allow it to be unlocked at the end of the job
             unlockTask.addUnlockTask(LockUtil.tryLockDSOnly(this.ds));
-            Job job = ConformService.startDsConformanceJob(session, this.ds, unlockTask);
+            Job job = ConformService.startDsConformanceJob(em, this.ds, unlockTask);
 
             response.setJobId(job.getId());
 
@@ -62,8 +63,8 @@ public class SyncDeploymentSpecService extends
     }
 
     @Override
-    protected void validate(Session session, DeploymentSpecDto dto) throws Exception {
-        this.ds = (DeploymentSpec) session.get(DeploymentSpec.class, dto.getId());
+    protected void validate(EntityManager em, DeploymentSpecDto dto) throws Exception {
+        this.ds = em.find(DeploymentSpec.class, dto.getId());
         if (this.ds == null) {
             throw new VmidcBrokerValidationException("Deployment Specification with Id: " + dto.getId()
                     + "  is not found.");

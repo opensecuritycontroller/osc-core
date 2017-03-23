@@ -21,11 +21,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
@@ -72,7 +73,7 @@ public class HibernateUtil {
     private static final Logger log = Logger.getLogger(HibernateUtil.class);
 
     private static ServiceRegistry serviceRegistry;
-    private static SessionFactory sessionFactory;
+    private static EntityManagerFactory emf;
 
     public static Connection getSQLConnection(DBConnectionParameters params) throws SQLException, KeyStoreProviderException {
         ensureInitialized();
@@ -121,15 +122,15 @@ public class HibernateUtil {
     }
 
     public static void initSessionFactory() {
-        if (sessionFactory != null) {
-            sessionFactory.close();
-            sessionFactory = null;
+        if (emf != null) {
+            emf.close();
+            emf = null;
         }
 
         ensureInitialized();
     }
 
-    private static SessionFactory init() {
+    private static EntityManagerFactory init() {
         /*
          * Increase lock timeout and avoid table lock for updates as per below.
          * http
@@ -150,9 +151,9 @@ public class HibernateUtil {
             serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties())
                     .build();
 
-            sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+            emf = configuration.buildSessionFactory(serviceRegistry);
 
-            return sessionFactory;
+            return emf;
 
         } catch (Throwable ex) {
 
@@ -194,31 +195,31 @@ public class HibernateUtil {
         }
     }
 
-    public static SessionFactory getSessionFactory() {
+    public static EntityManagerFactory getEntityManagerFactory() {
         ensureInitialized();
 
-        return sessionFactory;
+        return emf;
     }
 
     private static void ensureInitialized() {
-        if (sessionFactory == null) {
-            sessionFactory = init();
+        if (emf == null) {
+            emf = init();
         }
     }
 
     public static void shutdown() {
-        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-        Session session = sessionFactory.openSession();
+        EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
+        EntityManager em = emf.createEntityManager();
         try {
-            session.createSQLQuery("SHUTDOWN COMPACT").executeUpdate();
+            em.createNativeQuery("SHUTDOWN COMPACT").executeUpdate();
         } catch (HibernateException e) {
             log.error("Error during shutdown of DB.", e);
             // Ignore errors
         } finally {
-            session.close();
+            em.close();
         }
         // Close caches and connection pools
-        getSessionFactory().close();
+        getEntityManagerFactory().close();
     }
 
 }

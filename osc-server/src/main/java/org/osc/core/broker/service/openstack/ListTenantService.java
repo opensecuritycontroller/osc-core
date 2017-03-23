@@ -16,14 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
@@ -32,10 +33,10 @@ public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResp
     private ListResponse<Tenant> response = new ListResponse<Tenant>();
 
     @Override
-    public ListResponse<Tenant> exec(BaseIdRequest request, Session session) throws Exception {
+    public ListResponse<Tenant> exec(BaseIdRequest request, EntityManager em) throws Exception {
 
         // Initializing Entity Manager
-        EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();

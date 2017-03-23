@@ -16,20 +16,21 @@
  *******************************************************************************/
 package org.osc.core.broker.service.archive;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.archive.JobsArchive;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
 import org.osc.core.broker.service.persistence.JobsArchiveEntityMgr;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 
 public class UpdateJobsArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto>, BaseResponse> {
 
     @Override
-    public BaseResponse exec(BaseRequest<JobsArchiveDto> request, Session session) throws Exception {
-        EntityManager<JobsArchive> emgr = new EntityManager<JobsArchive>(JobsArchive.class, session);
+    public BaseResponse exec(BaseRequest<JobsArchiveDto> request, EntityManager em) throws Exception {
+        OSCEntityManager<JobsArchive> emgr = new OSCEntityManager<JobsArchive>(JobsArchive.class, em);
 
         // retrieve existing entry from db
         JobsArchive jobsArchive = emgr.findByPrimaryKey(request.getDto().getId());

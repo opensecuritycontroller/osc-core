@@ -20,10 +20,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
@@ -36,7 +37,7 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -57,7 +58,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
     private ImageMetadataValidator imageMetadataValidator;
 
     @Override
-    public BaseResponse exec(ImportFileRequest request, Session session) throws Exception {
+    public BaseResponse exec(ImportFileRequest request, EntityManager em) throws Exception {
         BaseResponse response = new BaseResponse();
 
         if (this.tmpUploadFolder == null) {
@@ -68,7 +69,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
 
             validateAndLoad();
 
-            Appliance appliance = ApplianceEntityMgr.findByModel(session, this.imageMetadata.getModel());
+            Appliance appliance = ApplianceEntityMgr.findByModel(em, this.imageMetadata.getModel());
 
             if (appliance == null) {
                 appliance = new Appliance();
@@ -76,7 +77,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                 appliance.setModel(this.imageMetadata.getModel());
                 appliance.setManagerSoftwareVersion(this.imageMetadata.getManagerVersion());
 
-                EntityManager<Appliance> applianceEntityManager = new EntityManager<Appliance>(Appliance.class, session);
+                OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em);
 
                 appliance = applianceEntityManager.create(appliance);
             } else {
@@ -106,7 +107,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
              * If it comes back not null there could still a valid case where the
              * record exists in DB but image does not in the file system.
              */
-            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(session,
+            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(em,
                     appliance.getId(), softwareVersion,
                     org.osc.core.broker.model.entities.appliance.VirtualizationType.valueOf(
                             virtualizationType.name()), virtualizationVersion);
@@ -114,7 +115,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
             boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(this.imageMetadata.getManagerType());
             if (av == null) {
 
-                ApplianceSoftwareVersion asv = ApplianceSoftwareVersionEntityMgr.findByImageUrl(session,
+                ApplianceSoftwareVersion asv = ApplianceSoftwareVersionEntityMgr.findByImageUrl(em,
                         this.imageMetadata.getImageName());
                 if (asv != null) {
                     throw new VmidcBrokerValidationException("Image file: " + this.imageMetadata.getImageName()
@@ -137,11 +138,11 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                 asvDto.getConfigProperties().putAll(this.imageMetadata.getConfigProperties());
                 asvDto.setAdditionalNicForInspection(this.imageMetadata.hasAdditionalNicForInspection());
 
-                EntityManager<ApplianceSoftwareVersion> emgr = new EntityManager<ApplianceSoftwareVersion>(
-                        ApplianceSoftwareVersion.class, session);
+                OSCEntityManager<ApplianceSoftwareVersion> emgr = new OSCEntityManager<ApplianceSoftwareVersion>(
+                        ApplianceSoftwareVersion.class, em);
 
                 // creating new entry in the db using entity manager object
-                av = ApplianceSoftwareVersionEntityMgr.createEntity(session, asvDto, appliance);
+                av = ApplianceSoftwareVersionEntityMgr.createEntity(em, asvDto, appliance);
 
                 av = emgr.create(av);
             } else {
@@ -159,13 +160,13 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                     av.setDiskSizeInGb(this.imageMetadata.getDiskSizeInGb());
                     av.getImageProperties().clear();
                     av.getConfigProperties().clear();
-                    EntityManager.update(session, av);
-                    session.flush();
+                    OSCEntityManager.update(em, av);
+                    em.flush();
 
                     av.getImageProperties().putAll(this.imageMetadata.getImageProperties());
                     av.getConfigProperties().putAll(this.imageMetadata.getConfigProperties());
 
-                    EntityManager.update(session, av);
+                    OSCEntityManager.update(em, av);
                 } else {
                     throw new VmidcBrokerValidationException(
                             "The composite key of Appliance Software Version, Virtualization Type, and Virtualization Software Version already exists.");

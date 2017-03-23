@@ -18,9 +18,10 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification.listener;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
@@ -112,19 +113,20 @@ public class OsVMNotificationListener extends OsNotificationListener {
              * Queue SG Sync first
              */
 
-            Session session = null;
-            Transaction tx = null;
+            EntityManager em = null;
+            EntityTransaction tx = null;
             try {
                 // open a new Hibernate Session
-                session = HibernateUtil.getSessionFactory().openSession();
+                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
                 // begin transaction
-                tx = session.beginTransaction();
+                tx = em.getTransaction();
+                tx.begin();
 
                 // load this entity from database to avoid any lazy loading issues
-                securityGroup = SecurityGroupEntityMgr.findById(session, securityGroup.getId());
+                securityGroup = SecurityGroupEntityMgr.findById(em, securityGroup.getId());
 
                 // iterate through all SGI -> DDS mappings to trigger required DDS Sync
-                ConformService.startSecurityGroupConformanceJob(session, securityGroup, null, true);
+                ConformService.startSecurityGroupConformanceJob(em, securityGroup, null, true);
 
                 tx.commit();
 
@@ -135,8 +137,8 @@ public class OsVMNotificationListener extends OsNotificationListener {
                 log.error("Failed to check if VM openstack Id - " + vmOpenstackId + " is migrated or not!", e);
                 throw e;
             } finally {
-                if (session != null) {
-                    session.close();
+                if (em != null) {
+                    em.close();
                 }
             }
 
@@ -178,8 +180,8 @@ public class OsVMNotificationListener extends OsNotificationListener {
          * 5 If not same then return true as this VM is migrated to another host
          */
 
-        Session session = null;
-        Transaction tx = null;
+        EntityManager em = null;
+        EntityTransaction tx = null;
         try {
 
             VmDiscoveryCache vmCache = new VmDiscoveryCache(this.vc, this.vc.getProviderAdminTenantName());
@@ -194,9 +196,10 @@ public class OsVMNotificationListener extends OsNotificationListener {
                 return false;
             }
 
-            session = HibernateUtil.getSessionFactory().openSession();
-            tx = session.beginTransaction();
-            VM vm = VMEntityManager.findByOpenstackId(session, vmOpenstackId);
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            tx = em.getTransaction();
+            tx.begin();
+            VM vm = VMEntityManager.findByOpenstackId(em, vmOpenstackId);
 
             if (vm == null) {
                 log.error("Got VM notification and checking VM migration but find this VM in our DB. openstack Id - '"
@@ -218,8 +221,8 @@ public class OsVMNotificationListener extends OsNotificationListener {
             log.error("Failed to check if VM openstack Id - " + vmOpenstackId + " is migrated or not!", e);
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
         return false;

@@ -19,7 +19,8 @@ package org.osc.core.broker.service.openstack;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jclouds.openstack.nova.v2_0.domain.HostAggregate;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -28,18 +29,18 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.openstack.request.BaseOpenStackRequest;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.response.ListResponse;
 
 public class ListHostAggregateService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<HostAggregateDto>> {
 
     @Override
-    public ListResponse<HostAggregateDto> exec(BaseOpenStackRequest request, Session session) throws Exception {
+    public ListResponse<HostAggregateDto> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
         JCloudNova novaApi = null;
         try {
             ListResponse<HostAggregateDto> response = new ListResponse<>();
 
-            EntityManager<VirtualSystem> emgr = new EntityManager<>(VirtualSystem.class, session);
+            OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em);
 
             VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 

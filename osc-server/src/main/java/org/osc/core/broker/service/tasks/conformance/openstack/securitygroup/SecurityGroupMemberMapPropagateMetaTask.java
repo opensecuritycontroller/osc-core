@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -40,8 +41,8 @@ public class SecurityGroupMemberMapPropagateMetaTask extends TransactionalMetaTa
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.sg = (SecurityGroup) session.get(SecurityGroup.class, this.sg.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
         this.tg = new TaskGraph();
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {

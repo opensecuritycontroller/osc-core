@@ -18,8 +18,9 @@ package org.osc.core.broker.util.db;
 
 import static org.mockito.Mockito.*;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -35,8 +36,8 @@ public class TransactionalRunnerTest {
     private class TestResponseClass{}
     private class TestRequestClass{}
 
-    private Session sessionMock;
-    private Transaction transactionMock;
+    private EntityManager em;
+    private EntityTransaction transactionMock;
     private SessionHandler sessionHandlerMock;
     private TransactionalRunner<TestResponseClass, TestRequestClass> target;
     private TransactionalAction<TestResponseClass, TestRequestClass> logicMock;
@@ -48,23 +49,23 @@ public class TransactionalRunnerTest {
 
     @SuppressWarnings("unchecked")
     private void init() throws Exception {
-        this.transactionMock = mock(Transaction.class);
-        this.sessionMock = mock(Session.class);
+        this.transactionMock = mock(EntityTransaction.class);
+        this.em = mock(EntityManager.class);
         this.sessionHandlerMock = mock(SessionHandler.class);
 
-        when(this.sessionMock.beginTransaction()).thenReturn(this.transactionMock);
-        when(this.sessionHandlerMock.getSession()).thenReturn(this.sessionMock);
+        when(this.em.getTransaction()).thenReturn(this.transactionMock);
+        when(this.sessionHandlerMock.getEntityManager()).thenReturn(this.em);
 
         this.target = new TransactionalRunner<>(this.sessionHandlerMock);
         this.logicMock = mock(TransactionalAction.class);
         this.failingLogicMock = mock(TransactionalAction.class);
-        when(this.failingLogicMock.run(this.sessionMock, null)).thenThrow(Exception.class);
+        when(this.failingLogicMock.run(this.em, null)).thenThrow(Exception.class);
 
         this.givenRequest = new TestRequestClass();
         this.expectedResponse = new TestResponseClass();
 
-        when(this.logicMock.run(this.sessionMock, this.givenRequest)).thenReturn(this.expectedResponse);
-        when(this.logicMock.run(this.sessionMock, null)).thenReturn(this.expectedResponse);
+        when(this.logicMock.run(this.em, this.givenRequest)).thenReturn(this.expectedResponse);
+        when(this.logicMock.run(this.em, null)).thenReturn(this.expectedResponse);
 
         this.listenerMock = mock(TransactionalListener.class);
 
@@ -87,7 +88,7 @@ public class TransactionalRunnerTest {
 
         // Assert.
         // transaction logic called
-        verify(this.logicMock, times(1)).run(this.sessionMock, null);
+        verify(this.logicMock, times(1)).run(this.em, null);
         // expected outputReturned
         Assert.assertEquals(this.expectedResponse, actualResponse);
     }
@@ -99,7 +100,7 @@ public class TransactionalRunnerTest {
 
         // Assert.
         // transaction logic called
-        verify(this.logicMock, times(1)).run(this.sessionMock, this.givenRequest);
+        verify(this.logicMock, times(1)).run(this.em, this.givenRequest);
         // expected outputReturned
         Assert.assertEquals(this.expectedResponse, actualResponse);
     }
@@ -111,9 +112,9 @@ public class TransactionalRunnerTest {
 
         // Assert.
         // session obtained once
-        verify(this.sessionHandlerMock, times(1)).getSession();
+        verify(this.sessionHandlerMock, times(1)).getEntityManager();
         // session recycled once
-        verify(this.sessionHandlerMock, times(1)).closeSession(this.sessionMock);
+        verify(this.sessionHandlerMock, times(1)).closeSession(this.em);
     }
 
     @Test
@@ -123,7 +124,7 @@ public class TransactionalRunnerTest {
 
         // Assert.
         // transaction opened
-        verify(this.sessionMock, times(1)).beginTransaction();
+        verify(this.transactionMock, times(1)).begin();
         // transaction closed
         verify(this.transactionMock, times(1)).commit();
         // no rollback called
@@ -137,7 +138,7 @@ public class TransactionalRunnerTest {
 
         // Assert.
         // transaction opened
-        verify(this.listenerMock, times(1)).afterCommit(this.sessionMock);
+        verify(this.listenerMock, times(1)).afterCommit(this.em);
     }
 
     @Test
@@ -169,9 +170,9 @@ public class TransactionalRunnerTest {
 
         // Assert.
         // "after rollback" event invoked
-        verify(this.listenerMock, times(1)).afterRollback(this.sessionMock);
+        verify(this.listenerMock, times(1)).afterRollback(this.em);
         // no "after commit" event invocation
-        verify(this.listenerMock, times(0)).afterCommit(this.sessionMock);
+        verify(this.listenerMock, times(0)).afterCommit(this.em);
     }
 
     @Test
@@ -181,9 +182,9 @@ public class TransactionalRunnerTest {
 
         // Assert.
         // "after rollback" event invoked
-        verify(this.sessionHandlerMock, times(1)).getSession();
+        verify(this.sessionHandlerMock, times(1)).getEntityManager();
         // no "after commit" event invocation
-        verify(this.sessionHandlerMock, times(1)).closeSession(this.sessionMock);
+        verify(this.sessionHandlerMock, times(1)).closeSession(this.em);
     }
 
     @Test

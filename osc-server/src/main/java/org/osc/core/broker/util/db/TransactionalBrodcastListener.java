@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.util.db;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 /**
@@ -25,12 +26,12 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
  */
 public class TransactionalBrodcastListener implements TransactionalRunner.TransactionalListener {
     @Override
-    public void afterCommit(Session session) {
-        TransactionalBroadcastUtil.broadcast(session);
+    public void afterCommit(EntityManager em) {
+        TransactionalBroadcastUtil.broadcast(em);
     }
 
     @Override
-    public void afterRollback(Session session) {
-        TransactionalBroadcastUtil.removeSessionFromMap(session);
+    public void afterRollback(EntityManager em) {
+        TransactionalBroadcastUtil.removeSessionFromMap(em);
     }
 }

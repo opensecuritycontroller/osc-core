@@ -19,7 +19,8 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jboss.logging.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
@@ -45,9 +46,9 @@ class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
+        this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
 
         SecurityGroup sg = this.sgm.getSecurityGroup();
 

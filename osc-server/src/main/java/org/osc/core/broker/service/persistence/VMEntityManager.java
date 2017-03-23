@@ -16,17 +16,31 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 
 public class VMEntityManager {
 
-    public static VM findByOpenstackId(Session session, String id) {
+    public static VM findByOpenstackId(EntityManager em, String id) {
 
-        Criteria criteria = session.createCriteria(VM.class).add(Restrictions.eq("openstackId", id));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        return (VM) criteria.uniqueResult();
+        CriteriaQuery<VM> query = cb.createQuery(VM.class);
+
+        Root<VM> root = query.from(VM.class);
+
+        query = query.select(root)
+            .where(cb.equal(root.get("openstackId"), id));
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 }

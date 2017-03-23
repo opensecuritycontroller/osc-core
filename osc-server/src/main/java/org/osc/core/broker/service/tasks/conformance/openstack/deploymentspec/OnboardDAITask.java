@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
@@ -47,8 +48,8 @@ public class OnboardDAITask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.dai = (DistributedApplianceInstance) session.get(DistributedApplianceInstance.class, this.dai.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
         SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),

@@ -18,15 +18,16 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.collections4.CollectionUtils;
-import org.hibernate.Session;
 import org.jboss.logging.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache.PortInfo;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache.VmInfo;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
@@ -42,15 +43,15 @@ class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
 
         VM vm = this.sgm.getVm();
 
         // Verify VM info
         vm.setName(this.vmInfo.name);
         vm.setHost(this.vmInfo.host);
-        EntityManager.update(session, vm);
+        OSCEntityManager.update(em, vm);
 
         // Verify ports info
         for (PortInfo portInfo : this.vmInfo.macAddressToPortMap.values()) {
@@ -68,8 +69,8 @@ class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
                 // Create new missing port
                 VMPort newVmPort = new VMPort(vm, portInfo.macAddress, portInfo.osNetworkId, portInfo.osPortId,
                         portInfo.getPortIPs());
-                EntityManager.update(session, this.sgm);
-                EntityManager.create(session, newVmPort);
+                OSCEntityManager.update(em, this.sgm);
+                OSCEntityManager.create(em, newVmPort);
                 this.log.info("Creating port for VM '" + vm.getName() + "' (" + vm.getOpenstackId() + "). Port:"
                         + newVmPort);
             }
@@ -81,7 +82,7 @@ class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
                 portInfo = this.vmInfo.macAddressToPortMap.get(vmPort.getMacAddresses().get(0));
             }
             if (portInfo == null) {
-                EntityManager.markDeleted(session, vmPort);
+                OSCEntityManager.markDeleted(em, vmPort);
                 this.log.info("Marking Deleting port for VM '" + vm.getName() + "' (" + vm.getOpenstackId()
                         + "). Port:" + vmPort);
             } else {
@@ -89,7 +90,7 @@ class SecurityGroupMemberVmUpdateTask extends TransactionalTask {
                 vmPort.setOsNetworkId(portInfo.osNetworkId);
                 vmPort.setOpenstackId(portInfo.osPortId);
 
-                EntityManager.update(session, vmPort);
+                OSCEntityManager.update(em, vmPort);
             }
         }
     }

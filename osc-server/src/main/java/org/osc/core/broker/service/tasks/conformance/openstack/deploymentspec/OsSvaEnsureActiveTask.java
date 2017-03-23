@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -40,8 +41,8 @@ class OsSvaEnsureActiveTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
 
         String osServerId = this.dai.getOsServerId();
         DeploymentSpec ds = this.dai.getDeploymentSpec();

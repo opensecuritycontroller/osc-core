@@ -17,32 +17,36 @@
 package org.osc.core.broker.service.request;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
 
-import java.io.Serializable;
+import javax.persistence.EntityManager;
 
-import org.hibernate.Session;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.osc.core.broker.model.entities.appliance.Appliance;
+import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.entities.management.Domain;
+import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.util.SessionStub;
+import org.osc.core.broker.service.test.InMemDB;
 
 public class AgentRegisterServiceRequestValidatorTest {
-    @Mock
-    private Session sessionMock;
+
+    private EntityManager em;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     private AgentRegisterServiceRequestValidator validator;
-    private static DistributedApplianceInstance DAI_WITH_VS = createDai(new VirtualSystem());
+    private static DistributedApplianceInstance DAI_WITH_VS;
 
     private static AgentRegisterServiceRequest REQUEST_WITH_NAME =
             createRequest("REQUEST_NAME", "REQUEST_WITH_NAME_IP", 1L);
@@ -62,17 +66,93 @@ public class AgentRegisterServiceRequestValidatorTest {
     private static AgentRegisterServiceRequest REQUEST_VS_NOT_FOUND =
             createRequest("REQUEST_VS_NOT_FOUND_NAME", "REQUEST_VS_NOT_FOUND_IP", 6L);
 
+    private VirtualSystem vs;
+
     @Before
     public void testInitialize() {
         MockitoAnnotations.initMocks(this);
-        SessionStub sessionStub = new SessionStub(this.sessionMock);
 
-        this.validator = new AgentRegisterServiceRequestValidator(this.sessionMock);
+        this.em = InMemDB.getEntityManagerFactory().createEntityManager();
 
-        sessionStub.stubFindByFieldName("name", REQUEST_WITH_NAME.getName(), DAI_WITH_VS);
-        sessionStub.stubFindByFieldName("ipAddress", REQUEST_DAI_FOUND_BY_IP.getApplianceIp(), DAI_WITH_VS);
+        populateDatabase();
 
-        when(this.sessionMock.get(VirtualSystem.class, REQUEST_VS_FOUND.getVsId())).thenReturn(new VirtualSystem());
+        REQUEST_VS_FOUND.setVirtualSystemId(this.vs.getId());
+
+        this.validator = new AgentRegisterServiceRequestValidator(this.em);
+    }
+
+    @After
+    public void testTearDown() {
+        InMemDB.shutdown();
+    }
+
+    private void populateDatabase() {
+
+        this.em.getTransaction().begin();
+
+        Appliance app = new Appliance();
+        app.setManagerSoftwareVersion("fizz");
+        app.setManagerType("buzz");
+        app.setModel("fizzbuzz");
+
+        this.em.persist(app);
+
+        ApplianceManagerConnector amc = new ApplianceManagerConnector();
+        amc.setManagerType("buzz");
+        amc.setIpAddress("127.0.0.1");
+        amc.setName("Steve");
+        amc.setServiceType("foobar");
+
+        this.em.persist(amc);
+
+        Domain domain = new Domain(amc);
+        domain.setName("domainName");
+
+        this.em.persist(domain);
+
+        VirtualizationConnector vc = new VirtualizationConnector();
+        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+        vc.setName("vcName");
+        vc.setProviderIpAddress("127.0.0.1");
+        vc.setProviderUsername("Natasha");
+        vc.setProviderPassword("********");
+
+        this.em.persist(vc);
+
+        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
+        asv.setApplianceSoftwareVersion("softwareVersion");
+        asv.setImageUrl("bar");
+        asv.setVirtualizarionSoftwareVersion(vc.getVirtualizationSoftwareVersion());
+        asv.setVirtualizationType(vc.getVirtualizationType());
+
+        this.em.persist(asv);
+
+        DistributedAppliance da = new DistributedAppliance(amc);
+        da.setName("daName");
+        da.setApplianceVersion(asv.getApplianceSoftwareVersion());
+        da.setAppliance(app);
+
+        this.em.persist(da);
+
+        this.vs = new VirtualSystem(da);
+        this.vs.setApplianceSoftwareVersion(asv);
+        this.vs.setDomain(domain);
+        this.vs.setVirtualizationConnector(vc);
+        this.vs.setMarkedForDeletion(false);
+        this.vs.setName("vsName");
+
+        this.em.persist(this.vs);
+        da.addVirtualSystem(this.vs);
+
+        DAI_WITH_VS = new DistributedApplianceInstance(this.vs);
+        DAI_WITH_VS.setName("REQUEST_NAME");
+        DAI_WITH_VS.setIpAddress("REQUEST_WITHOUT_NAME_IP");
+        DAI_WITH_VS.setApplianceConfig(new byte[3]);
+
+        this.em.persist(DAI_WITH_VS);
+
+        this.em.getTransaction().commit();
     }
 
     @Test
@@ -148,8 +228,6 @@ public class AgentRegisterServiceRequestValidatorTest {
         // Assert.
         assertThat(dai).as("dai").isNotNull();
         assertThat(dai).isEqualTo(expectedDai);
-
-        verify(this.sessionMock, times(0)).get(any(Class.class), any(Serializable.class));
     }
 
     private static AgentRegisterServiceRequest createRequest(String name, String ipAddress, Long vsId) {
@@ -159,10 +237,5 @@ public class AgentRegisterServiceRequestValidatorTest {
         request.setVirtualSystemId(vsId);
 
         return request;
-    }
-
-    private static DistributedApplianceInstance createDai(VirtualSystem vs) {
-        DistributedApplianceInstance dai = new DistributedApplianceInstance(vs);
-        return dai;
     }
 }

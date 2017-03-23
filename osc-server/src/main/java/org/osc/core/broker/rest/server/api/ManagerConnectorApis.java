@@ -33,8 +33,8 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteApplianceManagerConnectorService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDomainsByMcIdService;
@@ -52,7 +52,9 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -70,6 +72,9 @@ import io.swagger.annotations.Authorization;
 public class ManagerConnectorApis {
 
     private static final Logger logger = Logger.getLogger(ManagerConnectorApis.class);
+
+    @Reference
+    private ConformService conformService;
 
     @ApiOperation(value = "Lists All Manager Connectors",
             notes = "Password/API Key information is not returned as it is sensitive information",
@@ -126,7 +131,7 @@ public class ManagerConnectorApis {
         logger.info("Creating Appliance Manager Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponseForBaseRequest(new AddApplianceManagerConnectorService(),
+        return ApiUtil.getResponseForBaseRequest(new AddApplianceManagerConnectorService(this.conformService),
                 new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
     }
 
@@ -151,7 +156,7 @@ public class ManagerConnectorApis {
 
         ApiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
 
-        return ApiUtil.getResponseForBaseRequest(new UpdateApplianceManagerConnectorService(),
+        return ApiUtil.getResponseForBaseRequest(new UpdateApplianceManagerConnectorService(this.conformService),
                 new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
     }
 

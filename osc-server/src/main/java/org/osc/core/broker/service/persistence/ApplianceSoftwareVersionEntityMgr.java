@@ -20,12 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
@@ -33,11 +34,10 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
-//import org.osc.sdk.controller.TagEncapsulationType;
 
 public class ApplianceSoftwareVersionEntityMgr {
 
-    public static ApplianceSoftwareVersion createEntity(Session session, ApplianceSoftwareVersionDto dto, Appliance a) {
+    public static ApplianceSoftwareVersion createEntity(EntityManager em, ApplianceSoftwareVersionDto dto, Appliance a) {
 
         ApplianceSoftwareVersion av = new ApplianceSoftwareVersion(a);
 
@@ -85,90 +85,110 @@ public class ApplianceSoftwareVersionEntityMgr {
         dto.setAdditionalNicForInspection(av.hasAdditionalNicForInspection());
     }
 
-    public static ApplianceSoftwareVersion findByApplianceVersionVirtTypeAndVersion(Session session, Long applianceId, String av,
+    public static ApplianceSoftwareVersion findByApplianceVersionVirtTypeAndVersion(EntityManager em, Long applianceId, String av,
             VirtualizationType vt, String vv) {
 
-        Criteria criteria = session.createCriteria(ApplianceSoftwareVersion.class).createAlias("appliance", "a")
-                .add(Restrictions.eq("a.id", applianceId))
-                .add(Restrictions.eq("applianceSoftwareVersion", av).ignoreCase())
-                .add(Restrictions.eq("virtualizationType", vt))
-                .add(Restrictions.eq("virtualizationSoftwareVersion", vv).ignoreCase());
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        ApplianceSoftwareVersion item = (ApplianceSoftwareVersion) criteria.setFirstResult(0).setMaxResults(1)
-                .uniqueResult();
+        CriteriaQuery<ApplianceSoftwareVersion> query = cb.createQuery(ApplianceSoftwareVersion.class);
 
-        return item;
+        Root<ApplianceSoftwareVersion> root = query.from(ApplianceSoftwareVersion.class);
 
+        query = query.select(root)
+                .where(cb.equal(root.join("appliance").get("id"), applianceId),
+                       cb.equal(cb.upper(root.get("applianceSoftwareVersion")), av.toUpperCase()),
+                       cb.equal(root.get("virtualizationType"), vt),
+                       cb.equal(cb.upper(root.get("virtualizationSoftwareVersion")), vv.toUpperCase())
+                   );
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
-    public static ApplianceSoftwareVersion findByImageUrl(Session session, String imageUrl) {
+    public static ApplianceSoftwareVersion findByImageUrl(EntityManager em, String imageUrl) {
 
-        Criteria criteria = session.createCriteria(ApplianceSoftwareVersion.class)
-                .add(Restrictions.eq("imageUrl", imageUrl));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        ApplianceSoftwareVersion item = (ApplianceSoftwareVersion) criteria.setFirstResult(0).setMaxResults(1)
-                .uniqueResult();
+        CriteriaQuery<ApplianceSoftwareVersion> query = cb.createQuery(ApplianceSoftwareVersion.class);
 
-        return item;
+        Root<ApplianceSoftwareVersion> root = query.from(ApplianceSoftwareVersion.class);
 
+        query = query.select(root)
+                .where(cb.equal(root.get("imageUrl"), imageUrl));
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
-    public static boolean isExisting(Session session, Long applianceId, String applianceSoftwareVersion,
+    public static boolean isExisting(EntityManager em, Long applianceId, String applianceSoftwareVersion,
             VirtualizationType virtualizationType, String virtualizationSoftwareVersion) {
 
-        Criteria criteria = session.createCriteria(ApplianceSoftwareVersion.class).createAlias("appliance", "a")
-                .add(Restrictions.eq("a.id", applianceId))
-                .add(Restrictions.eq("applianceSoftwareVersion", applianceSoftwareVersion).ignoreCase())
-                .add(Restrictions.eq("virtualizationType", virtualizationType))
-                .add(Restrictions.eq("virtualizationSoftwareVersion", virtualizationSoftwareVersion).ignoreCase());
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Long count = (Long) criteria.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1)
-                .uniqueResult();
+        CriteriaQuery<ApplianceSoftwareVersion> query = cb.createQuery(ApplianceSoftwareVersion.class);
 
-        if (count > 0) {
+        Root<ApplianceSoftwareVersion> root = query.from(ApplianceSoftwareVersion.class);
 
-            return true;
-        }
+        query = query.select(root)
+                .where(cb.equal(root.join("appliance").get("id"), applianceId),
+                       cb.equal(cb.upper(root.get("applianceSoftwareVersion")), applianceSoftwareVersion.toUpperCase()),
+                       cb.equal(root.get("virtualizationType"), virtualizationType),
+                       cb.equal(cb.upper(root.get("virtualizationSoftwareVersion")), virtualizationSoftwareVersion.toUpperCase())
+                   );
 
-        return false;
+        List<ApplianceSoftwareVersion> items = em.createQuery(query).setMaxResults(1).getResultList();
 
-    }
-
-    public static boolean isReferencedByApplianceSoftwareVersion(Session session, Appliance a) {
-
-        Criteria criteria = session.createCriteria(ApplianceSoftwareVersion.class).createAlias("appliance", "a")
-                .add(Restrictions.eq("a.id", a.getId()));
-
-        Long count = (Long) criteria.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1)
-                .uniqueResult();
-
-        if (count > 0) {
-
-            return true;
-        }
-
-        return false;
+        return !items.isEmpty();
 
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<ApplianceSoftwareVersion> getApplianceSoftwareVersionsByApplianceId(Session session,
+    public static boolean isReferencedByApplianceSoftwareVersion(EntityManager em, Appliance a) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<ApplianceSoftwareVersion> query = cb.createQuery(ApplianceSoftwareVersion.class);
+
+        Root<ApplianceSoftwareVersion> root = query.from(ApplianceSoftwareVersion.class);
+
+        query = query.select(root)
+                .where(cb.equal(root.join("appliance").get("id"), a.getId()));
+
+        List<ApplianceSoftwareVersion> items = em.createQuery(query).setMaxResults(1).getResultList();
+
+        return !items.isEmpty();
+    }
+
+    public static List<ApplianceSoftwareVersion> getApplianceSoftwareVersionsByApplianceId(EntityManager em,
             Long applianceId) {
-        return session.createCriteria(ApplianceSoftwareVersion.class).add(Restrictions.eq("appliance.id", applianceId))
-                .addOrder(Order.asc("applianceSoftwareVersion")).list();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<ApplianceSoftwareVersion> query = cb.createQuery(ApplianceSoftwareVersion.class);
+
+        Root<ApplianceSoftwareVersion> root = query.from(ApplianceSoftwareVersion.class);
+
+        query = query.select(root)
+                .where(cb.equal(root.join("appliance").get("id"), applianceId))
+                .orderBy(cb.asc(root.get("applianceSoftwareVersion")));
+
+        return em.createQuery(query).getResultList();
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<ApplianceModelSoftwareVersionDto> findByMcType(Session session, ManagerType mcType) {
+    public static List<ApplianceModelSoftwareVersionDto> findByMcType(EntityManager em, ManagerType mcType) {
 
         String hql = "SELECT DISTINCT A.id AS aId, A.model AS aModel, AV.applianceSoftwareVersion AS avSwVersion FROM Appliance A, ApplianceSoftwareVersion AV"
                 + " WHERE A.managerType = :mcType AND AV.appliance.id = A.id"
                 + " ORDER BY aModel ASC, avSwVersion DESC";
 
-        Query query = session.createQuery(hql);
+        TypedQuery<Object[]> query = em.createQuery(hql, Object[].class);
         query.setParameter("mcType", mcType.toString());
 
-        List<Object[]> ls = query.list();
+        List<Object[]> ls = query.getResultList();
 
         List<ApplianceModelSoftwareVersionDto> dtoList = new ArrayList<ApplianceModelSoftwareVersionDto>();
 
@@ -187,33 +207,29 @@ public class ApplianceSoftwareVersionEntityMgr {
     }
 
     /**
-     * @param session
+     * @param em
      *            Hibernate Session
      * @param version
      *            Appliance software version string e.g. "8.2.7.27"
      * @return
      *         List of Appliance Software version objects
      */
-    @SuppressWarnings("unchecked")
-    public static List<ApplianceSoftwareVersion> findBSoftwareByVersion(Session session, String version) {
-        Criteria criteria = session.createCriteria(ApplianceSoftwareVersion.class)
-                .add(Restrictions.eq("applianceSoftwareVersion", version))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
-
+    public static List<ApplianceSoftwareVersion> findBSoftwareByVersion(EntityManager em, String version) {
+        return new OSCEntityManager<>(ApplianceSoftwareVersion.class, em)
+                .listByFieldName("applianceSoftwareVersion", version);
     }
 
     /**
-     * @param session
+     * @param em
      *            Hibernate Session
      * @param version
      * @return
      *         List of TagEncapsulationType for a gives Appliance software version
      */
-    public static List<TagEncapsulationType> getEncapsulationByApplianceSoftwareVersion(Session session,
+    public static List<TagEncapsulationType> getEncapsulationByApplianceSoftwareVersion(EntityManager em,
             String version, String model, VirtualizationType vcType) {
 
-        List<ApplianceSoftwareVersion> applianceList = findBSoftwareByVersion(session, version);
+        List<ApplianceSoftwareVersion> applianceList = findBSoftwareByVersion(em, version);
 
         for (ApplianceSoftwareVersion av : applianceList) {
             // return list of encapsulation type if the appliance software version is of Type Open stack and Encapsulation Type is not empty

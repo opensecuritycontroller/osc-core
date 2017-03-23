@@ -54,7 +54,7 @@ public class AuthUtilTest {
 			}
 
 			@Override
-			public void updateKey(byte[] key) throws EncryptionException {
+			public void updateKey(String keyHex) throws EncryptionException {
 				// dont do nothing
 			}
 		});

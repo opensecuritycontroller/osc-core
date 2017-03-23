@@ -18,16 +18,17 @@ package org.osc.core.server.scheduler;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.TransactionalRunner;
@@ -47,12 +48,14 @@ public class SyncDistributedApplianceJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
-        Session session = null;
+        ConformService conformService = (ConformService) context.get(ConformService.class.getName());
+        EntityManager em = null;
         try {
-            session = HibernateUtil.getSessionFactory().openSession();
-            EntityManager<DistributedAppliance> emgr = new EntityManager<DistributedAppliance>(
-                    DistributedAppliance.class, session);
-            Transaction tx = session.beginTransaction();
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
+                    DistributedAppliance.class, em);
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
             List<DistributedAppliance> das = emgr.listAll();
             tx.commit();
 
@@ -66,13 +69,13 @@ public class SyncDistributedApplianceJob implements Job {
                             .exec(new TransactionalAction<Object, DistributedAppliance>() {
 
                             @Override
-                            public Object run(Session session, DistributedAppliance da) {
+                            public Object run(EntityManager em, DistributedAppliance da) {
 
                                         SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
 
                                 try {
-                                    da = (DistributedAppliance) session.get(DistributedAppliance.class, da.getId());
-                                    ConformService.startDAConformJob(session, da, null, false);
+                                    da = em.find(DistributedAppliance.class, da.getId());
+                                    conformService.startDAConformJob(em, da, null, false);
                                 } catch (Exception ex) {
                                     AlertGenerator.processSystemFailureEvent(
                                             SystemFailureType.SCHEDULER_FAILURE,
@@ -99,8 +102,8 @@ public class SyncDistributedApplianceJob implements Job {
 
         } finally {
 
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }

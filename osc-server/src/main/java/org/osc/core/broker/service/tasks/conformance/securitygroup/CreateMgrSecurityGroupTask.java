@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
@@ -30,7 +31,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberElementImpl;
 import org.osc.core.broker.model.plugin.manager.SecurityGroupMemberListElementImpl;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.SecurityGroupMemberElement;
@@ -49,8 +50,8 @@ class CreateMgrSecurityGroupTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.sg = (SecurityGroup) session.get(SecurityGroup.class, this.sg.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
         ManagerSecurityGroupApi mgrApi = ManagerApiFactory.createManagerSecurityGroupApi(this.vs);
         try {
@@ -63,7 +64,7 @@ class CreateMgrSecurityGroupTask extends TransactionalTask {
             String mgrEndpointGroupId = mgrApi.createSecurityGroup(this.sg.getName(), iscId,
                     getSecurityGroupMemberListElement(this.sg));
             this.sg.setMgrId(mgrEndpointGroupId);
-            EntityManager.update(session, this.sg);
+            OSCEntityManager.update(em, this.sg);
 
         } finally {
             mgrApi.close();

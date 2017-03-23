@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.JobEngine;
@@ -27,7 +28,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.request.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.service.request.RequestValidator;
@@ -98,9 +99,9 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
     }
 
     @Override
-    public BaseJobResponse exec(BaseDeleteRequest request, Session session) throws Exception {
+    public BaseJobResponse exec(BaseDeleteRequest request, EntityManager em) throws Exception {
         if (this.validator == null) {
-            this.validator = new DeleteDistributedApplianceRequestValidator(session);
+            this.validator = new DeleteDistributedApplianceRequestValidator(em);
         }
 
         Long jobId;
@@ -119,7 +120,7 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
                 jobId = job.getId();
 
             } else {
-                EntityManager.markDeleted(session, da);
+                OSCEntityManager.markDeleted(em, da);
                 commitChanges(true);
                 jobId = startDeleteDAJob(da, ult).getId();
             }
@@ -127,7 +128,7 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
 
         } catch (Exception ex) {
             LockUtil.releaseLocks(ult);
-            TransactionalBroadcastUtil.removeSessionFromMap(session);
+            TransactionalBroadcastUtil.removeSessionFromMap(em);
             throw ex;
         }
 

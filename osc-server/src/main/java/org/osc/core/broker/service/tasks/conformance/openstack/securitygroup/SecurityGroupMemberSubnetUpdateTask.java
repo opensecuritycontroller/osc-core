@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jboss.logging.Logger;
 import org.jclouds.openstack.neutron.v2.domain.IP;
 import org.jclouds.openstack.neutron.v2.domain.Port;
@@ -35,7 +36,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -55,9 +56,9 @@ class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
+        this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
 
         Subnet subnet = this.sgm.getSubnet();
 
@@ -80,9 +81,9 @@ class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
                 // Check to see if the port belongs to one of our DAI. Only if the port does not belong to the DAI
                 // Add it to our DB for it to be protected later, so we prevent self inspection loop
                 DistributedApplianceInstance daiForPort = DistributedApplianceInstanceEntityMgr.getByOSServerId(
-                        session, osPort.getDeviceId());
+                        em, osPort.getDeviceId());
                 if (daiForPort == null) {
-                    VMPort vmPort = VMPortEntityManager.findByOpenstackId(session, osPort.getId());
+                    VMPort vmPort = VMPortEntityManager.findByOpenstackId(em, osPort.getId());
                     if (vmPort == null) {
                         // get list of IP address from port
                         List<String> ipAddresses = new ArrayList<>();
@@ -91,7 +92,7 @@ class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
                         }
                         vmPort = new VMPort(subnet, osPort.getMacAddress(), subnet.getOpenstackId(), osPort.getId(),
                                 ipAddresses);
-                        EntityManager.create(session, vmPort);
+                        OSCEntityManager.create(em, vmPort);
                         this.log.info("Creating port for Subnet '" + subnet.getName() + "' with Port:" + vmPort);
                     } else {
                         //Port exists check if it belongs to a VM
@@ -128,14 +129,14 @@ class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
                                 }
                             }
                         }
-                        // Port belongs to this Subnet. It it was mark deleted by Protect External flag and user reverted it then revert mark deletion flag and remove it from staled port list 
+                        // Port belongs to this Subnet. It it was mark deleted by Protect External flag and user reverted it then revert mark deletion flag and remove it from staled port list
                         if (vmPort.getMarkedForDeletion()) {
-                            EntityManager.unMarkDeleted(session, vmPort);
+                            OSCEntityManager.unMarkDeleted(em, vmPort);
                             existingOsPortIds.remove(osPort.getId());
                         }
                     }
                     if (!subnet.isProtectExternal()) {
-                        OpenstackUtil.discoverVmForPort(session, subnet.getRegion(), sg, osPort, vmPort);
+                        OpenstackUtil.discoverVmForPort(em, subnet.getRegion(), sg, osPort, vmPort);
                     }
                 }
 
@@ -151,7 +152,7 @@ class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
             }
         }
 
-        EntityManager.update(session, subnet);
+        OSCEntityManager.update(em, subnet);
     }
 
     @Override

@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -33,9 +34,9 @@ import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteVirtual
 public class ForceDeleteVirtualSystemService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse> {
 
     @Override
-    public BaseJobResponse exec(BaseDeleteRequest request, Session session) throws Exception {
+    public BaseJobResponse exec(BaseDeleteRequest request, EntityManager em) throws Exception {
 
-        VirtualSystem vs = validate(session, request);
+        VirtualSystem vs = validate(em, request);
 
         UnlockObjectMetaTask ult = null;
 
@@ -59,13 +60,13 @@ public class ForceDeleteVirtualSystemService extends ServiceDispatcher<BaseDelet
         }
     }
 
-    private VirtualSystem validate(Session session, BaseDeleteRequest request) throws Exception {
+    private VirtualSystem validate(EntityManager em, BaseDeleteRequest request) throws Exception {
 
         if (!request.isForceDelete()) {
             throw new VmidcBrokerValidationException("Virtual System can only be force deleted with this request");
         }
 
-        VirtualSystem vs = (VirtualSystem) session.get(VirtualSystem.class, request.getId());
+        VirtualSystem vs = em.find(VirtualSystem.class, request.getId());
 
         if (vs == null) {
             throw new VmidcBrokerValidationException("Virtual System with ID " + request.getId() + " is not found.");

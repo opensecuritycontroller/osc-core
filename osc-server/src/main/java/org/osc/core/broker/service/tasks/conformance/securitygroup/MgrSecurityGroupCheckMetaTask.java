@@ -19,8 +19,9 @@ package org.osc.core.broker.service.tasks.conformance.securitygroup;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -51,8 +52,8 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         if (this.vs.getMgrId() == null) {
             log.warn("Manager VSS Device is not yet present. Do nothing.");
@@ -95,7 +96,7 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
             // Remove any security groups which has no policy binding
             for (ManagerSecurityGroupElement mepge : mgrEndpointGroups) {
                 // Check if SG present in our Database
-                SecurityGroup sg = findVmidcSecurityGroupByMgrId(session, mepge);
+                SecurityGroup sg = findVmidcSecurityGroupByMgrId(em, mepge);
                 if (sg == null || sg.getSecurityGroupInterfaces().isEmpty()) {
                     // Delete security group from Manager if SG is not in our DB
                     this.tg.appendTask(new DeleteMgrSecurityGroupTask(this.vs, mepge));
@@ -113,9 +114,9 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         }
     }
 
-    private SecurityGroup findVmidcSecurityGroupByMgrId(Session session, ManagerSecurityGroupElement mgrSecurityGroup)
+    private SecurityGroup findVmidcSecurityGroupByMgrId(EntityManager em, ManagerSecurityGroupElement mgrSecurityGroup)
             throws Exception {
-        return SecurityGroupEntityMgr.listSecurityGroupsByVcIdAndMgrId(session, this.vs.getVirtualizationConnector()
+        return SecurityGroupEntityMgr.listSecurityGroupsByVcIdAndMgrId(em, this.vs.getVirtualizationConnector()
                 .getId(), mgrSecurityGroup.getSGId());
     }
 

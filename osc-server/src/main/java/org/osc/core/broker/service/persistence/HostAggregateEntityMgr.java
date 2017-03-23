@@ -18,9 +18,11 @@ package org.osc.core.broker.service.persistence;
 
 import java.util.List;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 
@@ -35,10 +37,16 @@ public class HostAggregateEntityMgr {
         entity.setName(dto.getName());
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<HostAggregate> listByOpenstackId(Session session, String openstackId) {
-        Criteria criteria = session.createCriteria(HostAggregate.class)
-                .add(Restrictions.eq("openstackId", openstackId)).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<HostAggregate> listByOpenstackId(EntityManager em, String openstackId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<HostAggregate> query = cb.createQuery(HostAggregate.class);
+
+        Root<HostAggregate> root = query.from(HostAggregate.class);
+
+        query = query.select(root).distinct(true)
+            .where(cb.equal(root.get("openstackId"), openstackId));
+
+        return em.createQuery(query).getResultList();
     }
 }

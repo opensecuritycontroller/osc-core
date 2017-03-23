@@ -16,28 +16,21 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.APPLIANCE_ID_EXISTING;
 import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_DA;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_VC;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_MISMATCHING_MC;
 import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_NAME_EXISTING_DA;
 import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_NAME_NEW_DA;
 import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.EMPTY_VALUE_ERROR_MESSAGE;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.MC_ID_VALID_MC;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_OPENSTACK;
 import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.createDistributedApplianceDto;
 
 import java.text.MessageFormat;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
@@ -49,36 +42,16 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ManagerApiFactory.class})
 public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDtoValidatorBaseTest{
-    private DistributedAppliance existingDa;
-    private DistributedAppliance mismatchingMcDa;
+//    private DistributedAppliance existingDa;
 
     @Override
     @Before
     public void testInitialize() throws Exception{
         super.testInitialize();
 
-        ApplianceManagerConnector mc = new ApplianceManagerConnector();
-        mc.setId(MC_ID_VALID_MC);
-        mc.setManagerType(ManagerType.NSM.toString());
-        this.existingDa = new DistributedAppliance(mc);
-        this.existingDa.setId(DA_ID_EXISTING_DA);
-
-        ApplianceManagerConnector mistmatchingMc = new ApplianceManagerConnector();
-        mistmatchingMc.setId(450L);
-        this.mismatchingMcDa = new DistributedAppliance(mistmatchingMc);
-
-        Mockito.when(this.sessionMock.get(Appliance.class, APPLIANCE_ID_EXISTING)).thenReturn(new Appliance());
-        Mockito.when(this.sessionMock.get(DistributedAppliance.class, DA_ID_EXISTING_DA)).thenReturn(this.existingDa);
-        Mockito.when(this.sessionMock.get(DistributedAppliance.class, DA_ID_MISMATCHING_MC)).thenReturn(this.mismatchingMcDa);
-
-        this.sessionStub.stubIsExistingEntity(DistributedAppliance.class, "name", DA_NAME_EXISTING_DA, true);
-        this.sessionStub.stubIsExistingEntity(DistributedAppliance.class, "name", DA_NAME_NEW_DA, false);
-
-        this.sessionStub.stubFindVirtualSystem(DA_ID_EXISTING_VC, VC_ID_OPENSTACK, new VirtualSystem());
-
         PowerMockito.mockStatic(ManagerApiFactory.class);
-        ManagerType.addType(mc.getManagerType());
-        Mockito.when(ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()))).thenReturn(true);
+        ManagerType.addType(ManagerType.NSM.getValue());
+        Mockito.when(ManagerApiFactory.syncsPolicyMapping(ManagerType.NSM)).thenReturn(true);
     }
 
     @Test
@@ -86,6 +59,13 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
         // Arrange.
         DistributedApplianceDto existingDaDto= createDistributedApplianceDto();
         existingDaDto.setName(DA_NAME_EXISTING_DA);
+        existingDaDto.setApplianceId(this.app.getId());
+        existingDaDto.setMcId(this.amc.getId());
+
+        for (VirtualSystemDto vsDto : existingDaDto.getVirtualizationSystems()) {
+            vsDto.setVcId(this.vc.getId());
+            vsDto.setDomainId(this.domain.getId());
+        }
 
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage(MessageFormat.format("Distributed Appliance Name: {0} already exists.", DA_NAME_EXISTING_DA));
@@ -99,6 +79,13 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
         // Arrange.
         DistributedApplianceDto newDaDto= createDistributedApplianceDto();
         newDaDto.setName(DA_NAME_NEW_DA);
+        newDaDto.setApplianceId(this.app.getId());
+        newDaDto.setMcId(this.amc.getId());
+
+        for (VirtualSystemDto vsDto : newDaDto.getVirtualizationSystems()) {
+            vsDto.setVcId(this.vc.getId());
+            vsDto.setDomainId(this.domain.getId());
+        }
 
         // Act.
         this.validator.validateForCreate(newDaDto);
@@ -135,8 +122,10 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
     public void testValidateForUpdate_WhenManagerConnectorIdMismatches_ThrowsValidationException() throws Exception {
         // Arrange.
         DistributedApplianceDto daDto = createDistributedApplianceDto();
-        daDto.setId(DA_ID_MISMATCHING_MC);
-        daDto.setMcId(this.mismatchingMcDa.getApplianceManagerConnector().getId() + 1);
+        daDto.setId(this.da.getId());
+        daDto.setName(DA_NAME_EXISTING_DA);
+        daDto.setApplianceId(this.app.getId());
+        daDto.setMcId(this.amc.getId() + 1);
 
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage("Appliance Manager Connector change is not allowed.");
@@ -145,7 +134,14 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
         this.validator.validateForUpdate(daDto);
     }
 
+    /**
+     * This test is currently ignored because it does not make sense when using
+     * a real database. The returned value will always have the right id because it
+     * is loaded by id (its primary key).
+     * @throws Exception
+     */
     @Test
+    @Ignore
     public void testValidateForUpdate_WhenDistributedApplianceExists_ExpectsCorrespondentDa() throws Exception {
         // Arrange.
         DistributedApplianceDto daDto = createDistributedApplianceDto();
@@ -156,6 +152,6 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
 
         // Assert.
         Assert.assertNotNull("The returned da should not be null.",  da);
-        Assert.assertEquals("The id of the returned da was different than expected.", this.existingDa.getId(), da.getId());
+        Assert.assertEquals("The id of the returned da was different than expected.", this.da.getId(), da.getId());
     }
 }

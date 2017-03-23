@@ -16,32 +16,27 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Session;
-import org.hibernate.jdbc.Work;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
 
+import javax.persistence.EntityManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.nio.file.Files;
 
 public class BackupService extends BackupFileService<BackupRequest, BackupResponse> {
 
 
     @Override
-    public BackupResponse exec(BackupRequest request, Session session) throws Exception {
+    public BackupResponse exec(BackupRequest request, EntityManager em) throws Exception {
         BackupResponse res = new BackupResponse();
         try {
         	// check for backup custom filename
@@ -54,17 +49,16 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
             deleteBackupFiles();
             
             // create temporary backup zip
-            createBackupZipFile(session, backupFileName);
-        	
-            // get zip file bytes
-            byte[] backupFileBytes = getBackupZipFileBytes(backupFileName);
-            
-            // concatenate zip file bytes with fixed length password bytes
-            byte[] backupData = appendDBPassword(backupFileBytes);
-            backupData = appendAESCTRKey(backupData);
+            createBackupZipFile(em, backupFileName);
+
+            BackupData backupData = new BackupData();
+            backupData.setDbData(getBackupZipFileBytes(backupFileName)); // zip that contains DB backup
+            backupData.setDbPassword(getDBPassword()); // admin password to DB
+            backupData.setAesCTRKeyHex(getAESCTRKeyHex()); // AES CTR key in hex
+            backupData.setTruststoreData(getTruststoreData()); // truststore as byte array
 
             // encrypt the concatenation with AES-GCM
-            byte[] encryptedBackupFileBytes = encryptBackupFileBytes(backupData, request.getBackupPassword());
+            byte[] encryptedBackupFileBytes = encryptBackupFileBytes(backupData.serialize(), request.getBackupPassword());
             
             // remove temporary backup zip
             deleteFile(resolveBackupZipPath(backupFileName));
@@ -111,18 +105,11 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
         }
     }
 
-    void createBackupZipFile(Session session, String backupFileName) {
+    void createBackupZipFile(EntityManager em, String backupFileName) {
     	// create backup file
-        session.doWork(new Work() {
-            @Override
-            @SuppressFBWarnings(value="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
-            public void execute(Connection connection) throws SQLException {
-                log.info("Execute sql: " + "BACKUP TO '" + resolveBackupZipPath(backupFileName)  + "';");
-                try (Statement statement = connection.createStatement()) {
-                	statement.execute("BACKUP TO '" + resolveBackupZipPath(backupFileName) + "';");
-                }
-            }
-        });
+        String sql = "BACKUP TO '" + resolveBackupZipPath(backupFileName) + "'";
+        log.info("Execute sql: " + sql);
+        em.createNativeQuery(sql).executeUpdate();
     }
     
     void writeEncryptedBackupFile(String backupFileName, byte[] encryptedBackupFileBytes) throws IOException {
@@ -158,20 +145,15 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
     							  .append(EXT_ENCRYPTED_BACKUP).toString();
     }
 
-    byte[] getDBPasswordBytes() throws UnsupportedEncodingException, KeyStoreProviderException, IOException {
-    	return new DBConnectionParameters().getPassword().getBytes("UTF-8");
-    }
-    
-    byte[] appendDBPassword(byte[] bytes) throws Exception {
-    	ByteBuffer backupFileBytesBuffer = ByteBuffer.allocate(DB_PASSWORD_MAX_LENGTH + bytes.length);
-        byte[] passwordBytes = getDBPasswordBytes();
-        backupFileBytesBuffer.put(passwordBytes);
-        backupFileBytesBuffer.position(DB_PASSWORD_MAX_LENGTH);
-        backupFileBytesBuffer.put(bytes);
-        return backupFileBytesBuffer.array();
+    String getDBPassword() throws UnsupportedEncodingException, KeyStoreProviderException, IOException {
+    	return new DBConnectionParameters().getPassword();
     }
 
-    byte[] appendAESCTRKey(byte[] bytes) throws EncryptionException {
-        return new AESCTREncryption().appendAESCTRKey(bytes);
+    String getAESCTRKeyHex() throws EncryptionException {
+        return new AESCTREncryption().getAESCTRKeyHex();
+    }
+
+    byte[] getTruststoreData() throws IOException {
+        return Files.readAllBytes(new File(X509TrustManagerFactory.TRUSTSTORE_FILE).toPath());
     }
 }

@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.nova.v2_0.domain.Server;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -40,8 +41,8 @@ class OsSvaStateCheckTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         Endpoint endPoint = new Endpoint(ds);

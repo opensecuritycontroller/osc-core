@@ -19,7 +19,8 @@ package org.osc.core.broker.service.persistence;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.openstack.Host;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 
@@ -48,9 +49,9 @@ public class HostEntityMgr {
     }
 
 
-    public static Host findById(Session session, Long id) {
+    public static Host findById(EntityManager em, Long id) {
         // Initializing Entity Manager
-        EntityManager<Host> emgr = new EntityManager<Host>(Host.class, session);
+        OSCEntityManager<Host> emgr = new OSCEntityManager<Host>(Host.class, em);
         return emgr.findByPrimaryKey(id);
     }
 }

@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -28,7 +29,7 @@ import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.dto.UserDtoValidator;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
 import org.osc.core.broker.service.request.UpdateUserRequest;
 import org.osc.core.broker.service.response.UpdateUserResponse;
@@ -45,11 +46,11 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
     private DtoValidator<UserDto, User> validator;
 
     @Override
-    public UpdateUserResponse exec(UpdateUserRequest request, Session session) throws Exception {
-        EntityManager<User> emgr = new EntityManager<User>(User.class, session);
+    public UpdateUserResponse exec(UpdateUserRequest request, EntityManager em) throws Exception {
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
 
         if (this.validator == null) {
-            this.validator = new UserDtoValidator(session);
+            this.validator = new UserDtoValidator(em);
         }
 
         // validate and retrieve existing entity from the database.

@@ -19,9 +19,10 @@ package org.osc.core.broker.service.vc;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -35,7 +36,7 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
@@ -63,7 +64,7 @@ public class UpdateVirtualizationConnectorService
     private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
 
     private boolean forceAddSSLCertificates = false;
-    
+
     private VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
 
     public UpdateVirtualizationConnectorService() {
@@ -74,9 +75,9 @@ public class UpdateVirtualizationConnectorService
     }
 
     @Override
-    public BaseResponse exec(DryRunRequest<VirtualizationConnectorDto> request, Session session) throws Exception {
+    public BaseResponse exec(DryRunRequest<VirtualizationConnectorDto> request, EntityManager em) throws Exception {
 
-        EntityManager<VirtualizationConnector> vcEntityMgr = new EntityManager<>(VirtualizationConnector.class, session);
+        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
 
         // retrieve existing entry from db
         BaseDto.checkForNullId(request.getDto());
@@ -85,11 +86,11 @@ public class UpdateVirtualizationConnectorService
         Set<SslCertificateAttr> persistentSslCertificatesSet = vc.getSslCertificateAttrSet();
 
         try {
-            validate(session, request, vc, vcEntityMgr);
+            validate(em, request, vc, vcEntityMgr);
         } catch (Exception e) {
             if (e instanceof SslCertificatesExtendedException && this.forceAddSSLCertificates) {
                 request = internalSSLCertificatesFetch(request, (SslCertificatesExtendedException) e);
-                validate(session, request, vc, vcEntityMgr);
+                validate(em, request, vc, vcEntityMgr);
             } else {
                 throw e;
             }
@@ -102,7 +103,7 @@ public class UpdateVirtualizationConnectorService
             vcUnlock = LockUtil.tryLockVC(vc, LockType.WRITE_LOCK);
 
             updateVirtualizationConnector(request, vc);
-            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(session);
+            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em);
             vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet(), request.getDto().getId(), persistentSslCertificatesSet));
             vcEntityMgr.update(vc);
 
@@ -110,17 +111,17 @@ public class UpdateVirtualizationConnectorService
             // view are refreshed to reflect the correct VC name
             if (!request.getDto().getName().equals(vcName)) {
 
-                List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByVcId(session, vc.getId());
+                List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByVcId(em, vc.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(session, daiId,
+                        TransactionalBroadcastUtil.addMessageToMap(em, daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
-                List<Long> vsIds = VirtualSystemEntityMgr.listByVcId(session, vc.getId());
+                List<Long> vsIds = VirtualSystemEntityMgr.listByVcId(em, vc.getId());
                 if (vsIds != null) {
                     for (Long vsId : vsIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(session, vsId, VirtualSystem.class.getSimpleName(),
+                        TransactionalBroadcastUtil.addMessageToMap(em, vsId, VirtualSystem.class.getSimpleName(),
                                 EventType.UPDATED);
                     }
                 }
@@ -147,8 +148,8 @@ public class UpdateVirtualizationConnectorService
         return request;
     }
 
-    void validate(Session session, DryRunRequest<VirtualizationConnectorDto> request,
-                  VirtualizationConnector existingVc, EntityManager<VirtualizationConnector> emgr) throws Exception {
+    void validate(EntityManager em, DryRunRequest<VirtualizationConnectorDto> request,
+                  VirtualizationConnector existingVc, OSCEntityManager<VirtualizationConnector> emgr) throws Exception {
 
         // check for null/empty values
         VirtualizationConnectorDto dto = request.getDto();
@@ -218,10 +219,10 @@ public class UpdateVirtualizationConnectorService
 
 		if (dto.getType().isVmware()) {
 
-			util.checkVmwareConnection(request, existingVc);
+			this.util.checkVmwareConnection(request, existingVc);
 		} else {
 
-			util.checkOpenstackConnection(request, existingVc);
+			this.util.checkOpenstackConnection(request, existingVc);
 		}
     }
 

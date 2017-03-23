@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -40,30 +41,30 @@ public class NsxServiceProfileCheckMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        log.info("Start executing ServiceProfileCheckMetaTask task for VS '" + vs.getId() + "'");
-        tg = new TaskGraph();
+        log.info("Start executing ServiceProfileCheckMetaTask task for VS '" + this.vs.getId() + "'");
+        this.tg = new TaskGraph();
 
-        vs = (VirtualSystem) session.get(VirtualSystem.class, vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        NsxSecurityGroupInterfacesCheckMetaTask.processServiceProfile(session, tg, vs, serviceProfile);
+        NsxSecurityGroupInterfacesCheckMetaTask.processServiceProfile(em, this.tg, this.vs, this.serviceProfile);
     }
 
     @Override
     public String getName() {
-        return "Checking Service Profile '" + serviceProfile.getName() + "' on Virtual System '"
-                + vs.getVirtualizationConnector().getName() + "'";
+        return "Checking Service Profile '" + this.serviceProfile.getName() + "' on Virtual System '"
+                + this.vs.getVirtualizationConnector().getName() + "'";
     }
 
     @Override
     public TaskGraph getTaskGraph() {
-        return tg;
+        return this.tg;
     }
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(vs);
+        return LockObjectReference.getObjectReferences(this.vs);
     }
 
 }

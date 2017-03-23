@@ -16,15 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import javax.persistence.EntityManager;
 import javax.security.auth.login.LoginException;
 
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.LoginRequest;
 import org.osc.core.broker.service.response.LoginResponse;
 import org.osc.core.util.EncryptionUtil;
@@ -34,11 +34,11 @@ public class LoginService extends ServiceDispatcher<LoginRequest, LoginResponse>
     private static final Logger LOG = Logger.getLogger(LoginService.class);
 
     @Override
-    public LoginResponse exec(LoginRequest request, Session session) throws Exception {
+    public LoginResponse exec(LoginRequest request, EntityManager em) throws Exception {
 
-        validate(session, request);
+        validate(em, request);
         // Initializing Entity Manager
-        EntityManager<User> emgr = new EntityManager<User>(User.class, session);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
         User user = emgr.findByFieldName("loginName", request.getLoginName());
         if (user == null) {
             throw new VmidcException("Wrong username and/or password! Please try again.");
@@ -64,7 +64,7 @@ public class LoginService extends ServiceDispatcher<LoginRequest, LoginResponse>
         return response;
     }
 
-    void validate(Session session, LoginRequest request) throws Exception {
+    void validate(EntityManager em, LoginRequest request) throws Exception {
         if (request.getLoginName() == null || request.getLoginName().isEmpty() || request.getPassword() == null
                 || request.getPassword().isEmpty()) {
             throw new LoginException("Login ID or Password cannot be empty.");

@@ -19,13 +19,14 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.InfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.sdk.manager.api.ManagerDomainApi;
@@ -44,11 +45,11 @@ public class SyncDomainMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         this.tg = new TaskGraph();
 
-        this.mc = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class, mc.getId());
+        this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId());
         ManagerDomainApi mgrApi = ManagerApiFactory.createManagerDomainApi(this.mc);
 
         Set<Domain> domains = this.mc.getDomains();
@@ -69,7 +70,7 @@ public class SyncDomainMetaTask extends TransactionalMetaTask {
                 // Update policy attributes
                 if (!domain.getName().equals(mgrDomain.getName())) {
                     domain.setName(mgrDomain.getName());
-                    EntityManager.update(session, domain);
+                    OSCEntityManager.update(em, domain);
                     this.tg.appendTask(new InfoTask("Updated Domain name ('" + mgrDomain.getName() + "')"));
                 }
             }
@@ -116,7 +117,7 @@ public class SyncDomainMetaTask extends TransactionalMetaTask {
 
     @Override
     public Set<LockObjectReference> getObjects() {
-        return LockObjectReference.getObjectReferences(mc);
+        return LockObjectReference.getObjectReferences(this.mc);
     }
 
 }

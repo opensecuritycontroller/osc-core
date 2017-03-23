@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
@@ -39,17 +40,17 @@ ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse> {
     //private static final Logger log = Logger.getLogger(NsxUpdateProfileContainerService.class);
 
     @Override
-    public BaseJobResponse exec(NsxUpdateProfileContainerRequest request, Session session) throws Exception {
+    public BaseJobResponse exec(NsxUpdateProfileContainerRequest request, EntityManager em) throws Exception {
 
         TaskGraph tg = new TaskGraph();
 
-        VirtualSystem vs = VirtualSystemEntityMgr.findByNsxServiceProfileIdAndNsxIp(session, request.serviceProfileId,
+        VirtualSystem vs = VirtualSystemEntityMgr.findByNsxServiceProfileIdAndNsxIp(em, request.serviceProfileId,
                 request.nsxIpAddress);
 
         if (vs == null) {
             String host = NetworkUtil.resolveIpToName(request.nsxIpAddress);
             if (host != null) {
-                vs = VirtualSystemEntityMgr.findByNsxServiceProfileIdAndNsxIp(session, request.serviceProfileId, host);
+                vs = VirtualSystemEntityMgr.findByNsxServiceProfileIdAndNsxIp(em, request.serviceProfileId, host);
             }
             // If we cannot find the VS, that means this is an invalid call.
             if (vs == null) {
@@ -58,7 +59,7 @@ ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse> {
             }
         }
 
-        SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(session, vs,
+        SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(em, vs,
                 request.serviceProfileId);
 
         NsxServiceProfileContainerCheckMetaTask syncTask = new NsxServiceProfileContainerCheckMetaTask(sgi,

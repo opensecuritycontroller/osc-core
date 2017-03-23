@@ -19,7 +19,8 @@ package org.osc.core.broker.service.vc;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -35,14 +36,14 @@ public class ListVirtualizationConnectorBySwVersionService extends
 
     @Override
     public ListResponse<VirtualizationConnectorDto> exec(ListVirtualizationConnectorBySwVersionRequest request,
-            Session session) throws EncryptionException {
+            EntityManager em) throws EncryptionException {
 
         // to do mapping
         List<VirtualizationConnectorDto> vcmList = new ArrayList<VirtualizationConnectorDto>();
         String swVersion = request.getSwVersion();
 
         // mapping all the VC objects to vc dto objects
-        for (VirtualizationConnector vc : VirtualizationConnectorEntityMgr.listBySwVersion(session, swVersion)) {
+        for (VirtualizationConnector vc : VirtualizationConnectorEntityMgr.listBySwVersion(em, swVersion)) {
             VirtualizationConnectorDto dto = new VirtualizationConnectorDto();
             VirtualizationConnectorEntityMgr.fromEntity(vc, dto);
             vcmList.add(dto);

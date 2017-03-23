@@ -64,7 +64,8 @@ import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConf
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -99,7 +100,7 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 @PowerMockIgnore("javax.net.ssl.*")
 public class VSConformanceCheckMetaTaskTest {
     @Mock
-    public Session sessionMock;
+    public EntityManager em;
 
     private ServiceManagerApi serviceManagerApiMock;
     private ServiceApi serviceApiMock;
@@ -133,7 +134,7 @@ public class VSConformanceCheckMetaTaskTest {
         this.serviceApiMock = Mockito.mock(ServiceApi.class);
 
         for (VirtualSystem vs: TEST_VIRTUAL_SYSTEMS) {
-            Mockito.doReturn(vs).when(this.sessionMock).get(VirtualSystem.class, vs.getId());
+            Mockito.doReturn(vs).when(this.em).find(VirtualSystem.class, vs.getId());
         }
 
         registerServiceManager(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS.getNsxServiceManagerId(), "nameOutOfSync", DEFAULT_SERVICEMANAGER_URL, DEFAULT_SERVICEMANAGER_PASSWORD);
@@ -179,7 +180,7 @@ public class VSConformanceCheckMetaTaskTest {
         VSConformanceCheckMetaTask task = new VSConformanceCheckMetaTask(this.vs);
 
         // Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         // Assert.
         TaskGraphHelper.validateTaskGraph(task, this.expectedGraph);

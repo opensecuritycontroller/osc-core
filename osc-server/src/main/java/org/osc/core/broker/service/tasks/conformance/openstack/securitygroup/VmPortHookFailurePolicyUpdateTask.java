@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
@@ -48,11 +49,11 @@ class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        this.vmPort = (VMPort) session.get(VMPort.class, this.vmPort.getId());
-        this.dai = (DistributedApplianceInstance) session.get(DistributedApplianceInstance.class, this.dai.getId());
-        this.securityGroupInterface = (SecurityGroupInterface) session.get(SecurityGroupInterface.class,
+        this.vmPort = em.find(VMPort.class, this.vmPort.getId());
+        this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
+        this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
 
         SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);

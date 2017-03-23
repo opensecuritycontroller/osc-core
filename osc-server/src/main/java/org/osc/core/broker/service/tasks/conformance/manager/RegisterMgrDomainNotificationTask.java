@@ -18,15 +18,15 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.apache.log4j.Logger;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.rest.server.OscAuthFilter;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
@@ -44,18 +44,18 @@ public class RegisterMgrDomainNotificationTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         log.debug("Start excecuting RegisterMgrDomainNotificationTask Task. MC: '" + this.mc.getName() + "'");
 
-        this.mc = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class, this.mc.getId(),
-                new LockOptions(LockMode.PESSIMISTIC_WRITE));
+        this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId(),
+                LockModeType.PESSIMISTIC_WRITE);
         ManagerCallbackNotificationApi mgrApi = null;
         try {
             mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(this.mc);
             mgrApi.createDomainNotificationRegistration(Server.getApiPort(), OscAuthFilter.OSC_DEFAULT_LOGIN,
                     OscAuthFilter.OSC_DEFAULT_PASS);
             this.mc.setLastKnownNotificationIpAddress(ServerUtil.getServerIP());
-            EntityManager.update(session, this.mc);
+            OSCEntityManager.update(em, this.mc);
         } finally {
             if (mgrApi != null) {
                 mgrApi.close();

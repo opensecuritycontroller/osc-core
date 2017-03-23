@@ -28,6 +28,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -136,7 +137,7 @@ public class AESCTREncryption {
 
     public interface KeyProvider {
         String getKeyHex() throws EncryptionException;
-        void updateKey(byte[] key) throws EncryptionException;
+        void updateKey(String keyHex) throws EncryptionException;
     }
 
     private class KeyFromKeystoreProvider implements KeyProvider {
@@ -164,7 +165,7 @@ public class AESCTREncryption {
             return hexKey;
         }
 
-        public void updateKey(byte[] key) throws EncryptionException {
+        public void updateKey(String keyHex) throws EncryptionException {
             String aesCtrPassword = loadKeystorePasswordForAESCTRKey();
 
             if(StringUtils.isBlank(aesCtrPassword)) {
@@ -172,7 +173,7 @@ public class AESCTREncryption {
             }
 
             try {
-                KeyStoreProvider.getInstance().putPassword("AesCtrKey", DatatypeConverter.printHexBinary(key), aesCtrPassword);
+                KeyStoreProvider.getInstance().putPassword("AesCtrKey", keyHex, aesCtrPassword);
             } catch (KeyStoreProvider.KeyStoreProviderException e) {
                 throw new EncryptionException("Failed to put AES-CTR key in keystore", e);
             }
@@ -180,8 +181,8 @@ public class AESCTREncryption {
 
         private String loadKeystorePasswordForAESCTRKey() throws EncryptionException {
             Properties properties = new Properties();
-            try {
-                properties.load(getClass().getResourceAsStream(EncryptionUtil.SECURITY_PROPS_RESOURCE_PATH));
+            try(InputStream is =getClass().getResourceAsStream(EncryptionUtil.SECURITY_PROPS_RESOURCE_PATH)) {
+                properties.load(is);
             } catch (IOException e) {
                 LOG.error("Error loading key from properties", e);
                 throw new EncryptionException("Failed to load keystore password.", e);
@@ -190,16 +191,11 @@ public class AESCTREncryption {
         }
     }
 
-    public byte[] appendAESCTRKey(byte[] bytes) throws EncryptionException {
-        byte[] aesCTRKey = DatatypeConverter.parseHexBinary(keyProvider.getKeyHex());
-
-        ByteBuffer backupFileBytesBuffer = ByteBuffer.allocate(aesCTRKey.length + bytes.length);
-        backupFileBytesBuffer.put(aesCTRKey);
-        backupFileBytesBuffer.put(bytes);
-        return backupFileBytesBuffer.array();
+    public String getAESCTRKeyHex() throws EncryptionException {
+        return keyProvider.getKeyHex();
     }
 
-    public void updateAESCTRKey(byte[] bytes) throws EncryptionException {
-        keyProvider.updateKey(bytes);
+    public void updateAESCTRKey(String keyHex) throws EncryptionException {
+        keyProvider.updateKey(keyHex);
     }
 }

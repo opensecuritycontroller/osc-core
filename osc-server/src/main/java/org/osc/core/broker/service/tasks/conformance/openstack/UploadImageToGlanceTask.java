@@ -25,9 +25,10 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.glance.v1_0.domain.ContainerFormat;
 import org.jclouds.openstack.glance.v1_0.domain.DiskFormat;
 import org.jclouds.openstack.glance.v1_0.options.CreateImageOptions;
@@ -38,7 +39,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsImageRefere
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.view.maintenance.ApplianceUploader;
 
@@ -64,8 +65,8 @@ class UploadImageToGlanceTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        EntityManager<VirtualSystem> emgr = new EntityManager<VirtualSystem>(VirtualSystem.class, session);
+    public void executeTransaction(EntityManager em) throws Exception {
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
 
         this.vs = emgr.findByPrimaryKey(this.vs.getId());
 
@@ -96,7 +97,7 @@ class UploadImageToGlanceTask extends TransactionalTask {
 
             this.vs.addOsImageReference(new OsImageReference(this.vs, this.region, imageId));
 
-            EntityManager.update(session, this.vs);
+            OSCEntityManager.update(em, this.vs);
         } finally {
             glance.close();
         }

@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance.deleteda;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
@@ -36,7 +37,7 @@ public class UnregisterServiceManagerCallbackTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         ServiceManagerApi serviceManagerApi = VMwareSdnApiFactory.createServiceManagerApi(this.vs);
         ServiceManagerElement serviceManagerElement = serviceManagerApi.getServiceManager(this.vs.getNsxServiceManagerId());
         ServiceManager serviceManager = new ServiceManager(serviceManagerElement);

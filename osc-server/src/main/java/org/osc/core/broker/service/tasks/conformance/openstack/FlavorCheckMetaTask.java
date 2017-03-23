@@ -19,10 +19,10 @@ package org.osc.core.broker.service.tasks.conformance.openstack;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.apache.log4j.Logger;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.jclouds.openstack.nova.v2_0.domain.Flavor;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -31,7 +31,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 
 import com.google.common.base.Joiner;
@@ -55,11 +55,11 @@ public class FlavorCheckMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
 
-        VirtualSystem vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId(),
-                new LockOptions().setLockMode(LockMode.PESSIMISTIC_WRITE));
+        VirtualSystem vs = em.find(VirtualSystem.class, this.vs.getId(),
+                LockModeType.PESSIMISTIC_WRITE);
 
         log.info("Checking VS" + vs.getName() + " has the corresponding flavor");
 
@@ -81,7 +81,7 @@ public class FlavorCheckMetaTask extends TransactionalMetaTask {
                     Flavor flavor = nova.getFlavorById(flavorReference.getRegion(), flavorReference.getFlavorRefId());
                     if (flavor == null) {
                         iterator.remove();
-                        EntityManager.delete(session, flavorReference);
+                        OSCEntityManager.delete(em, flavorReference);
                     } else if(!flavor.getName().equals(expectedFlavorName)) {
                         // Assume flavor name is changed, means the version is upgraded since flavor name contains version
                         // information. Delete existing flavor and create new flavor.
@@ -96,7 +96,7 @@ public class FlavorCheckMetaTask extends TransactionalMetaTask {
                         this.osEndPoint));
             }
 
-            EntityManager.update(session, vs);
+            OSCEntityManager.update(em, vs);
         } finally {
             nova.close();
         }

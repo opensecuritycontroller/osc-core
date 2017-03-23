@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.nova.v2_0.domain.FloatingIP;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -29,7 +30,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudUtil;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.InfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 
@@ -45,9 +46,9 @@ class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
+        this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         Endpoint endPoint = new Endpoint(ds);
@@ -80,7 +81,7 @@ class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
                 this.log.info("Dai: " + this.dai + " Ip Address set to: " + allocatedFloatingIp);
                 this.tg.addTask(new InfoTask(infoTaskName, LockObjectReference.getObjectReferences(this.dai)));
 
-                EntityManager.update(session, this.dai);
+                OSCEntityManager.update(em, this.dai);
             }
         } finally {
             nova.close();

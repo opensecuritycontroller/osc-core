@@ -20,12 +20,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
+
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -33,6 +35,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
@@ -66,114 +69,188 @@ public class SecurityGroupEntityMgr {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static SecurityGroupDto generateDescription(Session session, SecurityGroupDto dto) {
-        Criteria serviceNameCriteria = session.createCriteria(DistributedAppliance.class, "da")
-                .createAlias("da.virtualSystems", "vs").createAlias("vs.securityGroupInterfaces", "sgi")
-                .createAlias("sgi.securityGroups", "sg").add(Restrictions.eq("sg.id", dto.getId()))
-                .setProjection(Projections.property("name")).addOrder(Order.asc("sgi.order"));
-        List<String> serviceNames = serviceNameCriteria.list();
+    public static SecurityGroupDto generateDescription(EntityManager em, SecurityGroupDto dto) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<String> query = cb.createQuery(String.class);
+
+        Root<DistributedAppliance> root = query.from(DistributedAppliance.class);
+        Join<DistributedAppliance, SecurityGroupInterface> sgi = root.join("virtualSystems").join("securityGroupInterfaces");
+        Join<SecurityGroupInterface, SecurityGroup> sgEntity = sgi.join("securityGroups");
+
+        query = query.select(sgEntity.get("name"))
+                .where(cb.equal(sgEntity.get("id"), dto.getId()))
+                .orderBy(cb.asc(sgi.get("order")));
+
+        List<String> serviceNames = em.createQuery(query).getResultList();
 
         dto.setServicesDescription(StringUtils.join(serviceNames, ","));
 
-        SecurityGroup sg = findById(session, dto.getId());
+        SecurityGroup sg = findById(em, dto.getId());
 
         if (sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK) {
 
-            Criteria vmNumberCriteria = session.createCriteria(SecurityGroupMember.class, "sgm")
-                    .createAlias("sgm.securityGroup", "sg").add(Restrictions.eq("sg.id", dto.getId()))
-                    .setProjection(Projections.rowCount()).add(Restrictions.eq("type", SecurityGroupMemberType.VM));
+            CriteriaQuery<Long> vmNumberCriteria = cb.createQuery(Long.class);
 
-            Criteria nwNumberCriteria = session.createCriteria(SecurityGroupMember.class, "sgm")
-                    .createAlias("sgm.securityGroup", "sg").add(Restrictions.eq("sg.id", dto.getId()))
-                    .setProjection(Projections.rowCount())
-                    .add(Restrictions.eq("type", SecurityGroupMemberType.NETWORK));
+            Root<SecurityGroupMember> vmRoot = vmNumberCriteria.from(SecurityGroupMember.class);
+            vmNumberCriteria = vmNumberCriteria.select(cb.count(vmRoot))
+                    .where(cb.equal(vmRoot.join("securityGroup").get("id"), dto.getId()),
+                           cb.equal(vmRoot.get("type"), SecurityGroupMemberType.VM));
 
-            Criteria subNumberCriteria = session.createCriteria(SecurityGroupMember.class, "sgm")
-                    .createAlias("sgm.securityGroup", "sg").add(Restrictions.eq("sg.id", dto.getId()))
-                    .setProjection(Projections.rowCount()).add(Restrictions.eq("type", SecurityGroupMemberType.SUBNET));
+            CriteriaQuery<Long> nwNumberCriteria = cb.createQuery(Long.class);
+
+            Root<SecurityGroupMember> nwRoot = nwNumberCriteria.from(SecurityGroupMember.class);
+            nwNumberCriteria = nwNumberCriteria.select(cb.count(nwRoot))
+                    .where(cb.equal(nwRoot.join("securityGroup").get("id"), dto.getId()),
+                            cb.equal(nwRoot.get("type"), SecurityGroupMemberType.NETWORK));
+
+            CriteriaQuery<Long> subNumberCriteria = cb.createQuery(Long.class);
+
+            Root<SecurityGroupMember> subRoot = subNumberCriteria.from(SecurityGroupMember.class);
+            subNumberCriteria = subNumberCriteria.select(cb.count(subRoot))
+                    .where(cb.equal(subRoot.join("securityGroup").get("id"), dto.getId()),
+                            cb.equal(subRoot.get("type"), SecurityGroupMemberType.SUBNET));
+
 
             dto.setMemberDescription(String.format("VM: %d , Network: %d , Subnet: %d",
-                    vmNumberCriteria.uniqueResult(), nwNumberCriteria.uniqueResult(), subNumberCriteria.uniqueResult()));
+                    em.createQuery(vmNumberCriteria).getSingleResult(),
+                    em.createQuery(nwNumberCriteria).getSingleResult(),
+                    em.createQuery(subNumberCriteria).getSingleResult()));
 
         } else if (sg.getVirtualizationConnector().getVirtualizationType()
                 == VirtualizationType.VMWARE) {
 
-            Criteria ipNumberCriteria = session.createCriteria(SecurityGroupMember.class, "sgm")
-                    .createAlias("sgm.securityGroup", "sg").add(Restrictions.eq("sg.id", dto.getId()))
-                    .setProjection(Projections.rowCount()).add(Restrictions.eq("type", SecurityGroupMemberType.IP));
-            Criteria macNumberCriteria = session.createCriteria(SecurityGroupMember.class, "sgm")
-                    .createAlias("sgm.securityGroup", "sg").add(Restrictions.eq("sg.id", dto.getId()))
-                    .setProjection(Projections.rowCount()).add(Restrictions.eq("type", SecurityGroupMemberType.MAC));
+            CriteriaQuery<Long> ipNumberCriteria = cb.createQuery(Long.class);
 
-            dto.setMemberDescription(String.format("IP: %d , Mac: %d ", ipNumberCriteria.uniqueResult(),
-                    macNumberCriteria.uniqueResult()));
+            Root<SecurityGroupMember> ipRoot = ipNumberCriteria.from(SecurityGroupMember.class);
+            ipNumberCriteria = ipNumberCriteria.select(cb.count(ipRoot))
+                    .where(cb.equal(ipRoot.join("securityGroup").get("id"), dto.getId()),
+                           cb.equal(ipRoot.get("type"), SecurityGroupMemberType.IP));
+
+            CriteriaQuery<Long> macNumberCriteria = cb.createQuery(Long.class);
+
+            Root<SecurityGroupMember> macRoot = macNumberCriteria.from(SecurityGroupMember.class);
+            macNumberCriteria = macNumberCriteria.select(cb.count(macRoot))
+                    .where(cb.equal(macRoot.join("securityGroup").get("id"), dto.getId()),
+                           cb.equal(macRoot.get("type"), SecurityGroupMemberType.MAC));
+
+            dto.setMemberDescription(String.format("IP: %d , Mac: %d ",
+                    em.createQuery(ipNumberCriteria).getSingleResult(),
+                    em.createQuery(macNumberCriteria).getSingleResult()));
 
         }
 
         return dto;
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<SecurityGroup> listSecurityGroupsByVcId(Session session, Long vcId) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class).createAlias("virtualizationConnector", "vc")
-                .addOrder(Order.asc("name")).add(Restrictions.eq("vc.id", vcId))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<SecurityGroup> listSecurityGroupsByVcId(EntityManager em, Long vcId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId))
+                .orderBy(cb.asc(root.get("name")));
+
+        return em.createQuery(query).getResultList();
     }
 
-    public static SecurityGroup listSecurityGroupsByVcIdAndMgrId(Session session, Long vcId, String mgrId) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class).createAlias("virtualizationConnector", "vc")
-                .add(Restrictions.eq("vc.id", vcId)).add(Restrictions.eq("mgrId", mgrId));
+    public static SecurityGroup listSecurityGroupsByVcIdAndMgrId(EntityManager em, Long vcId, String mgrId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        return (SecurityGroup) criteria.uniqueResult();
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        query = query.select(root)
+                .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId),
+                       cb.equal(root.get("mgrId"), mgrId))
+                .orderBy(cb.asc(root.get("name")));
+
+        try {
+            return em.createQuery(query).getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<SecurityGroup> listSecurityGroupsByVsAndNoBindings(Session session, VirtualSystem vs) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class).createAlias("virtualizationConnector", "vc")
-                .add(Restrictions.eq("vc.id", vs.getVirtualizationConnector().getId()))
-                .add(Restrictions.isEmpty("securityGroupInterfaces"))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<SecurityGroup> listSecurityGroupsByVsAndNoBindings(EntityManager em, VirtualSystem vs) {
+        Long vcId = vs.getVirtualizationConnector().getId();
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId),
+                       cb.isEmpty(root.get("securityGroupInterfaces")))
+                .orderBy(cb.asc(root.get("name")));
+
+        return em.createQuery(query).getResultList();
     }
 
     /**
-     * @param session
-     *            Hibernate Session
+     * @param em
+     *            Hibernate EntityManager
      * @param sg
      *            Security Group
      * @return
      *         true if a new SGM is added.
      *         false if no new SGM was added
      */
-    public static boolean hasNewSGM(Session session, SecurityGroup sg) {
+    public static boolean hasNewSGM(EntityManager em, SecurityGroup sg) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<SecurityGroup> query;
+        Root<SecurityGroup> root;
+        Join<SecurityGroup, Object> join;
+        Join<Object, Object> join2;
 
         // VM
-        Criteria vmCriteria = session.createCriteria(SecurityGroup.class).createAlias("securityGroupMembers", "sgm")
-                .add(Restrictions.eq("sgm.type", SecurityGroupMemberType.VM)).createAlias("sgm.vm", "vm")
-                .add(Restrictions.isNull("vm.host")).setProjection(Projections.id()).setMaxResults(1);
+        query = cb.createQuery(SecurityGroup.class);
 
-        if (vmCriteria.uniqueResult() != null) {
+        root = query.from(SecurityGroup.class);
+        join = root.join("securityGroupMembers");
+        join2 = join.join("vm");
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.and(
+                        cb.equal(join.get("type"), SecurityGroupMemberType.VM),
+                        cb.isNull(join2.get("host"))));
+
+        if(!em.createQuery(query).setMaxResults(1).getResultList().isEmpty()) {
             return true;
         }
 
         // NW
-        Criteria nwCriteria = session.createCriteria(SecurityGroup.class).createAlias("securityGroupMembers", "sgm")
-                .add(Restrictions.eq("sgm.type", SecurityGroupMemberType.NETWORK))
-                .createAlias("sgm.network", "network").add(Restrictions.isEmpty("network.ports"))
-                .setProjection(Projections.id()).setMaxResults(1);
+        query = cb.createQuery(SecurityGroup.class);
 
-        if (nwCriteria.uniqueResult() != null) {
+        root = query.from(SecurityGroup.class);
+        join = root.join("securityGroupMembers");
+        join2 = join.join("network");
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.and(
+                        cb.equal(join.get("type"), SecurityGroupMemberType.NETWORK),
+                        cb.isEmpty(join2.get("ports"))));
+
+        if(!em.createQuery(query).setMaxResults(1).getResultList().isEmpty()) {
             return true;
         }
 
         // Subnet
-        Criteria subCriteria = session.createCriteria(SecurityGroup.class).createAlias("securityGroupMembers", "sgm")
-                .add(Restrictions.eq("sgm.type", SecurityGroupMemberType.SUBNET)).createAlias("sgm.subnet", "subnet")
-                .add(Restrictions.isEmpty("subnet.ports")).setProjection(Projections.id()).setMaxResults(1);
+        query = cb.createQuery(SecurityGroup.class);
 
-        if (subCriteria.uniqueResult() != null) {
+        root = query.from(SecurityGroup.class);
+        join = root.join("securityGroupMembers");
+        join2 = join.join("subnet");
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.and(
+                        cb.equal(join.get("type"), SecurityGroupMemberType.SUBNET),
+                        cb.isEmpty(join2.get("ports"))));
+
+        if(!em.createQuery(query).setMaxResults(1).getResultList().isEmpty()) {
             return true;
         }
 
@@ -181,100 +258,150 @@ public class SecurityGroupEntityMgr {
     }
 
     /**
-     * @param session
-     *            Hibernate Session
+     * @param em
+     *            Hibernate EntityManager
      * @param sg
      *            Security Group
      * @return
      *         true if any SGM was deleted
      *         false if no SGM was deleted
      */
-    public static boolean hasSGMRemoved(Session session, SecurityGroup sg) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class).createAlias("securityGroupMembers", "sgm")
-                .add(Restrictions.eq("sgm.markedForDeletion", true)).setProjection(Projections.id()).setMaxResults(1);
+    public static boolean hasSGMRemoved(EntityManager em, SecurityGroup sg) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        if (criteria.uniqueResult() != null) {
-            return true;
-        }
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
 
-        return false;
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        Join<SecurityGroup, Object> join = root.join("securityGroupMembers");
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.equal(join.get("markedForDeletion"), true));
+
+        return !em.createQuery(query).setMaxResults(1).getResultList().isEmpty();
     }
 
-    public static boolean isSecurityGroupExistWithProtectAll(Session session, String tenantId, Long vcId) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class).createAlias("virtualizationConnector", "vc")
-                .add(Restrictions.eq("tenantId", tenantId)).add(Restrictions.eq("vc.id", vcId))
-                .add(Restrictions.eq("protectAll", true)).setProjection(Projections.id()).setMaxResults(1);
+    public static boolean isSecurityGroupExistWithProtectAll(EntityManager em, String tenantId, Long vcId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        if (criteria.uniqueResult() != null) {
-            return true;
-        }
-        return false;
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        Join<SecurityGroup, Object> join = root.join("virtualizationConnector");
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.and(
+                        cb.equal(root.get("tenantId"), tenantId),
+                        cb.equal(root.get("protectAll"), true),
+                        cb.equal(join.get("id"), vcId)));
+
+        return !em.createQuery(query).setMaxResults(1).getResultList().isEmpty();
     }
 
-    public static boolean isSecurityGroupExistWithSameNameAndTenant(Session session, String name, String tenantId) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class).add(Restrictions.eq("tenantId", tenantId))
-                .add(Restrictions.eq("name", name)).setProjection(Projections.id()).setMaxResults(1);
+    public static boolean isSecurityGroupExistWithSameNameAndTenant(EntityManager em, String name, String tenantId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        if (criteria.uniqueResult() != null) {
-            return true;
-        }
-        return false;
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
 
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.and(
+                        cb.equal(root.get("tenantId"), tenantId),
+                        cb.equal(root.get("name"), name)));
+
+        return !em.createQuery(query).setMaxResults(1).getResultList().isEmpty();
     }
 
-    public static SecurityGroup findById(Session session, Long id) {
+    public static SecurityGroup findById(EntityManager em, Long id) {
 
         // Initializing Entity Manager
-        EntityManager<SecurityGroup> emgr = new EntityManager<SecurityGroup>(SecurityGroup.class, session);
+        OSCEntityManager<SecurityGroup> emgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
 
         return emgr.findByPrimaryKey(id);
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<SecurityGroup> findByNsxServiceProfileIdAndVs(Session session, VirtualSystem vs,
+    public static List<SecurityGroup> findByNsxServiceProfileIdAndVs(EntityManager em, VirtualSystem vs,
             String serviceProfileId) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class, "sg")
-                .createAlias("sg.securityGroupInterfaces", "sgi").add(Restrictions.eq("sgi.tag", serviceProfileId))
-                .add(Restrictions.eq("sgi.virtualSystem", vs)).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        Join<SecurityGroup, Object> join = root.join("securityGroupMembers");
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.and(
+                        cb.equal(join.get("tag"), serviceProfileId),
+                        cb.equal(join.get("virtualSystem"), vs)));
+
+        return em.createQuery(query).getResultList();
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<SecurityGroup> listByProtectAllAndtenantId(Session session, String tenantId) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class).add(Restrictions.eq("protectAll", true))
-                .add(Restrictions.eq("tenantId", tenantId)).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<SecurityGroup> listByProtectAllAndtenantId(EntityManager em, String tenantId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.and(
+                        cb.equal(root.get("tenantId"), tenantId),
+                        cb.equal(root.get("protectAll"), true)));
+
+        return em.createQuery(query).getResultList();
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<SecurityGroup> listByTenantId(Session session, String tenantId) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class).add(Restrictions.eq("tenantId", tenantId));
-        criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<SecurityGroup> listByTenantId(EntityManager em, String tenantId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.equal(root.get("tenantId"), tenantId));
+
+        return em.createQuery(query).getResultList();
     }
 
     // List SG by Port or Network Id...
-    @SuppressWarnings("unchecked")
-    public static List<SecurityGroup> listByNetworkId(Session session, String sgId, String networkId) {
+    public static List<SecurityGroup> listByNetworkId(EntityManager em, String sgId, String networkId) {
 
         // get Network or VM from port ID then Verify SGM ID and get GD ID...
 
-        Criteria criteria = session.createCriteria(SecurityGroup.class, "sg").add(Restrictions.eq("id", sgId))
-                .createAlias("sg.securityGroupMembers.network", "network")
-                .add(Restrictions.eq("network.openstackId", networkId))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        Join<SecurityGroup, Object> join = root.join("securityGroupMembers");
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.and(
+                        cb.equal(root.get("id"), sgId),
+                        cb.equal(join.get("network").get("openstackId"), networkId)));
+
+        return em.createQuery(query).getResultList();
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<SecurityGroup> listByDeviceId(Session session, String sgId, String deviceId) {
-        Criteria criteria = session.createCriteria(SecurityGroup.class, "sg").add(Restrictions.eq("id", sgId))
-                .createAlias("sg.securityGroupMembers", "sgm").add(Restrictions.eq("sgm.openstackId", deviceId))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<SecurityGroup> listByDeviceId(EntityManager em, String sgId, String deviceId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
+
+        Root<SecurityGroup> root = query.from(SecurityGroup.class);
+        Join<SecurityGroup, Object> join = root.join("securityGroupMembers");
+        query = query.select(root)
+                .distinct(true)
+                .where(cb.and(
+                        cb.equal(root.get("id"), sgId),
+                        cb.equal(join.get("openstackId"), deviceId)));
+
+        return em.createQuery(query).getResultList();
     }
 
-    public static Set<SecurityGroup> listByDai(Session session, DistributedApplianceInstance dai) {
+    public static Set<SecurityGroup> listByDai(EntityManager em, DistributedApplianceInstance dai) {
         Set<SecurityGroup> sgs = new HashSet<SecurityGroup>();
         for (VMPort port : dai.getProtectedPorts()) {
             if (port.getVm() != null) {

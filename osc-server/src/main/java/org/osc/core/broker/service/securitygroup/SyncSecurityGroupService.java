@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securitygroup;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
@@ -36,19 +37,19 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
     private VirtualizationConnector vc;
 
     @Override
-    public BaseJobResponse exec(BaseIdRequest request, Session session) throws Exception {
-        validateAndLoad(request, session);
+    public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
+        validateAndLoad(request, em);
 
-        Job job = ConformService.startSecurityGroupConformanceJob(session, this.securityGroup, null, false);
+        Job job = ConformService.startSecurityGroupConformanceJob(em, this.securityGroup, null, false);
 
         return new BaseJobResponse(job.getId());
     }
 
-    private void validateAndLoad(BaseIdRequest request, Session session) throws Exception,
+    private void validateAndLoad(BaseIdRequest request, EntityManager em) throws Exception,
             VmidcBrokerValidationException {
         BaseIdRequest.checkForNullIdAndParentNullId(request);
 
-        this.securityGroup = SecurityGroupEntityMgr.findById(session, request.getId());
+        this.securityGroup = SecurityGroupEntityMgr.findById(em, request.getId());
 
         if (this.securityGroup == null) {
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");
@@ -59,7 +60,7 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
                     "Syncing Security Group which is marked for deletion is not allowed.");
         }
 
-        this.vc = VirtualizationConnectorEntityMgr.findById(session, request.getParentId());
+        this.vc = VirtualizationConnectorEntityMgr.findById(em, request.getParentId());
 
         if (this.vc == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector with Id: " + request.getParentId()

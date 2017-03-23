@@ -16,9 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,7 +33,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsImageRefere
 public class DeleteImageReferenceTaskTest {
     @Rule public ExpectedException exception = ExpectedException.none();
 
-    @Mock private Session sessionMock;
+    @Mock private EntityManager em;
 
     private OsImageReference imageReference;
     private OsImageReference otherImageReference;
@@ -58,13 +58,13 @@ public class DeleteImageReferenceTaskTest {
         this.otherImageReference.setId(4L);
         this.otherVs.addOsImageReference(this.otherImageReference);
 
-        Mockito.when(this.sessionMock.get(OsImageReference.class, this.imageReference.getId())).thenReturn(this.imageReference);
-        Mockito.when(this.sessionMock.get(Mockito.eq(VirtualSystem.class), Mockito.eq(this.vs.getId()),
-                Mockito.argThat(new LockOptionsMatcher(LockMode.PESSIMISTIC_WRITE)))).thenReturn(this.vs);
+        Mockito.when(this.em.find(OsImageReference.class, this.imageReference.getId())).thenReturn(this.imageReference);
+        Mockito.when(this.em.find(Mockito.eq(VirtualSystem.class), Mockito.eq(this.vs.getId()),
+                Mockito.eq(LockModeType.PESSIMISTIC_WRITE))).thenReturn(this.vs);
 
-        Mockito.when(this.sessionMock.get(OsImageReference.class, this.otherImageReference.getId())).thenReturn(this.otherImageReference);
-        Mockito.when(this.sessionMock.get(Mockito.eq(VirtualSystem.class), Mockito.eq(this.otherVs.getId()),
-                Mockito.argThat(new LockOptionsMatcher(LockMode.PESSIMISTIC_WRITE)))).thenReturn(this.otherVs);
+        Mockito.when(this.em.find(OsImageReference.class, this.otherImageReference.getId())).thenReturn(this.otherImageReference);
+        Mockito.when(this.em.find(Mockito.eq(VirtualSystem.class), Mockito.eq(this.otherVs.getId()),
+                Mockito.eq(LockModeType.PESSIMISTIC_WRITE))).thenReturn(this.otherVs);
     }
 
     @Test
@@ -73,12 +73,12 @@ public class DeleteImageReferenceTaskTest {
         DeleteImageReferenceTask task = new DeleteImageReferenceTask(this.imageReference, this.vs);
 
         //Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         //Assert.
-        Mockito.verify(this.sessionMock).delete(this.imageReference);
-        Mockito.verify(this.sessionMock).update(Mockito.argThat(new ImageReferenceIsEmptyMatcher(this.vs)));
-        Mockito.verify(this.sessionMock).update(this.vs);
+        Mockito.verify(this.em).remove(this.imageReference);
+        Mockito.verify(this.em).merge(Mockito.argThat(new ImageReferenceIsEmptyMatcher(this.vs)));
+        Mockito.verify(this.em).merge(this.vs);
     }
 
     @Test
@@ -87,11 +87,11 @@ public class DeleteImageReferenceTaskTest {
         DeleteImageReferenceTask task = new DeleteImageReferenceTask(this.otherImageReference, this.vs);
 
         //Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         //Assert.
-        Mockito.verify(this.sessionMock).delete(this.otherImageReference);
-        Mockito.verify(this.sessionMock).update(this.vs);
+        Mockito.verify(this.em).remove(this.otherImageReference);
+        Mockito.verify(this.em).merge(this.vs);
     }
 
     private class ImageReferenceIsEmptyMatcher extends ArgumentMatcher<Object> {
@@ -108,23 +108,6 @@ public class DeleteImageReferenceTaskTest {
             }
 
             return this.vs.getOsImageReference().isEmpty();
-        }
-    }
-
-    private class LockOptionsMatcher extends ArgumentMatcher<LockOptions> {
-        private LockMode lockMode;
-
-        LockOptionsMatcher(LockMode lockMode) {
-            this.lockMode = lockMode;
-        }
-
-        @Override
-        public boolean matches(Object object) {
-            if (object == null || !(object instanceof LockOptions)) {
-                return false;
-            }
-
-            return ((LockOptions) object).getLockMode().equals(this.lockMode);
         }
     }
 }

@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.passwordchange;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
@@ -45,7 +46,7 @@ public class UpdateNsxServiceAttributesTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         LOG.info("Start executing UpdateNsxServiceAttributesTask");
         ServiceApi serviceApi = VMwareSdnApiFactory.createServiceApi(this.vs);
         serviceApi.updateService(
