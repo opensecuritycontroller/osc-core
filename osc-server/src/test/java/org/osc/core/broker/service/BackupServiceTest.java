@@ -47,10 +47,13 @@ public class BackupServiceTest {
 	@Test
 	public void testExec_withValidFilenameAndPassword_PerformsFullFlow() throws Exception {
 		// Arrange.
-		BackupRequest request = new BackupRequest();
 		byte[] backupZipBytes = "Test zip bytes".getBytes();
-		byte[] backupZipWithPasswordBytes = "Test zip bytes with password".getBytes();
-		byte[] backupZipWithPasswordAndAESCTRBytes = "Test zip bytes with password and AES-CTR key".getBytes();
+		BackupRequest request = new BackupRequest();
+		BackupData expectedData = new BackupData();
+		expectedData.setDbPassword("SOME_TEST_DB_PASSWORD");
+		expectedData.setDbData("Test zip bytes".getBytes());
+		expectedData.setAesCTRKeyHex("Some random hex");
+		byte[] expectedSerialized = expectedData.serialize();
 
 		String backupFilePath = "example/backup/file.dbb";
 		request.setBackupFileName(backupFilePath);
@@ -58,8 +61,8 @@ public class BackupServiceTest {
 
 		when(this.target.exec(request, this.em)).thenCallRealMethod();
 		when(this.target.getBackupZipFileBytes(backupFilePath)).thenReturn(backupZipBytes);
-		when(this.target.appendDBPassword(backupZipBytes)).thenReturn(backupZipWithPasswordBytes);
-		when(this.target.appendAESCTRKey(backupZipWithPasswordBytes)).thenReturn(backupZipWithPasswordAndAESCTRBytes);
+		when(this.target.getDBPassword()).thenReturn(expectedData.getDbPassword());
+		when(this.target.getAESCTRKeyHex()).thenReturn(expectedData.getAesCTRKeyHex());
 
 		// Act.
 		BackupResponse response = this.target.exec(request, this.em);
@@ -68,8 +71,11 @@ public class BackupServiceTest {
 		verify(this.target, times(1)).ensureBackupFolderExists();
 		verify(this.target, times(1)).deleteBackupFiles();
 		verify(this.target, times(1)).createBackupZipFile(this.em, backupFilePath);
-		verify(this.target, times(1)).appendDBPassword(backupZipBytes);
-		verify(this.target, times(1)).encryptBackupFileBytes(backupZipWithPasswordAndAESCTRBytes, request.getBackupPassword());
+		verify(this.target, times(1)).getBackupZipFileBytes(backupFilePath);
+		verify(this.target, times(1)).getDBPassword();
+		verify(this.target, times(1)).getAESCTRKeyHex();
+
+		verify(this.target, times(1)).encryptBackupFileBytes(expectedSerialized, request.getBackupPassword());
 		assertTrue(response.isSuccess());
 	}
 
@@ -98,21 +104,5 @@ public class BackupServiceTest {
 		// Assert.
 		verify(this.target, times(1)).deleteFile("backups" + File.separator + "BrokerServerDBBackup.zip");
 		verify(this.target, times(1)).deleteFile("backups" + File.separator + "BrokerServerDBBackup.dbb");
-	}
-
-	@Test
-	public void testAppendPasswordBytes_withGivenBytes_appendsPasswordProperly() throws Exception {
-		// Arrange.
-		byte[] testBytes = "someTestBytes".getBytes();
-		byte[] testDBPasswordBytes = "dbPasswordBytes".getBytes();
-
-		when(this.target.appendDBPassword(testBytes)).thenCallRealMethod();
-		when(this.target.getDBPasswordBytes()).thenReturn(testDBPasswordBytes);
-
-		// Act.
-		byte[] testBytesWithDBPassword = this.target.appendDBPassword(testBytes);
-
-		// Assert.
-		assertEquals(testBytesWithDBPassword.length, 160 /* max password length (fixed) */ + testBytes.length);
 	}
 }
