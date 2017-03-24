@@ -14,6 +14,7 @@
     @${log4j.dep},\
     @${commons-cli.dep},\
     @${commons-io.dep},\
+    @${org.apache.commons.lang.dep},\
     @${guava.dep},\
     @${aopalliance-repackaged.dep},\
     @${osgi-resource-locator.dep},\
