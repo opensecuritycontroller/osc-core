@@ -17,7 +17,6 @@
 package org.osc.core.rest.client.crypto;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
@@ -300,7 +299,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         }
         property = properties.getProperty(entryKey);
 
-        if (StringUtils.isBlank(property)) {
+        if (property == null || property.isEmpty()) {
             throw new Exception("No entry defined in properties.");
         }
 
