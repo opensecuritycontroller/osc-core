@@ -92,11 +92,6 @@ public class PKIUtil {
         keytoolExecutable = new File(keytoolExecutable, "keytool");
         String keytoolExecutablePath = keytoolExecutable.getAbsolutePath();
 
-        String os = System.getProperty("os.name");
-        if (os.contains("Windows")) {
-            keytoolExecutablePath = "keytool";
-        }
-
         log.info("Launching keytool");
 
         String[] command = new String[] { keytoolExecutablePath, "-genkey", "-alias", alias, "-keypass", keyPass,
