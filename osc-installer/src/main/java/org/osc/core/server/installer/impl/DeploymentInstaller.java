@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.server.installer.impl;
 
-import static org.osc.core.server.installer.impl.Locking.*;
+import static org.osc.core.server.installer.impl.Locking.withLock;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -331,7 +331,7 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
             request = analyseFile(file);
         } catch (Exception e) {
             debug("Failed to analyse file %s: %s", file, e.getMessage());
-            return newFailedUnit(file, file.getName(), file.getName(), "UNKNOWN_TYPE", String.format("Error reading archive file %s: %s", file.getAbsolutePath(), e.getMessage()));
+            return newFailedUnit(file, file.getName(), file.getName(), "UNKNOWN_VERSION", "UNKNOWN_TYPE", String.format("Error reading archive file %s: %s", file.getAbsolutePath(), e.getMessage()));
         }
 
         ResolveResult result;
@@ -339,7 +339,7 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
             result = this.resolver.resolve(request);
         } catch (Exception e) {
             debug("Failed to resolve file %s: %s", file, e.getMessage());
-            return newFailedUnit(file, request.getName(), request.getSymbolicName(), request.getType(), "Resolution failed: " + e.getMessage());
+            return newFailedUnit(file, request.getName(), request.getSymbolicName(), request.getVersion(), request.getType(), "Resolution failed: " + e.getMessage());
         }
 
         List<Artifact> artifacts = new ArrayList<>(result.getResources().size());
@@ -347,18 +347,18 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
             ArtifactImpl artifact = new ArtifactImpl(getIdentity(resourceEntry.getKey()), resourceEntry.getValue(), getContentHash(resourceEntry.getKey()));
             artifacts.add(artifact);
         }
-        debug("Sucessful resolve for file %s: Deployment-Name=%s, Deployment-SymbolicName=%s, Deployment-Type=%s", file, request.getName(), request.getSymbolicName(), request.getType());
-        return newResolvedUnit(file, request.getName(), request.getSymbolicName(), request.getType(), artifacts);
+        debug("Sucessful resolve for file %s: Deployment-Name=%s, Deployment-SymbolicName=%s, Deployment-Version= %s, Deployment-Type=%s", file, request.getName(), request.getSymbolicName(), request.getVersion(), request.getType());
+        return newResolvedUnit(file, request.getName(), request.getSymbolicName(), request.getVersion(), request.getType(), artifacts);
     }
 
-    private InstallableUnitImpl newResolvedUnit(File file, String name, String symbolicName, String type, List<Artifact> artifacts) {
-        InstallableUnitImpl newUnit = new InstallableUnitImpl(this, file, name, symbolicName, type, artifacts);
+    private InstallableUnitImpl newResolvedUnit(File file, String name, String symbolicName, String version, String type, List<Artifact> artifacts) {
+        InstallableUnitImpl newUnit = new InstallableUnitImpl(this, file, name, symbolicName, version, type, artifacts);
         newUnit.setState(State.RESOLVED);
         return newUnit;
     }
 
-    private InstallableUnitImpl newFailedUnit(File file, String name, String symbolicName, String type, String message) {
-        InstallableUnitImpl newUnit = new InstallableUnitImpl(this, file, name, symbolicName, type, Collections.emptyList());
+    private InstallableUnitImpl newFailedUnit(File file, String name, String symbolicName, String version, String type, String message) {
+        InstallableUnitImpl newUnit = new InstallableUnitImpl(this, file, name, symbolicName, version, type, Collections.emptyList());
         newUnit.setState(State.ERROR);
         newUnit.setErrorMessage(message);
         return newUnit;
@@ -420,6 +420,7 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
         String name;
         String type;
         String symbolicName;
+        String version = "";
 
         List<Requirement> requirements = new LinkedList<>();
         try (JarFile jar = new JarFile(file)) {
@@ -436,6 +437,8 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
                 name = symbolicName;
             }
 
+            version = manifestAttribs.getValue(Constants.DEPLOYMENT_VERSION);
+
             requirements.addAll(RequirementParser.parseRequireBundle(manifestAttribs.getValue(org.osgi.framework.Constants.REQUIRE_BUNDLE)));
             requirements.addAll(RequirementParser.parseRequireCapability(manifestAttribs.getValue(org.osgi.framework.Constants.REQUIRE_CAPABILITY)));
             if (requirements.isEmpty()) {
@@ -450,7 +453,8 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
         }
 
         try {
-            ResolveRequest request = new ResolveRequest(name, symbolicName, type, Collections.singletonList(new URI(indexUriStr)), requirements);
+            ResolveRequest request = new ResolveRequest(name, symbolicName, version, type,
+                    Collections.singletonList(new URI(indexUriStr)), requirements);
 
             return request;
         } catch (URISyntaxException e) {

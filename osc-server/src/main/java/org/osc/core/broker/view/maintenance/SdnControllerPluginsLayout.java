@@ -149,7 +149,7 @@ public class SdnControllerPluginsLayout extends FormLayout {
             this.plugins.removeItem(plugin);
             break;
         default:
-        	log.error("Unknown plugin event type: " + event.getType());
+        	this.log.error("Unknown plugin event type: " + event.getType());
         	break;
         }
     }
@@ -160,6 +160,7 @@ public class SdnControllerPluginsLayout extends FormLayout {
 
         item.getItemProperty(PROP_PLUGIN_STATE).setValue(plugin.getState().toString());
         item.getItemProperty(PROP_PLUGIN_NAME).setValue(installUnit.getSymbolicName());
+        item.getItemProperty(PROP_PLUGIN_VERSION).setValue(installUnit.getVersion());
         item.getItemProperty(PROP_PLUGIN_SERVICES).setValue(plugin.getServices() != null ? plugin.getServices().size() : 0);
 
         String info;

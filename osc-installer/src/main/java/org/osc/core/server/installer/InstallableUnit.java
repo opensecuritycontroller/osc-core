@@ -36,6 +36,8 @@ public interface InstallableUnit {
 
     String getSymbolicName();
 
+    String getVersion();
+
     String getType();
 
     /**
