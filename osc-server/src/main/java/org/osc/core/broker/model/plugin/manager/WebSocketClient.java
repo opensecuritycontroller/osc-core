@@ -18,7 +18,6 @@ package org.osc.core.broker.model.plugin.manager;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 
 import javax.websocket.ClientEndpointConfig;
@@ -81,7 +80,7 @@ public class WebSocketClient {
      * @param webSocketClientEndpoint
      *            "ClientEndPoint" annotated object which will handle communication with server
      * @throws Exception
-     *             Throws exception like {@link DeploymentException}, {@link IOException}, {@link URISyntaxException}
+     *             Throws exception like {@link DeploymentException}, {@link IOException}
      *             etc..
      */
     public WebSocketClient(final ApplianceManagerConnector mc, ManagerApis managerApis) throws Exception {

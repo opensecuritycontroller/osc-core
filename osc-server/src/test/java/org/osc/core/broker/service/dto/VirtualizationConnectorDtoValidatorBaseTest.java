@@ -16,13 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS_2;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS_2;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.createVirtualisationConnector;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.*;
 
 import javax.persistence.EntityManager;
 
@@ -62,15 +56,6 @@ public class VirtualizationConnectorDtoValidatorBaseTest {
         this.em = InMemDB.getEntityManagerFactory().createEntityManager();
 
         populateDatabase();
-//
-//        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "name",
-//                VMWARE_NAME_ALREADY_EXISTS, true);
-//        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "name",
-//                OPENSTACK_NAME_ALREADY_EXISTS, true);
-//        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "controllerIpAddress",
-//                CONTROLLER_IP_ALREADY_EXISTS, true);
-//        sessionStub.stubIsExistingEntity(VirtualizationConnector.class, "providerIpAddress",
-//                PROVIDER_IP_ALREADY_EXISTS, true);
 
         this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em);
 

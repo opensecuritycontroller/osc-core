@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.util.encryption;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.KeyStoreProvider;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Properties;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -27,12 +28,11 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Properties;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.KeyStoreProvider;
 
 public class AESCTREncryption {
     private static final Logger LOG = Logger.getLogger(AESCTREncryption.class);
@@ -165,6 +165,7 @@ public class AESCTREncryption {
             return hexKey;
         }
 
+        @Override
         public void updateKey(String keyHex) throws EncryptionException {
             String aesCtrPassword = loadKeystorePasswordForAESCTRKey();
 
