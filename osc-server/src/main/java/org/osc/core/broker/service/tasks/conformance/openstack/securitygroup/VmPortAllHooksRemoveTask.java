@@ -26,7 +26,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 
 class VmPortAllHooksRemoveTask extends TransactionalTask {
 
@@ -54,7 +54,7 @@ class VmPortAllHooksRemoveTask extends TransactionalTask {
 
         this.port.removeAllDais();
 
-        SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.sgm);
+        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.sgm);
         try {
             controller.removeAllInspectionHooks(new NetworkElementImpl(this.port));
         } finally {

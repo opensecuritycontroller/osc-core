@@ -50,7 +50,7 @@ import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecurityGroupTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
-import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupElement;
 
@@ -135,7 +135,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         addSGMemberSyncJob(em, isDeleteTg, vdc);
 
         if (this.sg.getVirtualizationConnector().isControllerDefined()){
-            SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(
+            SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(
                     this.sg.getVirtualizationConnector());
             if (SdnControllerApiFactory.supportsPortGroup(this.sg)){
                 this.tg.appendTask(new PortGroupCheckTask(this.sg, controller, isDeleteTg),

@@ -16,7 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,7 +47,6 @@ import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.util.EncryptionUtil;
-import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 import org.powermock.api.mockito.PowerMockito;
@@ -48,20 +54,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import com.rabbitmq.client.ShutdownSignalException;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SdnControllerApiFactory.class, RabbitMQRunner.class, EncryptionUtil.class,
@@ -189,7 +182,7 @@ public class VirtualizationConnectorUtilTest {
 
 		// Act.
 		this.util.checkVmwareConnection(spyRequest, spyVc);
-		
+
 		//Assert
 		verify(vmwareSdnApi, times(1)).checkStatus(any(VMwareSdnConnector.class));
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
@@ -218,7 +211,7 @@ public class VirtualizationConnectorUtilTest {
 
 		// Act.
 		this.util.checkVmwareConnection(spyRequest, spyVc);
-		
+
 		//Assert
 		verify(vmwareSdnApi, times(1)).checkStatus(any(VMwareSdnConnector.class));
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
@@ -244,7 +237,7 @@ public class VirtualizationConnectorUtilTest {
 
 		// Act.
 		this.util.checkVmwareConnection(spyRequest, spyVc);
-		
+
 		//Assert
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
@@ -268,7 +261,7 @@ public class VirtualizationConnectorUtilTest {
 
 		// Act.
 		this.util.checkVmwareConnection(spyRequest, spyVc);
-		
+
 		//Assert
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
@@ -289,15 +282,14 @@ public class VirtualizationConnectorUtilTest {
 		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
 		PowerMockito.mockStatic(SdnControllerApiFactory.class);
-		SdnControllerApi sdnController = mock(SdnControllerApi.class);
-		when(SdnControllerApiFactory.createNetworkControllerApi(vc)).thenReturn(sdnController);
-		doReturn(null).when(sdnController).getStatus();
+		when(SdnControllerApiFactory.getStatus(vc, null)).thenReturn(null);
 
 		// Act.
 		this.util.checkOpenstackConnection(spyRequest, vc);
 
 		// Assert
-		verify(sdnController, times(1)).getStatus();
+        PowerMockito.verifyStatic(times(1));
+        SdnControllerApiFactory.getStatus(vc, null);
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 	}
@@ -319,17 +311,16 @@ public class VirtualizationConnectorUtilTest {
 		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
 		PowerMockito.mockStatic(SdnControllerApiFactory.class);
-		SdnControllerApi sdnController = mock(SdnControllerApi.class);
-		when(SdnControllerApiFactory.createNetworkControllerApi(vc)).thenReturn(sdnController);
+        when(SdnControllerApiFactory.getStatus(vc, null)).thenThrow(new Exception());
 
-		doThrow(new Exception()).when(sdnController).getStatus();
 		request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
 
 		// Act.
 		this.util.checkOpenstackConnection(spyRequest, vc);
 
 		// Assert
-		verify(sdnController, times(1)).getStatus();
+		PowerMockito.verifyStatic(times(1));
+        SdnControllerApiFactory.getStatus(vc, null);
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
 		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 
@@ -403,7 +394,7 @@ public class VirtualizationConnectorUtilTest {
 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
 		doNothing().when(this.rabbitClient).testConnection();
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
+		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
 
 		// Act.
 		this.util.checkOpenstackConnection(spyRequest, vc);
@@ -462,7 +453,7 @@ public class VirtualizationConnectorUtilTest {
 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
 		doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
+		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
 
 		// Act.
 		this.util.checkOpenstackConnection(spyRequest, vc);
@@ -491,7 +482,7 @@ public class VirtualizationConnectorUtilTest {
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
 
 		doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
+		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
 
 		// Act.
 		this.util.checkOpenstackConnection(spyRequest, vc);
@@ -511,7 +502,8 @@ public class VirtualizationConnectorUtilTest {
 
 		PowerMockito.mockStatic(RabbitMQRunner.class);
 
-		HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
+		@SuppressWarnings("unchecked")
+        HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
 		when(RabbitMQRunner.getVcToRabbitMQClientMap()).thenReturn(map);
 		OsRabbitMQClient mqClient = mock(OsRabbitMQClient.class);
 		doReturn(mqClient).when(map).get(any(Integer.class));
@@ -525,7 +517,7 @@ public class VirtualizationConnectorUtilTest {
 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
 		doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request); 
+		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
 
 		// Act.
 		this.util.checkOpenstackConnection(spyRequest, vc);

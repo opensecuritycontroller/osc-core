@@ -32,7 +32,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 
 class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
 
@@ -67,7 +67,7 @@ class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
             ports = subnet.getPorts();
         }
 
-        SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.sgm);
+        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.sgm);
         try {
             for (VMPort port : ports) {
                 this.log.info("Deleting Zombie Inspection Hooks for member '" + this.sgm.getMemberName()

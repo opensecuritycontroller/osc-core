@@ -44,7 +44,6 @@ import org.osc.core.broker.util.VimUtils;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
-import org.osc.sdk.controller.api.SdnControllerApi;
 
 import com.vmware.vim25.mo.VirtualMachine;
 
@@ -170,7 +169,6 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
             }
 
             if (request.flow != null && !request.flow.isEmpty()) {
-                SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(vc);
                 JCloudNeutron neutron = null;
                 JCloudNova nova = null;
 
@@ -180,7 +178,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
 
                     if (SdnControllerApiFactory.providesTrafficPortInfo(ControllerType.fromText(vc.getControllerType()))) {
                         // Search using SDN controller
-                        HashMap<String, FlowPortInfo> flowPortInfo = controller.queryPortInfo(request.flow);
+                        HashMap<String, FlowPortInfo> flowPortInfo = SdnControllerApiFactory.queryPortInfo(vc, null, request.flow);
 
                         log.info("SDN Controller Response: " + flowPortInfo);
                         for (String requestId : flowPortInfo.keySet()) {
@@ -222,7 +220,6 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                     if (nova != null) {
                         nova.close();
                     }
-                    controller.close();
                 }
             }
         }
