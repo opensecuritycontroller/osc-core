@@ -21,7 +21,6 @@
 # This script requires:
 # 1. to be part of an upgrade bundle, unpacked to a temporary location.
 # 2. working directory is ${my_root}/opt/vmidc/bin
-# nothing
 
 # copy upgrade to /opt
 upgrade_copy() {
