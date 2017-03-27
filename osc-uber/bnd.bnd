@@ -47,7 +47,6 @@ Require-Capability: \
     @${jackson-dataformat-yaml.dep},\
     @${javax.mail.dep},\
     @${joda-time.dep},\
-    @${json.dep},\
     @${jsoup.dep},\
     @${log4j.dep},\
     @${org.apache.commons.lang.dep},\
@@ -58,7 +57,6 @@ Require-Capability: \
     @${slf4j-api.dep},\
     @${snakeyaml.dep},\
     @${stepper.dep},\
-    @${streamhtmlparser-jsilver.dep},\
     @${swagger-annotations.dep},\
     @${swagger-core.dep},\
     @${swagger-models.dep},\
@@ -79,7 +77,10 @@ Require-Capability: \
     @${sdn-controller-api.dep},\
     @${vmware-nsx-api.dep},\
     @${osc-common.dep},\
-    @${osc-server.dep}
+    @${osc-server.dep},\
+    @${gwt-elemental.dep},\
+    @${gwt-user.dep},\
+    @${vaadin-sass-compiler.dep}
 
 Import-Package:\
     ${exclude-osc},\
@@ -163,6 +164,7 @@ exclude-tomcat:\
 exclude-other:\
   !com.gargoylesoftware.htmlunit,\
   !com.gargoylesoftware.htmlunit.html,\
+  !com.gargoylesoftware.htmlunit.util,\
   !com.gargoylesoftware.htmlunit.javascript,\
   !com.gargoylesoftware.htmlunit.javascript.host,\
   !com.google.appengine.api.datastore,\
@@ -197,6 +199,14 @@ exclude-other:\
   !com.google.gwt.lang,\
   !com.google.gwt.thirdparty.debugging.sourcemap,\
   !com.google.gwt.thirdparty.debugging.sourcemap.proto,\
+  !com.google.gwt.thirdparty.json,\
+  !com.google.gwt.thirdparty.guava.common.base,\
+  !com.google.gwt.thirdparty.guava.common.collect,\
+  !com.google.gwt.thirdparty.guava.common.io,\
+  !com.google.gwt.thirdparty.guava.common.primitives,\
+  !com.yahoo.platform.yui.compressor,\
+  !org.objectweb.asm.commons,\
+  !org.kohsuke.args4j,\
   !com.google.gwt.util.tools,\
   !com.google.gwt.util.tools.shared,\
   !com.google.inject.internal.asm.util,\
