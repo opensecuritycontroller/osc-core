@@ -27,6 +27,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Logger;
+import org.osc.core.rest.client.util.LoggingUtil;
 
 public class ArchiveUtil {
 
@@ -86,7 +87,7 @@ public class ArchiveUtil {
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 String fileName = zipEntry.getName();
-                log.info("Extracting " + fileName);
+                log.info("Extracting " + LoggingUtil.removeCRLF(fileName));
                 File file = new File(destination + File.separator + fileName);
                 // create folder as needed
                 file.getParentFile().mkdirs();

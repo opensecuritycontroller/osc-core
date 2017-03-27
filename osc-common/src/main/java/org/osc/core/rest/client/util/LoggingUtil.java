@@ -37,6 +37,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import org.owasp.esapi.ESAPI;
 
 public final class LoggingUtil {
 
@@ -174,6 +175,17 @@ public final class LoggingUtil {
             log.error("Problem converting the input to Xml. This should not happen.", ex);
         }
         return null;
+    }
+
+    public static String removeCRLF(String message){
+        String clean = message.replace( '\n', '_' ).replace( '\r', '_' );
+        if ( ESAPI.securityConfiguration().getLogEncodingRequired() ) {
+            clean = ESAPI.encoder().encodeForHTML(message);
+            if (!message.equals(clean)) {
+                clean += " (Encoded)";
+            }
+        }
+        return clean;
     }
 
 }

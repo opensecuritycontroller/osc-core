@@ -77,6 +77,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import elemental.events.KeyboardEvent.KeyCode;
+import org.osc.core.rest.client.util.LoggingUtil;
 
 public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
@@ -493,7 +494,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 BufferedReader kbdInput = new BufferedReader(inp)){
                 String line;
                 while ((line = kbdInput.readLine()) != null) {
-                    log.info(line);
+                    log.info(LoggingUtil.removeCRLF(line));
                 }
             }
 
