@@ -165,6 +165,7 @@ exclude-tomcat:\
   !javax.ejb
 
 exclude-other:\
+  !com.codahale.metrics,\
   !com.gargoylesoftware.htmlunit,\
   !com.gargoylesoftware.htmlunit.html,\
   !com.gargoylesoftware.htmlunit.util,\
