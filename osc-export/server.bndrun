@@ -42,6 +42,7 @@
 	javax.validation.api;version='[1.1.0,1.1.1)',\
 	org.glassfish.jersey.core.jersey-server;version='[2.25.0,2.25.1)',\
 	org.glassfish.jersey.containers.jersey-container-servlet-core;version='[2.25.0,2.25.1)',\
+    org.glassfish.jersey.ext.jersey-bean-validation;version='[2.25.0,2.25.1)',\
 	org.glassfish.jersey.core.jersey-common;version='[2.25.0,2.25.1)',\
 	org.glassfish.jersey.core.jersey-client;version='[2.25.0,2.25.1)',\
 	org.glassfish.jersey.bundles.repackaged.jersey-guava;version='[2.25.0,2.25.1)',\
