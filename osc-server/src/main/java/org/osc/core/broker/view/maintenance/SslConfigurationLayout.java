@@ -17,12 +17,15 @@
 package org.osc.core.broker.view.maintenance;
 
 import com.vaadin.data.Item;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.Reindeer;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.DeleteSslCertificateService;
 import org.osc.core.broker.service.ListSslCertificatesService;
@@ -56,9 +59,7 @@ public class SslConfigurationLayout extends FormLayout {
 
     public SslConfigurationLayout() {
         super();
-
-        VerticalLayout sslConfigContainer = new VerticalLayout();
-
+        VerticalLayout sslUploadContainer = new VerticalLayout();
         try {
             SslCertificateUploader certificateUploader = new SslCertificateUploader(X509TrustManagerFactory.getInstance());
             certificateUploader.setSizeFull();
@@ -67,14 +68,16 @@ public class SslConfigurationLayout extends FormLayout {
                     buildSslConfigurationTable();
                 }
             });
-            sslConfigContainer.addComponent(certificateUploader);
+            sslUploadContainer.addComponent(ViewUtil.createSubHeader("Upload certificate", null));
+            sslUploadContainer.addComponent(certificateUploader);
         } catch (Exception e) {
             log.error("Cannot add upload component. Trust manager factory failed to initialize", e);
             ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_UPLOAD_INIT_FAILED, new Date()),
                     null, Notification.Type.TRAY_NOTIFICATION);
         }
 
-        sslConfigContainer.addComponent(ViewUtil.createSubHeader("Upload certificate", null));
+        VerticalLayout sslListContainer = new VerticalLayout();
+        sslListContainer.addComponent(createHeaderForSslList());
 
         this.sslConfigTable = new Table();
         this.sslConfigTable.setSizeFull();
@@ -91,9 +94,23 @@ public class SslConfigurationLayout extends FormLayout {
 
         Panel sslConfigTablePanel = new Panel();
         sslConfigTablePanel.setContent(this.sslConfigTable);
+        sslListContainer.addComponent(sslConfigTablePanel);
 
-        addComponent(sslConfigContainer);
-        addComponent(sslConfigTablePanel);
+        addComponent(sslUploadContainer);
+        addComponent(sslListContainer);
+    }
+
+    @SuppressWarnings("serial")
+    private HorizontalLayout createHeaderForSslList() {
+        HorizontalLayout header = ViewUtil.createSubHeader("List of available certificates", null);
+
+        Button refresh = new Button();
+        refresh.setStyleName(Reindeer.BUTTON_LINK);
+        refresh.setDescription("Refresh");
+        refresh.setIcon(new ThemeResource("img/Refresh.png"));
+        refresh.addClickListener((Button.ClickListener) event -> buildSslConfigurationTable());
+        header.addComponent(refresh);
+        return header;
     }
 
     private List<CertificateBasicInfoModel> getPersistenceSslData() {
