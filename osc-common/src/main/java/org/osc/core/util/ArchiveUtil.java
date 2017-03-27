@@ -86,12 +86,11 @@ public class ArchiveUtil {
      */
     public static void unzip(String inputFile, String destination) throws IOException {
         FileInputStream fis = new FileInputStream(inputFile);
-        ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
         ZipEntry entry;
         int entries = 0;
         long total = BUFFER_SIZE;
         log.info("Extracting " + inputFile + " into " + destination);
-        try {
+        try(ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));) {
             while ((entry = zis.getNextEntry()) != null) {
                 int count;
                 byte data[] = new byte[BUFFER_SIZE];
@@ -121,8 +120,6 @@ public class ArchiveUtil {
                     throw new IllegalStateException("Archive is too big.");
                 }
             }
-        } finally {
-            zis.close();
         }
     }
 
