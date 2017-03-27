@@ -54,6 +54,7 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.annotations.OscAuth;
@@ -83,6 +84,9 @@ public class ServerMgmtApis {
 
     @Reference
     Server server;
+
+    @Reference
+    private ApiUtil apiUtil;
 
     @ApiOperation(value = "Get server status",
             notes = "Returns server status information",
@@ -188,7 +192,7 @@ public class ServerMgmtApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) ApiUtil
+        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) apiUtil
                 .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
 
         return response.getList();
@@ -207,7 +211,7 @@ public class ServerMgmtApis {
         logger.info("Adding new SSL certificate to truststore");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         AddSslEntryRequest addSslEntryRequest = new AddSslEntryRequest(sslEntry.getAlias(), sslEntry.getCertificate());
-        return ApiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
+        return apiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
     }
 
     /**
@@ -225,6 +229,6 @@ public class ServerMgmtApis {
     public Response deleteSslCertificate(@Context HttpHeaders headers, @ApiParam(value = "SSL certificate alias") @PathParam("alias") String alias) {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
+        return apiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
     }
 }
