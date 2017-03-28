@@ -62,17 +62,6 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
     @Reference
     ValidateNsxTask validateNsxTask;
 
-    public DeleteDistributedApplianceService(
-            RequestValidator<BaseDeleteRequest, DistributedAppliance> validator,
-            ApiFactoryService apiFactoryService,
-            VSConformanceCheckMetaTask vsConformanceCheckMetaTask,
-            ValidateNsxTask validateNsxTask) {
-        this.validator = validator;
-        this.apiFactoryService = apiFactoryService;
-        this.vsConformanceCheckMetaTask = vsConformanceCheckMetaTask;
-        this.validateNsxTask = validateNsxTask;
-    }
-
     Job startDeleteDAJob(final DistributedAppliance da, UnlockObjectMetaTask ult) throws Exception {
 
         try {
