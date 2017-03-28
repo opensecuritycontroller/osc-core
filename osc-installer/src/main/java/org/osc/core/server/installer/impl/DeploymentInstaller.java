@@ -92,6 +92,9 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
      */
     public static final boolean DEBUG = Boolean.getBoolean("org.osc.core.server.installer.debug");
 
+    // If Deployment version is not specified, the version to return
+    private static final String UNKNOWN_DEPLOYMENT_VERSION = "0.0.0";
+
     /**
      * OSGi Repository indexes are documented to use SHA-256 for their content hashes.
      * @see ContentNamespace#CONTENT_NAMESPACE
@@ -438,7 +441,9 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
             }
 
             version = manifestAttribs.getValue(Constants.DEPLOYMENT_VERSION);
-
+            if (version == null) {
+                version = UNKNOWN_DEPLOYMENT_VERSION;
+            }
             requirements.addAll(RequirementParser.parseRequireBundle(manifestAttribs.getValue(org.osgi.framework.Constants.REQUIRE_BUNDLE)));
             requirements.addAll(RequirementParser.parseRequireCapability(manifestAttribs.getValue(org.osgi.framework.Constants.REQUIRE_CAPABILITY)));
             if (requirements.isEmpty()) {
