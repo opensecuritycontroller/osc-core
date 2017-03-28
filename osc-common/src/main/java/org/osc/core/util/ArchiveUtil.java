@@ -34,7 +34,7 @@ public class ArchiveUtil {
 
     private static final Logger log = Logger.getLogger(ArchiveUtil.class);
     static final int BUFFER_SIZE = 1024;
-    static final long FILE_SIZE = 1024*1024*1024;//size 1GB
+    static final long FILE_SIZE = 4*1024*1024*1024;//size 4GB
     static final int FILE_LIMIT = 2048;
     /**
      * @param inputDir   Input Directory name
