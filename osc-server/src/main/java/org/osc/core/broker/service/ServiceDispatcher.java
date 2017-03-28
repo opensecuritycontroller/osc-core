@@ -54,7 +54,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
             throw new VmidcException(Server.PRODUCT_NAME + " server is in maintenance mode.");
         }
 
-        if (this.em == null) {
+        if (this.em == null || !this.em.isOpen()) {
             this.em = getEntityManager();
         }
 
