@@ -49,7 +49,6 @@ Require-Capability: \
     @${joda-time.dep},\
     @${jsoup.dep},\
     @${log4j.dep},\
-    @${org.apache.commons.lang.dep},\
     @${popupbutton.dep},\
     @${quartz.dep},\
     @${quartz-jobs.dep},\
