@@ -21,7 +21,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.MessageDigest;
@@ -30,11 +35,13 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.util.Base64;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-
 
 public class PKIUtil {
 
@@ -103,94 +110,73 @@ public class PKIUtil {
 
     public static void writeInputStreamToFile(InputStream is, String parentFolderName, String fileName) {
 
-        FileOutputStream fos = null;
-        File file = new File(parentFolderName + File.separator + fileName);
-        File backup = new File(parentFolderName + File.separator + fileName + ".org");
+        StringBuilder sb = new StringBuilder(parentFolderName)
+                .append(File.separator)
+                .append(fileName);
 
-        log.info("Start writing input stream to file: " + file.getAbsolutePath());
+        Path file = Paths.get(sb.toString());
+        Path backup = Paths.get(sb.append(".org").toString());
 
-        try {
+        log.info("Start writing input stream to file: " + file);
 
-            if (file.exists()) {
-                log.info("Renaming and backup existing file");
-
-                file.renameTo(backup);
-                file.delete();
-            }
-
-            fos = new FileOutputStream(file);
-            int nBytes = 0;
-            byte[] buff = new byte[32 * 1024];
-
-            while ((nBytes = is.read(buff)) != -1) {
-                fos.write(buff, 0, nBytes);
-            }
-
-            log.info("Successfully wrote input stream to file '" + file.getName() + "'");
-
-            fos.flush();
-
-        } catch (Exception ex) {
-            log.error("failed to write input stream to file", ex);
-
-            // undo when fails
-            if (backup.exists()) {
-                if (file.exists()) {
-                    file.delete();
+        if(StringUtils.equals(String.valueOf(file.getFileName()),fileName)) {
+            try {
+                if (Files.exists(file)) {
+                    log.info("Renaming/backup existing file");
+                    Files.move(file, backup, StandardCopyOption.REPLACE_EXISTING);
                 }
-                backup.renameTo(file);
+                try {
+                    Files.copy(is, file);
+                    log.info("Successfully wrote input stream to file '" + file + "'");
+                } catch (Exception ex) {
+                    log.error("Failed to write input stream to file", ex);
+                    // undo when fails
+                    if (Files.exists(backup)) {
+                        Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+                Files.deleteIfExists(backup);
+            } catch (Exception e) {
+                log.error("Failed to write input stream to file" + file, e);
             }
-        } finally {
-            IOUtils.closeQuietly(is);
-            IOUtils.closeQuietly(fos);
-
-            if (backup.exists()) {
-                backup.delete();
-            }
+        } else {
+            log.warn("Filename: " + fileName + " is not valid");
         }
     }
 
     public static void writeBytesToFile(byte[] bytes, String parentFolderName, String fileName) {
 
-        log.info("Writing " + bytes.length + " bytes to file " + fileName);
-        FileOutputStream fos = null;
+        StringBuilder sb = new StringBuilder(parentFolderName)
+                .append(File.separator)
+                .append(fileName);
 
-        File file = new File(parentFolderName + File.separator + fileName);
-        File backup = new File(parentFolderName + File.separator + fileName + ".org");
+        Path file = Paths.get(sb.toString());
+        Path backup = Paths.get(sb.append(".org").toString());
 
-        try {
+        log.info("Start writing " + bytes.length + " bytes to file " + file);
 
-            if (file.exists()) {
-                log.info("Renaming/backup existing file");
-
-                file.renameTo(backup);
-                file.delete();
-            }
-
-            fos = new FileOutputStream(file);
-            fos.write(bytes);
-            log.info("Successfully wrote " + bytes.length + " bytes to file '" + file.getName() + "'");
-
-            fos.flush();
-
-        } catch (Exception ex) {
-            log.error("failed to convert bytes to file", ex);
-
-            // undo when fails
-            if (backup.exists()) {
-
-                if (file.exists()) {
-                    file.delete();
+        if(StringUtils.equals(String.valueOf(file.getFileName()),fileName)) {
+            try {
+                if (Files.exists(file)) {
+                    log.info("Renaming/backup existing file");
+                    Files.move(file, backup, StandardCopyOption.REPLACE_EXISTING);
                 }
-                backup.renameTo(file);
+                try {
+                    Files.write(file, bytes);
+                    log.info("Successfully wrote " + bytes.length + " bytes to file '" + file + "'");
+                } catch (Exception ex) {
+                    log.error("Failed to convert bytes to file", ex);
+                    // undo when fails
+                    if (Files.exists(backup)) {
+                        Files.move(backup, file, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+                Files.deleteIfExists(backup);
+            } catch (Exception e) {
+                log.error("Failed to write bytes to file" + file, e);
             }
-
-        } finally {
-            IOUtils.closeQuietly(fos);
-
-            if (backup.exists()) {
-                backup.delete();
-            }
+        } else {
+            log.warn("Filename: " + fileName + " is not valid");
         }
     }
 
@@ -310,5 +296,4 @@ public class PKIUtil {
 
         throw new Exception("Private key not found in key store.");
     }
-
 }
