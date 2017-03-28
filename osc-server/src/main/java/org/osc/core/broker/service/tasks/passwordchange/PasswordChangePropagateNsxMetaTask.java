@@ -28,24 +28,27 @@ import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = PasswordChangePropagateNsxMetaTask.class)
 public class PasswordChangePropagateNsxMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(PasswordChangePropagateNsxMetaTask.class);
 
     private TaskGraph tg;
-    private final ApiFactoryService apiFactoryService;
 
-    public PasswordChangePropagateNsxMetaTask(ApiFactoryService apiFactoryService) {
-        this.apiFactoryService = apiFactoryService;
+    @Reference
+    private UpdateNsxServiceManagerTask updateNsxServiceManagerTask;
+
+    public PasswordChangePropagateNsxMetaTask() {
         this.name = getName();
     }
 
@@ -68,7 +71,7 @@ public class PasswordChangePropagateNsxMetaTask extends TransactionalMetaTask {
 
             for (VirtualSystem vs : da.getVirtualSystems()) {
                 if (!vs.getMarkedForDeletion()) {
-                    propagateTaskGraph.addTask(new UpdateNsxServiceManagerTask(vs, this.apiFactoryService),
+                    propagateTaskGraph.addTask(this.updateNsxServiceManagerTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                 }
             }

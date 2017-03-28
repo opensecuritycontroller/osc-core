@@ -75,11 +75,9 @@ public class DeleteDistributedApplianceServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @InjectMocks
-    DeleteDistributedApplianceService deleteDistributedApplianceService;
-
     @Mock
     EntityManager em;
+
     @Mock
     EntityTransaction tx;
 
@@ -89,6 +87,15 @@ public class DeleteDistributedApplianceServiceTest {
     @Mock
     private ApiFactoryService apiFactoryService;
 
+    @InjectMocks
+    private VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
+
+    @InjectMocks
+    private ValidateNsxTask validateNsxTask;
+
+    @InjectMocks
+    private DeleteDistributedApplianceService deleteDistributedApplianceService;
+
     private JobEngine jobEngine;
 
     // TODO:Future Supressing all unchecked warnings. Bad way to fix the warning for the line. Upgrade mockito to fix.
@@ -97,6 +104,10 @@ public class DeleteDistributedApplianceServiceTest {
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        // @InjectMocks does not inject these fields
+        this.deleteDistributedApplianceService.vsConformanceCheckMetaTask = this.vsConformanceCheckMetaTask;
+        this.deleteDistributedApplianceService.validateNsxTask = this.validateNsxTask;
 
         Mockito.when(this.em.getTransaction()).thenReturn(this.tx);
 
@@ -139,11 +150,12 @@ public class DeleteDistributedApplianceServiceTest {
 
         TaskGraph taskGraphWithDeleteTaskAndVsTasks = new TaskGraph();
         TaskGraph vmWareVsDeleteTaskGraph = new TaskGraph();
-        vmWareVsDeleteTaskGraph.addTask(new ValidateNsxTask(vmWareVirtualSystem, this.apiFactoryService));
-        vmWareVsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(vmWareVirtualSystem, this.apiFactoryService));
+        vmWareVsDeleteTaskGraph.addTask(this.validateNsxTask.create(vmWareVirtualSystem));
+
+        vmWareVsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(vmWareVirtualSystem));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(vmWareVsDeleteTaskGraph);
         TaskGraph openStackVsDeleteTaskGraph = new TaskGraph();
-        openStackVsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(openStackVirtualSystem, this.apiFactoryService));
+        openStackVsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(openStackVirtualSystem));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(openStackVsDeleteTaskGraph);
         taskGraphWithDeleteTaskAndVsTasks.appendTask(new DeleteDAFromDbTask(VALID_DA_WITH_SYSTEMS), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         taskGraphWithDeleteTaskAndVsTasks.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);

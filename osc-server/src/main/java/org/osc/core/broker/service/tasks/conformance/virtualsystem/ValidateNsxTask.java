@@ -35,18 +35,24 @@ import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osc.sdk.sdn.element.ServiceElement;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
 import org.osc.sdk.sdn.exception.HttpException;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-
+@Component(service = ValidateNsxTask.class)
 public class ValidateNsxTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(ValidateNsxTask.class);
 
     private VirtualSystem vs;
-    private final ApiFactoryService apiFactoryService;
 
-    public ValidateNsxTask(VirtualSystem vs, ApiFactoryService apiFactoryService) {
-        this.vs = vs;
-        this.apiFactoryService = apiFactoryService;
-        this.name = getName();
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    public ValidateNsxTask create(VirtualSystem vs) {
+        ValidateNsxTask task = new ValidateNsxTask();
+        task.vs = vs;
+        task.apiFactoryService = this.apiFactoryService;
+        task.name = task.getName();
+        return task;
     }
 
     @Override

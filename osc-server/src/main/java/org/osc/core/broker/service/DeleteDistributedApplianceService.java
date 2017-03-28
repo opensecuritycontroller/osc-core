@@ -56,6 +56,23 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
     @Reference
     private ApiFactoryService apiFactoryService;
 
+    @Reference
+    VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
+
+    @Reference
+    ValidateNsxTask validateNsxTask;
+
+    public DeleteDistributedApplianceService(
+            RequestValidator<BaseDeleteRequest, DistributedAppliance> validator,
+            ApiFactoryService apiFactoryService,
+            VSConformanceCheckMetaTask vsConformanceCheckMetaTask,
+            ValidateNsxTask validateNsxTask) {
+        this.validator = validator;
+        this.apiFactoryService = apiFactoryService;
+        this.vsConformanceCheckMetaTask = vsConformanceCheckMetaTask;
+        this.validateNsxTask = validateNsxTask;
+    }
+
     Job startDeleteDAJob(final DistributedAppliance da, UnlockObjectMetaTask ult) throws Exception {
 
         try {
@@ -69,9 +86,9 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
             for (VirtualSystem vs : da.getVirtualSystems()) {
                 TaskGraph vsDeleteTaskGraph = new TaskGraph();
                 if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-                    vsDeleteTaskGraph.addTask(new ValidateNsxTask(vs, this.apiFactoryService));
+                    vsDeleteTaskGraph.addTask(this.validateNsxTask.create(vs));
                 }
-                vsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(vs, this.apiFactoryService));
+                vsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(vs));
 
                 tg.addTaskGraph(vsDeleteTaskGraph);
             }

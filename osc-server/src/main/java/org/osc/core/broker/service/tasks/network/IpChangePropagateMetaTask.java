@@ -30,7 +30,6 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.FailedInfoTask;
@@ -40,19 +39,23 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = IpChangePropagateMetaTask.class)
 public class IpChangePropagateMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(IpChangePropagateMetaTask.class);
 
     private TaskGraph tg;
-    private final ApiFactoryService apiFactoryService;
 
-    public IpChangePropagateMetaTask(ApiFactoryService apiFactoryService) {
+    @Reference
+    private UpdateNsxServiceManagerTask updateNsxServiceManagerTask;
+
+    public IpChangePropagateMetaTask() {
         this.name = getName();
-        this.apiFactoryService = apiFactoryService;
     }
 
     @Override
@@ -79,7 +82,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
 
                 if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
                     // Updating Service Manager callback URL
-                    propagateTaskGraph.addTask(new UpdateNsxServiceManagerTask(vs, this.apiFactoryService),
+                    propagateTaskGraph.addTask(this.updateNsxServiceManagerTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating Service Attribute which include vmiDC server IP
                     propagateTaskGraph.addTask(new UpdateNsxServiceAttributesTask(vs),

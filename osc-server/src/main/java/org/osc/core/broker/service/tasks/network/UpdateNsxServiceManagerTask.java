@@ -31,18 +31,25 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.CreateNsxServiceManagerTask;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = UpdateNsxServiceManagerTask.class)
 public class UpdateNsxServiceManagerTask extends TransactionalTask {
 
     final Logger log = Logger.getLogger(UpdateNsxServiceManagerTask.class);
 
     private VirtualSystem vs;
-    private final ApiFactoryService apiFactoryService;
 
-    public UpdateNsxServiceManagerTask(VirtualSystem vs, ApiFactoryService apiFactoryService) {
-        this.vs = vs;
-        this.apiFactoryService = apiFactoryService;
-        this.name = getName();
+    @Reference
+    public ApiFactoryService apiFactoryService;
+
+    public UpdateNsxServiceManagerTask create(VirtualSystem vs) {
+        UpdateNsxServiceManagerTask task = new UpdateNsxServiceManagerTask();
+        task.vs = vs;
+        task.apiFactoryService = this.apiFactoryService;
+        task.name = task.getName();
+        return task;
     }
 
     @Override

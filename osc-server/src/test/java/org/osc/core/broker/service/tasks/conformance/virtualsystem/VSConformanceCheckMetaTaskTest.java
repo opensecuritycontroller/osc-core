@@ -72,6 +72,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -81,6 +82,7 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
@@ -103,9 +105,17 @@ public class VSConformanceCheckMetaTaskTest {
     @Mock
     public EntityManager em;
 
-    @Mock
-    private ApiFactoryService apiFactoryService;
+    // this is initialised from getTestData(); otherwise the TaskNodeComparer fails
+    private static ApiFactoryService apiFactoryService;
 
+    @InjectMocks
+    private CreateNsxServiceManagerTask createNsxServiceManagerTask;
+
+    @InjectMocks
+    private UpdateNsxServiceManagerTask updateNsxServiceManagerTask;
+
+    @InjectMocks
+    private VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
 
     private ServiceManagerApi serviceManagerApiMock;
     private ServiceApi serviceApiMock;
@@ -135,6 +145,11 @@ public class VSConformanceCheckMetaTaskTest {
     @Before
     public void testInitialize() throws Exception{
         MockitoAnnotations.initMocks(this);
+
+        // @InjectMocks doesn't inject these fields
+        this.vsConformanceCheckMetaTask.createNsxServiceManagerTask = this.createNsxServiceManagerTask;
+        this.vsConformanceCheckMetaTask.updateNsxServiceManagerTask = this.updateNsxServiceManagerTask;
+
         this.serviceManagerApiMock = Mockito.mock(ServiceManagerApi.class);
         this.serviceApiMock = Mockito.mock(ServiceApi.class);
 
@@ -181,7 +196,7 @@ public class VSConformanceCheckMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousVirtualSystems_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        VSConformanceCheckMetaTask task = new VSConformanceCheckMetaTask(this.vs, this.apiFactoryService);
+        VSConformanceCheckMetaTask task = this.vsConformanceCheckMetaTask.create(this.vs);
 
         // Act.
         task.executeTransaction(this.em);
@@ -192,6 +207,7 @@ public class VSConformanceCheckMetaTaskTest {
 
     @Parameters()
     public static Collection<Object[]> getTestData() throws EncryptionException {
+        apiFactoryService = VSConformanceCheckMetaTaskTestData.apiFactoryService;
         return Arrays.asList(new Object[][] {
             {UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS, createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS), false},
             {UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS,  createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS), false},

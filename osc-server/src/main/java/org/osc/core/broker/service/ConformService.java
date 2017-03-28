@@ -76,6 +76,9 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     @Reference
     private DeleteDistributedApplianceService deleteDistributedApplianceService;
 
+    @Reference
+    private DAConformanceCheckMetaTask daConformanceCheckMetaTask;
+
     public Long startDAConformJob(EntityManager em, DistributedAppliance da) throws Exception {
         return startDAConformJob(em, da, null, true);
     }
@@ -124,7 +127,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             tg.addTask(mcCheck);
             tg.appendTask(new DowngradeLockObjectTask(new LockRequest(daWriteUnlocktask)),
                     TaskGuard.ALL_PREDECESSORS_COMPLETED);
-            tg.appendTask(new DAConformanceCheckMetaTask(da, this.apiFactoryService), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+            tg.appendTask(this.daConformanceCheckMetaTask.create(da), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             // Sync MC security group interfaces only if the appliance manager supports policy mapping.
             if (ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()))) {

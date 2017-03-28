@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.request.SetNetworkSettingsRequest;
 import org.osc.core.broker.service.response.SetNetworkSettingsResponse;
@@ -44,7 +43,7 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
     private Server server;
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    private IpChangePropagateMetaTask ipChangePropagateMetaTask;
 
     @Override
     public SetNetworkSettingsResponse exec(SetNetworkSettingsRequest request, EntityManager em) throws Exception {
@@ -104,7 +103,7 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new IpChangePropagateMetaTask(this.apiFactoryService));
+        tg.addTask(this.ipChangePropagateMetaTask);
 
         Job job = JobEngine.getEngine().submit(
                 "Updating " + Server.SHORT_PRODUCT_NAME

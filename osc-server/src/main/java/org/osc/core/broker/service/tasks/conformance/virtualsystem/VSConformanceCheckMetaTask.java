@@ -69,20 +69,35 @@ import org.osc.sdk.sdn.api.ServiceApi;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceElement;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.google.common.base.Objects;
 
+@Component(service = VSConformanceCheckMetaTask.class)
 public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     private static final Logger LOG = Logger.getLogger(VSConformanceCheckMetaTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    @Reference
+    CreateNsxServiceManagerTask createNsxServiceManagerTask;
+
+    @Reference
+    UpdateNsxServiceManagerTask updateNsxServiceManagerTask;
+
     private VirtualSystem vs;
     private TaskGraph tg;
-    private final ApiFactoryService apiFactoryService;
 
-    public VSConformanceCheckMetaTask(VirtualSystem vs, ApiFactoryService apiFactoryService) {
-        this.vs = vs;
-        this.apiFactoryService = apiFactoryService;
-        this.name = getName();
+    public VSConformanceCheckMetaTask create(VirtualSystem vs) {
+        VSConformanceCheckMetaTask task = new VSConformanceCheckMetaTask();
+        task.vs = vs;
+        task.apiFactoryService = this.apiFactoryService;
+        task.createNsxServiceManagerTask = this.createNsxServiceManagerTask;
+        task.updateNsxServiceManagerTask = this.updateNsxServiceManagerTask;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -162,10 +177,10 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
             // Sync service manager
             if (this.vs.getNsxServiceManagerId() == null) {
-                tg.addTask(new CreateNsxServiceManagerTask(this.vs, this.apiFactoryService));
+                tg.addTask(this.createNsxServiceManagerTask.create(this.vs));
             } else {
                 if (isNsxServiceManagerOutOfSync(this.vs)) {
-                    tg.addTask(new UpdateNsxServiceManagerTask(this.vs, this.apiFactoryService));
+                    tg.addTask(this.updateNsxServiceManagerTask.create(this.vs));
                 }
             }
 

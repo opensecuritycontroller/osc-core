@@ -32,19 +32,26 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = CreateNsxServiceManagerTask.class)
 public class CreateNsxServiceManagerTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(CreateNsxServiceManagerTask.class);
 
     private VirtualSystem vs;
-    private final ApiFactoryService apiFactoryService;
 
-    public CreateNsxServiceManagerTask(VirtualSystem vs, ApiFactoryService apiFactoryService) {
-        this.vs = vs;
-        this.apiFactoryService = apiFactoryService;
-        this.name = getName();
+    @Reference
+    public ApiFactoryService apiFactoryService;
+
+    public CreateNsxServiceManagerTask create(VirtualSystem vs) {
+        CreateNsxServiceManagerTask task = new CreateNsxServiceManagerTask();
+        task.vs = vs;
+        task.apiFactoryService = this.apiFactoryService;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
