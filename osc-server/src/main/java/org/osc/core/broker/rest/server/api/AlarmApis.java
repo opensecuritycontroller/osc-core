@@ -16,8 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import java.util.List;
-
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -58,6 +57,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 import org.osgi.service.component.annotations.Reference;
+
+import java.util.List;
 
 @Component(service = AlarmApis.class)
 @Api(tags = "Operations for Alarms", authorizations = { @Authorization(value = "Basic Auth") })
@@ -116,7 +117,7 @@ public class AlarmApis {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @POST
-    public Response createAlarm(@Context HttpHeaders headers, @ApiParam(required = true) AlarmDto alarmDto) {
+    public Response createAlarm(@Context HttpHeaders headers, @ApiParam(required = true) @Valid AlarmDto alarmDto) {
 
         logger.info("Creating Alarm...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
@@ -134,7 +135,7 @@ public class AlarmApis {
     @Path("/{alarmId}")
     @PUT
     public Response updateAlarm(@Context HttpHeaders headers, @PathParam("alarmId") Long alarmId,
-                                @ApiParam(required = true) AlarmDto alarmDto) {
+                                @ApiParam(required = true) @Valid AlarmDto alarmDto) {
 
         logger.info("Updating Alarm " + alarmId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
