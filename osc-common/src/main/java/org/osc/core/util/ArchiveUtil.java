@@ -35,7 +35,7 @@ public class ArchiveUtil {
 
     private static final Logger log = Logger.getLogger(ArchiveUtil.class);
     static final int BUFFER_SIZE = 1024;
-    static final long FILE_SIZE = 4*1024*1024*1024;//size 4GB
+    static final long FILE_SIZE = 4*1024*1024*1024L;//size 4GB
     static final int FILE_LIMIT = 2048;
     /**
      * @param inputDir   Input Directory name
@@ -84,6 +84,7 @@ public class ArchiveUtil {
      * @param inputFile   ZIP file
      * @param destination directory to extract
      * @throws IOException
+     * TODO: use system unzip instead of java zip stream.
      */
     public static void unzip(String inputFile, String destination) throws IOException {
         FileInputStream fis = new FileInputStream(inputFile);
