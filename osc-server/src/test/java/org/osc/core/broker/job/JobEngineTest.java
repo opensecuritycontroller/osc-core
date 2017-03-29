@@ -16,16 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.job;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.criterion.Restrictions;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -176,12 +177,12 @@ public class JobEngineTest {
         verifyJobPersistence(this.job);
     }
 
-    private void verifyJobPersistence(Job job) {
-        Session session = HibernateUtil.getSessionFactory().getCurrentSession();
-        Transaction tx = session.beginTransaction();
+    private void verifyJobPersistence(Job job) throws Exception {
+        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
         try {
-            JobRecord jobRecord = (JobRecord) session.createCriteria(JobRecord.class)
-                    .add(Restrictions.idEq(job.getId())).uniqueResult();
+            tx.begin();
+            JobRecord jobRecord = em.find(JobRecord.class, job.getId());
             assertEquals(jobRecord.getName(), job.getName());
 
             for (TaskRecord ts : jobRecord.getTasks()) {

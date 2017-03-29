@@ -20,12 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
@@ -105,25 +105,25 @@ public class VirtualizationConnectorEntityMgr {
         dto.setSoftwareVersion(vc.getVirtualizationSoftwareVersion());
     }
 
-    public static VirtualizationConnector findByName(Session session, String name) {
+    public static VirtualizationConnector findByName(EntityManager em, String name) {
 
         // Initializing Entity Manager
-        EntityManager<VirtualizationConnector> emgr = new EntityManager<VirtualizationConnector>(
-                VirtualizationConnector.class, session);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
+                VirtualizationConnector.class, em);
 
         return emgr.findByFieldName("name", name);
     }
 
-    public static List<VirtualizationConnector> listBySwVersion(Session session, String swVersion) {
+    public static List<VirtualizationConnector> listBySwVersion(EntityManager em, String swVersion) {
 
         // get appliance software version based on software version provided
-        EntityManager<ApplianceSoftwareVersion> emgr1 = new EntityManager<ApplianceSoftwareVersion>(
-                ApplianceSoftwareVersion.class, session);
+        OSCEntityManager<ApplianceSoftwareVersion> emgr1 = new OSCEntityManager<ApplianceSoftwareVersion>(
+                ApplianceSoftwareVersion.class, em);
         List<ApplianceSoftwareVersion> asvList = emgr1.listByFieldName("applianceSoftwareVersion", swVersion);
 
         // Initializing Entity Manager
-        EntityManager<VirtualizationConnector> emgr = new EntityManager<VirtualizationConnector>(
-                VirtualizationConnector.class, session);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
+                VirtualizationConnector.class, em);
 
         ArrayList<VirtualizationConnector> vcList = new ArrayList<VirtualizationConnector>();
 
@@ -138,23 +138,33 @@ public class VirtualizationConnectorEntityMgr {
 
     }
 
-    public static void validateCanBeDeleted(Session session, VirtualizationConnector vc)
+    public static void validateCanBeDeleted(EntityManager em, VirtualizationConnector vc)
             throws VmidcBrokerInvalidRequestException {
 
-        Criteria criteria = session.createCriteria(DistributedAppliance.class).setProjection(Projections.rowCount())
-                .createCriteria("virtualSystems").add(Restrictions.eq("virtualizationConnector", vc));
+        CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        Long daCount = (Long) criteria.uniqueResult();
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
+
+        Root<?> root = query.from(DistributedAppliance.class);
+
+        query = query.select(cb.count(root))
+            .where(cb.equal(root.join("virtualSystems").get("virtualizationConnector"), vc));
+
+        Long daCount = em.createQuery(query).getSingleResult();
 
         if (daCount > 0) {
             throw new VmidcBrokerInvalidRequestException(
                     "Cannot delete Virtualization Connector that is referenced by a Distributed Appliance.");
         }
 
-        criteria = session.createCriteria(SecurityGroup.class).setProjection(Projections.rowCount())
-                .add(Restrictions.eq("virtualizationConnector", vc));
+        query = cb.createQuery(Long.class);
 
-        Long sgCount = (Long) criteria.uniqueResult();
+        root = query.from(SecurityGroup.class);
+
+        query = query.select(cb.count(root))
+            .where(cb.equal(root.get("virtualizationConnector"), vc));
+
+        Long sgCount = em.createQuery(query).getSingleResult();
 
         if (sgCount > 0) {
             throw new VmidcBrokerInvalidRequestException(
@@ -163,31 +173,49 @@ public class VirtualizationConnectorEntityMgr {
 
     }
 
-    public static VirtualizationConnector findById(Session session, Long id) {
+    public static VirtualizationConnector findById(EntityManager em, Long id) {
 
         // Initializing Entity Manager
-        EntityManager<VirtualizationConnector> emgr = new EntityManager<VirtualizationConnector>(
-                VirtualizationConnector.class, session);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
+                VirtualizationConnector.class, em);
 
         return emgr.findByPrimaryKey(id);
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<VirtualizationConnector> listByType(Session session, VirtualizationType type) {
-        Criteria criteria = session.createCriteria(VirtualizationConnector.class)
-                .add(Restrictions.eq("virtualizationType", type)).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        return criteria.list();
+    public static List<VirtualizationConnector> listByType(EntityManager em, VirtualizationType type) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<VirtualizationConnector> query = cb.createQuery(VirtualizationConnector.class);
+
+        Root<VirtualizationConnector> root = query.from(VirtualizationConnector.class);
+
+        query = query.select(root)
+            .where(cb.equal(root.get("virtualizationType"), type));
+
+        return em.createQuery(query).getResultList();
     }
 
     public static boolean isControllerTypeUsed(String controllerType) {
-        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-        Transaction tx = null;
-        Session session = sessionFactory.openSession();
+        EntityTransaction tx = null;
+        EntityManager em = null;
+
         Long count = 0L;
         try {
-            tx = session.beginTransaction();
-            Criteria criteria1 = session.createCriteria(VirtualizationConnector.class).add(Restrictions.eq("controllerType", controllerType));
-            count = (Long) criteria1.setProjection(Projections.rowCount()).setFirstResult(0).setMaxResults(1).uniqueResult();
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            tx = em.getTransaction();
+            tx.begin();
+
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+
+            CriteriaQuery<Long> query = cb.createQuery(Long.class);
+
+            Root<VirtualizationConnector> root = query.from(VirtualizationConnector.class);
+
+            query = query.select(cb.count(root))
+                .where(cb.equal(root.get("controllerType"), controllerType));
+
+            count = em.createQuery(query).getSingleResult();
+
             tx.commit();
         } catch (Exception e) {
             if (tx != null) {
@@ -195,8 +223,8 @@ public class VirtualizationConnectorEntityMgr {
             }
         }
 
-        if (session != null) {
-            session.close();
+        if (em != null) {
+            em.close();
         }
 
         return count > 0;

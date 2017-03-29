@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.collections4.CollectionUtils;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
@@ -45,8 +46,8 @@ public class PortGroupCheckTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.sg = session.get(SecurityGroup.class, this.sg.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
         Set<SecurityGroupMember> members = this.sg.getSecurityGroupMembers();
         List<NetworkElement> protectedPorts = new ArrayList<>();
@@ -77,7 +78,7 @@ public class PortGroupCheckTask extends TransactionalTask {
                 if (pGrp != null && !pGrp.getElementId().equals(portGroup.getElementId())) {
                     //portGroup was deleted outside OSC, recreated portGroup above
                     this.sg.setNetworkElementId(pGrp.getElementId());
-                    session.update(this.sg);
+                    em.merge(this.sg);
                 }
             }
         } else {
@@ -88,7 +89,7 @@ public class PortGroupCheckTask extends TransactionalTask {
                 NetworkElement portGp = this.controller.registerNetworkElement(protectedPorts);
                 if (portGp != null) {
                     this.sg.setNetworkElementId(portGp.getElementId());
-                    session.update(this.sg);
+                    em.merge(this.sg);
                 }
             }
         }

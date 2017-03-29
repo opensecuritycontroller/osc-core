@@ -18,11 +18,12 @@ package org.osc.core.broker.service.tasks.conformance.deleteda;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 public class DeleteVsFromDbTask extends TransactionalTask {
@@ -36,15 +37,15 @@ public class DeleteVsFromDbTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
         if (this.vs.getSecurityGroupInterfaces().size() > 0) {
             throw new VmidcBrokerInvalidRequestException(String.format(
                     "Virtual System '%s' has Traffic Policy Mappings which"
                             + " need to be unbinded before the Virtual system can be deleted", this.vs
                             .getVirtualizationConnector().getName()));
         }
-        EntityManager.delete(session, this.vs);
+        OSCEntityManager.delete(em, this.vs);
     }
 
     @Override

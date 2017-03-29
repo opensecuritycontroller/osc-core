@@ -38,13 +38,13 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockInformationDto;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.rest.client.util.LoggingUtil;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
@@ -56,10 +56,13 @@ import com.mcafee.vmidc.server.Server;
 public class ServerDebugApis {
     private static final Logger logger = Logger.getLogger(ServerDebugApis.class);
 
+    @Reference
+    Server server;
+
     @Path("/lock")
     @GET
     public Response getCurrentLockInfomation() {
-        if(!Server.devMode) {
+        if(!this.server.getDevMode()) {
             return Response.status(Status.NOT_FOUND).build();
         }
 
@@ -76,7 +79,7 @@ public class ServerDebugApis {
     @Path("/query")
     @POST
     public Response queryDb(String sql) {
-        if(!Server.devMode) {
+        if(!this.server.getDevMode()) {
             return Response.status(Status.NOT_FOUND).build();
         }
         try {
@@ -93,7 +96,7 @@ public class ServerDebugApis {
     @Path("/exec")
     @POST
     public Response execDb(String sql) {
-        if(!Server.devMode) {
+        if(!this.server.getDevMode()) {
             return Response.status(Status.NOT_FOUND).build();
         }
         try {
@@ -111,8 +114,8 @@ public class ServerDebugApis {
     @PUT
     public Response reloadDevMode() {
         try {
-            Server.devMode = Boolean.valueOf(Server.loadServerProp(Server.DEV_MODE_PROPERTY_KEY, "false"));
-            return Response.ok(String.valueOf(Server.devMode)).build();
+            this.server.setDevMode(Boolean.valueOf(this.server.loadServerProp(Server.DEV_MODE_PROPERTY_KEY, "false")));
+            return Response.ok(String.valueOf(this.server.getDevMode())).build();
 
         } catch (Exception e) {
 
@@ -124,7 +127,7 @@ public class ServerDebugApis {
     @Path("/rest-logging")
     @POST
     public Response enableLogging(String enable) {
-        if(!Server.devMode) {
+        if(!this.server.getDevMode()) {
             return Response.status(Status.NOT_FOUND).build();
         }
         try {
@@ -144,15 +147,12 @@ public class ServerDebugApis {
         StringBuilder output = new StringBuilder();
         output.append("Query: ").append(sql).append("\n");
 
-        DBConnectionParameters params = new DBConnectionParameters();
-        params.setConnectionURL(params.getConnectionURL() + "AUTO_SERVER=TRUE;");
-
-        try (Connection conn = HibernateUtil.getSQLConnection(params);
+        try (Connection conn = HibernateUtil.getSQLConnection();
              Statement statement = conn.createStatement()) {
             try (ResultSet result = statement.executeQuery(sql)){
                 processResultSetForQuery(output, result);
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             output.append(ExceptionUtils.getStackTrace(ex));
         }
 
@@ -186,16 +186,13 @@ public class ServerDebugApis {
         StringBuilder output = new StringBuilder();
         output.append("Exec: ").append(sql).append("\n");
 
-        DBConnectionParameters params = new DBConnectionParameters();
-        params.setConnectionURL(params.getConnectionURL() + "AUTO_SERVER=TRUE;");
-
-        try (Connection conn = HibernateUtil.getSQLConnection(params);
+        try (Connection conn = HibernateUtil.getSQLConnection();
              Statement statement = conn.createStatement()) {
             boolean isResultSet = statement.execute(sql);
             if (!isResultSet) {
                 output.append(statement.getUpdateCount()).append(" rows affected.\n");
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             output.append(ExceptionUtils.getStackTrace(ex));
         }
         return output;

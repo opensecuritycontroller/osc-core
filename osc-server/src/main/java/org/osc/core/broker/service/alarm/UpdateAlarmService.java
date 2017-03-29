@@ -16,14 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.alarm;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.events.Alarm;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.AlarmEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.util.ValidateUtil;
@@ -31,16 +32,16 @@ import org.osc.core.broker.util.ValidateUtil;
 public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>, BaseResponse> {
 
     @Override
-    public BaseResponse exec(BaseRequest<AlarmDto> request, Session session) throws Exception {
+    public BaseResponse exec(BaseRequest<AlarmDto> request, EntityManager em) throws Exception {
 
-        EntityManager<Alarm> emgr = new EntityManager<Alarm>(Alarm.class, session);
+        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
 
         // retrieve existing entry from db
         Alarm alarm = emgr.findByPrimaryKey(request.getDto().getId());
 
         // this validate function will throw exception if entry is not unique,
         // has empty fields, violates correct formatting or exceeds maximum allowed length
-        validate(session, request.getDto(), alarm, emgr);
+        validate(em, request.getDto(), alarm, emgr);
 
         AlarmEntityMgr.toEntity(alarm, request.getDto());
         emgr.update(alarm);
@@ -49,7 +50,7 @@ public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>,
         return response;
     }
 
-    void validate(Session session, AlarmDto dto, Alarm existingAlarm, EntityManager<Alarm> emgr) throws Exception {
+    void validate(EntityManager em, AlarmDto dto, Alarm existingAlarm, OSCEntityManager<Alarm> emgr) throws Exception {
 
         BaseDto.checkForNullId(dto);
 

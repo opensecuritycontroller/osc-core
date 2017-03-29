@@ -16,8 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
+import java.util.ArrayList;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
@@ -29,7 +32,7 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
@@ -40,9 +43,10 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-import java.util.ArrayList;
-
+@Component(service = AddApplianceManagerConnectorService.class)
 public class AddApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
 
@@ -50,17 +54,13 @@ public class AddApplianceManagerConnectorService extends
 
     private boolean forceAddSSLCertificates = false;
 
-    public AddApplianceManagerConnectorService() {
-    }
-
-    public AddApplianceManagerConnectorService(boolean forceAddSSLCertificates) {
-        this.forceAddSSLCertificates = forceAddSSLCertificates;
-    }
+    @Reference
+    private ConformService conformService;
 
     @Override
-    public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, Session session)
+    public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em)
             throws Exception {
-        EntityManager<ApplianceManagerConnector> appMgrEntityMgr = new EntityManager<>(ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> appMgrEntityMgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
 
         try {
             validate(request, appMgrEntityMgr);
@@ -76,7 +76,7 @@ public class AddApplianceManagerConnectorService extends
         ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto());
         mc = appMgrEntityMgr.create(mc);
 
-        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(session);
+        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
         mc.setSslCertificateAttrSet(certificateAttrEntityMgr.storeSSLEntries(mc.getSslCertificateAttrSet(), mc.getId()));
 
         appMgrEntityMgr.update(mc);
@@ -88,7 +88,7 @@ public class AddApplianceManagerConnectorService extends
 
         BaseJobResponse response = new BaseJobResponse();
         response.setId(mc.getId());
-        Job job = ConformService.startMCConformJob(mc, mcUnlock, session);
+        Job job = this.conformService.startMCConformJob(mc, mcUnlock, em);
         response.setJobId(job.getId());
 
         return response;
@@ -105,7 +105,7 @@ public class AddApplianceManagerConnectorService extends
     }
 
     private void validate(DryRunRequest<ApplianceManagerConnectorDto> request,
-                          EntityManager<ApplianceManagerConnector> emgr) throws Exception {
+                          OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
         ApplianceManagerConnectorDto.checkForNullFields(request.getDto());
         ApplianceManagerConnectorDto.checkFieldLength(request.getDto());

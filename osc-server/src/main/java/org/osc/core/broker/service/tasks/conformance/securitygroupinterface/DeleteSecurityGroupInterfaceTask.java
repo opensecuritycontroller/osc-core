@@ -18,12 +18,13 @@ package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 /**
@@ -43,9 +44,9 @@ public class DeleteSecurityGroupInterfaceTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        this.securityGroupInterface = (SecurityGroupInterface) session.get(SecurityGroupInterface.class,
+        this.securityGroupInterface = (SecurityGroupInterface) em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
         boolean isVmwareSGI = this.securityGroupInterface.getVirtualSystem()
                 .getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE;
@@ -54,11 +55,11 @@ public class DeleteSecurityGroupInterfaceTask extends TransactionalTask {
             sg.removeSecurityInterface(this.securityGroupInterface);
             // If Security Group has no bindings left to any service profiles, delete the SG and its members.
             if (isVmwareSGI && sg.getSecurityGroupInterfaces().size() == 0) {
-                EntityManager.delete(session, sg);
+                OSCEntityManager.delete(em, sg);
             }
         }
 
-        EntityManager.delete(session, this.securityGroupInterface);
+        OSCEntityManager.delete(em, this.securityGroupInterface);
     }
 
     @Override

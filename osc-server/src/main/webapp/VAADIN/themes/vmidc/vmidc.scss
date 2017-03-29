@@ -696,6 +696,18 @@ $v-shadow: false;
 	.stepper .stepper-updown{
 		top:1.2px !important
 	}
+
+	.v-table-cell-wrapper {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		-o-text-overflow: ellipsis;
+		-ms-text-overflow: ellipsis;
+		-moz-binding:url(ellipsis-xbl.xml#ellipsis);
+		-icab-text-overflow: ellipsis;
+		-khtml-text-overflow: ellipsis;
+		-webkit-text-overflow: ellipsis;
+	}
 }
 
 .editButton{

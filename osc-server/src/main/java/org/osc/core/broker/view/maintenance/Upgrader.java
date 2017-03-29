@@ -28,6 +28,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.UpgradeService;
 import org.osc.core.broker.service.request.UpgradeRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -98,7 +99,7 @@ public class Upgrader extends CustomComponent implements Receiver, FailedListene
     private EmptySuccessResponse invokeUpgradeService(File file) throws Exception {
         UpgradeRequest req = new UpgradeRequest();
         EmptySuccessResponse res;
-        UpgradeService upgradeService = new UpgradeService();
+        UpgradeService upgradeService = StaticRegistry.upgradeService();
         req.setUploadedFile(file);
         res = upgradeService.dispatch(req);
         return res;

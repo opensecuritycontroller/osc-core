@@ -18,6 +18,7 @@ package org.osc.core.util;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.log4j.Logger;
+import org.osc.core.rest.client.util.LoggingUtil;
 import org.osc.core.util.encryption.EncryptionException;
 
 import javax.ws.rs.WebApplicationException;
@@ -63,7 +64,7 @@ public class AuthUtil {
             String[] credentials = credString.split(":");
 
             if (credentials.length != 2) {
-                log.warn("Authentication of " + requestUri + " failed - invalid credentials format");
+                log.warn("Authentication of " + LoggingUtil.removeCRLF(requestUri) + " failed - invalid credentials format");
                 throw wae;
             }
 
@@ -71,7 +72,7 @@ public class AuthUtil {
             String password = credentials[1];
 
             if (!validateUserAndPassword(loginName, password, usernamePasswordMap)) {
-                log.warn("Authentication of " + requestUri + " failed - user password mismatch");
+                log.warn("Authentication of " + LoggingUtil.removeCRLF(requestUri) + " failed - user password mismatch");
                 throw wae;
             }
         }

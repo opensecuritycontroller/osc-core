@@ -19,8 +19,8 @@ package org.osc.core.broker.service.mc;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.criterion.Order;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
@@ -28,7 +28,7 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
@@ -38,14 +38,14 @@ ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<ApplianceManagerConnectorDt
     private ListResponse<ApplianceManagerConnectorDto> response = new ListResponse<>();
 
     @Override
-    public ListResponse<ApplianceManagerConnectorDto> exec(BaseRequest<BaseDto> request, Session session) throws Exception {
+    public ListResponse<ApplianceManagerConnectorDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
         // Initializing Entity Manager
-        EntityManager<ApplianceManagerConnector> emgr = new EntityManager<>(ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
         // to do mapping
         List<ApplianceManagerConnectorDto> mcmList = new ArrayList<>();
 
         // mapping all the MC objects to mc dto objects
-        for (ApplianceManagerConnector mc : emgr.listAll(new Order[] { Order.asc("name") })) {
+        for (ApplianceManagerConnector mc : emgr.listAll("name")) {
             ApplianceManagerConnectorDto dto = new ApplianceManagerConnectorDto();
             ApplianceManagerConnectorEntityMgr.fromEntity(mc, dto);
             if (request.isApi()) {

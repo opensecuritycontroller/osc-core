@@ -16,7 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
@@ -25,15 +28,13 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 
-import java.util.List;
-
 public class ListSslCertificatesService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<CertificateBasicInfoModel>> {
 
     @Override
-    protected ListResponse<CertificateBasicInfoModel> exec(BaseRequest<BaseDto> request, Session session) throws Exception {
+    protected ListResponse<CertificateBasicInfoModel> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
         List<CertificateBasicInfoModel> certificateInfoList = X509TrustManagerFactory.getInstance().getCertificateInfoList();
 
-        SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(session);
+        SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
         List<SslCertificateAttrDto> sslEntriesList = sslCertificateAttrEntityMgr.getSslEntriesList();
 
         for (CertificateBasicInfoModel cim : certificateInfoList) {

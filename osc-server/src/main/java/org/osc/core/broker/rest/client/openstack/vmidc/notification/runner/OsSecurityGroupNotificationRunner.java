@@ -21,8 +21,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
@@ -33,7 +34,8 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.Not
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.OsNotificationListener;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.util.BroadcastMessage;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -57,20 +59,20 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
     private static final Logger log = Logger.getLogger(OsSecurityGroupNotificationRunner.class);
 
-    public OsSecurityGroupNotificationRunner() {
-        Session session = null;
+    public OsSecurityGroupNotificationRunner() throws InterruptedException, VmidcException {
+        EntityManager em = null;
         try {
             BroadcasterUtil.register(this);
-            session = HibernateUtil.getSessionFactory().openSession();
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
 
-            EntityManager<SecurityGroup> sgEmgr = new EntityManager<SecurityGroup>(SecurityGroup.class, session);
+            OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
             List<SecurityGroup> sgList = sgEmgr.listAll();
             for (SecurityGroup sg : sgList) {
                 addListener(sg);
             }
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }
@@ -92,10 +94,10 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         if (msg.getEventType() == EventType.DELETED) {
             removeListener(msg.getEntityId());
         } else {
-            Session session = null;
+            EntityManager em = null;
             try {
-                session = HibernateUtil.getSessionFactory().openSession();
-                SecurityGroup sg = SecurityGroupEntityMgr.findById(session, msg.getEntityId());
+                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+                SecurityGroup sg = SecurityGroupEntityMgr.findById(em, msg.getEntityId());
                 if (sg == null) {
                     log.error("Processing " + msg.getEventType() + " notification for Security Group ("
                             + msg.getEntityId() + ") but couldn't find it in the DB");
@@ -107,9 +109,12 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                 } else if (msg.getEventType() == EventType.UPDATED) {
                     updateListeners(sg);
                 }
+            } catch (Exception e) {
+                log.error("An error occurred updating the Security Group Listeners", e);
+                throw new RuntimeException("Failed to consume a broadcast message", e);
             } finally {
-                if (session != null) {
-                    session.close();
+                if (em != null) {
+                    em.close();
                 }
             }
         }

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.virtualization.VirtualizationType;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -30,6 +31,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.securityinterface.ListSecurityGroupInterfaceServiceByVirtualSystem;
 import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.CRUDBaseSubView;
 import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -50,6 +52,8 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
     private static final String MC_ENTITY_NAME = "ApplianceManagerConnector";
 
     private static final Logger log = Logger.getLogger(SecurityGroupInterfaceSubView.class);
+
+    private ConformService conformService = StaticRegistry.conformService();
 
     public SecurityGroupInterfaceSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
             VirtualSystemDto vs) throws Exception {
@@ -80,7 +84,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Security Group interface Window");
-            ViewUtil.addWindow(new AddSecurityGroupInterfaceWindow(getDtoInContext().getId()));
+            ViewUtil.addWindow(new AddSecurityGroupInterfaceWindow(getDtoInContext().getId(), this.conformService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Security Group interface Window");

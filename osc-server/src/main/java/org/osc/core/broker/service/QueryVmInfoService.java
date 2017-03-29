@@ -19,8 +19,9 @@ package org.osc.core.broker.service;
 import java.io.IOException;
 import java.util.HashMap;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.nova.v2_0.domain.Server;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
@@ -33,7 +34,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.rest.server.model.QueryVmInfoRequest;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.FlowVmInfo;
@@ -53,9 +54,9 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
             Logger.getLogger(QueryVmInfoService.class);
 
     @Override
-    public QueryVmInfoResponse exec(QueryVmInfoRequest request, Session session) throws Exception {
+    public QueryVmInfoResponse exec(QueryVmInfoRequest request, EntityManager em) throws Exception {
 
-        DistributedApplianceInstance dai = validate(session, request);
+        DistributedApplianceInstance dai = validate(em, request);
 
         VirtualizationConnector vc = dai.getVirtualSystem().getVirtualizationConnector();
 
@@ -119,7 +120,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                     nova = new JCloudNova(new Endpoint(vc));
                     for (String ipAddress : request.ipAddress) {
                         VmInfo vmInfo = null;
-                        VM vm = VMPortEntityManager.findByIpAddress(session, dai, ipAddress);
+                        VM vm = VMPortEntityManager.findByIpAddress(em, dai, ipAddress);
 
                         if (vm != null) {
                             vmInfo = new VmInfo(vm);
@@ -148,7 +149,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                     nova = new JCloudNova(new Endpoint(vc));
                     for (String macAddress : request.macAddress) {
                         VmInfo vmInfo = null;
-                        VM vm = VMPortEntityManager.findByMacAddress(session, macAddress);
+                        VM vm = VMPortEntityManager.findByMacAddress(em, macAddress);
 
                         if (vm != null) {
                             vmInfo = new VmInfo(vm);
@@ -206,9 +207,9 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                             FlowVmInfo flowVmInfo = new FlowVmInfo();
                             flowVmInfo.requestId = requestId;
                             flowVmInfo.flow = flowInfo;
-                            flowVmInfo.sourceVmInfo = findVmByMacOrIp(session, nova, neutron, dai,
+                            flowVmInfo.sourceVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
                                     flowInfo.sourceMacAddress, flowInfo.sourceIpAddress);
-                            flowVmInfo.destinationVmInfo = findVmByMacOrIp(session, nova, neutron, dai,
+                            flowVmInfo.destinationVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
                                     flowInfo.destinationMacAddress, flowInfo.destinationIpAddress);
 
                             response.flowVmInfo.put(requestId, flowVmInfo);
@@ -251,11 +252,11 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         return new VmInfo(vm);
     }
 
-    private VmInfo findVmByMacOrIp(Session session, JCloudNova nova, JCloudNeutron neutron,
+    private VmInfo findVmByMacOrIp(EntityManager em, JCloudNova nova, JCloudNeutron neutron,
             DistributedApplianceInstance dai, String macAddress, String ipAddress) throws IOException {
         VmInfo vmInfo = null;
         if (macAddress != null) {
-            VM vm = VMPortEntityManager.findByMacAddress(session, macAddress);
+            VM vm = VMPortEntityManager.findByMacAddress(em, macAddress);
             if (vm != null) {
                 // From local cache
                 vmInfo = new VmInfo(vm);
@@ -266,7 +267,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
             }
         } else {
             // By IP
-            VM vm = VMPortEntityManager.findByIpAddress(session, dai, ipAddress);
+            VM vm = VMPortEntityManager.findByIpAddress(em, dai, ipAddress);
             if (vm != null) {
                 // From local cache
                 vmInfo = new VmInfo(vm);
@@ -285,14 +286,14 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         return null;
     }
 
-    private DistributedApplianceInstance validate(Session session, QueryVmInfoRequest request) throws Exception {
+    private DistributedApplianceInstance validate(EntityManager em, QueryVmInfoRequest request) throws Exception {
 
         if (request.applianceInstanceName == null || request.applianceInstanceName.isEmpty()) {
             throw new VmidcBrokerValidationException("Invalid Appliance Instance Name.");
         }
 
-        EntityManager<DistributedApplianceInstance> emgr = new EntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, session);
+        OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
+                DistributedApplianceInstance.class, em);
         DistributedApplianceInstance dai = emgr.findByFieldName("name", request.applianceInstanceName);
 
         if (dai == null) {

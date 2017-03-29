@@ -18,13 +18,14 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.FlavorCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTask;
@@ -48,10 +49,10 @@ public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
 
-        EntityManager<DeploymentSpec> dsEmgr = new EntityManager<DeploymentSpec>(DeploymentSpec.class, session);
+        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
         this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
 
         VirtualSystem virtualSystem = this.ds.getVirtualSystem();

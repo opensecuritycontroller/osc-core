@@ -18,15 +18,16 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
@@ -70,12 +71,12 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
 
-        this.ds = (DeploymentSpec) session.get(DeploymentSpec.class, this.ds.getId());
+        this.ds = em.find(DeploymentSpec.class, this.ds.getId());
 
-        this.dai = getDAI(session, this.ds, this.dai);
+        this.dai = getDAI(em, this.ds, this.dai);
 
         // Reset all discovered attributes
         this.dai.resetAllDiscoveredAttributes();
@@ -84,7 +85,7 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
                 this.dai.getOsHostName()));
         this.availabilityZone = this.dai.getOsAvailabilityZone();
 
-        EntityManager.update(session, this.dai);
+        OSCEntityManager.update(em, this.dai);
 
         this.tg.addTask(new OsSvaServerCreateTask(this.dai, this.hypervisorHostName, this.availabilityZone));
         this.tg.appendTask(new OsSvaEnsureActiveTask(this.dai));
@@ -100,7 +101,7 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
             }
         }
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(session, this.dai, this);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this);
     }
 
     /**
@@ -117,12 +118,12 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
      * @return
      * @throws Exception
      */
-    private DistributedApplianceInstance getDAI(Session session, DeploymentSpec ds,
+    private DistributedApplianceInstance getDAI(EntityManager em, DeploymentSpec ds,
             DistributedApplianceInstance daiToLoad) throws Exception {
         DistributedApplianceInstance dai = null;
 
         if (daiToLoad != null) {
-            dai = (DistributedApplianceInstance) session.load(DistributedApplianceInstance.class, daiToLoad.getId());
+            dai = em.find(DistributedApplianceInstance.class, daiToLoad.getId());
         } else {
             String daiName;
             dai = new DistributedApplianceInstance(ds.getVirtualSystem());
@@ -132,7 +133,7 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
             //dai.setName("Temporary" + UUID.randomUUID().toString()); :TODO sridhar
             dai.setName("Temporary"); // setting temporary name since it is mandatory field
-            dai = EntityManager.create(session, dai);
+            dai = OSCEntityManager.create(em, dai);
 
             // Generate a unique, intuitive and immutable name
             daiName = ds.getVirtualSystem().getName() + "-" + dai.getId().toString();
@@ -140,7 +141,7 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
             dai.setName(daiName);
 
-            EntityManager.update(session, dai);
+            OSCEntityManager.update(em, dai);
             this.log.info("Creating new DAI " + dai);
         }
         return dai;

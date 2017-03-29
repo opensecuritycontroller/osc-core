@@ -18,29 +18,36 @@ package org.osc.core.broker.service;
 
 import java.io.File;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.UpgradeRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = UpgradeService.class)
 public class UpgradeService extends ServiceDispatcher<UpgradeRequest, EmptySuccessResponse> {
     private static final Logger log = Logger.getLogger(UpgradeService.class);
 
+    @Reference
+    private Server server;
+
     @Override
-    public EmptySuccessResponse exec(UpgradeRequest request, Session session) throws Exception {
+    public EmptySuccessResponse exec(UpgradeRequest request, EntityManager em) throws Exception {
         File uploadedFile = request.getUploadedFile();
         log.info("Upgrade Req (pid:" + ServerUtil.getCurrentPid() + "): uploaded File: "
                 + uploadedFile.getCanonicalPath());
 
         try {
-            Server.setInMaintenance(true);
+            this.server.setInMaintenance(true);
             ServerUtil.upgradeServer(uploadedFile);
         } catch (Exception e) {
-            Server.setInMaintenance(false);
+            this.server.setInMaintenance(false);
             throw new VmidcException("Upgrade failed: " + e);
         } finally {
             uploadedFile.delete();

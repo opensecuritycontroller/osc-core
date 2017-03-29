@@ -16,9 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import java.lang.reflect.Field;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,17 +51,17 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
-import org.osc.core.broker.util.SessionStub;
+import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.common.collect.Sets;
-import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ConformService.class, LockUtil.class, ManagerApiFactory.class})
+@PrepareForTest({HibernateUtil.class, LockUtil.class, ManagerApiFactory.class})
 public class UpdateDistributedApplianceServiceTest {
     private static long JOB_ID = 12345L;
     private static String NEW_APPLIANCE_SW_VERSION = "NEWVERSION";
@@ -65,18 +69,24 @@ public class UpdateDistributedApplianceServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @Mock
-    private Session sessionMock;
+    private EntityManager em;
 
     @Mock(name = "daValidator")
     private DistributedApplianceDtoValidator validatorMock;
+
+    @Mock
+    private ConformService conformServiceMock;
 
     @InjectMocks
     private UpdateDistributedApplianceService service;
 
     private BaseRequest<DistributedApplianceDto> request;
+    private Appliance app;
+    private ApplianceManagerConnector amc;
+    private ApplianceSoftwareVersion asv;
     private DistributedApplianceDto daDto;
     private DistributedAppliance da;
+    private VirtualizationConnector vcToBeDeleted;
     private VirtualSystemDto vsDto;
     private VirtualSystemDto vsDtoToBeDeleted;
     private VirtualSystem vsToBeDeleted;
@@ -84,7 +94,6 @@ public class UpdateDistributedApplianceServiceTest {
     private DistributedApplianceInstance daInstance;
     private VirtualizationConnector vc;
     private Domain domain;
-    private SessionStub sessionStub;
     private UnlockObjectMetaTask ult;
 
     private String invalidDaName = "invalidDaName";
@@ -93,104 +102,51 @@ public class UpdateDistributedApplianceServiceTest {
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        this.vc = new VirtualizationConnector();
-        this.vc.setId(1000L);
-        this.vc.setVirtualizationType(VirtualizationType.VMWARE);
-        this.vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+        EntityManagerFactory entityManagerFactory = InMemDB.getEntityManagerFactory();
 
-        this.domain = new Domain();
-        this.domain.setId(1001L);
-        this.domain.setName("domainName");
+        PowerMockito.mockStatic(HibernateUtil.class);
+        Mockito.when(HibernateUtil.getEntityManagerFactory()).thenReturn(entityManagerFactory);
+
+        this.em = entityManagerFactory.createEntityManager();
+
+        populateDatabase();
 
         this.request = new BaseRequest<>();
         this.daDto = new DistributedApplianceDto();
         this.request.setDto(this.daDto);
 
-        this.daDto.setName("daName");
-        this.daDto.setId(1L);
-        this.daDto.setApplianceId(2L);
-        this.daDto.setApplianceSoftwareVersionName("softwareVersion");
-        this.daDto.setMcId(3L);
+        this.daDto.setName(this.da.getName());
+        this.daDto.setId(this.da.getId());
+        this.daDto.setApplianceId(this.app.getId());
+        this.daDto.setApplianceSoftwareVersionName(this.asv.getApplianceSoftwareVersion());
+        this.daDto.setMcId(this.amc.getId());
 
         this.vsDto = new VirtualSystemDto();
-        this.vsDto.setId(5L);
+        this.vsDto.setId(this.vs.getId());
         this.vsDto.setVcId(this.vc.getId());
         this.vsDto.setDomainId(this.domain.getId());
 
-        VirtualizationConnector vcToBeDeleted = new VirtualizationConnector();
-        vcToBeDeleted.setId(2000L);
-        vcToBeDeleted.setVirtualizationType(VirtualizationType.VMWARE);
-        vcToBeDeleted.setVirtualizationSoftwareVersion("vcSoftwareVersion");
-
         this.vsDtoToBeDeleted = new VirtualSystemDto();
-        this.vsDtoToBeDeleted.setId(7L);
-        this.vsDtoToBeDeleted.setVcId(vcToBeDeleted.getId());
+        this.vsDtoToBeDeleted.setId(this.vsToBeDeleted.getId());
+        this.vsDtoToBeDeleted.setVcId(this.vcToBeDeleted.getId());
         this.vsDtoToBeDeleted.setDomainId(this.domain.getId());
 
         this.daDto.setVirtualizationSystems(Sets.newHashSet(this.vsDto, this.vsDtoToBeDeleted));
 
-        this.da = new DistributedAppliance(new ApplianceManagerConnector());
-        this.da.setId(this.daDto.getId());
-        this.da.setName(this.daDto.getName());
-        this.da.setApplianceVersion(this.daDto.getApplianceSoftwareVersionName());
-        this.da.setAppliance(new Appliance());
-
-        ApplianceSoftwareVersion softwareVersion = new ApplianceSoftwareVersion();
-        softwareVersion.setApplianceSoftwareVersion(this.daDto.getApplianceSoftwareVersionName());
-
-        this.vs = new VirtualSystem(this.da);
-        this.da.addVirtualSystem(this.vs);
-
-        this.vs.setId(this.vsDto.getId());
-        this.vs.setApplianceSoftwareVersion(softwareVersion);
-        this.vs.setDomain(this.domain);
-        this.vs.setVirtualizationConnector(this.vc);
-        this.vs.setMarkedForDeletion(false);
-
-        this.daInstance = new DistributedApplianceInstance(new VirtualSystem());
-        this.daInstance.setApplianceConfig(new byte[3]);
-        this.vs.addDistributedApplianceInstance(this.daInstance);
-
-        this.vsToBeDeleted = new VirtualSystem(this.da);
-        this.vsToBeDeleted.setId(this.vsDtoToBeDeleted.getId());
-        this.vsToBeDeleted.setApplianceSoftwareVersion(softwareVersion);
-        this.vsToBeDeleted.setDomain(this.domain);
-        this.vsToBeDeleted.setVirtualizationConnector(this.vc);
-        this.vsToBeDeleted.setMarkedForDeletion(false);
-        this.da.addVirtualSystem(this.vsToBeDeleted);
-
-        this.sessionStub = new SessionStub(this.sessionMock);
         this.ult = new UnlockObjectMetaTask(null);
-
-        Mockito.when(this.sessionMock.get(Appliance.class, this.daDto.getApplianceId())).thenReturn(new Appliance());
-        Mockito.when(this.sessionMock.get(VirtualizationConnector.class, this.vsDto.getVcId())).thenReturn(this.vc);
-        Mockito.when(this.sessionMock.get(VirtualizationConnector.class, this.vsDtoToBeDeleted.getVcId())).thenReturn(vcToBeDeleted);
-        Mockito.when(this.sessionMock.get(Domain.class, this.vsDto.getDomainId())).thenReturn(this.domain);
-        Mockito.when(this.sessionMock.get(VirtualSystem.class, this.vsDto.getId())).thenReturn(this.vs);
-        Mockito.when(this.sessionMock.get(VirtualSystem.class, this.vsDtoToBeDeleted.getId())).thenReturn(this.vsToBeDeleted);
-        Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, this.daDto.getMcId())).thenReturn(new ApplianceManagerConnector());
 
         Mockito.doThrow(VmidcBrokerInvalidEntryException.class).when(this.validatorMock)
         .validateForUpdate(Mockito.argThat(new DistributedApplianceDtoMatcher(this.invalidDaName)));
-        Mockito.doReturn(this.da).when(this.validatorMock)
+        Mockito.doAnswer(i -> {
+
+            Field f = ServiceDispatcher.class.getDeclaredField("em");
+            f.setAccessible(true);
+            return ((EntityManager)f.get(this.service)).find(DistributedAppliance.class, this.da.getId());
+
+        }).when(this.validatorMock)
         .validateForUpdate(Mockito.argThat(new DistributedApplianceDtoMatcher(this.daDto.getName())));
 
-        this.sessionStub.stubIsExistingEntity(DistributedAppliance.class, "name", this.daDto.getName(), false);
-
-        this.sessionStub.stubFindApplianceSoftwareVersion(this.daDto.getApplianceId(),
-                this.daDto.getApplianceSoftwareVersionName(),
-                this.vc.getVirtualizationType(),
-                this.vc.getVirtualizationSoftwareVersion(),
-                softwareVersion);
-        this.sessionStub.stubFindApplianceSoftwareVersion(this.daDto.getApplianceId(),
-                NEW_APPLIANCE_SW_VERSION,
-                this.vc.getVirtualizationType(),
-                this.vc.getVirtualizationSoftwareVersion(),
-                softwareVersion);
-        this.sessionStub.stubListByDaId(this.daDto.getId(), Lists.newArrayList(this.daDto.getId()));
-
-        PowerMockito.mockStatic(ConformService.class);
-        Mockito.when(ConformService.startDAConformJob(Mockito.any(Session.class),
+        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(EntityManager.class),
                 (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)),
                 Mockito.any(UnlockObjectMetaTask.class))).thenReturn(JOB_ID);
 
@@ -201,6 +157,99 @@ public class UpdateDistributedApplianceServiceTest {
         Mockito.when(ManagerApiFactory.createManagerDeviceApi(this.vs)).thenReturn(Mockito.mock(ManagerDeviceApi.class));
         Mockito.when(ManagerApiFactory.createManagerDeviceApi(this.vsToBeDeleted)).thenReturn(Mockito.mock(ManagerDeviceApi.class));
     }
+
+    @After
+    public void testTearDown() {
+        InMemDB.shutdown();
+    }
+
+    private void populateDatabase() {
+        this.em.getTransaction().begin();
+
+        this.app = new Appliance();
+        this.app.setManagerSoftwareVersion("fizz");
+        this.app.setManagerType("buzz");
+        this.app.setModel("fizzbuzz");
+
+        this.em.persist(this.app);
+
+        this.amc = new ApplianceManagerConnector();
+        this.amc.setManagerType("buzz");
+        this.amc.setIpAddress("127.0.0.1");
+        this.amc.setName("Steve");
+        this.amc.setServiceType("foobar");
+
+        this.em.persist(this.amc);
+
+        this.domain = new Domain(this.amc);
+        this.domain.setName("domainName");
+
+        this.em.persist(this.domain);
+
+        this.vc = new VirtualizationConnector();
+        this.vc.setVirtualizationType(VirtualizationType.VMWARE);
+        this.vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+        this.vc.setName("vcName");
+        this.vc.setProviderIpAddress("127.0.0.1");
+        this.vc.setProviderUsername("Natasha");
+        this.vc.setProviderPassword("********");
+
+        this.em.persist(this.vc);
+
+        this.vcToBeDeleted = new VirtualizationConnector();
+        this.vcToBeDeleted.setVirtualizationType(VirtualizationType.VMWARE);
+        this.vcToBeDeleted.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+        this.vcToBeDeleted.setName("vcToDeleteName");
+        this.vcToBeDeleted.setProviderIpAddress("192.168.1.1");
+        this.vcToBeDeleted.setProviderUsername("Bruce");
+        this.vcToBeDeleted.setProviderPassword("********");
+
+        this.em.persist(this.vcToBeDeleted);
+
+        this.asv = new ApplianceSoftwareVersion(this.app);
+        this.asv.setApplianceSoftwareVersion("softwareVersion");
+        this.asv.setImageUrl("bar");
+        this.asv.setVirtualizarionSoftwareVersion(this.vc.getVirtualizationSoftwareVersion());
+        this.asv.setVirtualizationType(this.vc.getVirtualizationType());
+
+        this.em.persist(this.asv);
+
+        this.da = new DistributedAppliance(this.amc);
+        this.da.setName("daName");
+        this.da.setApplianceVersion(this.asv.getApplianceSoftwareVersion());
+        this.da.setAppliance(this.app);
+
+        this.em.persist(this.da);
+
+        this.vsToBeDeleted = new VirtualSystem(this.da);
+        this.vsToBeDeleted.setApplianceSoftwareVersion(this.asv);
+        this.vsToBeDeleted.setDomain(this.domain);
+        this.vsToBeDeleted.setVirtualizationConnector(this.vcToBeDeleted);
+        this.vsToBeDeleted.setMarkedForDeletion(false);
+        this.vsToBeDeleted.setName("vsToDeleteName");
+
+        this.em.persist(this.vsToBeDeleted);
+        this.da.addVirtualSystem(this.vsToBeDeleted);
+
+        this.vs = new VirtualSystem(this.da);
+        this.vs.setApplianceSoftwareVersion(this.asv);
+        this.vs.setDomain(this.domain);
+        this.vs.setVirtualizationConnector(this.vc);
+        this.vs.setMarkedForDeletion(false);
+        this.vs.setName("vsName");
+
+        this.em.persist(this.vs);
+        this.da.addVirtualSystem(this.vs);
+
+        this.daInstance = new DistributedApplianceInstance(this.vs);
+        this.daInstance.setName("daiName");
+        this.daInstance.setApplianceConfig(new byte[3]);
+
+        this.em.persist(this.daInstance);
+
+        this.em.getTransaction().commit();
+        this.em.clear();
+     }
 
     @Test
     public void testDispatch_WithNullRequest_ThrowsNullPointerException() throws Exception {
@@ -246,14 +295,23 @@ public class UpdateDistributedApplianceServiceTest {
 
         // Assert.
         assertDaUpdated(response);
-        Mockito.verify(this.sessionMock).update(this.vsToBeDeleted);
-        Assert.assertTrue(this.vsToBeDeleted.getMarkedForDeletion());
+        Assert.assertTrue(
+                this.em.createQuery("Select vs from VirtualSystem vs where vs.name = 'vsToDeleteName'", VirtualSystem.class)
+                .getSingleResult().getMarkedForDeletion());
     }
 
     @Test
     public void testDispatch_ChangingTheSwVersion_DaInstanceIsUpdated() throws Exception {
         // Arrange.
         // If the da version is changing then the da instance must be updated.
+        this.em.getTransaction().begin();
+        ApplianceSoftwareVersion newVersion = new ApplianceSoftwareVersion(this.app);
+        newVersion.setApplianceSoftwareVersion(NEW_APPLIANCE_SW_VERSION);
+        newVersion.setImageUrl("foobar");
+        newVersion.setVirtualizarionSoftwareVersion(this.vc.getVirtualizationSoftwareVersion());
+        newVersion.setVirtualizationType(this.vc.getVirtualizationType());
+        this.em.persist(newVersion);
+        this.em.getTransaction().commit();
         this.daDto.setApplianceSoftwareVersionName(NEW_APPLIANCE_SW_VERSION);
 
         // Act.
@@ -261,13 +319,17 @@ public class UpdateDistributedApplianceServiceTest {
 
         // Assert.
         assertDaUpdated(response);
-        Mockito.verify(this.sessionMock).update(this.daInstance);
-        Assert.assertNull("The da instance confi should be null.", this.daInstance.getApplianceConfig());
+        Assert.assertNull("The da instance confi should be null.",
+                this.em.createQuery("Select dai from DistributedApplianceInstance dai where dai.name = 'daiName'",
+                        DistributedApplianceInstance.class).getSingleResult().getApplianceConfig());
     }
 
     private void assertDaUpdated(BaseJobResponse response) throws Exception {
         Mockito.verify(this.validatorMock).validateForUpdate(this.request.getDto());
-        Mockito.verify(this.sessionMock).update(this.da);
+
+
+        Assert.assertNotNull("Not updated",
+                this.em.find(DistributedAppliance.class, this.da.getId()).getUpdatedTimestamp());
 
         PowerMockito.verifyStatic();
         LockUtil.tryLockDA(this.da, this.da.getApplianceManagerConnector());

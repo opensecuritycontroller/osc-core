@@ -20,16 +20,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberStatusElement;
@@ -47,12 +48,14 @@ public class ApplianceAgentsJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        Session session = HibernateUtil.getSessionFactory().openSession();
+        EntityManager em = null;
 
         try {
-            Transaction tx = session.beginTransaction();
-            EntityManager<DistributedAppliance> emgr = new EntityManager<DistributedAppliance>(
-                    DistributedAppliance.class, session);
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
+            OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
+                    DistributedAppliance.class, em);
 
             for (DistributedAppliance da : emgr.listAll()) {
                 for (VirtualSystem vs : da.getVirtualSystems()) {
@@ -77,16 +80,17 @@ public class ApplianceAgentsJob implements Job {
         } catch (Exception ex) {
             log.error("Fail to sync DAs", ex);
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }
 
     private void getAgentFullStatus(DistributedApplianceInstance dai, List<ManagerDeviceMemberStatusElement> statusList) throws Exception {
-        Session session = HibernateUtil.getSessionFactory().openSession();
+        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
         try {
-            Transaction tx = session.beginTransaction();
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
             ManagerDeviceMemberStatusElement memberStatus = findDeviceMemberStatus(dai, statusList);
 
             if (memberStatus != null) {
@@ -96,7 +100,7 @@ public class ApplianceAgentsJob implements Job {
                 }
             }
 
-            EntityManager.update(session, dai);
+            OSCEntityManager.update(em, dai);
             tx.commit();
 
         } catch (Exception ex) {
@@ -104,8 +108,8 @@ public class ApplianceAgentsJob implements Job {
             log.error("Fail to get full status for dai '" + dai.getName() + "'. " + ex.getMessage());
 
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }

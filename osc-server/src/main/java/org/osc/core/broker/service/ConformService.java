@@ -18,10 +18,10 @@ package org.osc.core.broker.service;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.JobEngine;
@@ -39,12 +39,13 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.request.ConformRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -62,33 +63,39 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.TransactionalBrodcastListener;
 import org.osc.core.broker.util.db.TransactionalRunner;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = ConformService.class)
 public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> {
     private static final Logger log = Logger.getLogger(ConformService.class);
 
-    public static Long startDAConformJob(Session session, DistributedAppliance da) throws Exception {
-        return startDAConformJob(session, da, null, true);
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    public Long startDAConformJob(EntityManager em, DistributedAppliance da) throws Exception {
+        return startDAConformJob(em, da, null, true);
     }
 
-    public static Long startDAConformJob(Session session, DistributedAppliance da, UnlockObjectMetaTask mcUnlock)
+    public Long startDAConformJob(EntityManager em, DistributedAppliance da, UnlockObjectMetaTask mcUnlock)
             throws Exception {
-        return startDAConformJob(session, da, mcUnlock, true);
+        return startDAConformJob(em, da, mcUnlock, true);
     }
 
-    public static Long startDAConformJob(Session session, DistributedAppliance da, boolean trylock) throws Exception {
-        return startDAConformJob(session, da, null, trylock);
+    public Long startDAConformJob(EntityManager em, DistributedAppliance da, boolean trylock) throws Exception {
+        return startDAConformJob(em, da, null, trylock);
     }
 
-    public static Long startDAConformJob(Session session, DistributedAppliance da, UnlockObjectMetaTask daMcUnlockTask,
+    public Long startDAConformJob(EntityManager em, DistributedAppliance da, UnlockObjectMetaTask daMcUnlockTask,
             boolean trylock) throws Exception {
         if (!da.getMarkedForDeletion()) {
-            return startDASyncJob(session, da, daMcUnlockTask, trylock).getId();
+            return startDASyncJob(em, da, daMcUnlockTask, trylock).getId();
         } else {
             return DeleteDistributedApplianceService.startDeleteDAJob(da, null).getId();
         }
     }
 
-    private static Job startDASyncJob(Session session, final DistributedAppliance da,
+    private Job startDASyncJob(EntityManager em, final DistributedAppliance da,
             UnlockObjectMetaTask daMcUnlockTask, boolean trylock) throws Exception {
 
         log.info("Start DA (id:" + da.getId() + ") Conformance Job");
@@ -105,12 +112,12 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 }
             }
 
-            UnlockObjectTask mcReadUnlocktask = daMcUnlockTask.getUnlockTaskByTypeAndId(
-                    ObjectType.APPLIANCE_MANAGER_CONNECTOR, mc.getId());
-            UnlockObjectTask daWriteUnlocktask = daMcUnlockTask.getUnlockTaskByTypeAndId(
-                    ObjectType.DISTRIBUTED_APPLIANCE, da.getId());
+            UnlockObjectTask mcReadUnlocktask = daMcUnlockTask
+                    .getUnlockTaskByTypeAndId(ObjectType.APPLIANCE_MANAGER_CONNECTOR, mc.getId());
+            UnlockObjectTask daWriteUnlocktask = daMcUnlockTask
+                    .getUnlockTaskByTypeAndId(ObjectType.DISTRIBUTED_APPLIANCE, da.getId());
 
-            Task mcCheck = new MCConformanceCheckMetaTask(mc, mcReadUnlocktask);
+            Task mcCheck = new MCConformanceCheckMetaTask(mc, mcReadUnlocktask, this.apiFactoryService);
             tg.addTask(mcCheck);
             tg.appendTask(new DowngradeLockObjectTask(new LockRequest(daWriteUnlocktask)),
                     TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -134,13 +141,13 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                     .exec(new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class), new CompleteJobTransactionInput(da.getId(), job.getId()));
                 }
             });
-            da.setLastJob((JobRecord) session.get(JobRecord.class, job.getId()));
-            EntityManager.update(session, da);
+            da.setLastJob(em.find(JobRecord.class, job.getId()));
+            OSCEntityManager.update(em, da);
 
             try {
-                List<DeploymentSpec> dss = DeploymentSpecEntityMgr.listDeploymentSpecByDistributedAppliance(session, da);
+                List<DeploymentSpec> dss = DeploymentSpecEntityMgr.listDeploymentSpecByDistributedAppliance(em, da);
                 for (DeploymentSpec ds : dss) {
-                    ds.setLastJob((JobRecord) session.get(JobRecord.class, job.getId()));
+                    ds.setLastJob(em.find(JobRecord.class, job.getId()));
                 }
             } catch (Exception ex) {
                 log.error("Fail to update DS job status.", ex);
@@ -156,15 +163,15 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     }
 
     @Override
-    public BaseJobResponse exec(ConformRequest request, Session session) throws Exception {
+    public BaseJobResponse exec(ConformRequest request, EntityManager em) throws Exception {
 
-        EntityManager<DistributedAppliance> emgr = new EntityManager<DistributedAppliance>(DistributedAppliance.class,
-                session);
+        OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
+                em);
         DistributedAppliance da = emgr.findByPrimaryKey(request.getDaId());
 
         if (da == null) {
-            throw new VmidcBrokerValidationException("Distributed Appliance with ID: " + request.getDaId()
-            + ") was not found.");
+            throw new VmidcBrokerValidationException(
+                    "Distributed Appliance with ID: " + request.getDaId() + ") was not found.");
         }
 
         if (da.getMarkedForDeletion()) {
@@ -172,7 +179,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                     "Syncing Distributed Appliance which is marked for deletion is not allowed.");
         }
 
-        Long jobId = startDAConformJob(session, da);
+        Long jobId = startDAConformJob(em, da);
         commitChanges(false);
 
         BaseJobResponse response = new BaseJobResponse();
@@ -189,34 +196,37 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
      * If a unlock task is provided, executes the unlock task at the end.
      * </p>
      */
-    public static Job startMCConformJob(final ApplianceManagerConnector mc, UnlockObjectTask mcUnlock, Session session)
+    public Job startMCConformJob(final ApplianceManagerConnector mc, UnlockObjectTask mcUnlock, EntityManager em)
             throws Exception {
 
         log.info("Start MC (id:" + mc.getId() + ") Conformance Job");
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new MCConformanceCheckMetaTask(mc, mcUnlock));
+        tg.addTask(new MCConformanceCheckMetaTask(mc, mcUnlock, this.apiFactoryService));
         if (mcUnlock != null) {
             tg.appendTask(mcUnlock, TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
         Job job = JobEngine.getEngine().submit("Syncing Appliance Manager Connector '" + mc.getName() + "'", tg,
                 LockObjectReference.getObjectReferences(mc), new JobCompletionListener() {
 
-            @Override
-            public void completed(Job job) {
-                new TransactionalRunner<Void, CompleteJobTransactionInput>(new TransactionalRunner.SharedSessionHandler())
-                .withTransactionalListener(new TransactionalBrodcastListener())
-                .exec(new CompleteJobTransaction<ApplianceManagerConnector>(ApplianceManagerConnector.class), new CompleteJobTransactionInput(mc.getId(), job.getId()));
-            }
-        });
+                    @Override
+                    public void completed(Job job) {
+                        new TransactionalRunner<Void, CompleteJobTransactionInput>(
+                                new TransactionalRunner.SharedSessionHandler())
+                                        .withTransactionalListener(new TransactionalBrodcastListener())
+                                        .exec(new CompleteJobTransaction<ApplianceManagerConnector>(
+                                                ApplianceManagerConnector.class),
+                                                new CompleteJobTransactionInput(mc.getId(), job.getId()));
+                    }
+                });
 
         // Load MC on a new hibernate new session
-        // ApplianceManagerConnector mc1 = (ApplianceManagerConnector) session.get(ApplianceManagerConnector.class,
+        // ApplianceManagerConnector mc1 = (ApplianceManagerConnector) em.find(ApplianceManagerConnector.class,
         // mc.getId(),
         // new LockOptions(LockMode.PESSIMISTIC_WRITE));
-        mc.setLastJob((JobRecord) session.get(JobRecord.class, job.getId()));
-        EntityManager.update(session, mc);
+        mc.setLastJob(em.find(JobRecord.class, job.getId()));
+        OSCEntityManager.update(em, mc);
 
         log.info("Done submitting with jobId: " + job.getId());
         return job;
@@ -225,17 +235,17 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     /**
      * Starts and MC conform job and locks/unlock the mc after
      */
-    public static Job startMCConformJob(final ApplianceManagerConnector mc, Session session) throws Exception {
-        return startMCConformJob(mc, null, session);
+    public Job startMCConformJob(final ApplianceManagerConnector mc, EntityManager em) throws Exception {
+        return startMCConformJob(mc, null, em);
     }
 
     public static Job startDsConformanceJob(DeploymentSpec ds, UnlockObjectMetaTask dsUnlockTask) throws Exception {
         return startDsConformanceJob(null, ds, dsUnlockTask, false);
     }
 
-    public static Job startDsConformanceJob(Session session, DeploymentSpec ds, UnlockObjectMetaTask dsUnlockTask)
+    public static Job startDsConformanceJob(EntityManager em, DeploymentSpec ds, UnlockObjectMetaTask dsUnlockTask)
             throws Exception {
-        return startDsConformanceJob(session, ds, dsUnlockTask, false);
+        return startDsConformanceJob(em, ds, dsUnlockTask, false);
     }
 
     /**
@@ -253,15 +263,15 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
      * @throws Exception
      *
      */
-    private static Job startDsConformanceJob(Session session, final DeploymentSpec ds,
+    private static Job startDsConformanceJob(EntityManager em, final DeploymentSpec ds,
             UnlockObjectMetaTask dsUnlockTask, boolean queueThisJob) throws Exception {
         TaskGraph tg = new TaskGraph();
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
         DistributedAppliance da = ds.getVirtualSystem().getDistributedAppliance();
         try {
             if (dsUnlockTask == null) {
-                dsUnlockTask = LockUtil.tryLockDS(ds, da, da.getApplianceManagerConnector(), ds.getVirtualSystem()
-                        .getVirtualizationConnector());
+                dsUnlockTask = LockUtil.tryLockDS(ds, da, da.getApplianceManagerConnector(),
+                        ds.getVirtualSystem().getVirtualizationConnector());
             }
             tg.addTask(new DSConformanceCheckMetaTask(ds, new Endpoint(vc, ds.getTenantName())));
             tg.appendTask(dsUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -271,21 +281,20 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 jobName = "Deleting Deployment Specification";
             }
             if (queueThisJob) {
-                JobQueuer.getInstance().putJob(
-                        new JobRequest(jobName + " '" + ds.getName() + "'", tg, LockObjectReference
-                                .getObjectReferences(ds)));
+                JobQueuer.getInstance().putJob(new JobRequest(jobName + " '" + ds.getName() + "'", tg,
+                        LockObjectReference.getObjectReferences(ds)));
                 return null;
             }
             Job job = JobEngine.getEngine().submit(jobName + " '" + ds.getName() + "'", tg,
                     LockObjectReference.getObjectReferences(ds), new JobCompletionListener() {
 
-                @Override
-                public void completed(Job job) {
-                    ConformService.updateDSJob(null, ds, job);
-                }
-            });
+                        @Override
+                        public void completed(Job job) {
+                            ConformService.updateDSJob(null, ds, job);
+                        }
+                    });
 
-            ConformService.updateDSJob(session, ds, job);
+            ConformService.updateDSJob(em, ds, job);
 
             log.info("Done submitting with jobId: " + job.getId());
             return job;
@@ -297,32 +306,31 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         }
     }
 
-    public static void updateDSJob(Session session, final DeploymentSpec ds, Job job) {
-        if (session != null) {
-            ds.setLastJob((JobRecord) session.get(JobRecord.class, job.getId()));
-            EntityManager.update(session, ds);
+    public static void updateDSJob(EntityManager em, final DeploymentSpec ds, Job job) {
+        if (em != null) {
+            ds.setLastJob(em.find(JobRecord.class, job.getId()));
+            OSCEntityManager.update(em, ds);
 
         } else {
-            Transaction tx = null;
+            EntityTransaction tx = null;
 
             try {
+                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+                tx = em.getTransaction();
+                tx.begin();
 
-                SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-                session = sessionFactory.getCurrentSession();
-                tx = session.beginTransaction();
-
-                DeploymentSpec ds1 = DeploymentSpecEntityMgr.findById(session, ds.getId());
+                DeploymentSpec ds1 = DeploymentSpecEntityMgr.findById(em, ds.getId());
                 if (ds1 != null) {
-                    ds1.setLastJob((JobRecord) session.get(JobRecord.class, job.getId()));
-                    EntityManager.update(session, ds1);
+                    ds1.setLastJob(em.find(JobRecord.class, job.getId()));
+                    OSCEntityManager.update(em, ds1);
                 }
                 tx.commit();
-                TransactionalBroadcastUtil.broadcast(session);
+                TransactionalBroadcastUtil.broadcast(em);
             } catch (Exception ex) {
                 log.error("Fail to update DS job status.", ex);
                 if (tx != null) {
                     tx.rollback();
-                    TransactionalBroadcastUtil.removeSessionFromMap(session);
+                    TransactionalBroadcastUtil.removeSessionFromMap(em);
                 }
             }
         }
@@ -346,7 +354,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
      *
      * @throws Exception
      */
-    public static Job startSecurityGroupConformanceJob(Session session, final SecurityGroup sg,
+    public static Job startSecurityGroupConformanceJob(EntityManager em, final SecurityGroup sg,
             UnlockObjectMetaTask sgUnlockTask, boolean queueThisJob) throws Exception {
         TaskGraph tg = new TaskGraph();
         try {
@@ -361,15 +369,14 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 jobName = "Deleting Security Group";
             }
             if (queueThisJob) {
-                JobQueuer.getInstance().putJob(
-                        new JobRequest(jobName + " '" + sg.getName() + "'", tg, LockObjectReference
-                                .getObjectReferences(sg), getSecurityGroupJobCompletionListener(sg)));
+                JobQueuer.getInstance().putJob(new JobRequest(jobName + " '" + sg.getName() + "'", tg,
+                        LockObjectReference.getObjectReferences(sg), getSecurityGroupJobCompletionListener(sg)));
                 return null;
             }
             Job job = JobEngine.getEngine().submit(jobName + " '" + sg.getName() + "'", tg,
                     LockObjectReference.getObjectReferences(sg), getSecurityGroupJobCompletionListener(sg));
 
-            ConformService.updateSGJob(session, sg, job);
+            ConformService.updateSGJob(em, sg, job);
 
             return job;
         } catch (Exception e) {
@@ -379,7 +386,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         }
     }
 
-    public static Job startBindSecurityGroupConformanceJob(Session session, final SecurityGroup sg,
+    public static Job startBindSecurityGroupConformanceJob(EntityManager em, final SecurityGroup sg,
             UnlockObjectMetaTask sgUnlockTask)
                     throws Exception {
 
@@ -400,7 +407,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             Job job = JobEngine.getEngine().submit(jobName + " '" + sg.getName() + "'", tg,
                     LockObjectReference.getObjectReferences(sg), getSecurityGroupJobCompletionListener(sg));
 
-            ConformService.updateSGJob(session, sg, job);
+            ConformService.updateSGJob(em, sg, job);
 
             return job;
         } catch (Exception e) {
@@ -419,34 +426,33 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         };
     }
 
-    public static void updateSGJob(Session session, final SecurityGroup sg, Job job) {
-        if (session != null) {
-            sg.setLastJob((JobRecord) session.get(JobRecord.class, job.getId()));
-            EntityManager.update(session, sg);
+    public static void updateSGJob(EntityManager em, final SecurityGroup sg, Job job) {
+        if (em != null) {
+            sg.setLastJob(em.find(JobRecord.class, job.getId()));
+            OSCEntityManager.update(em, sg);
         } else {
-            Transaction tx = null;
+            EntityTransaction tx = null;
             try {
+                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+                tx = em.getTransaction();
+                tx.begin();
 
-                SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-                session = sessionFactory.getCurrentSession();
-                tx = session.beginTransaction();
-
-                SecurityGroup securityGroupEntity = SecurityGroupEntityMgr.findById(session, sg.getId());
+                SecurityGroup securityGroupEntity = SecurityGroupEntityMgr.findById(em, sg.getId());
                 if (securityGroupEntity != null) {
 
-                    securityGroupEntity = (SecurityGroup) session.get(SecurityGroup.class, sg.getId());
+                    securityGroupEntity = em.find(SecurityGroup.class, sg.getId());
 
-                    securityGroupEntity.setLastJob((JobRecord) session.get(JobRecord.class, job.getId()));
-                    EntityManager.update(session, securityGroupEntity);
+                    securityGroupEntity.setLastJob(em.find(JobRecord.class, job.getId()));
+                    OSCEntityManager.update(em, securityGroupEntity);
                 }
 
                 tx.commit();
-                TransactionalBroadcastUtil.broadcast(session);
+                TransactionalBroadcastUtil.broadcast(em);
             } catch (Exception ex) {
                 log.error("Fail to update SG job status.", ex);
                 if (tx != null) {
                     tx.rollback();
-                    TransactionalBroadcastUtil.removeSessionFromMap(session);
+                    TransactionalBroadcastUtil.removeSessionFromMap(em);
                 }
             }
         }

@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.jboss.logging.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
@@ -27,7 +28,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.DefaultInspectionPort;
@@ -52,11 +53,11 @@ class VmPortHookRemoveTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.vmPort = (VMPort) session.get(VMPort.class, this.vmPort.getId());
-        this.sgm = (SecurityGroupMember) session.get(SecurityGroupMember.class, this.sgm.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.vmPort = em.find(VMPort.class, this.vmPort.getId());
+        this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
         if (this.dai != null) {
-            this.dai = EntityManager.loadPessimistically(session, this.dai);
+            this.dai = OSCEntityManager.loadPessimistically(em, this.dai);
 
             VM vm = this.sgm.getVm();
             Network network = this.sgm.getNetwork();
@@ -91,7 +92,7 @@ class VmPortHookRemoveTask extends TransactionalTask {
                 }
             }
             this.vmPort.removeDai(this.dai);
-            EntityManager.update(session, this.vmPort);
+            OSCEntityManager.update(em, this.vmPort);
         }
     }
 

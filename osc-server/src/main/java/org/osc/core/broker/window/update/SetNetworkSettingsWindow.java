@@ -19,6 +19,7 @@ package org.osc.core.broker.window.update;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.SetNetworkSettingsService;
 import org.osc.core.broker.service.request.SetNetworkSettingsRequest;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.maintenance.NetworkLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
@@ -42,6 +43,8 @@ public class SetNetworkSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel
 
     private NetworkLayout networkLayout = null;
 
+    private SetNetworkSettingsService setNetworkSettingsService = StaticRegistry.setNetworkSettingsService();
+
     public SetNetworkSettingsWindow(NetworkLayout networkLayout) throws Exception {
         super();
         this.networkLayout = networkLayout;
@@ -62,24 +65,24 @@ public class SetNetworkSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel
 
         // filling form with existing data
         if (this.networkLayout.networkTable.getItem(1).getItemProperty("Value").getValue() != null) {
-            this.ipAddress.setValue(this.networkLayout.networkTable.getItem(1).getItemProperty("Value").getValue()
-                    .toString());
+            this.ipAddress.setValue(
+                    this.networkLayout.networkTable.getItem(1).getItemProperty("Value").getValue().toString());
         }
         if (this.networkLayout.networkTable.getItem(2).getItemProperty("Value").getValue() != null) {
-            this.subnetMask.setValue(this.networkLayout.networkTable.getItem(2).getItemProperty("Value").getValue()
-                    .toString());
+            this.subnetMask.setValue(
+                    this.networkLayout.networkTable.getItem(2).getItemProperty("Value").getValue().toString());
         }
         if (this.networkLayout.networkTable.getItem(3).getItemProperty("Value").getValue() != null) {
-            this.defaultGateway.setValue(this.networkLayout.networkTable.getItem(3).getItemProperty("Value").getValue()
-                    .toString());
+            this.defaultGateway.setValue(
+                    this.networkLayout.networkTable.getItem(3).getItemProperty("Value").getValue().toString());
         }
         if (this.networkLayout.networkTable.getItem(4).getItemProperty("Value").getValue() != null) {
-            this.dnsServer1.setValue(this.networkLayout.networkTable.getItem(4).getItemProperty("Value").getValue()
-                    .toString());
+            this.dnsServer1.setValue(
+                    this.networkLayout.networkTable.getItem(4).getItemProperty("Value").getValue().toString());
         }
         if (this.networkLayout.networkTable.getItem(5).getItemProperty("Value").getValue() != null) {
-            this.dnsServer2.setValue(this.networkLayout.networkTable.getItem(5).getItemProperty("Value").getValue()
-                    .toString());
+            this.dnsServer2.setValue(
+                    this.networkLayout.networkTable.getItem(5).getItemProperty("Value").getValue().toString());
         }
 
         // adding not null constraint

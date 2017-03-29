@@ -18,8 +18,9 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification.listener;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
@@ -53,13 +54,13 @@ public class OsTenantNotificationListener extends OsNotificationListener {
                     OsNotificationKeyType.RESOURCE_INFO.toString());
             if (keyValue != null) {
                 log.info(" [Identity] : message received - " + message);
-                Session session = null;
+                EntityManager em = null;
                 try {
-                    session = HibernateUtil.getSessionFactory().openSession();
+                    em = HibernateUtil.getEntityManagerFactory().createEntityManager();
                     if (this.entity instanceof SecurityGroup) {
-                        handleSGMessages(session, keyValue);
+                        handleSGMessages(em, keyValue);
                     } else if (this.entity instanceof DeploymentSpec) {
-                        handleDSMessages(session, keyValue);
+                        handleDSMessages(em, keyValue);
                     }
 
                 } catch (Exception e) {
@@ -72,17 +73,17 @@ public class OsTenantNotificationListener extends OsNotificationListener {
                                     "Fail to process Openstack Tenant (" + keyValue + ") notification ("
                                             + e.getMessage() + ")");
                 } finally {
-                    if (session != null) {
-                        session.close();
+                    if (em != null) {
+                        em.close();
                     }
                 }
             }
         }
     }
 
-    private void handleSGMessages(Session session, String keyValue) throws Exception {
+    private void handleSGMessages(EntityManager em, String keyValue) throws Exception {
         // if tenant deleted belongs to a security group
-        for (SecurityGroup securityGroup : SecurityGroupEntityMgr.listByTenantId(session, keyValue)) {
+        for (SecurityGroup securityGroup : SecurityGroupEntityMgr.listByTenantId(em, keyValue)) {
             // trigger sync job for that SG
             if (securityGroup.getId().equals(((SecurityGroup) this.entity).getId())) {
                 ConformService.startSecurityGroupConformanceJob(securityGroup);
@@ -90,9 +91,9 @@ public class OsTenantNotificationListener extends OsNotificationListener {
         }
     }
 
-    private void handleDSMessages(Session session, String keyValue) throws Exception {
+    private void handleDSMessages(EntityManager em, String keyValue) throws Exception {
         // if tenant deleted belongs to a deployment spec
-        for (DeploymentSpec ds : DeploymentSpecEntityMgr.listDeploymentSpecByTenentId(session, keyValue)) {
+        for (DeploymentSpec ds : DeploymentSpecEntityMgr.listDeploymentSpecByTenentId(em, keyValue)) {
             // trigger sync job for that DS
             if (ds.getId().equals(((DeploymentSpec) this.entity).getId())) {
                 ConformService.startDsConformanceJob(ds, null);

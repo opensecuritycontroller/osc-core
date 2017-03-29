@@ -27,12 +27,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.LockModeType;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest;
@@ -42,7 +41,7 @@ import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.TaskObject;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.LockUtil;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.SessionUtil;
@@ -127,28 +126,30 @@ public class Job implements Runnable, JobElement {
     }
 
     private void persistStatus() {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        Transaction tx = null;
+        EntityManager em = null;
+        EntityTransaction tx = null;
 
         try {
-            tx = session.beginTransaction();
-            this.jobRecord = (JobRecord) session.get(JobRecord.class, this.jobRecord.getId());
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            tx = em.getTransaction();
+            tx.begin();
+            this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
             this.jobRecord.setStatus(getEntityStatus());
-            EntityManager.update(session, this.jobRecord);
+            OSCEntityManager.update(em, this.jobRecord);
             tx.commit();
-            TransactionalBroadcastUtil.broadcast(session);
+            TransactionalBroadcastUtil.broadcast(em);
 
         } catch (Exception e) {
 
             log.error("Fail to update JobRecord " + this, e);
             if (tx != null) {
                 tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(session);
+                TransactionalBroadcastUtil.removeSessionFromMap(em);
             }
 
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }
@@ -394,33 +395,36 @@ public class Job implements Runnable, JobElement {
     }
 
     private void persistState() {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        Transaction tx = null;
+        EntityManager em = null;
+        EntityTransaction tx = null;
 
         try {
-            tx = session.beginTransaction();
-            this.jobRecord = (JobRecord) session.get(JobRecord.class, this.jobRecord.getId());
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            tx = em.getTransaction();
+            tx.begin();
+
+            this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
 
             this.jobRecord.setState(getEntityState());
             this.jobRecord.setQueuedTimestamp(getQueuedTimestamp());
             this.jobRecord.setStartedTimestamp(getStartedTimestamp());
             this.jobRecord.setCompletedTimestamp(getCompletedTimestamp());
             this.jobRecord.setFailureReason(getFailureReason());
-            EntityManager.update(session, this.jobRecord);
+            OSCEntityManager.update(em, this.jobRecord);
             tx.commit();
-            TransactionalBroadcastUtil.broadcast(session);
+            TransactionalBroadcastUtil.broadcast(em);
 
         } catch (Exception e) {
 
             log.error("Fail to update JobRecord " + this, e);
             if (tx != null) {
                 tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(session);
+                TransactionalBroadcastUtil.removeSessionFromMap(em);
             }
 
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }
@@ -583,12 +587,13 @@ public class Job implements Runnable, JobElement {
     }
 
     synchronized void persistJob() throws Exception {
-        Session session = null;
-        Transaction tx = null;
+        EntityManager em = null;
+        EntityTransaction tx = null;
 
         try {
-            session = HibernateUtil.getSessionFactory().openSession();
-            tx = session.beginTransaction();
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            tx = em.getTransaction();
+            tx.begin();
 
             JobRecord jobRecord = getJobRecord();
 
@@ -612,28 +617,28 @@ public class Job implements Runnable, JobElement {
                     }
                 }
 
-                EntityManager.create(session, jobRecord);
+                OSCEntityManager.create(em, jobRecord);
 
                 setJobStore(jobRecord);
             }
 
-            persistTaskGraph(session);
+            persistTaskGraph(em);
 
             tx.commit();
-            TransactionalBroadcastUtil.broadcast(session);
+            TransactionalBroadcastUtil.broadcast(em);
 
         } catch (Exception ex) {
 
             if (tx != null) {
                 tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(session);
+                TransactionalBroadcastUtil.removeSessionFromMap(em);
             }
             throw ex;
 
         } finally {
 
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }
@@ -642,7 +647,7 @@ public class Job implements Runnable, JobElement {
         return original == null ? null : (T) Enum.valueOf(toClass, original.name());
     }
 
-    private void persistTaskGraph(Session session) {
+    private void persistTaskGraph(EntityManager em) {
         Long i = 1L;
         for (TaskNode taskNode : this.taskGraph.getGraph().topologicalSort()) {
             if (taskNode.isStartOrEndTask()) {
@@ -655,8 +660,8 @@ public class Job implements Runnable, JobElement {
                 taskRecord.setCreatedBy(getJobRecord().getCreatedBy());
                 taskRecord.setCreatedTimestamp(new Date());
             } else {
-                taskRecord = (TaskRecord) session.get(TaskRecord.class, taskRecord.getId(),
-                        new LockOptions(LockMode.PESSIMISTIC_WRITE));
+                taskRecord = em.find(TaskRecord.class, taskRecord.getId(),
+                        LockModeType.PESSIMISTIC_WRITE);
                 taskRecord.setUpdatedBy(getJobRecord().getCreatedBy());
                 taskRecord.setUpdatedTimestamp(new Date());
             }
@@ -682,9 +687,9 @@ public class Job implements Runnable, JobElement {
                     }
                 }
 
-                EntityManager.create(session, taskRecord);
+                OSCEntityManager.create(em, taskRecord);
             } else {
-                EntityManager.update(session, taskRecord);
+                OSCEntityManager.update(em, taskRecord);
             }
         }
 
@@ -698,20 +703,8 @@ public class Job implements Runnable, JobElement {
             }
 
             TaskRecord taskRecord = taskNode.getTaskStore();
-            taskRecord = (TaskRecord) session.get(TaskRecord.class, taskRecord.getId(),
-                    new LockOptions(LockMode.PESSIMISTIC_WRITE));
-
-            /*
-             * This is a workaround for Hibernate lazy load issue that
-             * causes LazyInitializationException exception ("could not initialize proxy - no Session")
-             */
-            Hibernate.initialize(taskRecord);
-            Set<TaskRecord> p = taskRecord.getPredecessors();
-            Set<TaskRecord> s = taskRecord.getSuccessors();
-            Hibernate.initialize(p);
-            Hibernate.initialize(s);
-            p.clear();
-            s.clear();
+            taskRecord = em.find(TaskRecord.class, taskRecord.getId(),
+                    LockModeType.PESSIMISTIC_WRITE);
 
             for (TaskNode taskPredecessor : taskNode.getPredecessors()) {
                 // Skip persistence of start/end
@@ -734,7 +727,7 @@ public class Job implements Runnable, JobElement {
 
             if (taskNode.getProducer() != null) {
                 taskNode.getProducer().getTaskRecord().addChild(taskRecord);
-                EntityManager.update(session, taskNode.getProducer().getTaskRecord());
+                OSCEntityManager.update(em, taskNode.getProducer().getTaskRecord());
             }
         }
     }

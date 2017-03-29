@@ -39,6 +39,7 @@ import org.osc.core.broker.service.securitygroup.SecurityGroupDto;
 import org.osc.core.broker.service.securityinterface.DeleteSecurityGroupInterfaceService;
 import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.vc.DeleteVirtualizationConnectorService;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
@@ -195,7 +196,7 @@ public class DeleteWindowUtil {
                     delRequest.setId(dto.getId());
                     log.info("deleting Security Group interface - " + dto.getName());
 
-                    DeleteSecurityGroupInterfaceService deleteService = new DeleteSecurityGroupInterfaceService();
+                    DeleteSecurityGroupInterfaceService deleteService = new DeleteSecurityGroupInterfaceService(StaticRegistry.conformService());
                     deleteService.dispatch(delRequest);
                     deleteWindow.close();
                 } catch (Exception e) {

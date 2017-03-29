@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,7 +48,7 @@ public class DeleteDistributedApplianceRequestValidatorTest {
     public ExpectedException exception = ExpectedException.none();
 
     @Mock
-    Session session;
+    EntityManager em;
 
     private DeleteDistributedApplianceRequestValidator validator;
 
@@ -55,10 +56,10 @@ public class DeleteDistributedApplianceRequestValidatorTest {
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        this.validator = new DeleteDistributedApplianceRequestValidator(this.session);
+        this.validator = new DeleteDistributedApplianceRequestValidator(this.em);
 
-        Mockito.when((DistributedAppliance)session.get(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID))).thenReturn(NOT_MARKED_FOR_DELETION_DA);
-        Mockito.when((DistributedAppliance)session.get(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_FOR_DELETION))).thenReturn(MARKED_FOR_DELETION_DA);
+        Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID))).thenReturn(NOT_MARKED_FOR_DELETION_DA);
+        Mockito.when(this.em.find(Mockito.eq(DistributedAppliance.class), Mockito.eq(VALID_ID_FOR_DELETION))).thenReturn(MARKED_FOR_DELETION_DA);
     }
 
     @Test
@@ -67,7 +68,7 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         this.exception.expect(UnsupportedOperationException.class);
 
         // Act
-        validator.validate(VALID_REQUEST);
+        this.validator.validate(VALID_REQUEST);
     }
 
     @Test
@@ -77,7 +78,7 @@ public class DeleteDistributedApplianceRequestValidatorTest {
         this.exception.expectMessage("Distributed Appliance entry with ID '" + INVALID_ID + "' is not found.");
 
         // Act
-        validator.validateAndLoad(REQUEST_DA_NOT_FOUND);
+        this.validator.validateAndLoad(REQUEST_DA_NOT_FOUND);
     }
 
     @Test
@@ -89,13 +90,13 @@ public class DeleteDistributedApplianceRequestValidatorTest {
                         + " is not marked for deletion and force delete operation is applicable only for entries marked for deletion.");
 
         // Act
-        validator.validateAndLoad(VALID_REQUEST_FORCE_DELETE);
+        this.validator.validateAndLoad(VALID_REQUEST_FORCE_DELETE);
     }
 
     @Test
     public void testValidateAndLoad_WithNonForceDeleteRequestAndStandardDA_ExpectsSuccess() throws Exception {
         // Act
-        DistributedAppliance da = validator.validateAndLoad(VALID_REQUEST);
+        DistributedAppliance da = this.validator.validateAndLoad(VALID_REQUEST);
 
         // Assert
         Assert.assertEquals("The received ID is different than expected VALID_ID.", VALID_ID, da.getId());
@@ -104,7 +105,7 @@ public class DeleteDistributedApplianceRequestValidatorTest {
     @Test
     public void testValidateAndLoad_WithForceDeleteRequestAndMarkedForDeletionDA_ExpectsSuccess() throws Exception {
         // Act
-        DistributedAppliance da = validator.validateAndLoad(VALID_REQUEST_FORCE_DELETE_DA_MARKED_TO_DELETE);
+        DistributedAppliance da = this.validator.validateAndLoad(VALID_REQUEST_FORCE_DELETE_DA_MARKED_TO_DELETE);
 
         // Assert
         Assert.assertEquals("The received ID in force delete case is different than expected VALID_ID_FOR_DELETION.", VALID_ID_FOR_DELETION, da.getId());
@@ -113,7 +114,7 @@ public class DeleteDistributedApplianceRequestValidatorTest {
     @Test
     public void testValidateAndLoad_WithNonForceDeleteRequestAndMarkedForDeletionDA_ExpectsSuccess() throws Exception {
         // Act
-        DistributedAppliance da = validator.validateAndLoad(VALID_REQUEST_DA_MARKED_TO_DELETE);
+        DistributedAppliance da = this.validator.validateAndLoad(VALID_REQUEST_DA_MARKED_TO_DELETE);
 
         // Assert
         Assert.assertEquals("The received ID in non force delete case  is different than expected VALID_ID_FOR_DELETION.", VALID_ID_FOR_DELETION, da.getId());

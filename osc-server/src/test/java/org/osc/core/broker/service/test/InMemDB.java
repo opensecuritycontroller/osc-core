@@ -16,33 +16,30 @@
  *******************************************************************************/
 package org.osc.core.broker.service.test;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
-import org.osc.core.broker.util.db.HibernateUtil;
+import java.util.HashMap;
+import java.util.Map;
 
-class InMemDB {
-    private static ServiceRegistry serviceRegistry;
-    private static SessionFactory sessionFactory = init();
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
-    static SessionFactory init() {
+public class InMemDB {
+    private static EntityManagerFactory emf;
+
+    static EntityManagerFactory init() {
 
         try {
-            Configuration configuration = new Configuration();
+            Map<String, Object> props = new HashMap<>();
 
-            configuration.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-            configuration.setProperty("hibernate.connection.url", "jdbc:h2:mem"); // in-memory db
-            configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            configuration.setProperty("hibernate.show_sql", "true");
-            configuration.setProperty("hibernate.hbm2ddl.auto", "create"); // create brand-new db schema in memory
+            props.put("javax.persistence.jdbc.driver", "org.h2.Driver");
+            props.put("javax.persistence.jdbc.url", "jdbc:h2:mem"); // in-memory db
+            props.put("javax.persistence.schema-generation.database.action", "drop-and-create"); // create brand-new db schema in memory
+            props.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+            props.put("hibernate.show_sql", "true");
 
-            HibernateUtil.addAnnotatedClasses(configuration);
 
-            serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
-            sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+            emf = Persistence.createEntityManagerFactory("osc-server", props);
 
-            return sessionFactory;
+            return emf;
 
         } catch (Throwable ex) {
             System.out.println("Initial SessionFactory creation failed." + ex);
@@ -50,15 +47,17 @@ class InMemDB {
         }
     }
 
-    static SessionFactory getSessionFactory() {
-        return sessionFactory;
+    public static EntityManagerFactory getEntityManagerFactory() {
+        if(emf == null) {
+            emf = init();
+        }
+        return emf;
     }
 
-    static void shutdown() {
+    public static void shutdown() {
         // Close caches and connection pools
-        getSessionFactory().close();
-        InMemDB.serviceRegistry = null; // for faster garbage collection cleanup
-        InMemDB.sessionFactory = null;
+        emf.close();
+        emf = null;
     }
 
 }

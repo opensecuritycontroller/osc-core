@@ -18,12 +18,13 @@ package org.osc.core.broker.service.tasks.conformance.deleteda;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 
@@ -43,12 +44,12 @@ public class DeleteDAIFromDbTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws VmidcException, InterruptedException {
+    public void executeTransaction(EntityManager em) throws VmidcException, InterruptedException {
         log.debug("Start Executing DeleteDAIFromDb Task : " + this.dai.getId());
-        this.dai = (DistributedApplianceInstance) session.get(DistributedApplianceInstance.class, this.dai.getId());
+        this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(session, this.dai, this);
-        EntityManager.delete(session, this.dai);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this);
+        OSCEntityManager.delete(em, this.dai);
     }
 
     @Override

@@ -19,8 +19,9 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 import java.util.Arrays;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
@@ -29,6 +30,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.server.OscAuthFilter;
@@ -43,151 +45,153 @@ import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.element.ManagerNotificationRegistrationElement;
 
 public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
-    private static final Logger log = Logger.getLogger(MCConformanceCheckMetaTask.class);
+	private static final Logger log = Logger.getLogger(MCConformanceCheckMetaTask.class);
 
-    private ApplianceManagerConnector mc;
-    private TaskGraph tg;
-    private UnlockObjectTask mcUnlockTask;
+	private ApplianceManagerConnector mc;
+	private TaskGraph tg;
+	private UnlockObjectTask mcUnlockTask;
+	private ApiFactoryService apiFactoryService;
 
-    /**
-     * Start MC conformance task. A write lock exists for the duration of this task and any tasks kicked off by this
-     * task.
-     * <p>
-     * If the unlock task is provided, it automatically UPGRADES the lock to a write lock and will always DOWNGRADE the
-     * lock once the tasks are finished. The lock is NOT RELEASED and the provider of the lock should release the lock.
-     * </p>
-     * <p>
-     * If unlock task is not provided(null) then we acquire a write lock and RELEASE it after the tasks are finished.
-     * </p>
-     */
-    public MCConformanceCheckMetaTask(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask) {
-        this.mc = mc;
-        this.mcUnlockTask = mcUnlockTask;
-        this.name = getName();
-    }
+	/**
+	 * Start MC conformance task. A write lock exists for the duration of this task and any tasks kicked off by this
+	 * task.
+	 * <p>
+	 * If the unlock task is provided, it automatically UPGRADES the lock to a write lock and will always DOWNGRADE the
+	 * lock once the tasks are finished. The lock is NOT RELEASED and the provider of the lock should release the lock.
+	 * </p>
+	 * <p>
+	 * If unlock task is not provided(null) then we acquire a write lock and RELEASE it after the tasks are finished.
+	 * </p>
+	 */
+	public MCConformanceCheckMetaTask(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask, ApiFactoryService apiFactoryService) {
+		this.mc = mc;
+		this.mcUnlockTask = mcUnlockTask;
+		this.name = getName();
+		this.apiFactoryService = apiFactoryService;
+	}
 
-    @Override
-    public void executeTransaction(Session session) throws Exception {
-        boolean isLockProvided = true;
-        this.tg = new TaskGraph();
-        this.mc = session.get(ApplianceManagerConnector.class, this.mc.getId());
+	@Override
+	public void executeTransaction(EntityManager em) throws Exception {
+		boolean isLockProvided = true;
+		this.tg = new TaskGraph();
+		this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId());
 
-        try {
-            this.mc = session.get(ApplianceManagerConnector.class, this.mc.getId());
+		try {
+			this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId());
 
-            if (this.mcUnlockTask == null) {
-                isLockProvided = false;
-                this.mcUnlockTask = LockUtil.lockMC(this.mc, LockType.WRITE_LOCK);
-            } else {
-                // Upgrade to write lock. Will no op if we already have write lock
-                boolean upgradeLockSucceeded = LockManager.getLockManager().upgradeLockWithWait(
-                        new LockRequest(this.mcUnlockTask));
-                if (!upgradeLockSucceeded) {
-                    throw new VmidcBrokerInvalidRequestException("Fail to gain write lock for '"
-                            + this.mcUnlockTask.getObjectRef().getType() + "' with name '"
-                            + this.mcUnlockTask.getObjectRef().getName() + "'.");
-                }
-            }
+			if (this.mcUnlockTask == null) {
+				isLockProvided = false;
+				this.mcUnlockTask = LockUtil.lockMC(this.mc, LockType.WRITE_LOCK);
+			} else {
+				// Upgrade to write lock. Will no op if we already have write lock
+				boolean upgradeLockSucceeded = LockManager.getLockManager().upgradeLockWithWait(
+						new LockRequest(this.mcUnlockTask));
+				if (!upgradeLockSucceeded) {
+					throw new VmidcBrokerInvalidRequestException("Fail to gain write lock for '"
+							+ this.mcUnlockTask.getObjectRef().getType() + "' with name '"
+							+ this.mcUnlockTask.getObjectRef().getName() + "'.");
+				}
+			}
 
-            this.tg.addTaskGraph(syncPublicKey(session));
-            if (ManagerApiFactory.isPersistedUrlNotifications(this.mc)) {
-                this.tg.addTaskGraph(syncPersistedUrlNotification(session, this.mc));
-            }
+			this.tg.addTaskGraph(syncPublicKey(em));
+			if (this.apiFactoryService.isPersistedUrlNotifications(this.mc)) {
+				this.tg.addTaskGraph(syncPersistedUrlNotification(em, this.mc));
+			}
 
-            if (ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(this.mc.getManagerType()))) {
-                Task syncDomains = new SyncDomainMetaTask(this.mc);
-                this.tg.addTask(syncDomains);
+			if (this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(this.mc.getManagerType()))) {
+				Task syncDomains = new SyncDomainMetaTask(this.mc);
+				this.tg.addTask(syncDomains);
 
-                Task syncPolicies = new SyncPolicyMetaTask(this.mc);
-                this.tg.addTask(syncPolicies, syncDomains);
-            }
+				Task syncPolicies = new SyncPolicyMetaTask(this.mc);
+				this.tg.addTask(syncPolicies, syncDomains);
+			}
 
-            if (this.tg.isEmpty() && !isLockProvided) {
-                LockManager.getLockManager().releaseLock(new LockRequest(this.mcUnlockTask));
-            } else {
-                if (isLockProvided) {
-                    //downgrade lock since we upgraded it at the start
-                    this.tg.appendTask(new DowngradeLockObjectTask(new LockRequest(this.mcUnlockTask)),
-                            TaskGuard.ALL_PREDECESSORS_COMPLETED);
-                } else {
-                    this.tg.appendTask(this.mcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
-                }
-            }
+			if (this.tg.isEmpty() && !isLockProvided) {
+				LockManager.getLockManager().releaseLock(new LockRequest(this.mcUnlockTask));
+			} else {
+				if (isLockProvided) {
+					//downgrade lock since we upgraded it at the start
+					this.tg.appendTask(new DowngradeLockObjectTask(new LockRequest(this.mcUnlockTask)),
+							TaskGuard.ALL_PREDECESSORS_COMPLETED);
+				} else {
+					this.tg.appendTask(this.mcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
+				}
+			}
 
-        } catch (Exception ex) {
-            // If we experience any failure, unlock MC.
-            if (this.mcUnlockTask != null && !isLockProvided) {
-                log.info("Releasing lock for MC '" + this.mc.getName() + "'");
-                LockManager.getLockManager().releaseLock(new LockRequest(this.mcUnlockTask));
-            }
-            throw ex;
-        }
-    }
-
-    private TaskGraph syncPublicKey(Session session) throws Exception {
-        TaskGraph tg = new TaskGraph();
-
-        ApplianceManagerApi applianceManagerApi = ManagerApiFactory.createApplianceManagerApi(this.mc.getManagerType());
-        byte[] bytes = applianceManagerApi.getPublicKey(ManagerApiFactory.getApplianceManagerConnectorElement(this.mc));
-        if (bytes != null && (this.mc.getPublicKey() == null || !Arrays.equals(this.mc.getPublicKey(), bytes))) {
-            tg.addTask(new SyncMgrPublicKeyTask(this.mc, bytes));
-        }
-
-        return tg;
-    }
-
-    public static TaskGraph syncPersistedUrlNotification(Session session, ApplianceManagerConnector mc)
-            throws Exception {
-        TaskGraph tg = new TaskGraph();
-
-        ManagerCallbackNotificationApi mgrApi = null;
-        try {
-            mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(mc);
-
-            // Need to cache old broker ip because the manager tasks update the
-            // LastKnownBrokerIp on the MC
-            String oldIpAddress = mc.getLastKnownNotificationIpAddress();
-
-            // Need to get policy group and domain registrations at the same time before we start adding the tasks
-            // as the first task which gets executed updates the last known broker ip and the second update will not
-            // see the registrations as out of sync
-            ManagerNotificationRegistrationElement dr = mgrApi.getDomainNotificationRegistration();
-            ManagerNotificationRegistrationElement pgr = mgrApi.getPolicyGroupNotificationRegistration();
-
-            if (dr == null || dr.isEmpty()) {
-                tg.addTask(new RegisterMgrDomainNotificationTask(mc));
-            } else {
-                if (isOutOfSyncRegistration(dr)) {
-                    tg.appendTask(new UpdateMgrDomainNotificationTask(mc, oldIpAddress));
-                }
-            }
-
-            if (pgr == null || pgr.isEmpty()) {
-                tg.appendTask(new RegisterMgrPolicyNotificationTask(mc));
-            } else {
-                if (isOutOfSyncRegistration(pgr)) {
-                    tg.appendTask(new UpdateMgrPolicyNotificationTask(mc, oldIpAddress));
-                }
-            }
-
-        } finally {
-
-            if (mgrApi != null) {
-                mgrApi.close();
-            }
-        }
-
-        return tg;
-    }
-
-	private static boolean isOutOfSyncRegistration(ManagerNotificationRegistrationElement registration) {
-		if (registration.getPassword() == null
-				|| !registration.getPassword().equals(OscAuthFilter.OSC_DEFAULT_PASS)) {
-			return true;
+		} catch (Exception ex) {
+			// If we experience any failure, unlock MC.
+			if (this.mcUnlockTask != null && !isLockProvided) {
+				log.info("Releasing lock for MC '" + this.mc.getName() + "'");
+				LockManager.getLockManager().releaseLock(new LockRequest(this.mcUnlockTask));
+			}
+			throw ex;
 		}
-		if (registration.getIpAddress() == null || !registration.getIpAddress().equals(ServerUtil.getServerIP())) {
-			return true;
+	}
+
+	private TaskGraph syncPublicKey(EntityManager em) throws Exception {
+		TaskGraph tg = new TaskGraph();
+
+                ApplianceManagerApi applianceManagerApi = this.apiFactoryService.createApplianceManagerApi(ManagerType.fromText(this.mc.getManagerType()));
+                byte[] bytes = applianceManagerApi.getPublicKey(this.apiFactoryService.getApplianceManagerConnectorElement(this.mc));
+
+		if (bytes != null && (this.mc.getPublicKey() == null || !Arrays.equals(this.mc.getPublicKey(), bytes))) {
+			tg.addTask(new SyncMgrPublicKeyTask(this.mc, bytes));
 		}
+
+		return tg;
+	}
+
+	public static TaskGraph syncPersistedUrlNotification(EntityManager em, ApplianceManagerConnector mc)
+			throws Exception {
+		TaskGraph tg = new TaskGraph();
+
+		ManagerCallbackNotificationApi mgrApi = null;
+		try {
+			mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(mc);
+
+			// Need to cache old broker ip because the manager tasks update the
+			// LastKnownBrokerIp on the MC
+			String oldIpAddress = mc.getLastKnownNotificationIpAddress();
+
+			// Need to get policy group and domain registrations at the same time before we start adding the tasks
+			// as the first task which gets executed updates the last known broker ip and the second update will not
+			// see the registrations as out of sync
+			ManagerNotificationRegistrationElement dr = mgrApi.getDomainNotificationRegistration();
+			ManagerNotificationRegistrationElement pgr = mgrApi.getPolicyGroupNotificationRegistration();
+
+			if (dr == null || dr.isEmpty()) {
+				tg.addTask(new RegisterMgrDomainNotificationTask(mc));
+			} else {
+				if (isOutOfSyncRegistration(dr)) {
+					tg.appendTask(new UpdateMgrDomainNotificationTask(mc, oldIpAddress));
+				}
+			}
+
+			if (pgr == null || pgr.isEmpty()) {
+				tg.appendTask(new RegisterMgrPolicyNotificationTask(mc));
+			} else {
+				if (isOutOfSyncRegistration(pgr)) {
+					tg.appendTask(new UpdateMgrPolicyNotificationTask(mc, oldIpAddress));
+				}
+			}
+
+		} finally {
+
+			if (mgrApi != null) {
+				mgrApi.close();
+			}
+		}
+
+		return tg;
+	}
+
+    private static boolean isOutOfSyncRegistration(ManagerNotificationRegistrationElement registration) {
+        if (registration.getPassword() == null || !registration.getPassword().equals(OscAuthFilter.OSC_DEFAULT_PASS)) {
+            return true;
+        }
+        if (registration.getIpAddress() == null || !registration.getIpAddress().equals(ServerUtil.getServerIP())) {
+            return true;
+        }
 
         return false;
     }

@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
@@ -36,8 +37,8 @@ public class UpdateMgrSecurityGroupInterfaceTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.securityGroupInterface = (SecurityGroupInterface) session.get(SecurityGroupInterface.class,
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.securityGroupInterface = (SecurityGroupInterface) em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
 
         ManagerSecurityGroupInterfaceApi mgrApi = ManagerApiFactory

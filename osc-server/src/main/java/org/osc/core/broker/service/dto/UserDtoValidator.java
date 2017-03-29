@@ -16,25 +16,26 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.ValidateUtil;
 
 public class UserDtoValidator implements DtoValidator<UserDto, User> {
-    Session session;
+    EntityManager em;
 
-    public UserDtoValidator(Session session) {
-        this.session = session;
+    public UserDtoValidator(EntityManager em) {
+        this.em = em;
     }
 
     @Override
     public void validateForCreate(UserDto dto) throws Exception {
         validate(dto);
 
-        EntityManager<User> emgr = new EntityManager<User>(User.class, this.session);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, this.em);
 
         if (emgr.isExisting("loginName", dto.getLoginName())) {
             throw new VmidcBrokerValidationException("User Login Name: " + dto.getLoginName() + " already exists.");
@@ -47,7 +48,7 @@ public class UserDtoValidator implements DtoValidator<UserDto, User> {
 
         validate(dto);
 
-        EntityManager<User> emgr = new EntityManager<User>(User.class, this.session);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, this.em);
 
         User user = emgr.findByPrimaryKey(dto.getId());
 

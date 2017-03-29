@@ -16,12 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.PersistenceException;
+
 import org.apache.log4j.Logger;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
 import org.osc.core.broker.service.exceptions.VmidcDbConcurrencyException;
 import org.osc.core.broker.service.exceptions.VmidcDbConstraintViolationException;
@@ -40,8 +40,8 @@ import com.mcafee.vmidc.server.Server;
 public abstract class ServiceDispatcher<I extends Request, O extends Response> {
 
     private static final Logger log = Logger.getLogger(ServiceDispatcher.class);
-    private Transaction tx = null;
-    private Session session = null;
+    private EntityTransaction tx = null;
+    private EntityManager em = null;
 
     // generalized method to dispatch incoming requests to the appropriate
     // service handler
@@ -54,9 +54,8 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
             throw new VmidcException(Server.PRODUCT_NAME + " server is in maintenance mode.");
         }
 
-        if (this.session == null) {
-            SessionFactory sessionFactory = getSessionFactory();
-            this.session = sessionFactory.openSession();
+        if (this.em == null || !this.em.isOpen()) {
+            this.em = getEntityManager();
         }
 
         // add session with empty list in pendingBroadcastMessageMap
@@ -64,20 +63,21 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
         try {
 
             // Initializing transaction
-            this.tx = this.session.beginTransaction();
+            this.tx = this.em.getTransaction();
+            this.tx.begin();
             // calling service implementation
-            response = exec(request, this.session);
+            response = exec(request, this.em);
 
             // if no exception, commit the transaction
             commitChanges(false);
 
         } catch (Exception e) {
 
-            handleException(this.session, e);
+            handleException(this.em, e);
 
         } finally {
-            if (this.session != null && this.session.isOpen()) {
-                this.session.close();
+            if (this.em != null && this.em.isOpen()) {
+                this.em.close();
             }
         }
 
@@ -89,10 +89,12 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
      * Created for the testing the class. Which helps to create the mock object of SessionFactory.
      *
      * @return
+     * @throws VmidcException
+     * @throws InterruptedException
      */
     @VisibleForTesting
-    protected SessionFactory getSessionFactory() {
-        return HibernateUtil.getSessionFactory();
+    protected EntityManager getEntityManager() throws InterruptedException, VmidcException {
+        return HibernateUtil.getEntityManagerFactory().createEntityManager();
     }
 
     /**
@@ -112,22 +114,23 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
                 this.tx.commit();
             }
             this.tx = null;
-            TransactionalBroadcastUtil.broadcast(this.session);
+            TransactionalBroadcastUtil.broadcast(this.em);
             if (startNewTransaction) {
-                this.tx = this.session.beginTransaction();
+                this.tx = this.em.getTransaction();
+                this.tx.begin();
             } else {
-                if (this.session.isOpen()) {
-                    this.session.close();
+                if (this.em.isOpen()) {
+                    this.em.close();
                 }
             }
         } catch (Exception e) {
-            handleException(this.session, e);
+            handleException(this.em, e);
         }
     }
 
-    protected abstract O exec(I request, Session session) throws Exception;
+    protected abstract O exec(I request, EntityManager em) throws Exception;
 
-    private void handleException(Session session, Exception e) throws VmidcDbConstraintViolationException,
+    private void handleException(EntityManager em, Exception e) throws VmidcDbConstraintViolationException,
     VmidcDbConcurrencyException, Exception {
         if(e instanceof SslCertificatesExtendedException){
             throw e;
@@ -140,9 +143,9 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
         try {
             if (this.tx != null) {
                 this.tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(session);
+                TransactionalBroadcastUtil.removeSessionFromMap(em);
             }
-        } catch (HibernateException he) {
+        } catch (PersistenceException he) {
             log.error("Error rolling back database transaction", he);
         }
 

@@ -20,8 +20,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
@@ -35,7 +36,7 @@ import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
@@ -48,8 +49,8 @@ public class UpdateDeploymentSpecService extends
     private DeploymentSpec ds;
 
     @Override
-    public BaseJobResponse exec(BaseRequest<DeploymentSpecDto> request, Session session) throws Exception {
-        validate(session, request.getDto());
+    public BaseJobResponse exec(BaseRequest<DeploymentSpecDto> request, EntityManager em) throws Exception {
+        validate(em, request.getDto());
 
         UnlockObjectMetaTask dsUnlock = null;
 
@@ -64,17 +65,17 @@ public class UpdateDeploymentSpecService extends
             if (!this.ds.getHosts().isEmpty() || !this.ds.getAvailabilityZones().isEmpty()
                     || !this.ds.getHostAggregates().isEmpty()) {
                 if (!this.ds.getAvailabilityZones().isEmpty()) {
-                    this.ds.setAvailabilityZones(updateAvailabilityZones(session, request.getDto()
+                    this.ds.setAvailabilityZones(updateAvailabilityZones(em, request.getDto()
                             .getAvailabilityZones(), this.ds));
                 } else if (!this.ds.getHostAggregates().isEmpty()) {
-                    this.ds.setHostAggregates(updateHostAggregates(session, request.getDto().getHostAggregates(),
+                    this.ds.setHostAggregates(updateHostAggregates(em, request.getDto().getHostAggregates(),
                             this.ds));
                 } else if (!this.ds.getHosts().isEmpty()) {
-                    this.ds.setHosts(updateHosts(session, request.getDto().getHosts(), this.ds));
+                    this.ds.setHosts(updateHosts(em, request.getDto().getHosts(), this.ds));
 
                 }
             }
-            EntityManager.update(session, this.ds);
+            OSCEntityManager.update(em, this.ds);
 
             commitChanges(true);
         } catch (Exception e) {
@@ -82,16 +83,16 @@ public class UpdateDeploymentSpecService extends
             throw e;
         }
 
-        Job job = ConformService.startDsConformanceJob(session, this.ds, dsUnlock);
+        Job job = ConformService.startDsConformanceJob(em, this.ds, dsUnlock);
         return new BaseJobResponse(this.ds.getId(), job.getId());
 
     }
 
     @Override
-    protected void validate(Session session, DeploymentSpecDto dto) throws Exception {
+    protected void validate(EntityManager em, DeploymentSpecDto dto) throws Exception {
         BaseDto.checkForNullId(dto);
 
-        this.ds = (DeploymentSpec) session.get(DeploymentSpec.class, dto.getId());
+        this.ds = em.find(DeploymentSpec.class, dto.getId());
         if (this.ds == null) {
             throw new VmidcBrokerValidationException("Deployment Specification with Id: " + dto.getId()
                     + "  is not found.");
@@ -99,7 +100,7 @@ public class UpdateDeploymentSpecService extends
 
         ValidateUtil.checkMarkedForDeletion(this.ds, this.ds.getName());
 
-        super.validate(session, dto);
+        super.validate(em, dto);
 
         if (!dto.getParentId().equals(this.ds.getVirtualSystem().getId())) {
             throwInvalidUpdateActionException("Virtual System", this.ds.getName());
@@ -132,7 +133,7 @@ public class UpdateDeploymentSpecService extends
         throw new IllegalStateException("Unable to determine if floating ip information has been updated!");
     }
 
-    private Set<HostAggregate> updateHostAggregates(Session session, Set<HostAggregateDto> selectedHaDtoSet,
+    private Set<HostAggregate> updateHostAggregates(EntityManager em, Set<HostAggregateDto> selectedHaDtoSet,
             DeploymentSpec ds) {
 
         // assuming nothing changed
@@ -142,7 +143,7 @@ public class UpdateDeploymentSpecService extends
         // Add selected ones
         for (HostAggregateDto selectedHa : selectedHaDtoSet) {
             if (!doesSetContainHostAggr(updatedHaSet, selectedHa)) {
-                updatedHaSet.add(createHostAggregate(session, selectedHa, ds));
+                updatedHaSet.add(createHostAggregate(em, selectedHa, ds));
             }
         }
 
@@ -153,7 +154,7 @@ public class UpdateDeploymentSpecService extends
             HostAggregate dsHostAggr = dsHaIter.next();
             if (!doesSetContainHostAggr(selectedHaDtoSet, dsHostAggr)) {
                 log.info("Deleting Host Aggregate :" + dsHostAggr.getOpenstackId());
-                EntityManager.delete(session, dsHostAggr);
+                OSCEntityManager.delete(em, dsHostAggr);
                 dsHaIter.remove();
             }
         }
@@ -184,7 +185,7 @@ public class UpdateDeploymentSpecService extends
         return false;
     }
 
-    private Set<AvailabilityZone> updateAvailabilityZones(Session session, Set<AvailabilityZoneDto> selectedAZDtoSet,
+    private Set<AvailabilityZone> updateAvailabilityZones(EntityManager em, Set<AvailabilityZoneDto> selectedAZDtoSet,
             DeploymentSpec ds) {
 
         // assuming nothing changed
@@ -194,7 +195,7 @@ public class UpdateDeploymentSpecService extends
         // Add selected ones
         for (AvailabilityZoneDto selectedAz : selectedAZDtoSet) {
             if (!doesSetContainAz(updatedAzSet, selectedAz)) {
-                updatedAzSet.add(createAvailabilityZone(session, selectedAz, ds));
+                updatedAzSet.add(createAvailabilityZone(em, selectedAz, ds));
             }
         }
 
@@ -205,7 +206,7 @@ public class UpdateDeploymentSpecService extends
             AvailabilityZone dsAz = dsAzIter.next();
             if (!doesSetContainAz(selectedAZDtoSet, dsAz)) {
                 log.info("Deleting Availability Zone:" + dsAz.getZone());
-                EntityManager.delete(session, dsAz);
+                OSCEntityManager.delete(em, dsAz);
                 dsAzIter.remove();
             }
         }
@@ -235,7 +236,7 @@ public class UpdateDeploymentSpecService extends
         return false;
     }
 
-    private Set<Host> updateHosts(Session session, Set<HostDto> selectedHostDtoSet, DeploymentSpec ds) {
+    private Set<Host> updateHosts(EntityManager em, Set<HostDto> selectedHostDtoSet, DeploymentSpec ds) {
 
         // assuming nothing changed
         Set<Host> updatedHostSet = new HashSet<>();
@@ -244,7 +245,7 @@ public class UpdateDeploymentSpecService extends
         // Add selected ones
         for (HostDto selectedHost : selectedHostDtoSet) {
             if (!doesSetContainHost(updatedHostSet, selectedHost)) {
-                updatedHostSet.add(createHost(session, selectedHost, ds));
+                updatedHostSet.add(createHost(em, selectedHost, ds));
             }
         }
 
@@ -255,7 +256,7 @@ public class UpdateDeploymentSpecService extends
             Host dsHost = dsHostIter.next();
             if (!doesSetContainHost(selectedHostDtoSet, dsHost)) {
                 log.info("Deleting Host:" + dsHost.getName());
-                EntityManager.delete(session, dsHost);
+                OSCEntityManager.delete(em, dsHost);
                 dsHostIter.remove();
             }
         }

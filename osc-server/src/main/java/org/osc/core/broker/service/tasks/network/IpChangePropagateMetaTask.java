@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.network;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.TaskGuard;
@@ -30,7 +31,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.FailedInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
@@ -52,12 +53,12 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         log.debug("Start executing IP Change Propagate task");
 
-        EntityManager<DistributedAppliance> emgr = new EntityManager<DistributedAppliance>(DistributedAppliance.class,
-                session);
+        OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
+                em);
 
         this.tg = new TaskGraph();
         for (DistributedAppliance da : emgr.listAll()) {
@@ -97,8 +98,8 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
             this.tg.addTaskGraph(propagateTaskGraph);
         }
 
-        EntityManager<ApplianceManagerConnector> emgrMc = new EntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, session);
+        OSCEntityManager<ApplianceManagerConnector> emgrMc = new OSCEntityManager<ApplianceManagerConnector>(
+                ApplianceManagerConnector.class, em);
         for (ApplianceManagerConnector mc : emgrMc.listAll()) {
             try {
                 if (ManagerApiFactory.isPersistedUrlNotifications(mc)) {
@@ -112,7 +113,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
 
                     propagateTaskGraph.addTask(lockTask);
                     propagateTaskGraph.addTaskGraph(
-                            MCConformanceCheckMetaTask.syncPersistedUrlNotification(session, mc), lockTask);
+                            MCConformanceCheckMetaTask.syncPersistedUrlNotification(em, mc), lockTask);
                     propagateTaskGraph.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
                     this.tg.addTaskGraph(propagateTaskGraph);
                 }

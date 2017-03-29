@@ -16,14 +16,22 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.dto.UserDtoValidatorTestData.*;
+import static org.osc.core.broker.service.dto.UserDtoValidatorTestData.createUserDto;
+import static org.osc.core.broker.service.dto.UserDtoValidatorTestData.getInvalidEmailTestData;
+import static org.osc.core.broker.service.dto.UserDtoValidatorTestData.getInvalidFirstNameTestData;
+import static org.osc.core.broker.service.dto.UserDtoValidatorTestData.getInvalidLastNameTestData;
+import static org.osc.core.broker.service.dto.UserDtoValidatorTestData.getInvalidLoginNameTestData;
+import static org.osc.core.broker.service.dto.UserDtoValidatorTestData.getInvalidPasswordTestData;
+import static org.osc.core.broker.service.dto.UserDtoValidatorTestData.getInvalidRoleTestData;
 import static org.osc.core.test.util.ErrorMessageConstants.EMPTY_VALUE_ERROR_MESSAGE;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,12 +39,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.util.SessionStub;
+import org.osc.core.broker.service.test.InMemDB;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -44,7 +51,7 @@ import junitparams.Parameters;
 @RunWith(JUnitParamsRunner.class)
 public class UserDtoValidatorTest {
     @Mock
-    private Session sessionMock;
+    private EntityManager em;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -58,19 +65,36 @@ public class UserDtoValidatorTest {
     @Before
     public void testInitialize() {
         MockitoAnnotations.initMocks(this);
-        this.validator = new UserDtoValidator(this.sessionMock);
 
-        this.existingUserDto.setId(45L);
-        this.existingUser = new User();
-        this.existingUser.setId(this.existingUserDto.getId());
+        this.em = InMemDB.getEntityManagerFactory().createEntityManager();
 
-        SessionStub mockedSession = new SessionStub(this.sessionMock);
+        populateDatabase();
 
-        mockedSession.stubIsExistingEntity(User.class, "loginName", this.existingUserDto.getLoginName(), true);
+        this.validator = new UserDtoValidator(this.em);
 
-        mockedSession.stubIsExistingEntity(User.class, "loginName", this.newUserDto.getLoginName(), false);
+        this.existingUserDto.setId(this.existingUser.getId());
+    }
 
-        Mockito.when(this.sessionMock.get(User.class, this.existingUserDto.getId())).thenReturn(this.existingUser);
+    @After
+    public void testTearDown() {
+        InMemDB.shutdown();
+    }
+
+    private void populateDatabase() {
+       this.em.getTransaction().begin();
+
+       this.existingUser = new User();
+       this.existingUser.setLoginName(this.existingUserDto.getLoginName());
+       this.existingUser.setPassword(this.existingUserDto.getPassword());
+       this.existingUser.setRole(this.existingUserDto.getRole());
+       this.existingUser.setFirstName(this.existingUserDto.getFirstName());
+       this.existingUser.setLastName(this.existingUserDto.getLastName());
+       this.existingUser.setEmail(this.existingUserDto.getEmail());
+
+       this.em.persist(this.existingUser);
+
+       this.em.getTransaction().commit();
+
     }
 
     @Test

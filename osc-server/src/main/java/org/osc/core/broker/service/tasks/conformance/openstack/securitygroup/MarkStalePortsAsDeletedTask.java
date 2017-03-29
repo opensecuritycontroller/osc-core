@@ -18,7 +18,8 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.service.persistence.NetworkEntityManager;
@@ -43,20 +44,20 @@ class MarkStalePortsAsDeletedTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
         if (this.subnet == null) {
 
-            this.network = NetworkEntityManager.findById(session, this.network.getId());
+            this.network = NetworkEntityManager.findById(em, this.network.getId());
             //TODO: Future. Openstack. If we encounter stale object exception because we have multiple tasks trying to update
             // the same ports, we might need to retry with new transaction.
-            VMPortEntityManager.markStalePortsAsDeleted(session, this.network, this.validPorts);
+            VMPortEntityManager.markStalePortsAsDeleted(em, this.network, this.validPorts);
         }
         if (this.network == null) {
-            this.subnet = SubnetEntityManager.findById(session, this.subnet.getId());
+            this.subnet = SubnetEntityManager.findById(em, this.subnet.getId());
             //TODO: Future. Openstack. If we encounter stale object exception because we have multiple tasks trying to update
             // the same ports, we might need to retry with new transaction.
             //TODO mark stale VM for deletion ?
-            VMPortEntityManager.markStalePortsAsDeletedForSubnet(session, this.subnet, this.validPorts);
+            VMPortEntityManager.markStalePortsAsDeletedForSubnet(em, this.subnet, this.validPorts);
         }
 
     }

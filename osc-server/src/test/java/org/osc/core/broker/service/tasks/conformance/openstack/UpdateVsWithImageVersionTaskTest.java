@@ -18,9 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.openstack;
 
 import java.util.Set;
 
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,7 +37,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsImageRefere
 public class UpdateVsWithImageVersionTaskTest {
     @Rule public ExpectedException exception = ExpectedException.none();
 
-    @Mock private Session sessionMock;
+    @Mock private EntityManager em;
 
     private VirtualSystem vs;
     private ApplianceSoftwareVersion applianceSoftwareVersion;
@@ -54,8 +54,8 @@ public class UpdateVsWithImageVersionTaskTest {
         this.applianceSoftwareVersion.setApplianceSoftwareVersion("applianceSoftwareVersion");
         this.vs.setApplianceSoftwareVersion(this.applianceSoftwareVersion);
 
-        Mockito.when(this.sessionMock.get(Mockito.eq(VirtualSystem.class), Mockito.eq(this.vs.getId()),
-                Mockito.argThat(new LockOptionsMatcher(LockMode.PESSIMISTIC_WRITE)))).thenReturn(this.vs);
+        Mockito.when(this.em.find(Mockito.eq(VirtualSystem.class), Mockito.eq(this.vs.getId()),
+                Mockito.eq(LockModeType.PESSIMISTIC_WRITE))).thenReturn(this.vs);
     }
 
     @Test
@@ -64,10 +64,10 @@ public class UpdateVsWithImageVersionTaskTest {
         UpdateVsWithImageVersionTask task = new UpdateVsWithImageVersionTask(this.vs);
 
         //Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         //Assert.
-        Mockito.verify(this.sessionMock, Mockito.never()).update(this.vs);
+        Mockito.verify(this.em, Mockito.never()).merge(this.vs);
     }
 
     @Test
@@ -78,10 +78,10 @@ public class UpdateVsWithImageVersionTaskTest {
         UpdateVsWithImageVersionTask task = new UpdateVsWithImageVersionTask(this.vs);
 
         //Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         //Assert.
-        Mockito.verify(this.sessionMock, Mockito.never()).update(this.vs);
+        Mockito.verify(this.em, Mockito.never()).merge(this.vs);
     }
 
     @Test
@@ -93,11 +93,11 @@ public class UpdateVsWithImageVersionTaskTest {
         UpdateVsWithImageVersionTask task = new UpdateVsWithImageVersionTask(this.vs);
 
         //Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         //Assert.
-        Mockito.verify(this.sessionMock).update(this.vs);
-        Mockito.verify(this.sessionMock).update(Mockito.argThat(new ImageReferenceHasVersionMatcher(this.vs)));
+        Mockito.verify(this.em).merge(this.vs);
+        Mockito.verify(this.em).merge(Mockito.argThat(new ImageReferenceHasVersionMatcher(this.vs)));
     }
 
     @Test
@@ -121,11 +121,11 @@ public class UpdateVsWithImageVersionTaskTest {
         UpdateVsWithImageVersionTask task = new UpdateVsWithImageVersionTask(this.vs);
 
         //Act.
-        task.executeTransaction(this.sessionMock);
+        task.executeTransaction(this.em);
 
         //Assert.
-        Mockito.verify(this.sessionMock).update(this.vs);
-        Mockito.verify(this.sessionMock).update(Mockito.argThat(new ImageReferenceHasVersionMatcher(this.vs)));
+        Mockito.verify(this.em).merge(this.vs);
+        Mockito.verify(this.em).merge(Mockito.argThat(new ImageReferenceHasVersionMatcher(this.vs)));
     }
 
     private class ImageReferenceHasVersionMatcher extends ArgumentMatcher<Object> {
@@ -149,22 +149,6 @@ public class UpdateVsWithImageVersionTaskTest {
                 }
             }
             return hasVersion;
-        }
-    }
-
-    private class LockOptionsMatcher extends ArgumentMatcher<LockOptions> {
-        private LockMode lockMode;
-
-        LockOptionsMatcher(LockMode lockMode) {
-            this.lockMode = lockMode;
-        }
-
-        @Override
-        public boolean matches(Object object) {
-            if (object == null || !(object instanceof LockOptions)) {
-                return false;
-            }
-            return ((LockOptions) object).getLockMode().equals(this.lockMode);
         }
     }
 }

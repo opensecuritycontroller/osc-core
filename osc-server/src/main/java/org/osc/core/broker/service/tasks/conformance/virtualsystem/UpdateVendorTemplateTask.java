@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.TaskInput;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
@@ -43,11 +44,11 @@ public class UpdateVendorTemplateTask extends TransactionalTask {
     public String svcId;
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
         LOG.info("Start excecuting UpdateVendorTemplate Task");
 
-        this.vsp = (VirtualSystemPolicy) session.get(VirtualSystemPolicy.class, this.vsp.getId());
+        this.vsp = em.find(VirtualSystemPolicy.class, this.vsp.getId());
         String templateId = this.vsp.getNsxVendorTemplateId();
 
         if(templateId != null && !templateId.isEmpty()) {

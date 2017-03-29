@@ -21,7 +21,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -29,11 +28,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.NullInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.job.TaskGuard;
 import org.osc.core.broker.model.entities.job.TaskRecord;
@@ -77,6 +77,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import elemental.events.KeyboardEvent.KeyCode;
+import org.osc.core.rest.client.util.LoggingUtil;
 
 public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
@@ -289,7 +290,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
         }
     }
 
-    private void refreshGraph() throws IOException {
+    private void refreshGraph() throws Exception {
         StreamResource imageResource = buildImageResource();
         this.embeddedImage.setIcon(imageResource);
     }
@@ -307,7 +308,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 public void buttonClick(ClickEvent event) {
                     try {
                         refreshGraph();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         ViewUtil.showError("Error while building task graph DOT file.", e);
                     }
                 }
@@ -350,9 +351,10 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
         }
     }
 
-    private StreamResource buildImageResource() throws IOException {
-        Session session = HibernateUtil.getSessionFactory().openSession();
+    private StreamResource buildImageResource() throws Exception {
+        EntityManager em = null;
         try {
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
             this.dotFile = new File("job-" + getParentItemId() + System.currentTimeMillis() + ".dot");
 
             PrintWriter out = new PrintWriter(new FileWriter(this.dotFile));
@@ -370,7 +372,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             out.println("node [color=black, fontcolor=black, fontname=\"Helvetica\", fontsize=11.0, shape=record, style=\"solid,filled\"]");
             out.println();
 
-            TaskEntityMgr emgr = new TaskEntityMgr(session);
+            TaskEntityMgr emgr = new TaskEntityMgr(em);
             for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
                 out.printf("node_%d [%n", tr.getId());
                 out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
@@ -446,8 +448,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             return imageResource;
 
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
     }
@@ -492,7 +494,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 BufferedReader kbdInput = new BufferedReader(inp)){
                 String line;
                 while ((line = kbdInput.readLine()) != null) {
-                    log.info(line);
+                    log.info(LoggingUtil.removeCRLF(line));
                 }
             }
 

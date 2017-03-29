@@ -19,7 +19,8 @@ package org.osc.core.broker.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
@@ -33,10 +34,10 @@ public class ListApplianceSoftwareVersionByApplianceIdService extends
 
     @Override
     public ListResponse<ApplianceSoftwareVersionDto> exec(ListApplianceSoftwareVersionByApplianceIdRequest request,
-            Session session) {
+            EntityManager em) {
 
         List<ApplianceSoftwareVersion> ls = ApplianceSoftwareVersionEntityMgr
-                .getApplianceSoftwareVersionsByApplianceId(session, request.getApplianceId());
+                .getApplianceSoftwareVersionsByApplianceId(em, request.getApplianceId());
         List<ApplianceSoftwareVersionDto> dtoList = new ArrayList<ApplianceSoftwareVersionDto>();
 
         ListResponse<ApplianceSoftwareVersionDto> response = new ListResponse<ApplianceSoftwareVersionDto>();

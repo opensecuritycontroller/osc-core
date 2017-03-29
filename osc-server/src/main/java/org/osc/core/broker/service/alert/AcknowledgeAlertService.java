@@ -18,23 +18,24 @@ package org.osc.core.broker.service.alert;
 
 import java.util.Date;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.AlertEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.util.SessionUtil;
 
 public class AcknowledgeAlertService extends ServiceDispatcher<AlertRequest, EmptySuccessResponse> {
 
     @Override
-    public EmptySuccessResponse exec(AlertRequest request, Session session) throws Exception {
+    public EmptySuccessResponse exec(AlertRequest request, EntityManager em) throws Exception {
         EmptySuccessResponse response = new EmptySuccessResponse();
-        EntityManager<Alert> emgr = new EntityManager<Alert>(Alert.class, session);
+        OSCEntityManager<Alert> emgr = new OSCEntityManager<Alert>(Alert.class, em);
 
         if (request.isAcknowledge()) {
             for (AlertDto dto : request.getDtoList()) {

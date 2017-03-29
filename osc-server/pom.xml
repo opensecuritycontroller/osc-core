@@ -563,7 +563,7 @@
 					<version>2.12.4</version>
 					<configuration>
 						<!-- Sets the VM argument line used when unit tests are run. -->
-						<argLine>-Xmx512m ${surefireArgLine}</argLine>
+						<argLine>-Xmx1024m ${surefireArgLine}</argLine>
 						<excludes>
 							<exclude>**/JobEngineTest.java</exclude>
 							<exclude>**/SanityTest.java</exclude>

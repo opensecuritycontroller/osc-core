@@ -19,9 +19,10 @@ package org.osc.core.server.scheduler;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -29,7 +30,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -79,12 +80,13 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
-        Session session = null;
+        EntityManager em = null;
         try {
-            session = HibernateUtil.getSessionFactory().openSession();
-            EntityManager<DistributedApplianceInstance> emgr = new EntityManager<DistributedApplianceInstance>(
-                    DistributedApplianceInstance.class, session);
-            Transaction tx = session.beginTransaction();
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
+                    DistributedApplianceInstance.class, em);
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
             List<DistributedApplianceInstance> dais = emgr.listAll();
 
             for (DistributedApplianceInstance dai : dais) {
@@ -105,7 +107,7 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
                     // In case of NSX, update
                     if (dai.getVirtualSystem().getVirtualizationConnector()
                             .getVirtualizationType() == VirtualizationType.VMWARE) {
-                        NsxUpdateAgentsService.updateNsxAgentInfo(session, dai, "UNKNOWN");
+                        NsxUpdateAgentsService.updateNsxAgentInfo(em, dai, "UNKNOWN");
                     }
                     dai.setDiscovered(null);
                     dai.setInspectionReady(null);
@@ -118,8 +120,8 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
             log.error("Exception iterating over DAIs", ex);
 
         } finally {
-            if (session != null) {
-                session.close();
+            if (em != null) {
+                em.close();
             }
         }
 

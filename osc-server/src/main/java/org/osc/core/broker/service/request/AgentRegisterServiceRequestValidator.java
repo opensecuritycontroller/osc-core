@@ -16,19 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 
 public class AgentRegisterServiceRequestValidator implements RequestValidator<AgentRegisterServiceRequest, DistributedApplianceInstance> {
-    private Session session;
+    private EntityManager em;
     private static final Logger log = Logger.getLogger(AgentRegisterServiceRequestValidator.class);
 
-    public AgentRegisterServiceRequestValidator(Session session) {
-        this.session = session;
+    public AgentRegisterServiceRequestValidator(EntityManager em) {
+        this.em = em;
     }
 
     @Override
@@ -38,8 +39,8 @@ public class AgentRegisterServiceRequestValidator implements RequestValidator<Ag
 
     @Override
     public DistributedApplianceInstance validateAndLoad(AgentRegisterServiceRequest request) throws Exception {
-        EntityManager<DistributedApplianceInstance> emgr = new EntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, this.session);
+        OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
+                DistributedApplianceInstance.class, this.em);
 
         DistributedApplianceInstance dai = null;
 
@@ -71,7 +72,7 @@ public class AgentRegisterServiceRequestValidator implements RequestValidator<Ag
         if (dai != null) {
             vs = dai.getVirtualSystem();
         } else {
-            EntityManager<VirtualSystem> vsMgr = new EntityManager<VirtualSystem>(VirtualSystem.class, this.session);
+            OSCEntityManager<VirtualSystem> vsMgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, this.em);
             vs = vsMgr.findByPrimaryKey(request.getVsId());
         }
 

@@ -18,13 +18,14 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 
@@ -42,9 +43,9 @@ public class MgrCreateVSSDeviceTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
 
-        this.vs = (VirtualSystem) session.get(VirtualSystem.class, this.vs.getId());
+        this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.vs);
         String deviceId = null;
@@ -52,17 +53,17 @@ public class MgrCreateVSSDeviceTask extends TransactionalTask {
         try {
 
             deviceId = mgrApi.createVSSDevice();
-            vs.setMgrId(deviceId);
-            EntityManager.update(session, vs);
+            this.vs.setMgrId(deviceId);
+            OSCEntityManager.update(em, this.vs);
             log.info("New VSS device (" + deviceId + ") successfully created.");
 
         } catch (Exception e) {
 
             log.info("Failed to create device in Manager.");
-            deviceId = mgrApi.findDeviceByName(vs.getName());
+            deviceId = mgrApi.findDeviceByName(this.vs.getName());
             if (deviceId != null) {
-                vs.setMgrId(deviceId);
-                EntityManager.update(session, vs);
+                this.vs.setMgrId(deviceId);
+                OSCEntityManager.update(em, this.vs);
             } else {
                 throw e;
             }
@@ -74,7 +75,7 @@ public class MgrCreateVSSDeviceTask extends TransactionalTask {
         Set<DistributedApplianceInstance> daiList = this.vs.getDistributedApplianceInstances();
         daiList.forEach(dai -> {
             dai.setMgrDeviceId(null);
-            EntityManager.update(session, dai);
+            OSCEntityManager.update(em, dai);
         });
     }
 

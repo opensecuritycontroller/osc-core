@@ -21,8 +21,14 @@ import java.util.List;
 
 import org.mockito.Mockito;
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.model.entities.appliance.Appliance;
+import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
 
@@ -108,9 +114,43 @@ public class MgrCheckDevicesMetaTaskTestData {
     private static VirtualSystem createBaseVirtualSystem(Long vsId) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName("vc_name");
-        VirtualSystem vs = new VirtualSystem();
+        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+        vc.setName("vcName");
+        vc.setProviderIpAddress("127.0.0.1");
+        vc.setProviderUsername("Natasha");
+        vc.setProviderPassword("********");
+
+        ApplianceManagerConnector amc = new ApplianceManagerConnector();
+        amc.setManagerType("buzz");
+        amc.setIpAddress("127.0.0.1");
+        amc.setName("Steve");
+        amc.setServiceType("foobar");
+
+        Domain domain = new Domain(amc);
+        domain.setName("domainName");
+
+        Appliance app = new Appliance();
+        app.setManagerSoftwareVersion("fizz");
+        app.setManagerType("buzz");
+        app.setModel("fizzbuzz");
+
+        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
+        asv.setApplianceSoftwareVersion("softwareVersion");
+        asv.setImageUrl("bar");
+        asv.setVirtualizarionSoftwareVersion(vc.getVirtualizationSoftwareVersion());
+        asv.setVirtualizationType(vc.getVirtualizationType());
+
+        DistributedAppliance da = new DistributedAppliance(amc);
+        da.setName("daName");
+        da.setApplianceVersion(asv.getApplianceSoftwareVersion());
+        da.setAppliance(app);
+
+        VirtualSystem vs = new VirtualSystem(da);
         vs.setId(vsId);
         vs.setVirtualizationConnector(vc);
+        vs.setDomain(domain);
+        vs.setApplianceSoftwareVersion(asv);
 
         return vs;
     }

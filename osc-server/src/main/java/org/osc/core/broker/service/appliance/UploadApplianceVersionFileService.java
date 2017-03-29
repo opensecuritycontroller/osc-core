@@ -22,11 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.response.BaseResponse;
@@ -38,7 +39,7 @@ public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadR
     private static final Logger log = Logger.getLogger(UploadApplianceVersionFileService.class);
 
     @Override
-    public BaseResponse exec(UploadRequest request, Session session) throws Exception {
+    public BaseResponse exec(UploadRequest request, EntityManager em) throws Exception {
         String fileName = request.getFileName();
         String uploadFolder = ApplianceUploader.getUploadPath(true);
 

@@ -33,9 +33,9 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.AddDeploymentSpecService;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDeploymentSpecService;
 import org.osc.core.broker.service.ForceDeleteVirtualSystemService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -59,7 +59,9 @@ import org.osc.core.broker.service.securityinterface.ListSecurityGroupInterfaceS
 import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.securityinterface.UpdateSecurityGroupInterfaceService;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -77,6 +79,9 @@ import io.swagger.annotations.Authorization;
 public class VirtualSystemApis {
 
     private static final Logger logger = Logger.getLogger(VirtualSystemApis.class);
+
+    @Reference
+    private ConformService conformService;
 
     // DAI APIs
     @ApiOperation(value = "Lists Appliance Instances",
@@ -284,7 +289,7 @@ public class VirtualSystemApis {
         logger.info("Creating Security Group Interface ...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setParentIdOrThrow(sgiDto, vsId, "Traffic Policy Mapping");
-        return ApiUtil.getResponseForBaseRequest(new AddSecurityGroupInterfaceService(),
+        return ApiUtil.getResponseForBaseRequest(new AddSecurityGroupInterfaceService(this.conformService),
                 new BaseRequest<SecurityGroupInterfaceDto>(sgiDto));
     }
 
@@ -302,7 +307,7 @@ public class VirtualSystemApis {
         logger.info("Updating Security Group Interface " + sgiId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         ApiUtil.setIdAndParentIdOrThrow(sgiDto, sgiId, vsId, "Traffic Policy Mapping");
-        return ApiUtil.getResponseForBaseRequest(new UpdateSecurityGroupInterfaceService(),
+        return ApiUtil.getResponseForBaseRequest(new UpdateSecurityGroupInterfaceService(this.conformService),
                 new BaseRequest<SecurityGroupInterfaceDto>(sgiDto));
     }
 
@@ -318,7 +323,7 @@ public class VirtualSystemApis {
                                                  @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
         logger.info("Deleting Security Group Interface.. " + sgiId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new DeleteSecurityGroupInterfaceService(),
+        return ApiUtil.getResponseForBaseRequest(new DeleteSecurityGroupInterfaceService(this.conformService),
                 new BaseIdRequest(sgiId, vsId));
     }
 

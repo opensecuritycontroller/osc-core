@@ -18,13 +18,13 @@ package org.osc.core.broker.service.alert;
 
 import java.util.regex.Pattern;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.osc.core.broker.job.Job;
-import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.job.Job.JobCompletionListener;
+import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
@@ -38,7 +38,7 @@ import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.email.EmailSettingsDto;
 import org.osc.core.broker.service.persistence.AlertEntityMgr;
 import org.osc.core.broker.service.persistence.EmailSettingsEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.util.EmailUtil;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
@@ -47,7 +47,6 @@ import org.osc.core.broker.util.db.HibernateUtil;
 public class AlertGenerator implements JobCompletionListener {
 
     private static final Logger log = Logger.getLogger(AlertGenerator.class);
-    private static final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
     @Override
     public void completed(Job job) {
@@ -78,15 +77,16 @@ public class AlertGenerator implements JobCompletionListener {
     private static void processFailureEvent(Job job, SystemFailureType systemFailureType,
             DaiFailureType daiFailureType, LockObjectReference object, String message) {
 
-        Session session = null;
-        Transaction tx = null;
+        EntityManager em = null;
+        EntityTransaction tx = null;
 
         try {
 
-            session = sessionFactory.openSession();
-            tx = session.beginTransaction();
+            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            tx = em.getTransaction();
+            tx.begin();
 
-            EntityManager<Alarm> emgr = new EntityManager<Alarm>(Alarm.class, session);
+            OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
 
             //Iterate all the alarms and look for a regex match. As of now we only support Job Failure event type.
             //Generate alert for all the matches and perform the defined alarm action if any!
@@ -97,7 +97,7 @@ public class AlertGenerator implements JobCompletionListener {
                     case JOB_FAILURE:
                         if (job != null) {
                             if (isMatchAlarm(alarm.getRegexMatch(), job.getName())) {
-                                generateAlertAndNotify(session, alarm, object, message);
+                                generateAlertAndNotify(em, alarm, object, message);
                             }
                         }
                         break;
@@ -105,12 +105,12 @@ public class AlertGenerator implements JobCompletionListener {
                         // systemFailureType can only be null if it is email failure since email failure
                         // is in fact handled in processEmailFailure method as a special case
                         if (systemFailureType != null && isMatchAlarm(alarm.getRegexMatch(), message)) {
-                            generateAlertAndNotify(session, alarm, object, message);
+                            generateAlertAndNotify(em, alarm, object, message);
                         }
                         break;
                     case DAI_FAILURE:
                         if (daiFailureType != null && isMatchAlarm(alarm.getRegexMatch(), object.getName())) {
-                            generateAlertAndNotify(session, alarm, object, message);
+                            generateAlertAndNotify(em, alarm, object, message);
                         }
                         break;
                     default:
@@ -120,16 +120,16 @@ public class AlertGenerator implements JobCompletionListener {
             }
 
             tx.commit();
-            TransactionalBroadcastUtil.broadcast(session);
+            TransactionalBroadcastUtil.broadcast(em);
         } catch (Exception ex) {
             log.error("Failed to finish processing the job failure event : ", ex);
             if (tx != null) {
                 tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(session);
+                TransactionalBroadcastUtil.removeSessionFromMap(em);
             }
         } finally {
-            if (session != null && session.isOpen()) {
-                session.close();
+            if (em != null && em.isOpen()) {
+                em.close();
             }
         }
     }
@@ -139,19 +139,19 @@ public class AlertGenerator implements JobCompletionListener {
         return p.matcher(match).matches();
     }
 
-    private static void generateAlertAndNotify(Session session, Alarm alarm, LockObjectReference object, String message) {
+    private static void generateAlertAndNotify(EntityManager em, Alarm alarm, LockObjectReference object, String message) {
 
         try {
-            Alert alert = generateAlert(session, alarm, object, message);
+            Alert alert = generateAlert(em, alarm, object, message);
             if (alarm.getAlarmAction().equals(AlarmAction.EMAIL)) {
-                sendEmail(session, alarm, alert, message);
+                sendEmail(em, alarm, alert, message);
             }
         } catch (Exception ex) {
             log.error("Failed to generate alert: ", ex);
         }
     }
 
-    private static Alert generateAlert(Session session, Alarm alarm, LockObjectReference object, String message)
+    private static Alert generateAlert(EntityManager em, Alarm alarm, LockObjectReference object, String message)
             throws Exception {
 
         BaseRequest<AlertDto> request = new BaseRequest<AlertDto>();
@@ -169,23 +169,23 @@ public class AlertGenerator implements JobCompletionListener {
         Alert alert = AlertEntityMgr.createEntity(request.getDto());
 
         // creating new entry in the db using entity manager object
-        alert = EntityManager.create(session, alert);
+        alert = OSCEntityManager.create(em, alert);
 
         log.info("Adding new alert - " + alert.getName());
 
         return alert;
     }
 
-    private static void processEmailFailure(Session session, LockObjectReference object,
+    private static void processEmailFailure(EntityManager em, LockObjectReference object,
             SystemFailureType systemFailureType, String message) {
-        EntityManager<Alarm> emgr = new EntityManager<Alarm>(Alarm.class, session);
+        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
         for (Alarm alarm : emgr.listAll()) {
             if (alarm.isEnabled() && alarm.getEventType().equals(EventType.SYSTEM_FAILURE)
                     && isMatchAlarm(alarm.getRegexMatch(), systemFailureType.toString())) {
                 try {
                     // Since the sole purpose here is to notify the user of email misconfiguration/problem
                     // as soon as a match alarm is found, generate ONE alert and break from the loop
-                    generateAlert(session, alarm, object, message);
+                    generateAlert(em, alarm, object, message);
                     break;
                 } catch (Exception ex) {
                     log.error("Failed to generate email failure system alert: " + ex);
@@ -194,9 +194,9 @@ public class AlertGenerator implements JobCompletionListener {
         }
     }
 
-    private static void sendEmail(Session session, Alarm alarm, Alert alert, String message) {
+    private static void sendEmail(EntityManager em, Alarm alarm, Alert alert, String message) {
 
-        EmailSettings emailSettings = (EmailSettings) session.get(EmailSettings.class, 1L);
+        EmailSettings emailSettings = em.find(EmailSettings.class, 1L);
 
         try {
             if (emailSettings != null) {
@@ -208,7 +208,7 @@ public class AlertGenerator implements JobCompletionListener {
             }
         } catch (Exception ex) {
             log.error("Failed to send email to the interested user(s): ", ex);
-            processEmailFailure(session, new LockObjectReference(1L, "Email Settings", ObjectType.EMAIL),
+            processEmailFailure(em, new LockObjectReference(1L, "Email Settings", ObjectType.EMAIL),
                     SystemFailureType.EMAIL_FAILURE, "Fail to send alert email.");
         }
     }

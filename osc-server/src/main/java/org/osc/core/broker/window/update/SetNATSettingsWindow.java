@@ -21,6 +21,7 @@ import org.osc.core.broker.service.SetNATSettingsService;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.maintenance.NetworkLayout;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -89,7 +90,7 @@ public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 DryRunRequest<NATSettingsDto> req = new DryRunRequest<NATSettingsDto>();
                 req.setDto(dto);
 
-                SetNATSettingsService service = new SetNATSettingsService();
+                SetNATSettingsService service = StaticRegistry.setNATSettingsService();
                 BaseJobResponse response = service.dispatch(req);
                 this.networkLayout.populateNATTable();
                 if (response.getJobId() != null) {

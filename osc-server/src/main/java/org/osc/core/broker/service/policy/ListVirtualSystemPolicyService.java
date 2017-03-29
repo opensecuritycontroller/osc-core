@@ -19,7 +19,8 @@ package org.osc.core.broker.service.policy;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -34,9 +35,9 @@ public class ListVirtualSystemPolicyService extends ServiceDispatcher<BaseIdRequ
     private VirtualSystem vs;
 
     @Override
-    public ListResponse<PolicyDto> exec(BaseIdRequest daIdRequest, Session session) throws Exception {
+    public ListResponse<PolicyDto> exec(BaseIdRequest daIdRequest, EntityManager em) throws Exception {
 
-        validate(session, daIdRequest);
+        validate(em, daIdRequest);
 
         // to do mapping
         List<PolicyDto> dtoList = new ArrayList<PolicyDto>();
@@ -54,9 +55,9 @@ public class ListVirtualSystemPolicyService extends ServiceDispatcher<BaseIdRequ
         return response;
     }
 
-    protected void validate(Session session, BaseIdRequest request) throws Exception {
+    protected void validate(EntityManager em, BaseIdRequest request) throws Exception {
 
-        this.vs = VirtualSystemEntityMgr.findById(session, request.getId());
+        this.vs = VirtualSystemEntityMgr.findById(em, request.getId());
 
         if (this.vs == null) {
             throw new VmidcBrokerValidationException(

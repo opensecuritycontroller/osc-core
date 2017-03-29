@@ -33,7 +33,7 @@ public class TagVmServiceTest extends BaseTagVmServiceTest {
         this.exception.expectMessage("Missing IP Address or VM Uuid input.");
 
         // Act.
-        this.tagVmService.exec(REQUEST_WITH_TAG, this.session);
+        this.tagVmService.exec(REQUEST_WITH_TAG, this.em);
     }
 
     @Test
@@ -43,7 +43,7 @@ public class TagVmServiceTest extends BaseTagVmServiceTest {
         this.exception.expectMessage("Input must be either IP Address or VM Uuid but not both.");
 
         // Act.
-        this.tagVmService.exec(REQUEST_WITH_TAG_AND_IP_ADDRESS_AND_VM_UUID, this.session);
+        this.tagVmService.exec(REQUEST_WITH_TAG_AND_IP_ADDRESS_AND_VM_UUID, this.em);
     }
 
     @Test
@@ -53,13 +53,13 @@ public class TagVmServiceTest extends BaseTagVmServiceTest {
         this.exception.expectMessage("VM with Uuid '" + INVALID_VM_UUID + "' not found.");
 
         // Act.
-        this.tagVmService.exec(REQUEST_WITH_TAG_INVALID_VM_UUID, this.session);
+        this.tagVmService.exec(REQUEST_WITH_TAG_INVALID_VM_UUID, this.em);
     }
 
     @Test
     public void testExec_WithRequestWithVmUuid_ExpectsSuccess() throws Exception {
         // Act.
-        TagVmResponse response = this.tagVmService.exec(REQUEST_WITH_VM_UUID, this.session);
+        TagVmResponse response = this.tagVmService.exec(REQUEST_WITH_VM_UUID, this.em);
 
         // Assert.
         Assert.assertEquals("The tag in request with VmUuid and default tag is different than expected.", BaseTagVmService.DEFAULT_OSC_SECURITY_TAG, response.getVmTag());
@@ -68,7 +68,7 @@ public class TagVmServiceTest extends BaseTagVmServiceTest {
     @Test
     public void testExec_WithRequestWithVmUuidAndTag_ExpectsSuccess() throws Exception {
         // Act.
-        TagVmResponse response = this.tagVmService.exec(REQUEST_WITH_TAG_AND_VM_UUID, this.session);
+        TagVmResponse response = this.tagVmService.exec(REQUEST_WITH_TAG_AND_VM_UUID, this.em);
 
         // Assert.
         Assert.assertEquals("The tag in request with VmUuid and custom tag is different than expected.", TAG, response.getVmTag());
@@ -81,13 +81,13 @@ public class TagVmServiceTest extends BaseTagVmServiceTest {
         this.exception.expectMessage("VM with IP address '" + INVALID_IP_ADDRESS + "' not found.");
 
         // Act.
-        this.tagVmService.exec(REQUEST_WITH_TAG_AND_INVALID_IP_ADDRESS, this.session);
+        this.tagVmService.exec(REQUEST_WITH_TAG_AND_INVALID_IP_ADDRESS, this.em);
     }
 
     @Test
     public void testExec_WithRequestWithIpAddress_ExpectsSuccess() throws Exception {
         // Act.
-        TagVmResponse response = this.tagVmService.exec(REQUEST_WITH_IP_ADDRESS, this.session);
+        TagVmResponse response = this.tagVmService.exec(REQUEST_WITH_IP_ADDRESS, this.em);
 
         // Assert..
         Assert.assertEquals("The tag in request with IpAddress and default tag is different than expected.", BaseTagVmService.DEFAULT_OSC_SECURITY_TAG, response.getVmTag());
@@ -96,7 +96,7 @@ public class TagVmServiceTest extends BaseTagVmServiceTest {
     @Test
     public void testExec_WithRequestWithIpAddressAndTag_ExpectsSuccess() throws Exception {
         // Act.
-        TagVmResponse response = this.tagVmService.exec(REQUEST_WITH_TAG_AND_IP_ADDRESS, this.session);
+        TagVmResponse response = this.tagVmService.exec(REQUEST_WITH_TAG_AND_IP_ADDRESS, this.em);
 
         // Assert.
         Assert.assertEquals("The tag in request with IpAddress and custom tag is different than expected.", TAG, response.getVmTag());

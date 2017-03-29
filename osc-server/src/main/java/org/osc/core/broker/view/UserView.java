@@ -20,11 +20,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.DeleteUserService;
 import org.osc.core.broker.service.ListUserService;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.request.ListUserRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddUserWindow;
@@ -47,6 +49,8 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
 
     private static final Logger log = Logger.getLogger(UserView.class);
 
+    private final DeleteUserService deleteUserService = StaticRegistry.deleteUserService();
+
     public UserView() {
         createView("Users", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE));
     }
@@ -63,9 +67,8 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete User Window");
-            ViewUtil.addWindow(new DeleteUserWindow(this));
+            ViewUtil.addWindow(new DeleteUserWindow(this, this.deleteUserService));
         }
-
     }
 
     @Override

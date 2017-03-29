@@ -68,6 +68,7 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
         this.sslConfigTable.addContainerProperty("Valid from", Date.class, null);
         this.sslConfigTable.addContainerProperty("Valid until", Date.class, null);
         this.sslConfigTable.addContainerProperty("Algorithm type", String.class, null);
+        this.sslConfigTable.setColumnWidth("Issuer", 200);
         populateSSLConfigTable();
         this.form.addComponent(this.sslConfigTable);
     }

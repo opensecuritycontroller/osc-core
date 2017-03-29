@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.util.db;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
+import org.osc.core.broker.service.exceptions.VmidcException;
 
 /**
  * TransactionalRunner ensures that the execution of given logic is secured by transaction and DB changes will be
@@ -33,24 +34,30 @@ public class TransactionalRunner<T, S> {
 
     /** Interface that can provide and closeSession hibernate session */
     public interface SessionHandler {
-        /** Obtains hibernate session */
-        Session getSession();
+        /** Obtains hibernate session
+         * @throws VmidcException
+         * @throws InterruptedException */
+        EntityManager getEntityManager() throws InterruptedException, VmidcException;
         /** Recycles hibernate session **/
-        void closeSession(Session session);
+        void closeSession(EntityManager em);
     }
 
     /** Provides shared, opened hibernate session, doesn't close it
      *  Session is shared for all transactional runner instance executions */
     public static class SharedSessionHandler implements SessionHandler {
 
+        private EntityManager em;
+
         @Override
-        public Session getSession() {
-            SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-            return sessionFactory.getCurrentSession();
+        public EntityManager getEntityManager() throws InterruptedException, VmidcException {
+            if(this.em == null) {
+                this.em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            }
+            return this.em;
         }
 
         @Override
-        public void closeSession(Session session) {}
+        public void closeSession(EntityManager em) {}
     }
 
     /** Creates session on demand before the transaction and closes after transaction.
@@ -58,14 +65,14 @@ public class TransactionalRunner<T, S> {
     public static class ExclusiveSessionHandler implements SessionHandler {
 
         @Override
-        public Session getSession() {
-            return HibernateUtil.getSessionFactory().openSession();
+        public EntityManager getEntityManager() throws InterruptedException, VmidcException {
+            return HibernateUtil.getEntityManagerFactory().createEntityManager();
         }
 
         @Override
-        public void closeSession(Session session) {
-            if(session != null) {
-                session.close();
+        public void closeSession(EntityManager em) {
+            if(em != null) {
+                em.close();
             }
         }
     }
@@ -82,7 +89,7 @@ public class TransactionalRunner<T, S> {
          * @return the output for the action
          * @throws Exception
          */
-        T run(Session session, S param) throws Exception;
+        T run(EntityManager em, S param) throws Exception;
     }
 
     /**
@@ -96,7 +103,7 @@ public class TransactionalRunner<T, S> {
          * @param session
          *            DB session
          */
-        void afterCommit(Session session);
+        void afterCommit(EntityManager em);
 
         /**
          * handles the logic just after rollback
@@ -104,7 +111,7 @@ public class TransactionalRunner<T, S> {
          * @param session
          *            DB session
          */
-        void afterRollback(Session session);
+        void afterRollback(EntityManager em);
     }
 
     /** Allows to inject custom error handing */
@@ -119,10 +126,10 @@ public class TransactionalRunner<T, S> {
     /** Empty listener */
     private TransactionalListener transactionalListener = new TransactionalListener() {
         @Override
-        public void afterCommit(Session session) { }
+        public void afterCommit(EntityManager em) { }
 
         @Override
-        public void afterRollback(Session session) { }
+        public void afterRollback(EntityManager em) { }
     };
 
     /** Empty error handler */
@@ -172,32 +179,33 @@ public class TransactionalRunner<T, S> {
      */
     public T exec(TransactionalAction<T, S> logic, S param) {
 
-        Session session = null;
-        Transaction transaction = null;
+        EntityManager em = null;
+        EntityTransaction transaction = null;
         T output = null;
 
         try {
-            session = this.sessionHandler.getSession();
+            em = this.sessionHandler.getEntityManager();
 
-            transaction = session.beginTransaction();
+            transaction = em.getTransaction();
+            transaction.begin();
 
             // call some abstract action on input and produce output
-            output = logic.run(session, param);
+            output = logic.run(em, param);
 
             transaction.commit();
-            this.transactionalListener.afterCommit(session);
+            this.transactionalListener.afterCommit(em);
         } catch (Exception e) {
 
             this.log.error("Fail to execute transaction logic.", e);
             if (transaction != null) {
                 transaction.rollback();
-                this.transactionalListener.afterRollback(session);
+                this.transactionalListener.afterRollback(em);
             }
 
             this.errorHandler.handleError(e);
 
         } finally {
-            this.sessionHandler.closeSession(session);
+            this.sessionHandler.closeSession(em);
         }
 
         return output;

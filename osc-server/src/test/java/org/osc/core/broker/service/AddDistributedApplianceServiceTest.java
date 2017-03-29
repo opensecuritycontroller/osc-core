@@ -19,7 +19,11 @@ package org.osc.core.broker.service;
 import java.text.MessageFormat;
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.TypedQuery;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -35,7 +39,6 @@ import org.mockito.internal.util.collections.Sets;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
@@ -46,34 +49,37 @@ import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
-import org.osc.core.broker.util.SessionStub;
+import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.db.HibernateUtil;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(ConformService.class)
+@PrepareForTest({HibernateUtil.class})
 public class AddDistributedApplianceServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @Mock
-    private Session sessionMock;
+    private EntityManager em;
 
     @Mock
     private DistributedApplianceDtoValidator validatorMock;
+
+    @Mock
+    private ConformService conformServiceMock;
 
     @InjectMocks
     private AddDistributedApplianceService service;
 
     private BaseRequest<DistributedApplianceDto> request;
+    private Appliance app;
+    private ApplianceManagerConnector amc;
+    private ApplianceSoftwareVersion asv;
     private DistributedApplianceDto daDto;
-    private DistributedAppliance da;
     private VirtualSystemDto vsDto;
-    private VirtualSystem vs;
     private VirtualizationConnector vc;
     private Domain domain;
-    private SessionStub sessionStub;
 
     private String invalidDaName = "invalidDaName";
 
@@ -81,61 +87,81 @@ public class AddDistributedApplianceServiceTest {
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
+        EntityManagerFactory entityManagerFactory = InMemDB.getEntityManagerFactory();
+
+        PowerMockito.mockStatic(HibernateUtil.class);
+        Mockito.when(HibernateUtil.getEntityManagerFactory()).thenReturn(entityManagerFactory);
+
+        this.em = entityManagerFactory.createEntityManager();
+
+        populateDatabase();
+
         this.request = new BaseRequest<DistributedApplianceDto>();
         this.daDto = new DistributedApplianceDto();
         this.daDto.setName("daName");
         this.request.setDto(this.daDto);
 
-        this.daDto.setApplianceId(1L);
-        this.daDto.setApplianceSoftwareVersionName("softwareVersion");
-        this.daDto.setMcId(2L);
-
-        this.domain = new Domain();
-        this.domain.setId(3L);
-        this.domain.setName("domainName");
+        this.daDto.setApplianceId(this.app.getId());
+        this.daDto.setApplianceSoftwareVersionName(this.asv.getApplianceSoftwareVersion());
+        this.daDto.setMcId(this.amc.getId());
 
         this.vsDto = new VirtualSystemDto();
-        this.vsDto.setId(4L);
-        this.vsDto.setVcId(5L);
+        this.vsDto.setVcId(this.vc.getId());
         this.vsDto.setDomainId(this.domain.getId());
         this.daDto.setVirtualizationSystems(Sets.newSet(this.vsDto));
-
-        this.da = new DistributedAppliance();
-        this.da.setId(this.daDto.getId());
-        this.da.setName(this.daDto.getName());
-
-        this.vs = new VirtualSystem(this.da);
-        ApplianceSoftwareVersion softwareVersion = new ApplianceSoftwareVersion();
-        softwareVersion.setApplianceSoftwareVersion(this.daDto.getApplianceSoftwareVersionName());
-        this.vs.setId(6L);
-
-        this.vc = new VirtualizationConnector();
-        this.vc.setId(7L);
-        this.vc.setVirtualizationType(VirtualizationType.VMWARE);
-        this.vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
-
-        this.vs.setApplianceSoftwareVersion(softwareVersion);
-        this.vs.setDomain(this.domain);
-        this.vs.setVirtualizationConnector(this.vc);
-
-        this.sessionStub = new SessionStub(this.sessionMock);
-
-        Mockito.when(this.sessionMock.get(Appliance.class, this.daDto.getApplianceId())).thenReturn(new Appliance());
-        Mockito.when(this.sessionMock.get(VirtualizationConnector.class, this.vsDto.getVcId())).thenReturn(this.vc);
-        Mockito.when(this.sessionMock.get(Domain.class, this.vsDto.getDomainId())).thenReturn(this.domain);
 
         Mockito.doThrow(VmidcBrokerInvalidEntryException.class).when(this.validatorMock)
         .validateForCreate(Mockito.argThat(new DistributedApplianceDtoMatcher(this.invalidDaName)));
 
-        this.sessionStub.stubIsExistingEntity(DistributedAppliance.class, "name", this.daDto.getName(), false);
+    }
 
-        Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, this.daDto.getMcId())).thenReturn(new ApplianceManagerConnector());
+    @After
+    public void testTearDown() {
+        InMemDB.shutdown();
+    }
 
-        this.sessionStub.stubFindApplianceSoftwareVersion(this.daDto.getApplianceId(),
-                this.daDto.getApplianceSoftwareVersionName(),
-                this.vc.getVirtualizationType(),
-                this.vc.getVirtualizationSoftwareVersion(),
-                softwareVersion);
+    private void populateDatabase() {
+       this.em.getTransaction().begin();
+
+       this.app = new Appliance();
+       this.app.setManagerSoftwareVersion("fizz");
+       this.app.setManagerType("buzz");
+       this.app.setModel("fizzbuzz");
+
+       this.em.persist(this.app);
+
+       this.amc = new ApplianceManagerConnector();
+       this.amc.setManagerType("buzz");
+       this.amc.setIpAddress("127.0.0.1");
+       this.amc.setName("Steve");
+       this.amc.setServiceType("foobar");
+
+       this.em.persist(this.amc);
+
+       this.domain = new Domain(this.amc);
+       this.domain.setName("domainName");
+
+       this.em.persist(this.domain);
+
+       this.vc = new VirtualizationConnector();
+       this.vc.setVirtualizationType(VirtualizationType.VMWARE);
+       this.vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+       this.vc.setName("vcName");
+       this.vc.setProviderIpAddress("127.0.0.1");
+       this.vc.setProviderUsername("Natasha");
+       this.vc.setProviderPassword("********");
+
+       this.em.persist(this.vc);
+
+       this.asv = new ApplianceSoftwareVersion(this.app);
+       this.asv.setApplianceSoftwareVersion("softwareVersion");
+       this.asv.setImageUrl("bar");
+       this.asv.setVirtualizarionSoftwareVersion(this.vc.getVirtualizationSoftwareVersion());
+       this.asv.setVirtualizationType(this.vc.getVirtualizationType());
+
+       this.em.persist(this.asv);
+
+       this.em.getTransaction().commit();
     }
 
     @Test
@@ -164,12 +190,8 @@ public class AddDistributedApplianceServiceTest {
     public void testDispatch_AddingNewAppliance_ExpectsValidResponse() throws Exception {
         // Arrange.
         Long jobId = new Long(1234L);
-        Long daId = new Long(145L);
 
-        this.sessionStub.stubSaveEntity(new VirtualSystemMatcher(this.vs), 123L);
-        this.sessionStub.stubSaveEntity(new DistributedApplianceMatcher(this.da), daId);
-        PowerMockito.mockStatic(ConformService.class);
-        Mockito.when(ConformService.startDAConformJob(Mockito.any(Session.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.da)))).thenReturn(jobId);
+        Mockito.when(this.conformServiceMock.startDAConformJob(Mockito.any(EntityManager.class), (DistributedAppliance)Mockito.argThat(new DistributedApplianceMatcher(this.daDto.getName())))).thenReturn(jobId);
 
         // Act.
         AddDistributedApplianceResponse response = this.service.dispatch(this.request);
@@ -180,11 +202,15 @@ public class AddDistributedApplianceServiceTest {
         Assert.assertNotNull("The secret key should not be null when the request is not "
                 + "orginated from the REST API.", response.getSecretKey());
         Assert.assertEquals("The job id was different than expected.", jobId, response.getJobId());
-        Assert.assertEquals("The response id was different than expected.", daId, response.getId());
+        Assert.assertEquals("The response id was different than expected.",
+                this.em.createQuery("Select da.id from DistributedAppliance da where da.name = 'daName'").getSingleResult(),
+                response.getId());
         Assert.assertEquals("The response name was different than expected.", this.daDto.getName(), response.getName());
         Assert.assertEquals("The count of virtualization systems was different than expected.", this.daDto.getVirtualizationSystems().size(), response.getVirtualizationSystems().size());
         for (VirtualSystemDto vs: this.daDto.getVirtualizationSystems()) {
-            vs.setId(123L);
+            TypedQuery<Long> query = this.em.createQuery("Select vs.id from VirtualSystem vs where vs.distributedAppliance.id = ?", Long.class);
+            query.setParameter(0, response.getId());
+            vs.setId(query.getSingleResult());
             Assert.assertTrue(MessageFormat.format("The expected vs with id {0} was not found.", vs.getId()),
                     contains(response.getVirtualizationSystems(), vs));
         }
@@ -197,35 +223,13 @@ public class AddDistributedApplianceServiceTest {
 
         for (VirtualSystemDto vsDto : vsDtos) {
             if (vsDto.getId() == expectedVsDto.getId() &&
-                    vsDto.getDomainId() == this.vs.getDomain().getId() &&
-                    vsDto.getVcId() == this.vs.getVirtualizationConnector().getId()) {
+                    vsDto.getDomainId() == this.domain.getId() &&
+                    vsDto.getVcId() == this.vc.getId()) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    private class VirtualSystemMatcher extends ArgumentMatcher<Object> {
-        private VirtualSystem vs;
-
-        VirtualSystemMatcher(VirtualSystem vs) {
-            this.vs = vs;
-        }
-
-        @Override
-        public boolean matches(Object object) {
-            if (object == null || !(object instanceof VirtualSystem)) {
-                return false;
-            }
-
-            VirtualSystem providedVs = (VirtualSystem) object;
-
-            // Matching by the virtual system id or the appliance id since for mocked session.save calls
-            // the vs id is not provided as part of the input.
-            return this.vs.getId() == providedVs.getId() ||
-                    this.vs.getDistributedAppliance().getId() == this.vs.getDistributedAppliance().getId();
-        }
     }
 
     private class DistributedApplianceDtoMatcher extends ArgumentMatcher<DistributedApplianceDto> {
@@ -245,10 +249,10 @@ public class AddDistributedApplianceServiceTest {
     }
 
     private class DistributedApplianceMatcher extends ArgumentMatcher<Object> {
-        private DistributedAppliance da;
+        private String daName;
 
-        public DistributedApplianceMatcher(DistributedAppliance da) {
-            this.da = da;
+        public DistributedApplianceMatcher(String daName) {
+            this.daName = daName;
         }
 
         @Override
@@ -257,7 +261,7 @@ public class AddDistributedApplianceServiceTest {
                 return false;
             }
             DistributedAppliance da = (DistributedAppliance)object;
-            return this.da.getId() == da.getId() || this.da.getName().equals(da.getName());
+            return this.daName.equals(da.getName());
         }
     }
 }

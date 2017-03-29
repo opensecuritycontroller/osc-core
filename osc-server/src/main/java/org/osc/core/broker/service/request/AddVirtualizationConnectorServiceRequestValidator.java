@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -26,7 +27,7 @@ import org.osc.core.broker.util.VirtualizationConnectorUtil;
 
 public class AddVirtualizationConnectorServiceRequestValidator
 		implements RequestValidator<DryRunRequest<VirtualizationConnectorDto>, VirtualizationConnector> {
-	private Session session;
+	private EntityManager em;
 	private static final Logger LOG = Logger.getLogger(AddVirtualizationConnectorServiceRequestValidator.class);
 
 	private DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> dtoValidator;
@@ -37,29 +38,29 @@ public class AddVirtualizationConnectorServiceRequestValidator
 		this.virtualizationConnectorUtil = virtualizationConnectorUtil;
 	}
 
-	public AddVirtualizationConnectorServiceRequestValidator(Session session) {
-		this.session = session;
+	public AddVirtualizationConnectorServiceRequestValidator(EntityManager em) {
+		this.em = em;
 	}
 
 	@Override
 	public void validate(DryRunRequest<VirtualizationConnectorDto> request) throws Exception {
 
 		if (this.dtoValidator == null) {
-			this.dtoValidator = new VirtualizationConnectorDtoValidator(session);
+			this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em);
 		}
 
 		VirtualizationConnectorDto dto = request.getDto();
-		dtoValidator.validateForCreate(dto);
+		this.dtoValidator.validateForCreate(dto);
 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(dto);
 
-		if (virtualizationConnectorUtil == null) {
-			virtualizationConnectorUtil = new VirtualizationConnectorUtil();
+		if (this.virtualizationConnectorUtil == null) {
+			this.virtualizationConnectorUtil = new VirtualizationConnectorUtil();
 		}
 		if (dto.getType().isVmware()) {
-			virtualizationConnectorUtil.checkVmwareConnection(request, vc);
+			this.virtualizationConnectorUtil.checkVmwareConnection(request, vc);
 		} else {
-			virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
+			this.virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
 		}
 	}
 

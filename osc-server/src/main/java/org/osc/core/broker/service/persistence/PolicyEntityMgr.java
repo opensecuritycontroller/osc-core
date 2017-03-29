@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.service.policy.PolicyDto;
 
@@ -30,11 +31,11 @@ public class PolicyEntityMgr {
         dto.setMgrDomainName(entity.getDomain().getName());
     }
 
-    public static Policy findById(Session session, Long id) {
+    public static Policy findById(EntityManager em, Long id) {
 
         // Initializing Entity Manager
-        EntityManager<Policy> emgr = new EntityManager<Policy>(
-                Policy.class, session);
+        OSCEntityManager<Policy> emgr = new OSCEntityManager<Policy>(
+                Policy.class, em);
 
         return emgr.findByPrimaryKey(id);
     }

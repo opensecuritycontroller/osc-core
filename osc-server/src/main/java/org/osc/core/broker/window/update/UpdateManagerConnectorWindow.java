@@ -32,6 +32,7 @@ import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.ManagerConnectorView;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -75,6 +76,8 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
     private BeanItem<ApplianceManagerConnectorDto> currentMCObject = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
+
+    private UpdateApplianceManagerConnectorService updateMCService = StaticRegistry.updateApplianceManagerConnectorService();
 
     public UpdateManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
         this.mcView = mcView;
@@ -204,11 +207,9 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
         updateRequest.addErrorsToIgnore(this.errorTypesToIgnore);
 
-        UpdateApplianceManagerConnectorService updateService = new UpdateApplianceManagerConnectorService();
-
         log.debug("Updating manager connector - " + this.name.getValue().trim());
         // no response needed for update request
-        BaseJobResponse response = updateService.dispatch(updateRequest);
+        BaseJobResponse response = this.updateMCService.dispatch(updateRequest);
 
         // updating bean in the table container
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "name")

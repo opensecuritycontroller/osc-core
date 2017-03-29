@@ -18,11 +18,12 @@ package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
 import java.util.Set;
 
-import org.hibernate.Session;
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.element.ServiceProfileElement;
 
@@ -37,8 +38,8 @@ public class CreateSecurityGroupInterfaceTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.vsp = (VirtualSystemPolicy) session.get(VirtualSystemPolicy.class, this.vsp.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.vsp = em.find(VirtualSystemPolicy.class, this.vsp.getId());
 
         SecurityGroupInterface securityGroupInterface = new SecurityGroupInterface(this.vsp,
                 this.serviceProfile.getId());
@@ -47,7 +48,7 @@ public class CreateSecurityGroupInterfaceTask extends TransactionalTask {
         securityGroupInterface.setTag(this.serviceProfile.getId());
         securityGroupInterface.setNsxVsmUuid(this.serviceProfile.getVsmId());
 
-        EntityManager.create(session, securityGroupInterface);
+        OSCEntityManager.create(em, securityGroupInterface);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class UnTagVmServiceTest extends BaseTagVmServiceTest {
         this.exception.expectMessage("Invalid VM Uuid.");
 
         // Act.
-        this.unTagVmService.exec(REQUEST_WITH_TAG, this.session);
+        this.unTagVmService.exec(REQUEST_WITH_TAG, this.em);
     }
 
     @Test
@@ -43,13 +43,13 @@ public class UnTagVmServiceTest extends BaseTagVmServiceTest {
         this.exception.expectMessage("VM with Uuid '" + INVALID_VM_UUID + "' not found.");
 
         // Act.
-        this.unTagVmService.exec(REQUEST_WITH_TAG_INVALID_VM_UUID, this.session);
+        this.unTagVmService.exec(REQUEST_WITH_TAG_INVALID_VM_UUID, this.em);
     }
 
     @Test
     public void testExec_WithValidRequest_ExpectsSuccess() throws Exception {
         // Act.
-        this.unTagVmService.exec(REQUEST_WITH_TAG_AND_VM_UUID, this.session);
+        this.unTagVmService.exec(REQUEST_WITH_TAG_AND_VM_UUID, this.em);
 
         // Assert.
         Mockito.verify(this.securityTagApi, Mockito.times(1)).removeSecurityTagFromVM(REQUEST_WITH_TAG_AND_VM_UUID.getVmUuid(), BaseTagVmService.DEFAULT_OSC_SECURITY_TAG);

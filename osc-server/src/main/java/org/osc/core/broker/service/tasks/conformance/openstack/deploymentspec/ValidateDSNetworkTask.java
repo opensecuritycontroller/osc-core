@@ -18,14 +18,15 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.jclouds.openstack.neutron.v2.domain.Network;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 /**
@@ -62,8 +63,8 @@ class ValidateDSNetworkTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        EntityManager<DeploymentSpec> dsEmgr = new EntityManager<DeploymentSpec>(DeploymentSpec.class, session);
+    public void executeTransaction(EntityManager em) throws Exception {
+        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
         this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
 
         if (!this.ds.getMarkedForDeletion()) {
@@ -83,7 +84,7 @@ class ValidateDSNetworkTask extends TransactionalTask {
                     this.log.info("DS " + this.networkType + " network " + networkName
                             + " Deleted from openstack. Marking DS for deletion.");
                     // network was deleted, mark ds for deleting as well
-                    EntityManager.markDeleted(session, this.ds);
+                    OSCEntityManager.markDeleted(em, this.ds);
                 } else {
                     // Sync the network name if needed
                     if (!neutronNetwork.getName().equals(networkName)) {
@@ -94,7 +95,7 @@ class ValidateDSNetworkTask extends TransactionalTask {
                         } else {
                             this.ds.setInspectionNetworkName(neutronNetwork.getName());
                         }
-                        EntityManager.update(session, this.ds);
+                        OSCEntityManager.update(em, this.ds);
                     }
                 }
             } finally {

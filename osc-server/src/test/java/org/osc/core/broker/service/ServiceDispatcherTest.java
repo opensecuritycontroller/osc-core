@@ -16,9 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -27,17 +27,14 @@ import org.osc.core.broker.service.response.Response;
 
 public class ServiceDispatcherTest {
 
-    private SessionFactory mockedSessionFactory;
-    private Session mockedSession;
-    private Transaction mockedTransaction;
+    private EntityManager mockEM;
+    private EntityTransaction mockedTransaction;
 
     @Before
     public void setUp() {
-        this.mockedSessionFactory = Mockito.mock(SessionFactory.class);
-        this.mockedSession = Mockito.mock(Session.class);
-        this.mockedTransaction = Mockito.mock(Transaction.class);
-        Mockito.when(this.mockedSessionFactory.openSession()).thenReturn(this.mockedSession);
-        Mockito.when(this.mockedSession.beginTransaction()).thenReturn(this.mockedTransaction);
+        this.mockEM = Mockito.mock(EntityManager.class);
+        this.mockedTransaction = Mockito.mock(EntityTransaction.class);
+        Mockito.when(this.mockEM.getTransaction()).thenReturn(this.mockedTransaction);
     }
 
     @Test
@@ -45,13 +42,13 @@ public class ServiceDispatcherTest {
         ServiceDispatcher<?, ?> mockServiceDispatcher = new ServiceDispatcher<Request, Response>() {
 
             @Override
-            public Response exec(Request request, Session session) throws Exception {
+            public Response exec(Request request, EntityManager em) throws Exception {
                 return null;
             }
 
             @Override
-            protected SessionFactory getSessionFactory() {
-                return ServiceDispatcherTest.this.mockedSessionFactory;
+            protected EntityManager getEntityManager() {
+                return ServiceDispatcherTest.this.mockEM;
             }
 
         };
@@ -64,12 +61,12 @@ public class ServiceDispatcherTest {
         ServiceDispatcher<?, ?> mockServiceDispatcher = new ServiceDispatcher<Request, Response>() {
 
             @Override
-            protected SessionFactory getSessionFactory() {
-                return ServiceDispatcherTest.this.mockedSessionFactory;
+            protected EntityManager getEntityManager() {
+                return ServiceDispatcherTest.this.mockEM;
             }
 
             @Override
-            public Response exec(Request request, Session session) throws Exception {
+            public Response exec(Request request, EntityManager em) throws Exception {
                 throw new Exception("");
             }
 

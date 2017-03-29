@@ -18,8 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
-import org.hibernate.Session;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -28,7 +29,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudUtil;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
-import org.osc.core.broker.service.persistence.EntityManager;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
 class OsSvaDeleteFloatingIpTask extends TransactionalTask {
@@ -42,8 +43,8 @@ class OsSvaDeleteFloatingIpTask extends TransactionalTask {
     }
 
     @Override
-    public void executeTransaction(Session session) throws Exception {
-        this.dai = DistributedApplianceInstanceEntityMgr.findById(session, this.dai.getId());
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
         if (this.dai.getIpAddress() == null || this.dai.getFloatingIpId() == null) {
             return;
         }
@@ -59,7 +60,7 @@ class OsSvaDeleteFloatingIpTask extends TransactionalTask {
             this.dai.setIpAddress(null);
             this.dai.setFloatingIpId(null);
 
-            EntityManager.update(session, this.dai);
+            OSCEntityManager.update(em, this.dai);
 
         } finally {
             nova.close();
