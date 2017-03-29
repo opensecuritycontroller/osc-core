@@ -30,13 +30,11 @@ import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 
 class VmPortHookRemoveTask extends TransactionalTask {
-
     private final Logger log = Logger.getLogger(VmPortHookRemoveTask.class);
 
     private SecurityGroupMember sgm;
@@ -77,20 +75,16 @@ class VmPortHookRemoveTask extends TransactionalTask {
                                 this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName));
             }
 
-            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);) {
-                DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
-                        this.dai.getInspectionIngressMacAddress());
-                DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
-                        this.dai.getInspectionEgressMacAddress());
-                if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
-                    String portGroupId = this.sgm.getSecurityGroup().getNetworkElementId();
-                    PortGroup portGroup = new PortGroup();
-                    portGroup.setPortGroupId(portGroupId);
-                    controller.removeInspectionHook(portGroup, new DefaultInspectionPort(ingressPort, egressPort));
-                } else {
+            if (!SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup())) {
+                try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);) {
+                    DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
+                            this.dai.getInspectionIngressMacAddress());
+                    DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
+                            this.dai.getInspectionEgressMacAddress());
                     controller.removeInspectionHook(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort));
                 }
             }
+
             this.vmPort.removeDai(this.dai);
             OSCEntityManager.update(em, this.vmPort);
         }
@@ -114,5 +108,4 @@ class VmPortHookRemoveTask extends TransactionalTask {
         throw new IllegalStateException(
                 "Vm Hook Remove needs to specify either the network or vm on behalf of which its running");
     }
-
 }

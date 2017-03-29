@@ -58,7 +58,7 @@ public class SecurityGroupInterface extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "virtual_system_fk", nullable = false,
-            foreignKey = @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM"))
+    foreignKey = @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM"))
     private VirtualSystem virtualSystem;
 
     /**
@@ -69,7 +69,7 @@ public class SecurityGroupInterface extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "virtual_system_policy_fk",
-            foreignKey = @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM_POLIC"))
+    foreignKey = @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM_POLIC"))
     private VirtualSystemPolicy virtualSystemPolicy;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -102,6 +102,9 @@ public class SecurityGroupInterface extends BaseEntity {
 
     @Column(name = "chain_order", columnDefinition = "bigint default 0", nullable = false)
     private Long order = 0L;
+
+    @Column(name = "network_elem_id")
+    private String networkElementId;
 
     public SecurityGroupInterface(VirtualSystemPolicy virtualSystemPolicy, String tag) {
         super();
@@ -243,5 +246,13 @@ public class SecurityGroupInterface extends BaseEntity {
 
     public void setOrder(long order) {
         this.order = order;
+    }
+
+    public String getNetworkElementId() {
+        return this.networkElementId;
+    }
+
+    public void setNetworkElementId(String networkElemId) {
+        this.networkElementId = networkElemId;
     }
 }

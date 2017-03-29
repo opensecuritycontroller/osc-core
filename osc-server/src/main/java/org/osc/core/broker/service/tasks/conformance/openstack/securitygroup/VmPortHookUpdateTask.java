@@ -62,8 +62,10 @@ class VmPortHookUpdateTask extends TransactionalTask {
                     this.dai.getInspectionIngressMacAddress());
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
-
-            controller.updateInspectionHook(new NetworkElementImpl(this.vmPort),
+            // TODO emanoel: The inspection hook id is only used for SDN controllers
+            // supporting port group. However we should save the inspection hook id for
+            // the other cases as well and provide it here.
+            controller.updateInspectionHook(null, new NetworkElementImpl(this.vmPort),
                     new DefaultInspectionPort(ingressPort, egressPort),
                     this.securityGroupInterface.getTagValue(),
                     TagEncapsulationType.valueOf(this.securityGroupInterface.getVirtualSystem().getEncapsulationType().name()),
