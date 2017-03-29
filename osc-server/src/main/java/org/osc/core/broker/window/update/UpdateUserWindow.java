@@ -53,9 +53,11 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private ComboBox role = null;
 
     private BeanItem<UserDto> currentUser = null;
+    private final UpdateUserService updateUserService;
 
-    public UpdateUserWindow(UserView userView) throws Exception {
+    public UpdateUserWindow(UserView userView, UpdateUserService updateUserService) throws Exception {
         this.currentUser = userView.getParentItem();
+        this.updateUserService = updateUserService;
         createWindow(this.CAPTION);
     }
 
@@ -142,10 +144,9 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 updateRequest.setPassword(this.password.getValue());
                 updateRequest.setRole(RoleType.valueOf(this.role.getValue().toString()));
 
-                UpdateUserService updateService = new UpdateUserService();
                 log.info("Updating user - " + this.loginName.getValue());
 
-                UpdateUserResponse res = updateService.dispatch(updateRequest);
+                UpdateUserResponse res = this.updateUserService.dispatch(updateRequest);
                 if (res.getJobId() != null) {
                     ViewUtil.showJobNotification(res.getJobId());
                 }

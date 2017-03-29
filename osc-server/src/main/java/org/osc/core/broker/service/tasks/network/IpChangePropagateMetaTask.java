@@ -39,14 +39,20 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = IpChangePropagateMetaTask.class)
 public class IpChangePropagateMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(IpChangePropagateMetaTask.class);
 
     private TaskGraph tg;
+
+    @Reference
+    private UpdateNsxServiceManagerTask updateNsxServiceManagerTask;
 
     public IpChangePropagateMetaTask() {
         this.name = getName();
@@ -76,7 +82,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
 
                 if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
                     // Updating Service Manager callback URL
-                    propagateTaskGraph.addTask(new UpdateNsxServiceManagerTask(vs),
+                    propagateTaskGraph.addTask(this.updateNsxServiceManagerTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating Service Attribute which include vmiDC server IP
                     propagateTaskGraph.addTask(new UpdateNsxServiceAttributesTask(vs),

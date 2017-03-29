@@ -26,11 +26,23 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = DAConformanceCheckMetaTask.class)
 public class DAConformanceCheckMetaTask extends TransactionalMetaTask {
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
+
+    @Reference
+    private ValidateNsxTask validateNsxTask;
 
     private DistributedAppliance da;
     private TaskGraph tg;
@@ -39,9 +51,14 @@ public class DAConformanceCheckMetaTask extends TransactionalMetaTask {
      * Kicks off DA conformance. Assumes the appropriate locks have been acquired already.
      * @param da
      */
-    public DAConformanceCheckMetaTask(DistributedAppliance da) {
-        this.da = da;
-        this.name = getName();
+    public DAConformanceCheckMetaTask create(DistributedAppliance da) {
+        DAConformanceCheckMetaTask task = new DAConformanceCheckMetaTask();
+        task.da = da;
+        task.apiFactoryService = this.apiFactoryService;
+        task.vsConformanceCheckMetaTask = this.vsConformanceCheckMetaTask;
+        task.validateNsxTask = this.validateNsxTask;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -53,12 +70,12 @@ public class DAConformanceCheckMetaTask extends TransactionalMetaTask {
         for (VirtualSystem vs : this.da.getVirtualSystems()) {
             TaskGraph vsTaskGraph = new TaskGraph();
             if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-                vsTaskGraph.addTask(new ValidateNsxTask(vs));
+                vsTaskGraph.addTask(this.validateNsxTask.create(vs));
             }
             if (vs.getMarkedForDeletion()) {
-                vsTaskGraph.appendTask(new VSConformanceCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                vsTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             } else {
-                vsTaskGraph.appendTask(new VSConformanceCheckMetaTask(vs));
+                vsTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(vs));
             }
             this.tg.addTaskGraph(vsTaskGraph);
         }

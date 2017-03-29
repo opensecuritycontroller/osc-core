@@ -37,10 +37,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ApplianceManagerConnectorElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.broker.model.plugin.manager.VirtualSystemElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
@@ -52,6 +54,8 @@ import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.ManagerAuthenticationType;
 import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
+import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osgi.framework.BundleContext;
@@ -164,6 +168,14 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
 
     void removeVMwareSdnApi(ComponentServiceObjects<VMwareSdnApi> serviceObjs) {
         removeApi(serviceObjs, this.vmwareSdnRefs, this.vmwareSdnApis);
+    }
+
+    @Override
+    public String generateServiceManagerName(VirtualSystem vs) throws Exception {
+        return "OSC "
+                + getVendorName(ManagerType
+                        .fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()))
+                + " " + vs.getDistributedAppliance().getName();
     }
 
     // Manager Types ///////////////////////////////////////////////////////////////////////////////////////////
@@ -279,6 +291,25 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         // with some TTL and/or some refreshing mechanism not just for this scenario but potentially also others.
         decryptedMc.setClientIpAddress(ServerUtil.getServerIP());
         return new ApplianceManagerConnectorElementImpl(decryptedMc);
+    }
+
+    @Override
+    public ManagerWebSocketNotificationApi createManagerWebSocketNotificationApi(ApplianceManagerConnector mc)
+            throws Exception {
+        return createApplianceManagerApi(mc.getManagerType())
+                .createManagerWebSocketNotificationApi(getApplianceManagerConnectorElement(mc));
+    }
+
+    @Override
+    public void checkConnection(ApplianceManagerConnector mc) throws Exception {
+        createApplianceManagerApi(mc.getManagerType()).checkConnection(getApplianceManagerConnectorElement(mc));
+    }
+
+    @Override
+    public ManagerDeviceMemberApi createManagerDeviceMemberApi(ApplianceManagerConnector mc, VirtualSystem vs)
+            throws Exception {
+        return createApplianceManagerApi(mc.getManagerType()).createManagerDeviceMemberApi(
+                getApplianceManagerConnectorElement(mc), new VirtualSystemElementImpl(vs));
     }
 
     // Controller Types ///////////////////////////////////////////////////////////////////////////////////////////
