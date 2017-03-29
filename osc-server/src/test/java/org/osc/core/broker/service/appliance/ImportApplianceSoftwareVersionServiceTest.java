@@ -21,11 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.spy;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.powermock.api.mockito.PowerMockito.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +64,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest( {ServerUtil.class, FileUtils.class, FileUtil.class, HibernateUtil.class, ManagerApiFactory.class})
+@PrepareForTest({ServerUtil.class, FileUtils.class, FileUtil.class, HibernateUtil.class, ManagerApiFactory.class})
 public class ImportApplianceSoftwareVersionServiceTest {
 
     private static final Long APPLIANCE_ID = 123L;

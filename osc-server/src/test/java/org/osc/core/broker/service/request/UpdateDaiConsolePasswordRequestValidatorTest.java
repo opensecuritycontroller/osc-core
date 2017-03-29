@@ -55,9 +55,9 @@ public class UpdateDaiConsolePasswordRequestValidatorTest {
 
     private static final Long INVALID_VS_ID = 47L;
 
-    private static final String VALID_VS_NAME = "vsName" ;
-    private static final String OTHER_VS_NAME = "otherVsName" ;
-    private static final String VS_NO_DAI_NAME = "vsNoDAIName" ;
+    private static final String VALID_VS_NAME = "vsName";
+    private static final String OTHER_VS_NAME = "otherVsName";
+    private static final String VS_NO_DAI_NAME = "vsNoDAIName";
     private static final String NON_EXISTENT_VS_NAME = "nonExistentName_" + INVALID_VS_ID;
     private static final String INVALID_VS_NAME = "invalidName";
 
