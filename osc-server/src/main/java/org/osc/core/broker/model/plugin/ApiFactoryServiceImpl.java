@@ -16,18 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
-import static org.osc.sdk.manager.Constants.AUTHENTICATION_TYPE;
-import static org.osc.sdk.manager.Constants.EXTERNAL_SERVICE_NAME;
-import static org.osc.sdk.manager.Constants.NOTIFICATION_TYPE;
-import static org.osc.sdk.manager.Constants.PROVIDE_DEVICE_STATUS;
-import static org.osc.sdk.manager.Constants.SERVICE_NAME;
-import static org.osc.sdk.manager.Constants.SYNC_POLICY_MAPPING;
-import static org.osc.sdk.manager.Constants.SYNC_SECURITY_GROUP;
-import static org.osc.sdk.manager.Constants.VENDOR_NAME;
+import static org.osc.sdk.manager.Constants.*;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +67,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
     private Map<String, ComponentServiceObjects<ApplianceManagerApi>> managerRefs = new ConcurrentHashMap<>();
     private Map<String, VMwareSdnApi> vmwareSdnApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<VMwareSdnApi>> vmwareSdnRefs = new ConcurrentHashMap<>();
+    private Map<String, SdnControllerApi> sdnControllerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<SdnControllerApi>> sdnControllerRefs = new ConcurrentHashMap<>();
 
     private List<PluginTracker<?>> pluginTrackers = new LinkedList<>();
@@ -334,17 +325,17 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
     @Override
     public SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception {
         final String name = controllerType.getValue();
-        ComponentServiceObjects<SdnControllerApi> serviceObjs = this.sdnControllerRefs.get(name);
-        if (serviceObjs == null) {
-            throw new VmidcException(String.format("Sdn plugin not found for controller type: %s", name));
+        SdnControllerApi api = this.sdnControllerApis.get(name);
+
+        if (api == null) {
+            ComponentServiceObjects<SdnControllerApi> serviceObjs = this.sdnControllerRefs.get(name);
+            if (serviceObjs == null) {
+                throw new VmidcException(String.format("Sdn plugin not found for controller type: %s", name));
+            }
+            api = serviceObjs.getService();
+            this.sdnControllerApis.put(name, api);
         }
-        /*
-         * The SdnControllerApi is a prototype service: @Component(scope=ServiceScope.PROTOTYPE).
-         * This means that serviceObjs.getService() will return a new service instance
-         * on each call. We need to arrange for serviceObjs.ungetService() to be called.
-         * This is done by the autoCloseProxy.
-         */
-        return autoCloseProxy(serviceObjs, SdnControllerApi.class);
+        return api;
     }
 
     @Override
@@ -354,31 +345,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
             throw new VmidcException("Unsupported Controller type '" + name + "'");
         }
         return this.sdnControllerRefs.get(name).getServiceReference().getProperty(propertyName);
-    }
-
-    /**
-     * Create a proxy for an <code>AutoCloseable</code> prototype service, that automatically calls
-     * {@code ServiceObjects#ungetService(Object)} when {@code AutoCloseable#close()} is called.
-     *
-     * @param serviceObjs
-     * @param type
-     * @return
-     */
-    private <T extends AutoCloseable> T autoCloseProxy(ComponentServiceObjects<T> serviceObjs, Class<T> type) {
-        T service = serviceObjs.getService();
-
-        @SuppressWarnings("unchecked")
-        T proxy = (T) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { type },
-                new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        if (method.getName().equals("close") && method.getParameterTypes().length == 0) {
-                            serviceObjs.ungetService(service);
-                        }
-                        return method.invoke(service, args);
-                    }
-                });
-        return proxy;
     }
 
     @Override
