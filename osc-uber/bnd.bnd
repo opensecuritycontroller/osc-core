@@ -78,6 +78,8 @@ Require-Capability: \
     @${security-mgr-api.dep},\
     @${sdn-controller-api.dep},\
     @${vmware-nsx-api.dep},\
+    @${esapi.dep},\
+    @${antisamy.dep},\
     @${osc-common.dep},\
     @${osc-server.dep}
 
@@ -321,6 +323,17 @@ exclude-other:\
   !weblogic.jdbc.jts,\
   !weblogic.jdbc.vendor.oracle,\
   !weblogic.websocket,\
-  !weblogic.websocket.annotation
+  !weblogic.websocket.annotation,\
+  !bsh,\
+  !nu.xom,\
+  !org.apache.commons.beanutils,\
+  !org.apache.commons.collections.iterators,\
+  !org.apache.commons.configuration,\
+  !org.apache.commons.fileupload.*,\
+  !org.apache.batik.css.parser,\
+  !org.apache.commons.httpclient.*,\
+  !org.apache.xerces.*,\
+  !org.apache.xml.serialize,\
+  !org.cyberneko.html.*
 
 #end
