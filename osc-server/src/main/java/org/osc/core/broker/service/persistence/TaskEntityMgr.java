@@ -145,7 +145,7 @@ public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
         Root<TaskRecord> from = query.from(TaskRecord.class);
 
         query = query.select(from).where(
-                cb.equal(from.get("state"), COMPLETED));
+                cb.notEqual(from.get("state"), COMPLETED));
 
         return this.em.createQuery(query).getResultList();
     }
