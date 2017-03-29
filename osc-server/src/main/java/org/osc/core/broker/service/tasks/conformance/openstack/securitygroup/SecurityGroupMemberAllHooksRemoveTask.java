@@ -67,7 +67,7 @@ class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
             ports = subnet.getPorts();
         }
 
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.sgm);
+        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgm);
         try {
             for (VMPort port : ports) {
                 this.log.info("Deleting Zombie Inspection Hooks for member '" + this.sgm.getMemberName()

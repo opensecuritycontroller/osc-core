@@ -54,7 +54,7 @@ class VmPortAllHooksRemoveTask extends TransactionalTask {
 
         this.port.removeAllDais();
 
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.sgm);
+        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgm);
         try {
             controller.removeAllInspectionHooks(new NetworkElementImpl(this.port));
         } finally {

@@ -148,7 +148,7 @@ class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     }
 
     private boolean isPortRegistered() throws NetworkPortNotFoundException, Exception {
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
+        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());

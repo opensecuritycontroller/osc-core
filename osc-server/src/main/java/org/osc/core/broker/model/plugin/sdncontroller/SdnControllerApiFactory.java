@@ -69,20 +69,20 @@ public class SdnControllerApiFactory {
 
     private static BundleContext bundleContext;
 
-    public static SdnRedirectionApi createNetworkControllerApi(VirtualSystem vs) throws Exception {
-        return createNetworkControllerApi(vs.getVirtualizationConnector(), null);
+    public static SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs) throws Exception {
+        return createNetworkRedirectionApi(vs.getVirtualizationConnector(), null);
     }
 
-    public static SdnRedirectionApi createNetworkControllerApi(VirtualizationConnector vc) throws Exception {
-        return createNetworkControllerApi(vc, null);
+    public static SdnRedirectionApi createNetworkRedirectionApi(VirtualizationConnector vc) throws Exception {
+        return createNetworkRedirectionApi(vc, null);
     }
 
-    public static SdnRedirectionApi createNetworkControllerApi(DistributedApplianceInstance dai) throws Exception {
-        return createNetworkControllerApi(dai.getVirtualSystem(), dai.getDeploymentSpec().getRegion());
+    public static SdnRedirectionApi createNetworkRedirectionApi(DistributedApplianceInstance dai) throws Exception {
+        return createNetworkRedirectionApi(dai.getVirtualSystem(), dai.getDeploymentSpec().getRegion());
     }
 
-    public static SdnRedirectionApi createNetworkControllerApi(SecurityGroupMember sgm) throws Exception {
-        return createNetworkControllerApi(sgm.getSecurityGroup().getVirtualizationConnector(), getMemberRegion(sgm));
+    public static SdnRedirectionApi createNetworkRedirectionApi(SecurityGroupMember sgm) throws Exception {
+        return createNetworkRedirectionApi(sgm.getSecurityGroup().getVirtualizationConnector(), getMemberRegion(sgm));
     }
 
     private static String getMemberRegion(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
@@ -99,11 +99,11 @@ public class SdnControllerApiFactory {
         }
     }
 
-    public static SdnRedirectionApi createNetworkControllerApi(VirtualSystem vs, String region) throws Exception {
-        return createNetworkControllerApi(vs.getVirtualizationConnector(), region);
+    public static SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs, String region) throws Exception {
+        return createNetworkRedirectionApi(vs.getVirtualizationConnector(), region);
     }
 
-    private static SdnRedirectionApi createNetworkControllerApi(VirtualizationConnector vc, String region)
+    private static SdnRedirectionApi createNetworkRedirectionApi(VirtualizationConnector vc, String region)
             throws Exception {
         SdnControllerApi sca = createNetworkControllerApi(vc.getControllerType());
         return sca.createRedirectionApi(getVirtualizationConnectorElement(vc), region);

@@ -56,7 +56,7 @@ class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
         this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
 
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
+        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());

@@ -135,7 +135,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         addSGMemberSyncJob(em, isDeleteTg, vdc);
 
         if (this.sg.getVirtualizationConnector().isControllerDefined()){
-            SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(
+            SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(
                     this.sg.getVirtualizationConnector());
             if (SdnControllerApiFactory.supportsPortGroup(this.sg)){
                 this.tg.appendTask(new PortGroupCheckTask(this.sg, controller, isDeleteTg),

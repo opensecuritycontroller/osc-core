@@ -65,7 +65,7 @@ class VmPortHookCreateTask extends TransactionalTask {
 
         this.log.info(String.format("Creating Inspection Hooks for Security Group Member VM '%s' for service '%s'",
                 this.vmName, this.serviceName));
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
+        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
 
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(

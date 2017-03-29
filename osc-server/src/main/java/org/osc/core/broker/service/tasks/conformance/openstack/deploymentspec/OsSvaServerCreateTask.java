@@ -105,7 +105,7 @@ class OsSvaServerCreateTask extends TransactionalTask {
         try {
             this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
             if (vc.isControllerDefined()){
-                controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
+                controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
             }
 
             String applianceName = this.dai.getName();

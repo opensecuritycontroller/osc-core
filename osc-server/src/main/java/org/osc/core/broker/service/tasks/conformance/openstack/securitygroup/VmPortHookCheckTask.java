@@ -161,7 +161,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
             this.log.info("Checking Inspection Hook for Security group Member: " + this.sgm.getMemberName());
 
             InspectionHookElement hook;
-            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(assignedRedirectedDai)) {
+            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(assignedRedirectedDai)) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(
                         assignedRedirectedDai.getInspectionOsIngressPortId(),
                         assignedRedirectedDai.getInspectionIngressMacAddress());

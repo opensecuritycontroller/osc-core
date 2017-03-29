@@ -77,7 +77,7 @@ class VmPortHookRemoveTask extends TransactionalTask {
                                 this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName));
             }
 
-            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);) {
+            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                         this.dai.getInspectionIngressMacAddress());
                 DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
