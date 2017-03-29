@@ -179,5 +179,5 @@ def freeze_package_file(file, config, resolved_pkgs, resolved_dependencies):
 
 resolved_pkgs = set()
 resolved_dependencies = set()
-for (file, config) in [("centos-6.packages1", "repo/centos-6-updated.yum.conf"), ("centos-6.packages2", "repo/centos-6-updated.yum.conf"), ("centos-6-new.packages", "repo/centos-6-updated.yum.conf")]:
+for (file, config) in [("centos-6.packages1", "repo/centos-6-updated.yum.conf"), ("centos-6.packages2", "repo/centos-6-updated.yum.conf"), ("centos-6-new.packages", "repo/centos-6-updated.yum.conf"), ("centos-epel.packages", "repo/centos-epel.yum.conf")]:
     freeze_package_file(file, config, resolved_pkgs, resolved_dependencies)

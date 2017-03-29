@@ -33,19 +33,21 @@ class InstallableUnitImpl implements InstallableUnit {
     private final File originFile;
     private final String name;
     private final String symbolicName;
+    private final String version;
     private final String type;
     private final Collection<Artifact> artifacts;
 
     private State state;
     private String errorMessage = null;
 
-    InstallableUnitImpl(DeploymentInstaller installer, File originFile, String name, String symbolicName, String type, Collection<Artifact> artifacts) {
+    InstallableUnitImpl(DeploymentInstaller installer, File originFile, String name, String symbolicName, String version, String type, Collection<Artifact> artifacts) {
         this.installer = installer;
         this.originFile = originFile;
         this.name = name;
         this.symbolicName = symbolicName;
         this.artifacts = artifacts;
         this.type = type;
+        this.version = version;
     }
 
     @Override
@@ -111,6 +113,11 @@ class InstallableUnitImpl implements InstallableUnit {
     @Override
     public String getType() {
         return this.type;
+    }
+
+    @Override
+    public String getVersion() {
+        return this.version;
     }
 
 }

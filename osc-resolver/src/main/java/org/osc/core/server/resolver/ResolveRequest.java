@@ -32,6 +32,7 @@ public class ResolveRequest {
 
     private final String name;
     private final String symbolicName;
+    private final String version;
     private final String type;
     private final List<URI> indexes;
     private final Collection<Requirement> requirements;
@@ -45,10 +46,11 @@ public class ResolveRequest {
      * @param requirements
      *            The list of requirements to resolve.
      */
-    public ResolveRequest(String name, String symbolicName, String type, List<URI> indexes, Collection<Requirement> requirements) {
+    public ResolveRequest(String name, String symbolicName, String version, String type, List<URI> indexes, Collection<Requirement> requirements) {
         this.name = name;
         this.symbolicName = symbolicName;
         this.type = type;
+        this.version = version;
         this.indexes = new ArrayList<>(indexes);
         this.requirements = new ArrayList<>(requirements);
     }
@@ -63,6 +65,10 @@ public class ResolveRequest {
 
     public String getType() {
         return this.type;
+    }
+
+    public String getVersion() {
+        return this.version;
     }
 
     public List<URI> getIndexes() {

@@ -325,8 +325,8 @@ public class DistributedApplianceInstanceEntityMgr {
         Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
 
         query = query.select(root)
-                .where(cb.equal(root.join("virtualSystem").join("protectedPorts")
-                        .get("id"), port.getId()));
+                .where(cb.equal(root.join("virtualSystem").get("id"), vs.getId()),
+                       cb.equal(root.join("protectedPorts").get("id"), port.getId()));
 
         try {
             return em.createQuery(query).getSingleResult();
