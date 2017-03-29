@@ -29,6 +29,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Logger;
+import org.osc.core.rest.client.util.LoggingUtil;
 
 public class ArchiveUtil {
 
@@ -101,6 +102,7 @@ public class ArchiveUtil {
                     new File(name).mkdir();
                     continue;
                 }
+                log.info("Extracting " + LoggingUtil.removeCRLF(name));
                 FileOutputStream fos = new FileOutputStream(name);
                 BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER_SIZE);
                 count = zis.read(data, 0, BUFFER_SIZE);
