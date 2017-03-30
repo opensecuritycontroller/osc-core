@@ -38,6 +38,9 @@ public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSe
     @Reference
     private Server server;
 
+    @Reference
+    private SetNetworkSettingsService setNetworkSettingsService;
+
     void validate(DryRunRequest<NATSettingsDto> req) throws Exception {
         NATSettingsDto.checkForNullFields(req.getDto());
         // check for valid IP address format
@@ -56,7 +59,7 @@ public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSe
         BaseJobResponse response = new BaseJobResponse();
 
         if (!StringUtils.equals(oldServerIp, newServerIp)) {
-            response.setJobId(SetNetworkSettingsService.startIpPropagateJob());
+            response.setJobId(this.setNetworkSettingsService.startIpPropagateJob());
         }
 
         return response;

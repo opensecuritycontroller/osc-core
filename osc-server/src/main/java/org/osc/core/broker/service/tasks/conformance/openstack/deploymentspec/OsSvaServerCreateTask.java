@@ -44,7 +44,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
-import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
@@ -101,11 +101,11 @@ class OsSvaServerCreateTask extends TransactionalTask {
         VirtualizationConnector vc = vs.getVirtualizationConnector();
         Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
         JCloudNova nova = new JCloudNova(endPoint);
-        SdnControllerApi controller = null;
+        SdnRedirectionApi controller = null;
         try {
             this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
             if (vc.isControllerDefined()){
-                controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
+                controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
             }
 
             String applianceName = this.dai.getName();

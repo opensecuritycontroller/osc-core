@@ -45,6 +45,7 @@ import org.osc.core.broker.service.response.GetAgentStatusResponseDto;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -52,7 +53,6 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
-import org.osgi.service.component.annotations.Reference;
 
 @Component(service = DistributedApplianceInstanceApis.class)
 @Api(tags = "Operations for Distributed Appliance Instances", authorizations = { @Authorization(value = "Basic Auth") })
@@ -66,6 +66,9 @@ public class DistributedApplianceInstanceApis {
 
     @Reference
     private ApiUtil apiUtil;
+
+    @Reference
+    private GetAgentStatusService getAgentStatusService;
 
     @ApiOperation(value = "Lists All Distributed Appliance Instances",
             notes = "Lists all the Distributed Appliance Instances",
@@ -123,6 +126,6 @@ public class DistributedApplianceInstanceApis {
         logger.info("Getting Distributed Appliance Instance Status " + req);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return apiUtil.submitRequestToService(new GetAgentStatusService(), req);
+        return apiUtil.submitRequestToService(this.getAgentStatusService, req);
     }
 }
