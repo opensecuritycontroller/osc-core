@@ -53,7 +53,9 @@ public class PortGroupCheckTask extends TransactionalTask {
         List<NetworkElement> protectedPorts = new ArrayList<>();
 
         for (SecurityGroupMember sgm : members) {
-            protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
+            if (!sgm.getMarkedForDeletion()) {
+                protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
+            }
         }
         String domainId = OpenstackUtil.extractDomainId(this.sg.getTenantId(), this.sg.getTenantName(),
                 this.sg.getVirtualizationConnector(), protectedPorts);
