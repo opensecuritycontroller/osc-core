@@ -34,7 +34,7 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.TagEncapsulationType;
-import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 
 class VmPortHookCreateTask extends TransactionalTask {
 
@@ -65,7 +65,7 @@ class VmPortHookCreateTask extends TransactionalTask {
 
         this.log.info(String.format("Creating Inspection Hooks for Security Group Member VM '%s' for service '%s'",
                 this.vmName, this.serviceName));
-        SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);
+        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
 
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(
