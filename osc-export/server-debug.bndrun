@@ -61,6 +61,9 @@ x-runproperties.debug: \
 	org.glassfish.jersey.core.jersey-common;version='[2.25.0,2.25.1)',\
 	org.glassfish.jersey.core.jersey-client;version='[2.25.0,2.25.1)',\
 	org.glassfish.jersey.bundles.repackaged.jersey-guava;version='[2.25.0,2.25.1)',\
+    org.glassfish.jersey.media.jersey-media-json-jackson;version='[2.25.0,2.25.1)',\
+    org.glassfish.jersey.media.jersey-media-jaxb;version='[2.25.0,2.25.1)',\
+    org.glassfish.jersey.ext.jersey-entity-filtering;version='[2.25.0,2.25.1)',\
 	javax.el-api;version='[2.2.4,2.2.5)',\
 	javax.annotation-api;version='[1.2.0,1.2.1)',\
 	javax.validation.api;version='[1.1.0,1.1.1)',\
