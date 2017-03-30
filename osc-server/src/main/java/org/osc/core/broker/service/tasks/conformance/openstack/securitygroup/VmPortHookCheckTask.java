@@ -43,7 +43,7 @@ import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.Op
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
-import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionHookElement;
 import org.osc.sdk.controller.element.NetworkElement;
 
@@ -161,7 +161,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
             this.log.info("Checking Inspection Hook for Security group Member: " + this.sgm.getMemberName());
 
             InspectionHookElement hook;
-            try (SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(assignedRedirectedDai)) {
+            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(assignedRedirectedDai)) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(
                         assignedRedirectedDai.getInspectionOsIngressPortId(),
                         assignedRedirectedDai.getInspectionIngressMacAddress());

@@ -92,7 +92,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Security Group interface Window");
-            DeleteWindowUtil.deleteSecurityGroupInterface(getSelectedItem().getBean());
+            DeleteWindowUtil.deleteSecurityGroupInterface(getSelectedItem().getBean(), this.conformService);
         }
         if (event.getButton().getId().equals(ToolbarButtons.BACK.getId())) {
             // removing object from the sub view map so it can be garbage collected

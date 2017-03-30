@@ -33,7 +33,7 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
-import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 
 class VmPortHookRemoveTask extends TransactionalTask {
 
@@ -77,7 +77,7 @@ class VmPortHookRemoveTask extends TransactionalTask {
                                 this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName));
             }
 
-            try (SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(this.dai);) {
+            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                         this.dai.getInspectionIngressMacAddress());
                 DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),

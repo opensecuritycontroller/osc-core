@@ -16,13 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.sdncontroller;
 
-import static org.osc.sdk.controller.Constants.QUERY_PORT_INFO;
-import static org.osc.sdk.controller.Constants.SUPPORT_FAILURE_POLICY;
-import static org.osc.sdk.controller.Constants.SUPPORT_OFFBOX_REDIRECTION;
-import static org.osc.sdk.controller.Constants.SUPPORT_PORT_GROUP;
-import static org.osc.sdk.controller.Constants.SUPPORT_SFC;
-import static org.osc.sdk.controller.Constants.USE_PROVIDER_CREDS;
+import static org.osc.sdk.controller.Constants.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,7 +38,12 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.sdk.controller.FlowInfo;
+import org.osc.sdk.controller.FlowPortInfo;
+import org.osc.sdk.controller.Status;
 import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.VirtualizationConnectorElement;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -68,20 +69,20 @@ public class SdnControllerApiFactory {
 
     private static BundleContext bundleContext;
 
-    public static SdnControllerApi createNetworkControllerApi(VirtualSystem vs) throws Exception {
-        return createNetworkControllerApi(vs.getVirtualizationConnector(), null);
+    public static SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs) throws Exception {
+        return createNetworkRedirectionApi(vs.getVirtualizationConnector(), null);
     }
 
-    public static SdnControllerApi createNetworkControllerApi(VirtualizationConnector vc) throws Exception {
-        return createNetworkControllerApi(vc, null);
+    public static SdnRedirectionApi createNetworkRedirectionApi(VirtualizationConnector vc) throws Exception {
+        return createNetworkRedirectionApi(vc, null);
     }
 
-    public static SdnControllerApi createNetworkControllerApi(DistributedApplianceInstance dai) throws Exception {
-        return createNetworkControllerApi(dai.getVirtualSystem(), dai.getDeploymentSpec().getRegion());
+    public static SdnRedirectionApi createNetworkRedirectionApi(DistributedApplianceInstance dai) throws Exception {
+        return createNetworkRedirectionApi(dai.getVirtualSystem(), dai.getDeploymentSpec().getRegion());
     }
 
-    public static SdnControllerApi createNetworkControllerApi(SecurityGroupMember sgm) throws Exception {
-        return createNetworkControllerApi(sgm.getSecurityGroup().getVirtualizationConnector(), getMemberRegion(sgm));
+    public static SdnRedirectionApi createNetworkRedirectionApi(SecurityGroupMember sgm) throws Exception {
+        return createNetworkRedirectionApi(sgm.getSecurityGroup().getVirtualizationConnector(), getMemberRegion(sgm));
     }
 
     private static String getMemberRegion(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
@@ -98,32 +99,35 @@ public class SdnControllerApiFactory {
         }
     }
 
-    public static SdnControllerApi createNetworkControllerApi(VirtualSystem vs, String region) throws Exception {
-        return createNetworkControllerApi(vs.getVirtualizationConnector(), region);
+    public static SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs, String region) throws Exception {
+        return createNetworkRedirectionApi(vs.getVirtualizationConnector(), region);
     }
 
-    private static SdnControllerApi createNetworkControllerApi(VirtualizationConnector vc, String region)
+    private static SdnRedirectionApi createNetworkRedirectionApi(VirtualizationConnector vc, String region)
+            throws Exception {
+        SdnControllerApi sca = createNetworkControllerApi(vc.getControllerType());
+        return sca.createRedirectionApi(getVirtualizationConnectorElement(vc), region);
+    }
+
+    private static VirtualizationConnectorElement getVirtualizationConnectorElement(VirtualizationConnector vc)
             throws Exception {
         VirtualizationConnector shallowClone = new VirtualizationConnector(vc);
-        SdnControllerApi sca = createNetworkControllerApi(shallowClone.getControllerType());
         shallowClone.setProviderPassword(EncryptionUtil.decryptAESCTR(shallowClone.getProviderPassword()));
         if (!StringUtils.isEmpty(shallowClone.getControllerPassword())) {
             shallowClone.setControllerPassword(EncryptionUtil.decryptAESCTR(shallowClone.getControllerPassword()));
         }
-        sca.setVirtualizationConnector(new VirtualizationConnectorElementImpl(shallowClone));
-        sca.setRegion(region);
-        return sca;
+        return new VirtualizationConnectorElementImpl(shallowClone);
     }
 
     public static VMwareSdnApi createVMwareSdnApi(VirtualizationConnector vc) throws VmidcException {
         return apiFactoryService.createVMwareSdnApi(vc);
     }
 
-    public static SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception {
+    private static SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception {
         return createNetworkControllerApi(ControllerType.fromText(controllerType));
     }
 
-    public static SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception {
+    private static SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception {
         return apiFactoryService.createNetworkControllerApi(controllerType);
     }
 
@@ -134,6 +138,19 @@ public class SdnControllerApiFactory {
             requiredProperties = REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES;
         }
         return apiFactoryService.newPluginTracker(customizer, pluginClass, pluginType, requiredProperties);
+    }
+
+    public static Status getStatus(VirtualizationConnector vc, String region) throws Exception {
+        try (SdnControllerApi networkControllerApi = createNetworkControllerApi(vc.getControllerType())) {
+            return networkControllerApi.getStatus(getVirtualizationConnectorElement(vc), region);
+        }
+    }
+
+    public static HashMap<String, FlowPortInfo> queryPortInfo(VirtualizationConnector vc, String region,
+            HashMap<String, FlowInfo> portsQuery) throws Exception {
+        try (SdnControllerApi networkControllerApi = createNetworkControllerApi(vc.getControllerType())) {
+            return networkControllerApi.queryPortInfo(getVirtualizationConnectorElement(vc), region, portsQuery);
+        }
     }
 
     public static Boolean supportsOffboxRedirection(VirtualSystem vs) throws Exception {

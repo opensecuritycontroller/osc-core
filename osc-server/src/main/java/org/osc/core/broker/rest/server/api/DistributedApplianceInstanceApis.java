@@ -30,7 +30,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -43,7 +42,9 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.GetAgentStatusResponseDto;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -61,6 +62,9 @@ import io.swagger.annotations.Authorization;
 public class DistributedApplianceInstanceApis {
 
     private static final Logger logger = Logger.getLogger(DistributedApplianceInstanceApis.class);
+
+    @Reference
+    private GetAgentStatusService getAgentStatusService;
 
     @ApiOperation(value = "Lists All Distributed Appliance Instances",
             notes = "Lists all the Distributed Appliance Instances",
@@ -118,6 +122,6 @@ public class DistributedApplianceInstanceApis {
         logger.info("Getting Distributed Appliance Instance Status " + req);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.submitRequestToService(new GetAgentStatusService(), req);
+        return ApiUtil.submitRequestToService(this.getAgentStatusService, req);
     }
 }

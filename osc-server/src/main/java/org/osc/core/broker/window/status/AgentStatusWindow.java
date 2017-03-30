@@ -50,10 +50,13 @@ public class AgentStatusWindow extends Window {
     protected FormLayout form;
     private VerticalLayout statusPane;
 
+    private final GetAgentStatusService getAgentStatusService;
+
     @SuppressWarnings("serial")
-    public AgentStatusWindow(List<DistributedApplianceInstanceDto> daiList) {
+    public AgentStatusWindow(List<DistributedApplianceInstanceDto> daiList, GetAgentStatusService getAgentStatusService) {
         super();
         this.daiList = daiList;
+        this.getAgentStatusService = getAgentStatusService;
         setModal(true);
         setClosable(true);
         setResizable(true);
@@ -106,10 +109,9 @@ public class AgentStatusWindow extends Window {
         this.statusPane.removeAllComponents();
 
         DistributedApplianceInstancesRequest req = new DistributedApplianceInstancesRequest(this.daiList);
-        GetAgentStatusService statusService = new GetAgentStatusService();
 
         try {
-            GetAgentStatusResponseDto response = statusService.dispatch(req);
+            GetAgentStatusResponseDto response = this.getAgentStatusService.dispatch(req);
             for (AgentStatusResponse status : response.getAgentStatusList()) {
                 // TODO emanoel: For now assuming that if the dpa info is null the status is not supported by the manager.
                 // may change the status response for an enum: DISCOVERED, INSPECTION_READY, NOT_PROVIDED, etc.

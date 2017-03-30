@@ -37,13 +37,19 @@ import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateD
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateMgrMetaTask;
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateNsxMetaTask;
 import org.osc.core.util.EncryptionUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = UpdateUserService.class)
 public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, UpdateUserResponse> {
 
     private static final Logger log = Logger.getLogger(UpdateUserService.class);
     private DtoValidator<UserDto, User> validator;
+
+    @Reference
+    private PasswordChangePropagateNsxMetaTask passwordChangePropagateNsxMetaTask;
 
     @Override
     public UpdateUserResponse exec(UpdateUserRequest request, EntityManager em) throws Exception {
@@ -77,13 +83,13 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
         return response;
     }
 
-    public static Long startPasswordPropagateNsxJob() throws Exception {
+    public Long startPasswordPropagateNsxJob() throws Exception {
 
         log.info("Start propagating new password to all NSX managers");
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new PasswordChangePropagateNsxMetaTask());
+        tg.addTask(this.passwordChangePropagateNsxMetaTask);
 
         Job job = JobEngine.getEngine().submit("Update NSX manager(s) " + Server.SHORT_PRODUCT_NAME + " Password", tg,
                 null);

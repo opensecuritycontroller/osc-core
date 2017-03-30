@@ -39,6 +39,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.request.DeleteDistributedApplianceRequestValidator;
@@ -74,16 +75,26 @@ public class DeleteDistributedApplianceServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @InjectMocks
-    DeleteDistributedApplianceService deleteDistributedApplianceService;
-
     @Mock
     EntityManager em;
+
     @Mock
     EntityTransaction tx;
 
     @Mock
     private DeleteDistributedApplianceRequestValidator validatorMock;
+
+    @Mock
+    private ApiFactoryService apiFactoryService;
+
+    @InjectMocks
+    private VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
+
+    @InjectMocks
+    private ValidateNsxTask validateNsxTask;
+
+    @InjectMocks
+    private DeleteDistributedApplianceService deleteDistributedApplianceService;
 
     private JobEngine jobEngine;
 
@@ -93,6 +104,10 @@ public class DeleteDistributedApplianceServiceTest {
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        // @InjectMocks does not inject these fields
+        this.deleteDistributedApplianceService.vsConformanceCheckMetaTask = this.vsConformanceCheckMetaTask;
+        this.deleteDistributedApplianceService.validateNsxTask = this.validateNsxTask;
 
         Mockito.when(this.em.getTransaction()).thenReturn(this.tx);
 
@@ -135,11 +150,12 @@ public class DeleteDistributedApplianceServiceTest {
 
         TaskGraph taskGraphWithDeleteTaskAndVsTasks = new TaskGraph();
         TaskGraph vmWareVsDeleteTaskGraph = new TaskGraph();
-        vmWareVsDeleteTaskGraph.addTask(new ValidateNsxTask(vmWareVirtualSystem));
-        vmWareVsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(vmWareVirtualSystem));
+        vmWareVsDeleteTaskGraph.addTask(this.validateNsxTask.create(vmWareVirtualSystem));
+
+        vmWareVsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(vmWareVirtualSystem));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(vmWareVsDeleteTaskGraph);
         TaskGraph openStackVsDeleteTaskGraph = new TaskGraph();
-        openStackVsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(openStackVirtualSystem));
+        openStackVsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(openStackVirtualSystem));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(openStackVsDeleteTaskGraph);
         taskGraphWithDeleteTaskAndVsTasks.appendTask(new DeleteDAFromDbTask(VALID_DA_WITH_SYSTEMS), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         taskGraphWithDeleteTaskAndVsTasks.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -192,7 +208,7 @@ public class DeleteDistributedApplianceServiceTest {
     @Test
     public void testStartDeleteDAJob_WithoutUnlockObjectMetaTask_ExpectsSuccess() throws Exception {
         // Act
-        DeleteDistributedApplianceService.startDeleteDAJob(VALID_DA, null);
+        this.deleteDistributedApplianceService.startDeleteDAJob(VALID_DA, null);
 
         // Assert
         PowerMockito.verifyStatic(Mockito.times(1));
