@@ -95,7 +95,7 @@ public class ArchiveUtil {
         try(ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));) {
             while ((entry = zis.getNextEntry()) != null) {
                 int count;
-                byte data[] = new byte[BUFFER_SIZE];
+                byte[] data = new byte[BUFFER_SIZE];
                 // Write the files to the disk, but ensure that the filename is valid,
                 // and that the file is not insanely big
                 String name = validateFilename(entry.getName(), ".");
