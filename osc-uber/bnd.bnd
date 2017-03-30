@@ -122,10 +122,6 @@ import-extra:\
   javax.transaction;version="[1.1,2)",\
   javax.transaction.xa;version="[1.1,2)",\
   com.fasterxml.jackson.annotation,\
-  org.hibernate.validator,\
-  javax.validation,\
-  javax.validation.constraints,\
-  org.glassfish.jersey.server.validation,\
   com.fasterxml.jackson.databind.exc,\
   com.fasterxml.jackson.core
 

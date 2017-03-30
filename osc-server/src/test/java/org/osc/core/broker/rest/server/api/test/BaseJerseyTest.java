@@ -25,7 +25,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.BadRequestExceptionMapper;
-import org.osc.core.broker.rest.server.exception.ConstraintViolationExceptionMapper;
 import org.osc.core.broker.rest.server.exception.InternalServerErrorExceptionMapper;
 import org.osc.core.broker.rest.server.exception.JsonProcessingExceptionMapper;
 import org.osc.core.broker.rest.server.exception.NotFoundExceptionMapper;
