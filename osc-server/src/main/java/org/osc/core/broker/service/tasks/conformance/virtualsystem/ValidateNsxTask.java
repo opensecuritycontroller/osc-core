@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -34,17 +35,24 @@ import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osc.sdk.sdn.element.ServiceElement;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
 import org.osc.sdk.sdn.exception.HttpException;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-
+@Component(service = ValidateNsxTask.class)
 public class ValidateNsxTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(ValidateNsxTask.class);
 
     private VirtualSystem vs;
 
-    public ValidateNsxTask(VirtualSystem vs) {
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
-        this.vs = vs;
-        this.name = getName();
+    public ValidateNsxTask create(VirtualSystem vs) {
+        ValidateNsxTask task = new ValidateNsxTask();
+        task.vs = vs;
+        task.apiFactoryService = this.apiFactoryService;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -58,7 +66,7 @@ public class ValidateNsxTask extends TransactionalTask {
             svcMgr = serviceManagerApi.getServiceManager(this.vs.getNsxServiceManagerId());
         }
         if (svcMgr == null) {
-            svcMgr = serviceManagerApi.findServiceManager(CreateNsxServiceManagerTask.generateServiceManagerName(this.vs));
+            svcMgr = serviceManagerApi.findServiceManager(this.apiFactoryService.generateServiceManagerName(this.vs));
         }
         String svcMgrId = svcMgr == null ? null : svcMgr.getId();
         if (!isNsxServiceManagerInSync(svcMgrId)) {

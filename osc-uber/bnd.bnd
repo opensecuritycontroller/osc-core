@@ -47,6 +47,7 @@ Require-Capability: \
     @${jackson-dataformat-yaml.dep},\
     @${javax.mail.dep},\
     @${joda-time.dep},\
+    @${json.dep},\
     @${jsoup.dep},\
     @${log4j.dep},\
     @${popupbutton.dep},\
@@ -56,6 +57,7 @@ Require-Capability: \
     @${slf4j-api.dep},\
     @${snakeyaml.dep},\
     @${stepper.dep},\
+    @${streamhtmlparser-jsilver.dep},\
     @${swagger-annotations.dep},\
     @${swagger-core.dep},\
     @${swagger-models.dep},\
@@ -78,6 +80,8 @@ Require-Capability: \
     @${security-mgr-api.dep},\
     @${sdn-controller-api.dep},\
     @${vmware-nsx-api.dep},\
+    @${esapi.dep},\
+    @${antisamy.dep},\
     @${osc-common.dep},\
     @${osc-server.dep},\
     @${gwt-elemental.dep},\
@@ -335,9 +339,19 @@ exclude-other:\
   !weblogic.jdbc.vendor.oracle,\
   !weblogic.websocket,\
   !weblogic.websocket.annotation,\
+  !bsh,\
+  !nu.xom,\
+  !org.apache.commons.beanutils,\
+  !org.apache.commons.collections.iterators,\
+  !org.apache.commons.configuration,\
+  !org.apache.commons.fileupload.*,\
+  !org.apache.batik.css.parser,\
+  !org.apache.commons.httpclient.*,\
+  !org.apache.xerces.*,\
+  !org.apache.xml.serialize,\
+  !org.cyberneko.html.*
   !org.apache.avalon.*,\
   !org.apache.http.*,\
   !org.apache.log.*,\
   !org.apache.log4j.*
-
 #end

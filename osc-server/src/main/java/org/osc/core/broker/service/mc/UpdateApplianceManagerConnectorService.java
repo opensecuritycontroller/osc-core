@@ -68,6 +68,9 @@ public class UpdateApplianceManagerConnectorService extends
     @Reference
     private ConformService conformService;
 
+    @Reference
+    private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
+
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em) throws Exception {
 
@@ -203,7 +206,7 @@ public class UpdateApplianceManagerConnectorService extends
         // Transforms the existing mc based on the update request
         updateApplianceManagerConnector(request, existingMc);
 
-        AddApplianceManagerConnectorService.checkManagerConnection(log, request, existingMc);
+        this.addApplianceManagerConnectorService.checkManagerConnection(log, request, existingMc);
     }
 
     /**

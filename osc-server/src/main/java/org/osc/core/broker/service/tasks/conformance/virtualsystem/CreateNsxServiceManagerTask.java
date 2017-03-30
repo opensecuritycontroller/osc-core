@@ -23,7 +23,7 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.ServiceManager;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
@@ -32,17 +32,26 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = CreateNsxServiceManagerTask.class)
 public class CreateNsxServiceManagerTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(CreateNsxServiceManagerTask.class);
 
     private VirtualSystem vs;
 
-    public CreateNsxServiceManagerTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    @Reference
+    public ApiFactoryService apiFactoryService;
+
+    public CreateNsxServiceManagerTask create(VirtualSystem vs) {
+        CreateNsxServiceManagerTask task = new CreateNsxServiceManagerTask();
+        task.vs = vs;
+        task.apiFactoryService = this.apiFactoryService;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -54,7 +63,7 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
         ServiceManagerElement serviceManager = null;
         ServiceManagerApi serviceManagerApi = VMwareSdnApiFactory.createServiceManagerApi(this.vs);
 
-        String serviceManagerName = generateServiceManagerName(this.vs);
+        String serviceManagerName = this.apiFactoryService.generateServiceManagerName(this.vs);
 
         ServiceManager input = new ServiceManager(
                 serviceManagerName,
@@ -87,9 +96,4 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
         return LockObjectReference.getObjectReferences(this.vs);
     }
 
-    public static String generateServiceManagerName(VirtualSystem vs) throws Exception {
-        return "OSC " +
-                ManagerApiFactory.getVendorName(vs) +
-                " " + vs.getDistributedAppliance().getName();
-    }
 }

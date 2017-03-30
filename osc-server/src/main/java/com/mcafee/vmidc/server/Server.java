@@ -32,6 +32,7 @@ import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
@@ -110,6 +111,9 @@ public class Server {
 
     @Reference
     private ManagerApis managerApis;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private Thread thread;
 
@@ -292,6 +296,7 @@ public class Server {
         scheduler.start();
 
         JobDataMap jobDataMap = new JobDataMap();
+        jobDataMap.put(ApiFactoryService.class.getName(), this.apiFactoryService);
         jobDataMap.put(ConformService.class.getName(), this.conformService);
 
         JobDetail syncDaJob = JobBuilder.newJob(SyncDistributedApplianceJob.class).usingJobData(jobDataMap).build();
@@ -521,7 +526,7 @@ public class Server {
          * This class is responsible for creating web socket communication with all existing SMCs upon server
          * start/restart
          */
-        this.wsRunner = new WebSocketRunner(this.managerApis);
+        this.wsRunner = new WebSocketRunner(this.managerApis, this.apiFactoryService);
         log.info("Started Web Socket Runner");
     }
 

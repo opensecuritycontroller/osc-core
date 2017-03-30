@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.DeleteDistributedApplianceService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDistributedApplianceService;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -38,6 +39,7 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.deploymentspec.DeploymentSpecSubView;
 import org.osc.core.broker.view.securityinterface.SecurityGroupInterfaceSubView;
 import org.osc.core.broker.view.util.ToolbarButtons;
@@ -63,6 +65,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     // objects of all the sub views this View supports
     private DeploymentSpecSubView dsSubView = null;
     private SecurityGroupInterfaceSubView sgiSubView = null;
+
+    private DeleteDistributedApplianceService deleteDistributedApplianceService = StaticRegistry.deleteDistributedApplianceService();
 
     public DistributedApplianceView() {
 
@@ -100,7 +104,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.info("Redirecting to Delete Distributed Appliance Window");
-            DeleteWindowUtil.deleteDistributedAppliance(getParentItem().getBean());
+            DeleteWindowUtil.deleteDistributedAppliance(getParentItem().getBean(), this.deleteDistributedApplianceService);
         }
         if (event.getButton().getId().equals(ToolbarButtons.CONFORM.getId())) {
             conformDistributedAppliace(getParentItemId());

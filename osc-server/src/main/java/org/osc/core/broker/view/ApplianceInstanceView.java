@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.ListDistributedApplianceInstanceService;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
@@ -49,6 +50,8 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
     private static final long serialVersionUID = 1605215705219327527L;
 
     private static final Logger LOG = Logger.getLogger(ApplianceInstanceView.class);
+
+    private GetAgentStatusService getAgentStatusService;
 
     public ApplianceInstanceView() {
         super();
@@ -151,7 +154,7 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
 
     private void checkApplianceInstanceStatus() {
         try {
-            ViewUtil.addWindow(new AgentStatusWindow(this.itemList));
+            ViewUtil.addWindow(new AgentStatusWindow(this.itemList, this.getAgentStatusService));
         } catch (Exception e) {
             LOG.error("Failed to get status from Agent(s)", e);
             ViewUtil.iscNotification("Failed to get status from Agent(s).", Notification.Type.WARNING_MESSAGE);
