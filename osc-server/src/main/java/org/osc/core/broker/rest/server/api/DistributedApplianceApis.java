@@ -74,6 +74,9 @@ public class DistributedApplianceApis {
     @Reference
     private ConformService conformService;
 
+    @Reference
+    private DeleteDistributedApplianceService deleteDistributedApplianceService;
+
     @ApiOperation(value = "Lists All Distributed Appliances",
             notes = "Lists all the Distributed Appliances",
             response = DistributedApplianceDto.class,
@@ -157,7 +160,7 @@ public class DistributedApplianceApis {
                                                        required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Deleting Distributed Appliance " + distributedApplianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new DeleteDistributedApplianceService(),
+        return ApiUtil.getResponseForBaseRequest(this.deleteDistributedApplianceService,
                 new BaseDeleteRequest(distributedApplianceId, false)); // false as this is not force delete
     }
 
@@ -172,7 +175,7 @@ public class DistributedApplianceApis {
                                                             required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Deleting Distributed Appliance " + distributedApplianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new DeleteDistributedApplianceService(),
+        return ApiUtil.getResponseForBaseRequest(this.deleteDistributedApplianceService,
                 new BaseDeleteRequest(distributedApplianceId, true));
     }
 

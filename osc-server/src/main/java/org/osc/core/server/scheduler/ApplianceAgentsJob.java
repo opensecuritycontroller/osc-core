@@ -27,6 +27,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -48,6 +49,7 @@ public class ApplianceAgentsJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        ApiFactoryService apiFactoryService =  (ApiFactoryService) context.get(ApiFactoryService.class.getName());
 
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
@@ -62,7 +64,7 @@ public class ApplianceAgentsJob implements Job {
                 for (VirtualSystem vs : da.getVirtualSystems()) {
 
                     ApplianceManagerConnector apmc = vs.getDistributedAppliance().getApplianceManagerConnector();
-                    ManagerDeviceMemberApi agentApi =  ManagerApiFactory.createManagerDeviceMemberApi(apmc, vs);
+                    ManagerDeviceMemberApi agentApi =  apiFactoryService.createManagerDeviceMemberApi(apmc, vs);
 
                     if (ManagerApiFactory.providesDeviceStatus(vs)) {
                         List<ManagerDeviceMemberStatusElement> agentElems = agentApi.getFullStatus(

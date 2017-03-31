@@ -35,6 +35,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
@@ -48,12 +49,18 @@ import org.osc.core.util.VersionUtil;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.element.DistributedApplianceInstanceElement;
 import org.osc.sdk.manager.element.ManagerDeviceMemberStatusElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = GetAgentStatusService.class)
 public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianceInstancesRequest, GetAgentStatusResponseDto> {
 
     private static final Logger LOG = Logger.getLogger(GetAgentStatusService.class);
     private List<DistributedApplianceInstance> daiList = null;
     private EntityManager em = null;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public GetAgentStatusResponseDto exec(DistributedApplianceInstancesRequest request, EntityManager em) throws Exception {
@@ -127,7 +134,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
     private List<AgentStatusResponse> invokeRequest(List<DistributedApplianceInstanceElement> dais,
             final VirtualSystem vs) throws Exception {
         ApplianceManagerConnector mc = vs.getDistributedAppliance().getApplianceManagerConnector();
-        ManagerDeviceMemberApi agentApi =  ManagerApiFactory.createManagerDeviceMemberApi(mc, vs);
+        ManagerDeviceMemberApi agentApi =  this.apiFactoryService.createManagerDeviceMemberApi(mc, vs);
 
         List<AgentStatusResponse> agentStatusList = new ArrayList<>();
         try {

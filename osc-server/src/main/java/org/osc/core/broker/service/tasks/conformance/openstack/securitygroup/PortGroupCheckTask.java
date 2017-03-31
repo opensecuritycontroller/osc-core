@@ -30,16 +30,16 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
-import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 
 public class PortGroupCheckTask extends TransactionalTask {
 
     private SecurityGroup sg;
-    private SdnControllerApi controller;
+    private SdnRedirectionApi controller;
     boolean deleteTg;
 
-    public PortGroupCheckTask(SecurityGroup sg, SdnControllerApi controller, boolean deleteTg) {
+    public PortGroupCheckTask(SecurityGroup sg, SdnRedirectionApi controller, boolean deleteTg) {
         this.sg = sg;
         this.deleteTg = deleteTg;
         this.controller = controller;

@@ -16,7 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -33,13 +36,10 @@ import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Map;
+import com.rabbitmq.client.ShutdownSignalException;
 
 public class VirtualizationConnectorUtil {
 
@@ -132,12 +132,11 @@ public class VirtualizationConnectorUtil {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstack");
                 try {
                     // Check NSC Connectivity and Credentials
-                    try (SdnControllerApi controller = SdnControllerApiFactory.createNetworkControllerApi(vc)) {
-                        controller.getStatus();
-                    }
+                    SdnControllerApiFactory.getStatus(vc, null);
                 } catch (Exception exception) {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
-                    LOG.warn("Exception encountered when trying to add SDN Controller info to Virtualization Connector, allowing user to either ignore or correct issue");
+                    LOG.warn(
+                            "Exception encountered when trying to add SDN Controller info to Virtualization Connector, allowing user to either ignore or correct issue");
                 }
             }
             // Check Connectivity with Key stone if https response exception is not to be ignored

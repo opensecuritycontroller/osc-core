@@ -42,6 +42,9 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
     @Reference
     private Server server;
 
+    @Reference
+    private IpChangePropagateMetaTask ipChangePropagateMetaTask;
+
     @Override
     public SetNetworkSettingsResponse exec(SetNetworkSettingsRequest request, EntityManager em) throws Exception {
 
@@ -94,13 +97,13 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
 
     }
 
-    public static Long startIpPropagateJob() throws Exception {
+    public Long startIpPropagateJob() throws Exception {
 
         log.info("Start propagating new IP(" + NetworkUtil.getHostIpAddress() + ") to all NSX managers and DAIs");
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new IpChangePropagateMetaTask());
+        tg.addTask(this.ipChangePropagateMetaTask);
 
         Job job = JobEngine.getEngine().submit(
                 "Updating " + Server.SHORT_PRODUCT_NAME

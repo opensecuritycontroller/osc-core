@@ -28,6 +28,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.request.DeleteDistributedApplianceRequestValidator;
@@ -41,13 +42,25 @@ import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTa
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = DeleteDistributedApplianceService.class)
 public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse> {
 
     private static final Logger log = Logger.getLogger(DeleteDistributedApplianceService.class);
     private RequestValidator<BaseDeleteRequest, DistributedAppliance> validator;
 
-    static Job startDeleteDAJob(final DistributedAppliance da, UnlockObjectMetaTask ult) throws Exception {
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    @Reference
+    VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
+
+    @Reference
+    ValidateNsxTask validateNsxTask;
+
+    Job startDeleteDAJob(final DistributedAppliance da, UnlockObjectMetaTask ult) throws Exception {
 
         try {
             if (ult == null) {
@@ -60,9 +73,9 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
             for (VirtualSystem vs : da.getVirtualSystems()) {
                 TaskGraph vsDeleteTaskGraph = new TaskGraph();
                 if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-                    vsDeleteTaskGraph.addTask(new ValidateNsxTask(vs));
+                    vsDeleteTaskGraph.addTask(this.validateNsxTask.create(vs));
                 }
-                vsDeleteTaskGraph.appendTask(new VSConformanceCheckMetaTask(vs));
+                vsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(vs));
 
                 tg.addTaskGraph(vsDeleteTaskGraph);
             }

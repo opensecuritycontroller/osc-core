@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.DeleteUserService;
 import org.osc.core.broker.service.ListUserService;
+import org.osc.core.broker.service.UpdateUserService;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.request.ListUserRequest;
@@ -50,6 +51,7 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
     private static final Logger log = Logger.getLogger(UserView.class);
 
     private final DeleteUserService deleteUserService = StaticRegistry.deleteUserService();
+    private final UpdateUserService updateUserService = StaticRegistry.updateUserService();
 
     public UserView() {
         createView("Users", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE));
@@ -63,7 +65,7 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update User Window");
-            ViewUtil.addWindow(new UpdateUserWindow(this));
+            ViewUtil.addWindow(new UpdateUserWindow(this, this.updateUserService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete User Window");

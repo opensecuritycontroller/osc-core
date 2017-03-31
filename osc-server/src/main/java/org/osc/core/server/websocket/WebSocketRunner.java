@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.WebSocketClient;
 import org.osc.core.broker.rest.server.api.ManagerApis;
@@ -54,10 +55,12 @@ public class WebSocketRunner implements BroadcastListener {
     private List<ApplianceManagerConnector> amcs = new ArrayList<>();
     private ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
     private int count = MAX_TRIES;
-    private ManagerApis managerApis;
+    private final ManagerApis managerApis;
+    private final ApiFactoryService apiFactoryService;
 
-    public WebSocketRunner(ManagerApis managerApis) {
+    public WebSocketRunner(ManagerApis managerApis, ApiFactoryService apiFactoryService) {
         this.managerApis = managerApis;
+        this.apiFactoryService = apiFactoryService;
         BroadcasterUtil.register(this);
 
         try {
@@ -182,7 +185,7 @@ public class WebSocketRunner implements BroadcastListener {
              * This case we will add SMC in existing Map and launch a new Web socket client for newly added MC.
              */
 
-            this.webSocketConnections.put(mc.getId(), new WebSocketClient(mc, this.managerApis));
+            this.webSocketConnections.put(mc.getId(), new WebSocketClient(mc, this.managerApis, this.apiFactoryService));
 
         } else if (event == EventType.UPDATED && ManagerApiFactory.isWebSocketNotifications(mc)) {
 
@@ -196,7 +199,7 @@ public class WebSocketRunner implements BroadcastListener {
 
                 closeAndRemove(mc.getId());
                 // Add new one based on the new Updated MC object
-                this.webSocketConnections.put(mc.getId(), new WebSocketClient(mc, this.managerApis));
+                this.webSocketConnections.put(mc.getId(), new WebSocketClient(mc, this.managerApis, this.apiFactoryService));
             }
 
         } else { // DELETED

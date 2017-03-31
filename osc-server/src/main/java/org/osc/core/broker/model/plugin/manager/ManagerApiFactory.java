@@ -28,27 +28,22 @@ import static org.osc.sdk.manager.Constants.VENDOR_NAME;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.PluginTracker;
 import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
-import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.IscJobNotificationApi;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
-import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.api.ManagerDomainApi;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
-import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -103,16 +98,6 @@ public class ManagerApiFactory {
 
     private static ApplianceManagerApi createApplianceManagerApi(String managerName) throws Exception {
         return apiFactoryService.createApplianceManagerApi(ManagerType.fromText(managerName));
-    }
-
-    public static ApplianceManagerApi createApplianceManagerApi(DistributedApplianceInstance dai) throws Exception {
-        return createApplianceManagerApi(dai.getVirtualSystem());
-    }
-
-    private static ApplianceManagerApi createApplianceManagerApi(VirtualSystem vs) throws Exception {
-        return createApplianceManagerApi(
-                getDecryptedApplianceManagerConnector(vs.getDistributedAppliance().getApplianceManagerConnector())
-                        .getManagerType());
     }
 
     public static ManagerDeviceApi createManagerDeviceApi(VirtualSystem vs) throws Exception {
@@ -171,15 +156,9 @@ public class ManagerApiFactory {
         return apiFactoryService.getServiceName(managerType);
     }
 
-    public static String getVendorName(VirtualSystem vs) throws Exception {
+    private static String getVendorName(VirtualSystem vs) throws Exception {
         return apiFactoryService.getVendorName(
                 ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
-    }
-
-    public static ManagerDeviceMemberApi createManagerDeviceMemberApi(ApplianceManagerConnector mc, VirtualSystem vs)
-            throws Exception {
-        return createApplianceManagerApi(mc.getManagerType()).createManagerDeviceMemberApi(
-                getApplianceManagerConnectorElement(mc), new VirtualSystemElementImpl(vs));
     }
 
     public static ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc)
@@ -209,28 +188,9 @@ public class ManagerApiFactory {
         return apiFactoryService.isKeyAuth(mt);
     }
 
-    public static void checkConnection(ApplianceManagerConnector mc) throws Exception {
-        createApplianceManagerApi(mc.getManagerType()).checkConnection(getApplianceManagerConnectorElement(mc));
-    }
-
-    private static ApplianceManagerConnector getDecryptedApplianceManagerConnector(ApplianceManagerConnector mc)
-            throws EncryptionException {
-        ApplianceManagerConnector shallowClone = new ApplianceManagerConnector(mc);
-        if (!StringUtils.isEmpty(shallowClone.getPassword())) {
-            shallowClone.setPassword(EncryptionUtil.decryptAESCTR(shallowClone.getPassword()));
-        }
-        return shallowClone;
-    }
-
-    public static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(ApplianceManagerConnector mc)
+    private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(ApplianceManagerConnector mc)
             throws EncryptionException {
         return apiFactoryService.getApplianceManagerConnectorElement(mc);
-    }
-
-    static ManagerWebSocketNotificationApi createManagerWebSocketNotificationApi(ApplianceManagerConnector mc)
-            throws Exception {
-        return createApplianceManagerApi(mc.getManagerType())
-                .createManagerWebSocketNotificationApi(getApplianceManagerConnectorElement(mc));
     }
 
     private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs)

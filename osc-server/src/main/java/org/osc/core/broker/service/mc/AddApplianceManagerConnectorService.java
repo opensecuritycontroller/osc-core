@@ -25,7 +25,7 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -53,6 +53,9 @@ public class AddApplianceManagerConnectorService extends
     private static final Logger LOG = Logger.getLogger(AddApplianceManagerConnectorService.class);
 
     private boolean forceAddSSLCertificates = false;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Reference
     private ConformService conformService;
@@ -129,7 +132,7 @@ public class AddApplianceManagerConnectorService extends
         checkManagerConnection(LOG, request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
     }
 
-    static void checkManagerConnection(Logger log, DryRunRequest<ApplianceManagerConnectorDto> request,
+    void checkManagerConnection(Logger log, DryRunRequest<ApplianceManagerConnectorDto> request,
                                        ApplianceManagerConnector mc) throws ErrorTypeException {
         if (!request.isSkipAllDryRun() && !request.isIgnoreErrorsAndCommit(ErrorType.MANAGER_CONNECTOR_EXCEPTION)) {
 
@@ -143,7 +146,7 @@ public class AddApplianceManagerConnectorService extends
             });
 
             try {
-                ManagerApiFactory.checkConnection(mc);
+                this.apiFactoryService.checkConnection(mc);
             } catch (Exception e) {
                 ErrorTypeException errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
                 log.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
