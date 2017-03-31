@@ -49,6 +49,7 @@ import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.sdk.manager.element.MgrChangeNotification;
 import org.osc.sdk.manager.element.MgrChangeNotification.ChangeType;
@@ -75,6 +76,9 @@ public class ManagerApis {
 
     @Reference
     private ConformService conformService;
+
+    @Reference
+    private ApiUtil apiUtil;
 
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
@@ -116,7 +120,7 @@ public class ManagerApis {
         request.setMgrFile(mgrFile.getMgrFile());
         request.setMgrFileName(mgrFile.getMgrFileName());
 
-        return ApiUtil.getResponse(new PropagateVSMgrFileService(), request);
+        return apiUtil.getResponse(new PropagateVSMgrFileService(), request);
     }
 
     @ApiOperation(value = "Query Virtual Machine information",
@@ -135,7 +139,7 @@ public class ManagerApis {
         log.info("Query VM info request: " + queryVmInfo);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
+        return apiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
     }
 
     @Path("/tagVm")
@@ -145,7 +149,7 @@ public class ManagerApis {
         log.info("Tag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponse(new TagVmService(), tagVmRequest);
+        return apiUtil.getResponse(new TagVmService(), tagVmRequest);
     }
 
     @Path("/untagVm")
@@ -155,7 +159,7 @@ public class ManagerApis {
         log.info("UnTag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponse(new UnTagVmService(), tagVmRequest);
+        return apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
     }
 
     public Response triggerMcSync(String username, String ipAddress, Notification notification) {

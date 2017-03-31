@@ -51,6 +51,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -78,6 +79,9 @@ public class ManagerConnectorApis {
     @Reference
     private UpdateApplianceManagerConnectorService updateService;
 
+    @Reference
+    private ApiUtil apiUtil;
+
     @ApiOperation(value = "Lists All Manager Connectors",
             notes = "Password/API Key information is not returned as it is sensitive information",
             response = ApplianceManagerConnectorDto.class,
@@ -91,7 +95,7 @@ public class ManagerConnectorApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<ApplianceManagerConnectorDto> response = (ListResponse<ApplianceManagerConnectorDto>) ApiUtil
+        ListResponse<ApplianceManagerConnectorDto> response = (ListResponse<ApplianceManagerConnectorDto>) apiUtil
                 .getListResponse(new ListApplianceManagerConnectorService(), new BaseRequest<BaseDto>(true));
 
         return response.getList();
@@ -115,7 +119,7 @@ public class ManagerConnectorApis {
         getDtoRequest.setEntityId(amcId);
         getDtoRequest.setEntityName("ApplianceManagerConnector");
         GetDtoFromEntityService<ApplianceManagerConnectorDto> getDtoService = new GetDtoFromEntityService<ApplianceManagerConnectorDto>();
-        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Creates an Manager Connector",
@@ -133,7 +137,7 @@ public class ManagerConnectorApis {
         logger.info("Creating Appliance Manager Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponseForBaseRequest(this.addService,
+        return apiUtil.getResponseForBaseRequest(this.addService,
                 new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
     }
 
@@ -156,9 +160,9 @@ public class ManagerConnectorApis {
         logger.info("Updating Appliance Manager Connector " + amcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        ApiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
+        apiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
 
-        return ApiUtil.getResponseForBaseRequest(this.updateService,
+        return apiUtil.getResponseForBaseRequest(this.updateService,
                 new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
     }
 
@@ -178,7 +182,7 @@ public class ManagerConnectorApis {
         logger.info("Deleting Appliance Manager Connector " + amcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponseForBaseRequest(new DeleteApplianceManagerConnectorService(),
+        return apiUtil.getResponseForBaseRequest(new DeleteApplianceManagerConnectorService(),
                 new BaseIdRequest(amcId));
     }
 
@@ -197,7 +201,7 @@ public class ManagerConnectorApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<DomainDto> response = (ListResponse<DomainDto>) ApiUtil
+        ListResponse<DomainDto> response = (ListResponse<DomainDto>) apiUtil
                 .getListResponse(new ListDomainsByMcIdService(), new BaseIdRequest(amcId));
         return response.getList();
     }

@@ -37,7 +37,6 @@
 	osc-uber-jcloud;version='[1.0.0,1.0.1)',\
 	javax.websocket-api;version='[1.0.0,1.0.1)',\
 	javax.ws.rs-api;version='[2.0.1,2.0.2)',\
-	javax.el-api;version='[2.2.4,2.2.5)',\
 	javax.annotation-api;version='[1.2.0,1.2.1)',\
 	javax.validation.api;version='[1.1.0,1.1.1)',\
 	org.glassfish.jersey.core.jersey-server;version='[2.25.0,2.25.1)',\
