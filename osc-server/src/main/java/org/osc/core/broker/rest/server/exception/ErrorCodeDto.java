@@ -22,6 +22,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ErrorCodeDto {
@@ -37,22 +40,21 @@ public class ErrorCodeDto {
     private Long errorCode;
 
     @ApiModelProperty(required = true)
-    private String errorMessage;
-
+    private List<String> errorMessages = new ArrayList<>();
     @SuppressWarnings("unused")
     private ErrorCodeDto() {
     }
 
-    public ErrorCodeDto(Long errorCode, String errorMessage) {
+    public ErrorCodeDto(Long errorCode, List<String> errorMessages) {
         this.errorCode = errorCode;
-        this.errorMessage = errorMessage;
+        this.errorMessages = errorMessages;
     }
 
-    public Long getErrorCode() {
-        return this.errorCode;
+    public List<String> getErrorMessages() {
+        return errorMessages;
     }
 
-    public String getErrorMessage() {
-        return this.errorMessage;
+    public void setErrorMessages(List<String> errorMessages) {
+        this.errorMessages = errorMessages;
     }
 }
