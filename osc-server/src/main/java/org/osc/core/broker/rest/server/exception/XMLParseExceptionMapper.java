@@ -26,7 +26,7 @@ import javax.ws.rs.ext.Provider;
 import java.util.Arrays;
 
 /**
- * Exception handler for invalid json deserialization
+ * Exception handler for invalid xml deserialization
  */
 @Provider
 public class XMLParseExceptionMapper implements ExceptionMapper<XMLParseException>, BaseExceptionMapperUtil {
