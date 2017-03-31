@@ -50,6 +50,12 @@ import org.osc.core.broker.rest.server.api.VirtualSystemApis;
 import org.osc.core.broker.rest.server.api.VirtualizationConnectorApis;
 import org.osc.core.broker.rest.server.api.proprietary.NsmMgrApis;
 import org.osc.core.broker.rest.server.api.proprietary.NsxApis;
+import org.osc.core.broker.rest.server.exception.BadRequestExceptionMapper;
+import org.osc.core.broker.rest.server.exception.InternalServerErrorExceptionMapper;
+import org.osc.core.broker.rest.server.exception.JsonProcessingExceptionMapper;
+import org.osc.core.broker.rest.server.exception.NotFoundExceptionMapper;
+import org.osc.core.broker.rest.server.exception.PathParamExceptionMapper;
+import org.osc.core.broker.rest.server.exception.XMLParseExceptionMapper;
 import org.osc.core.util.LocalHostAuthFilter;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -110,6 +116,14 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
         super.register(NsxAuthFilter.class);
         super.register(LocalHostAuthFilter.class);
         super.register(OscAuthFilter.class);
+
+        //Exception mappers
+        super.register(BadRequestExceptionMapper.class);
+        super.register(InternalServerErrorExceptionMapper.class);
+        super.register(JsonProcessingExceptionMapper.class);
+        super.register(NotFoundExceptionMapper.class);
+        super.register(PathParamExceptionMapper.class);
+        super.register(XMLParseExceptionMapper.class);
 
         //Properties
         super.property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true);

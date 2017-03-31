@@ -30,7 +30,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.broker.rest.server.api.ApiUtil;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
@@ -42,6 +41,7 @@ import org.osc.core.broker.service.TagVmService;
 import org.osc.core.broker.service.UnTagVmService;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,6 +57,9 @@ public class NsmMgrApis {
 
     @Reference
     private ManagerApis managerApis;
+
+    @Reference
+    private ApiUtil apiUtil;
 
     @Path("/notification")
     @POST
@@ -80,7 +83,7 @@ public class NsmMgrApis {
         request.setMgrFile(mgrFile.getMgrFile());
         request.setMgrFileName(mgrFile.getMgrFileName());
 
-        return ApiUtil.getResponse(new PropagateVSMgrFileService(), request);
+        return apiUtil.getResponse(new PropagateVSMgrFileService(), request);
 
     }
 
@@ -91,7 +94,7 @@ public class NsmMgrApis {
         log.info("Query VM info request: " + queryVmInfo);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
+        return apiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
     }
 
     @Path("/tagVm")
@@ -101,7 +104,7 @@ public class NsmMgrApis {
         log.info("Tag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponse(new TagVmService(), tagVmRequest);
+        return apiUtil.getResponse(new TagVmService(), tagVmRequest);
     }
 
     @Path("/untagVm")
@@ -111,7 +114,7 @@ public class NsmMgrApis {
         log.info("UnTag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.getResponse(new UnTagVmService(), tagVmRequest);
+        return apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
     }
 
 }

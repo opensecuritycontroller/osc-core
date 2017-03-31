@@ -34,6 +34,7 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -55,6 +56,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service = AlertApis.class)
 @Api(tags = "Operations for Alerts", authorizations = { @Authorization(value = "Basic Auth") })
@@ -66,6 +68,9 @@ public class AlertApis {
 
     private static final Logger logger = Logger.getLogger(AlertApis.class);
 
+    @Reference
+    private ApiUtil apiUtil;
+
     @ApiOperation(value = "Lists all Alerts", response = AlertDto.class, responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
@@ -76,7 +81,7 @@ public class AlertApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<AlertDto> response = (ListResponse<AlertDto>) ApiUtil.getListResponse(new ListAlertService(),
+        ListResponse<AlertDto> response = (ListResponse<AlertDto>) apiUtil.getListResponse(new ListAlertService(),
                 new BaseRequest<>(true));
 
         return response.getList();
@@ -97,7 +102,7 @@ public class AlertApis {
         getDtoRequest.setEntityName("Alert");
 
         GetDtoFromEntityService<AlertDto> getDtoService = new GetDtoFromEntityService<AlertDto>();
-        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     //TODO: Future. Allow multi update/delete of alerts
@@ -117,12 +122,12 @@ public class AlertApis {
 
         logger.info("Updating Alert " + alertId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        ApiUtil.setIdOrThrow(alertDto, alertId, "Alert");
+        apiUtil.setIdOrThrow(alertDto, alertId, "Alert");
 
         AlertRequest alertRequest = createAcknowledgeRequest(alertId, alertDto);
         AcknowledgeAlertService service = new AcknowledgeAlertService();
 
-        return ApiUtil.getResponseForBaseRequest(service, alertRequest);
+        return apiUtil.getResponseForBaseRequest(service, alertRequest);
     }
 
     /**
@@ -145,7 +150,7 @@ public class AlertApis {
 
         DeleteAlertService deleteService = new DeleteAlertService();
 
-        return ApiUtil.getResponseForBaseRequest(deleteService, alertRequest);
+        return apiUtil.getResponseForBaseRequest(deleteService, alertRequest);
     }
 
     private AlertRequest createDeleteRequest(Long alertId) {
