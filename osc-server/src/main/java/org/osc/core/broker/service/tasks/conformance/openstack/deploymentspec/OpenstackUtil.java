@@ -74,6 +74,7 @@ public class OpenstackUtil {
     private static final int SLEEP_DISCOVERY_RETRIES = 10 * 1000; // 10 seconds
     private static final int MAX_DISCOVERY_RETRIES = 40;
 
+    // TODO Sridhar: pass in just the IDs of the protectedports and remove break outerloop
     /**
      * Extract domainId for the given list of protected ports, which all belong to the same domain
      * @param tenantId
