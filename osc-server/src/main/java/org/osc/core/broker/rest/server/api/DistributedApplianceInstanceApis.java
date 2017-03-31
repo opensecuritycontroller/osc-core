@@ -30,6 +30,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -42,7 +44,6 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.GetAgentStatusResponseDto;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -64,6 +65,9 @@ public class DistributedApplianceInstanceApis {
     private static final Logger logger = Logger.getLogger(DistributedApplianceInstanceApis.class);
 
     @Reference
+    private ApiUtil apiUtil;
+
+    @Reference
     private GetAgentStatusService getAgentStatusService;
 
     @ApiOperation(value = "Lists All Distributed Appliance Instances",
@@ -80,7 +84,7 @@ public class DistributedApplianceInstanceApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) ApiUtil
+        ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) apiUtil
         .getListResponse(new ListDistributedApplianceInstanceService(), new BaseRequest<>(true));
 
         return response.getList();
@@ -105,7 +109,7 @@ public class DistributedApplianceInstanceApis {
         getDtoRequest.setEntityName("DistributedApplianceInstance");
         GetDtoFromEntityService<DistributedApplianceInstanceDto> getDtoService = new GetDtoFromEntityService<DistributedApplianceInstanceDto>();
 
-        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Retrieves the Distributed Appliance Instances status",
@@ -122,6 +126,6 @@ public class DistributedApplianceInstanceApis {
         logger.info("Getting Distributed Appliance Instance Status " + req);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return ApiUtil.submitRequestToService(this.getAgentStatusService, req);
+        return apiUtil.submitRequestToService(this.getAgentStatusService, req);
     }
 }
