@@ -34,6 +34,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
@@ -62,6 +63,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service = ApplianceApis.class)
 @Api(tags = "Operations for Security Functions Catalog", authorizations = { @Authorization(value = "Basic Auth") })
@@ -72,6 +74,9 @@ import io.swagger.annotations.Authorization;
 public class ApplianceApis {
 
     private static final Logger logger = Logger.getLogger(ApplianceApis.class);
+
+    @Reference
+    private ApiUtil apiUtil;
 
     @ApiOperation(value = "Lists All Software Function Models",
             notes = "Lists all the Software Function Models",
@@ -86,7 +91,7 @@ public class ApplianceApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<ApplianceDto> response = (ListResponse<ApplianceDto>) ApiUtil
+        ListResponse<ApplianceDto> response = (ListResponse<ApplianceDto>) apiUtil
                 .getListResponse(new ListApplianceService(), new BaseRequest<BaseDto>(true));
 
         return response.getList();
@@ -110,7 +115,7 @@ public class ApplianceApis {
         getDtoRequest.setEntityId(applianceId);
         getDtoRequest.setEntityName("Appliance");
         GetDtoFromEntityService<ApplianceDto> getDtoService = new GetDtoFromEntityService<ApplianceDto>();
-        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Deletes a Security Function Model",
@@ -123,7 +128,7 @@ public class ApplianceApis {
             required = true) @PathParam("applianceId") Long applianceId) {
         logger.info("Deleting Appliance " + applianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new DeleteApplianceService(), new BaseIdRequest(applianceId));
+        return apiUtil.getResponseForBaseRequest(new DeleteApplianceService(), new BaseIdRequest(applianceId));
     }
 
     @ApiOperation(value = "Lists Software Function Software Versions",
@@ -175,7 +180,7 @@ public class ApplianceApis {
         getDtoRequest.setParentId(applianceId);
 
         GetDtoFromEntityService<ApplianceSoftwareVersionDto> getDtoService = new GetDtoFromEntityService<ApplianceSoftwareVersionDto>();
-        return ApiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Deletes a Security Function Software Version",
@@ -191,7 +196,7 @@ public class ApplianceApis {
         logger.info(
                 "Deleting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new DeleteApplianceSoftwareVersionService(),
+        return apiUtil.getResponseForBaseRequest(new DeleteApplianceSoftwareVersionService(),
                 new BaseIdRequest(applianceSoftwareVersionId, applianceId));
     }
 
@@ -209,7 +214,7 @@ public class ApplianceApis {
                                   @ApiParam(required = true) InputStream uploadedInputStream) {
         logger.info("Started uploading file " + fileName);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return ApiUtil.getResponseForBaseRequest(new UploadApplianceVersionFileService(),
+        return apiUtil.getResponseForBaseRequest(new UploadApplianceVersionFileService(),
                 new UploadRequest(fileName, uploadedInputStream));
     }
 
