@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
@@ -59,12 +54,17 @@ import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.Sec
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
+import org.osc.core.broker.service.vc.CheckSSLConnectivityVcTask;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.TransactionalBrodcastListener;
 import org.osc.core.broker.util.db.TransactionalRunner;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import java.util.List;
 
 @Component(service = ConformService.class)
 public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> {
@@ -233,6 +233,32 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         // new LockOptions(LockMode.PESSIMISTIC_WRITE));
         mc.setLastJob(em.find(JobRecord.class, job.getId()));
         OSCEntityManager.update(em, mc);
+
+        log.info("Done submitting with jobId: " + job.getId());
+        return job;
+    }
+
+    /**
+     * Starts and VC conform job and executes the unlock task at the end. If the unlock task is null then automatically
+     * write locks the MC and release the lock at the end.
+     * <p>
+     * If a unlock task is provided, executes the unlock task at the end.
+     * </p>
+     */
+    public Job startVCConformJob(final VirtualizationConnector vc, EntityManager em)
+            throws Exception {
+        log.info("Start VC (id:" + vc.getId() + ") Conformance Job");
+        TaskGraph tg = new TaskGraph();
+        tg.addTask(new CheckSSLConnectivityVcTask(vc));
+        Job job = JobEngine.getEngine().submit("Syncing Virtualization Connector '" + vc.getName() + "'", tg,
+                LockObjectReference.getObjectReferences(vc), job1 -> new TransactionalRunner<Void, CompleteJobTransactionInput>(
+                        new TransactionalRunner.SharedSessionHandler())
+                        .withTransactionalListener(new TransactionalBrodcastListener())
+                        .exec(new CompleteJobTransaction<>(VirtualizationConnector.class),
+                                new CompleteJobTransactionInput(vc.getId(), job1.getId())));
+
+        vc.setLastJob(em.find(JobRecord.class, job.getId()));
+        OSCEntityManager.update(em, vc);
 
         log.info("Done submitting with jobId: " + job.getId());
         return job;

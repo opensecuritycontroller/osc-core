@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
@@ -31,7 +29,7 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.manager.MCDeleteMetaTask;
 
-
+import javax.persistence.EntityManager;
 
 public class DeleteApplianceManagerConnectorService extends
         ServiceDispatcher<BaseIdRequest, BaseJobResponse> {
@@ -39,19 +37,10 @@ public class DeleteApplianceManagerConnectorService extends
     private static final Logger log = Logger.getLogger(DeleteApplianceManagerConnectorService.class);
 
     @Override
-    public BaseJobResponse exec(BaseIdRequest request, EntityManager em)
-            throws Exception {
-
-        ApplianceManagerConnector mc = em.find(ApplianceManagerConnector.class,
-                request.getId());
-
+    public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
+        ApplianceManagerConnector mc = em.find(ApplianceManagerConnector.class, request.getId());
         validate(em, request, mc);
-
-        Long jobId = startJob(mc);
-
-        BaseJobResponse response = new BaseJobResponse();
-        response.setJobId(jobId);
-        return response;
+        return new BaseJobResponse(startJob(mc));
     }
 
     private void validate(EntityManager em, BaseIdRequest request, ApplianceManagerConnector mc)

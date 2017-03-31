@@ -1,0 +1,88 @@
+/*******************************************************************************
+ * Copyright (c) Intel Corporation
+ * Copyright (c) 2017
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
+
+import org.apache.log4j.Logger;
+import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.job.TaskGuard;
+import org.osc.core.broker.job.lock.LockManager;
+import org.osc.core.broker.job.lock.LockRequest;
+import org.osc.core.broker.job.lock.LockRequest.LockType;
+import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
+import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+
+import javax.persistence.EntityManager;
+
+public class VCDeleteMetaTask extends TransactionalMetaTask {
+    private static final Logger log = Logger.getLogger(VCDeleteMetaTask.class);
+
+    private VirtualizationConnector vc;
+    private TaskGraph tg;
+
+    public VCDeleteMetaTask(VirtualizationConnector vc) {
+        this.vc = vc;
+        this.name = getName();
+    }
+
+    @Override
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.tg = new TaskGraph();
+        log.info("Start executing VCConformanceCheckMetaTask task for VC '" + this.vc.getName() + "'");
+
+        UnlockObjectTask vcUnlockTask = null;
+        try {
+            this.vc = em.find(VirtualizationConnector.class, this.vc.getId());
+
+            vcUnlockTask = LockUtil.lockVC(this.vc, LockType.WRITE_LOCK);
+
+            OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
+            VirtualizationConnector connector = vcEntityMgr.findByPrimaryKey(this.vc.getId());
+
+            SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
+            sslCertificateAttrEntityMgr.removeCertificateList(connector.getSslCertificateAttrSet());
+            vcEntityMgr.delete(this.vc.getId());
+
+            if (this.tg.isEmpty()) {
+                LockManager.getLockManager().releaseLock(new LockRequest(vcUnlockTask));
+            } else {
+                this.tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
+            }
+
+        } catch (Exception ex) {
+            // If we experience any failure, unlock VC.
+            if (vcUnlockTask != null) {
+                log.info("Releasing lock for VC '" + this.vc.getName() + "'");
+                LockManager.getLockManager().releaseLock(new LockRequest(vcUnlockTask));
+            }
+            throw ex;
+        }
+    }
+
+    @Override
+    public String getName() {
+        return "Delete Virtualization Connector '" + this.vc.getName() + "'";
+    }
+
+    @Override
+    public TaskGraph getTaskGraph() {
+        return this.tg;
+    }
+}

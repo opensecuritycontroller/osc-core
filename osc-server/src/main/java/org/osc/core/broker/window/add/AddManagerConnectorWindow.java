@@ -16,12 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.window.add;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
-
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
@@ -47,15 +50,11 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.rest.client.exception.RestClientException;
 
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("serial")
 public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonModel> {
@@ -219,9 +218,8 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
 
         addRequest.addErrorsToIgnore(errorTypesToIgnore);
         // calling add MC service
-        BaseJobResponse addResponse;
         log.info("adding manager connector - " + this.name.getValue().trim());
-        addResponse = this.addMCService.dispatch(addRequest);
+        BaseJobResponse addResponse = this.addMCService.dispatch(addRequest);
         // adding returned ID to the request DTO object
         addRequest.getDto().setId(addResponse.getId());
         // adding new object to the parent table
