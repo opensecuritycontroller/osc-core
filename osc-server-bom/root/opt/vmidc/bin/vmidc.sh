@@ -23,6 +23,9 @@ default_java_opts="
     -Xmx4096m
 "
 
+# Extend size of ephemeral Diffie-Hellman keys
+JAVA_OPTS="$JAVA_OPTS -Djdk.tls.ephemeralDHKeySize=2048"
+
 # if JAVA_OPTS is not set, then set it to $default_java_opts
 : ${JAVA_OPTS:=$default_java_opts}
 
