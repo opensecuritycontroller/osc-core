@@ -28,7 +28,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.Job;
-import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
@@ -107,9 +106,6 @@ public class AddVirtualizationConnectorServiceTest {
 
         PowerMockito.mockStatic(EncryptionUtil.class);
         when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
-
-        PowerMockito.mockStatic(LockUtil.class);
-        PowerMockito.when(LockUtil.dryLockVC(any(VirtualizationConnector.class), any(LockRequest.LockType.class))).thenReturn(this.unlockObjectTask);
 
         when(this.job.getId()).thenReturn(5L);
         //PowerMockito.mockStatic(ConformService.class);

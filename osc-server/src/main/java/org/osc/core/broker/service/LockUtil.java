@@ -102,11 +102,6 @@ public class LockUtil {
                 lockType, false);
     }
 
-    public static UnlockObjectTask dryLockVC(VirtualizationConnector vc, LockType lockType) throws Exception {
-        return lockObject(new LockObjectReference(vc.getId(), vc.getName(), ObjectType.VIRTUALIZATION_CONNECTOR),
-                lockType, true);
-    }
-
     public static UnlockObjectMetaTask tryLockVC(VirtualizationConnector vc, LockType lockType) throws Exception {
         return tryLockObjects(lockType, new LockObjectReference(vc.getId(), vc.getName(),
                 ObjectType.VIRTUALIZATION_CONNECTOR));
