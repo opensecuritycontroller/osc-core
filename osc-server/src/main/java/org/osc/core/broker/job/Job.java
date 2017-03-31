@@ -141,7 +141,7 @@ public class Job implements Runnable, JobElement {
             // the scoped work (i.e. the executeTransaction() call.
             log.error("Fail to update JobRecord " + this, e.getCause());
         } catch (Exception e) {
-            // TODO remove when EM and TX are injected
+            // TODO:nbartlex remove when EM and TX are injected in A7
             log.error("Fail to update JobRecord " + this, e);
         }
     }

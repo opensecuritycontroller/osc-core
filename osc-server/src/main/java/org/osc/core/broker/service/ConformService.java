@@ -137,7 +137,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                     try {
                         HibernateUtil.getTransactionControl().required(() ->
                             new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class)
-                            .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(mc.getId(), job.getId())));
+                            .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
                     } catch (Exception e) {
                         log.error("A serious error occurred in the Job Listener", e);
                         throw new RuntimeException("No Transactional resources are available", e);
@@ -436,8 +436,9 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
     public static void updateSGJob(EntityManager em, final SecurityGroup sg, Job job) {
 
-        //TODO it would be more sensible to inject the transactional entitymanager
+        // TODO:nbartlex it would be more sensible to inject the transactional entitymanager
         // and make this decision using if(txControl.activeTransaction()) {...}
+    	// (work item A7)
 
         if (em != null) {
             sg.setLastJob(em.find(JobRecord.class, job.getId()));
