@@ -178,8 +178,8 @@ public final class LoggingUtil {
     }
 
     public static String removeCRLF(String message){
-        String clean = message.replace( '\n', '_' ).replace( '\r', '_' );
-        if ( ESAPI.securityConfiguration().getLogEncodingRequired() ) {
+        String clean = message.replace('\n', '_').replace('\r', '_');
+        if (ESAPI.securityConfiguration().getLogEncodingRequired()) {
             clean = ESAPI.encoder().encodeForHTML(message);
             if (!message.equals(clean)) {
                 clean += " (Encoded)";

@@ -58,7 +58,7 @@ public class ArchiveUtilTest {
             ZipOutputStream out = new ZipOutputStream(fos)) {
             archiveMap.entrySet().stream()
                     .sorted(Map.Entry.<String, String>comparingByValue())
-                    .forEachOrdered( k ->addEntryToZip(sb, out, k));
+                    .forEachOrdered(k ->addEntryToZip(sb, out, k));
         }
     }
 
