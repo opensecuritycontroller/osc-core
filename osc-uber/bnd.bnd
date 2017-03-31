@@ -47,7 +47,6 @@ Require-Capability: \
     @${jackson-dataformat-yaml.dep},\
     @${javax.mail.dep},\
     @${joda-time.dep},\
-    @${json.dep},\
     @${jsoup.dep},\
     @${log4j.dep},\
     @${popupbutton.dep},\
@@ -57,7 +56,6 @@ Require-Capability: \
     @${slf4j-api.dep},\
     @${snakeyaml.dep},\
     @${stepper.dep},\
-    @${streamhtmlparser-jsilver.dep},\
     @${swagger-annotations.dep},\
     @${swagger-core.dep},\
     @${swagger-models.dep},\
@@ -350,7 +348,7 @@ exclude-other:\
   !org.apache.commons.httpclient.*,\
   !org.apache.xerces.*,\
   !org.apache.xml.serialize,\
-  !org.cyberneko.html.*
+  !org.cyberneko.html.*,\
   !org.apache.avalon.*,\
   !org.apache.http.*,\
   !org.apache.log.*,\
