@@ -79,15 +79,18 @@ public class RabbitMQRunner implements BroadcastListener {
             // Initializing DS Runner here
             this.deploymentSpecRunner = new OsDeploymentSpecNotificationRunner();
 
+        } catch (ScopedWorkException e) {
+            handleError(e.getCause());
         } catch (Exception e) {
-            if(e instanceof ScopedWorkException) {
-                e = (Exception) e.getCause();
-            }
-            log.error("Exception during initializing RabbitMQ clients", e);
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
-                    "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
+            handleError(e);
         }
 
+    }
+
+    private void handleError(Throwable e) {
+        log.error("Exception during initializing RabbitMQ clients", e);
+        AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+                "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
     }
 
     @Override
@@ -105,15 +108,18 @@ public class RabbitMQRunner implements BroadcastListener {
                 }
                 updateVCNotificationThreadMap(vc, msg.getEventType());
             }
+        } catch (ScopedWorkException e) {
+            handleError(vc, e.getCause());
         } catch (Exception e) {
-            if(e instanceof ScopedWorkException) {
-                e = (Exception) e.getCause();
-            }
-            log.error("Failed to create RabbitMQ Client for given Open Stack " + vc.getId() + " due to "
-                    + e.getMessage());
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
-                    "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
+            handleError(vc, e);
         }
+    }
+
+    private void handleError(VirtualizationConnector vc, Throwable e) {
+        log.error("Failed to create RabbitMQ Client for given Open Stack " + vc.getId() + " due to "
+                + e.getMessage());
+        AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+                "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
     }
 
     private void updateVCNotificationThreadMap(VirtualizationConnector vc, EventType event) throws Exception {

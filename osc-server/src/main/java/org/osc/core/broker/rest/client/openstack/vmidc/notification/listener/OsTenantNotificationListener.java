@@ -67,21 +67,24 @@ public class OsTenantNotificationListener extends OsNotificationListener {
                         return null;
                     });
 
+                } catch (ScopedWorkException e) {
+                    handleException(keyValue, e.getCause());
                 } catch (Exception e) {
-                    if(e instanceof ScopedWorkException) {
-                        e = (Exception) e.getCause();
-                    }
-                    log.error("Failed post notification processing  - " + this.vc.getControllerIpAddress(), e);
-                    AlertGenerator
-                            .processSystemFailureEvent(
-                                    SystemFailureType.OS_NOTIFICATION_FAILURE,
-                                    LockObjectReference.getLockObjectReference(this.entity, new LockObjectReference(
-                                            this.vc)),
-                                    "Fail to process Openstack Tenant (" + keyValue + ") notification ("
-                                            + e.getMessage() + ")");
+                    handleException(keyValue, e);
                 }
             }
         }
+    }
+
+    private void handleException(String keyValue, Throwable e) {
+        log.error("Failed post notification processing  - " + this.vc.getControllerIpAddress(), e);
+        AlertGenerator
+                .processSystemFailureEvent(
+                        SystemFailureType.OS_NOTIFICATION_FAILURE,
+                        LockObjectReference.getLockObjectReference(this.entity, new LockObjectReference(
+                                this.vc)),
+                        "Fail to process Openstack Tenant (" + keyValue + ") notification ("
+                                + e.getMessage() + ")");
     }
 
     private void handleSGMessages(EntityManager em, String keyValue) throws Exception {
