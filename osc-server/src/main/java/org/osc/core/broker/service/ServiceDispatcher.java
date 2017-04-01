@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.Callable;
 
 import javax.persistence.EntityManager;
@@ -43,7 +45,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
     private static final Logger log = Logger.getLogger(ServiceDispatcher.class);
     private EntityManager em = null;
 
-    private Callable<O> secondaryDispatch;
+    private final Queue<ChainedDispatch<O>> chainedDispatches = new LinkedList<>();
 
     // generalized method to dispatch incoming requests to the appropriate
     // service handler
@@ -67,30 +69,100 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
             // calling service in a transaction
             response = txControl.required(() -> exec(request, this.em));
         } catch (ScopedWorkException e) {
-
             handleException((Exception) e.getCause());
-
         }
 
-        if(this.secondaryDispatch != null) {
-            try {
-                // calling the second step of this service in a transaction
-                response = txControl.required(this.secondaryDispatch);
-            } catch (ScopedWorkException e) {
-                handleException((Exception) e.getCause());
-            }
-        }
+		ChainedDispatch<O> nextDispatch;
+		while ((nextDispatch = popChain()) != null) {
+			try {
+				final O previousResponse = response;
+				final ChainedDispatch<O> tempNext = nextDispatch;
+				response = txControl.required(() -> tempNext.dispatch(previousResponse, em));
+			} catch (ScopedWorkException e) {
+				handleException((Exception) e.getCause());
+			}
+		}
 
         log.info("Service response: " + response);
         return response;
     }
-
-    protected void chain(Callable<O> toCall) {
-        if(this.secondaryDispatch != null) {
-            throw new IllegalStateException("An additional transactional step has already been added");
-        }
-        this.secondaryDispatch = toCall;
+    
+    private ChainedDispatch<O> popChain() {
+    	synchronized (chainedDispatches) {
+    		return chainedDispatches.poll();
+		}
     }
+
+	/**
+	 * <p>
+	 * Chain an additional transaction step that will be executed in its own
+	 * transaction, after the successful completion of the main transaction and
+	 * all previously chained transaction steps. It is legal to add a chained
+	 * step during the execution of the main transaction and/or during a
+	 * previously added step.
+	 * </p>
+	 * 
+	 * <p>
+	 * This variation of the method is convenient for chaining method
+	 * references, for example:
+	 * </p>
+	 * 
+	 * <pre>
+	 * &#64;Override
+	 * protected B exec(A a, EntityManager em) throws Exception {
+	 *     B interimResult = ...;
+	 *     chain(this::doNextPart);
+	 *     return interimResult;
+	 * }
+	 * private B doNextPart(B input, EntityManager em) {
+	 *     // input comes from 'interimResult' above
+	 *     em.merge(input);
+	 *     return new B(...);
+	 * }
+	 * </pre>
+	 * 
+	 * @param dispatch
+	 *            A function that shall be executed in its own transaction. The
+	 *            input to the function shall be the result from the previous
+	 *            step or, if this is the first step, the result from the main
+	 *            transaction. If this is the last step then the return value of
+	 *            the provided function is used as the result for the entire
+	 *            dispatch.
+	 */
+	protected void chain(ChainedDispatch<O> dispatch) {
+		synchronized (chainedDispatches) {
+			chainedDispatches.add(dispatch);
+		}
+	}
+
+	/**
+	 * <p>See {@link #chain(ChainedDispatch)}.</p>
+	 * 
+	 * <p>This variation of the method is useful for chaining lambdas, which can
+	 * have visibility of the outer scope. For example:</p>
+	 * 
+	 * <pre>
+	 * &#64;Override
+	 * protected B exec(A a, EntityManager em) throws Exception {
+	 *     B interimResult = ...;
+	 *     chain(() -> {
+	 *         em.merge(interimResult);
+	 *         return new B(...);
+	 *     });
+	 *     return interimResult;
+	 * }
+	 * 
+	 * </pre>
+	 * 
+	 * @param call
+	 * @see #chain(ChainedDispatch)
+	 */
+	protected void chain(Callable<O> call) {
+		ChainedDispatch<O> dispatch = (em, o) -> call.call();
+		synchronized (chainedDispatches) {
+			chainedDispatches.add(dispatch);
+		}
+	}
 
     /**
      * Created for the testing the class. Which helps to create the mock object of SessionFactory.
