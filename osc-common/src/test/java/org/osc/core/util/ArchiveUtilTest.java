@@ -36,13 +36,21 @@ import java.util.zip.ZipOutputStream;
 public class ArchiveUtilTest {
 
 
-    private static final String PATH = System.getProperty("user.dir");
-    private final static String FILE_ABSOLUTE = PATH + File.separator+"test.zip";
+    private static String PATH = System.getProperty("user.dir");
+    private static String FILE_ABSOLUTE = null;
+    private static String SEPARATOR = File.separator;
 
+    static{
+        String system = System.getProperty("os.name");
+        if(system.contains("Windows")){
+            SEPARATOR = "/";
+        }
+        FILE_ABSOLUTE = PATH + SEPARATOR + "test.zip";
+    }
     private  Map<String, String> archiveMap = new HashMap<String, String>(){{
-       put("mytext.txt","f");
-       put("dir"+File.separator,"d");
-       put("dir"+File.separator+"mytext.txt","f");
+        put("mytext.txt","f");
+        put("dir"+SEPARATOR,"d");
+        put("dir"+SEPARATOR+"mytext.txt","f");
     }};
 
     private void prepareValidZipFile() throws IOException {
@@ -101,7 +109,7 @@ public class ArchiveUtilTest {
 
     private void removeDirs(String d) {
         try {
-            Files.deleteIfExists(Paths.get(PATH + File.separator + d));
+            Files.deleteIfExists(Paths.get(PATH + SEPARATOR + d));
         } catch (IOException e) {
             if(!(e instanceof DirectoryNotEmptyException)) {
                 e.printStackTrace();
@@ -111,7 +119,7 @@ public class ArchiveUtilTest {
 
     private void removeFilesAndEmptyDirs(List<String> dirsToRetry, Map.Entry<String, String> k) {
         try {
-             Files.deleteIfExists(Paths.get(PATH + File.separator + k.getKey()));
+            Files.deleteIfExists(Paths.get(PATH + SEPARATOR + k.getKey()));
         } catch (IOException e) {
             if(e instanceof DirectoryNotEmptyException) {
                 dirsToRetry.add(k.getKey());
@@ -131,7 +139,7 @@ public class ArchiveUtilTest {
         archiveMap.entrySet()
                 .stream()
                 .forEach(k ->
-                        Assert.assertTrue("File should exist: " + PATH + File.separator + k.getKey(), Files.exists(Paths.get(PATH + File.separator + k.getKey())))
+                        Assert.assertTrue("File should exist: " + PATH + SEPARATOR + k.getKey(), Files.exists(Paths.get(PATH + SEPARATOR + k.getKey())))
                 );
 
     }
