@@ -30,9 +30,9 @@ import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 
 /**
- * This task is responsible for creating a inspection hook
- * for a given security group interface (SGI) using the given distributed
- * appliance instance. This task will also update the SGI with the identifier
+ * This task is responsible for creating a inspection hook for a given
+ * security group interface (SGI) using the provided distributed appliance
+ * instance. This task will also update the SGI with the identifier
  * of the created inspection hook.
  * <p>
  * This task is applicable to SGIs whose virtual system refers to an SDN
@@ -59,7 +59,7 @@ public final class CreatePortGroupHookTask extends BasePortGroupHookTask {
         LOG.info(String.format("Created inspection hook %s for the security group interface %s",  inspectionHookId, getSGI().getName()));
 
         if (inspectionHookId == null){
-            throw new VmidcException(String.format("The creation of the inspection hook for the security group interface $s "
+            throw new VmidcException(String.format("The creation of the inspection hook for the security group interface %s."
                     + "succeeded but the returned identifier was null.", getSGI().getName()));
         }
 

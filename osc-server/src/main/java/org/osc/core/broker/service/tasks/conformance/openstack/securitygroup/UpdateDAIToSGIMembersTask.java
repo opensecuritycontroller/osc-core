@@ -31,6 +31,13 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 
+/**
+ * This base task represents the common responsibility between the tasks
+ * {@see AllocateDAIWithSGIMembersTask} and {@see DeallocateDAIOfSGIMembersTask}
+ * <p>
+ * This task is applicable to SGIs whose virtual system refers to an SDN
+ * controller that supports port groups.
+ */
 public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
     private SecurityGroupInterface sgi;
     private DistributedApplianceInstance dai;

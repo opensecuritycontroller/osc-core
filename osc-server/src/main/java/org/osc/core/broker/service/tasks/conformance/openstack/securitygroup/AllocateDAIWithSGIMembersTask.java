@@ -21,6 +21,13 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 
+/**
+ * This task is responsible for assigning the provided DAI
+ * to all the protected ports associated with the given SGI.
+ * <p>
+ * This task is applicable to SGIs whose virtual system refers to an SDN
+ * controller that supports port groups.
+ */
 public final class AllocateDAIWithSGIMembersTask extends UpdateDAIToSGIMembersTask {
     private static final Logger LOG = Logger.getLogger(AllocateDAIWithSGIMembersTask.class);
 

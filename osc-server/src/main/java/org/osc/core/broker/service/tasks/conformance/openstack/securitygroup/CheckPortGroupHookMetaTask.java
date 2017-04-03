@@ -37,6 +37,14 @@ import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.Op
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionHookElement;
 
+/**
+ * This metatask is responsible for checking whether a port
+ * group hook needs to be created, updated or deleted for the
+ * provided SGI.
+ * <p>
+ * This task is applicable to SGIs whose virtual system refers to an SDN
+ * controller that supports port groups.
+ */
 public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
     private SecurityGroupInterface sgi;
     private TaskGraph tg;
@@ -184,7 +192,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
 
     @Override
     public String getName() {
-        return String.format("Create the inspection hook for the security group interface '%s' ", this.sgi.getName());
+        return String.format("Check the inspection hook for the security group interface %s.", this.sgi.getName());
     }
 
     @Override

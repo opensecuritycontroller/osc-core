@@ -28,6 +28,13 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.DefaultNetworkPort;
 
+/**
+ * This abstract class represents the common responsibility of
+ * the tasks {@link CreatePortGroupHookTask} and {@link UpdatePortGroupHookTask}.
+ * <p>
+ * This task is applicable to SGIs whose virtual system refers to an SDN
+ * controller that supports port groups.
+ */
 public abstract class BasePortGroupHookTask extends TransactionalTask {
     private SecurityGroupInterface sgi;
     private DistributedApplianceInstance dai;
@@ -48,7 +55,7 @@ public abstract class BasePortGroupHookTask extends TransactionalTask {
         String portGroupId = this.sgi.getSecurityGroup().getNetworkElementId();
 
         if (portGroupId == null) {
-            throw new VmidcBrokerValidationException(String.format("The security group $s does not have a network element set.", this.sgi.getSecurityGroup().getName()));
+            throw new VmidcBrokerValidationException(String.format("The security group %s does not have a network element set.", this.sgi.getSecurityGroup().getName()));
         }
 
         this.portGroup = new PortGroup();

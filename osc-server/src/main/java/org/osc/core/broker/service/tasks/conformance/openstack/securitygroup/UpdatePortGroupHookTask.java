@@ -28,8 +28,8 @@ import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 
 /**
- * This task is responsible for updating a inspection hook
- * for a given security group interface (SGI) using the given distributed
+ * This task is responsible for updating a inspection hook for a given
+ * security group interface (SGI) using the given distributed
  * appliance instance.
  * <p>
  * This task is applicable to SGIs whose virtual system refers to an SDN
