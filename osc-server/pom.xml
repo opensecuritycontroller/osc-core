@@ -46,14 +46,14 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
-		<repository>
-			<id>osc-nexus</id>
-			<name>OSC Nexus</name>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<url>http://10.3.240.132:8082/nexus/content/repositories/releases/</url>
-		</repository>
+        <repository>
+            <id>osc-nexus</id>
+            <name>OSC Nexus</name>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/osc-snapshot/</url>
+        </repository>
 
 	</repositories>
 	<pluginRepositories>
@@ -72,25 +72,13 @@
         <dependency>
 			<groupId>org.osc.api</groupId>
 			<artifactId>security-mgr-api</artifactId>
-			<version>1.0</version>
+			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.api</groupId>
 			<artifactId>sdn-controller-api</artifactId>
-			<version>1.0</version>
+			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>org.osc.api</groupId>
-			<artifactId>security-mgr-api</artifactId>
-			<version>1.0</version>
-            <classifier>sources</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.osc.api</groupId>
-			<artifactId>sdn-controller-api</artifactId>
-			<version>1.0</version>
-		    <classifier>sources</classifier>
-        </dependency>
 	    <dependency>
 	      <groupId>org.osc.api</groupId>
 	      <artifactId>vmware-nsx-api</artifactId>
@@ -408,7 +396,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.5</version>
 				<configuration>
-					<finalName>${artifactId}</finalName>
+					<finalName>${project.artifactId}</finalName>
 					<archive>
 						<manifest>
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
