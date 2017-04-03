@@ -16,28 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api.test;
 
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.osc.core.broker.rest.server.OscAuthFilter;
-import org.osc.core.broker.rest.server.exception.BadRequestExceptionMapper;
-import org.osc.core.broker.rest.server.exception.InternalServerErrorExceptionMapper;
-import org.osc.core.broker.rest.server.exception.JsonProcessingExceptionMapper;
-import org.osc.core.broker.rest.server.exception.NotFoundExceptionMapper;
-import org.osc.core.broker.rest.server.exception.PathParamExceptionMapper;
-import org.osc.core.broker.rest.server.exception.XMLParseExceptionMapper;
-import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.util.api.ApiUtil;
 
 import java.util.Arrays;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class BaseJerseyTest extends JerseyTest {
