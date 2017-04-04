@@ -31,7 +31,7 @@ public class InMemDB {
             Map<String, Object> props = new HashMap<>();
 
             props.put("javax.persistence.jdbc.driver", "org.h2.Driver");
-            props.put("javax.persistence.jdbc.url", "jdbc:h2:mem"); // in-memory db
+            props.put("javax.persistence.jdbc.url", "jdbc:h2:mem:test"); // in-memory db
             props.put("javax.persistence.schema-generation.database.action", "drop-and-create"); // create brand-new db schema in memory
             props.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
             props.put("hibernate.show_sql", "true");

@@ -56,8 +56,6 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.util.encryption.EncryptionException;
 
-import com.google.gwt.thirdparty.guava.common.base.Objects;
-
 public class UpdateVirtualizationConnectorService
         extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>, BaseResponse> {
 
@@ -197,8 +195,8 @@ public class UpdateVirtualizationConnectorService
         if (!request.isIgnoreErrorsAndCommit(ErrorType.IP_CHANGED_EXCEPTION) && !request.isSkipAllDryRun()
                 && existingVc.getVirtualSystems().size() > 0
                 && ((existingVc.getControllerIpAddress() != null
-                && !Objects.equal(existingVc.getControllerIpAddress(), dto.getControllerIP()))
-                || !Objects.equal(existingVc.getProviderIpAddress(), dto.getProviderIP()))) {
+                && !existingVc.getControllerIpAddress().equals(dto.getControllerIP())
+                || !existingVc.getProviderIpAddress().equals(dto.getProviderIP())))) {
             log.info("Ip changed for either the controller or the provider with deployed Virtual Systems");
             throw new ErrorTypeException(VmidcMessages.getString(VmidcMessages_.VC_WARNING_IPUPDATE),
                     ErrorType.IP_CHANGED_EXCEPTION);
