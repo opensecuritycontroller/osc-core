@@ -41,8 +41,10 @@ import static org.osc.core.broker.service.tasks.conformance.openstack.deployment
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -64,8 +66,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.test.util.TaskGraphHelper;
-
-import com.google.gwt.thirdparty.guava.common.collect.Sets;
 
 @RunWith(Parameterized.class)
 public class DSUpdateOrDeleteMetaTaskTest {
@@ -94,11 +94,12 @@ public class DSUpdateOrDeleteMetaTaskTest {
 
         List<AvailabilityZoneDetails> osAvailabilityZones1 = Arrays.asList(createAvailableZoneDetails(AZ_1, Arrays.asList(HS_1_1)));
         HostAggregate ha = Mockito.mock(HostAggregate.class);
-        Mockito.doReturn(Sets.newHashSet(HS_1_1)).when(ha).getHosts();
+        Set<String> h1set = new HashSet<>(Arrays.asList(HS_1_1));
+        Mockito.doReturn(h1set).when(ha).getHosts();
         Mockito.doReturn("ha_name").when(ha).getName();
 
         Mockito.doReturn(osAvailabilityZones1).when(this.novaApiMock).getAvailabilityZonesDetail(REGION_1);
-        Mockito.doReturn(Sets.newHashSet(HS_1_1)).when(this.novaApiMock).getComputeHosts(REGION_1);
+        Mockito.doReturn(h1set).when(this.novaApiMock).getComputeHosts(REGION_1);
         Mockito.doReturn(ha).when(this.novaApiMock).getHostAggregateById(
                 REGION_1,
                 ((org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate)UPDATE_HOST_AGGREGATE_SELECTED_DS.getHostAggregates().toArray()[0]).getOpenstackId());

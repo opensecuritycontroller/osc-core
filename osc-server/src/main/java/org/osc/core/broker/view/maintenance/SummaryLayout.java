@@ -24,7 +24,6 @@ import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
 import org.osc.core.broker.service.BackupService;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
@@ -150,15 +149,11 @@ public class SummaryLayout extends FormLayout {
             @Override
             public void setEnabled(boolean enabled) {
                 if (enabled) {
-                    try {
-                        // because setEnabled(false) calls are ignored and button is disabled
-                        // on client because of setDisableOnClick(true), by doing this we
-                        // make sure that the button is actually disabled so that setEnabled(true)
-                        // has effect
-                        getUI().getConnectorTracker().getDiffState(this).put("enabled", false);
-                    } catch (JSONException e) {
-                        throw new RuntimeException(e);
-                    }
+                    // because setEnabled(false) calls are ignored and button is disabled
+                    // on client because of setDisableOnClick(true), by doing this we
+                    // make sure that the button is actually disabled so that setEnabled(true)
+                    // has effect
+                    getUI().getConnectorTracker().getDiffState(this).put("enabled", false);
                     super.setEnabled(enabled);
                 }
             }

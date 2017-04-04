@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -92,13 +93,22 @@ public class ArchiveUtil {
         int entries = 0;
         long total = BUFFER_SIZE;
         log.info("Extracting " + inputFile + " into " + destination);
+
+        File zipParentDir = new File(inputFile).getParentFile();
+
         try(ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));) {
             while ((entry = zis.getNextEntry()) != null) {
                 int count;
                 byte[] data = new byte[BUFFER_SIZE];
                 // Write the files to the disk, but ensure that the filename is valid,
                 // and that the file is not insanely big
-                String name = validateFilename(entry.getName(), ".");
+
+                String filename = entry.getName();
+                if (zipParentDir.isDirectory()) {
+                    filename = Paths.get(zipParentDir.toString(), entry.getName()).toString();
+                }
+
+                String name = preventPathTraversal(filename, destination);
                 if (entry.isDirectory()) {
                     new File(name).mkdir();
                     continue;
@@ -155,7 +165,7 @@ public class ArchiveUtil {
      * @return name of the file
      * @throws IllegalStateException if name is incorrect
      */
-    private static String validateFilename(String filename, String intendedDir)
+    private static String preventPathTraversal(String filename, String intendedDir)
             throws java.io.IOException {
         File f = new File(filename);
         File iD = new File(intendedDir);
