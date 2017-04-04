@@ -54,8 +54,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
-import com.google.gwt.thirdparty.guava.common.collect.Sets;
-
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
 @PrepareForTest({HibernateUtil.class})
