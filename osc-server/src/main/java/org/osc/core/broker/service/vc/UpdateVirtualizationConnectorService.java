@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import com.google.gwt.thirdparty.guava.common.base.Objects;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
