@@ -21,6 +21,7 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
+import org.osc.core.broker.model.plugin.sdncontroller.InspectionHookElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.FailurePolicyType;
@@ -49,10 +50,13 @@ public final class UpdatePortGroupHookTask extends BasePortGroupHookTask {
         String inspectionHookId = getSGI().getNetworkElementId();
 
         try (SdnRedirectionApi redirection = SdnControllerApiFactory.createNetworkRedirectionApi(getSGI().getVirtualSystem())) {
-            redirection.updateInspectionHook(inspectionHookId, getPortGroup(),
-                    new DefaultInspectionPort(getIngressPort(), getEgressPort()),
-                    getSGI().getTagValue(), TagEncapsulationType.valueOf(getSGI().getVirtualSystem().getEncapsulationType().name()),
-                    getSGI().getOrder(), FailurePolicyType.valueOf(getSGI().getFailurePolicyType().name()));
+            InspectionHookElementImpl inspectionHook =
+                    new InspectionHookElementImpl(inspectionHookId, getPortGroup(),
+                            new DefaultInspectionPort(getIngressPort(), getEgressPort()),
+                            getSGI().getTagValue(), TagEncapsulationType.valueOf(getSGI().getVirtualSystem().getEncapsulationType().name()),
+                            getSGI().getOrder(), FailurePolicyType.valueOf(getSGI().getFailurePolicyType().name()));
+
+            redirection.updateInspectionHook(inspectionHook);
         }
 
         LOG.info(String.format("Updated inspection hook %s for the security group interface %s",  inspectionHookId, getSGI().getName()));
