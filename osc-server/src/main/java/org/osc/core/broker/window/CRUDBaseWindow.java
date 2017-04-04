@@ -88,7 +88,7 @@ public abstract class CRUDBaseWindow<T extends OkCancelButtonModel> extends Vmid
     }
 
     protected void handleCatchAllException(Throwable e) {
-        log.info(e.getMessage());
+        log.error(e.getMessage(), e);
         ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
     }
 
