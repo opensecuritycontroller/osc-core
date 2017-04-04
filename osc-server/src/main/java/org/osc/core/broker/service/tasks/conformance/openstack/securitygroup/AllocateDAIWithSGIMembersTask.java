@@ -35,10 +35,19 @@ public final class AllocateDAIWithSGIMembersTask extends UpdateDAIToSGIMembersTa
         super(sgi,dai);
     }
 
+    /**
+     * This method assigns the provided port with the {@link #getDai()}
+     * @param protectedPort   the port to be attached to the DAI.
+     */
     @Override
     public void updatePortProtection(VMPort protectedPort) {
         protectedPort.addDai(getDai());
         getDai().addProtectedPort(protectedPort);
         LOG.info(String.format("The port %s is protected with the DAI %s", protectedPort.getId(), getDai().getName()));
+    }
+
+    @Override
+    public String getName() {
+        return String.format("Assigning the DAI %s to all the ports in the SGI %s.", getDai().getName(), getSGI().getName());
     }
 }

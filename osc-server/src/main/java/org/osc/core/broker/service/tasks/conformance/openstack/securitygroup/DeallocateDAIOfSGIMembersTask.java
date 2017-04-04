@@ -35,10 +35,19 @@ public class DeallocateDAIOfSGIMembersTask extends UpdateDAIToSGIMembersTask {
         super(sgi,dai);
     }
 
+    /**
+     * This method detaches the provided port from the {@link #getDai()}
+     * @param protectedPort   the port to be detached from the DAI.
+     */
     @Override
     public void updatePortProtection(VMPort protectedPort) {
         protectedPort.removeDai(getDai());
         getDai().removeProtectedPort(protectedPort);
         LOG.info(String.format("The DAI %s was unassigned from the port %s.", getDai().getName(), protectedPort.getId()));
+    }
+
+    @Override
+    public String getName() {
+        return String.format("Detaching the DAI %s from all the ports in the SGI %s.", getDai().getName(), getSGI());
     }
 }

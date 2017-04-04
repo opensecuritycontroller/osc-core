@@ -103,6 +103,10 @@ public class SecurityGroupInterface extends BaseEntity {
     @Column(name = "chain_order", columnDefinition = "bigint default 0", nullable = false)
     private Long order = 0L;
 
+    /**
+     * Represents the identifier of the inspection hook created in the SDN controller
+     * when it supports port groups.
+     */
     @Column(name = "network_elem_id")
     private String networkElementId;
 

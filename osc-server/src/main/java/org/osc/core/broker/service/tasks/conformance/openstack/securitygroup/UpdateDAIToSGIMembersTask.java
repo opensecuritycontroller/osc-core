@@ -80,5 +80,13 @@ public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
         return this.dai;
     }
 
+    protected SecurityGroupInterface getSGI() {
+        return this.sgi;
+    }
+
+    /**
+     * This method updates the provided port with the {@link #getDai()}
+     * @param protectedPort   the port to be updated.
+     */
     public abstract void updatePortProtection(VMPort protectedPort);
 }
