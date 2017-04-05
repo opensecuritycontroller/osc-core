@@ -51,14 +51,13 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
             throw new VmidcBrokerValidationException("Security Group Name: " + dto.getName() + " already exists on the same Tenant.");
         }
 
-        SecurityGroup securityGroup = null;
         UnlockObjectMetaTask unlockTask = null;
 
         try {
 
             unlockTask = LockUtil.tryLockVC(this.vc, LockType.READ_LOCK);
 
-            securityGroup = new SecurityGroup(this.vc, dto.getTenantId(), dto.getTenantName());
+            SecurityGroup securityGroup = new SecurityGroup(this.vc, dto.getTenantId(), dto.getTenantName());
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
             LOG.info("Creating security group: " + securityGroup.toString());
@@ -73,7 +72,17 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
 
             OSCEntityManager.update(em, securityGroup);
 
-            commitChanges(true);
+            UnlockObjectMetaTask forLambda = unlockTask;
+            chain(() -> {
+                try {
+                    Job job = ConformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+
+                    return new BaseJobResponse(securityGroup.getId(), job.getId());
+                } catch (Exception e) {
+                    LockUtil.releaseLocks(forLambda);
+                    throw e;
+                }
+            });
 
             // Lock the SG with a write lock and allow it to be unlocked at the end of the job
             unlockTask.addUnlockTask(LockUtil.tryLockSecurityGroupOnly(securityGroup));
@@ -82,9 +91,6 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
             throw e;
         }
 
-        Job job = ConformService.startSecurityGroupConformanceJob(securityGroup, unlockTask);
-
-        return new BaseJobResponse(securityGroup.getId(), job.getId());
-
+        return null;
     }
 }

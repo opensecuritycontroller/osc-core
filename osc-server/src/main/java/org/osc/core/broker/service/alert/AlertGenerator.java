@@ -19,7 +19,6 @@ package org.osc.core.broker.service.alert;
 import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
@@ -41,8 +40,9 @@ import org.osc.core.broker.service.persistence.EmailSettingsEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.util.EmailUtil;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.transaction.control.ScopedWorkException;
+import org.osgi.service.transaction.control.TransactionControl;
 
 public class AlertGenerator implements JobCompletionListener {
 
@@ -77,60 +77,51 @@ public class AlertGenerator implements JobCompletionListener {
     private static void processFailureEvent(Job job, SystemFailureType systemFailureType,
             DaiFailureType daiFailureType, LockObjectReference object, String message) {
 
-        EntityManager em = null;
-        EntityTransaction tx = null;
-
         try {
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            TransactionControl txControl = HibernateUtil.getTransactionControl();
+            txControl.required(() -> {
+                        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
 
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
+                        //Iterate all the alarms and look for a regex match. As of now we only support Job Failure event type.
+                        //Generate alert for all the matches and perform the defined alarm action if any!
+                        for (Alarm alarm : emgr.listAll()) {
 
-            OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
-
-            //Iterate all the alarms and look for a regex match. As of now we only support Job Failure event type.
-            //Generate alert for all the matches and perform the defined alarm action if any!
-            for (Alarm alarm : emgr.listAll()) {
-
-                if (alarm.isEnabled()) {
-                    switch (alarm.getEventType()) {
-                    case JOB_FAILURE:
-                        if (job != null) {
-                            if (isMatchAlarm(alarm.getRegexMatch(), job.getName())) {
-                                generateAlertAndNotify(em, alarm, object, message);
+                            if (alarm.isEnabled()) {
+                                switch (alarm.getEventType()) {
+                                case JOB_FAILURE:
+                                    if (job != null) {
+                                        if (isMatchAlarm(alarm.getRegexMatch(), job.getName())) {
+                                            generateAlertAndNotify(em, alarm, object, message);
+                                        }
+                                    }
+                                    break;
+                                case SYSTEM_FAILURE:
+                                    // systemFailureType can only be null if it is email failure since email failure
+                                    // is in fact handled in processEmailFailure method as a special case
+                                    if (systemFailureType != null && isMatchAlarm(alarm.getRegexMatch(), message)) {
+                                        generateAlertAndNotify(em, alarm, object, message);
+                                    }
+                                    break;
+                                case DAI_FAILURE:
+                                    if (daiFailureType != null && isMatchAlarm(alarm.getRegexMatch(), object.getName())) {
+                                        generateAlertAndNotify(em, alarm, object, message);
+                                    }
+                                    break;
+                                default:
+                                    log.error("The alarm event type " + alarm.getEventType() + " is not supported");
+                                }
                             }
                         }
-                        break;
-                    case SYSTEM_FAILURE:
-                        // systemFailureType can only be null if it is email failure since email failure
-                        // is in fact handled in processEmailFailure method as a special case
-                        if (systemFailureType != null && isMatchAlarm(alarm.getRegexMatch(), message)) {
-                            generateAlertAndNotify(em, alarm, object, message);
-                        }
-                        break;
-                    case DAI_FAILURE:
-                        if (daiFailureType != null && isMatchAlarm(alarm.getRegexMatch(), object.getName())) {
-                            generateAlertAndNotify(em, alarm, object, message);
-                        }
-                        break;
-                    default:
-                        log.error("The alarm event type " + alarm.getEventType() + " is not supported");
-                    }
-                }
-            }
-
-            tx.commit();
-            TransactionalBroadcastUtil.broadcast(em);
+                        return null;
+                    });
+        } catch (ScopedWorkException e) {
+            // Unwrap the ScopedWorkException to get the cause from
+            // the scoped work (i.e. the executeTransaction() call.
+            log.error("Failed to finish processing the job failure event : ", e.getCause());
         } catch (Exception ex) {
+            // TODO remove this once EM and TX are injected
             log.error("Failed to finish processing the job failure event : ", ex);
-            if (tx != null) {
-                tx.rollback();
-                TransactionalBroadcastUtil.removeSessionFromMap(em);
-            }
-        } finally {
-            if (em != null && em.isOpen()) {
-                em.close();
-            }
         }
     }
 

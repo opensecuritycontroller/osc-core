@@ -25,7 +25,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -44,6 +43,7 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
 import org.osc.core.broker.view.util.EventType;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class WebSocketRunner implements BroadcastListener {
     private static final int MAX_TRIES = 10;
@@ -63,31 +63,19 @@ public class WebSocketRunner implements BroadcastListener {
         this.apiFactoryService = apiFactoryService;
         BroadcasterUtil.register(this);
 
-        EntityManager em = null;
-        EntityTransaction tx = null;
-
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            HibernateUtil.getTransactionControl().required(() -> {
+                OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
+                        ApplianceManagerConnector.class, em);
+                this.amcs.addAll(emgr.listAll());
 
-            tx = em.getTransaction();
-            tx.begin();
+                return null;
+            });
 
-            OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
-                    ApplianceManagerConnector.class, em);
-
-            this.amcs.addAll(emgr.listAll());
-
-            tx.commit();
             this.ses.schedule(new WebSocketRunnable(), TRY_WAIT_MS, TimeUnit.MILLISECONDS);
         } catch (Exception ex) {
             log.error("Create DB encountered runtime exception: ", ex);
-            if (tx != null && tx.isActive()) {
-                tx.rollback();
-            }
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
 
         /*
@@ -155,26 +143,25 @@ public class WebSocketRunner implements BroadcastListener {
 
     @Override
     public void receiveBroadcast(BroadcastMessage msg) {
-        EntityManager em = null;
         ApplianceManagerConnector mc = null;
         try {
             if (msg.getReceiver().equals("ApplianceManagerConnector")) {
-                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
                 if (msg.getEventType() != EventType.DELETED) {
-                    mc = ApplianceManagerConnectorEntityMgr.findById(em, msg.getEntityId());
+                    EntityManager em = HibernateUtil.getTransactionalEntityManager();
+                    mc = HibernateUtil.getTransactionControl().required(() ->
+                            ApplianceManagerConnectorEntityMgr.findById(em, msg.getEntityId()));
                 } else {
                     mc = new ApplianceManagerConnector();
                     mc.setId(msg.getEntityId());
                 }
                 updateMCNotificationThreadMap(mc, msg.getEventType());
             }
+        } catch (ScopedWorkException e) {
+            log.error("Failed to create Web Socket Client for given Manager ID " + msg.getEntityId() + " due to "
+                    + e.getCause().getMessage());
         } catch (Exception e) {
             log.error("Failed to create Web Socket Client for given Manager ID " + msg.getEntityId() + " due to "
                     + e.getMessage());
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 

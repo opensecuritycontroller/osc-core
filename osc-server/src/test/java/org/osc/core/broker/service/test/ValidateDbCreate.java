@@ -17,16 +17,16 @@
 package org.osc.core.broker.service.test;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
 
-import org.hibernate.HibernateException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Answers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
@@ -43,58 +43,53 @@ import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.test.util.TestTransactionControl;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({HibernateUtil.class })
 public class ValidateDbCreate {
 
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
+    private TestTransactionControl txControl;
+
+    EntityManager em;
+
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         // initializing in-memory db
-        InMemDB.init();
+        this.em = InMemDB.init().createEntityManager();
+
+        PowerMockito.mockStatic(HibernateUtil.class);
+        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+
+        this.txControl.setEntityManager(this.em);
     }
 
     @Test
     public void testDatabaseSanityAndValidation() {
-        EntityManager session = null;
-        EntityTransaction tx = null;
+        // We must open a new transaction before doing anything with the DB
+        this.txControl.required(() -> {
 
-        try {
-            EntityManagerFactory sessionFactory = InMemDB.getEntityManagerFactory();
-            session = sessionFactory.createEntityManager();
-
-            // We must open a new transaction before doing anything with the DB
-            tx = session.getTransaction();
-            tx.begin();
-
-            addUserEntity(session);
-            addReleaseInfoEntity(session);
-            Appliance appliance = addApplianceEntity(session);
-            ApplianceSoftwareVersion applianceSwVer = addApplianceSoftwareVersion(session, appliance);
-            ApplianceManagerConnector applianceMgrCon = addApplianceManagerConnectorEntity(session);
-            VirtualizationConnector virtualizationCon = addVirtualizationConnectorEntity(session);
-            JobRecord jobRecord = addJobRecord(session);
-            DistributedAppliance distributedAppliance = addDistributedApplianceEntity(session, appliance, applianceMgrCon, jobRecord);
-            Domain domain = addDomainEntity(session, applianceMgrCon);
-            VirtualSystem virtualSystem = addVirtualSystemEntity(session, applianceSwVer, virtualizationCon, distributedAppliance, domain);
-            addDistributedApplianceInstanceEntity(session, virtualSystem);
+            addUserEntity(this.em);
+            addReleaseInfoEntity(this.em);
+            Appliance appliance = addApplianceEntity(this.em);
+            ApplianceSoftwareVersion applianceSwVer = addApplianceSoftwareVersion(this.em, appliance);
+            ApplianceManagerConnector applianceMgrCon = addApplianceManagerConnectorEntity(this.em);
+            VirtualizationConnector virtualizationCon = addVirtualizationConnectorEntity(this.em);
+            JobRecord jobRecord = addJobRecord(this.em);
+            DistributedAppliance distributedAppliance = addDistributedApplianceEntity(this.em, appliance, applianceMgrCon, jobRecord);
+            Domain domain = addDomainEntity(this.em, applianceMgrCon);
+            VirtualSystem virtualSystem = addVirtualSystemEntity(this.em, applianceSwVer, virtualizationCon, distributedAppliance, domain);
+            addDistributedApplianceInstanceEntity(this.em, virtualSystem);
 
             // We can now close the transaction and persist the changes
-            tx.commit();
-
-        } catch (RuntimeException re) {
-            if (tx != null && tx.isActive()) {
-                try {
-                    // Second try catch as the rollback could fail as well
-                    tx.rollback();
-                } catch (HibernateException he) {
-                    fail("db validation test fails with transaction rollback exception: " + he);
-                }
-            }
-            fail("db validation test fails with runtime exception: " + re);
-        } catch (Exception ex) {
-            fail("db validation test fails with exception: " + ex);
-        } finally {
-            session.close();
-        }
+            return null;
+        });
     }
 
     private void addDistributedApplianceInstanceEntity(EntityManager em, VirtualSystem virtualSystem) {

@@ -70,15 +70,13 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
     @Override
     public BaseJobResponse exec(BaseRequest<DistributedApplianceDto> request, EntityManager em)
             throws Exception {
-        DistributedAppliance da = null;
         DistributedApplianceDto daDto = request.getDto();
         if (this.validator == null) {
             this.validator = new DistributedApplianceDtoValidator(em);
         }
 
-        Long jobId = null;
         try {
-            da = this.validator.validateForUpdate(daDto);
+            DistributedAppliance da = this.validator.validateForUpdate(daDto);
             this.ult = LockUtil.tryLockDA(da, da.getApplianceManagerConnector());
 
             // reload the associated appliance
@@ -93,7 +91,7 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
                 List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByDaId(em, da.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(em, daiId,
+                        TransactionalBroadcastUtil.addMessageToMap(daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
@@ -102,18 +100,27 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, BaseJobResponse> {
             DistributedApplianceEntityMgr.toEntity(a, da, daDto);
             OSCEntityManager.update(em, da);
 
-            commitChanges(true);
+            UnlockObjectMetaTask forLambda = this.ult;
+            chain(() -> {
+                try {
+                    Long jobId = startConformDAJob(da, em);
+                    BaseJobResponse response = new BaseJobResponse();
+                    response.setJobId(jobId);
 
-            jobId = startConformDAJob(da, em);
+                    return response;
+                } catch (Exception e) {
+                    LockUtil.releaseLocks(forLambda);
+                    throw e;
+                }
+            });
+
+
         } catch (Exception e) {
             LockUtil.releaseLocks(this.ult);
             throw e;
         }
 
-        BaseJobResponse response = new BaseJobResponse();
-        response.setJobId(jobId);
-
-        return response;
+        return null;
     }
 
     private Long startConformDAJob(DistributedAppliance da, EntityManager em) throws Exception {

@@ -33,6 +33,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -48,6 +49,7 @@ import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osc.core.test.util.TestTransactionControl;
 import org.osc.core.util.EncryptionUtil;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -65,6 +67,9 @@ public class AddVirtualizationConnectorServiceTest {
     @Mock
     private AddVirtualizationConnectorServiceRequestValidator validatorMock;
 
+    @Mock(answer=Answers.CALLS_REAL_METHODS)
+    private TestTransactionControl txControl;
+
     @InjectMocks
     private AddVirtualizationConnectorService service;
 
@@ -75,11 +80,13 @@ public class AddVirtualizationConnectorServiceTest {
         MockitoAnnotations.initMocks(this);
 
         EntityManagerFactory entityManagerFactory = InMemDB.getEntityManagerFactory();
+        this.em = entityManagerFactory.createEntityManager();
 
         PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getEntityManagerFactory()).thenReturn(entityManagerFactory);
+        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
 
-        this.em = entityManagerFactory.createEntityManager();
+        this.txControl.setEntityManager(this.em);
 
         populateDatabase();
 

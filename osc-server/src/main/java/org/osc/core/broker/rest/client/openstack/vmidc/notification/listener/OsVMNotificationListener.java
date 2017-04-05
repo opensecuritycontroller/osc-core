@@ -19,7 +19,6 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification.listener;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -41,6 +40,7 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class OsVMNotificationListener extends OsNotificationListener {
 
@@ -113,33 +113,24 @@ public class OsVMNotificationListener extends OsNotificationListener {
              * Queue SG Sync first
              */
 
-            EntityManager em = null;
-            EntityTransaction tx = null;
             try {
                 // open a new Hibernate Session
-                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+                EntityManager em = HibernateUtil.getTransactionalEntityManager();
                 // begin transaction
-                tx = em.getTransaction();
-                tx.begin();
+                HibernateUtil.getTransactionControl().required(() -> {
+                    // load this entity from database to avoid any lazy loading issues
+                    SecurityGroup sg = SecurityGroupEntityMgr.findById(em, securityGroup.getId());
 
-                // load this entity from database to avoid any lazy loading issues
-                securityGroup = SecurityGroupEntityMgr.findById(em, securityGroup.getId());
+                    // iterate through all SGI -> DDS mappings to trigger required DDS Sync
+                    return ConformService.startSecurityGroupConformanceJob(em, sg, null, true);
+                });
 
-                // iterate through all SGI -> DDS mappings to trigger required DDS Sync
-                ConformService.startSecurityGroupConformanceJob(em, securityGroup, null, true);
-
-                tx.commit();
-
+            } catch (ScopedWorkException e) {
+                log.error("Failed to check if VM openstack Id - " + vmOpenstackId + " is migrated or not!", e.getCause());
+                throw e.as(Exception.class);
             } catch (Exception e) {
-                if (tx != null) {
-                    tx.rollback();
-                }
                 log.error("Failed to check if VM openstack Id - " + vmOpenstackId + " is migrated or not!", e);
                 throw e;
-            } finally {
-                if (em != null) {
-                    em.close();
-                }
             }
 
         }
@@ -180,8 +171,6 @@ public class OsVMNotificationListener extends OsNotificationListener {
          * 5 If not same then return true as this VM is migrated to another host
          */
 
-        EntityManager em = null;
-        EntityTransaction tx = null;
         try {
 
             VmDiscoveryCache vmCache = new VmDiscoveryCache(this.vc, this.vc.getProviderAdminTenantName());
@@ -196,35 +185,30 @@ public class OsVMNotificationListener extends OsNotificationListener {
                 return false;
             }
 
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
-            VM vm = VMEntityManager.findByOpenstackId(em, vmOpenstackId);
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
 
-            if (vm == null) {
-                log.error("Got VM notification and checking VM migration but find this VM in our DB. openstack Id - '"
-                        + vmOpenstackId + "'");
+            return HibernateUtil.getTransactionControl().required(() -> {
+                VM vm = VMEntityManager.findByOpenstackId(em, vmOpenstackId);
+
+                if (vm == null) {
+                    log.error("Got VM notification and checking VM migration but find this VM in our DB. openstack Id - '"
+                            + vmOpenstackId + "'");
+                    return false;
+                }
+
+                // if the migrated VM host is same as what we have in the database then VM was resized and not Migrated
+                if (!vm.getHost().equals(vmInfo.host)) {
+                    return true;
+                }
+
                 return false;
-            }
-
-            // if the migrated VM host is same as what we have in the database then VM was resized and not Migrated
-            if (!vm.getHost().equals(vmInfo.host)) {
-                return true;
-            }
-
-            tx.commit();
-
+            });
+        } catch (ScopedWorkException e) {
+            log.error("Failed to check if VM openstack Id - " + vmOpenstackId + " is migrated or not!", e.getCause());
+            throw e.as(Exception.class);
         } catch (Exception e) {
-            if (tx != null) {
-                tx.rollback();
-            }
             log.error("Failed to check if VM openstack Id - " + vmOpenstackId + " is migrated or not!", e);
             throw e;
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
-        return false;
     }
 }

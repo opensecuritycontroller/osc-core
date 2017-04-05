@@ -17,57 +17,70 @@
 package org.osc.core.broker.util;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-
-import javax.persistence.EntityManager;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil;
 import org.osc.core.broker.view.util.EventType;
+import org.osgi.service.transaction.control.TransactionContext;
+import org.osgi.service.transaction.control.TransactionControl;
+import org.osgi.service.transaction.control.TransactionStatus;
 
 public class TransactionalBroadcastUtil {
 
-    public volatile static HashMap<EntityManager, ArrayList<BroadcastMessage>> pendingBroadcastMap = new HashMap<>();
     private final static Logger log = Logger.getLogger(TransactionalBroadcastUtil.class);
 
-    public static synchronized void broadcast(EntityManager em) {
-        if (pendingBroadcastMap.get(em) != null) {
-            try {
-                ArrayList<BroadcastMessage> list = pendingBroadcastMap.get(em);
-                for (BroadcastMessage msg : list) {
-                    log.debug("Broadcasting Message: " + msg.toString());
-                    BroadcasterUtil.broadcast(msg);
-                }
-                // remove session from pendingBroadcastMap
-                TransactionalBroadcastUtil.removeSessionFromMap(em);
-
-            } catch (Exception ex) {
-
-                log.error("Broadcasting messages failed", ex);
-            }
-        }
-    }
-
-    public static synchronized void removeSessionFromMap(EntityManager em) {
-        log.debug("Removing Session from PendingBraodcastMap");
+    private static void sendBroadcast(List<BroadcastMessage> messages) {
         try {
-            pendingBroadcastMap.remove(em);
+            for (BroadcastMessage msg : messages) {
+                log.debug("Broadcasting Message: " + msg.toString());
+                BroadcasterUtil.broadcast(msg);
+            }
         } catch (Exception ex) {
-            log.error("Removing Session from PendingBraodcastMap failed", ex);
+            log.error("Broadcasting messages failed", ex);
         }
     }
 
-    public static synchronized void addMessageToMap(EntityManager em, final Long entityId, String receiver,
+    public static synchronized void addMessageToMap(final Long entityId, String receiver,
             EventType eventType) {
-        addMessageToMap(em, entityId, receiver, eventType, null);
+        addMessageToMap(entityId, receiver, eventType, null);
     }
-    public static synchronized void addMessageToMap(EntityManager em, final Long entityId, String receiver,
+    public static synchronized void addMessageToMap(final Long entityId, String receiver,
             EventType eventType, BaseDto dto) {
         BroadcastMessage msg = new BroadcastMessage(entityId, receiver, eventType, dto);
-        if (pendingBroadcastMap.get(em) == null) {
-            pendingBroadcastMap.put(em, new ArrayList<BroadcastMessage>());
+
+        TransactionControl txControl;
+        try {
+            txControl = HibernateUtil.getTransactionControl();
+        } catch (Exception e) {
+            log.error("Unable to acquire the current transaction context", e);
+            throw new RuntimeException(e);
         }
-        pendingBroadcastMap.get(em).add(msg);
+
+        if(txControl.activeScope()) {
+            TransactionContext transactionContext = txControl.getCurrentContext();
+            @SuppressWarnings("unchecked")
+            List<BroadcastMessage> list = (List<BroadcastMessage>) transactionContext
+                    .getScopedValue(TransactionalBroadcastUtil.class);
+
+            if(list == null) {
+                list = new ArrayList<>();
+                transactionContext.putScopedValue(TransactionalBroadcastUtil.class, list);
+
+                // We need an effectively final value for the lambda
+                List<BroadcastMessage> forSending = list;
+                transactionContext.postCompletion(status -> {
+                        if(status == TransactionStatus.COMMITTED) {
+                            sendBroadcast(forSending);
+                        }
+                    });
+            }
+
+            list.add(msg);
+        } else {
+            throw new IllegalStateException("No scope is available to add the BroadcastMessage to");
+        }
     }
 }

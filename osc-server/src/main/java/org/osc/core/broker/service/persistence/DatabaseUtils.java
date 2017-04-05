@@ -20,8 +20,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -44,6 +42,7 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class DatabaseUtils {
     private static final Logger log = Logger.getLogger(DatabaseUtils.class);
@@ -57,26 +56,15 @@ public class DatabaseUtils {
 
         log.info("================= Creating default database objects ================");
 
-        EntityManager em = null;
-        EntityTransaction tx = null;
-
         try {
-            EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
-            em = emf.createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
-
-            createDefaultUsers(em);
-            createDefaultAlarms(em);
-
-            tx.commit();
-
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            HibernateUtil.getTransactionControl().required(() -> {
+                createDefaultUsers(em);
+                createDefaultAlarms(em);
+                return null;
+            });
         } catch (Exception ex) {
-
             log.error("Create DB encountered runtime exception: ", ex);
-            if (tx != null && tx.isActive()) {
-                tx.rollback();
-            }
         }
     }
 
@@ -144,41 +132,34 @@ public class DatabaseUtils {
         Thread updateJobTaskStateThread = new Thread("UpdateJobThreadState-Thread") {
             @Override
             public void run() {
-                EntityManager em = null;
-                EntityTransaction tx = null;
 
                 try {
-                    EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
-                    em = emf.createEntityManager();
-                    tx = em.getTransaction();
-                    tx.begin();
+                    EntityManager em = HibernateUtil.getTransactionalEntityManager();
+                    HibernateUtil.getTransactionControl().required(() -> {
 
-                    // In case we stopped server while jobs/tasks were running, we'll flagged them all aborted.
-                    List<TaskRecord> uncompletedTasks = new TaskEntityMgr(em).getUncompletedTasks();
-                    log.info("Marking " + uncompletedTasks.size() + " uncompleted Tasks as aborted");
-                    for (TaskRecord task : uncompletedTasks) {
-                        task.setState(TaskState.COMPLETED);
-                        task.setStatus(TaskStatus.ABORTED);
-                        task.setCompletedTimestamp(new DateTime().toDate());
-                    }
+                        // In case we stopped server while jobs/tasks were running, we'll flagged them all aborted.
+                        List<TaskRecord> uncompletedTasks = new TaskEntityMgr(em).getUncompletedTasks();
+                        log.info("Marking " + uncompletedTasks.size() + " uncompleted Tasks as aborted");
+                        for (TaskRecord task : uncompletedTasks) {
+                            task.setState(TaskState.COMPLETED);
+                            task.setStatus(TaskStatus.ABORTED);
+                            task.setCompletedTimestamp(new DateTime().toDate());
+                        }
 
-                    List<JobRecord> uncompletedJobs = new JobEntityManager().getUncompletedJobs(em);
-                    log.info("Marking " + uncompletedJobs.size() + " uncompleted Jobs as aborted");
-                    for (JobRecord job : uncompletedJobs) {
-                        job.setState(JobState.COMPLETED);
-                        job.setStatus(JobStatus.ABORTED);
-                        job.setFailureReason(VmidcMessages.getString(VmidcMessages_.JOB_ABORT_STARTUP));
-                        job.setCompletedTimestamp(new Date());
-                    }
-
-                    tx.commit();
-
+                        List<JobRecord> uncompletedJobs = new JobEntityManager().getUncompletedJobs(em);
+                        log.info("Marking " + uncompletedJobs.size() + " uncompleted Jobs as aborted");
+                        for (JobRecord job : uncompletedJobs) {
+                            job.setState(JobState.COMPLETED);
+                            job.setStatus(JobStatus.ABORTED);
+                            job.setFailureReason(VmidcMessages.getString(VmidcMessages_.JOB_ABORT_STARTUP));
+                            job.setCompletedTimestamp(new Date());
+                        }
+                        return null;
+                    });
+                } catch (ScopedWorkException ex) {
+                    log.error("Create DB encountered runtime exception: ", ex.getCause());
                 } catch (Exception ex) {
-
                     log.error("Create DB encountered runtime exception: ", ex);
-                    if (tx != null && tx.isActive()) {
-                        tx.rollback();
-                    }
                 }
             }
         };
