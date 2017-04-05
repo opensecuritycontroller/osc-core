@@ -25,8 +25,6 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.sdk.controller.DefaultInspectionPort;
-import org.osc.sdk.controller.FailurePolicyType;
-import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 
 /**
@@ -47,13 +45,14 @@ public final class CreatePortGroupHookTask extends BasePortGroupHookTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        super.executeTransaction(em);
         String inspectionHookId = null;
 
         try (SdnRedirectionApi redirection = SdnControllerApiFactory.createNetworkRedirectionApi(getSGI().getVirtualSystem())) {
             inspectionHookId = redirection.installInspectionHook(getPortGroup(),
                     new DefaultInspectionPort(getIngressPort(), getEgressPort()),
-                    getSGI().getTagValue(), TagEncapsulationType.valueOf(getSGI().getVirtualSystem().getEncapsulationType().name()),
-                    getSGI().getOrder(), FailurePolicyType.valueOf(getSGI().getFailurePolicyType().name()));
+                    getSGI().getTagValue(), null,
+                    getSGI().getOrder(), null);
         }
 
         LOG.info(String.format("Created inspection hook %s for the security group interface %s",  inspectionHookId, getSGI().getName()));

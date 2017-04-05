@@ -64,7 +64,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         VMPort protectedPort = getAnyProtectedPort(this.sgi);
         SecurityGroupMember sgm = this.sgi.getSecurityGroup().getSecurityGroupMembers().iterator().next();
 
-        DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
+        DistributedApplianceInstance assignedRedirectedDai = protectedPort == null ? null : DistributedApplianceInstanceEntityMgr
                 .findByVirtualSystemAndPort(em, this.sgi.getVirtualSystem(), protectedPort);
 
         if (assignedRedirectedDai == null) {
@@ -116,6 +116,10 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
 
     private VMPort getAnyProtectedPort(SecurityGroupInterface sgi) {
         // Retrieving the first security group member
+        if (this.sgi.getSecurityGroup().getSecurityGroupMembers() == null) {
+            return null;
+        }
+
         for (SecurityGroupMember sgm : this.sgi.getSecurityGroup().getSecurityGroupMembers()) {
             // If SGM is marked for deletion, previous tasks should have removed the hooks and deleted the member from D.
             if (!sgm.getMarkedForDeletion()) {
