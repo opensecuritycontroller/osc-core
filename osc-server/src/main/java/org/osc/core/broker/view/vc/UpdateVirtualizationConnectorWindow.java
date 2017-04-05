@@ -18,12 +18,10 @@ package org.osc.core.broker.view.vc;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ViewUtil;
 
 public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
@@ -31,8 +29,6 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
     private static final long serialVersionUID = 1L;
 
     private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorWindow.class);
-
-    private ConformService conformService = StaticRegistry.conformService();
 
     final String CAPTION = "Edit Virtualization Connector";
 
@@ -80,7 +76,7 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
                 // creating add request with user entered data
                 DryRunRequest<VirtualizationConnectorDto> updateRequest = createRequest();
                 updateRequest.getDto().setId(this.currentVCObject.getBean().getId());
-                UpdateVirtualizationConnectorService updateService = new UpdateVirtualizationConnectorService(this.conformService);
+                UpdateVirtualizationConnectorService updateService = new UpdateVirtualizationConnectorService();
                 log.debug("Updating virtualization connector - " + this.name.getValue().trim());
                 // no response needed for update request
                 BaseJobResponse response = updateService.dispatch(updateRequest);

@@ -23,23 +23,25 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseJobRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osgi.service.component.annotations.Reference;
 
 import javax.persistence.EntityManager;
 
 public class SyncVirtualizationConnectorService extends ServiceDispatcher<BaseJobRequest, BaseJobResponse> {
 
-    private final ConformService conformService;
-
-    public SyncVirtualizationConnectorService(ConformService conformService) {
-        this.conformService = conformService;
-    }
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
+        if (!request.validateId()) {
+            throw new VmidcBrokerValidationException("Missing virtualization connector id");
+        }
+
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
         validate(request, vc);
-        Long jobId = this.conformService.startVCConformJob(vc, em).getId();
+        Long jobId = this.conformService.startVCSyncJob(vc, em).getId();
         return new BaseJobResponse(vc.getId(), jobId);
     }
 

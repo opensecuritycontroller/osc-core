@@ -30,4 +30,8 @@ public class BaseJobRequest implements Request {
     public void setId(Long id) {
         this.id = id;
     }
+
+    public boolean validateId() {
+        return this.getId() != null;
+    }
 }

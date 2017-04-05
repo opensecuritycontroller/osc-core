@@ -52,9 +52,9 @@ import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckM
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
+import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.CheckSSLConnectivityVcTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
-import org.osc.core.broker.service.vc.CheckSSLConnectivityVcTask;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.TransactionalBrodcastListener;
@@ -239,13 +239,13 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     }
 
     /**
-     * Starts and VC conform job and executes the unlock task at the end. If the unlock task is null then automatically
+     * Starts VC sync job and executes the unlock task at the end. If the unlock task is null then automatically
      * write locks the MC and release the lock at the end.
      * <p>
      * If a unlock task is provided, executes the unlock task at the end.
      * </p>
      */
-    public Job startVCConformJob(final VirtualizationConnector vc, EntityManager em)
+    public Job startVCSyncJob(final VirtualizationConnector vc, EntityManager em)
             throws Exception {
         log.info("Start VC (id:" + vc.getId() + ") Conformance Job");
         TaskGraph tg = new TaskGraph();

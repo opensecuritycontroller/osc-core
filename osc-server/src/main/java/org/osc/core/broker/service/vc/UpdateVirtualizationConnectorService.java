@@ -51,6 +51,7 @@ import org.osc.core.broker.view.util.EventType;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.service.component.annotations.Reference;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -65,14 +66,13 @@ public class UpdateVirtualizationConnectorService
 
     private VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
 
-    private final ConformService conformService;
+    @Reference
+    private ConformService conformService;
 
-    public UpdateVirtualizationConnectorService(ConformService conformService) {
-        this.conformService = conformService;
+    public UpdateVirtualizationConnectorService() {
     }
 
-    public UpdateVirtualizationConnectorService(ConformService conformService, boolean forceAddSSLCertificates) {
-        this(conformService);
+    public UpdateVirtualizationConnectorService(boolean forceAddSSLCertificates) {
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
 
@@ -136,7 +136,7 @@ public class UpdateVirtualizationConnectorService
             LockUtil.releaseLocks(vcUnlock);
         }
 
-        Long jobId = this.conformService.startVCConformJob(vc, em).getId();
+        Long jobId = this.conformService.startVCSyncJob(vc, em).getId();
         return new BaseJobResponse(vc.getId(), jobId);
     }
 

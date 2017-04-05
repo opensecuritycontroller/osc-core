@@ -109,7 +109,7 @@ public class AddVirtualizationConnectorServiceTest {
 
         when(this.job.getId()).thenReturn(5L);
         //PowerMockito.mockStatic(ConformService.class);
-        when(this.conformService.startVCConformJob(any(VirtualizationConnector.class), any(EntityManager.class))).thenReturn(this.job);
+        when(this.conformService.startVCSyncJob(any(VirtualizationConnector.class), any(EntityManager.class))).thenReturn(this.job);
     }
 
     @After

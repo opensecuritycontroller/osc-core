@@ -17,8 +17,6 @@
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -26,16 +24,15 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
-import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 
 import javax.persistence.EntityManager;
 
-public class VCDeleteMetaTask extends TransactionalMetaTask {
+public class VCDeleteMetaTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(VCDeleteMetaTask.class);
 
     private VirtualizationConnector vc;
-    private TaskGraph tg;
 
     public VCDeleteMetaTask(VirtualizationConnector vc) {
         this.vc = vc;
@@ -44,28 +41,18 @@ public class VCDeleteMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        this.tg = new TaskGraph();
         log.info("Start executing VCConformanceCheckMetaTask task for VC '" + this.vc.getName() + "'");
 
         UnlockObjectTask vcUnlockTask = null;
         try {
             this.vc = em.find(VirtualizationConnector.class, this.vc.getId());
-
             vcUnlockTask = LockUtil.lockVC(this.vc, LockType.WRITE_LOCK);
-
             OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
             VirtualizationConnector connector = vcEntityMgr.findByPrimaryKey(this.vc.getId());
 
             SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
             sslCertificateAttrEntityMgr.removeCertificateList(connector.getSslCertificateAttrSet());
             vcEntityMgr.delete(this.vc.getId());
-
-            if (this.tg.isEmpty()) {
-                LockManager.getLockManager().releaseLock(new LockRequest(vcUnlockTask));
-            } else {
-                this.tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
-            }
-
         } catch (Exception ex) {
             // If we experience any failure, unlock VC.
             if (vcUnlockTask != null) {
@@ -81,8 +68,4 @@ public class VCDeleteMetaTask extends TransactionalMetaTask {
         return "Delete Virtualization Connector '" + this.vc.getName() + "'";
     }
 
-    @Override
-    public TaskGraph getTaskGraph() {
-        return this.tg;
-    }
 }
