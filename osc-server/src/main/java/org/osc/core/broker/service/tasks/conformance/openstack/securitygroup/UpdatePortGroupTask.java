@@ -33,7 +33,7 @@ import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ele
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 
-public class UpdatePortGroupTask  extends TransactionalTask{
+class UpdatePortGroupTask  extends TransactionalTask{
     private static final Logger LOG = Logger.getLogger(UpdatePortGroupTask.class);
 
 
@@ -69,7 +69,10 @@ public class UpdatePortGroupTask  extends TransactionalTask{
         SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(
                 this.securityGroup.getVirtualizationConnector());
         NetworkElement portGrp = controller.updateNetworkElement(this.portGroup, protectedPorts);
-        if (portGrp != null && !portGrp.getElementId().equals(this.portGroup.getElementId())) {
+        if (portGrp == null) {
+            throw new Exception(String.format("Failed to update Port Group : '%s'", this.portGroup.getElementId()));
+        }
+        if (!portGrp.getElementId().equals(this.portGroup.getElementId())) {
             //portGroup was deleted outside OSC, recreated portGroup above
             this.securityGroup.setNetworkElementId(portGrp.getElementId());
             em.merge(this.securityGroup);

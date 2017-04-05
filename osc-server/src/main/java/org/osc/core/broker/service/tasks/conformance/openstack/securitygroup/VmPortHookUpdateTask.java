@@ -21,6 +21,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.sdncontroller.InspectionHookElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -62,13 +63,18 @@ class VmPortHookUpdateTask extends TransactionalTask {
                     this.dai.getInspectionIngressMacAddress());
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
+            // TODO emanoel: The inspection hook id is only used for SDN controllers
+            // supporting port group. However we should save the inspection hook id for
+            // the other cases as well and provide it here.
+            InspectionHookElementImpl inspectionHook =
+                    new InspectionHookElementImpl(null, new NetworkElementImpl(this.vmPort),
+                            new DefaultInspectionPort(ingressPort, egressPort),
+                            this.securityGroupInterface.getTagValue(),
+                            TagEncapsulationType.valueOf(this.securityGroupInterface.getVirtualSystem().getEncapsulationType().name()),
+                            this.securityGroupInterface.getOrder(),
+                            FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
 
-            controller.updateInspectionHook(new NetworkElementImpl(this.vmPort),
-                    new DefaultInspectionPort(ingressPort, egressPort),
-                    this.securityGroupInterface.getTagValue(),
-                    TagEncapsulationType.valueOf(this.securityGroupInterface.getVirtualSystem().getEncapsulationType().name()),
-                    this.securityGroupInterface.getOrder(),
-                    FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
+            controller.updateInspectionHook(inspectionHook);
         } finally {
             controller.close();
         }
