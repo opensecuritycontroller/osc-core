@@ -50,7 +50,6 @@ import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecurityGroupTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
-import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupElement;
 
@@ -135,8 +134,6 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         addSGMemberSyncJob(em, isDeleteTg, vdc);
 
         if (this.sg.getVirtualizationConnector().isControllerDefined()){
-            SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(
-                    this.sg.getVirtualizationConnector());
             if (SdnControllerApiFactory.supportsPortGroup(this.sg)){
                 this.tg.appendTask(new PortGroupCheckMetaTask(this.sg, isDeleteTg),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -144,6 +141,10 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         }
 
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
+            if (SdnControllerApiFactory.supportsPortGroup(this.sg)) {
+                this.tg.addTask(new CheckPortGroupHookMetaTask(sgi, isDeleteTg));
+            }
+
             if (sgi.getMarkedForDeletion() || isDeleteTg) {
                 VirtualSystem vs = sgi.getVirtualSystem();
                 List<Task> tasksToSucceedToDeleteSGI = new ArrayList<>();
@@ -156,7 +157,11 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                         tasksToSucceedToDeleteSGI.add(mgrSecurityGroupDelTask);
                     }
                 }
-                tasksToSucceedToDeleteSGI.addAll(addSGMemberRemoveHooksTask(em, sgi));
+
+                if (!SdnControllerApiFactory.supportsPortGroup(this.sg)) {
+                    tasksToSucceedToDeleteSGI.addAll(addSGMemberRemoveHooksTask(em, sgi));
+                }
+
                 // Ensure removal of mapping for all DAIs before removing SGI.
                 this.tg.addTask(new DeleteSecurityGroupInterfaceTask(sgi), TaskGuard.ALL_PREDECESSORS_SUCCEEDED,
                         tasksToSucceedToDeleteSGI.toArray(new Task[0]));

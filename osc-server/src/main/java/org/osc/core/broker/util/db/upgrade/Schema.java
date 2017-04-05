@@ -262,6 +262,7 @@ public class Schema {
                 "user_configurable bit not null default 0 ," +
                 "failure_policy_type varchar(255) not null," +
                 "chain_order bigint not null default 0," +
+                "network_elem_id varchar(255)," +
                 "primary key (id)" +
             ");",
 

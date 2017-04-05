@@ -28,6 +28,12 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 
+/**
+ * This task is responsible for removing all the inspection appliances
+ * assigned to protected VM port. If the related SDN controller
+ * does not support port group it will also remove orphan inspection hooks
+ * in the controller.
+ */
 class VmPortAllHooksRemoveTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(VmPortAllHooksRemoveTask.class);
@@ -54,11 +60,11 @@ class VmPortAllHooksRemoveTask extends TransactionalTask {
 
         this.port.removeAllDais();
 
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgm);
-        try {
-            controller.removeAllInspectionHooks(new NetworkElementImpl(this.port));
-        } finally {
-            controller.close();
+        // If port group is not supported also remove the inspection hooks from the controller.
+        if (!SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup())) {
+            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgm)) {
+                controller.removeAllInspectionHooks(new NetworkElementImpl(this.port));
+            }
         }
 
         OSCEntityManager.update(em, this.port);
@@ -69,5 +75,4 @@ class VmPortAllHooksRemoveTask extends TransactionalTask {
         return String.format("Removing hooks for Stale Port with MAC '%s' belonging to %s member '%s'",
                 this.port.getMacAddresses(), this.sgmType, this.sgmName);
     }
-
 }

@@ -25,7 +25,7 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 
-public class DeletePortGroupTask extends TransactionalTask {
+class DeletePortGroupTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(DeletePortGroupTask.class);
     private PortGroup portGroup;
     private SecurityGroup securityGroup;

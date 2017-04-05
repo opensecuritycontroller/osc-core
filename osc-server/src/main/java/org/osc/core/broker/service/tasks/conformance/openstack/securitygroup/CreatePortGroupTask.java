@@ -33,7 +33,7 @@ import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.Op
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 
-public class CreatePortGroupTask extends TransactionalTask {
+class CreatePortGroupTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(CreatePortGroupTask.class);
 
 

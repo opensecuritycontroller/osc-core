@@ -16,6 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.util.db.upgrade;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.h2.util.StringUtils;
@@ -47,7 +58,7 @@ public class ReleaseUpgradeMgr {
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
-    public static final int TARGET_DB_VERSION = 77;
+    public static final int TARGET_DB_VERSION = 78;
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
@@ -229,6 +240,8 @@ public class ReleaseUpgradeMgr {
                 upgrade75to76(stmt);
             case 76:
                 upgrade76to77(stmt);
+            case 77:
+                upgrade77to78(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -240,7 +253,7 @@ public class ReleaseUpgradeMgr {
         }
     }
 
-    private static void upgrade76to77(Statement stmt) throws SQLException, EncryptionException {
+    private static void upgrade77to78(Statement stmt) throws SQLException, EncryptionException {
         execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR ADD COLUMN last_job_id_fk bigint;");
         execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR " +
                 "add constraint FK_VC_LAST_JOB " +
@@ -250,6 +263,10 @@ public class ReleaseUpgradeMgr {
                 "add constraint FK_VC_LAST_JOB_UNIQUE unique (last_job_id_fk);");
 
     }
+
+    private static void upgrade76to77(Statement stmt) throws SQLException, EncryptionException {
+         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE ADD COLUMN network_elem_id varchar(255);");
+     }
 
     private static void upgrade75to76(Statement stmt) throws SQLException, EncryptionException {
         execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_AGENT';");
