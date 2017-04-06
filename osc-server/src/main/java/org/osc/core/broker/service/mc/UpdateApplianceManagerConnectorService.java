@@ -115,14 +115,25 @@ public class UpdateApplianceManagerConnectorService extends
                 List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByMcId(em, mc.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(em, daiId,
+                        TransactionalBroadcastUtil.addMessageToMap(daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
             }
 
             // Commit the changes early so that the entity is available for the job engine
-            commitChanges(true);
+            UnlockObjectTask forLambda = mcUnlock;
+            chain(() -> {
+                try {
+                    Long jobId = this.conformService.startMCConformJob(mc, forLambda, em).getId();
+                    return new BaseJobResponse(mc.getId(), jobId);
+                } catch (Exception e) {
+                    // If we experience any failure, unlock MC.
+                    log.info("Releasing lock for MC '" + mc.getName() + "'");
+                    LockManager.getLockManager().releaseLock(new LockRequest(forLambda));
+                    throw e;
+                }
+            });
         } catch (Exception e) {
             // If we experience any failure, unlock MC.
             if (mcUnlock != null) {
@@ -132,8 +143,7 @@ public class UpdateApplianceManagerConnectorService extends
             throw e;
         }
 
-        Long jobId = this.conformService.startMCConformJob(mc, mcUnlock, em).getId();
-        return new BaseJobResponse(mc.getId(), jobId);
+        return null;
     }
 
     private DryRunRequest<ApplianceManagerConnectorDto> internalSSLCertificatesFetch(

@@ -45,7 +45,6 @@ public class AddDeploymentSpecService extends
     @Override
     public BaseJobResponse exec(BaseRequest<DeploymentSpecDto> request, EntityManager em) throws Exception {
 
-        BaseJobResponse response = new BaseJobResponse();
 
         UnlockObjectMetaTask unlockTask = null;
         validate(em, request.getDto());
@@ -58,24 +57,35 @@ public class AddDeploymentSpecService extends
                     .addUnlockTask(LockUtil.tryLockVCObject(this.vs.getVirtualizationConnector(), LockType.READ_LOCK));
 
             DeploymentSpec ds = DeploymentSpecEntityMgr.createEntity(request.getDto(), this.vs);
-            ds = OSCEntityManager.create(em, ds);
+            OSCEntityManager.create(em, ds);
             ds.setAvailabilityZones(createAvailabilityZones(ds, request.getDto(), em));
             ds.setHosts(createHosts(ds, request.getDto(), em));
             ds.setHostAggregates(createHostAggregates(ds, request.getDto(), em));
 
-            commitChanges(true);
+            UnlockObjectMetaTask forLambda = unlockTask;
+            chain(() -> {
+                // Lock the deployment spec with a write lock and allow it to be unlocked at the end of the job.
+                try {
+                    BaseJobResponse response = new BaseJobResponse();
 
-            // Lock the deployment spec with a write lock and allow it to be unlocked at the end of the job.
-            unlockTask.addUnlockTask(LockUtil.tryLockDSOnly(ds));
-            Job job = ConformService.startDsConformanceJob(em, ds, unlockTask);
+                    forLambda.addUnlockTask(LockUtil.tryLockDSOnly(ds));
 
-            response.setJobId(job.getId());
+                    Job job = ConformService.startDsConformanceJob(em, ds, forLambda);
 
-            return response;
+                    response.setJobId(job.getId());
+
+                    return response;
+                } catch (Exception e) {
+                    LockUtil.releaseLocks(forLambda);
+                    throw e;
+                }
+            });
+
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
             throw e;
         }
+        return null;
     }
 
     private Set<HostAggregate> createHostAggregates(DeploymentSpec ds, DeploymentSpecDto dto, EntityManager em) {

@@ -18,6 +18,15 @@ package org.osc.core.broker.service.persistence;
 
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
@@ -199,35 +208,24 @@ public class VirtualizationConnectorEntityMgr {
     }
 
     public static boolean isControllerTypeUsed(String controllerType) {
-        EntityTransaction tx = null;
-        EntityManager em = null;
 
         Long count = 0L;
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            tx = em.getTransaction();
-            tx.begin();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            count = HibernateUtil.getTransactionControl().required(() -> {
+                CriteriaBuilder cb = em.getCriteriaBuilder();
 
-            CriteriaBuilder cb = em.getCriteriaBuilder();
+                CriteriaQuery<Long> query = cb.createQuery(Long.class);
 
-            CriteriaQuery<Long> query = cb.createQuery(Long.class);
+                Root<VirtualizationConnector> root = query.from(VirtualizationConnector.class);
 
-            Root<VirtualizationConnector> root = query.from(VirtualizationConnector.class);
+                query = query.select(cb.count(root))
+                        .where(cb.equal(root.get("controllerType"), controllerType));
 
-            query = query.select(cb.count(root))
-                .where(cb.equal(root.get("controllerType"), controllerType));
-
-            count = em.createQuery(query).getSingleResult();
-
-            tx.commit();
+                return em.createQuery(query).getSingleResult();
+            });
         } catch (Exception e) {
-            if (tx != null) {
-                tx.rollback();
-            }
-        }
-
-        if (em != null) {
-            em.close();
+            // Ignore this exception
         }
 
         return count > 0;

@@ -80,7 +80,7 @@ public class AddApplianceManagerConnectorService extends
         }
 
         ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto());
-        mc = appMgrEntityMgr.create(mc);
+        appMgrEntityMgr.create(mc);
 
         SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
         mc.setSslCertificateAttrSet(certificateAttrEntityMgr.storeSSLEntries(mc.getSslCertificateAttrSet(), mc.getId()));
@@ -88,11 +88,13 @@ public class AddApplianceManagerConnectorService extends
         appMgrEntityMgr.update(mc);
 
         // Commit the changes early so that the entity is available for the job engine
-        commitChanges(true);
-        UnlockObjectTask mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
+        chain(() -> {
+            UnlockObjectTask mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
+            Job job = this.conformService.startMCConformJob(mc, mcUnlock, em);
+            return new BaseJobResponse(mc.getId(), job.getId());
+        });
 
-        Job job = this.conformService.startMCConformJob(mc, mcUnlock, em);
-        return new BaseJobResponse(mc.getId(), job.getId());
+        return null;
     }
 
     private DryRunRequest<ApplianceManagerConnectorDto> internalSSLCertificatesFetch(

@@ -122,7 +122,7 @@ public class OSCEntityManager<T extends IscEntity> {
         }
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(em, entity.getId(), entity.getClass().getSimpleName(),
+        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.ADDED, dto);
 
         return entity;
@@ -141,7 +141,7 @@ public class OSCEntityManager<T extends IscEntity> {
         }
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(em, entity.getId(), entity.getClass().getSimpleName(),
+        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.UPDATED, dto);
     }
 
@@ -154,7 +154,7 @@ public class OSCEntityManager<T extends IscEntity> {
         em.merge(entity);
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(em, entity.getId(), entity.getClass().getSimpleName(),
+        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.UPDATED);
     }
 
@@ -166,7 +166,7 @@ public class OSCEntityManager<T extends IscEntity> {
         em.merge(entity);
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(em, entity.getId(), entity.getClass().getSimpleName(),
+        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.UPDATED);
     }
 
@@ -174,7 +174,7 @@ public class OSCEntityManager<T extends IscEntity> {
         em.remove(entity);
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(em, entity.getId(), entity.getClass().getSimpleName(),
+        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.DELETED);
 
         if (entity instanceof VirtualSystem) {
@@ -183,7 +183,7 @@ public class OSCEntityManager<T extends IscEntity> {
             // After removing a VS (not mark deleted) we send additional broadcast message to respective DA.
             VirtualSystem vs = (VirtualSystem) entity;
             if (!vs.getDistributedAppliance().getMarkedForDeletion()) {
-                TransactionalBroadcastUtil.addMessageToMap(em, vs.getDistributedAppliance().getId(), vs
+                TransactionalBroadcastUtil.addMessageToMap(vs.getDistributedAppliance().getId(), vs
                         .getDistributedAppliance().getClass().getSimpleName(), EventType.UPDATED);
             }
         }

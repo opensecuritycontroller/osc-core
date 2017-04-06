@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -35,6 +34,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberStatusElement;
+import org.osgi.service.transaction.control.ScopedWorkException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -49,17 +49,18 @@ public class ApplianceAgentsJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        EntityManager em = null;
         ApiFactoryService apiFactoryService =  (ApiFactoryService) context.get(ApiFactoryService.class.getName());
 
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            EntityTransaction tx = em.getTransaction();
-            tx.begin();
-            OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
-                    DistributedAppliance.class, em);
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            List<DistributedAppliance> das = HibernateUtil.getTransactionControl().required(() -> {
+                OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
+                        DistributedAppliance.class, em);
 
-            for (DistributedAppliance da : emgr.listAll()) {
+                return emgr.listAll();
+            });
+
+            for (DistributedAppliance da : das) {
                 for (VirtualSystem vs : da.getVirtualSystems()) {
 
                     ApplianceManagerConnector apmc = vs.getDistributedAppliance().getApplianceManagerConnector();
@@ -77,42 +78,32 @@ public class ApplianceAgentsJob implements Job {
                 }
             }
 
-            tx.commit();
-
         } catch (Exception ex) {
             log.error("Fail to sync DAs", ex);
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 
     private void getAgentFullStatus(DistributedApplianceInstance dai, List<ManagerDeviceMemberStatusElement> statusList) throws Exception {
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
         try {
-            EntityTransaction tx = em.getTransaction();
-            tx.begin();
-            ManagerDeviceMemberStatusElement memberStatus = findDeviceMemberStatus(dai, statusList);
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            HibernateUtil.getTransactionControl().required(() -> {
+                ManagerDeviceMemberStatusElement memberStatus = findDeviceMemberStatus(dai, statusList);
 
-            if (memberStatus != null) {
-                dai.setLastStatus(new Date());
-                if (memberStatus.getRx() != null) {
-                    dai.setPackets(memberStatus.getRx());
+                if (memberStatus != null) {
+                    dai.setLastStatus(new Date());
+                    if (memberStatus.getRx() != null) {
+                        dai.setPackets(memberStatus.getRx());
+                    }
                 }
-            }
 
-            OSCEntityManager.update(em, dai);
-            tx.commit();
+                OSCEntityManager.update(em, dai);
+                return null;
+            });
 
+        } catch (ScopedWorkException ex) {
+            log.error("Fail to get full status for dai '" + dai.getName() + "'. " + ex.getCause().getMessage());
         } catch (Exception ex) {
-
             log.error("Fail to get full status for dai '" + dai.getName() + "'. " + ex.getMessage());
-
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 

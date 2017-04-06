@@ -36,8 +36,8 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SubnetEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
-import org.osc.core.broker.util.db.TransactionalRunner;
-import org.osc.core.broker.util.db.TransactionalRunner.ErrorHandler;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class OsPortNotificationListener extends OsNotificationListener {
 
@@ -57,37 +57,35 @@ public class OsPortNotificationListener extends OsNotificationListener {
                 || eventType.contains(OsNotificationEventState.INTERFACE_DELETE.toString())) {
             log.info(" [Port] : message received - " + message);
             if (this.entity instanceof SecurityGroup) {
-                new TransactionalRunner<Void, Void>(new TransactionalRunner.ExclusiveSessionHandler())
-                        .withErrorHandling(getErrorHandler()).exec(getTranscationalAction(eventType, message));
+
+                try {
+                    doTranscationalAction(eventType, message);
+                } catch (ScopedWorkException e) {
+                    handleError(e.getCause());
+                } catch (Exception e) {
+                    handleError(e);
+                }
             }
         }
     }
 
-    private TransactionalRunner.TransactionalAction<Void, Void> getTranscationalAction(final String eventType, final String message) {
-        return new TransactionalRunner.TransactionalAction<Void, Void>() {
-            @Override
-            public Void run(EntityManager em, Void param) throws Exception {
-                if (eventType.contains(OsNotificationEventState.DELETE.toString())
-                        || eventType.contains(OsNotificationEventState.INTERFACE_DELETE.toString())) {
-                    handleSGPortDeletionMessages(em, message);
-                } else {
-                    handleSGPortMessages(em, message);
-                }
-                return null;
-            }
-        };
+    private Void doTranscationalAction(final String eventType, final String message)
+            throws Exception {
+        EntityManager em = HibernateUtil.getTransactionalEntityManager();
+        if (eventType.contains(OsNotificationEventState.DELETE.toString())
+                || eventType.contains(OsNotificationEventState.INTERFACE_DELETE.toString())) {
+            handleSGPortDeletionMessages(em, message);
+        } else {
+            handleSGPortMessages(em, message);
+        }
+        return null;
     }
 
-    private ErrorHandler getErrorHandler() {
-        return new ErrorHandler() {
-            @Override
-            public void handleError(Exception e) {
-                log.error("Failed to trigger Security Group Sync on Port message Received!" + e);
-                AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
-                        LockObjectReference.getLockObjectReference(OsPortNotificationListener.this.entity, new LockObjectReference(OsPortNotificationListener.this.vc)),
-                        "Fail to process Openstack Port notification (" + e.getMessage() + ")");
-            }
-        };
+    private void handleError(Throwable e) {
+        log.error("Failed to trigger Security Group Sync on Port message Received!" + e);
+        AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+                LockObjectReference.getLockObjectReference(OsPortNotificationListener.this.entity, new LockObjectReference(OsPortNotificationListener.this.vc)),
+                "Fail to process Openstack Port notification (" + e.getMessage() + ")");
     }
 
     private void handleSGPortMessages(EntityManager em, String message) throws Exception {

@@ -19,7 +19,6 @@ package org.osc.core.server.scheduler;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -32,8 +31,7 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.broker.util.db.TransactionalRunner;
-import org.osc.core.broker.util.db.TransactionalRunner.TransactionalAction;
+import org.osgi.service.transaction.control.ScopedWorkException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -49,14 +47,12 @@ public class SyncSecurityGroupJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
-        EntityManager em = null;
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            OSCEntityManager<SecurityGroup> emgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
-            EntityTransaction tx = em.getTransaction();
-            tx.begin();
-            List<SecurityGroup> sgs = emgr.listAll();
-            tx.commit();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            List<SecurityGroup> sgs = HibernateUtil.getTransactionControl().required(() -> {
+                OSCEntityManager<SecurityGroup> emgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
+                return emgr.listAll();
+            });
 
             for (final SecurityGroup sg : sgs) {
                 if (sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
@@ -65,17 +61,13 @@ public class SyncSecurityGroupJob implements Job {
                 Thread sgSync = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        new TransactionalRunner<Object, SecurityGroup>(new TransactionalRunner.ExclusiveSessionHandler())
-                            .exec(new TransactionalAction<Object, SecurityGroup>() {
-
-                            @Override
-                            public Object run(EntityManager em, SecurityGroup sg) {
-
-                                        SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
-
+                        try {
+                            HibernateUtil.getTransactionControl().required(() -> {
+                                SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
+                                EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
-                                    sg = em.find(SecurityGroup.class, sg.getId());
-                                    ConformService.startSecurityGroupConformanceJob(sg);
+                                    SecurityGroup found = em.find(SecurityGroup.class, sg.getId());
+                                    ConformService.startSecurityGroupConformanceJob(found);
                                 } catch (Exception ex) {
                                     AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE,
                                             new LockObjectReference(sg),
@@ -83,24 +75,24 @@ public class SyncSecurityGroupJob implements Job {
                                     log.error("Fail to sync SG " + sg.getName(), ex);
                                 }
                                 return null;
-                            }
-                        }, sg);
 
+                            });
+                        } catch (Exception e) {
+                            // Just let the thread finish
+                        }
                     }
                 }, "Scheduled-SG-Sync-runner-Thread-" + System.currentTimeMillis());
 
                 sgSync.start();
             }
+        } catch (ScopedWorkException ex) {
+            AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
+                    "Failure during scheduling of Security Groups Sync. " + ex.getCause().getMessage());
+            log.error("Fail to get database session or query SGs", ex.getCause());
         } catch (Exception ex) {
             AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
                     "Failure during scheduling of Security Groups Sync. " + ex.getMessage());
             log.error("Fail to get database session or query SGs", ex);
-
-        } finally {
-
-            if (em != null) {
-                em.close();
-            }
         }
     }
 

@@ -16,21 +16,30 @@
  *******************************************************************************/
 package org.osc.core.broker.service.transactions;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.mockito.Answers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.LastJobContainer;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.test.util.TestTransactionControl;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(HibernateUtil.class)
 public class CompleteJobTransactionTest {
     @SuppressWarnings("serial")
     private class TestEntityWithLastJob extends BaseEntity implements LastJobContainer {
@@ -42,7 +51,11 @@ public class CompleteJobTransactionTest {
         }
     }
 
+    @Mock(answer=Answers.CALLS_REAL_METHODS)
+    private TestTransactionControl txControl;
+
     private EntityManager em;
+    private EntityTransaction tx;
     private long existingEntityId = 1;
     private long existingJobId = 2;
     private long missingEntityId = 3;
@@ -53,8 +66,18 @@ public class CompleteJobTransactionTest {
     private TestEntityWithLastJob testEntity;
     private JobRecord testLastJobRecord;
 
-    private void init() {
+    private void init() throws Exception {
         this.em = mock(EntityManager.class);
+        this.tx = mock(EntityTransaction.class);
+
+        Mockito.when(this.em.getTransaction()).thenReturn(this.tx);
+
+        PowerMockito.mockStatic(HibernateUtil.class);
+        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+
+        this.txControl.setEntityManager(this.em);
+
         this.target= new CompleteJobTransaction<TestEntityWithLastJob>(TestEntityWithLastJob.class);
         this.testEntity = mock(TestEntityWithLastJob.class);
         this.testLastJobRecord = new JobRecord();
@@ -66,7 +89,7 @@ public class CompleteJobTransactionTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         init();
     }
 
@@ -76,7 +99,8 @@ public class CompleteJobTransactionTest {
     @Test
     public void testRun_WithValidInput_UpdatesEntityProperly() throws Exception {
         // Act.
-        this.target.run(this.em,new CompleteJobTransactionInput(this.existingEntityId, this.existingJobId));
+        this.txControl.required(() ->
+        this.target.run(this.em,new CompleteJobTransactionInput(this.existingEntityId, this.existingJobId)));
 
         // Assert.
         verify(this.testEntity, times(1)).setLastJob(this.testLastJobRecord);
