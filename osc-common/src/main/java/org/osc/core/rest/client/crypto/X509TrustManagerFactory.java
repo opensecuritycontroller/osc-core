@@ -69,6 +69,9 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     private KeyStore keyStore;
     private CertificateInterceptor listener = null;
 
+    /** Listeners for trust store changes (adding/removing/modifying trust store) */
+    private LinkedHashSet<TruststoreChangedListener> truststoreChangedListeners = new LinkedHashSet<>();
+
     public static X509TrustManagerFactory getInstance() {
         if (instance == null) {
             instance = new X509TrustManagerFactory();
@@ -311,8 +314,6 @@ public final class X509TrustManagerFactory implements X509TrustManager {
 
         return property;
     }
-
-    private LinkedHashSet<TruststoreChangedListener> truststoreChangedListeners = new LinkedHashSet<>();
 
     private void notifyTruststoreChanged() {
         truststoreChangedListeners.stream().forEach(listener -> listener.truststoreChanged());
