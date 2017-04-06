@@ -36,10 +36,7 @@ public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobReques
 
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
-        if (!request.validateId()) {
-            throw new VmidcBrokerValidationException("Missing appliance manager connector id");
-        }
-
+        request.validateId();
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(request.getId());
         validate(request, mc);

@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+
 public class BaseJobRequest implements Request {
     private Long id;
 
@@ -31,7 +33,9 @@ public class BaseJobRequest implements Request {
         this.id = id;
     }
 
-    public boolean validateId() {
-        return this.getId() != null;
+    public void validateId() throws VmidcBrokerValidationException {
+        if(this.id == null){
+            throw new VmidcBrokerValidationException("Base job request id is not set");
+        }
     }
 }

@@ -34,10 +34,7 @@ public class SyncVirtualizationConnectorService extends ServiceDispatcher<BaseJo
 
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
-        if (!request.validateId()) {
-            throw new VmidcBrokerValidationException("Missing virtualization connector id");
-        }
-
+        request.validateId();
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
         validate(request, vc);
