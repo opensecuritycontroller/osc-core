@@ -47,7 +47,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class SslConfigurationLayout extends FormLayout {
+public class SslConfigurationLayout extends FormLayout implements X509TrustManagerFactory.TruststoreChangedListener {
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(SslConfigurationLayout.class);
@@ -98,6 +98,8 @@ public class SslConfigurationLayout extends FormLayout {
 
         addComponent(sslUploadContainer);
         addComponent(sslListContainer);
+
+        X509TrustManagerFactory.getInstance().addTruststoreChangedListener(this);
     }
 
     @SuppressWarnings("serial")
@@ -243,4 +245,9 @@ public class SslConfigurationLayout extends FormLayout {
             ViewUtil.iscNotification(VmidcMessages.getString(outputMessage, new Date()), null, Notification.Type.TRAY_NOTIFICATION);
         }
     };
+
+    @Override
+    public void truststoreChanged() {
+        buildSslConfigurationTable();
+    }
 }

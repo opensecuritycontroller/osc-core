@@ -43,6 +43,7 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -207,6 +208,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
             this.keyStore.store(outputStream, getTruststorePassword());
         }
         reloadTrustManager();
+        notifyTruststoreChanged();
     }
 
     public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
@@ -214,6 +216,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
             this.keyStore.setCertificateEntry(newAlias, certificate);
             this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), getTruststorePassword());
             reloadTrustManager();
+            notifyTruststoreChanged();
         } else {
             throw new Exception("Given certificate fingerprint already exists in trust store");
         }
@@ -239,12 +242,15 @@ public final class X509TrustManagerFactory implements X509TrustManager {
                 this.keyStore.store(outputStream, getTruststorePassword());
             }
         }
+        notifyTruststoreChanged();
     }
 
     public void removeEntry(String alias) throws Exception {
         reloadTrustManager();
         this.keyStore.deleteEntry(alias);
         this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), getTruststorePassword());
+        notifyTruststoreChanged();
+
     }
 
     /**
@@ -306,5 +312,20 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         return property;
     }
 
+    private LinkedHashSet<TruststoreChangedListener> truststoreChangedListeners = new LinkedHashSet<>();
 
+    private void notifyTruststoreChanged() {
+        truststoreChangedListeners.stream().forEach(listener -> listener.truststoreChanged());
+    }
+
+    public void addTruststoreChangedListener(TruststoreChangedListener listener) {
+        truststoreChangedListeners.add(listener);
+    }
+
+    /**
+     * Listens to all trust store changes (adding/removing/modifying trust store)
+     */
+    public interface TruststoreChangedListener {
+        void truststoreChanged();
+    }
 }
