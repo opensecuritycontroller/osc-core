@@ -253,7 +253,9 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             throws Exception {
         log.info("Start VC (id:" + vc.getId() + ") Conformance Job");
         TaskGraph tg = new TaskGraph();
+        UnlockObjectTask vcUnlockTask = LockUtil.lockVC(vc, LockRequest.LockType.READ_LOCK);
         tg.addTask(new CheckSSLConnectivityVcTask(vc));
+        tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         Job job = JobEngine.getEngine().submit("Syncing Virtualization Connector '" + vc.getName() + "'", tg,
             LockObjectReference.getObjectReferences(vc), job1 -> {
