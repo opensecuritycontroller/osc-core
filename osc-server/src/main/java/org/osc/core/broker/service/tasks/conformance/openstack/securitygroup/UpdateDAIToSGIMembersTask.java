@@ -53,6 +53,11 @@ public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
         this.sgi = em.find(SecurityGroupInterface.class, this.sgi.getId());
         this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId(), LockModeType.PESSIMISTIC_WRITE);
 
+        if (this.sgi.getSecurityGroup().getSecurityGroupMembers() == null) {
+            LOG.info(String.format("The SGI %s security group does not have members.", this.sgi.getName()));
+            return;
+        }
+
         Set<VMPort> ports = new HashSet<>();
         for (SecurityGroupMember sgm : this.sgi.getSecurityGroup().getSecurityGroupMembers()) {
             // If SGM is marked for deletion, previous tasks should have removed the hooks and deleted the member from D.

@@ -26,7 +26,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
@@ -64,7 +64,7 @@ class CreatePortGroupTask extends TransactionalTask {
                 this.securityGroup.getVirtualizationConnector());
         if (CollectionUtils.isNotEmpty(protectedPorts)) {
             for (NetworkElement vmPort : protectedPorts) {
-                ((VMPort) vmPort).setParentId(domainId);
+                ((NetworkElementImpl) vmPort).setParentId(domainId);
             }
             NetworkElement portGp = controller.registerNetworkElement(protectedPorts);
             if (portGp == null) {
@@ -78,6 +78,6 @@ class CreatePortGroupTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Create Port Group for security group: %s ", this.securityGroup) ;
+        return String.format("Create Port Group for security group: %s ", this.securityGroup.getName()) ;
     }
 }
