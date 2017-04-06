@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -80,50 +79,43 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
-        EntityManager em = null;
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
-                    DistributedApplianceInstance.class, em);
-            EntityTransaction tx = em.getTransaction();
-            tx.begin();
-            List<DistributedApplianceInstance> dais = emgr.listAll();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            HibernateUtil.getTransactionControl().required(() -> {
+                OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
+                        DistributedApplianceInstance.class, em);
+                List<DistributedApplianceInstance> dais = emgr.listAll();
 
-            for (DistributedApplianceInstance dai : dais) {
-                Date date = null;
-                if (dai.getLastStatus() != null) {
-                    date = new Date(dai.getLastStatus().getTime() + AGENT_UPDATE_THRESHOLD);
-                }
-                // Generate an alert if it has been more than 4 minutes since we last heard from the DAI
-                if (date == null || new Date().compareTo(date) > 0) {
-                    log.warn("Generate an alert for DAI '" + dai.getName()
-                    + "' since we have not receive expected registration request (every 3 minutes)");
-                    AlertGenerator.processDaiFailureEvent(DaiFailureType.DAI_TIMEOUT,
-                            new LockObjectReference(dai.getId(), dai.getName(),
-                                    ObjectType.DISTRIBUTED_APPLIANCE_INSTANCE),
-                            "Health status information for Appliance Instance '" + dai.getName()
-                            + "' not timely reported and is out of date");
-
-                    // In case of NSX, update
-                    if (dai.getVirtualSystem().getVirtualizationConnector()
-                            .getVirtualizationType() == VirtualizationType.VMWARE) {
-                        NsxUpdateAgentsService.updateNsxAgentInfo(em, dai, "UNKNOWN");
+                for (DistributedApplianceInstance dai : dais) {
+                    Date date = null;
+                    if (dai.getLastStatus() != null) {
+                        date = new Date(dai.getLastStatus().getTime() + AGENT_UPDATE_THRESHOLD);
                     }
-                    dai.setDiscovered(null);
-                    dai.setInspectionReady(null);
-                }
-            }
+                    // Generate an alert if it has been more than 4 minutes since we last heard from the DAI
+                    if (date == null || new Date().compareTo(date) > 0) {
+                        log.warn("Generate an alert for DAI '" + dai.getName()
+                        + "' since we have not receive expected registration request (every 3 minutes)");
+                        AlertGenerator.processDaiFailureEvent(DaiFailureType.DAI_TIMEOUT,
+                                new LockObjectReference(dai.getId(), dai.getName(),
+                                        ObjectType.DISTRIBUTED_APPLIANCE_INSTANCE),
+                                "Health status information for Appliance Instance '" + dai.getName()
+                                + "' not timely reported and is out of date");
 
-            tx.commit();
+                        // In case of NSX, update
+                        if (dai.getVirtualSystem().getVirtualizationConnector()
+                                .getVirtualizationType() == VirtualizationType.VMWARE) {
+                            NsxUpdateAgentsService.updateNsxAgentInfo(em, dai, "UNKNOWN");
+                        }
+                        dai.setDiscovered(null);
+                        dai.setInspectionReady(null);
+                    }
+                }
+                return null;
+            });
 
         } catch (Exception ex) {
             log.error("Exception iterating over DAIs", ex);
 
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
-
     }
 }

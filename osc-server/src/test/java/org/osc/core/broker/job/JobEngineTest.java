@@ -36,7 +36,7 @@ import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.tasks.BaseTask;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.service.test.InMemDB;
 
 public class JobEngineTest {
 
@@ -178,7 +178,7 @@ public class JobEngineTest {
     }
 
     private void verifyJobPersistence(Job job) throws Exception {
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = InMemDB.getEntityManagerFactory().createEntityManager();
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -245,6 +245,8 @@ public class JobEngineTest {
         } catch (Exception e) {
             e.printStackTrace();
             tx.rollback();
+        } finally {
+            InMemDB.shutdown();
         }
     }
 

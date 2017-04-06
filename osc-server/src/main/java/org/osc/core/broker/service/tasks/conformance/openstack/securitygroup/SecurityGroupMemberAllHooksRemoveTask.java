@@ -34,6 +34,12 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 
+/**
+ * This task is responsible for removing all the inspection appliances
+ * assigned to a security group member. If the related SDN controller
+ * does not support port group it will also remove orphan inspection hooks
+ * in the controller.
+ */
 class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(SecurityGroupMemberAllHooksRemoveTask.class);
@@ -68,11 +74,17 @@ class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
         }
 
         SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgm);
+
         try {
             for (VMPort port : ports) {
-                this.log.info("Deleting Zombie Inspection Hooks for member '" + this.sgm.getMemberName()
+                this.log.info("Deleting orphan inspection ports from member '" + this.sgm.getMemberName()
                         + "' And port: '" + port.getElementId() + "'");
+
+                // If port group is not supported also remove the inspection hooks from the controller.
+                if (!SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup())) {
                 controller.removeAllInspectionHooks(new NetworkElementImpl(port));
+                }
+
                 port.removeAllDais();
                 OSCEntityManager.update(em, port);
             }

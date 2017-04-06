@@ -47,7 +47,7 @@ public class ReleaseUpgradeMgr {
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
-    public static final int TARGET_DB_VERSION = 76;
+    public static final int TARGET_DB_VERSION = 77;
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
@@ -227,6 +227,8 @@ public class ReleaseUpgradeMgr {
                 upgrade74to75(stmt);
             case 75:
                 upgrade75to76(stmt);
+            case 76:
+                upgrade76to77(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -237,6 +239,10 @@ public class ReleaseUpgradeMgr {
                 log.error("Current DB version is unknown !!!");
         }
     }
+
+    private static void upgrade76to77(Statement stmt) throws SQLException, EncryptionException {
+         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE ADD COLUMN network_elem_id varchar(255);");
+     }
 
     private static void upgrade75to76(Statement stmt) throws SQLException, EncryptionException {
         execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_AGENT';");

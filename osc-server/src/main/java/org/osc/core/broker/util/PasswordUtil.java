@@ -25,17 +25,20 @@ import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class PasswordUtil {
 
     public static void initPasswordFromDb(String loginName) throws InterruptedException, VmidcException {
 
-        EntityManager session = HibernateUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = HibernateUtil.getTransactionalEntityManager();
         User user;
 
         try {
-            OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, session);
-            user = emgr.findByFieldName("loginName", loginName);
+            user = HibernateUtil.getTransactionControl().required(() -> {
+                OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
+                return  emgr.findByFieldName("loginName", loginName);
+            });
             if (user.getLoginName().equals(AgentAuthFilter.VMIDC_AGENT_LOGIN)) {
                 AgentAuthFilter.VMIDC_AGENT_PASS = user.getPassword();
             } else if (user.getLoginName().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
@@ -44,10 +47,8 @@ public class PasswordUtil {
                 OscAuthFilter.OSC_DEFAULT_PASS = user.getPassword();
             }
 
-        } finally {
-            if (session != null) {
-                session.close();
-            }
+        } catch (ScopedWorkException swe) {
+            throw swe.asRuntimeException();
         }
     }
 

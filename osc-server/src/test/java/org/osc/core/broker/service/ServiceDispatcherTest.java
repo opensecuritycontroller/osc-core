@@ -16,25 +16,38 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Answers;
 import org.mockito.Mockito;
+import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
+import org.osc.core.test.util.TestTransactionControl;
+import org.osgi.service.transaction.control.TransactionControl;
 
 public class ServiceDispatcherTest {
 
     private EntityManager mockEM;
     private EntityTransaction mockedTransaction;
 
+    private TestTransactionControl mockedTxControl;
+
     @Before
     public void setUp() {
         this.mockEM = Mockito.mock(EntityManager.class);
         this.mockedTransaction = Mockito.mock(EntityTransaction.class);
         Mockito.when(this.mockEM.getTransaction()).thenReturn(this.mockedTransaction);
+
+        this.mockedTxControl = Mockito.mock(TestTransactionControl.class, Answers.CALLS_REAL_METHODS.get());
+        this.mockedTxControl.setEntityManager(this.mockEM);
     }
 
     @Test
@@ -51,9 +64,52 @@ public class ServiceDispatcherTest {
                 return ServiceDispatcherTest.this.mockEM;
             }
 
+            @Override
+            protected TransactionControl getTransactionControl() throws InterruptedException, VmidcException {
+                return ServiceDispatcherTest.this.mockedTxControl;
+            }
         };
         mockServiceDispatcher.dispatch(null);
+        Mockito.verify(this.mockedTransaction).begin();
         Mockito.verify(this.mockedTransaction).commit();
+    }
+
+    @Test
+    public void testExecuteChainedRequests() throws Exception {
+        final List<String> strings = new LinkedList<>();
+        ServiceDispatcher<?, ?> mockServiceDispatcher = new ServiceDispatcher<Request, Response>() {
+
+            @Override
+            public Response exec(Request request, EntityManager em) throws Exception {
+                chain(this::next1);
+                strings.add("main");
+                return null;
+            }
+            
+            private Response next1(Response r, EntityManager em) {
+                chain(() -> {
+                    strings.add("lambda");
+                    return null;
+                });
+                strings.add("methodref");
+                return null;
+            }
+
+            @Override
+            protected EntityManager getEntityManager() {
+                return ServiceDispatcherTest.this.mockEM;
+            }
+
+            @Override
+            protected TransactionControl getTransactionControl() throws InterruptedException, VmidcException {
+                return ServiceDispatcherTest.this.mockedTxControl;
+            }
+        };
+        mockServiceDispatcher.dispatch(null);
+        String[] expected = new String[] { "main", "methodref", "lambda" };
+        assertArrayEquals(expected, strings.toArray(new String[0]));
+        Mockito.verify(this.mockedTransaction, Mockito.times(3)).begin();
+        Mockito.verify(this.mockedTransaction, Mockito.times(3)).commit();
     }
 
     @Test(expected = Exception.class)
@@ -63,6 +119,11 @@ public class ServiceDispatcherTest {
             @Override
             protected EntityManager getEntityManager() {
                 return ServiceDispatcherTest.this.mockEM;
+            }
+
+            @Override
+            protected TransactionControl getTransactionControl() throws InterruptedException, VmidcException {
+                return ServiceDispatcherTest.this.mockedTxControl;
             }
 
             @Override

@@ -43,7 +43,6 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
 
         BaseJobResponse response = new BaseJobResponse();
         validateAndLoad(em, request);
-        Job job = null;
         UnlockObjectMetaTask dsUnlock = null;
 
         try {
@@ -55,15 +54,25 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
                 TaskGraph tg = new TaskGraph();
                 tg.addTask(new ForceDeleteDSTask(this.ds));
                 tg.appendTask(dsUnlock, TaskGuard.ALL_PREDECESSORS_COMPLETED);
-                job = JobEngine.getEngine().submit("Force Delete Deployment Spec '" + this.ds.getName() + "'", tg,
+                Job job = JobEngine.getEngine().submit("Force Delete Deployment Spec '" + this.ds.getName() + "'", tg,
                         LockObjectReference.getObjectReferences(this.ds));
 
+                response.setJobId(job.getId());
             } else {
                 OSCEntityManager.markDeleted(em, this.ds);
-                commitChanges(true);
-                job = ConformService.startDsConformanceJob(em, this.ds, dsUnlock);
+                UnlockObjectMetaTask forLambda = dsUnlock;
+                chain(() -> {
+                    try {
+                        BaseJobResponse result = new BaseJobResponse();
+                        Job job = ConformService.startDsConformanceJob(em, this.ds, forLambda);
+                        result.setJobId(job.getId());
+                        return response;
+                    } catch (Exception e) {
+                        LockUtil.releaseLocks(forLambda);
+                        throw e;
+                    }
+                });
             }
-            response.setJobId(job.getId());
         } catch (Exception e) {
             LockUtil.releaseLocks(dsUnlock);
             throw e;

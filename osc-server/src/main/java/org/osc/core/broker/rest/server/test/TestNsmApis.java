@@ -23,12 +23,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.hibernate.HibernateException;
 import org.junit.Test;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
@@ -42,6 +39,7 @@ import org.osc.core.rest.client.VmidcAgentServerRestClient;
 import org.osc.core.rest.client.agent.model.input.AgentUpdateMgrFileRequest;
 import org.osc.core.rest.client.util.LoggingUtil;
 import org.osc.core.util.PKIUtil;
+import org.osgi.service.transaction.control.TransactionControl;
 
 public class TestNsmApis {
 
@@ -152,8 +150,8 @@ public class TestNsmApis {
 
             System.out.println("===== Start Test verify agent pubkey");
 
-            EntityManager em = null;
-            EntityTransaction tx = null;
+
+            TransactionControl tx = null;
 
             byte[] ks_1 = null;
             PublicKey pubkey_1 = null;
@@ -161,73 +159,41 @@ public class TestNsmApis {
 
             // get pubkey and keystore for record #1
             try {
-
-                EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
-                em = emf.createEntityManager();
+                EntityManager em = HibernateUtil.getTransactionalEntityManager();
+                tx = HibernateUtil.getTransactionControl();
 
                 // We must open a new transaction before doing anything with the
                 // DB
-                tx = em.getTransaction();
-                tx.begin();
+                ks_1 = tx.required(() -> {
+                    OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+                    VirtualSystem vs = emgr.findByPrimaryKey(new Long(97));
+                    return vs.getKeyStore();
 
-                OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
-                VirtualSystem vs = emgr.findByPrimaryKey(new Long(97));
+                });
 
-                ks_1 = vs.getKeyStore();
                 pubkey_1 = PKIUtil.getPubKey(ks_1);
-
-                // We can now close the transaction and persist the changes
-                tx.commit();
-
             } catch (RuntimeException re) {
                 System.out.println("test verify agent pubkey: got runtime exception: " + re);
-
-                if (tx != null && tx.isActive()) {
-                    try {
-                        // Second try catch as the rollback could fail as well
-                        tx.rollback();
-                    } catch (HibernateException he) {
-                        // logger.debug("Error rolling back transaction");
-                    }
-                    // throw again the first exception
-                    throw re;
-                }
+                throw re;
             } catch (Exception ex) {
                 System.out.println("test verify agent pubkey: got general exception: " + ex);
             }
 
             // get pubkey and keystore for record #2
             try {
-
-                EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
-                em = emf.createEntityManager();
-
+                EntityManager em = HibernateUtil.getTransactionalEntityManager();
                 // We must open a new transaction before doing anything with the
                 // DB
-                tx = em.getTransaction();
-                tx.begin();
+                ks_2 = tx.required(() -> {
+                    OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+                    VirtualSystem vs = emgr.findByPrimaryKey(new Long(165));
 
-                OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
-                VirtualSystem vs = emgr.findByPrimaryKey(new Long(165));
+                    return vs.getKeyStore();
 
-                ks_2 = vs.getKeyStore();
-
-                // We can now close the transaction and persist the changes
-                tx.commit();
-
+                });
             } catch (RuntimeException re) {
                 System.out.println("test verify agent pubkey: got runtime exception: " + re);
-
-                if (tx != null && tx.isActive()) {
-                    try {
-                        // Second try catch as the rollback could fail as well
-                        tx.rollback();
-                    } catch (HibernateException he) {
-                        // logger.debug("Error rolling back transaction");
-                    }
-                    // throw again the first exception
-                    throw re;
-                }
+                throw re;
             } catch (Exception ex) {
                 System.out.println("test verify agent pubkey: got general exception: " + ex);
             }
@@ -280,43 +246,24 @@ public class TestNsmApis {
 
             System.out.println("===== Start Test creating nsm pub key");
 
-            EntityManager em = null;
-            EntityTransaction tx = null;
-
             try {
-
-                EntityManagerFactory emf = HibernateUtil.getEntityManagerFactory();
-                em = emf.createEntityManager();
+                EntityManager em = HibernateUtil.getTransactionalEntityManager();
 
                 // We must open a new transaction before doing anything with the
                 // DB
-                tx = em.getTransaction();
-                tx.begin();
+                HibernateUtil.getTransactionControl().required(() -> {
+                    OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
+                            ApplianceManagerConnector.class, em);
+                    ApplianceManagerConnector mc = emgr.findByPrimaryKey(1L);
+                    byte[] pubKey = "abcdef".getBytes();
+                    mc.setPublicKey(pubKey);
 
-                OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
-                        ApplianceManagerConnector.class, em);
-                ApplianceManagerConnector mc = emgr.findByPrimaryKey(1L);
-                byte[] pubKey = "abcdef".getBytes();
-                mc.setPublicKey(pubKey);
-
-                emgr.update(mc);
-
-                // We can now close the transaction and persist the changes
-                tx.commit();
-
+                    emgr.update(mc);
+                    return null;
+                });
             } catch (RuntimeException re) {
                 System.out.println("test creating nsm pubkey: got runtime exception: " + re);
-
-                if (tx != null && tx.isActive()) {
-                    try {
-                        // Second try catch as the rollback could fail as well
-                        tx.rollback();
-                    } catch (HibernateException he) {
-                        // logger.debug("Error rolling back transaction");
-                    }
-                    // throw again the first exception
-                    throw re;
-                }
+                throw re;
             } catch (Exception ex) {
                 System.out.println("test creating nsm pubkey: got general exception: " + ex);
             }

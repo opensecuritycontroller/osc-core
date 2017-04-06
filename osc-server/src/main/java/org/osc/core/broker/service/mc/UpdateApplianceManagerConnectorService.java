@@ -76,8 +76,6 @@ public class UpdateApplianceManagerConnectorService extends
 
         BaseDto.checkForNullId(request.getDto());
 
-        BaseJobResponse response = new BaseJobResponse();
-
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
 
         // retrieve existing entry from db
@@ -114,14 +112,29 @@ public class UpdateApplianceManagerConnectorService extends
                 List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByMcId(em, mc.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(em, daiId,
+                        TransactionalBroadcastUtil.addMessageToMap(daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
             }
 
             // Commit the changes early so that the entity is available for the job engine
-            commitChanges(true);
+            UnlockObjectTask forLambda = mcUnlock;
+            chain(() -> {
+                try {
+                    BaseJobResponse response = new BaseJobResponse();
+                    response.setId(mc.getId());
+
+                    Long jobId = this.conformService.startMCConformJob(mc, forLambda, em).getId();
+                    response.setJobId(jobId);
+                    return response;
+                } catch (Exception e) {
+                    // If we experience any failure, unlock MC.
+                    log.info("Releasing lock for MC '" + mc.getName() + "'");
+                    LockManager.getLockManager().releaseLock(new LockRequest(forLambda));
+                    throw e;
+                }
+            });
         } catch (Exception e) {
             // If we experience any failure, unlock MC.
             if (mcUnlock != null) {
@@ -131,12 +144,7 @@ public class UpdateApplianceManagerConnectorService extends
             throw e;
         }
 
-        response.setId(mc.getId());
-
-        Long jobId = this.conformService.startMCConformJob(mc, mcUnlock, em).getId();
-        response.setJobId(jobId);
-
-        return response;
+        return null;
     }
 
     private DryRunRequest<ApplianceManagerConnectorDto> internalSSLCertificatesFetch(

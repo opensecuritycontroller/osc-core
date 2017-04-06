@@ -53,15 +53,17 @@ BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJo
         SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, this.policy, SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Creating SecurityGroupInterface: " + sgi.toString());
-        sgi = OSCEntityManager.create(em, sgi);
+        OSCEntityManager.create(em, sgi);
 
-        commitChanges(true);
+        chain(() -> {
+            Long jobId = this.conformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
 
-        Long jobId = this.conformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
+            BaseJobResponse response = new BaseJobResponse(sgi.getId());
+            response.setJobId(jobId);
+            return response;
+        });
 
-        BaseJobResponse response = new BaseJobResponse(sgi.getId());
-        response.setJobId(jobId);
-        return response;
+        return null;
     }
 
     @Override

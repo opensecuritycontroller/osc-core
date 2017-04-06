@@ -19,7 +19,6 @@ package org.osc.core.server.scheduler;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -31,8 +30,7 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.broker.util.db.TransactionalRunner;
-import org.osc.core.broker.util.db.TransactionalRunner.TransactionalAction;
+import org.osgi.service.transaction.control.ScopedWorkException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -49,15 +47,14 @@ public class SyncDistributedApplianceJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
         ConformService conformService = (ConformService) context.get(ConformService.class.getName());
-        EntityManager em = null;
         try {
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-            OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
-                    DistributedAppliance.class, em);
-            EntityTransaction tx = em.getTransaction();
-            tx.begin();
-            List<DistributedAppliance> das = emgr.listAll();
-            tx.commit();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+
+            List<DistributedAppliance> das = HibernateUtil.getTransactionControl().required(() -> {
+                OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
+                        DistributedAppliance.class, em);
+                return emgr.listAll();
+            });
 
             // Iterate on all DAs and execute a sync on a separate thread as we are placing lock and want to avoid
             // delays for following DAs
@@ -65,17 +62,13 @@ public class SyncDistributedApplianceJob implements Job {
                 Thread daSync = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        new TransactionalRunner<Object, DistributedAppliance>(new TransactionalRunner.ExclusiveSessionHandler())
-                            .exec(new TransactionalAction<Object, DistributedAppliance>() {
-
-                            @Override
-                            public Object run(EntityManager em, DistributedAppliance da) {
-
-                                        SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
-
+                        try {
+                            HibernateUtil.getTransactionControl().required(() -> {
+                                SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
+                                EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
-                                    da = em.find(DistributedAppliance.class, da.getId());
-                                    conformService.startDAConformJob(em, da, null, false);
+                                    DistributedAppliance found = em.find(DistributedAppliance.class, da.getId());
+                                    conformService.startDAConformJob(em, found, null, false);
                                 } catch (Exception ex) {
                                     AlertGenerator.processSystemFailureEvent(
                                             SystemFailureType.SCHEDULER_FAILURE,
@@ -85,9 +78,10 @@ public class SyncDistributedApplianceJob implements Job {
                                     log.error("Fail to sync DA " + da.getName(), ex);
                                 }
                                 return null;
-                            }
-                        }, da);
-
+                            });
+                        } catch (Exception e) {
+                            // Just let the thread finish
+                        }
                     }
                 }, "Scheduled-DA-Sync-runner-Thread-" + System.currentTimeMillis());
 
@@ -95,16 +89,15 @@ public class SyncDistributedApplianceJob implements Job {
 
             }
 
+        } catch (ScopedWorkException ex) {
+            AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
+                    "Failure during scheduling of Distributed Appliances Sync. " + ex.getCause().getMessage());
+            log.error("Fail to get database session or query DAs", ex.getCause());
         } catch (Exception ex) {
             AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
                     "Failure during scheduling of Distributed Appliances Sync. " + ex.getMessage());
             log.error("Fail to get database session or query DAs", ex);
 
-        } finally {
-
-            if (em != null) {
-                em.close();
-            }
         }
     }
 }

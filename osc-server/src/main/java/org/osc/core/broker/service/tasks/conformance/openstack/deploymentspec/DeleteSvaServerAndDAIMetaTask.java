@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -58,7 +59,9 @@ class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         if (this.dai.getProtectedPorts() != null && !this.dai.getProtectedPorts().isEmpty()) {
             throw new VmidcBrokerValidationException("Server is being actively used to protect other servers");
         }
-
+        if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
+            this.tg.appendTask(new DeleteInspectionPortTask(this.region, this.dai));
+        }
         this.tg.addTask(new DeleteSvaServerTask(this.region, this.dai));
         if (this.dai.getFloatingIpId() != null) {
             this.tg.appendTask(new OsSvaDeleteFloatingIpTask(this.dai));

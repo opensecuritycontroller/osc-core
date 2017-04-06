@@ -42,6 +42,7 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
 import org.osc.core.broker.view.util.EventType;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -59,20 +60,19 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
     private static final Logger log = Logger.getLogger(OsDeploymentSpecNotificationRunner.class);
 
     public OsDeploymentSpecNotificationRunner() throws InterruptedException, VmidcException {
-        EntityManager em = null;
         try {
             BroadcasterUtil.register(this);
-            em = HibernateUtil.getEntityManagerFactory().createEntityManager();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
 
-            OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
-            List<DeploymentSpec> dsList = dsEmgr.listAll();
+            List<DeploymentSpec> dsList = HibernateUtil.getTransactionControl().required(() -> {
+                OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
+                return dsEmgr.listAll();
+            });
             for (DeploymentSpec ds : dsList) {
                 addListener(ds);
             }
-        } finally {
-            if (em != null) {
-                em.close();
-            }
+        } catch (ScopedWorkException ex) {
+            throw ex.asRuntimeException();
         }
     }
 
@@ -93,10 +93,10 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         if (msg.getEventType() == EventType.DELETED) {
             removeListener(msg.getEntityId());
         } else {
-            EntityManager em = null;
             try {
-                em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-                DeploymentSpec ds = DeploymentSpecEntityMgr.findById(em, msg.getEntityId());
+                EntityManager em = HibernateUtil.getTransactionalEntityManager();
+                DeploymentSpec ds = HibernateUtil.getTransactionControl().required(() ->
+                         DeploymentSpecEntityMgr.findById(em, msg.getEntityId()));
                 if (ds != null) {
                     // if DS is deleted after update notification was sent
                     if (msg.getEventType() == EventType.ADDED) {
@@ -110,13 +110,12 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                         }
                     }
                 }
+            } catch (ScopedWorkException e) {
+                log.error("An error occurred updating the Deployment Spec listeners", e.getCause());
+                throw e.asRuntimeException();
             } catch (Exception e) {
                 log.error("An error occurred updating the Deployment Spec listeners", e);
                 throw new RuntimeException("Failed to consume a broadcast message", e);
-            } finally {
-                if (em != null) {
-                    em.close();
-                }
             }
         }
     }

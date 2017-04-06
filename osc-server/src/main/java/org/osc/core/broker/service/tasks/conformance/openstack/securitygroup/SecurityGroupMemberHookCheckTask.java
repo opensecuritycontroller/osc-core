@@ -29,9 +29,18 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 
+/**
+ * This task is responsible for checking the conformance of the inspection appliances
+ * assigned to a security group member. If the related SDN controller
+ * does not support port group it will also create the inspection hook for each VM port
+ * of the security group member.
+ */
+// TODO emanoel: Consider renaming the task to SecurityGroupMemberCheckAppliancesTask since
+// it does more than checking the inspection hook.
 class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
 
     private final Logger log = Logger.getLogger(SecurityGroupMemberHookCheckTask.class);
@@ -70,7 +79,7 @@ class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
                 this.tg.appendTask(new VmPortDeleteFromDbTask(this.sgm, port));
             } else {
                 for (SecurityGroupInterface sgi : sg.getSecurityGroupInterfaces()) {
-                    if (!sgi.getMarkedForDeletion()) {
+                    if (!sgi.getMarkedForDeletion() && !SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup())) {
                         this.tg.appendTask(new VmPortHookCheckTask(this.sgm, sgi, port, this.vdc),
                                 TaskGuard.ALL_PREDECESSORS_COMPLETED);
                     }

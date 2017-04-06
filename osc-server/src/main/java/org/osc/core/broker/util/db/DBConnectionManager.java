@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 import javax.sql.DataSource;
@@ -36,6 +37,8 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.jdbc.DataSourceFactory;
 import org.osgi.service.jpa.EntityManagerFactoryBuilder;
+import org.osgi.service.transaction.control.TransactionControl;
+import org.osgi.service.transaction.control.jpa.JPAEntityManagerProviderFactory;
 
 /**
  * This component provides a single OSGi service which offers access to
@@ -57,11 +60,19 @@ public class DBConnectionManager {
     @Reference(target="(osgi.jdbc.driver.class=org.h2.Driver)")
     DataSourceFactory dsf;
 
+    @Reference
+    JPAEntityManagerProviderFactory jpaEntityManagerProviderFactory;
+
+    @Reference
+    TransactionControl txControl;
+
     private volatile EntityManagerFactory emf;
 
     private volatile DataSource ds;
 
     private Map<String, Object> properties;
+
+    private EntityManager transactionalEntityManager;
 
     @Activate
     void start(Map<String, Object> properties) throws Exception {
@@ -81,6 +92,8 @@ public class DBConnectionManager {
 
         this.emf = this.emfBuilder.createEntityManagerFactory(jpaProps);
 
+        this.transactionalEntityManager = this.jpaEntityManagerProviderFactory
+                .getProviderFor(this.emf, null).getResource(this.txControl);
     }
 
     @Deactivate
@@ -101,12 +114,16 @@ public class DBConnectionManager {
         }
     }
 
-    public EntityManagerFactory getEmf() {
-        return this.emf;
-    }
-
     public Connection getSQLConnection() throws SQLException {
         return this.ds.getConnection();
+    }
+
+    public EntityManager getTransactionalEntityManager() {
+        return this.transactionalEntityManager;
+    }
+
+    public TransactionControl getTransactionControl() {
+        return this.txControl;
     }
 
     public  void replaceDefaultDBPassword() throws Exception {

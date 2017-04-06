@@ -21,20 +21,18 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.LastJobContainer;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.util.db.TransactionalRunner;
 
 /**
  * Attaches (in transaction) the last job record to given entity
  * @param <T> type that implements LastJobContainer (IscEntity with ability to attach last job)
  */
-public class CompleteJobTransaction<T extends LastJobContainer> implements TransactionalRunner.TransactionalAction<Void, CompleteJobTransactionInput> {
+public class CompleteJobTransaction<T extends LastJobContainer> {
     private Class<T> entityType;
 
     public CompleteJobTransaction(Class<T> entityType) {
         this.entityType = entityType;
     }
 
-    @Override
     public Void run(EntityManager em, CompleteJobTransactionInput param) throws Exception {
         T entity = em.find(this.entityType, param.getEntityId());
 

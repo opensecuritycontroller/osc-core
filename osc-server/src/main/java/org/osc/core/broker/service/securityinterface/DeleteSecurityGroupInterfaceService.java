@@ -48,13 +48,14 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
 
         OSCEntityManager.delete(em, this.sgi);
 
-        commitChanges(true);
+        chain(() -> {
+            Long jobId = this.conformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
 
-        Long jobId = this.conformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
-
-        BaseJobResponse response = new BaseJobResponse(this.sgi.getId());
-        response.setJobId(jobId);
-        return response;
+            BaseJobResponse response = new BaseJobResponse(this.sgi.getId());
+            response.setJobId(jobId);
+            return response;
+        });
+        return null;
     }
 
     private void validate(EntityManager em, BaseIdRequest request) throws Exception {

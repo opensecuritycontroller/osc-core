@@ -94,13 +94,15 @@ ServiceDispatcher<BaseRequest<DistributedApplianceDto>, AddDistributedApplianceR
             response.setSecretKey(null);
         }
 
-        commitChanges(true);
+        chain(() -> {
 
-        Long jobId = startConformDAJob(da, em);
+            Long jobId = startConformDAJob(da, em);
 
-        response.setJobId(jobId);
+            response.setJobId(jobId);
 
-        return response;
+            return response;
+        });
+        return null;
     }
 
     private Long startConformDAJob(DistributedAppliance da, EntityManager em) throws Exception {

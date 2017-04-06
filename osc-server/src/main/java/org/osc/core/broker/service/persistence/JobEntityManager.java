@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -39,6 +38,7 @@ import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class JobEntityManager {
 
@@ -71,54 +71,35 @@ public class JobEntityManager {
 
     public static Long getTaskCount(Long jobId) throws InterruptedException, VmidcException {
 
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-
         try {
-            EntityTransaction tx = em.getTransaction();
-            tx.begin();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            return HibernateUtil.getTransactionControl().required(() -> {
 
-            String hql = "SELECT count(*) FROM TaskRecord WHERE job_fk = :jobId";
+                String hql = "SELECT count(*) FROM TaskRecord WHERE job_fk = :jobId";
 
-            TypedQuery<Long> query = em.createQuery(hql, Long.class);
-            query.setParameter("jobId", jobId);
-            Long count = query.getSingleResult();
-
-            tx.commit();
-
-            return count;
-
-        } finally {
-
-            if (em != null) {
-                em.close();
-            }
+                TypedQuery<Long> query = em.createQuery(hql, Long.class);
+                query.setParameter("jobId", jobId);
+                return query.getSingleResult();
+            });
+        } catch (ScopedWorkException swe) {
+            throw swe.as(RuntimeException.class);
         }
-
     }
 
     public static Long getCompletedTaskCount(Long jobId) throws InterruptedException, VmidcException {
 
-        EntityManager em = HibernateUtil.getEntityManagerFactory().createEntityManager();
-
         try {
-            EntityTransaction tx = em.getTransaction();
-            tx.begin();
+            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            return HibernateUtil.getTransactionControl().required(() -> {
 
-            String hql = "SELECT count(*) FROM TaskRecord WHERE job_fk = :jobId AND state = 'COMPLETED'";
+                String hql = "SELECT count(*) FROM TaskRecord WHERE job_fk = :jobId AND state = 'COMPLETED'";
 
-            TypedQuery<Long> query = em.createQuery(hql, Long.class);
-            query.setParameter("jobId", jobId);
-            Long count = query.getSingleResult();
-
-            tx.commit();
-
-            return count;
-
-        } finally {
-
-            if (em != null) {
-                em.close();
-            }
+                TypedQuery<Long> query = em.createQuery(hql, Long.class);
+                query.setParameter("jobId", jobId);
+                return query.getSingleResult();
+            });
+        } catch (ScopedWorkException swe) {
+            throw swe.as(RuntimeException.class);
         }
     }
 

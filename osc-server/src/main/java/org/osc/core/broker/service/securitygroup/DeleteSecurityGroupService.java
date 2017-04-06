@@ -47,7 +47,6 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
         validate(em, request);
 
         UnlockObjectMetaTask unlockTask = null;
-        Job deleteSecurityGroupJob = null;
         BaseJobResponse response = new BaseJobResponse();
         log.info("Deleting SecurityGroup: " + this.securityGroup.getName());
         try {
@@ -57,19 +56,28 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
                 TaskGraph tg = new TaskGraph();
                 tg.addTask(new ForceDeleteSecurityGroupTask(this.securityGroup));
                 tg.appendTask(unlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
-                deleteSecurityGroupJob = JobEngine.getEngine().submit(
+                Job job = JobEngine.getEngine().submit(
                         "Force Delete Security Group '" + this.securityGroup.getName() + "'", tg,
                         LockObjectReference.getObjectReferences(this.securityGroup));
 
+                response.setJobId(job.getId());
             } else {
 
                 // Mark this security Group for Deletion and Trigger  Sync Job
                 OSCEntityManager.markDeleted(em, this.securityGroup);
-                commitChanges(true);
-                deleteSecurityGroupJob = ConformService.startSecurityGroupConformanceJob(em, this.securityGroup,
-                        unlockTask, false);
+                UnlockObjectMetaTask forLambda = unlockTask;
+                chain(() -> {
+                    try {
+                        Job job = ConformService.startSecurityGroupConformanceJob(em, this.securityGroup,
+                            forLambda, false);
+                        response.setJobId(job.getId());
+                        return response;
+                    } catch (Exception e) {
+                        LockUtil.releaseLocks(forLambda);
+                        throw e;
+                    }
+                });
             }
-            response.setJobId(deleteSecurityGroupJob.getId());
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
             throw e;
