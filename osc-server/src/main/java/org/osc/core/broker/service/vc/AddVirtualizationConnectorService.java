@@ -80,8 +80,6 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
 
         vcEntityMgr.update(vc);
 
-        // Commit the changes early so that the entity is available for the job engine
-        commitChanges(true);
         Job job = this.conformService.startVCSyncJob(vc, em);
         return new BaseJobResponse(vc.getId(), job.getId());
     }

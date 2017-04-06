@@ -129,9 +129,6 @@ public class UpdateVirtualizationConnectorService
                     }
                 }
             }
-
-            // Commit the changes early so that the entity is available for the job engine
-            commitChanges(true);
         } finally {
             LockUtil.releaseLocks(vcUnlock);
         }

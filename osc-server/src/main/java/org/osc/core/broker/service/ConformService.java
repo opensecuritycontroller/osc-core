@@ -16,10 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
@@ -66,7 +62,6 @@ import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import java.util.List;
 
 @Component(service = ConformService.class)
@@ -259,12 +254,19 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         log.info("Start VC (id:" + vc.getId() + ") Conformance Job");
         TaskGraph tg = new TaskGraph();
         tg.addTask(new CheckSSLConnectivityVcTask(vc));
+
         Job job = JobEngine.getEngine().submit("Syncing Virtualization Connector '" + vc.getName() + "'", tg,
-                LockObjectReference.getObjectReferences(vc), job1 -> new TransactionalRunner<Void, CompleteJobTransactionInput>(
-                        new TransactionalRunner.SharedSessionHandler())
-                        .withTransactionalListener(new TransactionalBrodcastListener())
-                        .exec(new CompleteJobTransaction<>(VirtualizationConnector.class),
-                                new CompleteJobTransactionInput(vc.getId(), job1.getId())));
+            LockObjectReference.getObjectReferences(vc), job1 -> {
+                try {
+                    HibernateUtil.getTransactionControl().required(() ->
+                            new CompleteJobTransaction<>(VirtualizationConnector.class)
+                                    .run(HibernateUtil.getTransactionalEntityManager(),
+                                            new CompleteJobTransactionInput(vc.getId(), job1.getId())));
+                } catch (Exception e) {
+                    log.error("A serious error occurred in the Job Listener", e);
+                    throw new RuntimeException("No Transactional resources are available", e);
+                }
+            });
 
         vc.setLastJob(em.find(JobRecord.class, job.getId()));
         OSCEntityManager.update(em, vc);

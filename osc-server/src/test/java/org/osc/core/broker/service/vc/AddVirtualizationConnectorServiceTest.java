@@ -86,13 +86,10 @@ public class AddVirtualizationConnectorServiceTest {
     private ConformService conformService;
 
     @InjectMocks()
-    private AddVirtualizationConnectorService service = new AddVirtualizationConnectorService(conformService);
+    private AddVirtualizationConnectorService service = new AddVirtualizationConnectorService(this.conformService);
 
     @Mock(answer=Answers.CALLS_REAL_METHODS)
     private TestTransactionControl txControl;
-
-    @InjectMocks
-    private AddVirtualizationConnectorService service;
 
     private static final String NAME_ALREADY_EXISTS = "Name already exists in the System";
 
