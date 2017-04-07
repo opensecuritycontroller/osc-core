@@ -92,7 +92,7 @@ public class ArchiveUtil {
         ZipEntry entry;
         int entries = 0;
         long total = BUFFER_SIZE;
-        log.info("Extracting " + inputFile + " into " + destination);
+        log.info("Extracting " + LoggingUtil.removeCRLF(inputFile) + " into " + destination);
 
         File zipParentDir = new File(inputFile).getParentFile();
 
