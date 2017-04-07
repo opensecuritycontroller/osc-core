@@ -274,20 +274,19 @@ public class ReleaseUpgradeMgr {
         updatePasswordScheme(stmt, "distributed_appliance_instance", "password");
 
         String sqlQuery = "SELECT vc_fk, value FROM virtualization_connector_provider_attr WHERE key = 'rabbitMQPassword';";
-        try(Statement statement = stmt) {
-            ResultSet result = statement.executeQuery(sqlQuery);
-            Map<Integer, String> attrs = new HashMap<>();
 
-            while (result.next()) {
-                attrs.put(result.getInt("vc_fk"), EncryptionUtil.encryptAESCTR(EncryptionUtil.decryptDES(result.getString("value"))));
-            }
+        ResultSet result = stmt.executeQuery(sqlQuery);
+        Map<Integer, String> attrs = new HashMap<>();
 
-            try (PreparedStatement preparedStatementUpdate = statement.getConnection().prepareStatement("UPDATE virtualization_connector_provider_attr SET value = ? WHERE vc_fk = ? AND key = 'rabbitMQPassword'")) {
-                for (Map.Entry<Integer, String> entry : attrs.entrySet()) {
-                    preparedStatementUpdate.setString(1, entry.getValue());
-                    preparedStatementUpdate.setInt(2, entry.getKey());
-                    preparedStatementUpdate.executeUpdate();
-                }
+        while (result.next()) {
+            attrs.put(result.getInt("vc_fk"), EncryptionUtil.encryptAESCTR(EncryptionUtil.decryptDES(result.getString("value"))));
+        }
+
+        try (PreparedStatement preparedStatementUpdate = stmt.getConnection().prepareStatement("UPDATE virtualization_connector_provider_attr SET value = ? WHERE vc_fk = ? AND key = 'rabbitMQPassword'")) {
+            for (Map.Entry<Integer, String> entry : attrs.entrySet()) {
+                preparedStatementUpdate.setString(1, entry.getValue());
+                preparedStatementUpdate.setInt(2, entry.getKey());
+                preparedStatementUpdate.executeUpdate();
             }
         }
     }
@@ -1748,23 +1747,20 @@ public class ReleaseUpgradeMgr {
         return !StringUtils.isNullOrEmpty(val) && Integer.parseInt(val) == 0;
     }
 
-    private static void updatePasswordScheme(Statement stmt, String tableName, String columnName) throws SQLException, EncryptionException {
+    private static void updatePasswordScheme(Statement statement, String tableName, String columnName) throws SQLException, EncryptionException {
         String sqlQuery = "SELECT id, " + columnName + " FROM " + tableName + ";";
+        ResultSet result = statement.executeQuery(sqlQuery);
+        Map<Integer, String> idsAndPasswords = new HashMap<>();
 
-        try(Statement statement = stmt) {
-            ResultSet result = statement.executeQuery(sqlQuery);
-            Map<Integer, String> idsAndPasswords = new HashMap<>();
+        while (result.next()) {
+            idsAndPasswords.put(result.getInt("id"), EncryptionUtil.encryptAESCTR(EncryptionUtil.decryptDES(result.getString(columnName))));
+        }
 
-            while (result.next()) {
-                idsAndPasswords.put(result.getInt("id"), EncryptionUtil.encryptAESCTR(EncryptionUtil.decryptDES(result.getString(columnName))));
-            }
-
-            try (PreparedStatement preparedStatementUpdate = statement.getConnection().prepareStatement("UPDATE " + tableName + " SET " + columnName + " = ? WHERE id = ?")) {
-                for (Map.Entry<Integer, String> entry : idsAndPasswords.entrySet()) {
-                    preparedStatementUpdate.setString(1, entry.getValue());
-                    preparedStatementUpdate.setInt(2, entry.getKey());
-                    preparedStatementUpdate.executeUpdate();
-                }
+        try (PreparedStatement preparedStatementUpdate = statement.getConnection().prepareStatement("UPDATE " + tableName + " SET " + columnName + " = ? WHERE id = ?")) {
+            for (Map.Entry<Integer, String> entry : idsAndPasswords.entrySet()) {
+                preparedStatementUpdate.setString(1, entry.getValue());
+                preparedStatementUpdate.setInt(2, entry.getKey());
+                preparedStatementUpdate.executeUpdate();
             }
         }
     }
