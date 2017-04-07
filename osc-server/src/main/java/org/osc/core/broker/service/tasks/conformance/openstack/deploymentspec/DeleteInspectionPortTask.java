@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -23,7 +24,9 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
@@ -51,15 +54,29 @@ public class DeleteInspectionPortTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
         try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);) {
+
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
+            DeploymentSpec ds = this.dai.getDeploymentSpec();
+            String domainId = OpenstackUtil.extractDomainId(
+                    ds.getTenantId(),
+                    ds.getTenantName(),
+                    ds.getVirtualSystem().getVirtualizationConnector(),
+                    Arrays.asList(ingressPort));
+
+            if (domainId == null) {
+                throw new VmidcBrokerValidationException(String.format("A domain was not found for the ingress port %s.", ingressPort.getElementId()));
+            }
+
+            ingressPort.setParentId(domainId);
+            egressPort.setParentId(domainId);
 
             InspectionPortElement portEl = new DefaultInspectionPort(ingressPort, egressPort);
             LOG.info(String.format("Deleting Inspection port(s): '%s' from region '%s' and Server : '%s' ",
                     portEl, this.region, this.dai));
-            controller.removeInspectionPort( portEl);
+            controller.removeInspectionPort(portEl);
 
         }
     }

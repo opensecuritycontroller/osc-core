@@ -25,7 +25,7 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
@@ -64,7 +64,7 @@ class UpdatePortGroupTask  extends TransactionalTask{
         }
         this.portGroup.setParentId(domainId);
         for (NetworkElement elem : protectedPorts) {
-            ((VMPort) elem).setParentId(domainId);
+            ((NetworkElementImpl) elem).setParentId(domainId);
         }
         SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(
                 this.securityGroup.getVirtualizationConnector());
@@ -81,7 +81,7 @@ class UpdatePortGroupTask  extends TransactionalTask{
 
     @Override
     public String getName() {
-        return String.format("Update Port Group for security group: %s ", this.securityGroup) ;
+        return String.format("Update Port Group for security group: %s ", this.securityGroup.getName()) ;
     }
 }
 

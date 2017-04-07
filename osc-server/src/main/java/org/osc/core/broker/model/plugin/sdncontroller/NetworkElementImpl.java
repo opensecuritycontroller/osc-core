@@ -49,4 +49,7 @@ public class NetworkElementImpl implements NetworkElement {
         return this.vmPort.getParentId();
     }
 
+    public void setParentId(String parentId) {
+        this.vmPort.setParentId(parentId);
+    }
 }

@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +44,6 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
-import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
@@ -152,9 +150,11 @@ class OsSvaServerCreateTask extends TransactionalTask {
                             createdServer.getEgressInspectionMacAddr());
 
                     if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
-                        String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
+                        String domainId = OpenstackUtil.extractDomainId(
+                                ds.getTenantId(),
+                                ds.getTenantName(),
                                 ds.getVirtualSystem().getVirtualizationConnector(),
-                                new ArrayList<NetworkElement>(Arrays.asList(ingressPort)));
+                                Arrays.asList(ingressPort));
                         ingressPort.setParentId(domainId);
                         egressPort.setParentId(domainId);
                     }
