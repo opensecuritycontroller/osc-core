@@ -50,7 +50,7 @@ public class RestoreUtil {
         if (!H2_DATABASE_NAME.equals(bkpFile.getName())) {
             throw new VmidcException("Restored Database backup does not contain expected files in the uploaded zip file.");
         }
-        String connectionUrl = "jdbc:h2:./tmp/vmiDCDB;AUTO_SERVER=TRUE;LOCK_TIMEOUT=10000";
+        String connectionUrl = "jdbc:h2:./tmp/vmiDCDB;AUTO_SERVER=TRUE;LOCK_TIMEOUT=10000;MV_STORE=FALSE;";
         log.info("Restoring from database: " + connectionUrl);
 
         Properties props = new Properties();
