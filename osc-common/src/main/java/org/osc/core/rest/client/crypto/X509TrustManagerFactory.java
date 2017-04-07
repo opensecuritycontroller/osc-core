@@ -323,6 +323,10 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         truststoreChangedListeners.add(listener);
     }
 
+    public void removeTruststoreChangedListener(TruststoreChangedListener listener) {
+        truststoreChangedListeners.remove(listener);
+    }
+
     /**
      * Listens to all trust store changes (adding/removing/modifying trust store)
      */
