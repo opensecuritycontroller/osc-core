@@ -183,7 +183,7 @@ public class VirtualizationConnectorApis {
         logger.info("Updating Virtualization Connector " + vcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         apiUtil.setIdOrThrow(vcRequest, vcId, "Virtualization Connector");
-        return apiUtil.getResponseForBaseRequest(new UpdateVirtualizationConnectorService(vcRequest.isForceAddSSLCertificates()),
+        return apiUtil.getResponseForBaseRequest(new UpdateVirtualizationConnectorService(this.conformService, vcRequest.isForceAddSSLCertificates()),
                 new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
 

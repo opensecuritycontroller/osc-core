@@ -253,7 +253,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     private void conformVirtualConnector(Long vcId) {
         log.info("Syncing VC " + vcId.toString());
         BaseJobRequest request = new BaseJobRequest(vcId);
-        SyncVirtualizationConnectorService service = new SyncVirtualizationConnectorService();
+        SyncVirtualizationConnectorService service = new SyncVirtualizationConnectorService(this.conformService);
 
         try {
             BaseJobResponse response = service.dispatch(request);

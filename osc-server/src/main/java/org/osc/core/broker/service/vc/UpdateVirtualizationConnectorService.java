@@ -51,7 +51,6 @@ import org.osc.core.broker.view.util.EventType;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.util.encryption.EncryptionException;
-import org.osgi.service.component.annotations.Reference;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -66,13 +65,14 @@ public class UpdateVirtualizationConnectorService
 
     private VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
 
-    @Reference
-    private ConformService conformService;
+    private final ConformService conformService;
 
-    public UpdateVirtualizationConnectorService() {
+    public UpdateVirtualizationConnectorService(ConformService conformService) {
+        this.conformService = conformService;
     }
 
-    public UpdateVirtualizationConnectorService(boolean forceAddSSLCertificates) {
+    public UpdateVirtualizationConnectorService(ConformService conformService, boolean forceAddSSLCertificates) {
+        this(conformService);
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
 
