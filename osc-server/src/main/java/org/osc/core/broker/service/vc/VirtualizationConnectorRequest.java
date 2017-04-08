@@ -30,7 +30,7 @@ public class VirtualizationConnectorRequest extends VirtualizationConnectorDto i
     private boolean skipRemoteValidation;
     private boolean forceAddSSLCertificates;
 
-    VirtualizationConnectorRequest() {
+    public VirtualizationConnectorRequest() {
     }
 
     public boolean isSkipRemoteValidation() {
