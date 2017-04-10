@@ -133,7 +133,8 @@ public class TaskNode implements Runnable, TaskElement {
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             TransactionControl txControl = HibernateUtil.getTransactionControl();
-            txControl.required(() -> {
+            // Use a new transaction to persist this update come what may
+            txControl.requiresNew(() -> {
                     this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
                             LockModeType.PESSIMISTIC_WRITE);
 
@@ -219,7 +220,8 @@ public class TaskNode implements Runnable, TaskElement {
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             TransactionControl txControl = HibernateUtil.getTransactionControl();
-            txControl.required(() -> {
+            // Use a new transaction to persist this update come what may
+            txControl.requiresNew(() -> {
                     this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
                             LockModeType.PESSIMISTIC_WRITE);
 

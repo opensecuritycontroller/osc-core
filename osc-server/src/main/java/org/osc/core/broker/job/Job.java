@@ -130,7 +130,8 @@ public class Job implements Runnable, JobElement {
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             TransactionControl txControl = HibernateUtil.getTransactionControl();
-            txControl.required(() -> {
+            // Use a new transaction to persist this update come what may
+            txControl.requiresNew(() -> {
                     this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
                     this.jobRecord.setStatus(getEntityStatus());
                     OSCEntityManager.update(em, this.jobRecord);
@@ -390,7 +391,8 @@ public class Job implements Runnable, JobElement {
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             TransactionControl txControl = HibernateUtil.getTransactionControl();
-            txControl.required(() -> {
+            // Use a new transaction to persist this update come what may
+            txControl.requiresNew(() -> {
                     this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
 
                     this.jobRecord.setState(getEntityState());
@@ -572,7 +574,8 @@ public class Job implements Runnable, JobElement {
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             TransactionControl txControl = HibernateUtil.getTransactionControl();
-            txControl.required(() -> {
+            // Use a new transaction to persist this Job come what may
+            txControl.requiresNew(() -> {
                     JobRecord jobRecord = getJobRecord();
 
                     if (jobRecord == null) {

@@ -81,8 +81,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
 
         // If not a deletion then create or update.
         if (!this.sgi.getMarkedForDeletion() && !this.isDeleteTaskGraph) {
-            if (existingInspHook == null)
-            {
+            if (existingInspHook == null) {
                 assignedRedirectedDai = assignedRedirectedDai == null ? getDeployedDAI(sgm, protectedPort, em) : assignedRedirectedDai;
                 this.tg.appendTask(new AllocateDAIWithSGIMembersTask(this.sgi, assignedRedirectedDai));
                 this.tg.appendTask(new CreatePortGroupHookTask(this.sgi, assignedRedirectedDai));
