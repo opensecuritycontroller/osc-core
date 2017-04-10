@@ -44,6 +44,6 @@ class DeletePortGroupTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Delete Port Group ID : %s", this.portGroup.getElementId()) ;
+        return String.format("Delete Port Group ID : %s", this.portGroup.getElementId());
     }
 }

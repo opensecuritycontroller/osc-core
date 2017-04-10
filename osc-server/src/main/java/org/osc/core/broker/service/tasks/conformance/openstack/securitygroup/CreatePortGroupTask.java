@@ -78,6 +78,6 @@ class CreatePortGroupTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Create Port Group for security group: %s ", this.securityGroup.getName()) ;
+        return String.format("Create Port Group for security group: %s ", this.securityGroup.getName());
     }
 }
