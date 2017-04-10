@@ -81,7 +81,7 @@ class UpdatePortGroupTask  extends TransactionalTask{
 
     @Override
     public String getName() {
-        return String.format("Update Port Group for security group: %s ", this.securityGroup.getName()) ;
+        return String.format("Update Port Group for security group: %s ", this.securityGroup.getName());
     }
 }
 
