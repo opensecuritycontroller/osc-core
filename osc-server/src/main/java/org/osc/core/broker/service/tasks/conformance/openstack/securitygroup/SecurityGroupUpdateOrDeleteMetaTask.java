@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,10 +38,12 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.securitygroup.BaseSecurityGroupService;
@@ -48,6 +51,7 @@ import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPartOfAnotherSecurityGroupException;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecurityGroupTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
@@ -75,7 +79,24 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
         if (this.sg.getMarkedForDeletion()) {
             this.log.info("Security Group " + this.sg.getName() + " marked for deletion, deleting Endpoint Group");
-            buildTaskGraph(em, true);
+            // If the SDN supports PG hook we need to retrieve the domainId before
+            // the members are deleted.
+            String domainId = null;
+            if (SdnControllerApiFactory.supportsPortGroup(this.sg)){
+                VMPort sgMemberPort = OpenstackUtil.getAnyProtectedPort(this.sg);
+
+                domainId = OpenstackUtil.extractDomainId(
+                        this.sg.getTenantId(),
+                        this.sg.getVirtualizationConnector().getProviderAdminTenantName(),
+                        this.sg.getVirtualizationConnector(),
+                        Arrays.asList(new NetworkElementImpl(sgMemberPort)));
+
+                if (domainId == null) {
+                    throw new VmidcBrokerValidationException(String.format("No domain found for port %s.", sgMemberPort));
+                }
+            }
+
+            buildTaskGraph(em, true, domainId);
         } else {
             this.log.info("Checking Security Group " + this.sg.getName());
 
@@ -121,12 +142,12 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 }
 
             }
-            buildTaskGraph(em, false);
+            buildTaskGraph(em, false, null);
         }
 
     }
 
-    private void buildTaskGraph(EntityManager em, boolean isDeleteTg) throws Exception {
+    private void buildTaskGraph(EntityManager em, boolean isDeleteTg, String domainId) throws Exception {
         VmDiscoveryCache vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(), this.sg.getVirtualizationConnector()
                 .getProviderAdminTenantName());
 
@@ -135,7 +156,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
         if (this.sg.getVirtualizationConnector().isControllerDefined()){
             if (SdnControllerApiFactory.supportsPortGroup(this.sg)){
-                this.tg.appendTask(new PortGroupCheckMetaTask(this.sg, isDeleteTg),
+                this.tg.appendTask(new PortGroupCheckMetaTask(this.sg, isDeleteTg, domainId),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
         }
