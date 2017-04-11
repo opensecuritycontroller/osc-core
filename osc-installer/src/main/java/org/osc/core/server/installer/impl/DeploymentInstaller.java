@@ -279,7 +279,9 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
                 oldState = unit.getState();
                 unit.setState(State.ERROR);
                 unit.setErrorMessage(e.getMessage());
-                if (log != null) log.log(LogService.LOG_ERROR, "Error installing artifact(s)", e);
+                if (log != null) {
+                    log.log(LogService.LOG_ERROR, "Error installing artifact(s)", e);
+                }
                 notifyListeners(Collections.singleton(new InstallableUnitEvent(oldState, State.ERROR, unit)));
                 return Collections.emptyList();
             }
