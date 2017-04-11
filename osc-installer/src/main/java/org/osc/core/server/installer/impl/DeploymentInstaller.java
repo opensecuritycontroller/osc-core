@@ -489,12 +489,15 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
     
     private static String getVersion(Capability identityCap) {
         Object versionObj = identityCap.getAttributes().get(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE);
-        if (versionObj == null)
+        if (versionObj == null) {
             return Version.emptyVersion.toString();
-        if (versionObj instanceof Version)
+        }
+        if (versionObj instanceof Version) {
             return ((Version) versionObj).toString();
-        if (versionObj instanceof String)
+        }
+        if (versionObj instanceof String) {
             return Version.parseVersion((String) versionObj).toString();
+        }
         throw new IllegalArgumentException("Incorrect type on identity version");
     }
 
