@@ -139,7 +139,11 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
                 chain(() -> {
                     try {
                         BaseJobResponse result = new BaseJobResponse();
-                        Job job = startDeleteDAJob(da, forLambda);
+                        // This is a new transaction so we need to get a live
+                        // managed DA instance - if not then we can't read lazy fields
+                        // and or may have invalid state
+                        DistributedAppliance liveDA = em.find(DistributedAppliance.class, da.getId());
+                        Job job = startDeleteDAJob(liveDA, forLambda);
                         result.setJobId(job.getId());
                         return result;
                     } catch (Exception e) {

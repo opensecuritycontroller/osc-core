@@ -124,6 +124,7 @@ public class DeleteDistributedApplianceServiceTest {
         Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
 
         VALID_DA_WITH_SYSTEMS.setName("name");
+        VALID_DA_WITH_SYSTEMS.setId(VALID_ID);
         VirtualizationConnector openStackVirtualizationConnector = new VirtualizationConnector();
         openStackVirtualizationConnector.setVirtualizationType(VirtualizationType.OPENSTACK);
         VirtualSystem openStackVirtualSystem = new VirtualSystem();
@@ -141,6 +142,9 @@ public class DeleteDistributedApplianceServiceTest {
         Mockito.when(this.validatorMock.validateAndLoad(VALID_REQUEST_FORCE_DELETE)).thenReturn(VALID_DA);
         Mockito.when(this.validatorMock.validateAndLoad(VALID_REQUEST_NOT_FORCE_DELETE)).thenReturn(VALID_DA_WITH_SYSTEMS);
         Mockito.when(this.validatorMock.validateAndLoad(UNLOCKABLE_DA_REQUEST)).thenReturn(UNLOCKABLE_DA);
+
+        Mockito.when(this.em.find(DistributedAppliance.class, VALID_REQUEST_NOT_FORCE_DELETE.getId()))
+            .thenReturn(VALID_DA_WITH_SYSTEMS);
 
         UnlockObjectMetaTask ult = new UnlockObjectMetaTask(null);
         PowerMockito.mockStatic(LockUtil.class);
