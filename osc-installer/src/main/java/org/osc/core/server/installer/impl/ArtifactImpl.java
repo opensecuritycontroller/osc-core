@@ -22,11 +22,13 @@ import org.osc.core.server.installer.Hash;
 class ArtifactImpl implements Artifact {
 
 	private final String name;
+	private final String version;
 	private final String location;
 	private final Hash hash;
 
-	ArtifactImpl(String name, String location, Hash hash) {
-		if (location == null) {
+	ArtifactImpl(String name, String version, String location, Hash hash) {
+		this.version = version;
+        if (location == null) {
             throw new IllegalArgumentException("Artifact location may not be null");
         }
 		this.name = name;
@@ -37,6 +39,11 @@ class ArtifactImpl implements Artifact {
 	@Override
 	public String getName() {
 		return this.name;
+	}
+	
+	@Override
+	public String getVersion() {
+	    return version;
 	}
 
 	@Override
@@ -51,7 +58,12 @@ class ArtifactImpl implements Artifact {
 
 	@Override
 	public String toString() {
-		return new StringBuilder().append(this.name).append(":").append(this.hash != null ? this.hash : "<no-hash>").append("@").append(this.location).toString();
+		return new StringBuilder()
+		        .append(this.name)
+		        .append('/').append(this.version)
+		        .append(":").append(this.hash != null ? this.hash : "<no-hash>")
+		        .append("@").append(this.location)
+		        .toString();
 	}
 
 }
