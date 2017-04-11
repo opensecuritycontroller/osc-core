@@ -16,10 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.SslCertificateAttr;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.model.entities.job.JobRecord;
+import org.osc.core.broker.model.entities.job.LastJobContainer;
 
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
@@ -29,21 +31,22 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
-
-import org.osc.core.broker.model.entities.BaseEntity;
-import org.osc.core.broker.model.entities.SslCertificateAttr;
-import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Entity
 @Table(name = "VIRTUALIZATION_CONNECTOR")
-public class VirtualizationConnector extends BaseEntity {
+public class VirtualizationConnector extends BaseEntity implements LastJobContainer {
 
     private static final String NO_CONTROLLER = "NONE";
 
@@ -104,6 +107,10 @@ public class VirtualizationConnector extends BaseEntity {
             inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_job_id_fk", foreignKey = @ForeignKey(name = "FK_MC_LAST_JOB"))
+    private JobRecord lastJob;
+
     @Column(name = "admin_tenant_name")
     private String adminTenantName;
 
@@ -132,6 +139,7 @@ public class VirtualizationConnector extends BaseEntity {
         this.securityGroups = originalVc.securityGroups;
         this.providerAttributes = originalVc.providerAttributes;
         this.adminTenantName = originalVc.adminTenantName;
+        this.lastJob = originalVc.lastJob;
     }
 
     public String getName() {
@@ -267,5 +275,15 @@ public class VirtualizationConnector extends BaseEntity {
     public String getRabbitMQIP() {
         String rabbitMQIP = getProviderAttributes() != null ? getProviderAttributes().get(ATTRIBUTE_KEY_RABBITMQ_IP) : null;
         return rabbitMQIP == null || rabbitMQIP.isEmpty() ? getProviderIpAddress() : rabbitMQIP;
+    }
+
+    @Override
+    public JobRecord getLastJob() {
+        return this.lastJob;
+    }
+
+    @Override
+    public void setLastJob(JobRecord lastJob) {
+        this.lastJob = lastJob;
     }
 }

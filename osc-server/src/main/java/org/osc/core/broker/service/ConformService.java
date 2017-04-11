@@ -16,10 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
@@ -56,6 +52,7 @@ import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckM
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
+import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.CheckSSLConnectivityVcTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -63,6 +60,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
+
+import javax.persistence.EntityManager;
+import java.util.List;
 
 @Component(service = ConformService.class)
 public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> {
@@ -237,6 +237,41 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         // new LockOptions(LockMode.PESSIMISTIC_WRITE));
         mc.setLastJob(em.find(JobRecord.class, job.getId()));
         OSCEntityManager.update(em, mc);
+
+        log.info("Done submitting with jobId: " + job.getId());
+        return job;
+    }
+
+    /**
+     * Starts VC sync job and executes the unlock task at the end. If the unlock task is null then automatically
+     * write locks the MC and release the lock at the end.
+     * <p>
+     * If a unlock task is provided, executes the unlock task at the end.
+     * </p>
+     */
+    public Job startVCSyncJob(final VirtualizationConnector vc, EntityManager em)
+            throws Exception {
+        log.info("Start VC (id:" + vc.getId() + ") Synchronization Job");
+        TaskGraph tg = new TaskGraph();
+        UnlockObjectTask vcUnlockTask = LockUtil.lockVC(vc, LockRequest.LockType.READ_LOCK);
+        tg.addTask(new CheckSSLConnectivityVcTask(vc));
+        tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
+
+        Job job = JobEngine.getEngine().submit("Syncing Virtualization Connector '" + vc.getName() + "'", tg,
+            LockObjectReference.getObjectReferences(vc), job1 -> {
+                try {
+                    HibernateUtil.getTransactionControl().required(() ->
+                            new CompleteJobTransaction<>(VirtualizationConnector.class)
+                                    .run(HibernateUtil.getTransactionalEntityManager(),
+                                            new CompleteJobTransactionInput(vc.getId(), job1.getId())));
+                } catch (Exception e) {
+                    log.error("A serious error occurred in the Job Listener", e);
+                    throw new RuntimeException("No Transactional resources are available", e);
+                }
+            });
+
+        vc.setLastJob(em.find(JobRecord.class, job.getId()));
+        OSCEntityManager.update(em, vc);
 
         log.info("Done submitting with jobId: " + job.getId());
         return job;

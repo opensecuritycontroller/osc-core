@@ -16,12 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util.db.upgrade;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.archive.FreqType;
@@ -30,7 +25,11 @@ import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * Schema: this class will help create our vmiDC database schema and generate
@@ -385,6 +384,7 @@ public class Schema {
                 "virtualization_type varchar(255) not null," +
                 "controller_type varchar(255) not null," +
                 "admin_tenant_name varchar(255)," +
+                "last_job_id_fk bigint," +
                 "primary key (id)" +
             ");",
 
@@ -826,6 +826,14 @@ public class Schema {
 
             "alter table APPLIANCE_MANAGER_CONNECTOR " +
                  "add constraint FK_MC_LAST_JOB_UNIQUE unique (last_job_id_fk);",
+
+            "alter table VIRTUALIZATION_CONNECTOR " +
+                    "add constraint FK_VC_LAST_JOB " +
+                    "foreign key (last_job_id_fk) " +
+                    "references JOB(id) ON DELETE SET NULL;",
+
+            "alter table VIRTUALIZATION_CONNECTOR " +
+                    "add constraint FK_VC_LAST_JOB_UNIQUE unique (last_job_id_fk);",
 
             "alter table APPLIANCE_SOFTWARE_VERSION " +
                 "add constraint UK_AV_AP_SV_VT_VSV unique (" +

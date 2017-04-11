@@ -16,52 +16,38 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
-import javax.persistence.EntityManager;
-
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.service.request.SyncApplianceManagerConnectorRequest;
-import org.osc.core.broker.service.response.SyncApplianceManagerConnectorResponse;
+import org.osc.core.broker.service.request.BaseJobRequest;
+import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+import javax.persistence.EntityManager;
+
 @Component(service = SyncManagerConnectorService.class)
-public class SyncManagerConnectorService extends
-        ServiceDispatcher<SyncApplianceManagerConnectorRequest, SyncApplianceManagerConnectorResponse> {
+public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobRequest, BaseJobResponse> {
 
     @Reference
     private ConformService conformService;
 
     @Override
-    public SyncApplianceManagerConnectorResponse exec(SyncApplianceManagerConnectorRequest request, EntityManager em)
-            throws Exception {
-
-        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, em);
-
+    public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
+        request.validateId();
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(request.getId());
-
         validate(request, mc);
-
         Long jobId = this.conformService.startMCConformJob(mc, em).getId();
-
-        SyncApplianceManagerConnectorResponse response = new SyncApplianceManagerConnectorResponse();
-        response.setJobId(jobId);
-
-        return response;
+        return new BaseJobResponse(mc.getId(), jobId);
     }
 
-    void validate(SyncApplianceManagerConnectorRequest request, ApplianceManagerConnector mc) throws Exception {
-
+    private void validate(BaseJobRequest request, ApplianceManagerConnector mc) throws Exception {
         // check for uniqueness of mc IP
         if (mc == null) {
-
-            throw new VmidcBrokerValidationException("Appliance Manager Connector Id " + request.getId()
-                    + " not found.");
+            throw new VmidcBrokerValidationException("Appliance Manager Connector Id " + request.getId() + " not found.");
         }
-
     }
 }

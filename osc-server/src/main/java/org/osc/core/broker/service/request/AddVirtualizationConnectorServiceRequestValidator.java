@@ -16,19 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
-import javax.persistence.EntityManager;
-
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 
+import javax.persistence.EntityManager;
+
 public class AddVirtualizationConnectorServiceRequestValidator
 		implements RequestValidator<DryRunRequest<VirtualizationConnectorDto>, VirtualizationConnector> {
 	private EntityManager em;
-	private static final Logger LOG = Logger.getLogger(AddVirtualizationConnectorServiceRequestValidator.class);
 
 	private DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> dtoValidator;
 

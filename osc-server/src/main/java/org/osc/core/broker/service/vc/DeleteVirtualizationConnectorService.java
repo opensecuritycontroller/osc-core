@@ -16,34 +16,36 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import javax.persistence.EntityManager;
-
+import org.apache.log4j.Logger;
+import org.osc.core.broker.job.Job;
+import org.osc.core.broker.job.JobEngine;
+import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
-import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.VCDeleteMetaTask;
 
-public class DeleteVirtualizationConnectorService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse> {
+import javax.persistence.EntityManager;
+
+public class DeleteVirtualizationConnectorService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse> {
+
+    private static final Logger log = Logger.getLogger(DeleteVirtualizationConnectorService.class);
+
     @Override
-    public EmptySuccessResponse exec(BaseIdRequest request, EntityManager em) throws VmidcException, Exception {
+    public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
         validate(em, request);
 
         OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
-        VirtualizationConnector connector = vcEntityMgr.findByPrimaryKey(request.getId());
-
-        SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
-        sslCertificateAttrEntityMgr.removeCertificateList(connector.getSslCertificateAttrSet());
-        vcEntityMgr.delete(request.getId());
-
-        return new EmptySuccessResponse();
+        VirtualizationConnector vc = vcEntityMgr.findByPrimaryKey(request.getId());
+        return new BaseJobResponse(startJob(vc));
     }
 
-    void validate(EntityManager em, BaseIdRequest request) throws VmidcException, Exception {
+    void validate(EntityManager em, BaseIdRequest request) throws Exception {
         VirtualizationConnector vc = em.find(VirtualizationConnector.class, request.getId());
 
         // entry must pre-exist in db
@@ -52,6 +54,18 @@ public class DeleteVirtualizationConnectorService extends ServiceDispatcher<Base
         }
 
         VirtualizationConnectorEntityMgr.validateCanBeDeleted(em, vc);
+    }
+
+    private Long startJob(VirtualizationConnector vc) throws Exception {
+
+        log.info("Start VC (id:" + vc.getId() + ") delete Job");
+
+        TaskGraph tg = new TaskGraph();
+
+        tg.addTask(new VCDeleteMetaTask(vc));
+        Job job = JobEngine.getEngine().submit("Delete Virtualization Connector '" + vc.getName() + "'", tg,
+                LockObjectReference.getObjectReferences(vc));
+        return job.getId();
     }
 
 }

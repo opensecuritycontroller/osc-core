@@ -16,10 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.view;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
+import com.vaadin.data.util.BeanContainer;
+import com.vaadin.data.util.BeanItem;
+import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.CustomTable;
+import com.vaadin.ui.CustomTable.ColumnGenerator;
+import com.vaadin.ui.Notification;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -30,10 +33,10 @@ import org.osc.core.broker.service.mc.SyncManagerConnectorService;
 import org.osc.core.broker.service.policy.ListManagerConnectoryPolicyService;
 import org.osc.core.broker.service.policy.PolicyDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
+import org.osc.core.broker.service.request.BaseJobRequest;
 import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.SyncApplianceManagerConnectorRequest;
+import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.response.SyncApplianceManagerConnectorResponse;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -41,13 +44,9 @@ import org.osc.core.broker.window.add.AddManagerConnectorWindow;
 import org.osc.core.broker.window.delete.DeleteManagerConnectorWindow;
 import org.osc.core.broker.window.update.UpdateManagerConnectorWindow;
 
-import com.vaadin.data.util.BeanContainer;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.CustomTable;
-import com.vaadin.ui.CustomTable.ColumnGenerator;
-import com.vaadin.ui.Notification;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnectorDto, PolicyDto> {
     private static final String MC_HELP_GUID = "GUID-14BF1C4E-4729-437A-BF60-A53EED74009C.html";
@@ -85,13 +84,13 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
         }
     }
 
-    public void conformManagerConnector(Long mcId) {
+    private void conformManagerConnector(Long mcId) {
         log.info("Syncing MC " + mcId.toString());
-        SyncApplianceManagerConnectorRequest request = new SyncApplianceManagerConnectorRequest();
-        request.setId(mcId);
+        BaseJobRequest request = new BaseJobRequest(mcId);
+        SyncManagerConnectorService service = new SyncManagerConnectorService();
 
         try {
-            SyncApplianceManagerConnectorResponse response = this.syncManagerConnectorService.dispatch(request);
+            BaseJobResponse response = service.dispatch(request);
             ViewUtil.showJobNotification(response.getJobId());
 
         } catch (Exception e) {

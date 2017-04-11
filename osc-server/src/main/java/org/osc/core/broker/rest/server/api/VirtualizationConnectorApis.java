@@ -16,27 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import java.util.List;
-import java.util.Set;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.broker.util.api.ApiUtil;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
@@ -45,7 +34,6 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
 import org.osc.core.broker.service.securitygroup.AddOrUpdateSecurityGroupRequest;
@@ -69,15 +57,25 @@ import org.osc.core.broker.service.vc.ListVirtualizationConnectorService;
 import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
 import org.osc.core.broker.service.vc.VirtualizationConnectorRequest;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
 import org.osgi.service.component.annotations.Reference;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Set;
 
 @Component(service = VirtualizationConnectorApis.class)
 @Api(tags = "Operations for Virtualization Connectors", authorizations = { @Authorization(value = "Basic Auth") })
@@ -91,6 +89,9 @@ public class VirtualizationConnectorApis {
 
     @Reference
     private ApiUtil apiUtil;
+
+    @Reference
+    private ConformService conformService;
 
     @ApiOperation(value = "Lists All Virtualization Connectors",
             notes = "Password information is not returned as it is sensitive information",
@@ -144,7 +145,7 @@ public class VirtualizationConnectorApis {
             notes = "Creates a Virtualization Connector<br/>"
                     + "If we are unable to connect to the endpoint using the credentials provided, this call will fail.<br/>"
                     + "To skip validation of IP and credentials 'skipRemoteValidation' flag can be used.",
-            response = BaseResponse.class)
+            response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @POST
@@ -153,8 +154,8 @@ public class VirtualizationConnectorApis {
 
         logger.info("Creating Virtualization Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponseForBaseRequest(new AddVirtualizationConnectorService(),
-                new DryRunRequest<VirtualizationConnectorDto>(vcRequest, vcRequest.isSkipRemoteValidation()));
+        return apiUtil.getResponseForBaseRequest(new AddVirtualizationConnectorService(this.conformService, vcRequest.isForceAddSSLCertificates()),
+                new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
 
     /**
@@ -170,7 +171,7 @@ public class VirtualizationConnectorApis {
                     + "For all other cases (current-type->NONE, current-type->new-type), there should not be any"
                     + "virtual systems using it.<br/> Password information is Optional for update requests as OSC will use "
                     + "the current password information.",
-            response = BaseResponse.class)
+            response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}")
@@ -182,8 +183,8 @@ public class VirtualizationConnectorApis {
         logger.info("Updating Virtualization Connector " + vcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         apiUtil.setIdOrThrow(vcRequest, vcId, "Virtualization Connector");
-        return apiUtil.getResponseForBaseRequest(new UpdateVirtualizationConnectorService(),
-                new DryRunRequest<VirtualizationConnectorDto>(vcRequest, vcRequest.isSkipRemoteValidation()));
+        return apiUtil.getResponseForBaseRequest(new UpdateVirtualizationConnectorService(this.conformService, vcRequest.isForceAddSSLCertificates()),
+                new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
 
     /**
@@ -193,7 +194,8 @@ public class VirtualizationConnectorApis {
      * @return
      */
     @ApiOperation(value = "Deletes a Virtualization Connector",
-            notes = "Deletes a Virtualization Connector if not referenced by any Virtual Systems")
+            notes = "Deletes a Virtualization Connector if not referenced by any Virtual Systems",
+            response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vcId}")
@@ -241,7 +243,7 @@ public class VirtualizationConnectorApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(sgId);
         getDtoRequest.setEntityName("SecurityGroup");
-        GetDtoFromEntityService<SecurityGroupDto> getDtoService = new GetDtoFromEntityService<SecurityGroupDto>();
+        GetDtoFromEntityService<SecurityGroupDto> getDtoService = new GetDtoFromEntityService<>();
         SecurityGroupDto dto = apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
         apiUtil.validateParentIdMatches(dto, vcId, "SecurityGroup");
@@ -351,7 +353,7 @@ public class VirtualizationConnectorApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(sgId);
         getDtoRequest.setEntityName("SecurityGroup");
-        GetDtoFromEntityService<SecurityGroupDto> getDtoService = new GetDtoFromEntityService<SecurityGroupDto>();
+        GetDtoFromEntityService<SecurityGroupDto> getDtoService = new GetDtoFromEntityService<>();
         SecurityGroupDto dto = apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
         apiUtil.validateParentIdMatches(dto, vcId, "SecurityGroup");
