@@ -16,21 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
@@ -38,7 +29,6 @@ import org.osc.core.broker.service.DeleteApplianceManagerConnectorService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDomainsByMcIdService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
-import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.ApplianceManagerConnectorRequest;
@@ -56,12 +46,19 @@ import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Component(service = ManagerConnectorApis.class)
 @Api(tags = "Operations for Manager Connectors", authorizations = { @Authorization(value = "Basic Auth") })
@@ -96,7 +93,7 @@ public class ManagerConnectorApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<ApplianceManagerConnectorDto> response = (ListResponse<ApplianceManagerConnectorDto>) apiUtil
-                .getListResponse(new ListApplianceManagerConnectorService(), new BaseRequest<BaseDto>(true));
+                .getListResponse(new ListApplianceManagerConnectorService(), new BaseRequest<>(true));
 
         return response.getList();
     }
@@ -118,7 +115,7 @@ public class ManagerConnectorApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(amcId);
         getDtoRequest.setEntityName("ApplianceManagerConnector");
-        GetDtoFromEntityService<ApplianceManagerConnectorDto> getDtoService = new GetDtoFromEntityService<ApplianceManagerConnectorDto>();
+        GetDtoFromEntityService<ApplianceManagerConnectorDto> getDtoService = new GetDtoFromEntityService<>();
         return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
@@ -136,9 +133,15 @@ public class ManagerConnectorApis {
 
         logger.info("Creating Appliance Manager Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-
-        return apiUtil.getResponseForBaseRequest(this.addService,
-                new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
+        this.addService.setForceAddSSLCertificates(amcRequest.isForceAddSSLCertificates());
+        Response responseForBaseRequest;
+        try {
+            responseForBaseRequest = apiUtil.getResponseForBaseRequest(this.addService,
+                    new DryRunRequest<>(amcRequest, amcRequest.isSkipRemoteValidation()));
+        } finally {
+            this.addService.setForceAddSSLCertificates(false);
+        }
+        return responseForBaseRequest;
     }
 
     @ApiOperation(
@@ -162,8 +165,16 @@ public class ManagerConnectorApis {
 
         apiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
 
-        return apiUtil.getResponseForBaseRequest(this.updateService,
-                new DryRunRequest<ApplianceManagerConnectorDto>(amcRequest, amcRequest.isSkipRemoteValidation()));
+        this.updateService.setForceAddSSLCertificates(amcRequest.isForceAddSSLCertificates());
+
+        Response responseForBaseRequest;
+        try {
+            responseForBaseRequest = apiUtil.getResponseForBaseRequest(this.updateService,
+                    new DryRunRequest<>(amcRequest, amcRequest.isSkipRemoteValidation()));
+        } finally {
+            this.updateService.setForceAddSSLCertificates(false);
+        }
+        return responseForBaseRequest;
     }
 
     @ApiOperation(value = "Deletes an Manager Connector",

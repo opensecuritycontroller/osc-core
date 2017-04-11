@@ -16,10 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
-import java.util.ArrayList;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -46,6 +42,9 @@ import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
+
 @Component(service = AddApplianceManagerConnectorService.class)
 public class AddApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
@@ -59,6 +58,10 @@ public class AddApplianceManagerConnectorService extends
 
     @Reference
     private ConformService conformService;
+
+    public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
+        this.forceAddSSLCertificates = forceAddSSLCertificates;
+    }
 
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em)
@@ -87,14 +90,8 @@ public class AddApplianceManagerConnectorService extends
         // Commit the changes early so that the entity is available for the job engine
         chain(() -> {
             UnlockObjectTask mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
-
-
-            BaseJobResponse response = new BaseJobResponse();
-            response.setId(mc.getId());
             Job job = this.conformService.startMCConformJob(mc, mcUnlock, em);
-            response.setJobId(job.getId());
-
-            return response;
+            return new BaseJobResponse(mc.getId(), job.getId());
         });
 
         return null;

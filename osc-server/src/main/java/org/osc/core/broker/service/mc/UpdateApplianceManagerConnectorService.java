@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockManager;
@@ -57,6 +52,10 @@ import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+import javax.persistence.EntityManager;
+import java.util.List;
+import java.util.Set;
+
 @Component(service = UpdateApplianceManagerConnectorService.class)
 public class UpdateApplianceManagerConnectorService extends
         ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
@@ -70,6 +69,10 @@ public class UpdateApplianceManagerConnectorService extends
 
     @Reference
     private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
+
+    public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
+        this.forceAddSSLCertificates = forceAddSSLCertificates;
+    }
 
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em) throws Exception {
@@ -122,12 +125,8 @@ public class UpdateApplianceManagerConnectorService extends
             UnlockObjectTask forLambda = mcUnlock;
             chain(() -> {
                 try {
-                    BaseJobResponse response = new BaseJobResponse();
-                    response.setId(mc.getId());
-
                     Long jobId = this.conformService.startMCConformJob(mc, forLambda, em).getId();
-                    response.setJobId(jobId);
-                    return response;
+                    return new BaseJobResponse(mc.getId(), jobId);
                 } catch (Exception e) {
                     // If we experience any failure, unlock MC.
                     log.info("Releasing lock for MC '" + mc.getName() + "'");

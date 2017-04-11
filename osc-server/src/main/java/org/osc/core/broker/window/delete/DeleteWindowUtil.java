@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.window.delete;
 
-import java.util.List;
-
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Notification;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDeploymentSpecService;
@@ -46,9 +47,7 @@ import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.broker.window.button.OkCancelForceDeleteModel;
 
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Notification;
+import java.util.List;
 
 public class DeleteWindowUtil {
 
@@ -229,7 +228,8 @@ public class DeleteWindowUtil {
                     delRequest.setId(dto.getId());
                     log.info("deleting Virtualization Connector - " + dto.getName());
                     DeleteVirtualizationConnectorService deleteService = new DeleteVirtualizationConnectorService();
-                    deleteService.dispatch(delRequest);
+                    BaseJobResponse response = deleteService.dispatch(delRequest);
+                    ViewUtil.showJobNotification(response.getJobId());
                     deleteWindow.close();
                 } catch (Exception e) {
                     ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);

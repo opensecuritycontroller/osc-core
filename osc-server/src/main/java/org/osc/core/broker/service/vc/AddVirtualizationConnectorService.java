@@ -16,16 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import java.rmi.RemoteException;
-
-import javax.persistence.EntityManager;
-
-import org.apache.log4j.Logger;
+import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
-import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
@@ -33,22 +29,25 @@ import org.osc.core.broker.service.request.AddVirtualizationConnectorServiceRequ
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.RequestValidator;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
-import org.osc.core.broker.service.response.BaseResponse;
+import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.core.rest.client.exception.RestClientException;
 
-public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>, BaseResponse> {
+import javax.persistence.EntityManager;
 
-    private static final Logger log = Logger.getLogger(AddVirtualizationConnectorService.class);
+public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>, BaseJobResponse> {
+
     private RequestValidator<DryRunRequest<VirtualizationConnectorDto>, VirtualizationConnector> validator;
 
     private boolean forceAddSSLCertificates = false;
+    private ConformService conformService;
 
-    public AddVirtualizationConnectorService() {
+    public AddVirtualizationConnectorService(ConformService conformService) {
+        this.conformService = conformService;
     }
 
-    public AddVirtualizationConnectorService(boolean forceAddSSLCertificates) {
+    public AddVirtualizationConnectorService(ConformService conformService, boolean forceAddSSLCertificates) {
+        this(conformService);
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
 
@@ -57,8 +56,7 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
     }
 
     @Override
-    public BaseResponse exec(DryRunRequest<VirtualizationConnectorDto> request, EntityManager em)
-            throws VmidcException, RestClientException, RemoteException, Exception {
+    public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorDto> request, EntityManager em) throws Exception {
         if (this.validator == null) {
             this.validator = new AddVirtualizationConnectorServiceRequestValidator(em);
         }
@@ -82,7 +80,8 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
 
         vcEntityMgr.update(vc);
 
-        return new BaseResponse(vc.getId());
+        Job job = this.conformService.startVCSyncJob(vc, em);
+        return new BaseJobResponse(vc.getId(), job.getId());
     }
 
     private DryRunRequest<VirtualizationConnectorDto> internalSSLCertificatesFetch(
@@ -99,4 +98,4 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
         return request;
     }
 
-   }
+}

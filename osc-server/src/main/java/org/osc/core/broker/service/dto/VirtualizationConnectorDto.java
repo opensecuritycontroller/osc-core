@@ -16,17 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
+import io.swagger.annotations.ApiModelProperty;
 import org.apache.commons.lang.StringUtils;
+import org.osc.core.broker.job.JobState;
+import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
@@ -35,7 +28,14 @@ import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.util.ValidateUtil;
 
-import io.swagger.annotations.ApiModelProperty;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 // Virtualization Connector Data Transfer Object associated with VC entity
 @XmlRootElement(name = "virtualizationConnector")
@@ -86,6 +86,16 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     @ApiModelProperty(hidden = true)
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
+
+    @ApiModelProperty(readOnly = true)
+    private JobState lastJobState;
+
+    @ApiModelProperty(readOnly = true)
+    private JobStatus lastJobStatus;
+
+    @ApiModelProperty(readOnly = true)
+    private Long lastJobId;
+
     /**
      * Gets the controller type
      *
@@ -185,6 +195,30 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     public void setSslCertificateAttrSet(Set<SslCertificateAttr> sslCertificateAttrSet) {
         this.sslCertificateAttrSet = sslCertificateAttrSet;
+    }
+
+    public JobStatus getLastJobStatus() {
+        return this.lastJobStatus;
+    }
+
+    public Long getLastJobId() {
+        return this.lastJobId;
+    }
+
+    public void setLastJobId(Long lastJobId) {
+        this.lastJobId = lastJobId;
+    }
+
+    public void setLastJobStatus(JobStatus lastJobStatus) {
+        this.lastJobStatus = lastJobStatus;
+    }
+
+    public JobState getLastJobState() {
+        return this.lastJobState;
+    }
+
+    public void setLastJobState(JobState lastJobState) {
+        this.lastJobState = lastJobState;
     }
 
     public String getAdminTenantName() {

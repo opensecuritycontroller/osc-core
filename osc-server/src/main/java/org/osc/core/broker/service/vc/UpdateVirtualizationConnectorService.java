@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -29,6 +24,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -44,7 +40,7 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
-import org.osc.core.broker.service.response.BaseResponse;
+import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
@@ -56,8 +52,12 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.util.encryption.EncryptionException;
 
+import javax.persistence.EntityManager;
+import java.util.List;
+import java.util.Set;
+
 public class UpdateVirtualizationConnectorService
-        extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>, BaseResponse> {
+        extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>, BaseJobResponse> {
 
     private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
 
@@ -65,20 +65,25 @@ public class UpdateVirtualizationConnectorService
 
     private VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
 
-    public UpdateVirtualizationConnectorService() {
+    private final ConformService conformService;
+
+    public UpdateVirtualizationConnectorService(ConformService conformService) {
+        this.conformService = conformService;
     }
 
-    public UpdateVirtualizationConnectorService(boolean forceAddSSLCertificates) {
+    public UpdateVirtualizationConnectorService(ConformService conformService, boolean forceAddSSLCertificates) {
+        this(conformService);
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
 
     @Override
-    public BaseResponse exec(DryRunRequest<VirtualizationConnectorDto> request, EntityManager em) throws Exception {
+    public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorDto> request, EntityManager em) throws Exception {
+
+        BaseDto.checkForNullId(request.getDto());
 
         OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
 
         // retrieve existing entry from db
-        BaseDto.checkForNullId(request.getDto());
         VirtualizationConnector vc = vcEntityMgr.findByPrimaryKey(request.getDto().getId());
 
         Set<SslCertificateAttr> persistentSslCertificatesSet = vc.getSslCertificateAttrSet();
@@ -124,11 +129,12 @@ public class UpdateVirtualizationConnectorService
                     }
                 }
             }
-
-            return new BaseResponse(vc.getId());
         } finally {
             LockUtil.releaseLocks(vcUnlock);
         }
+
+        Long jobId = this.conformService.startVCSyncJob(vc, em).getId();
+        return new BaseJobResponse(vc.getId(), jobId);
     }
 
     private DryRunRequest<VirtualizationConnectorDto> internalSSLCertificatesFetch(
@@ -216,11 +222,9 @@ public class UpdateVirtualizationConnectorService
         updateVirtualizationConnector(request, existingVc);
 
 		if (dto.getType().isVmware()) {
-
-			this.util.checkVmwareConnection(request, existingVc);
+            this.util.checkVmwareConnection(request, existingVc);
 		} else {
-
-			this.util.checkOpenstackConnection(request, existingVc);
+            this.util.checkOpenstackConnection(request, existingVc);
 		}
     }
 

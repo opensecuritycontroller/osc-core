@@ -16,16 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.VMWARE_REQUEST;
-
-import java.util.ArrayList;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -38,13 +28,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.AddVirtualizationConnectorServiceRequestValidator;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
+import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.BaseResponse;
+import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
@@ -55,8 +50,22 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import java.util.ArrayList;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.VMWARE_REQUEST;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({X509TrustManagerFactory.class, EncryptionUtil.class, HibernateUtil.class })
+@PrepareForTest({X509TrustManagerFactory.class, EncryptionUtil.class, HibernateUtil.class, LockUtil.class })
 public class AddVirtualizationConnectorServiceTest {
 
     @Rule
@@ -65,13 +74,22 @@ public class AddVirtualizationConnectorServiceTest {
     private EntityManager em;
 
     @Mock
+    private Job job;
+
+    @Mock
+    private UnlockObjectTask unlockObjectTask;
+
+    @Mock
     private AddVirtualizationConnectorServiceRequestValidator validatorMock;
+
+    @Mock
+    private ConformService conformService;
+
+    @InjectMocks()
+    private AddVirtualizationConnectorService service = new AddVirtualizationConnectorService(this.conformService);
 
     @Mock(answer=Answers.CALLS_REAL_METHODS)
     private TestTransactionControl txControl;
-
-    @InjectMocks
-    private AddVirtualizationConnectorService service;
 
     private static final String NAME_ALREADY_EXISTS = "Name already exists in the System";
 
@@ -95,6 +113,10 @@ public class AddVirtualizationConnectorServiceTest {
 
         PowerMockito.mockStatic(EncryptionUtil.class);
         when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
+
+        when(this.job.getId()).thenReturn(5L);
+        //PowerMockito.mockStatic(ConformService.class);
+        when(this.conformService.startVCSyncJob(any(VirtualizationConnector.class), any(EntityManager.class))).thenReturn(this.job);
     }
 
     @After
@@ -115,7 +137,7 @@ public class AddVirtualizationConnectorServiceTest {
         doNothing().when(this.validatorMock).validate(VMWARE_REQUEST);
 
         // Act.
-        BaseResponse response = this.service.dispatch(VMWARE_REQUEST);
+        BaseJobResponse response = this.service.dispatch(VMWARE_REQUEST);
 
         // Assert.
         VirtualizationConnector vc = this.em.createQuery("Select vc from VirtualizationConnector vc where vc.name = '" + VMWARE_REQUEST.getDto().getName() + "'", VirtualizationConnector.class)
@@ -123,6 +145,7 @@ public class AddVirtualizationConnectorServiceTest {
         validateResponse(response, vc.getId());
         verify(this.validatorMock).validate(VMWARE_REQUEST);
         Assert.assertNotNull("Not updated", vc.getUpdatedTimestamp());
+        Assert.assertTrue("Job id should be equal", 5L == response.getJobId());
     }
 
     @Test
@@ -168,12 +191,12 @@ public class AddVirtualizationConnectorServiceTest {
 
         // Arrange.
         ErrorTypeException exception = new ErrorTypeException("Error Thrown", ErrorType.CONTROLLER_EXCEPTION);
-        doThrow(new SslCertificatesExtendedException(exception, new ArrayList<CertificateResolverModel>())).doNothing().when(this.validatorMock)
+        doThrow(new SslCertificatesExtendedException(exception, new ArrayList<>())).doNothing().when(this.validatorMock)
                 .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
         this.service.setForceAddSSLCertificates(true);
 
         // Act.
-        BaseResponse response = this.service.dispatch(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        BaseJobResponse response = this.service.dispatch(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Assert.
         verify(this.validatorMock, times(2))
