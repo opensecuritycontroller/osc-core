@@ -137,7 +137,7 @@ public class WebSocketClient {
         this.clientEndpoint = new WebSocketClientEndPoint(this.mc, this.mgrApi, this.managerApis);
         this.client = ClientManager.createClient();
         if (this.mgrApi.isHttps()) {
-            SSLEngineConfigurator sslEngineConfigurator = new SSLEngineConfigurator(new SslContextProvider().getSSLContext(), true,
+            SSLEngineConfigurator sslEngineConfigurator = new SSLEngineConfigurator(SslContextProvider.getInstance().getSSLContext(), true,
                     false, false);
             this.client.getProperties().put(ClientManager.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
         }

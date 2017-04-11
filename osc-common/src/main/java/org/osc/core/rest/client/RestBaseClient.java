@@ -173,7 +173,7 @@ public abstract class RestBaseClient {
 
     private Client configureHttpsClient() {
 
-        SSLContext ctx = new SslContextProvider().getSSLContext();
+        SSLContext ctx = SslContextProvider.getInstance().getSSLContext();
         HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
 
         return ClientBuilder.newBuilder()

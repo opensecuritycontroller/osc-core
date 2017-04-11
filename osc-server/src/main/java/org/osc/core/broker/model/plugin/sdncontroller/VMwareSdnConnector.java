@@ -45,7 +45,7 @@ public class VMwareSdnConnector implements ConnectorElement {
         this.ipAddress = vc.getControllerIpAddress();
         this.userName = vc.getControllerUsername();
         this.password = EncryptionUtil.decryptAESCTR(vc.getControllerPassword());
-        this.sslContext = new SslContextProvider().getSSLContext();
+        this.sslContext = SslContextProvider.getInstance().getSSLContext();
     }
 
     /**

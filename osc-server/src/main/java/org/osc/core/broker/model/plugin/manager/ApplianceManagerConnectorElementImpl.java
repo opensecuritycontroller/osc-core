@@ -83,7 +83,7 @@ public class ApplianceManagerConnectorElementImpl implements ApplianceManagerCon
 
     @Override
     public SSLContext getSslContext() {
-        return new SslContextProvider().getSSLContext();
+        return SslContextProvider.getInstance().getSSLContext();
     }
 
     @Override
