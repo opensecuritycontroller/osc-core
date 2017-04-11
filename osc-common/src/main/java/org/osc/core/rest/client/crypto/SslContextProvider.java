@@ -37,6 +37,14 @@ public class SslContextProvider {
         try {
             sslContext = SSLContext.getInstance("TLSv1.2");
             sslContext.init(null, trustManager, new SecureRandom());
+
+            // disable SSL session caching - we load SSL certificates dinamically so we need to ensure
+            // that we have up to date cached certificates list
+            sslContext.getClientSessionContext().setSessionCacheSize(1);
+            sslContext.getClientSessionContext().setSessionTimeout(1);
+            sslContext.getServerSessionContext().setSessionCacheSize(1);
+            sslContext.getServerSessionContext().setSessionTimeout(1);
+
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             LOG.error("Encountering security exception in SSL context", e);
             throw new RuntimeException("Internal error with SSL context", e);
