@@ -65,6 +65,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.resource.Capability;
@@ -278,6 +279,9 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
                 oldState = unit.getState();
                 unit.setState(State.ERROR);
                 unit.setErrorMessage(e.getMessage());
+                if (log != null) {
+                    log.log(LogService.LOG_ERROR, "Error installing artifact(s)", e);
+                }
                 notifyListeners(Collections.singleton(new InstallableUnitEvent(oldState, State.ERROR, unit)));
                 return Collections.emptyList();
             }
@@ -347,7 +351,8 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
 
         List<Artifact> artifacts = new ArrayList<>(result.getResources().size());
         for (Entry<Resource, String> resourceEntry : result.getResources().entrySet()) {
-            ArtifactImpl artifact = new ArtifactImpl(getIdentity(resourceEntry.getKey()), resourceEntry.getValue(), getContentHash(resourceEntry.getKey()));
+            Capability idCap = getIdentityCapability(resourceEntry.getKey());
+            ArtifactImpl artifact = new ArtifactImpl(getIdentity(idCap), getVersion(idCap), resourceEntry.getValue(), getContentHash(resourceEntry.getKey()));
             artifacts.add(artifact);
         }
         debug("Sucessful resolve for file %s: Deployment-Name=%s, Deployment-SymbolicName=%s, Deployment-Version= %s, Deployment-Type=%s", file, request.getName(), request.getSymbolicName(), request.getVersion(), request.getType());
@@ -472,19 +477,33 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
         log(LogService.LOG_INFO, null, "Installing bundle archive: %s", file.getAbsolutePath());
         putResolveJob(file);
     }
+    
+    private static String getIdentity(Capability identityCap) {
+        Object idObj = identityCap.getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE);
+        if (!(idObj instanceof String)) {
+            throw new IllegalArgumentException("Missing identity capability on resource, or incorrect type");
+        }
+        
+        return (String) idObj;
+    }
+    
+    private static String getVersion(Capability identityCap) {
+        Object versionObj = identityCap.getAttributes().get(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE);
+        if (versionObj == null)
+            return Version.emptyVersion.toString();
+        if (versionObj instanceof Version)
+            return ((Version) versionObj).toString();
+        if (versionObj instanceof String)
+            return Version.parseVersion((String) versionObj).toString();
+        throw new IllegalArgumentException("Incorrect type on identity version");
+    }
 
-    private static String getIdentity(Resource resource) {
+    private static Capability getIdentityCapability(Resource resource) {
         List<Capability> caps = resource.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE);
         if (caps == null || caps.isEmpty()) {
             throw new IllegalArgumentException("Missing identity capability on resource");
         }
-
-        Object idObj = caps.get(0).getAttributes().get(IdentityNamespace.IDENTITY_NAMESPACE);
-        if (!(idObj instanceof String)) {
-            throw new IllegalArgumentException("Missing identity capability on resource, or incorrect type");
-        }
-
-        return (String) idObj;
+        return caps.get(0);
     }
 
     @Override

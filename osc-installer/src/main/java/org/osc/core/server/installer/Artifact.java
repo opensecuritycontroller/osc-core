@@ -22,6 +22,8 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface Artifact {
 
 	String getName();
+	
+	String getVersion();
 
 	/**
 	 * Returns the hash for the artifact content if available, otherwise
