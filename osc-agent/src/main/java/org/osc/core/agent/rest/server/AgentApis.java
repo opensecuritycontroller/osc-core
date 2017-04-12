@@ -505,7 +505,7 @@ public class AgentApis {
 
     private void downloadFileSecure(URL url, File outFile) throws Exception {
 
-        final SSLContext sslContext = new SslContextProvider().getSSLContext();
+        final SSLContext sslContext = SslContextProvider.getInstance().getSSLContext();
         HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
 
         // Create all-trusting host name verifier

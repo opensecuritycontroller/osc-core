@@ -50,7 +50,7 @@ public class Endpoint {
         this.user = vc.getProviderUsername();
         this.password = EncryptionUtil.decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
-        this.sslContext = new SslContextProvider().getSSLContext();
+        this.sslContext = SslContextProvider.getInstance().getSSLContext();
     }
 
     public Endpoint(DeploymentSpec ds) throws EncryptionException {

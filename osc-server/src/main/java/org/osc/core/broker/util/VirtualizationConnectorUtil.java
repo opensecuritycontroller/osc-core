@@ -148,7 +148,7 @@ public class VirtualizationConnectorUtil {
 
                     if (this.endPoint == null) {
                         this.endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
-                                vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, new SslContextProvider().getSSLContext());
+                                vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, SslContextProvider.getInstance().getSSLContext());
                     }
                     if (this.keystoneAPi == null) {
                         this.keystoneAPi = new JCloudKeyStone(this.endPoint);
