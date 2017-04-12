@@ -97,6 +97,7 @@ public class UpdateVirtualizationConnectorService
                 throw e;
             }
         }
+        setForceAddSSLCertificates(false); // set default ssl state for future calls
 
         String vcName = vc.getName();
 

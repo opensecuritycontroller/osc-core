@@ -96,6 +96,7 @@ public class UpdateApplianceManagerConnectorService extends
                 throw e;
             }
         }
+        setForceAddSSLCertificates(false); // set default ssl state for future calls
 
         String mcName = mc.getName();
 

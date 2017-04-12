@@ -67,6 +67,7 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
                 throw e;
             }
         }
+        setForceAddSSLCertificates(false); // set default ssl state for future calls
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
         OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
