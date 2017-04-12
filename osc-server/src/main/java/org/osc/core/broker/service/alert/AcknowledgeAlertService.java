@@ -23,11 +23,11 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.AlertEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.SessionUtil;
 
 public class AcknowledgeAlertService extends ServiceDispatcher<AlertRequest, EmptySuccessResponse> {
@@ -53,7 +53,7 @@ public class AcknowledgeAlertService extends ServiceDispatcher<AlertRequest, Emp
         }
 
         for (AlertDto dto : request.getDtoList()) {
-            BaseDto.checkForNullId(dto);
+            BaseDtoValidator.checkForNullId(dto);
             Alert alert = emgr.findByPrimaryKey(dto.getId());
             // Do not update an alert if the request is to acknowledge an already acknowledged alert
             if (!((alert.getStatus().equals(AcknowledgementStatus.ACKNOWLEDGED) && request.isAcknowledge()))) {

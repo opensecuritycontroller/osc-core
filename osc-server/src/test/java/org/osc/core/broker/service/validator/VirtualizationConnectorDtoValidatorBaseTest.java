@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.dto;
+package org.osc.core.broker.service.validator;
 
 import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.*;
 
@@ -25,8 +25,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.broker.service.request.VirtualizationConnectorDtoValidator;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator;
 
 /**
  * The base class for the {@link VirtualizationConnectorDtoValidator} unit tests.

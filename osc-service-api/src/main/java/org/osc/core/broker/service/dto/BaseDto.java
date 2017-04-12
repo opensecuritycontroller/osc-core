@@ -16,12 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.osc.core.broker.util.ValidateUtil;
-
-
 public class BaseDto {
 
     private Long id;
@@ -49,16 +43,4 @@ public class BaseDto {
     public void setParentId(Long parentId) {
         this.parentId = parentId;
     }
-
-    public static void checkForNullId(BaseDto dto) throws Exception {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("Id", dto.getId());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
 }

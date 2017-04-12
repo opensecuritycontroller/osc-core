@@ -16,15 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.util.ValidateUtil;
 
 // Appliance Data Transfer Object associated with Appliance Entity
 @XmlRootElement(name = "appliance")
@@ -63,28 +59,5 @@ public class ApplianceDto extends BaseDto {
     public String toString() {
         return "ApplianceDto [id=" + getId() + ", model=" + this.model + ", managerType=" + this.managerType + ", managerVersion="
                 + this.managerVersion + "]";
-    }
-
-    public static void checkForNullFields(ApplianceDto dto) throws Exception {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("Appliance Model", dto.getModel());
-        map.put("Appliance Manager Type", dto.getManagerType());
-        map.put("Appliance Manager Version", dto.getManagerVersion());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
-    public static void checkFieldLength(ApplianceDto dto) throws Exception {
-
-        Map<String, String> map = new HashMap<String, String>();
-
-        map.put("Appliance Model", dto.getModel());
-        map.put("Appliance Manager Version", dto.getManagerVersion());
-
-        ValidateUtil.validateFieldLength(map, ValidateUtil.DEFAULT_MAX_LEN);
     }
 }

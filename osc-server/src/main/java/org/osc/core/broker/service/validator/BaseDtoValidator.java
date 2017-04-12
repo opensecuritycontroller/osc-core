@@ -14,33 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.dto.openstack;
+package org.osc.core.broker.service.validator;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.util.ValidateUtil;
 
-public class AvailabilityZoneDto extends BaseDto {
+public class BaseDtoValidator {
 
-    private String region;
-    private String zone;
+    public static void checkForNullId(BaseDto dto) throws Exception {
 
-    public String getRegion() {
-        return this.region;
-    }
+        // build a map of (field,value) pairs to be checked for null/empty
+        // values
+        Map<String, Object> map = new HashMap<String, Object>();
 
-    public void setRegion(String region) {
-        this.region = region;
-    }
+        map.put("Id", dto.getId());
 
-    public String getZone() {
-        return this.zone;
-    }
-
-    public void setZone(String zone) {
-        this.zone = zone;
-    }
-
-    @Override
-    public String toString() {
-        return "AvailabilityZoneDto [region=" + this.region + ", zone=" + this.zone + "]";
+        ValidateUtil.checkForNullFields(map);
     }
 }

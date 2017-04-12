@@ -14,12 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.dto;
+package org.osc.core.broker.service.validator;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.User;
+import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.ValidateUtil;
@@ -44,7 +48,7 @@ public class UserDtoValidator implements DtoValidator<UserDto, User> {
 
     @Override
     public User validateForUpdate(UserDto dto) throws Exception {
-        BaseDto.checkForNullId(dto);
+        BaseDtoValidator.checkForNullId(dto);
 
         validate(dto);
 
@@ -60,8 +64,8 @@ public class UserDtoValidator implements DtoValidator<UserDto, User> {
     }
 
     void validate(UserDto dto) throws Exception {
-        UserDto.checkForNullFields(dto);
-        UserDto.checkFieldLength(dto);
+        UserDtoValidator.checkForNullFields(dto);
+        UserDtoValidator.checkFieldLength(dto);
 
         //validating email address formatting
         if (!StringUtils.isBlank(dto.getEmail())) {
@@ -73,5 +77,30 @@ public class UserDtoValidator implements DtoValidator<UserDto, User> {
 
         //check for validity of password format
         ValidateUtil.checkForValidPassword(dto.getPassword());
+    }
+
+    public static void checkForNullFields(UserDto dto) throws Exception {
+        // build a map of (field,value) pairs to be checked for null/empty
+        // values
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        map.put("User Name", dto.getLoginName());
+        map.put("password", dto.getPassword());
+        map.put("role", dto.getRole());
+
+        ValidateUtil.checkForNullFields(map);
+
+    }
+
+    public static void checkFieldLength(UserDto dto) throws Exception {
+
+        Map<String, String> map = new HashMap<String, String>();
+
+        map.put("First Name", dto.getFirstName());
+        map.put("Last Name", dto.getLastName());
+        map.put("Email", dto.getEmail());
+
+        ValidateUtil.validateFieldLength(map, ValidateUtil.DEFAULT_MAX_LEN);
+
     }
 }

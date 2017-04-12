@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.dto;
+package org.osc.core.broker.service.validator;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.service.dto.BaseDto;
 
 /**
  * This interface contains the contract used to validate {@link BaseDto} objects.

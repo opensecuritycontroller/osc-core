@@ -16,15 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.virtualization.VirtualizationType;
-import org.osc.core.broker.util.ValidateUtil;
 import org.osc.sdk.controller.TagEncapsulationType;
 
 import io.swagger.annotations.ApiModel;
@@ -182,16 +177,4 @@ public class VirtualSystemDto extends BaseDto {
                 + this.domainName + ", vcId=" + this.vcId + ", domainId=" + this.domainId + ", markForDeletion="
                 + this.markForDeletion + "]";
     }
-
-    public static void checkForNullFields(VirtualSystemDto dto) throws Exception {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("Virtualization Connector Id", dto.getVcId());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
 }

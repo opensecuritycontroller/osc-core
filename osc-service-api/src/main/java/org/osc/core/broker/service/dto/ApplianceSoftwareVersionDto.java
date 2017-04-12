@@ -25,8 +25,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.virtualization.VirtualizationType;
-import org.osc.core.broker.util.ValidateUtil;
 import org.osc.sdk.controller.TagEncapsulationType;
 
 import io.swagger.annotations.ApiModel;
@@ -181,31 +179,5 @@ public class ApplianceSoftwareVersionDto extends BaseDto {
         return "ApplianceSoftwareVersionDto [id=" + getId() + ", applianceId=" + getParentId() + ", swVersion="
                 + this.swVersion + ", virtualizationType=" + this.virtualizationType + ", virtualizationVersion="
                 + this.virtualizationVersion + ", imageUrl=" + this.imageUrl + "]";
-    }
-
-    public static void checkForNullFields(ApplianceSoftwareVersionDto dto) throws Exception {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("Appliance Id", dto.getParentId());
-        map.put("Appliance Software Version", dto.getSwVersion());
-        map.put("Virtualization Type", dto.getVirtualizationType());
-        map.put("Virtualization Version", dto.getVirtualizationVersion());
-        map.put("Image Url", dto.getImageUrl());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
-    public static void checkFieldLength(ApplianceSoftwareVersionDto dto) throws Exception {
-
-        Map<String, String> map = new HashMap<String, String>();
-
-        map.put("Appliance Software Version", dto.getSwVersion());
-        map.put("Virtualization Version", dto.getVirtualizationVersion());
-        map.put("Image Url", dto.getImageUrl());
-
-        ValidateUtil.validateFieldLength(map, ValidateUtil.DEFAULT_MAX_LEN);
     }
 }

@@ -16,9 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -28,7 +26,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
-import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.rest.client.annotations.VmidcLogHidden;
 
 import io.swagger.annotations.ApiModel;
@@ -184,28 +181,6 @@ public class DistributedApplianceDto extends BaseDto {
                 + ", applianceModel=" + this.applianceModel + ", applianceSoftwareVersionName=" + this.applianceSoftwareVersionName + ", secretKey="
                 + this.secretKey + ", lastJobstatus=" + this.lastJobStatus + ", markForDeletion="
                 + this.markForDeletion + "]";
-    }
-
-    public static void checkForNullFields(DistributedApplianceDto dto) throws Exception {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("Appliance Definition - Software Version", dto.getApplianceSoftwareVersionName());
-        map.put("Secret Key", dto.getSecretKey());
-        map.put("Distributed Appliance Name", dto.getName());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
-    public static void checkFieldLength(DistributedApplianceDto dto) throws Exception {
-
-        Map<String, String> map = new HashMap<String, String>();
-
-        map.put("Secret Key", dto.getSecretKey());
-
-        ValidateUtil.validateFieldLength(map, ValidateUtil.DEFAULT_MAX_LEN);
     }
 
     public static void sanitizeDistributedAppliance(DistributedApplianceDto dto) {

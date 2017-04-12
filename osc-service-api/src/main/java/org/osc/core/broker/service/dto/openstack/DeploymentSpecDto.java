@@ -16,9 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto.openstack;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -28,7 +26,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.util.ValidateUtil;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -277,38 +274,4 @@ public class DeploymentSpecDto extends BaseDto {
                 + ", managementNetworkId=" + this.managementNetworkId + ", availabilityZones=" + this.availabilityZones
                 + ", hosts=" + this.hosts + ", count=" + this.count + "]";
     }
-
-    public static void checkForNullFields(DeploymentSpecDto dto) throws Exception {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("Name", dto.getName());
-
-        map.put("Tenant Name", dto.getTenantName());
-        map.put("Tenant", dto.getTenantId());
-
-        map.put("Region", dto.getRegion());
-
-        map.put("Virtual System Id", dto.getParentId());
-
-        map.put("Management Network Name", dto.getManagementNetworkName());
-        map.put("Management Network Id", dto.getManagementNetworkId());
-
-        map.put("Inspection Network Name", dto.getInspectionNetworkName());
-        map.put("Inspection Network Id", dto.getInspectionNetworkId());
-
-        map.put("Instance Count", dto.getCount());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
-    public static void checkFieldLength(DeploymentSpecDto dto) throws Exception {
-
-        Map<String, String> map = new HashMap<String, String>();
-
-        map.put("Name", dto.getName());
-        ValidateUtil.validateFieldLength(map, ValidateUtil.DEFAULT_MAX_LEN);
-    }
-
 }

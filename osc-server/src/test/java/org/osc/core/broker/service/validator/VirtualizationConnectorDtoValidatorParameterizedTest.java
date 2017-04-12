@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.dto;
+package org.osc.core.broker.service.validator;
 
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.EMPTY_VALUE_ERROR_MESSAGE;
+import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.EMPTY_VALUE_ERROR_MESSAGE;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.broker.util.ValidateUtil;

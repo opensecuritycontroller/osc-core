@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.dto;
+package org.osc.core.broker.service.validator;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -30,6 +31,8 @@ import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.broker.service.dto.DistributedApplianceDto;
+import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
@@ -63,7 +66,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
 
     @Override
     public DistributedAppliance validateForUpdate(DistributedApplianceDto dto) throws Exception {
-        BaseDto.checkForNullId(dto);
+        BaseDtoValidator.checkForNullId(dto);
 
         DistributedAppliance da = this.em.find(DistributedAppliance.class, dto.getId());
 
@@ -91,7 +94,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
     }
 
     void validate(DistributedApplianceDto dto, boolean forCreate) throws Exception {
-        DistributedApplianceDto.checkForNullFields(dto);
+        DistributedApplianceDtoValidator.checkForNullFields(dto);
 
         // Ensure DA name complies with Manager naming requirements
         if (!ValidateUtil.validateDaName(dto.getName())) {
@@ -101,7 +104,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
                             + "DA name must not exceed 13 characters, must start with a letter, and can only contain numbers, letters and dash(-).");
         }
 
-        DistributedApplianceDto.checkFieldLength(dto);
+        DistributedApplianceDtoValidator.checkFieldLength(dto);
 
         Set<VirtualSystemDto> vsDtoList = dto.getVirtualizationSystems();
 
@@ -127,7 +130,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
         }
 
         for (VirtualSystemDto vsDto : dto.getVirtualizationSystems()) {
-            VirtualSystemDto.checkForNullFields(vsDto);
+            VirtualSystemDtoValidator.checkForNullFields(vsDto);
 
             VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(this.em, vsDto.getVcId());
 
@@ -187,5 +190,27 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
                 }
             }
         }
+    }
+
+    public static void checkForNullFields(DistributedApplianceDto dto) throws Exception {
+
+        // build a map of (field,value) pairs to be checked for null/empty
+        // values
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        map.put("Appliance Definition - Software Version", dto.getApplianceSoftwareVersionName());
+        map.put("Secret Key", dto.getSecretKey());
+        map.put("Distributed Appliance Name", dto.getName());
+
+        ValidateUtil.checkForNullFields(map);
+    }
+
+    public static void checkFieldLength(DistributedApplianceDto dto) throws Exception {
+
+        Map<String, String> map = new HashMap<String, String>();
+
+        map.put("Secret Key", dto.getSecretKey());
+
+        ValidateUtil.validateFieldLength(map, ValidateUtil.DEFAULT_MAX_LEN);
     }
 }

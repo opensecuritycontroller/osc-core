@@ -16,6 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockManager;
@@ -28,7 +33,6 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
-import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
@@ -42,6 +46,8 @@ import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
+import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -51,10 +57,6 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
-import java.util.List;
-import java.util.Set;
 
 @Component(service = UpdateApplianceManagerConnectorService.class)
 public class UpdateApplianceManagerConnectorService extends
@@ -77,7 +79,7 @@ public class UpdateApplianceManagerConnectorService extends
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em) throws Exception {
 
-        BaseDto.checkForNullId(request.getDto());
+        BaseDtoValidator.checkForNullId(request.getDto());
 
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
 
@@ -167,8 +169,8 @@ public class UpdateApplianceManagerConnectorService extends
                           ApplianceManagerConnector existingMc, OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
         // check for null/empty values
-        ApplianceManagerConnectorDto.checkForNullFields(request.getDto(), request.isApi());
-        ApplianceManagerConnectorDto.checkFieldLength(request.getDto());
+        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), request.isApi());
+        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto());
 
         // entry must pre-exist in db
         if (existingMc == null) {

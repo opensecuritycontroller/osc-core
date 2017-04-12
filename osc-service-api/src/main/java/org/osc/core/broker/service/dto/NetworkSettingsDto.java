@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.osc.core.broker.util.ValidateUtil;
-
 public class NetworkSettingsDto extends BaseDto{
 
     private boolean dhcp;
@@ -31,7 +26,7 @@ public class NetworkSettingsDto extends BaseDto{
     private String hostDnsServer2;
 
     public boolean isDhcp() {
-        return dhcp;
+        return this.dhcp;
     }
 
     public void setDhcp(boolean dhcp) {
@@ -39,7 +34,7 @@ public class NetworkSettingsDto extends BaseDto{
     }
 
     public String getHostIpAddress() {
-        return hostIpAddress;
+        return this.hostIpAddress;
     }
 
     public void setHostIpAddress(String hostIpAddress) {
@@ -47,7 +42,7 @@ public class NetworkSettingsDto extends BaseDto{
     }
 
     public String getHostSubnetMask() {
-        return hostSubnetMask;
+        return this.hostSubnetMask;
     }
 
     public void setHostSubnetMask(String hostSubnetMask) {
@@ -55,7 +50,7 @@ public class NetworkSettingsDto extends BaseDto{
     }
 
     public String getHostDefaultGateway() {
-        return hostDefaultGateway;
+        return this.hostDefaultGateway;
     }
 
     public void setHostDefaultGateway(String hostDefaultGateway) {
@@ -63,7 +58,7 @@ public class NetworkSettingsDto extends BaseDto{
     }
 
     public String getHostDnsServer1() {
-        return hostDnsServer1 == null ? "" : hostDnsServer1;
+        return this.hostDnsServer1 == null ? "" : this.hostDnsServer1;
     }
 
     public void setHostDnsServer1(String hostDnsServer1) {
@@ -71,7 +66,7 @@ public class NetworkSettingsDto extends BaseDto{
     }
 
     public String getHostDnsServer2() {
-        return hostDnsServer2 == null ? "" : hostDnsServer2;
+        return this.hostDnsServer2 == null ? "" : this.hostDnsServer2;
     }
 
     public void setHostDnsServer2(String hostDnsServer2) {
@@ -80,20 +75,8 @@ public class NetworkSettingsDto extends BaseDto{
 
     @Override
     public String toString() {
-        return "NetworkSettingsDto [dhcp=" + dhcp + ", hostIpAddress=" + hostIpAddress + ", hostSubnetMask="
-                + hostSubnetMask + ", hostDefaultGateway=" + hostDefaultGateway + ", hostDnsServer1=" + hostDnsServer1
-                + ", hostDnsServer2=" + hostDnsServer2 + "]";
+        return "NetworkSettingsDto [dhcp=" + this.dhcp + ", hostIpAddress=" + this.hostIpAddress + ", hostSubnetMask="
+                + this.hostSubnetMask + ", hostDefaultGateway=" + this.hostDefaultGateway + ", hostDnsServer1=" + this.hostDnsServer1
+                + ", hostDnsServer2=" + this.hostDnsServer2 + "]";
     }
-
-    public static void checkForNullFields(NetworkSettingsDto dto) throws Exception {
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("IP Address", dto.getHostIpAddress());
-        map.put("Net Mask", dto.getHostSubnetMask());
-        map.put("Default Gateway", dto.getHostDefaultGateway());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
 }

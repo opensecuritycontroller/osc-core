@@ -16,11 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.osc.core.broker.model.entities.RoleType;
-import org.osc.core.broker.util.ValidateUtil;
 
 public class UserDto extends BaseDto {
 
@@ -83,30 +79,5 @@ public class UserDto extends BaseDto {
 
     public void setRole(RoleType role) {
         this.role = role;
-    }
-
-    public static void checkForNullFields(UserDto dto) throws Exception {
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("User Name", dto.getLoginName());
-        map.put("password", dto.getPassword());
-        map.put("role", dto.getRole());
-
-        ValidateUtil.checkForNullFields(map);
-
-    }
-
-    public static void checkFieldLength(UserDto dto) throws Exception {
-
-        Map<String, String> map = new HashMap<String, String>();
-
-        map.put("First Name", dto.getFirstName());
-        map.put("Last Name", dto.getLastName());
-        map.put("Email", dto.getEmail());
-
-        ValidateUtil.validateFieldLength(map, ValidateUtil.DEFAULT_MAX_LEN);
-
     }
 }
