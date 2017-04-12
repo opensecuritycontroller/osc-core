@@ -66,7 +66,7 @@ public class RemovePortGroupHookTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Deleting the inspection hook for the security group interface '%s' ", this.sgi.getName());
+        return String.format("Deleting the inspection hook for the security group interface %s.", this.sgi.getName());
     }
 
     @Override

@@ -18,7 +18,6 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -26,7 +25,6 @@ import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ele
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 
 class DeletePortGroupTask extends TransactionalTask {
-    private static final Logger LOG = Logger.getLogger(DeletePortGroupTask.class);
     private PortGroup portGroup;
     private SecurityGroup securityGroup;
 
@@ -37,6 +35,8 @@ class DeletePortGroupTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
+
         SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(
                 this.securityGroup.getVirtualizationConnector());
         controller.deleteNetworkElement(this.portGroup);
