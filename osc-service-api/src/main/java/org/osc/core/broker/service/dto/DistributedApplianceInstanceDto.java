@@ -20,9 +20,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-
 import io.swagger.annotations.ApiModelProperty;
 
 @XmlRootElement(name = "distributedApplianceInstance")
@@ -126,40 +123,15 @@ public class DistributedApplianceInstanceDto extends BaseDto {
 
     }
 
-    public DistributedApplianceInstanceDto(DistributedApplianceInstance dai) throws Exception {
-        setId(dai.getId());
-
-        this.virtualsystemId = dai.getVirtualSystem().getId();
-        setVcId(dai.getVirtualSystem().getVirtualizationConnector().getId());
-        setMcId(dai.getVirtualSystem().getDistributedAppliance().getApplianceManagerConnector().getId());
-        this.name = dai.getName();
-        this.ipAddress = dai.getIpAddress();
-
-        this.applianceModel = dai.getVirtualSystem().getDistributedAppliance().getAppliance().getModel();
-        this.swVersion = dai.getVirtualSystem().getDistributedAppliance().getApplianceVersion();
-
-        this.distributedApplianceName = dai.getVirtualSystem().getDistributedAppliance().getName();
-        this.applianceManagerConnectorName = dai.getVirtualSystem().getDistributedAppliance()
-                .getApplianceManagerConnector().getName();
-        this.virtualConnectorName = dai.getVirtualSystem().getVirtualizationConnector().getName();
-        this.hostname = dai.getHostName();
-
-        this.osVmId = dai.getOsServerId();
-        this.osHostname = dai.getOsHostName();
-        this.osInspectionIngressPortId = dai.getInspectionOsIngressPortId();
-        this.osInspectionIngressMacAddress = dai.getInspectionIngressMacAddress();
-        this.osInspectionEgressPortId = dai.getInspectionOsEgressPortId();
-        this.osInspectionEgressMacAddress = dai.getInspectionEgressMacAddress();
-
-        this.mgmtIpAddress = dai.getMgmtIpAddress();
-        this.mgmtSubnetPrefixLength = dai.getMgmtSubnetPrefixLength();
-        this.mgmtGateway = dai.getMgmtGateway();
-
-        this.isApplianceStatusEnabled = ManagerApiFactory.providesDeviceStatus(dai.getVirtualSystem());
-        this.discovered = this.isApplianceStatusEnabled ? (dai.getDiscovered() != null ? dai.getDiscovered().toString() : "") : "N/A";
-        this.inspectionReady = this.isApplianceStatusEnabled ? (dai.getInspectionReady() != null ? dai.getInspectionReady().toString() : "") : "N/A";
-        this.lastStatus = this.isApplianceStatusEnabled ? (dai.getLastStatus() != null ? dai.getLastStatus().toString() : "") : "N/A";
+    public DistributedApplianceInstanceDto(Boolean isApplianceStatusEnabled,
+            String discovered, String inspectionReady, String lastStatus) {
+        this.isApplianceStatusEnabled = isApplianceStatusEnabled;
+        this.discovered = discovered;
+        this.inspectionReady = inspectionReady;
+        this.lastStatus = lastStatus;
     }
+
+
 
     public String getName() {
         return this.name;
