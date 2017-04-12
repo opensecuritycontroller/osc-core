@@ -92,7 +92,7 @@ public class VirtualizationConnectorElementImpl implements VirtualizationConnect
 
     @Override
     public SSLContext getSslContext() {
-        return new SslContextProvider().getSSLContext();
+        return SslContextProvider.getInstance().getSSLContext();
     }
 
     @Override

@@ -17,6 +17,7 @@
 package org.osc.core.rest.client.crypto;
 
 import org.apache.log4j.Logger;
+import org.osc.core.util.KeyStoreProvider;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -28,21 +29,48 @@ public class SslContextProvider {
 
     private static final Logger LOG = Logger.getLogger(SslContextProvider.class);
 
+    private SSLContext sslContext;
+
+    private SslContextProvider() {
+        // load SSL context
+        TrustManager[] trustManager = new TrustManager[]{X509TrustManagerFactory.getInstance()};
+        try {
+            sslContext = SSLContext.getInstance("TLSv1.2");
+            sslContext.init(null, trustManager, new SecureRandom());
+
+            // disable SSL session caching - we load SSL certificates dinamically so we need to ensure
+            // that we have up to date cached certificates list
+            sslContext.getClientSessionContext().setSessionCacheSize(1);
+            sslContext.getClientSessionContext().setSessionTimeout(1);
+            sslContext.getServerSessionContext().setSessionCacheSize(1);
+            sslContext.getServerSessionContext().setSessionTimeout(1);
+
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            LOG.error("Encountering security exception in SSL context", e);
+            throw new RuntimeException("Internal error with SSL context", e);
+        }
+    }
+
+    private static volatile SslContextProvider instance;
+
+    public static SslContextProvider getInstance() {
+        if (instance == null) {
+            synchronized(SslContextProvider.class) {
+                if(instance == null) {
+                    instance = new SslContextProvider();
+                }
+            }
+        }
+
+        return instance;
+    }
+
     /**
      * Provides SSL context which accepts SSL connections with trust store verification
      *
      * @return SSLContext
      */
     public SSLContext getSSLContext() {
-        SSLContext ctx;
-        TrustManager[] trustManager = new TrustManager[]{X509TrustManagerFactory.getInstance()};
-        try {
-            ctx = SSLContext.getInstance("TLSv1.2");
-            ctx.init(null, trustManager, new SecureRandom());
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            LOG.error("Encountering security exception in SSL context", e);
-            throw new RuntimeException("Internal error with SSL context", e);
-        }
-        return ctx;
+        return sslContext;
     }
 }
