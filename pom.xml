@@ -109,8 +109,9 @@
                 
                 <module>osc-tools</module>
                 <module>osc-common</module>
-                <module>osc-server</module>
                 <module>osc-domain</module>
+                <module>osc-service-api</module>
+                <module>osc-server</module>
 
                 <module>osc-uber</module>
                 <module>osc-uber-jcloud</module>
@@ -130,8 +131,9 @@
             <modules>
                 <module>osc-tools</module>
                 <module>osc-common</module>
-                <module>osc-server</module>
                 <module>osc-domain</module>
+                <module>osc-service-api</module>
+                <module>osc-server</module>
 
                 <module>osc-uber</module>
                 <module>osc-uber-jcloud</module>

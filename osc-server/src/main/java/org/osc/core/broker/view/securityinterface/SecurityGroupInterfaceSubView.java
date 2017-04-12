@@ -20,12 +20,12 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
+import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.ListResponse;

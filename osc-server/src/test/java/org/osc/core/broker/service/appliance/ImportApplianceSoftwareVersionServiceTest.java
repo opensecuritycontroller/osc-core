@@ -133,11 +133,11 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         // Image meta data setup
         when(this.imageMetaData.getImageName()).thenReturn(OVF_IMAGE_NAME);
-        when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.model.virtualization.VirtualizationType.VMWARE);
+        when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.service.dto.VirtualizationType.VMWARE);
         when(this.imageMetaData.getModel()).thenReturn(SOFTWARE_MODEL);
         when(this.imageMetaData.getManagerType()).thenReturn(ManagerType.NSM);
         when(this.imageMetaData.getManagerVersion()).thenReturn(MANAGER_VERSION);
-        when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.model.virtualization.VirtualizationType.VMWARE);
+        when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.service.dto.VirtualizationType.VMWARE);
         when(this.imageMetaData.getVmwareVirtualizationVersion()).thenReturn(org.osc.core.broker.model.virtualization.VmwareSoftwareVersion.VMWARE_V5_5);
         when(this.imageMetaData.getVirtualizationVersionString()).thenReturn(VmwareSoftwareVersion.VMWARE_V5_5.toString());
         when(this.imageMetaData.getSoftwareVersion()).thenReturn(SOFTWARE_VERSION);

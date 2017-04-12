@@ -23,8 +23,8 @@ import java.util.Map;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
+import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.request.DryRunRequest;
 
 public class VirtualizationConnectorServiceData {

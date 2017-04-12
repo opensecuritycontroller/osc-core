@@ -112,6 +112,11 @@
 			<artifactId>osc-domain</artifactId>
 			<version>1.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.osc.core</groupId>
+			<artifactId>osc-service-api</artifactId>
+			<version>1.0</version>
+		</dependency>
 		
 		<dependency>
 			<groupId>org.osc.core</groupId>

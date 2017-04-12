@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.ListApplianceModelSwVersionComboService;
 import org.osc.core.broker.service.ListDomainsByMcIdService;
 import org.osc.core.broker.service.ListEncapsulationTypeByVersionTypeAndModel;
@@ -29,6 +28,7 @@ import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
+import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
