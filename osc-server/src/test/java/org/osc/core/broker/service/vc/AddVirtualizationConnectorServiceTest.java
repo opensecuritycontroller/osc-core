@@ -86,7 +86,7 @@ public class AddVirtualizationConnectorServiceTest {
     private ConformService conformService;
 
     @InjectMocks()
-    private AddVirtualizationConnectorService service = new AddVirtualizationConnectorService(this.conformService);
+    private AddVirtualizationConnectorService service;
 
     @Mock(answer=Answers.CALLS_REAL_METHODS)
     private TestTransactionControl txControl;

@@ -86,13 +86,10 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
 
     private void conformManagerConnector(Long mcId) {
         log.info("Syncing MC " + mcId.toString());
-        BaseJobRequest request = new BaseJobRequest(mcId);
-        SyncManagerConnectorService service = new SyncManagerConnectorService();
-
         try {
-            BaseJobResponse response = service.dispatch(request);
+            BaseJobRequest request = new BaseJobRequest(mcId);
+            BaseJobResponse response = this.syncManagerConnectorService.dispatch(request);
             ViewUtil.showJobNotification(response.getJobId());
-
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
         }

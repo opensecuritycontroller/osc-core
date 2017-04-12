@@ -78,6 +78,7 @@ public class AddApplianceManagerConnectorService extends
                 throw e;
             }
         }
+        setForceAddSSLCertificates(false); // set default ssl state for future calls
 
         ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto());
         appMgrEntityMgr.create(mc);

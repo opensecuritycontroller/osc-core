@@ -25,7 +25,6 @@ import io.swagger.annotations.Authorization;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
@@ -91,7 +90,10 @@ public class VirtualizationConnectorApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private ConformService conformService;
+    private UpdateVirtualizationConnectorService updateVirtualizationConnectorService;
+
+    @Reference
+    private AddVirtualizationConnectorService addVirtualizationConnectorService;
 
     @ApiOperation(value = "Lists All Virtualization Connectors",
             notes = "Password information is not returned as it is sensitive information",
@@ -154,7 +156,8 @@ public class VirtualizationConnectorApis {
 
         logger.info("Creating Virtualization Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponseForBaseRequest(new AddVirtualizationConnectorService(this.conformService, vcRequest.isForceAddSSLCertificates()),
+        this.addVirtualizationConnectorService.setForceAddSSLCertificates(vcRequest.isForceAddSSLCertificates());
+        return this.apiUtil.getResponseForBaseRequest(this.addVirtualizationConnectorService,
                 new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
 
@@ -182,8 +185,9 @@ public class VirtualizationConnectorApis {
 
         logger.info("Updating Virtualization Connector " + vcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        apiUtil.setIdOrThrow(vcRequest, vcId, "Virtualization Connector");
-        return apiUtil.getResponseForBaseRequest(new UpdateVirtualizationConnectorService(this.conformService, vcRequest.isForceAddSSLCertificates()),
+        this.apiUtil.setIdOrThrow(vcRequest, vcId, "Virtualization Connector");
+        this.updateVirtualizationConnectorService.setForceAddSSLCertificates(vcRequest.isForceAddSSLCertificates());
+        return this.apiUtil.getResponseForBaseRequest(this.updateVirtualizationConnectorService,
                 new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
 
