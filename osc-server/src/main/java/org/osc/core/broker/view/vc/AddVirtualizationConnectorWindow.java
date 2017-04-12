@@ -18,7 +18,6 @@ package org.osc.core.broker.view.vc;
 
 import com.vaadin.data.Property.ValueChangeListener;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -31,7 +30,7 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
 
     private final String CAPTION = "Add Virtualization Connector";
 
-    private ConformService conformService = StaticRegistry.conformService();
+    private AddVirtualizationConnectorService addVirtualizationConnectorService = StaticRegistry.addVirtualizationConnectorService();
 
     private static final Logger log = Logger.getLogger(AddVirtualizationConnectorWindow.class);
 
@@ -55,10 +54,9 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
 
                 DryRunRequest<VirtualizationConnectorDto> addRequest = createRequest();
                 // calling add VC service
-                AddVirtualizationConnectorService addService = new AddVirtualizationConnectorService(this.conformService);
 
                 log.info("adding virtualization connector - " + this.name.getValue().trim());
-                BaseJobResponse addResponse = addService.dispatch(addRequest);
+                BaseJobResponse addResponse = this.addVirtualizationConnectorService.dispatch(addRequest);
 
                 // adding returned ID to the request DTO object
                 addRequest.getDto().setId(addResponse.getId());

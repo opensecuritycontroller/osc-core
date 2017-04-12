@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
+import com.mcafee.vmidc.server.Server;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDistributedApplianceService;
@@ -27,11 +28,11 @@ import org.osc.core.broker.service.UpgradeService;
 import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.SyncManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
+import org.osc.core.broker.service.vc.AddVirtualizationConnectorService;
+import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 /**
  * This registry is a work-around to temporarily allow some static calls to remain after they have been removed from the
@@ -67,6 +68,12 @@ public class StaticRegistry {
 
     @Reference
     private UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService;
+
+    @Reference
+    private AddVirtualizationConnectorService addVirtualizationConnectorService;
+
+    @Reference
+    private UpdateVirtualizationConnectorService updateVirtualizationConnectorService;
 
     @Reference
     private SyncManagerConnectorService syncManagerConnectorService;
@@ -121,6 +128,14 @@ public class StaticRegistry {
 
     public static SyncManagerConnectorService syncManagerConnectorService() {
         return instance.syncManagerConnectorService;
+    }
+
+    public static AddVirtualizationConnectorService addVirtualizationConnectorService() {
+        return instance.addVirtualizationConnectorService;
+    }
+
+    public static UpdateVirtualizationConnectorService updateVirtualizationConnectorService() {
+        return instance.updateVirtualizationConnectorService;
     }
 
     public static DeleteUserService deleteUserService() {

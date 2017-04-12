@@ -33,6 +33,9 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
 
     final String CAPTION = "Edit Virtualization Connector";
 
+    private UpdateVirtualizationConnectorService updateVirtualizationConnectorService =
+            StaticRegistry.updateVirtualizationConnectorService();
+
     public UpdateVirtualizationConnectorWindow(VirtualizationConnectorView vcView) throws Exception {
         this.currentVCObject = vcView.getParentContainer().getItem(vcView.getParentItemId());
         createWindow(this.CAPTION);
@@ -77,10 +80,9 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
                 // creating add request with user entered data
                 DryRunRequest<VirtualizationConnectorDto> updateRequest = createRequest();
                 updateRequest.getDto().setId(this.currentVCObject.getBean().getId());
-                UpdateVirtualizationConnectorService updateService = new UpdateVirtualizationConnectorService(StaticRegistry.conformService());
                 log.debug("Updating virtualization connector - " + this.name.getValue().trim());
                 // no response needed for update request
-                BaseJobResponse response = updateService.dispatch(updateRequest);
+                BaseJobResponse response = this.updateVirtualizationConnectorService.dispatch(updateRequest);
                 close();
                 ViewUtil.showJobNotification(response.getJobId());
             }

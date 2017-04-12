@@ -32,26 +32,23 @@ import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import javax.persistence.EntityManager;
 
-public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>, BaseJobResponse> {
+@Component(service = AddVirtualizationConnectorService.class)
+public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>,
+        BaseJobResponse> {
 
     private RequestValidator<DryRunRequest<VirtualizationConnectorDto>, VirtualizationConnector> validator;
 
     private boolean forceAddSSLCertificates = false;
+
+    @Reference
     private ConformService conformService;
 
-    public AddVirtualizationConnectorService(ConformService conformService) {
-        this.conformService = conformService;
-    }
-
-    public AddVirtualizationConnectorService(ConformService conformService, boolean forceAddSSLCertificates) {
-        this(conformService);
-        this.forceAddSSLCertificates = forceAddSSLCertificates;
-    }
-
-    void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
+    public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
 
