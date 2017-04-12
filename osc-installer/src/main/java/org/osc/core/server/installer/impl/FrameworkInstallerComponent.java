@@ -92,10 +92,11 @@ public class FrameworkInstallerComponent implements FrameworkInstaller {
 						sponsors.add(sponsor);
 						this.bundleSponsors.put(bundle.getBundleId(), sponsors);
 					} catch (BundleException e) {
-					    if (e.getType() == BundleException.DUPLICATE_BUNDLE_ERROR)
+					    if (e.getType() == BundleException.DUPLICATE_BUNDLE_ERROR) {
 					        log.log(LogService.LOG_WARNING, "Duplicate bundle symbolic-name/version in install for location " + location, e);
-					    else
+					    } else {
 					        throw e;
+					    }
 					}
 				} catch (URISyntaxException e) {
 					throw new IOException("Invalid bundle location URI: " + location, e);
