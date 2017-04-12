@@ -32,11 +32,13 @@ public class PortGroupCheckMetaTask extends TransactionalMetaTask {
 
     private SecurityGroup securityGroup;
     boolean deleteTg;
+    private final String domainId;
     TaskGraph tg;
 
-    public PortGroupCheckMetaTask(SecurityGroup sg, boolean deleteTg) {
+    public PortGroupCheckMetaTask(SecurityGroup sg, boolean deleteTg, String domainId) {
         this.securityGroup = sg;
         this.deleteTg = deleteTg;
+        this.domainId = domainId;
     }
 
     @Override
@@ -48,6 +50,7 @@ public class PortGroupCheckMetaTask extends TransactionalMetaTask {
         String portGroupId = this.securityGroup.getNetworkElementId();
         PortGroup portGroup = new PortGroup();
         portGroup.setPortGroupId(portGroupId);
+        portGroup.setParentId(this.domainId);
 
         if (portGroupId != null) {
             if (this.deleteTg) {

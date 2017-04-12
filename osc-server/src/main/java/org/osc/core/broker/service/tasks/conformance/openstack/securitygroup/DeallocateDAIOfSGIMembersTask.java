@@ -48,6 +48,6 @@ public class DeallocateDAIOfSGIMembersTask extends UpdateDAIToSGIMembersTask {
 
     @Override
     public String getName() {
-        return String.format("Detaching the DAI %s from all the ports in the SGI %s.", getDai().getName(), getSGI());
+        return String.format("Detaching the DAI %s from all the ports in the SGI %s.", getDai().getName(), getSGI().getName());
     }
 }

@@ -83,7 +83,7 @@ public class DeleteInspectionPortTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Deleting Inspection Port of Server '%s' using SDN Controller plugin", this.dai);
+        return String.format("Deleting Inspection Port of Server '%s' using SDN Controller plugin", this.dai.getName());
     }
 
     @Override

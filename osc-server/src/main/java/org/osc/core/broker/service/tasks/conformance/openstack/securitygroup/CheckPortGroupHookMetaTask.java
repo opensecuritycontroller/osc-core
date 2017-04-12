@@ -76,6 +76,9 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         if (this.sgi.getNetworkElementId() != null) {
             try (SdnRedirectionApi redirection = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgi.getVirtualSystem())) {
                 existingInspHook = redirection.getInspectionHook(this.sgi.getNetworkElementId());
+                if (existingInspHook == null) {
+                    LOG.info(String.format("A inspection hook with the id %s was not found.", this.sgi.getNetworkElementId()));
+                }
             }
         }
 
@@ -94,13 +97,14 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
 
                 // If the existing inspection hook has ingress or egress port IDs
                 // different than the found assigned DAI then update the inspection hook.
-                if (!existingInspHook.getInspectionPort().getIngressPort().getElementId()
+                // TODO emanoel: Update is curretly not support by the Nuage plugin. Skipping the code below.
+                /*if (!existingInspHook.getInspectionPort().getIngressPort().getElementId()
                         .equals(assignedRedirectedDai.getInspectionOsIngressPortId()) ||
                         !existingInspHook.getInspectionPort().getEgressPort().getElementId()
                         .equals(assignedRedirectedDai.getInspectionOsEgressPortId())) {
 
                     this.tg.appendTask(new UpdatePortGroupHookTask(this.sgi, assignedRedirectedDai));
-                }
+                }*/
             }
         } else {
             if (existingInspHook != null) {

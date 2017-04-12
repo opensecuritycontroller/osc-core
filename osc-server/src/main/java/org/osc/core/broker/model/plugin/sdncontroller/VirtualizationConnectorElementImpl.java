@@ -57,7 +57,7 @@ public class VirtualizationConnectorElementImpl implements VirtualizationConnect
     @Override
     public boolean isControllerHttps() {
         // TODO: Future. Need to add support for Controller HTTPS access
-        return false;
+        return this.virtualizationConnector.getControllerType().equals("NSC") ? false : true;
     }
 
     @Override
