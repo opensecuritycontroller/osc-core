@@ -22,12 +22,14 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.service.alert.AcknowledgeAlertService;
 import org.osc.core.broker.service.alert.AlertDto;
 import org.osc.core.broker.service.alert.AlertRequest;
 import org.osc.core.broker.service.alert.ListAlertService;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.view.util.ToolbarButtons;
@@ -81,7 +83,9 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
             public Object generateCell(CustomTable source, Object itemId, Object columnId) {
                 AlertDto alertDto = AlertView.this.parentContainer.getItem(itemId).getBean();
                 if (alertDto.getObject() != null) {
-                    return ViewUtil.generateObjectLink(alertDto.getObject());
+                    LockObjectReference object = alertDto.getObject();
+                    return ViewUtil.generateObjectLink(new LockObjectDto(
+                            object.getId(), object.getName(), object.getType()));
                 }
                 return null;
             }

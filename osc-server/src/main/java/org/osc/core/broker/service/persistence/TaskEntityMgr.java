@@ -30,12 +30,12 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.job.TaskObject;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.dto.TaskFailureRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
+import org.osc.core.broker.service.dto.job.ObjectType;
 import org.osc.core.broker.service.dto.job.TaskState;
 import org.osc.core.broker.service.dto.job.TaskStatus;
 
@@ -66,14 +66,14 @@ public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
         taskDto.setObjects(getJobObjects(tr));
     }
 
-    private static Set<LockObjectReference> getJobObjects(TaskRecord task) {
+    private static Set<LockObjectDto> getJobObjects(TaskRecord task) {
         if (task.getObjects() == null) {
             return null;
         }
 
-        Set<LockObjectReference> objects = new HashSet<LockObjectReference>();
+        Set<LockObjectDto> objects = new HashSet<LockObjectDto>();
         for (TaskObject jo : task.getObjects()) {
-            objects.add(new LockObjectReference(jo.getObjectId(), jo.getName(),
+            objects.add(new LockObjectDto(jo.getObjectId(), jo.getName(),
                     ObjectType.valueOf(jo.getObjectType().name())));
         }
         return objects;

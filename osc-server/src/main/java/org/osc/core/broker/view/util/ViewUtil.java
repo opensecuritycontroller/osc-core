@@ -30,10 +30,10 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.job.JobState;
 import org.osc.core.broker.service.dto.job.JobStatus;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.view.MainUI;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -290,7 +290,7 @@ public class ViewUtil {
         return mgrLink;
     }
 
-    public static Object generateObjectLink(LockObjectReference or) {
+    public static Object generateObjectLink(LockObjectDto or) {
         String viewFragment;
         String paramObjectId;
         switch (or.getType()) {
@@ -366,12 +366,12 @@ public class ViewUtil {
         return jobLink;
     }
 
-    public static Object generateObjectLink(Set<LockObjectReference> ors) {
+    public static Object generateObjectLink(Set<LockObjectDto> ors) {
         if (ors == null || ors.isEmpty()) {
             return null;
         }
 
-        LockObjectReference or = (LockObjectReference) ors.toArray()[0];
+        LockObjectDto or = (LockObjectDto) ors.toArray()[0];
         return generateObjectLink(or);
     }
 

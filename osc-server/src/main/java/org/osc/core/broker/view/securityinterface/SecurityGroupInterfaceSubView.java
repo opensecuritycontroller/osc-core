@@ -19,13 +19,14 @@ package org.osc.core.broker.view.securityinterface;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
+import org.osc.core.broker.service.dto.job.ObjectType;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.ListResponse;
@@ -115,8 +116,8 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
                 SecurityGroupInterfaceDto dto = SecurityGroupInterfaceSubView.this.tableContainer.getItem(itemId)
                         .getBean();
                 if (dto.getSecurityGroupId() != null) {
-                    return ViewUtil.generateObjectLink(new LockObjectReference(dto.getSecurityGroupId(), dto
-                            .getSecurityGroupName(), LockObjectReference.ObjectType.SECURITY_GROUP));
+                    return ViewUtil.generateObjectLink(new LockObjectDto(dto.getSecurityGroupId(), dto
+                            .getSecurityGroupName(), ObjectType.SECURITY_GROUP));
                 } else {
                     return null;
                 }

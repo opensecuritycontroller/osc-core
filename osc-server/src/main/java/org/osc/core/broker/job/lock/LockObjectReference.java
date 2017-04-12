@@ -33,6 +33,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.service.dto.job.ObjectType;
 import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -40,34 +41,6 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "objectReference")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class LockObjectReference {
-
-    public enum ObjectType {
-        VIRTUALIZATION_CONNECTOR("Virtualization Connector"),
-        APPLIANCE_MANAGER_CONNECTOR("Manager Connector"),
-        DISTRIBUTED_APPLIANCE("Distributed Appliance"),
-        VIRTUAL_SYSTEM("Virtual System"),
-        DEPLOYMENT_SPEC("Deployment Specification"),
-        DISTRIBUTED_APPLIANCE_INSTANCE("Distributed Appliance Instance"),
-        SECURITY_GROUP("Security Group"),
-        SECURITY_GROUP_INTERFACE("Security Group Interface"),
-        SSL_CONFIGURATION("SSL Configuration"),
-        JOB("Job"),
-        EMAIL(""),
-        NETWORK(""),
-        ARCHIVE(""),
-        ALERT("Alert");
-
-        private String name;
-
-        private ObjectType(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return this.name;
-        }
-    }
 
     @ApiModelProperty(required = true)
     private Long id;
@@ -94,31 +67,31 @@ public class LockObjectReference {
     }
 
     public LockObjectReference(VirtualSystem vs) {
-        this(vs.getId(), vs.getName(), LockObjectReference.ObjectType.VIRTUAL_SYSTEM);
+        this(vs.getId(), vs.getName(), ObjectType.VIRTUAL_SYSTEM);
     }
 
     public LockObjectReference(DeploymentSpec ds) {
-        this(ds.getId(), ds.getName(), LockObjectReference.ObjectType.DEPLOYMENT_SPEC);
+        this(ds.getId(), ds.getName(), ObjectType.DEPLOYMENT_SPEC);
     }
 
     public LockObjectReference(DistributedApplianceInstance dai) {
-        this(dai.getId(), dai.getName(), LockObjectReference.ObjectType.DISTRIBUTED_APPLIANCE_INSTANCE);
+        this(dai.getId(), dai.getName(), ObjectType.DISTRIBUTED_APPLIANCE_INSTANCE);
     }
 
     public LockObjectReference(SecurityGroup sg) {
-        this(sg.getId(), sg.getName(), LockObjectReference.ObjectType.SECURITY_GROUP);
+        this(sg.getId(), sg.getName(), ObjectType.SECURITY_GROUP);
     }
 
     public LockObjectReference(SecurityGroupInterface sgi) {
-        this(sgi.getId(), sgi.getName(), LockObjectReference.ObjectType.SECURITY_GROUP_INTERFACE);
+        this(sgi.getId(), sgi.getName(), ObjectType.SECURITY_GROUP_INTERFACE);
     }
 
     public LockObjectReference(SecurityGroupInterfaceDto sgi) {
-        this(sgi.getId(), sgi.getName(), LockObjectReference.ObjectType.SECURITY_GROUP_INTERFACE);
+        this(sgi.getId(), sgi.getName(), ObjectType.SECURITY_GROUP_INTERFACE);
     }
 
     public LockObjectReference(Job job) {
-        this(job.getId(), job.getName(), LockObjectReference.ObjectType.JOB);
+        this(job.getId(), job.getName(), ObjectType.JOB);
     }
 
     public static Set<LockObjectReference> getObjectReferences(BaseEntity... objects) {

@@ -54,6 +54,7 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.rest.client.util.LoggingUtil;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -78,7 +79,6 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import elemental.events.KeyboardEvent.KeyCode;
-import org.osc.core.rest.client.util.LoggingUtil;
 
 public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
@@ -378,7 +378,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
                     out.printf("node_%d [%n", tr.getId());
                     out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
-                    if(org.osc.core.broker.job.TaskState.valueOf(tr.getState().name()).isTerminalState()) {
+                    if(org.osc.core.broker.service.dto.job.TaskState.valueOf(tr.getState().name()).isTerminalState()) {
                         if (tr.getStatus().equals(TaskStatus.PASSED)) {
                             if (tr.getChildren().isEmpty()) {
                                 out.printf("  fillcolor=%s fontcolor=white%n", "green4");

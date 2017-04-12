@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.TaskState;
 import org.osc.core.broker.service.dto.job.TaskStatus;
 
@@ -49,7 +49,7 @@ public class TaskRecordDto extends BaseDto {
 
     @ApiModelProperty(value = "List of object references relevant to this job. For example, in a Distributed Appliance "
             + "Synchronization Job, the Distributed Appliance Object reference will be included ")
-    private Set<LockObjectReference> objects;
+    private Set<LockObjectDto> objects;
 
     @Override
     public String toString() {
@@ -130,11 +130,11 @@ public class TaskRecordDto extends BaseDto {
         this.predecessors = predecessors;
     }
 
-    public Set<LockObjectReference> getObjects() {
+    public Set<LockObjectDto> getObjects() {
         return this.objects;
     }
 
-    public void setObjects(Set<LockObjectReference> objects) {
+    public void setObjects(Set<LockObjectDto> objects) {
         this.objects = objects;
     }
 }

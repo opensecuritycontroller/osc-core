@@ -56,7 +56,7 @@ public class AlertEntityMgr {
 
         if (alert.getObjectId() != null) {
             LockObjectReference object = new LockObjectReference(alert.getObjectId(), alert.getObjectName(),
-                    org.osc.core.broker.job.lock.LockObjectReference.ObjectType.valueOf(
+                    org.osc.core.broker.service.dto.job.ObjectType.valueOf(
                             alert.getObjectType().name()));
             dto.setObject(object);
         }
