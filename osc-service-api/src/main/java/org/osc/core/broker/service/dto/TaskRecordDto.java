@@ -23,9 +23,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.job.TaskState;
-import org.osc.core.broker.job.TaskStatus;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.service.dto.job.TaskState;
+import org.osc.core.broker.service.dto.job.TaskStatus;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

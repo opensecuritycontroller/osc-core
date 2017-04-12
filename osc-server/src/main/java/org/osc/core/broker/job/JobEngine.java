@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.Job.TaskChangeListener;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.service.dto.job.JobState;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;

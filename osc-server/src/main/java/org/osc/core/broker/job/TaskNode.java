@@ -32,6 +32,8 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.osc.core.broker.job.Job.TaskChangeListener;
 import org.osc.core.broker.model.entities.job.TaskRecord;
+import org.osc.core.broker.service.dto.job.TaskState;
+import org.osc.core.broker.service.dto.job.TaskStatus;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;

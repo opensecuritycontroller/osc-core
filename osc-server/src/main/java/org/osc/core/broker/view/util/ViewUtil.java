@@ -30,10 +30,10 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.job.JobState;
+import org.osc.core.broker.service.dto.job.JobStatus;
 import org.osc.core.broker.view.MainUI;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;

@@ -30,14 +30,14 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.osc.core.broker.job.TaskState;
-import org.osc.core.broker.job.TaskStatus;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.job.TaskObject;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.dto.TaskFailureRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
+import org.osc.core.broker.service.dto.job.TaskState;
+import org.osc.core.broker.service.dto.job.TaskStatus;
 
 public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
 
