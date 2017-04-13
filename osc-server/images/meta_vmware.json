@@ -1,0 +1,19 @@
+{
+	"metaDataVersion": "1.0",
+	"model": "IPS-VM100-VSS",
+	"managerType": "NSM",
+	"managerVersion": "8.2",
+	"virtualizationType": "VMWARE",
+	"virtualizationVersion": "5.5",
+	"softwareVersion": "8.1.7.27",
+	"imageName": "sensorsw_vm100-vss_81727.ovf",
+	"minIscVersion": {
+		"major": 1,
+		"minor": 0,
+		"build": 2000,
+		"versionStr": ""
+	},
+	"minCpus": 3,
+	"memoryInMb": 5120,
+	"diskSizeInGb": 50
+}

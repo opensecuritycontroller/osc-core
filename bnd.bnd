@@ -1,0 +1,4 @@
+# This file sets default bnd configuration inherited by all sub-projects
+
+# Export any package defined by the current project which is versioned
+-exportcontents: ${packages;VERSIONED}

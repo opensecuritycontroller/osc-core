@@ -1,0 +1,2 @@
+# Admin user can do anything. FOR NOW
+admin ALL=(ALL) NOPASSWD: ALL

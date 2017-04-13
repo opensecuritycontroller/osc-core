@@ -1,0 +1,11 @@
+@import "addons.scss";
+@import "vmidc.scss";
+
+/* This file prefixes all rules with the theme name to avoid causing conflicts with other themes. */
+/* The actual styles should be defined in vmidc.scss */
+.vmidc {
+  @include addons;
+
+  // Include vmidc theme styles in your theme
+  @include vmidc;
+}

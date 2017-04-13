@@ -1,0 +1,117 @@
+<project name="vmidcDeployMgr" default="build" basedir=".">
+  <description>a vmidc deploy tool</description>
+
+  <target name="build" depends="ovfBuild,ovfFailure" description="Runs ovfBuild and cleans up on error" />
+
+  <target name="ovfBuild" description="generate vmidc ovf only" >
+    <exec executable="sh" resultproperty="ovf.result">
+      <arg value="-c" />
+      <arg value="rm -rf root/opt/vmidc/jre/*" />
+    </exec>
+    <exec executable="tar" resultproperty="ovf.result">
+      <arg value="--directory=root/opt/vmidc/jre" />
+      <arg value="-xzf" />
+      <arg value="Sources/server-jre-8u112-linux-x64.tar.gz" />
+      <arg value="--strip" />
+      <arg value="1" />
+    </exec>
+    <exec executable="sudo" resultproperty="ovf.result">
+      <arg value="make" />
+      <arg value="-f" />
+      <arg value="makefiles/master.mk" />
+      <arg value="clean" />
+    </exec>
+    <exec executable="sudo" resultproperty="ovf.result">
+      <arg value="make" />
+      <arg value="image-format=${image-format}"/>
+      <arg value="buildNumber=${buildNumber}"/>
+      <arg value="-j" />
+      <arg value="--no-print-directory"/>
+      <arg value="-f" />
+      <arg value="makefiles/master.mk" />
+    </exec>
+  </target>
+
+  <target name="ovfFailure" depends="ovfTest" if="ovf.failure" description="Conditionally calls ovfCleanup" >
+    <antcall target="ovfCleanup" />
+    <fail message="ovf build Failed" />
+  </target>
+
+  <target name="ovfTest" description="tests the return code from ovfBuild" >
+    <condition property="ovf.failure" >
+      <isfailure code="${ovf.result}" />
+    </condition>
+  </target>
+
+  <target name="ovfCleanup" description="Cleanup OVF mounts" >
+    <exec executable="sudo" resultproperty="ovf.result" >
+      <arg value="make" />
+      <arg value="--no-print-directory"/>
+      <arg value="-f" />
+      <arg value="makefiles/master.mk" />
+      <arg value="cleanup" />
+    </exec>
+  </target>
+
+  <target name="clean" description="Cleanup OVF mounts" >
+    <exec executable="sudo" resultproperty="ovf.result" >
+      <arg value="make" />
+      <arg value="--no-print-directory"/>
+      <arg value="-f" />
+      <arg value="makefiles/master.mk" />
+      <arg value="clean" />
+    </exec>
+  </target>
+
+  <target name="realclean" description="Cleanup OVF mounts" >
+    <exec executable="sudo" resultproperty="ovf.result" >
+      <arg value="make" />
+      <arg value="--no-print-directory"/>
+      <arg value="-f" />
+      <arg value="makefiles/master.mk" />
+      <arg value="realclean" />
+    </exec>
+  </target>
+
+  <target name="mount" description="Just mount the image" >
+    <exec executable="sudo" >
+      <arg value="make" />
+      <arg value="--no-print-directory"/>
+      <arg value="-j" />
+      <arg value="-f" />
+      <arg value="makefiles/mount.mk" />
+    </exec>
+  </target>
+
+  <target name="umount" description="Just mount the image" >
+    <exec executable="sudo" >
+      <arg value="make" />
+      <arg value="--no-print-directory"/>
+      <arg value="-j" />
+      <arg value="-f" />
+      <arg value="makefiles/mount.mk" />
+      <arg value="cleanup" />
+    </exec>
+  </target>
+
+  <target name="packages" description="Just install packages on the image" >
+    <exec executable="sudo" >
+      <arg value="make" />
+      <arg value="--no-print-directory"/>
+      <arg value="-j" />
+      <arg value="-f" />
+      <arg value="makefiles/packages.mk" />
+    </exec>
+  </target>
+
+  <target name="install" description="Just install OSC on the image" >
+    <exec executable="sudo" >
+      <arg value="make" />
+      <arg value="--no-print-directory"/>
+      <arg value="-j" />
+      <arg value="-f" />
+      <arg value="makefiles/install.mk" />
+    </exec>
+  </target>
+
+</project>

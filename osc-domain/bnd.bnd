@@ -1,0 +1,7 @@
+Meta-Persistence: META-INF/persistence.xml
+
+Require-Capability: osgi.extender;filter:="(&(osgi.extender=aries.jpa)(version>=2.6)(!(version>=3.0)))"
+
+Import-Package: org.hibernate.proxy, \
+    javassist.util.proxy, \
+    *

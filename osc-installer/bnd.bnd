@@ -1,0 +1,6 @@
+-exportcontents: org.osc.core.server.installer
+-conditionalpackage:\
+	org.apache.felix.utils.manifest,\
+	org.jboss.osgi.repository.*,\
+	aQute.lib.*,\
+	aQute.libg.*
