@@ -112,6 +112,7 @@
 			<artifactId>osc-domain</artifactId>
 			<version>1.0</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-service-api</artifactId>
@@ -423,7 +424,7 @@
 					<apiSources>
 						<apiSource>
 							<springmvc>false</springmvc>
-							<locations>org.osc.core.broker.rest.server.api</locations>
+							<locations>org.osc.core.broker.service.dto,org.osc.core.broker.rest.server.api</locations>
 							<basePath>/</basePath>
 							<info>
 								<title>OSC API Documentation</title>
