@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import org.osc.core.broker.model.entities.RoleType;
-
 public class UserDto extends BaseDto {
 
     private String firstName;
@@ -25,7 +23,7 @@ public class UserDto extends BaseDto {
     private String loginName;
     private String password;
     private String email;
-    private RoleType role;
+    private String role;
 
     @Override
     public String toString() {
@@ -73,11 +71,11 @@ public class UserDto extends BaseDto {
         this.email = email;
     }
 
-    public RoleType getRole() {
+    public String getRole() {
         return this.role;
     }
 
-    public void setRole(RoleType role) {
+    public void setRole(String role) {
         this.role = role;
     }
 }

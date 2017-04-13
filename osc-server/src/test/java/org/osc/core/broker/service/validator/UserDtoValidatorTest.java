@@ -34,12 +34,12 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.test.InMemDB;
-import org.osc.core.broker.service.validator.UserDtoValidator;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -82,7 +82,7 @@ public class UserDtoValidatorTest {
        this.existingUser = new User();
        this.existingUser.setLoginName(this.existingUserDto.getLoginName());
        this.existingUser.setPassword(this.existingUserDto.getPassword());
-       this.existingUser.setRole(this.existingUserDto.getRole());
+       this.existingUser.setRole(RoleType.valueOf(this.existingUserDto.getRole()));
        this.existingUser.setFirstName(this.existingUserDto.getFirstName());
        this.existingUser.setLastName(this.existingUserDto.getLastName());
        this.existingUser.setEmail(this.existingUserDto.getEmail());

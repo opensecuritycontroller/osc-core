@@ -142,7 +142,7 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 updateRequest.setLoginName(this.loginName.getValue().trim());
                 updateRequest.setEmail(this.email.getValue().trim());
                 updateRequest.setPassword(this.password.getValue());
-                updateRequest.setRole(RoleType.valueOf(this.role.getValue().toString()));
+                updateRequest.setRole(this.role.getValue().toString());
 
                 log.info("Updating user - " + this.loginName.getValue());
 

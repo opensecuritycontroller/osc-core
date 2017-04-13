@@ -16,7 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
 
-import static org.osc.core.test.util.ErrorMessageConstants.*;
+import static org.osc.core.test.util.ErrorMessageConstants.EMPTY_VALUE_ERROR_MESSAGE;
+import static org.osc.core.test.util.ErrorMessageConstants.INVALID_FIELD_LENGTH_ERROR_MESSAGE;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -119,7 +120,7 @@ public class UserDtoValidatorTestData {
         UserDto user = new UserDto();
         user.setLoginName(loginName);
         user.setPassword("Admin123#!");
-        user.setRole(RoleType.ADMIN);
+        user.setRole(RoleType.ADMIN.name());
         user.setFirstName("FirstName");
         user.setLastName("LastName");
         user.setEmail("myemail@email.com");
