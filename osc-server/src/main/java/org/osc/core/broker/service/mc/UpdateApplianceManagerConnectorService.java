@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.List;
 import java.util.Set;
 
@@ -33,6 +35,7 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
@@ -108,7 +111,11 @@ public class UpdateApplianceManagerConnectorService extends
 
             updateApplianceManagerConnector(request, mc);
             SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em);
-            mc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet(), request.getDto().getId(), persistentSslCertificatesSet));
+            mc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(
+                    request.getDto().getSslCertificateAttrSet().stream()
+                        .map(SslCertificateAttrEntityMgr::createEntity)
+                        .collect(toSet()),
+                    request.getDto().getId(), persistentSslCertificatesSet));
             emgr.update(mc);
 
             // Broadcast notifications to UI if MC name has changed, so that Appliance Instances view is refreshed to
@@ -158,7 +165,7 @@ public class UpdateApplianceManagerConnectorService extends
         for (CertificateResolverModel certObj : sslCertificatesException.getCertificateResolverModels()) {
             String newAlias = certObj.getAlias().replaceFirst(SslCertificateAttrEntityMgr.replaceTimestampPattern, "_" + request.getDto().getId() + "_" + i);
             trustManagerFactory.addEntry(certObj.getCertificate(), newAlias);
-            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttr(newAlias, certObj.getSha1()));
+            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttrDto(newAlias, certObj.getSha1()));
             i++;
         }
 

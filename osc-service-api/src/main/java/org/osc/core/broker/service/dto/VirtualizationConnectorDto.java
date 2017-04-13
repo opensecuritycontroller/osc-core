@@ -25,7 +25,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.service.dto.job.JobState;
 import org.osc.core.broker.service.dto.job.JobStatus;
 
@@ -79,7 +78,7 @@ public class VirtualizationConnectorDto extends BaseDto {
     private String adminTenantName;
 
     @ApiModelProperty(hidden = true)
-    private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
+    private Set<SslCertificateAttrDto> sslCertificateAttrSet = new HashSet<>();
 
     @ApiModelProperty(readOnly = true)
     private JobState lastJobState;
@@ -183,11 +182,11 @@ public class VirtualizationConnectorDto extends BaseDto {
         this.providerAttributes = providerAttributes;
     }
 
-    public Set<SslCertificateAttr> getSslCertificateAttrSet() {
+    public Set<SslCertificateAttrDto> getSslCertificateAttrSet() {
         return this.sslCertificateAttrSet;
     }
 
-    public void setSslCertificateAttrSet(Set<SslCertificateAttr> sslCertificateAttrSet) {
+    public void setSslCertificateAttrSet(Set<SslCertificateAttrDto> sslCertificateAttrSet) {
         this.sslCertificateAttrSet = sslCertificateAttrSet;
     }
 

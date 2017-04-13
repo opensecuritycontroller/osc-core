@@ -23,7 +23,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.service.dto.job.JobState;
 import org.osc.core.broker.service.dto.job.JobStatus;
 
@@ -65,7 +64,7 @@ public class ApplianceManagerConnectorDto extends BaseDto {
     private String apiKey;
 
     @ApiModelProperty(hidden = true)
-    private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
+    private Set<SslCertificateAttrDto> sslCertificateAttrSet = new HashSet<>();
 
     public String getName() {
         return this.name;
@@ -147,11 +146,11 @@ public class ApplianceManagerConnectorDto extends BaseDto {
         this.isPolicyMappingSupported = isPolicyMappingSupported;
     }
 
-    public Set<SslCertificateAttr> getSslCertificateAttrSet() {
+    public Set<SslCertificateAttrDto> getSslCertificateAttrSet() {
         return this.sslCertificateAttrSet;
     }
 
-    public void setSslCertificateAttrSet(Set<SslCertificateAttr> sslCertificateAttrSet) {
+    public void setSslCertificateAttrSet(Set<SslCertificateAttrDto> sslCertificateAttrSet) {
         this.sslCertificateAttrSet = sslCertificateAttrSet;
     }
 

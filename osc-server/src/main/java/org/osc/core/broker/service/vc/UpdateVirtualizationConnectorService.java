@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.List;
 import java.util.Set;
 
@@ -32,6 +34,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -109,7 +112,10 @@ public class UpdateVirtualizationConnectorService
 
             updateVirtualizationConnector(request, vc);
             SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em);
-            vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet(), request.getDto().getId(), persistentSslCertificatesSet));
+            vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet().stream()
+                    .map(SslCertificateAttrEntityMgr::createEntity)
+                    .collect(toSet()),
+                request.getDto().getId(), persistentSslCertificatesSet));
             vcEntityMgr.update(vc);
 
             // Broadcast notifications to UI if VC name has changed, so that Appliance Instances view and Virtual System
@@ -148,7 +154,7 @@ public class UpdateVirtualizationConnectorService
         for (CertificateResolverModel certObj : sslCertificatesException.getCertificateResolverModels()) {
             String newAlias = certObj.getAlias().replaceFirst(SslCertificateAttrEntityMgr.replaceTimestampPattern, "_" + request.getDto().getId() + "_" + i);
             trustManagerFactory.addEntry(certObj.getCertificate(), newAlias);
-            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttr(newAlias, certObj.getSha1()));
+            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttrDto(newAlias, certObj.getSha1()));
             i++;
         }
         return request;

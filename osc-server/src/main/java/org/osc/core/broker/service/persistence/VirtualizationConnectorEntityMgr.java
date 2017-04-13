@@ -16,9 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -74,7 +75,10 @@ public class VirtualizationConnectorEntityMgr {
         vc.setProviderPassword(EncryptionUtil.encryptAESCTR(dto.getProviderPassword()));
         vc.setAdminTenantName(dto.getAdminTenantName());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
-        vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
+        vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
+                .stream()
+                .map(SslCertificateAttrEntityMgr::createEntity)
+                .collect(toSet()));
 
         vc.setVirtualizationSoftwareVersion(dto.getSoftwareVersion());
     }
@@ -96,7 +100,9 @@ public class VirtualizationConnectorEntityMgr {
         dto.setProviderPassword(EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
         dto.setAdminTenantName(vc.getProviderAdminTenantName());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
-        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream().collect(Collectors.toSet()));
+        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
+                .map(SslCertificateAttrEntityMgr::fromEntity)
+                .collect(toSet()));
 
         dto.setSoftwareVersion(vc.getVirtualizationSoftwareVersion());
 

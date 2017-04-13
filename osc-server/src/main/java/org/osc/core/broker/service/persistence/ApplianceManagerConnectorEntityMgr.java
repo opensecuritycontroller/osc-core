@@ -16,8 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -57,7 +58,10 @@ public class ApplianceManagerConnectorEntityMgr {
         mc.setUsername(dto.getUsername());
         mc.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
         mc.setApiKey(dto.getApiKey());
-        mc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
+        mc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
+                .stream()
+                .map(SslCertificateAttrEntityMgr::createEntity)
+                .collect(toSet()));
     }
 
     public static void fromEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) throws EncryptionException {
@@ -75,7 +79,9 @@ public class ApplianceManagerConnectorEntityMgr {
             dto.setLastJobId(mc.getLastJob().getId());
         }
         dto.setApiKey(mc.getApiKey());
-        dto.setSslCertificateAttrSet(mc.getSslCertificateAttrSet().stream().collect(Collectors.toSet()));
+        dto.setSslCertificateAttrSet(mc.getSslCertificateAttrSet().stream()
+                .map(SslCertificateAttrEntityMgr::fromEntity)
+                .collect(toSet()));
     }
 
     public static ApplianceManagerConnector findById(EntityManager em, Long id) {

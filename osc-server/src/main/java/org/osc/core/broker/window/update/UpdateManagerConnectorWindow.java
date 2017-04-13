@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
@@ -199,9 +199,9 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         updateRequest.getDto().setPassword(this.pw.getValue().trim());
         updateRequest.getDto().setApiKey(this.apiKey.getValue().trim());
 
-        HashSet<SslCertificateAttr> sslSet = new HashSet<>();
+        HashSet<SslCertificateAttrDto> sslSet = new HashSet<>();
         if (this.certificateResolverModelsList != null) {
-            sslSet.addAll(this.certificateResolverModelsList.stream().map(crm -> new SslCertificateAttr(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()));
+            sslSet.addAll(this.certificateResolverModelsList.stream().map(crm -> new SslCertificateAttrDto(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()));
             updateRequest.getDto().setSslCertificateAttrSet(sslSet);
         }
 

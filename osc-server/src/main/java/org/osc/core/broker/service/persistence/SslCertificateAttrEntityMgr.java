@@ -38,7 +38,7 @@ public class SslCertificateAttrEntityMgr extends OSCEntityManager<SslCertificate
         super(SslCertificateAttr.class, em);
     }
 
-    public static SslCertificateAttr createEntity(SslCertificateAttrDto dto) throws Exception {
+    public static SslCertificateAttr createEntity(SslCertificateAttrDto dto) {
         SslCertificateAttr vc = new SslCertificateAttr();
         toEntity(vc, dto);
         return vc;
@@ -49,6 +49,13 @@ public class SslCertificateAttrEntityMgr extends OSCEntityManager<SslCertificate
         vc.setId(dto.getId());
         vc.setAlias(dto.getAlias());
         vc.setSha1(dto.getSha1());
+    }
+
+    // transform from entity to dto
+    public static SslCertificateAttrDto fromEntity(SslCertificateAttr vc) {
+        SslCertificateAttrDto dto = new SslCertificateAttrDto();
+        fromEntity(vc, dto);
+        return dto;
     }
 
     // transform from entity to dto

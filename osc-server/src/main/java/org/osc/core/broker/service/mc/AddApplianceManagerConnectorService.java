@@ -23,13 +23,13 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
-import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -105,7 +105,7 @@ public class AddApplianceManagerConnectorService extends
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
         for (CertificateResolverModel certObj : sslCertificatesException.getCertificateResolverModels()) {
             trustManagerFactory.addEntry(certObj.getCertificate(), certObj.getAlias());
-            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttr(certObj.getAlias(), certObj.getSha1()));
+            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttrDto(certObj.getAlias(), certObj.getSha1()));
         }
         return request;
     }

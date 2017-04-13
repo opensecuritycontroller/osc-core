@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import io.swagger.annotations.ApiModelProperty;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import io.swagger.annotations.ApiModelProperty;
 
 // SSL Certificate attributes Data Transfer Object associated with VC entity
 @XmlRootElement(name = "sslCertificateAttributes")
@@ -32,8 +33,16 @@ public class SslCertificateAttrDto extends BaseDto {
     @ApiModelProperty(value = "SHA1 fingerprint of the certificate")
     private String sha1 = "";
 
+    public SslCertificateAttrDto() {
+    }
+
+    public SslCertificateAttrDto(String alias, String sha1) {
+        this.alias = alias;
+        this.sha1 = sha1;
+    }
+
     public String getAlias() {
-        return alias;
+        return this.alias;
     }
 
     public void setAlias(String alias) {
@@ -41,7 +50,7 @@ public class SslCertificateAttrDto extends BaseDto {
     }
 
     public String getSha1() {
-        return sha1;
+        return this.sha1;
     }
 
     public void setSha1(String sha1) {
@@ -49,10 +58,48 @@ public class SslCertificateAttrDto extends BaseDto {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((this.alias == null) ? 0 : this.alias.hashCode());
+        result = prime * result + ((this.sha1 == null) ? 0 : this.sha1.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        SslCertificateAttrDto other = (SslCertificateAttrDto) obj;
+        if (this.alias == null) {
+            if (other.alias != null) {
+                return false;
+            }
+        } else if (!this.alias.equals(other.alias)) {
+            return false;
+        }
+        if (this.sha1 == null) {
+            if (other.sha1 != null) {
+                return false;
+            }
+        } else if (!this.sha1.equals(other.sha1)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public String toString() {
         return "SslCertificateAttrDto{" +
-                "alias='" + alias + '\'' +
-                ", sha1='" + sha1 + '\'' +
+                "alias='" + this.alias + '\'' +
+                ", sha1='" + this.sha1 + '\'' +
                 '}';
     }
 }

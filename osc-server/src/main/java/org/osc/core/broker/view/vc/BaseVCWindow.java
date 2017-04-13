@@ -28,12 +28,12 @@ import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 import org.jclouds.http.HttpResponseException;
 import org.jclouds.rest.AuthorizationException;
-import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.request.DryRunRequest;
@@ -91,7 +91,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     protected Map<String, String> providerAttributes = new HashMap<>();
 
     protected List<ErrorType> errorTypesToIgnore = new ArrayList<>();
-    private HashSet<SslCertificateAttr> sslCertificateAttrs = new HashSet<>();
+    private HashSet<SslCertificateAttrDto> sslCertificateAttrs = new HashSet<>();
 
     // current view referencecurrentVCObject
 
@@ -412,7 +412,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                     if(certificateResolverModels != null) {
                         BaseVCWindow.this.sslCertificateAttrs.addAll(
                                 certificateResolverModels.stream().map(
-                                        crm -> new SslCertificateAttr(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()
+                                        crm -> new SslCertificateAttrDto(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()
                                                 )
                                 );
                     }
