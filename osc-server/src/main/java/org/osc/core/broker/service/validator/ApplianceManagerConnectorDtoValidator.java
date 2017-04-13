@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.util.ValidateUtil;
 
@@ -46,9 +47,12 @@ public class ApplianceManagerConnectorDtoValidator {
         notNullFieldsMap.put("Name", dto.getName());
         notNullFieldsMap.put("Type", dto.getManagerType());
         notNullFieldsMap.put("IP Address", dto.getIpAddress());
-        if (ManagerApiFactory.isKeyAuth(dto.getManagerType()) && !skipPasswordNullCheck) {
+
+        ManagerType managerType = ManagerType.fromText(dto.getManagerType());
+
+        if (ManagerApiFactory.isKeyAuth(managerType) && !skipPasswordNullCheck) {
             notNullFieldsMap.put("API Key", dto.getApiKey());
-        } else if (ManagerApiFactory.isBasicAuth(dto.getManagerType())) {
+        } else if (ManagerApiFactory.isBasicAuth(managerType)) {
             if (!skipPasswordNullCheck) {
                 notNullFieldsMap.put("Password", dto.getPassword());
             }
@@ -69,7 +73,7 @@ public class ApplianceManagerConnectorDtoValidator {
         Map<String, String> map = new HashMap<String, String>();
 
         map.put("Name", dto.getName());
-        if (ManagerApiFactory.isBasicAuth(dto.getManagerType())) {
+        if (ManagerApiFactory.isBasicAuth(ManagerType.fromText(dto.getManagerType()))) {
             map.put("Password", dto.getPassword());
             map.put("User Name", dto.getUsername());
         }

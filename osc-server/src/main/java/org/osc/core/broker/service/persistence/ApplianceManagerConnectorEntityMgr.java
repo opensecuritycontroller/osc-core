@@ -50,8 +50,9 @@ public class ApplianceManagerConnectorEntityMgr {
         // Transform from dto to entity
         mc.setId(dto.getId());
         mc.setName(dto.getName());
-        mc.setManagerType(dto.getManagerType().getValue());
-        mc.setServiceType(ManagerApiFactory.getServiceName(dto.getManagerType()));
+        mc.setManagerType(dto.getManagerType());
+        mc.setServiceType(ManagerApiFactory.getServiceName(
+                ManagerType.fromText(dto.getManagerType())));
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
         mc.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
@@ -64,7 +65,7 @@ public class ApplianceManagerConnectorEntityMgr {
         // transform from entity to dto
         dto.setId(mc.getId());
         dto.setName(mc.getName());
-        dto.setManagerType(ManagerType.fromText(mc.getManagerType()));
+        dto.setManagerType(mc.getManagerType());
         dto.setIpAddress(mc.getIpAddress());
         dto.setUsername(mc.getUsername());
         dto.setPassword(EncryptionUtil.decryptAESCTR(mc.getPassword()));

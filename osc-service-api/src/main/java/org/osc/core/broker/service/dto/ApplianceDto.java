@@ -20,15 +20,13 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.plugin.manager.ManagerType;
-
 // Appliance Data Transfer Object associated with Appliance Entity
 @XmlRootElement(name = "appliance")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ApplianceDto extends BaseDto {
 
     private String model;
-    private ManagerType managerType;
+    private String managerType;
     private String managerVersion;
 
     public String getModel() {
@@ -39,11 +37,11 @@ public class ApplianceDto extends BaseDto {
         this.model = model;
     }
 
-    public ManagerType getManagerType() {
+    public String getManagerType() {
         return this.managerType;
     }
 
-    public void setManagerType(ManagerType managerType) {
+    public void setManagerType(String managerType) {
         this.managerType = managerType;
     }
 

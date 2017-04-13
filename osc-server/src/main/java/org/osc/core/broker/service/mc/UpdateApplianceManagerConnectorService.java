@@ -197,7 +197,7 @@ public class UpdateApplianceManagerConnectorService extends
         }
 
         // cannot change type once created
-        if (!request.getDto().getManagerType().getValue()
+        if (!request.getDto().getManagerType()
                 .equals(existingMc.getManagerType())) {
 
             throw new VmidcBrokerInvalidRequestException("Cannot change type of Appliance Manager Connector.");

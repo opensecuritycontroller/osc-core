@@ -29,7 +29,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.dto.job.JobState;
@@ -56,9 +55,9 @@ public class VirtualizationConnectorEntityMgr {
                 org.osc.core.broker.model.entities.appliance.VirtualizationType.valueOf(
                         dto.getType().name()));
 
-        ControllerType controllerType = dto.getControllerType();
+        String controllerType = dto.getControllerType();
         if(controllerType != null) {
-            vc.setControllerType(controllerType.getValue());
+            vc.setControllerType(controllerType);
         }
         if (dto.isControllerDefined()) {
             vc.setControllerIpAddress(dto.getControllerIP());
@@ -87,7 +86,7 @@ public class VirtualizationConnectorEntityMgr {
         dto.setName(vc.getName());
         dto.setType(VirtualizationType.valueOf(vc.getVirtualizationType().name()));
 
-        dto.setControllerType(ControllerType.fromText(vc.getControllerType()));
+        dto.setControllerType(vc.getControllerType());
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
         dto.setControllerPassword(EncryptionUtil.decryptAESCTR(vc.getControllerPassword()));

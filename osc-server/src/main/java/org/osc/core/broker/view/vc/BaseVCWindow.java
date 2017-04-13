@@ -465,10 +465,10 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         if (this.virtualizationType.getValue().equals(VirtualizationType.OPENSTACK.toString())) {
             request.getDto().setSoftwareVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
             request.getDto()
-            .setControllerType(ControllerType.fromText(BaseVCWindow.this.controllerType.getValue().toString()));
+            .setControllerType(BaseVCWindow.this.controllerType.getValue().toString());
         } else {
             request.getDto().setSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
-            request.getDto().setControllerType(ControllerType.fromText(NSX_CAPTION));
+            request.getDto().setControllerType(NSX_CAPTION);
         }
         return request;
     }

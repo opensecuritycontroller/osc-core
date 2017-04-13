@@ -170,8 +170,7 @@ public class VirtualizationConnectorServiceData {
 
          if (controllerTypeStr != null && (!controllerTypeStr.isEmpty())) {
              ControllerType.addType(controllerTypeStr);
-             ControllerType controllerType = ControllerType.fromText(controllerTypeStr);
-             vcDto.setControllerType(controllerType);
+             vcDto.setControllerType(controllerTypeStr);
          }
     }
 

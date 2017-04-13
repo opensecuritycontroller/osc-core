@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
@@ -140,7 +141,8 @@ public class VirtualizationConnectorDtoValidator
                 nullFieldsMap.put("Controller User Name", dto.getControllerUser());
                 nullFieldsMap.put("Controller Password", dto.getControllerPassword());
             } else {
-                if (!SdnControllerApiFactory.usesProviderCreds(dto.getControllerType())) {
+                if (!SdnControllerApiFactory.usesProviderCreds(ControllerType.fromText(
+                        dto.getControllerType()))) {
                     notNullFieldsMap.put("Controller IP Address", dto.getControllerIP());
                     notNullFieldsMap.put("Controller User Name", dto.getControllerUser());
                     if (!skipPasswordNullCheck) {

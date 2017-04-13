@@ -212,7 +212,7 @@ public class UpdateVirtualizationConnectorService
 
         // If controller type is changed, only NONE->new-type is allowed unconditionally.
         // For all other cases (current-type->NONE, current-type->new-type), there should not be any virtual systems using it.
-        if (!existingVc.getControllerType().equals(dto.getControllerType().getValue())
+        if (!existingVc.getControllerType().equals(dto.getControllerType())
                 && !existingVc.getControllerType().equals(ControllerType.NONE.getValue())
                 && (existingVc.getVirtualSystems().size() > 0 || existingVc.getSecurityGroups().size() > 0)) {
             throw new VmidcBrokerInvalidRequestException(

@@ -26,7 +26,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.model.entities.SslCertificateAttr;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.dto.job.JobState;
 import org.osc.core.broker.service.dto.job.JobStatus;
 
@@ -67,7 +66,7 @@ public class VirtualizationConnectorDto extends BaseDto {
     private String softwareVersion = "";
 
     @ApiModelProperty(value = "The SDN controller type", allowableValues = "NONE, NSC")
-    private ControllerType controllerType;
+    private String controllerType;
 
     @ApiModelProperty(
             value = "The Provider Attributes are all required if Provider is OpenStack except rabbitMQIP if the RabbitMQ endpoint is the same as the OpenStack keystone. "
@@ -96,11 +95,11 @@ public class VirtualizationConnectorDto extends BaseDto {
      *
      * @return controller type
      */
-    public ControllerType getControllerType() {
+    public String getControllerType() {
         return this.controllerType;
     }
 
-    public void setControllerType(ControllerType controllerType) {
+    public void setControllerType(String controllerType) {
         this.controllerType = controllerType;
     }
 
@@ -226,7 +225,7 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     @ApiModelProperty(hidden = true)
     public boolean isControllerDefined() {
-        return (getControllerType() != null && !getControllerType().equals(ControllerType.NONE))
+        return (getControllerType() != null && !getControllerType().equals("NONE"))
                 || getType().isVmware();
     }
 

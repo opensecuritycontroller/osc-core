@@ -193,7 +193,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         updateRequest.setDto(new ApplianceManagerConnectorDto());
         updateRequest.getDto().setId(this.currentMCObject.getBean().getId());
         updateRequest.getDto().setName(this.name.getValue().trim());
-        updateRequest.getDto().setManagerType(ManagerType.fromText(this.type.getValue().trim()));
+        updateRequest.getDto().setManagerType(this.type.getValue().trim());
         updateRequest.getDto().setIpAddress(this.ip.getValue().trim());
         updateRequest.getDto().setUsername(this.user.getValue().trim());
         updateRequest.getDto().setPassword(this.pw.getValue().trim());

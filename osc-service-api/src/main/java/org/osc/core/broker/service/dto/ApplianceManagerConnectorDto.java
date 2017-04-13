@@ -24,7 +24,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.model.entities.SslCertificateAttr;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.job.JobState;
 import org.osc.core.broker.service.dto.job.JobStatus;
 
@@ -39,7 +38,7 @@ public class ApplianceManagerConnectorDto extends BaseDto {
     private String name;
 
     @ApiModelProperty(required = true)
-    private ManagerType managerType;
+    private String managerType;
 
     @ApiModelProperty(required = true)
     private String ipAddress;
@@ -76,11 +75,11 @@ public class ApplianceManagerConnectorDto extends BaseDto {
         this.name = name;
     }
 
-    public ManagerType getManagerType() {
+    public String getManagerType() {
         return this.managerType;
     }
 
-    public void setManagerType(ManagerType type) {
+    public void setManagerType(String type) {
         this.managerType = type;
     }
 
