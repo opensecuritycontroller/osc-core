@@ -46,7 +46,7 @@ public class SyncDistributedApplianceJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
-        ConformService conformService = (ConformService) context.get(ConformService.class.getName());
+        ConformService conformService = (ConformService) context.getMergedJobDataMap().get(ConformService.class.getName());
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
 
