@@ -576,10 +576,6 @@
 					<configuration>
 						<!-- Sets the VM argument line used when unit tests are run. -->
 						<argLine>-Xmx1024m ${surefireArgLine}</argLine>
-						<excludes>
-							<exclude>**/JobEngineTest.java</exclude>
-							<exclude>**/SanityTest.java</exclude>
-						</excludes>
 					</configuration>
 				</plugin>
 				<plugin>

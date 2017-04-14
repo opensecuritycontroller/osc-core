@@ -118,6 +118,15 @@ public final class JobEngine {
         }
     }
 
+    /**
+     * Shuts down the job engine and allows for reintialization of job engine for future tests.
+     */
+    void shutdownForTest() {
+        shutdown();
+        this.initialized = false;
+        this.isShutdown = false;
+    }
+
     public void logStatus() {
         logger.debug(String
                 .format("[job monitor] [Pool:%d/Core:%d] Active: %d, Completed: %d, Tasks: %d, queus-size: %d, isShutdown: %s, isTerminated: %s",
