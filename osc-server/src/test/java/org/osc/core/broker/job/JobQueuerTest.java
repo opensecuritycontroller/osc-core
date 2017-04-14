@@ -61,7 +61,7 @@ public class JobQueuerTest {
 
     @AfterClass
     public static void uninitTests() {
-        JobEngine.getEngine().shutdown();
+        JobEngine.getEngine().shutdownForTest();
     }
 
     @Test
