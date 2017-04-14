@@ -120,7 +120,7 @@ public class JobEngineTest {
 
     @AfterClass
     public static void uninitTests() {
-        JobEngine.getEngine().shutdown();
+        JobEngine.getEngine().shutdownForTest();
     }
 
     @Before
