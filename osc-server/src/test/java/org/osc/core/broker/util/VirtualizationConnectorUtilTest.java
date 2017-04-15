@@ -16,11 +16,22 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import com.rabbitmq.client.ShutdownSignalException;
-import org.junit.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
@@ -43,11 +54,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.rmi.RemoteException;
-import java.util.*;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import com.rabbitmq.client.ShutdownSignalException;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SdnControllerApiFactory.class, RabbitMQRunner.class, EncryptionUtil.class,
