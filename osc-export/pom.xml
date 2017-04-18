@@ -401,8 +401,8 @@
 						<phase>package</phase>
 						<configuration>
 							<target>
-							    <copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
-                                            file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" />
+                                <copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
+                                    file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" />
 								<!-- webapp -->
 								<copy todir="${basedir}/webapp">
 									<fileset dir="${basedir}/../osc-server/src/main/webapp"
