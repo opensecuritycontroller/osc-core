@@ -112,6 +112,7 @@
                 <module>osc-tools</module>
                 <module>osc-uber-jcloud</module>
                 <module>osc-uber</module>
+                <module>osc-ui</module>
             </modules>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -144,6 +145,7 @@
                 <module>osc-tools</module>
                 <module>osc-uber-jcloud</module>
                 <module>osc-uber</module>
+                <module>osc-ui</module>
             </modules>
         </profile>
     </profiles>

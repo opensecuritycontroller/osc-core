@@ -446,7 +446,7 @@
 							<target>
 								<!-- webapp UI -->
 								<copy todir="${basedir}/webapp">
-									<fileset dir="${basedir}/../osc-server/src/main/webapp"
+									<fileset dir="${basedir}/../osc-ui/src/main/webapp"
 										excludes="VAADIN/gwt-unitCache/**" />
 								</copy>
 								<!-- swagger doc -->
