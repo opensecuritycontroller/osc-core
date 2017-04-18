@@ -378,9 +378,6 @@
 				<configuration>
 					<filesets>
 						<fileset>
-							<directory>src/main/webapp/VAADIN/widgetsets</directory>
-						</fileset>
-						<fileset>
 							<directory>src/main/generated</directory>
 							<includes>
                                 <include>**/*</include>
@@ -424,43 +421,12 @@
 								<exec executable="java" failonerror="true">
 									<arg line="-cp ${gen.cp.generic} org.osc.core.tools.Generator" />
 									<arg
-										line="${basedir}/src/main/generated/ org.osc.core.broker.view.common.VmidcMessages" />
+										line="${basedir}/src/main/generated/ org.osc.core.broker.service.common.VmidcMessages" />
 								</exec>
 							</tasks>
 						</configuration>
 						<goals>
 							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-maven-plugin</artifactId>
-				<version>${vaadin.plugin.version}</version>
-				<configuration>
-					<extraJvmArgs>-Xmx512M -Xss1024k</extraJvmArgs>
-					<webappDirectory>${basedir}/src/main/webapp/VAADIN/widgetsets
-					</webappDirectory>
-					<hostedWebapp>${basedir}/src/main/webapp/VAADIN/widgetsets
-					</hostedWebapp>
-					<noServer>true</noServer>
-					<compileReport>true</compileReport>
-					<style>OBF</style>
-					<strict>true</strict>
-				</configuration>
-				<executions>
-					<execution>
-						<configuration>
-						</configuration>
-						<goals>
-							<goal>clean</goal>
-							<goal>resources</goal>
-							<goal>update-theme</goal>
-							<goal>update-widgetset</goal>
-							<goal>compile-theme</goal>
-							<goal>compile</goal>
 						</goals>
 					</execution>
 				</executions>
