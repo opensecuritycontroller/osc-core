@@ -189,7 +189,7 @@ public abstract class RabbitMQClient {
 
     private ConnectionFactory initConnectionFactory() {
         ConnectionFactory factory = new ConnectionFactory();
-        // TODO: Future. use SSL if vc is HTTPS
+        // TODO: pawel - Future. use SSL if vc is HTTPS
         factory.setHost(this.serverIP);
         factory.setPort(this.port);
         factory.setUsername(this.user);

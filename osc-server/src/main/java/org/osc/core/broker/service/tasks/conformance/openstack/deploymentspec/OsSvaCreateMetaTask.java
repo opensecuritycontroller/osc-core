@@ -131,7 +131,6 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
             dai.setOsAvailabilityZone(this.availabilityZone);
             dai.setDeploymentSpec(ds);
 
-            //dai.setName("Temporary" + UUID.randomUUID().toString()); :TODO sridhar
             dai.setName("Temporary"); // setting temporary name since it is mandatory field
             dai = OSCEntityManager.create(em, dai);
 

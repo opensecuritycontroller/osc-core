@@ -38,8 +38,7 @@ public class ImageMetadataValidator {
                 throw new VmidcBrokerValidationException("This Appliance is compatible with OSC server version "
                         + minIscVersion.getShortVersionStrWithBuild() + " or higher");
             } else if (compareValue > 1) {
-                // TODO: Future. We fulfill minimum software version. Check if iSC can support this CPA in
-                // case protocol changes
+                // TODO: Future. We fulfill minimum software version. Enforce other validations here.
             }
         }
 

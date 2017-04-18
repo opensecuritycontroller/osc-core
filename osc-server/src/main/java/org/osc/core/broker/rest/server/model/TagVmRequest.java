@@ -31,9 +31,9 @@ public class TagVmRequest implements Request {
     private String ipAddress;
     private String tag;
 
-    // TODO prepare UnTagVmRequest with separate validator
+    // TODO emanoel: prepare UnTagVmRequest with separate validator
     public String getApplianceInstanceName() {
-        return applianceInstanceName;
+        return this.applianceInstanceName;
     }
 
     public void setApplianceInstanceName(String applianceInstanceName) {
@@ -41,7 +41,7 @@ public class TagVmRequest implements Request {
     }
 
     public String getVmUuid() {
-        return vmUuid;
+        return this.vmUuid;
     }
 
     public void setVmUuid(String vmUuid) {
@@ -49,7 +49,7 @@ public class TagVmRequest implements Request {
     }
 
     public String getIpAddress() {
-        return ipAddress;
+        return this.ipAddress;
     }
 
     public void setIpAddress(String ipAddress) {
@@ -57,7 +57,7 @@ public class TagVmRequest implements Request {
     }
 
     public String getTag() {
-        return tag;
+        return this.tag;
     }
 
     public void setTag(String tag) {
@@ -66,8 +66,8 @@ public class TagVmRequest implements Request {
 
     @Override
     public String toString() {
-        return "TagVmRequest [applianceInstanceName=" + applianceInstanceName + ", vmUuid=" + vmUuid
-                + ", ipAddress=" + ipAddress + "]";
+        return "TagVmRequest [applianceInstanceName=" + this.applianceInstanceName + ", vmUuid=" + this.vmUuid
+                + ", ipAddress=" + this.ipAddress + "]";
     }
 
 }

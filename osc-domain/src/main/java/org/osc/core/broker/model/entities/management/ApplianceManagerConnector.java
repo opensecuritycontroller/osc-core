@@ -83,22 +83,13 @@ public class ApplianceManagerConnector extends BaseEntity implements LastJobCont
     @Column(name = "api_key")
     private String apiKey;
 
-    // TODO emanoel: We should have a separate class implementing ApplianceManagerConnectorElement instead of this entity class.
-    // As an attempt to do that I noticed the effect cascades to most of the other entity classes that implements the interfaces *Element
-    // and have methods returning other *Element objects. So all those classes need to go through the same transformation at once (VS, DA, etc)
-    // or else things start to look somewhat hacky (i.e.: DA would need two methods one returning the mc entity and one returning the mc db instance,
-    // same applies to various other entities and all their callers. This is because some callers expect an *IscEntity and some others expect an *Element)
-    // For better isolation of responsibility and flexibility we should still decouple all these classes.
-    // Entity classes are meant to represent DB data, DTOs are what we expose in the services and api and classes implementing
-    // *Element are what we pass to the plugins, this approach will allow us to both exclude information that does not need to flow to the plugins
-    // or add something that is not saved in the DB like this field below.
     @Transient
     private String clientIpAddress;
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name="SSL_CERTIFICATE_ATTR_APPL_MAN_CONNECTOR",
-            joinColumns={@JoinColumn(name="APPLIANCE_MANAGER_CONNECTOR_ID")},
-            inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
+    joinColumns={@JoinColumn(name="APPLIANCE_MANAGER_CONNECTOR_ID")},
+    inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
 
     public ApplianceManagerConnector() {

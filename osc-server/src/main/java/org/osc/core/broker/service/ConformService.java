@@ -16,6 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
@@ -60,9 +64,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
-
-import javax.persistence.EntityManager;
-import java.util.List;
 
 @Component(service = ConformService.class)
 public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> {
@@ -142,8 +143,8 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 public void completed(Job job) {
                     try {
                         HibernateUtil.getTransactionControl().required(() ->
-                            new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class)
-                            .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
+                        new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class)
+                        .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
                     } catch (Exception e) {
                         log.error("A serious error occurred in the Job Listener", e);
                         throw new RuntimeException("No Transactional resources are available", e);
@@ -218,18 +219,18 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         Job job = JobEngine.getEngine().submit("Syncing Appliance Manager Connector '" + mc.getName() + "'", tg,
                 LockObjectReference.getObjectReferences(mc), new JobCompletionListener() {
 
-                    @Override
-                    public void completed(Job job) {
-                        try {
-                            HibernateUtil.getTransactionControl().required(() ->
-                                new CompleteJobTransaction<ApplianceManagerConnector>(ApplianceManagerConnector.class)
-                                .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(mc.getId(), job.getId())));
-                        } catch (Exception e) {
-                            log.error("A serious error occurred in the Job Listener", e);
-                            throw new RuntimeException("No Transactional resources are available", e);
-                        }
-                    }
-                });
+            @Override
+            public void completed(Job job) {
+                try {
+                    HibernateUtil.getTransactionControl().required(() ->
+                    new CompleteJobTransaction<ApplianceManagerConnector>(ApplianceManagerConnector.class)
+                    .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(mc.getId(), job.getId())));
+                } catch (Exception e) {
+                    log.error("A serious error occurred in the Job Listener", e);
+                    throw new RuntimeException("No Transactional resources are available", e);
+                }
+            }
+        });
 
         // Load MC on a new hibernate new session
         // ApplianceManagerConnector mc1 = (ApplianceManagerConnector) em.find(ApplianceManagerConnector.class,
@@ -258,17 +259,17 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         Job job = JobEngine.getEngine().submit("Syncing Virtualization Connector '" + vc.getName() + "'", tg,
-            LockObjectReference.getObjectReferences(vc), job1 -> {
-                try {
-                    HibernateUtil.getTransactionControl().required(() ->
-                            new CompleteJobTransaction<>(VirtualizationConnector.class)
-                                    .run(HibernateUtil.getTransactionalEntityManager(),
-                                            new CompleteJobTransactionInput(vc.getId(), job1.getId())));
-                } catch (Exception e) {
-                    log.error("A serious error occurred in the Job Listener", e);
-                    throw new RuntimeException("No Transactional resources are available", e);
-                }
-            });
+                LockObjectReference.getObjectReferences(vc), job1 -> {
+                    try {
+                        HibernateUtil.getTransactionControl().required(() ->
+                        new CompleteJobTransaction<>(VirtualizationConnector.class)
+                        .run(HibernateUtil.getTransactionalEntityManager(),
+                                new CompleteJobTransactionInput(vc.getId(), job1.getId())));
+                    } catch (Exception e) {
+                        log.error("A serious error occurred in the Job Listener", e);
+                        throw new RuntimeException("No Transactional resources are available", e);
+                    }
+                });
 
         vc.setLastJob(em.find(JobRecord.class, job.getId()));
         OSCEntityManager.update(em, vc);
@@ -333,11 +334,11 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             Job job = JobEngine.getEngine().submit(jobName + " '" + ds.getName() + "'", tg,
                     LockObjectReference.getObjectReferences(ds), new JobCompletionListener() {
 
-                        @Override
-                        public void completed(Job job) {
-                            ConformService.updateDSJob(null, ds, job);
-                        }
-                    });
+                @Override
+                public void completed(Job job) {
+                    ConformService.updateDSJob(null, ds, job);
+                }
+            });
 
             ConformService.updateDSJob(em, ds, job);
 
@@ -353,9 +354,8 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
     public static void updateDSJob(EntityManager em, final DeploymentSpec ds, Job job) {
 
-        //TODO it would be more sensible to inject the transactional entitymanager
+        // TODO: nbartlex - it would be more sensible to inject the transactional entitymanager
         // and make this decision using if(txControl.activeTransaction()) {...}
-
         if (em != null) {
             ds.setLastJob(em.find(JobRecord.class, job.getId()));
             OSCEntityManager.update(em, ds);
@@ -366,19 +366,19 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 EntityManager txEm = HibernateUtil.getTransactionalEntityManager();
                 TransactionControl txControl = HibernateUtil.getTransactionControl();
                 txControl.required(() -> {
-                        DeploymentSpec ds1 = DeploymentSpecEntityMgr.findById(txEm, ds.getId());
-                        if (ds1 != null) {
-                            ds1.setLastJob(txEm.find(JobRecord.class, job.getId()));
-                            OSCEntityManager.update(txEm, ds1);
-                        }
-                        return null;
-                    });
+                    DeploymentSpec ds1 = DeploymentSpecEntityMgr.findById(txEm, ds.getId());
+                    if (ds1 != null) {
+                        ds1.setLastJob(txEm.find(JobRecord.class, job.getId()));
+                        OSCEntityManager.update(txEm, ds1);
+                    }
+                    return null;
+                });
             } catch (ScopedWorkException e) {
                 // Unwrap the ScopedWorkException to get the cause from
                 // the scoped work (i.e. the executeTransaction() call.
                 log.error("Fail to update DS job status.", e.getCause());
             } catch (Exception e) {
-                // TODO remove when EM and TX are injected
+                // TODO: nbartlex - remove when EM and TX are injected
                 log.error("Fail to update DS job status.", e);
                 throw new RuntimeException("There was a problem with the DsConformance Job", e);
             }
@@ -477,9 +477,9 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
     public static void updateSGJob(EntityManager em, final SecurityGroup sg, Job job) {
 
-        // TODO:nbartlex it would be more sensible to inject the transactional entitymanager
+        // TODO: nbartlex - it would be more sensible to inject the transactional entitymanager
         // and make this decision using if(txControl.activeTransaction()) {...}
-    	// (work item A7)
+        // (work item A7)
 
         if (em != null) {
             sg.setLastJob(em.find(JobRecord.class, job.getId()));
@@ -498,14 +498,14 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                         securityGroupEntity.setLastJob(txEm.find(JobRecord.class, job.getId()));
                         OSCEntityManager.update(txEm, securityGroupEntity);
                     }
-                        return null;
-                    });
+                    return null;
+                });
             } catch (ScopedWorkException e) {
                 // Unwrap the ScopedWorkException to get the cause from
                 // the scoped work (i.e. the executeTransaction() call.
                 log.error("Fail to update SG job status.", e.getCause());
             } catch (Exception e) {
-                // TODO remove when EM and TX are injected
+                // TODO: nbartlex - remove when EM and TX are injected
                 log.error("Fail to update SG job status.", e);
                 throw new RuntimeException("There was a problem with the SGConformance Job", e);
             }

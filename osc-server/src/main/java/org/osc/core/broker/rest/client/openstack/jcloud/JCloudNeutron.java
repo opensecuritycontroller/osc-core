@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableList;
 
 public class JCloudNeutron extends BaseJCloudApi {
 
-	private static final Logger log = Logger.getLogger(JCloudNeutron.class);
+    private static final Logger log = Logger.getLogger(JCloudNeutron.class);
 
     private static final String QUERY_PARAM_SHARED = "shared";
     private static final String QUERY_PARAM_COMPUTE_DEVICE_OWNER = "compute:";
@@ -251,10 +251,4 @@ public class JCloudNeutron extends BaseJCloudApi {
     protected List<? extends Closeable> getApis() {
         return Arrays.asList(this.neutronApi);
     }
-
-    public String getVmIdByIpAddress(String region, String sourceIpAddress) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

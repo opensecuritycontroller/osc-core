@@ -16,11 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.jcloud;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
+import java.io.Closeable;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Properties;
+
+import javax.net.ssl.SSLContext;
+
 import org.apache.log4j.Logger;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
@@ -36,12 +39,11 @@ import org.jclouds.rest.ResourceNotFoundException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.rest.client.RestBaseClient;
 
-import javax.net.ssl.SSLContext;
-import java.io.Closeable;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Properties;
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
 
 public class JCloudUtil {
 
@@ -50,7 +52,6 @@ public class JCloudUtil {
     // Enable JCloud logging
     //static Iterable<Module> modules = ImmutableSet.<Module> of(new SLF4JLoggingModule());
 
-    // TODO: Future. Openstack. Externalize the timeout values
     private static final Properties OVERRIDES = new Properties();
 
     static {
@@ -71,25 +72,25 @@ public class JCloudUtil {
         }
         ContextBuilder contextBuilder = null;
         if("openstack-neutron".equals(serviceName)) {
-             contextBuilder = ContextBuilder.newBuilder(new NeutronApiMetadata())
+            contextBuilder = ContextBuilder.newBuilder(new NeutronApiMetadata())
                     .endpoint(endpointURL)
                     .credentials(endPoint.getTenant() + ":" + endPoint.getUser(), endPoint.getPassword())
                     .overrides(OVERRIDES);
         }
         if("openstack-keystone".equals(serviceName)) {
-             contextBuilder = ContextBuilder.newBuilder(new KeystoneApiMetadata())
+            contextBuilder = ContextBuilder.newBuilder(new KeystoneApiMetadata())
                     .endpoint(endpointURL)
                     .credentials(endPoint.getTenant() + ":" + endPoint.getUser(), endPoint.getPassword())
                     .overrides(OVERRIDES);
         }
         if("openstack-nova".equals(serviceName)) {
-             contextBuilder = ContextBuilder.newBuilder(new NovaApiMetadata())
+            contextBuilder = ContextBuilder.newBuilder(new NovaApiMetadata())
                     .endpoint(endpointURL)
                     .credentials(endPoint.getTenant() + ":" + endPoint.getUser(), endPoint.getPassword())
                     .overrides(OVERRIDES);
         }
         if("openstack-glance".equals(serviceName)) {
-             contextBuilder = ContextBuilder.newBuilder(new GlanceApiMetadata())
+            contextBuilder = ContextBuilder.newBuilder(new GlanceApiMetadata())
                     .endpoint(endpointURL)
                     .credentials(endPoint.getTenant() + ":" + endPoint.getUser(), endPoint.getPassword())
                     .overrides(OVERRIDES);
@@ -127,7 +128,7 @@ public class JCloudUtil {
      * @throws VmidcBrokerInvalidRequestException in case we get an exception while allocating the floating ip
      */
     public static synchronized FloatingIP allocateFloatingIp(JCloudNova jCloudNova, String zone, String poolName,
-                                                             String serverId) throws VmidcBrokerInvalidRequestException {
+            String serverId) throws VmidcBrokerInvalidRequestException {
         boolean newIPAllocated = false;
         NovaApi novaApi = jCloudNova.getNovaApi();
         FloatingIPApi floatingIpApi = getFloatingIpApi(zone, novaApi);
