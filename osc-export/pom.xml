@@ -1,4 +1,4 @@
-<!--
+<!-- 
     Copyright (c) Intel Corporation
     Copyright (c) 2017
    
@@ -12,8 +12,8 @@
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
-    limitations under the License.
- -->
+    limitations under the License. 
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -25,7 +25,7 @@
 	</parent>
 	<artifactId>osc-export</artifactId>
 	<description>OSC Export/Index</description>
-    <name>org.osc.core:osc-export</name>
+	<name>org.osc.core:osc-export</name>
 	<packaging>pom</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -47,7 +47,7 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
-    	<repository>
+		<repository>
 			<id>osc-nexus</id>
 			<name>OSC Nexus</name>
 			<snapshots>
@@ -242,7 +242,7 @@
 			<version>1.10.1</version>
 			<scope>runtime</scope>
 		</dependency>
-		
+
 		<!-- OSGi runtime for JPA -->
 		<dependency>
 			<groupId>org.apache.aries.jpa</groupId>
@@ -262,7 +262,7 @@
 			<version>0.0.2</version>
 			<scope>runtime</scope>
 		</dependency>
-		
+
 		<!-- OSGi enabled Hibernate dependencies for use at runtime -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
@@ -282,8 +282,43 @@
 			<version>1.6.1_5</version>
 			<scope>runtime</scope>
 		</dependency>
-		
+
 	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>all</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>1.7</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<tasks>
+										<!-- copy bundled plugins for bundled profile -->
+										<copy tofile="${basedir}/mgr_plugins/SmcMgrPlugin.bar"
+											file="${basedir}/../../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" />
+										<copy tofile="${basedir}/mgr_plugins/NsmMgrPlugin.bar"
+											file="${basedir}/../../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" />
+										<copy tofile="${basedir}/mgr_plugins/SampleMgrPlugin.bar"
+											file="${basedir}/../../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" />
+										<copy tofile="${basedir}/sdn_ctrl_plugins/VMwareNsxPlugin.bar"
+											file="${basedir}/../../vmware-nsx-plugin/target/VMwareNsxPlugin.bar" />
+									</tasks>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	<build>
 		<plugins>
 			<plugin>
@@ -338,8 +373,8 @@
 						<fileset>
 							<directory>${basedir}/../osc-server-bom/root/opt/vmidc/bin</directory>
 							<excludes>
-							    <exclude>mgr_plugins</exclude>
-							    <exclude>sdn_ctrl_plugins</exclude>
+								<exclude>mgr_plugins</exclude>
+								<exclude>sdn_ctrl_plugins</exclude>
 								<exclude>log4j.properties</exclude>
 								<exclude>ESAPI.properties</exclude>
 								<exclude>quartz.properties</exclude>
@@ -349,8 +384,8 @@
 								<exclude>scripts/**</exclude>
 							</excludes>
 							<includes>
-							    <include>sdn_ctrl_plugins/**</include>
-							    <include>mgr_plugins/**</include>
+								<include>sdn_ctrl_plugins/**</include>
+								<include>mgr_plugins/**</include>
 								<inclede>jar/**</inclede>
 								<inclede>osc-server.jar</inclede>
 							</includes>
@@ -368,17 +403,8 @@
 						<phase>package</phase>
 						<configuration>
 							<target>
-								<!-- copy bundled plugins -->
-                                <!-- TODO emanoel: we should change this to use the maven dependencies plugin to perform this copy. This should avoid having this path here. -->
-								<copy tofile="${basedir}/mgr_plugins/SmcMgrPlugin.bar"
-									file="${user.home}/.m2/repository/com/forcepoint/osc/security-mgr-smc-plugin/1.0/security-mgr-smc-plugin-1.0.bar" />
-								<copy tofile="${basedir}/mgr_plugins/NsmMgrPlugin.bar"
-									file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" />
 								<copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
-									file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" />
-								<copy tofile="${basedir}/sdn_ctrl_plugins/VMwareNsxPlugin.bar"
-									file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" />
-
+									file="${basedir}/../../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" />
 								<!-- webapp -->
 								<copy todir="${basedir}/webapp">
 									<fileset dir="${basedir}/../osc-server/src/main/webapp"
@@ -387,14 +413,15 @@
 										includes="api-doc/**" />
 								</copy>
 
-								<unzip dest="${basedir}/webapp/WebHelp"
-									src="${basedir}/../osc-server/techdoc/WebHelp.zip" />
+								<unzip dest="${basedir}/webapp/WebHelp" src="${basedir}/../osc-server/techdoc/WebHelp.zip" />
 
 								<copy todir="${basedir}/webapp/SDK">
-									<fileset dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.0/">
+									<fileset
+										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.0/">
 										<include name="**/*-sources.jar" />
 									</fileset>
-									<fileset dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/1.0/">
+									<fileset
+										dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/1.0/">
 										<include name="**/*-sources.jar" />
 									</fileset>
 								</copy>
