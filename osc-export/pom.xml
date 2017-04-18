@@ -286,19 +286,19 @@
 	</dependencies>
 
 	<profiles>
-   		<profile>
-     		<id>qa</id>
-     		<build>
-       			<plugins>
-         			<plugin>
-           				<artifactId>maven-antrun-plugin</artifactId>
+		<profile>
+			<id>qa</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
 						<version>1.7</version>
-           				<executions>
-             				<execution>
-							 	<phase>package</phase>
-               					<goals>
-                 					<goal>run</goal>
-              					</goals>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
 								<configuration>
 									<tasks>
 										<!-- copy bundled plugins for QA -->
@@ -306,10 +306,8 @@
 											file="${user.home}/.m2/repository/com/forcepoint/osc/security-mgr-smc-plugin/1.0/security-mgr-smc-plugin-1.0.bar" />
 										<copy tofile="${basedir}/mgr_plugins/NsmMgrPlugin.bar"
 											file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" />
-										<copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
-											file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" />
 										<copy tofile="${basedir}/sdn_ctrl_plugins/VMwareNsxPlugin.bar"
-											file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" /> -->
+											file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" />
 									</tasks>
 								</configuration>
 							</execution>
@@ -403,6 +401,8 @@
 						<phase>package</phase>
 						<configuration>
 							<target>
+							    <copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
+                                            file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" />
 								<!-- webapp -->
 								<copy todir="${basedir}/webapp">
 									<fileset dir="${basedir}/../osc-server/src/main/webapp"
