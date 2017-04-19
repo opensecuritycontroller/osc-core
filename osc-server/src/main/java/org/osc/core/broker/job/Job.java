@@ -46,6 +46,7 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
+import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.sdk.manager.element.JobElement;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
