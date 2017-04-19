@@ -278,7 +278,7 @@
 
 	<profiles>
 		<profile>
-			<id>qa</id>
+			<id>all</id>
 			<build>
 				<plugins>
 					<plugin>
@@ -294,11 +294,15 @@
 									<tasks>
 										<!-- copy bundled plugins for QA -->
 										<copy tofile="${basedir}/mgr_plugins/SmcMgrPlugin.bar"
-											file="${user.home}/.m2/repository/com/forcepoint/osc/security-mgr-smc-plugin/1.0/security-mgr-smc-plugin-1.0.bar" />
+											file="${basedir}/../../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" />
 										<copy tofile="${basedir}/mgr_plugins/NsmMgrPlugin.bar"
-											file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" />
+											file="${basedir}/../../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" />
+										<copy tofile="${basedir}/mgr_plugins/SampleMgrPlugin.bar"
+                                            file="${basedir}/../../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" />
 										<copy tofile="${basedir}/sdn_ctrl_plugins/VMwareNsxPlugin.bar"
-											file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" />
+											file="${basedir}/../../vmware-nsx-plugin/target/VMwareNsxPlugin.bar" />
+										<copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
+                                            file="${basedir}/../../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" />
 									</tasks>
 								</configuration>
 							</execution>
@@ -392,8 +396,6 @@
 						<phase>package</phase>
 						<configuration>
 							<target>
-								<copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
-									file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" />
 								<!-- webapp -->
 								<copy todir="${basedir}/webapp">
 									<fileset dir="${basedir}/../osc-server/src/main/webapp"
