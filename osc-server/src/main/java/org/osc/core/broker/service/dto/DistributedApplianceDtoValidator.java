@@ -85,7 +85,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
         return da;
     }
 
-    //TODO Emanoel Add a unit test for image url update for DA
+    // TODO: Emanoel - Add a unit test for image url update for DA
     void validate(DistributedApplianceDto dto) throws Exception {
         validate(dto, true);
     }

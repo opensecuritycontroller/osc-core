@@ -192,7 +192,7 @@ public class SdnControllerApiFactory {
                 ApiFactoryService.class, null);
         apiFactoryTracker.open();
 
-        // TODO This is a horrible way to get hold of a service instance; if only we could use DS here.
+        // TODO: emanoel - Can DS be used here?
         try {
             apiFactoryService = apiFactoryTracker.waitForService(2000);
             apiFactoryTracker.close();

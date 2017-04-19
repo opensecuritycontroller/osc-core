@@ -37,6 +37,9 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.time.DurationFormatUtils;
@@ -44,9 +47,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.rest.client.exception.CorruptedPidException;
 import org.osc.core.util.VersionUtil.Version;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
 
 public class ServerUtil {
     private static final Logger log = Logger.getLogger(ServerUtil.class);
@@ -650,7 +650,7 @@ public class ServerUtil {
 
     private static boolean validateUpgradeBundle(String jarFile) {
 
-        // TODO: Future. Need to verify that this is a valid signed bundle/jar.
+        // TODO: emanoel - Future. Need to verify that this is a valid signed bundle/jar.
 
         // validate valid jar format and make sure it is executable jar as well
         if (!ServerUtil.validateExecutableJar(jarFile)) {

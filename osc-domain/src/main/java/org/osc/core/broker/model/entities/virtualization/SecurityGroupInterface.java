@@ -228,7 +228,7 @@ public class SecurityGroupInterface extends BaseEntity {
     }
 
     public SecurityGroup getSecurityGroup() {
-        // TODO: Future. Need to figure out how to eliminate this function and callers since SG to SGI
+        // TODO: arvind - Future. Need to figure out how to eliminate this function and callers since SG to SGI
         // has many to many relationship.
         if (!this.securityGroups.isEmpty()) {
             return this.securityGroups.iterator().next();

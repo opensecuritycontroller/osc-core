@@ -346,9 +346,6 @@ public class OpenstackUtil {
                 .collect(Collectors.toList());
     }
 
-    // TODO emanoel: We should revisit the signature and implementation of the existing extractDomainId instead.
-    // I.e.: It should not take the entire network element since it just needs the id.
-    // Not doing that now to avoid additional churn on the Nuage current coding efforts.
     private static String extractDomainId(String tenantId, VirtualizationConnector vc, DistributedApplianceInstance dai) throws IOException, EncryptionException {
         DefaultNetworkPort ingressPort = new DefaultNetworkPort(dai.getInspectionOsIngressPortId(), dai.getInspectionIngressMacAddress());
         return OpenstackUtil.extractDomainId(
