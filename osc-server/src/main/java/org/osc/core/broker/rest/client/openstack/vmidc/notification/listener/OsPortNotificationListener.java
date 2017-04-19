@@ -118,8 +118,6 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
                 // if key value is null by now we assume it is a subnet related notification
                 if (keyValue != null) {
-                    //TODO: Test the concurrency scenario when SG Sync is running and we receive a notification..
-
                     Subnet subnet = SubnetEntityManager.findByOpenstackId(em, keyValue);
                     String deviceOwner = OsNotificationUtil.getPropertyFromNotificationMessage(message,
                             OsNotificationKeyType.DEVICE_OWNER.toString());
@@ -148,8 +146,8 @@ public class OsPortNotificationListener extends OsNotificationListener {
                 VMPort port = VMPortEntityManager.findByOpenstackId(em, portId);
                 if (port != null &&
                         ((port.getNetwork() != null && this.objectIdList.contains(port.getNetwork().getOpenstackId()))
-                        || (port.getVm() != null && this.objectIdList.contains(port.getVm().getOpenstackId()))
-                        || (port.getSubnet() != null && this.objectIdList.contains(port.getSubnet().getOpenstackId())))) {
+                                || (port.getVm() != null && this.objectIdList.contains(port.getVm().getOpenstackId()))
+                                || (port.getSubnet() != null && this.objectIdList.contains(port.getSubnet().getOpenstackId())))) {
                     triggerSGSync(sg, em);
                 }
 

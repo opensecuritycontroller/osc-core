@@ -16,14 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.manager;
 
-import static org.osc.sdk.manager.Constants.AUTHENTICATION_TYPE;
-import static org.osc.sdk.manager.Constants.EXTERNAL_SERVICE_NAME;
-import static org.osc.sdk.manager.Constants.NOTIFICATION_TYPE;
-import static org.osc.sdk.manager.Constants.PROVIDE_DEVICE_STATUS;
-import static org.osc.sdk.manager.Constants.SERVICE_NAME;
-import static org.osc.sdk.manager.Constants.SYNC_POLICY_MAPPING;
-import static org.osc.sdk.manager.Constants.SYNC_SECURITY_GROUP;
-import static org.osc.sdk.manager.Constants.VENDOR_NAME;
+import static org.osc.sdk.manager.Constants.*;
 
 import java.util.Map;
 import java.util.Set;
@@ -66,7 +59,7 @@ public class ManagerApiFactory {
 
     public static PluginTracker<ApplianceManagerApi> newPluginTracker(
             PluginTrackerCustomizer<ApplianceManagerApi> customizer, PluginType pluginType)
-            throws ServiceUnavailableException {
+                    throws ServiceUnavailableException {
         return apiFactoryService.newPluginTracker(customizer, ApplianceManagerApi.class, pluginType,
                 REQUIRED_MANAGER_PLUGIN_PROPERTIES);
     }
@@ -78,7 +71,7 @@ public class ManagerApiFactory {
                 ApiFactoryService.class, null);
         apiFactoryTracker.open();
 
-        // TODO This is a horrible way to get hold of a service instance; if only we could use DS here.
+        // TODO: emanoel - Can we use DS here instead?
         try {
             apiFactoryService = apiFactoryTracker.waitForService(2000);
             apiFactoryTracker.close();

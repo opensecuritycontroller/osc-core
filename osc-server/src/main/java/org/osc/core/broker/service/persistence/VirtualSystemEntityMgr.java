@@ -50,7 +50,7 @@ public class VirtualSystemEntityMgr {
 
         if(encapsulationType != null) {
             dto.setEncapsulationType(TagEncapsulationType.valueOf(
-                encapsulationType.name()));
+                    encapsulationType.name()));
         }
 
         if (entity.getDomain() != null) {
@@ -77,8 +77,8 @@ public class VirtualSystemEntityMgr {
         Root<VirtualSystem> root = query.from(VirtualSystem.class);
 
         query = query.select(root)
-            .where(cb.equal(root.get("nsxVsmUuid"), serviceVsmUuid),
-                   cb.equal(root.get("nsxServiceInstanceId"), serviceInstanceId));
+                .where(cb.equal(root.get("nsxVsmUuid"), serviceVsmUuid),
+                        cb.equal(root.get("nsxServiceInstanceId"), serviceInstanceId));
 
         List<VirtualSystem> list = em.createQuery(query).setMaxResults(1).getResultList();
 
@@ -98,7 +98,7 @@ public class VirtualSystemEntityMgr {
         Root<VirtualSystem> root = query.from(VirtualSystem.class);
 
         query = query.select(root)
-            .where(cb.equal(root.get("nsxServiceId"), nsxServiceId));
+                .where(cb.equal(root.get("nsxServiceId"), nsxServiceId));
 
         List<VirtualSystem> list = em.createQuery(query).setMaxResults(1).getResultList();
 
@@ -118,8 +118,8 @@ public class VirtualSystemEntityMgr {
         Root<VirtualSystem> root = query.from(VirtualSystem.class);
 
         query = query.select(root)
-            .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId),
-                   cb.equal(root.join("distributedAppliance").get("id"), daId));
+                .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId),
+                        cb.equal(root.join("distributedAppliance").get("id"), daId));
 
         List<VirtualSystem> list = em.createQuery(query).getResultList();
 
@@ -139,8 +139,8 @@ public class VirtualSystemEntityMgr {
         Root<VirtualSystem> root = query.from(VirtualSystem.class);
 
         query = query.select(root).distinct(true)
-            .where(cb.equal(root.join("securityGroupInterfaces")
-                    .join("securityGroups").get("id"), sgId));
+                .where(cb.equal(root.join("securityGroupInterfaces")
+                        .join("securityGroups").get("id"), sgId));
 
         return em.createQuery(query).getResultList();
     }
@@ -187,7 +187,7 @@ public class VirtualSystemEntityMgr {
         Root<VirtualSystem> root = query.from(VirtualSystem.class);
 
         query = query.select(root.get("id")).distinct(true)
-            .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId));
+                .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId));
 
         List<Long> list = em.createQuery(query).getResultList();
 
@@ -207,8 +207,8 @@ public class VirtualSystemEntityMgr {
         Root<VirtualSystem> root = query.from(VirtualSystem.class);
 
         query = query.select(root)
-            .where(cb.equal(root.join("securityGroupInterfaces").get("tag"), serviceProfileId),
-                   cb.equal(root.join("virtualizationConnector").get("controllerIpAddress"), nsxIpAddress));
+                .where(cb.equal(root.join("securityGroupInterfaces").get("tag"), serviceProfileId),
+                        cb.equal(root.join("virtualizationConnector").get("controllerIpAddress"), nsxIpAddress));
 
         try {
             return em.createQuery(query).getSingleResult();
@@ -236,8 +236,8 @@ public class VirtualSystemEntityMgr {
                 + "FROM security_group_interface WHERE virtual_system_fk = " + vs.getId() + " ORDER BY tag_val";
         List<Object> list = em.createNativeQuery(sql).getResultList();
         // Start with 2 as 1 is reserved in some cases
-        // TODO: arvindn For Barcelona, plumgrid requires tag's larger than 300. Remove once problem is fixed on
-        // plumgrid side.
+        // TODO: arvindn - Some security partners require tag's larger than 300. Remove once problem is fixed on the
+        // partners side.
         Long prevVal = 301L;
         for (Object tag : list) {
             long tagValue = ((BigInteger) tag).longValue();

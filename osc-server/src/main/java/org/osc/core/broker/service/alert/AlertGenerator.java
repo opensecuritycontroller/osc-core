@@ -81,46 +81,46 @@ public class AlertGenerator implements JobCompletionListener {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             TransactionControl txControl = HibernateUtil.getTransactionControl();
             txControl.required(() -> {
-                        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
+                OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
 
-                        //Iterate all the alarms and look for a regex match. As of now we only support Job Failure event type.
-                        //Generate alert for all the matches and perform the defined alarm action if any!
-                        for (Alarm alarm : emgr.listAll()) {
+                //Iterate all the alarms and look for a regex match. As of now we only support Job Failure event type.
+                //Generate alert for all the matches and perform the defined alarm action if any!
+                for (Alarm alarm : emgr.listAll()) {
 
-                            if (alarm.isEnabled()) {
-                                switch (alarm.getEventType()) {
-                                case JOB_FAILURE:
-                                    if (job != null) {
-                                        if (isMatchAlarm(alarm.getRegexMatch(), job.getName())) {
-                                            generateAlertAndNotify(em, alarm, object, message);
-                                        }
-                                    }
-                                    break;
-                                case SYSTEM_FAILURE:
-                                    // systemFailureType can only be null if it is email failure since email failure
-                                    // is in fact handled in processEmailFailure method as a special case
-                                    if (systemFailureType != null && isMatchAlarm(alarm.getRegexMatch(), message)) {
-                                        generateAlertAndNotify(em, alarm, object, message);
-                                    }
-                                    break;
-                                case DAI_FAILURE:
-                                    if (daiFailureType != null && isMatchAlarm(alarm.getRegexMatch(), object.getName())) {
-                                        generateAlertAndNotify(em, alarm, object, message);
-                                    }
-                                    break;
-                                default:
-                                    log.error("The alarm event type " + alarm.getEventType() + " is not supported");
+                    if (alarm.isEnabled()) {
+                        switch (alarm.getEventType()) {
+                        case JOB_FAILURE:
+                            if (job != null) {
+                                if (isMatchAlarm(alarm.getRegexMatch(), job.getName())) {
+                                    generateAlertAndNotify(em, alarm, object, message);
                                 }
                             }
+                            break;
+                        case SYSTEM_FAILURE:
+                            // systemFailureType can only be null if it is email failure since email failure
+                            // is in fact handled in processEmailFailure method as a special case
+                            if (systemFailureType != null && isMatchAlarm(alarm.getRegexMatch(), message)) {
+                                generateAlertAndNotify(em, alarm, object, message);
+                            }
+                            break;
+                        case DAI_FAILURE:
+                            if (daiFailureType != null && isMatchAlarm(alarm.getRegexMatch(), object.getName())) {
+                                generateAlertAndNotify(em, alarm, object, message);
+                            }
+                            break;
+                        default:
+                            log.error("The alarm event type " + alarm.getEventType() + " is not supported");
                         }
-                        return null;
-                    });
+                    }
+                }
+                return null;
+            });
         } catch (ScopedWorkException e) {
             // Unwrap the ScopedWorkException to get the cause from
             // the scoped work (i.e. the executeTransaction() call.
             log.error("Failed to finish processing the job failure event : ", e.getCause());
         } catch (Exception ex) {
-            // TODO remove this once EM and TX are injected
+            // TODO: nbartlex - remove this once EM and TX are injected
             log.error("Failed to finish processing the job failure event : ", ex);
         }
     }

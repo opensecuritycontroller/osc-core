@@ -46,7 +46,7 @@ public class ArchiveUtil {
      */
     public static File archive(String inputDir, String outputFile) throws IOException {
         try (FileOutputStream out = new FileOutputStream(outputFile);
-             ZipOutputStream zos = new ZipOutputStream(out)) {
+                ZipOutputStream zos = new ZipOutputStream(out)) {
             addToArchive(new File(inputDir), zos);
             return new File(outputFile);
         }
@@ -85,9 +85,9 @@ public class ArchiveUtil {
      * @param inputFile   ZIP file
      * @param destination directory to extract
      * @throws IOException
-     * TODO: use system unzip instead of java zip stream.
      */
     public static void unzip(String inputFile, String destination) throws IOException {
+        // TODO: barteks - use system unzip instead of java zip stream.
         FileInputStream fis = new FileInputStream(inputFile);
         ZipEntry entry;
         int entries = 0;
@@ -146,7 +146,7 @@ public class ArchiveUtil {
     public static List<String> peekFileNames(String inputFile) throws IOException {
         List<String> files = new ArrayList<>();
         try (FileInputStream inputStream = new FileInputStream(inputFile);
-             ZipInputStream zis = new ZipInputStream(inputStream)) {
+                ZipInputStream zis = new ZipInputStream(inputStream)) {
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 files.add(zipEntry.getName());

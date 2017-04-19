@@ -53,7 +53,7 @@ public class VMPort extends BaseEntity {
     @ElementCollection(fetch = FetchType.LAZY)
     @Column(name = "ip_address")
     @CollectionTable(name = "VM_PORT_IP_ADDRESS", joinColumns = @JoinColumn(name = "vm_port_fk"),
-            foreignKey=@ForeignKey(name = "FK_VM_PORT_IP_ADDRESS"))
+    foreignKey=@ForeignKey(name = "FK_VM_PORT_IP_ADDRESS"))
     private List<String> ipAddresses = new ArrayList<String>();
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -68,10 +68,8 @@ public class VMPort extends BaseEntity {
     private String parentId;
 
     /*
-     * \
-     * TODO: Future, Later we want to modify our infrastructure to support multiple subnets per port.
-     * Current version have MaytoOne relation. However, once we support multiple IP Addresses per port we need to change
-     * This also needs to be documented in release docs
+     * TODO: arvind - Future, Later we want to modify our infrastructure to support multiple subnets per port.
+     * Current version have MaytoOne relation. However, once we support multiple IP Addresses per port we need to change.
      */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "subnet_fk", foreignKey = @ForeignKey(name = "FK_VMP_SUBNET"))

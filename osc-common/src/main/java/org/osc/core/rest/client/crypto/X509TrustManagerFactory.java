@@ -16,17 +16,6 @@
  *******************************************************************************/
 package org.osc.core.rest.client.crypto;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.KeyStoreProvider;
-
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -47,11 +36,23 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
+import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.KeyStoreProvider;
+
 public final class X509TrustManagerFactory implements X509TrustManager {
 
     private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
-    //:TODO combine with vmidckeystore as part of US11664
+    // TODO: bartek - combine with vmidckeystore as part of US11664
     // vmidctruststore stores public certificates needed to establish SSL connection
     public static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
     // key entry to properties file that contains password
@@ -105,7 +106,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         } catch (CertificateException cx) {
             try {
                 X509Certificate x509Certificate = chain[0];
-                //x509Certificate.checkValidity(); //:TODO uncomment if certificate should be checked against expiration
+                //x509Certificate.checkValidity(); // TODO: bartek - uncomment if certificate should be checked against expiration
                 long unixTimestamp = Instant.now().getEpochSecond();
                 CertificateResolverModel resolverModel = new CertificateResolverModel(
                         x509Certificate, String.valueOf(unixTimestamp), getSha1Fingerprint(x509Certificate));
@@ -145,7 +146,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
             throw new Exception("Failed to load certificate from trust store", e);
         }
 
-        // :TODO remove after solving US11330
+        // TODO: pawel - remove after solving US11330
         this.keyStore.setCertificateEntry("internal", loadInternalCertificate());
 
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509", "SunJSSE");
@@ -162,7 +163,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
 
     }
 
-    // :TODO remove after solving US11330
+    // TODO: pawel - remove after solving US11330
     private X509Certificate loadInternalCertificate() throws Exception {
         KeyStore keystoreInternal = KeyStore.getInstance(KEYSTORE_TYPE);
         LOG.debug("Opening internal keystore file....");
@@ -204,7 +205,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     public void addEntry(File file) throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         try (FileInputStream inputStream = new FileInputStream(file);
-            FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
+                FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
             X509Certificate certificate = (X509Certificate) cf.generateCertificate(inputStream);
             String newAlias = cleanFileName(FilenameUtils.removeExtension(file.getName()));
             this.keyStore.setCertificateEntry(newAlias, certificate);
@@ -231,7 +232,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     }
 
     private boolean fingerprintNotExist(final String fingerprint) throws Exception {
-        List<CertificateBasicInfoModel> certificateInfoList = this.getCertificateInfoList();
+        List<CertificateBasicInfoModel> certificateInfoList = getCertificateInfoList();
         return certificateInfoList.stream().noneMatch(entry -> entry.getSha1Fingerprint().equals(fingerprint));
     }
 
@@ -316,15 +317,15 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     }
 
     private void notifyTruststoreChanged() {
-        truststoreChangedListeners.stream().forEach(listener -> listener.truststoreChanged());
+        this.truststoreChangedListeners.stream().forEach(listener -> listener.truststoreChanged());
     }
 
     public void addTruststoreChangedListener(TruststoreChangedListener listener) {
-        truststoreChangedListeners.add(listener);
+        this.truststoreChangedListeners.add(listener);
     }
 
     public void removeTruststoreChangedListener(TruststoreChangedListener listener) {
-        truststoreChangedListeners.remove(listener);
+        this.truststoreChangedListeners.remove(listener);
     }
 
     /**

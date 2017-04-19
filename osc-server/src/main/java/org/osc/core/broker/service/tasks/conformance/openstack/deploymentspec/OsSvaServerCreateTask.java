@@ -120,7 +120,7 @@ class OsSvaServerCreateTask extends TransactionalTask {
                     .getApplianceSoftwareVersion();
             CreatedServerDetails createdServer = null;
 
-            //TODO: sjallapx Hack to workaround Nuage (the only SDN controller currently to return true to supportsPortGroup) SimpleDateFormat parse errors due to JCloud
+            // TODO: sjallapx - Hack to workaround issue SimpleDateFormat parse errors due to JCloud on some partner environments.
             if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
                 createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
                         imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
