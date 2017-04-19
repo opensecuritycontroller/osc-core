@@ -72,12 +72,11 @@
 
 	<target name="copyPlugins">
 		<copy file="target/serverUpgradeBundle.zip" tofile="Build${buildNumber}/serverUpgradeBundle-${buildNumber}.zip" />
-		<!-- TODO: Plugins should be copied by their own jobs to a separate folder -->
-		<copy file="${user.home}/.m2/repository/org/osc/plugin/security-mgr-sample-plugin/1.0/security-mgr-sample-plugin-1.0.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" />
-		<copy file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />
-		<copy file="${user.home}/.m2/repository/com/forcepoint/osc/security-mgr-smc-plugin/1.0/security-mgr-smc-plugin-1.0.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" />
-		<copy file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" tofile="Build${buildNumber}/NscSdnControllerPlugin.bar" />
-		<copy file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" tofile="Build${buildNumber}/VMwareNsxPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" failonerror="false" />
+		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" failonerror="false" />
+		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" failonerror="false" />
+		<copy file="${basedir}/../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" tofile="Build${buildNumber}/NscSdnControllerPlugin.bar" failonerror="false" />
+		<copy file="${basedir}/../vmware-nsx-plugin/target/VMwareNsxPlugin.bar" tofile="Build${buildNumber}/VMwareNsxPlugin.bar" failonerror="false" />
 	</target>
 
 	<target name="checkImagesTocopy">

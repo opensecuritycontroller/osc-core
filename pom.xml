@@ -95,6 +95,7 @@
 	</dependencyManagement>
 	<profiles>
 		<profile>
+			<!-- The 'default' profile includes only OSC projects and plugins -->
 			<id>default</id>
 			<modules>
 				<module>osc-tools</module>
@@ -116,6 +117,8 @@
 			</activation>
 		</profile>
 		<profile>
+			<!-- The 'all' profile includes all projects and supported plugins  
+				Example usage: 'mvn install -Pall' -->
 			<id>all</id>
 			<modules>
 				<module>../sdn-controller-api</module>
