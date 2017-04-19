@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.EntityManager;
 
@@ -131,8 +132,7 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
             dai.setOsAvailabilityZone(this.availabilityZone);
             dai.setDeploymentSpec(ds);
 
-            //dai.setName("Temporary" + UUID.randomUUID().toString()); :TODO sridhar
-            dai.setName("Temporary"); // setting temporary name since it is mandatory field
+            dai.setName("Temporary" + UUID.randomUUID().toString());
             dai = OSCEntityManager.create(em, dai);
 
             // Generate a unique, intuitive and immutable name
