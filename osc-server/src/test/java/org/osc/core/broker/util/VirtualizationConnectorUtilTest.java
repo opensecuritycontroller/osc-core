@@ -31,6 +31,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -54,10 +55,11 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.mcafee.vmidc.server.Server;
 import com.rabbitmq.client.ShutdownSignalException;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({SdnControllerApiFactory.class, RabbitMQRunner.class, EncryptionUtil.class,
+@PrepareForTest({SdnControllerApiFactory.class, StaticRegistry.class, EncryptionUtil.class,
         VirtualizationConnectorUtil.class, X509TrustManagerFactory.class, SslContextProvider.class})
 @PowerMockIgnore("javax.net.ssl.*")
 public class VirtualizationConnectorUtilTest {
@@ -478,6 +480,17 @@ public class VirtualizationConnectorUtilTest {
 		errorList.add(ErrorType.PROVIDER_EXCEPTION);
 		request.addErrorsToIgnore(errorList);
 
+		PowerMockito.mockStatic(StaticRegistry.class);
+
+        Server server = Mockito.mock(Server.class);
+        RabbitMQRunner runner = Mockito.mock(RabbitMQRunner.class);
+
+        @SuppressWarnings("unchecked")
+        HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
+        when(StaticRegistry.server()).thenReturn(server);
+        when(server.getActiveRabbitMQRunner()).thenReturn(runner);
+        when(runner.getVcToRabbitMQClientMap()).thenReturn(map);
+
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
 
 		doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
@@ -499,11 +512,16 @@ public class VirtualizationConnectorUtilTest {
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
 				.getOpenStackRequestwithSDN();
 
-		PowerMockito.mockStatic(RabbitMQRunner.class);
+		PowerMockito.mockStatic(StaticRegistry.class);
+
+		Server server = Mockito.mock(Server.class);
+		RabbitMQRunner runner = Mockito.mock(RabbitMQRunner.class);
 
 		@SuppressWarnings("unchecked")
         HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
-		when(RabbitMQRunner.getVcToRabbitMQClientMap()).thenReturn(map);
+		when(StaticRegistry.server()).thenReturn(server);
+		when(server.getActiveRabbitMQRunner()).thenReturn(runner);
+		when(runner.getVcToRabbitMQClientMap()).thenReturn(map);
 		OsRabbitMQClient mqClient = mock(OsRabbitMQClient.class);
 		doReturn(mqClient).when(map).get(any(Integer.class));
 		doReturn(true).when(mqClient).isConnected();

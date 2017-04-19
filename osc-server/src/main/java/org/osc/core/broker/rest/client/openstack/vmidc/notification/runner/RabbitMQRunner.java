@@ -27,15 +27,22 @@ import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.broadcast.BroadcastListener;
+import org.osc.core.broker.service.broadcast.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
-import org.osc.core.broker.util.BroadcastMessage;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
-import org.osc.core.broker.view.util.EventType;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceScope;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 /**
@@ -43,18 +50,27 @@ import org.osgi.service.transaction.control.ScopedWorkException;
  * Class will be instantiated whenever server is started and will run forever until server shutdown
  *
  */
+@Component(scope=ServiceScope.PROTOTYPE,
+    service=RabbitMQRunner.class)
 public class RabbitMQRunner implements BroadcastListener {
 
     private static final Logger log = Logger.getLogger(RabbitMQRunner.class);
     private static HashMap<Long, Thread> vcToRabbitMQRunnerThreadMap = new HashMap<>();
     private static HashMap<Long, OsRabbitMQClient> vcToRabbitMQClientMap = new HashMap<>();
 
+    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private OsSecurityGroupNotificationRunner securityGroupRunner;
+    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private OsDeploymentSpecNotificationRunner deploymentSpecRunner;
 
-    public RabbitMQRunner() {
+    private ServiceRegistration<BroadcastListener> registration;
+
+    @Activate
+    void start(BundleContext ctx) {
+        // This is not done automatically by DS as we do not want the broadcast whiteboard
+        // to activate another instance of this component, only people getting the runner!
+        this.registration = ctx.registerService(BroadcastListener.class, this, null);
         try {
-            BroadcasterUtil.register(this);
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             List<VirtualizationConnector> vcList =
                     HibernateUtil.getTransactionControl().required(() ->
@@ -72,13 +88,6 @@ public class RabbitMQRunner implements BroadcastListener {
 
                 updateVCNotificationThreadMap(vc, EventType.ADDED);
             }
-
-            // Initializing SG Runner here
-            this.securityGroupRunner = new OsSecurityGroupNotificationRunner();
-
-            // Initializing DS Runner here
-            this.deploymentSpecRunner = new OsDeploymentSpecNotificationRunner();
-
         } catch (ScopedWorkException e) {
             handleError(e.getCause());
         } catch (Exception e) {
@@ -255,8 +264,14 @@ public class RabbitMQRunner implements BroadcastListener {
     * This method will gracefully terminate all open RabbitMQ connections
     * Used before server shutdown
     */
-    public void shutdown() {
-        BroadcasterUtil.unregister(this);
+    @Deactivate
+    void shutdown() {
+        try {
+            this.registration.unregister();
+        } catch (IllegalStateException ise) {
+            // No problem - this means the service was
+            // already unregistered (e.g. by bundle stop)
+        }
         log.info("Unregistered RabbitMQ Runner");
         closeAllConnections();
         this.securityGroupRunner.shutdown();
@@ -276,7 +291,11 @@ public class RabbitMQRunner implements BroadcastListener {
         }
     }
 
-    public static HashMap<Long, OsRabbitMQClient> getVcToRabbitMQClientMap() {
+    public HashMap<Long, OsRabbitMQClient> getVcToRabbitMQClientMap() {
         return vcToRabbitMQClientMap;
+    }
+
+    public OsDeploymentSpecNotificationRunner getOsDeploymentSpecNotificationRunner() {
+        return this.deploymentSpecRunner;
     }
 }

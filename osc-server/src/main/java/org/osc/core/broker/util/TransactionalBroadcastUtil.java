@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.broadcast.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil;
-import org.osc.core.broker.view.util.EventType;
 import org.osgi.service.transaction.control.TransactionContext;
 import org.osgi.service.transaction.control.TransactionControl;
 import org.osgi.service.transaction.control.TransactionStatus;
@@ -36,7 +36,7 @@ public class TransactionalBroadcastUtil {
         try {
             for (BroadcastMessage msg : messages) {
                 log.debug("Broadcasting Message: " + msg.toString());
-                BroadcasterUtil.broadcast(msg);
+                StaticRegistry.broadcaster().broadcast(msg);
             }
         } catch (Exception ex) {
             log.error("Broadcasting messages failed", ex);

@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import com.mcafee.vmidc.server.Server;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDistributedApplianceService;
@@ -25,6 +24,7 @@ import org.osc.core.broker.service.SetNATSettingsService;
 import org.osc.core.broker.service.SetNetworkSettingsService;
 import org.osc.core.broker.service.UpdateUserService;
 import org.osc.core.broker.service.UpgradeService;
+import org.osc.core.broker.service.broadcast.Broadcaster;
 import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.SyncManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
@@ -33,6 +33,8 @@ import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import com.mcafee.vmidc.server.Server;
 
 /**
  * This registry is a work-around to temporarily allow some static calls to remain after they have been removed from the
@@ -86,6 +88,9 @@ public class StaticRegistry {
 
     @Reference
     private DeleteDistributedApplianceService deleteDistributedApplianceService;
+
+    @Reference
+    private Broadcaster broadcaster;
 
     private static StaticRegistry instance = null;
 
@@ -148,6 +153,10 @@ public class StaticRegistry {
 
     public static UpdateUserService updateUserService() {
         return instance.updateUserService;
+    }
+
+    public static Broadcaster broadcaster() {
+        return instance.broadcaster;
     }
 
 }

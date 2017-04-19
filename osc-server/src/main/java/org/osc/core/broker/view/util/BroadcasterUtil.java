@@ -16,36 +16,45 @@
  *******************************************************************************/
 package org.osc.core.broker.view.util;
 
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.osc.core.broker.util.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.BroadcastListener;
+import org.osc.core.broker.service.broadcast.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.Broadcaster;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
-public class BroadcasterUtil implements Serializable {
-    private static final long serialVersionUID = 1L;
+@Component
+public class BroadcasterUtil implements Broadcaster {
 
-    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private ExecutorService executorService;
 
-    /**
-     * Needs to implement this interface in order to be able to receive
-     * broadcasted messages
-     *
-     */
-    public interface BroadcastListener {
-        void receiveBroadcast(BroadcastMessage msg);
+    private LinkedList<BroadcastListener> listeners = new LinkedList<BroadcastListener>();
+
+    @Activate
+    void start() {
+        this.executorService = Executors.newSingleThreadExecutor();
     }
 
-    private static LinkedList<BroadcastListener> listeners = new LinkedList<BroadcastListener>();
+    @Deactivate
+    synchronized void stop() {
+        this.executorService.shutdown();
+    }
 
     /**
      * Add given listener to listeners list
      *
      * @param listener
      */
-    public static synchronized void register(BroadcastListener listener) {
-        listeners.add(listener);
+    @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    synchronized void addListener(BroadcastListener listener) {
+        this.listeners.add(listener);
     }
 
     /**
@@ -53,8 +62,8 @@ public class BroadcasterUtil implements Serializable {
      *
      * @param listener
      */
-    public static synchronized void unregister(BroadcastListener listener) {
-        listeners.remove(listener);
+    synchronized void removeListener(BroadcastListener listener) {
+        this.listeners.remove(listener);
     }
 
     /**
@@ -65,9 +74,10 @@ public class BroadcasterUtil implements Serializable {
      *            (entity class simple name)
      * @param event
      */
-    public static synchronized void broadcast(final BroadcastMessage msg) {
-        for (final BroadcastListener listener : listeners) {
-            executorService.execute(new Runnable() {
+    @Override
+    public synchronized void broadcast(final BroadcastMessage msg) {
+        for (final BroadcastListener listener : this.listeners) {
+            this.executorService.execute(new Runnable() {
                 @Override
                 public void run() {
                     listener.receiveBroadcast(msg);
