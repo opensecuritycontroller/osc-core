@@ -424,7 +424,7 @@
 					<apiSources>
 						<apiSource>
 							<springmvc>false</springmvc>
-							<locations>org.osc.core.broker.service.dto,org.osc.core.broker.rest.server.api</locations>
+							<locations>org.osc.core.broker.rest.server.api</locations>
 							<basePath>/</basePath>
 							<info>
 								<title>OSC API Documentation</title>
