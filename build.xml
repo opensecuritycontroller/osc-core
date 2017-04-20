@@ -17,7 +17,7 @@
 <project name="vmidcDeployMgr" default="build" basedir="." xmlns:if="ant:if" xmlns:unless="ant:unless">
 	<description>a vmidc deploy tool</description>
 
-	<property name="image-format" value="vmdk" />
+	<property name="image-format" value="vmdk_only" />
 	<target name="ovf" depends="build,ovfOnly,ovfCopy" description="build all and generate vmidc ovf" />
 
 	<target name="build">
@@ -75,11 +75,11 @@
 	</target>
 		
 	<target name="copyPlugins" if:true="${all}">
-		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" failonerror="false" />
-		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" failonerror="false" />
-		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" failonerror="false" />
-		<copy file="${basedir}/../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" tofile="Build${buildNumber}/NscSdnControllerPlugin.bar" failonerror="false" />
-		<copy file="${basedir}/../vmware-nsx-plugin/target/VMwareNsxPlugin.bar" tofile="Build${buildNumber}/VMwareNsxPlugin.bar" failonerror="false" />
+		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" />
+		<copy file="${basedir}/../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" tofile="Build${buildNumber}/NscSdnControllerPlugin.bar" />
+		<copy file="${basedir}/../vmware-nsx-plugin/target/VMwareNsxPlugin.bar" tofile="Build${buildNumber}/VMwareNsxPlugin.bar" />
 	</target>
 
 	<target name="checkImagesTocopy">
