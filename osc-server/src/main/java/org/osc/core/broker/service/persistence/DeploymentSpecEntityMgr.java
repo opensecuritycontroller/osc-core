@@ -31,8 +31,6 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate;
-import org.osc.core.broker.service.dto.job.JobState;
-import org.osc.core.broker.service.dto.job.JobStatus;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -71,8 +69,8 @@ public class DeploymentSpecEntityMgr {
         dto.setInspectionNetworkId(ds.getInspectionNetworkId());
         dto.setCount(ds.getInstanceCount());
         if (ds.getLastJob() != null) {
-            dto.setLastJobStatus(JobStatus.valueOf(ds.getLastJob().getStatus().name()));
-            dto.setLastJobState(JobState.valueOf(ds.getLastJob().getState().name()));
+            dto.setLastJobStatus(ds.getLastJob().getStatus().name());
+            dto.setLastJobState(ds.getLastJob().getState().name());
             dto.setLastJobId(ds.getLastJob().getId());
         }
         dto.setShared(ds.isShared());

@@ -24,8 +24,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.service.dto.job.LockObjectDto;
-import org.osc.core.broker.service.dto.job.TaskState;
-import org.osc.core.broker.service.dto.job.TaskStatus;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -38,8 +36,8 @@ public class TaskRecordDto extends BaseDto {
 
     private Long dependencyOrder;
     private String name;
-    private TaskState state;
-    private TaskStatus status;
+    private String state;
+    private String status;
     private Date queued;
     private Date started;
     private Date completed;
@@ -82,19 +80,19 @@ public class TaskRecordDto extends BaseDto {
         this.name = name;
     }
 
-    public TaskState getState() {
+    public String getState() {
         return this.state;
     }
 
-    public void setState(TaskState state) {
+    public void setState(String state) {
         this.state = state;
     }
 
-    public TaskStatus getStatus() {
+    public String getStatus() {
         return this.status;
     }
 
-    public void setStatus(TaskStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 

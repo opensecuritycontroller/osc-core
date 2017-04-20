@@ -36,8 +36,6 @@ import org.osc.core.broker.service.dto.TaskFailureRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectType;
-import org.osc.core.broker.service.dto.job.TaskState;
-import org.osc.core.broker.service.dto.job.TaskStatus;
 
 public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
 
@@ -55,8 +53,8 @@ public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
         taskDto.setId(tr.getId());
         taskDto.setParentId(tr.getJob().getId());
         taskDto.setName(tr.getName());
-        taskDto.setStatus(TaskStatus.valueOf(tr.getStatus().name()));
-        taskDto.setState(TaskState.valueOf(tr.getState().name()));
+        taskDto.setStatus(tr.getStatus().name());
+        taskDto.setState(tr.getState().name());
         taskDto.setQueued(tr.getQueuedTimestamp());
         taskDto.setStarted(tr.getStartedTimestamp());
         taskDto.setCompleted(tr.getCompletedTimestamp());

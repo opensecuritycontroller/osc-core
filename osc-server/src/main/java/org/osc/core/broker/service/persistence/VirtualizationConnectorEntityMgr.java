@@ -32,8 +32,6 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
-import org.osc.core.broker.service.dto.job.JobState;
-import org.osc.core.broker.service.dto.job.JobStatus;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.EncryptionUtil;
@@ -107,8 +105,8 @@ public class VirtualizationConnectorEntityMgr {
         dto.setSoftwareVersion(vc.getVirtualizationSoftwareVersion());
 
         if (vc.getLastJob() != null) {
-            dto.setLastJobStatus(JobStatus.valueOf(vc.getLastJob().getStatus().name()));
-            dto.setLastJobState(JobState.valueOf(vc.getLastJob().getState().name()));
+            dto.setLastJobStatus(vc.getLastJob().getStatus().name());
+            dto.setLastJobState(vc.getLastJob().getState().name());
             dto.setLastJobId(vc.getLastJob().getId());
         }
     }

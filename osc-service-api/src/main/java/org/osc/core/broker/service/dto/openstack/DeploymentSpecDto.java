@@ -24,8 +24,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.service.dto.job.JobState;
-import org.osc.core.broker.service.dto.job.JobStatus;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -110,10 +108,10 @@ public class DeploymentSpecDto extends BaseDto {
     private boolean markForDeletion = false;
 
     @ApiModelProperty(readOnly = true)
-    private JobState lastJobState;
+    private String lastJobState;
 
     @ApiModelProperty(readOnly = true)
-    private JobStatus lastJobStatus;
+    private String lastJobStatus;
 
     @ApiModelProperty(readOnly = true)
     private Long lastJobId;
@@ -238,19 +236,19 @@ public class DeploymentSpecDto extends BaseDto {
         this.floatingIpPoolName = floatingIpPoolName;
     }
 
-    public JobState getLastJobState() {
+    public String getLastJobState() {
         return this.lastJobState;
     }
 
-    public void setLastJobState(JobState lastJobState) {
+    public void setLastJobState(String lastJobState) {
         this.lastJobState = lastJobState;
     }
 
-    public JobStatus getLastJobStatus() {
+    public String getLastJobStatus() {
         return this.lastJobStatus;
     }
 
-    public void setLastJobStatus(JobStatus lastJobStatus) {
+    public void setLastJobStatus(String lastJobStatus) {
         this.lastJobStatus = lastJobStatus;
     }
 

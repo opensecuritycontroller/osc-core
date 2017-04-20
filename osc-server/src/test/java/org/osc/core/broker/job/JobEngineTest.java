@@ -35,7 +35,6 @@ import org.junit.Test;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.TaskRecord;
-import org.osc.core.broker.service.dto.job.TaskStatus;
 import org.osc.core.broker.service.tasks.BaseTask;
 import org.osc.core.broker.service.test.InMemDB;
 

@@ -22,6 +22,7 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
+import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
@@ -32,7 +33,6 @@ import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.events.EmailSettings;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
-import org.osc.core.broker.service.dto.job.JobStatus;
 import org.osc.core.broker.service.dto.job.ObjectType;
 import org.osc.core.broker.service.email.EmailSettingsDto;
 import org.osc.core.broker.service.persistence.AlertEntityMgr;

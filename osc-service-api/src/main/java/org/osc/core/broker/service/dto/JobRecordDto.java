@@ -23,8 +23,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.service.dto.job.JobState;
-import org.osc.core.broker.service.dto.job.JobStatus;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 
 import io.swagger.annotations.ApiModel;
@@ -37,8 +35,8 @@ public class JobRecordDto extends BaseDto {
 
     private String name;
     private String failureReason;
-    private JobState state;
-    private JobStatus status;
+    private String state;
+    private String status;
     private Date queued;
     private Date started;
     private Date completed;
@@ -64,19 +62,19 @@ public class JobRecordDto extends BaseDto {
         this.name = name;
     }
 
-    public JobState getState() {
+    public String getState() {
         return this.state;
     }
 
-    public void setState(JobState state) {
+    public void setState(String state) {
         this.state = state;
     }
 
-    public JobStatus getStatus() {
+    public String getStatus() {
         return this.status;
     }
 
-    public void setStatus(JobStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 

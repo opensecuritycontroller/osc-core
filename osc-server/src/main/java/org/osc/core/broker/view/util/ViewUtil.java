@@ -31,8 +31,6 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.service.dto.job.JobState;
-import org.osc.core.broker.service.dto.job.JobStatus;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.view.MainUI;
 import org.osc.core.broker.view.common.StyleConstants;
@@ -265,7 +263,7 @@ public class ViewUtil {
      *
      * @return link to job page if both last Job status and the last Job id are not null
      */
-    public static Object generateJobLink(JobStatus lastJobStatus, JobState lastJobState, Long lastJobId) {
+    public static Object generateJobLink(String lastJobStatus, String lastJobState, Long lastJobId) {
         if (lastJobStatus != null && lastJobId != null) {
             return createJobLink(VmidcMessages.getString(VmidcMessages_.JOB_LINK_CAPTION_ID,
                     resolveJobStateAndStatus(lastJobStatus, lastJobState), lastJobId), lastJobId);
@@ -415,11 +413,22 @@ public class ViewUtil {
         return paramMap;
     }
 
-    private static String resolveJobStateAndStatus(JobStatus lastJobStatus, JobState lastJobState) {
-        if (lastJobStatus.isSuccessful() && !lastJobState.isTerminalState()) {
+    private static String resolveJobStateAndStatus(String lastJobStatus, String lastJobState) {
+        if (isJobSuccessful(lastJobStatus) && !isJobComplete(lastJobState)) {
             return lastJobState.toString();
         }
         return lastJobStatus.toString();
+    }
+
+    private static final String JOB_COMPLETE = "COMPLETED";
+    private static final String JOB_SUCCESSFUL = "PASSED";
+
+    public static boolean isJobComplete(String jobState) {
+        return JOB_COMPLETE.equals(jobState);
+    }
+
+    public static boolean isJobSuccessful(String jobStatus) {
+        return JOB_SUCCESSFUL.equals(jobStatus);
     }
 
     private static Link createJobLink(String caption, Long lastJobId) {

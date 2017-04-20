@@ -25,9 +25,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.service.dto.job.JobState;
-import org.osc.core.broker.service.dto.job.JobStatus;
-
 import io.swagger.annotations.ApiModelProperty;
 
 // Virtualization Connector Data Transfer Object associated with VC entity
@@ -81,10 +78,10 @@ public class VirtualizationConnectorDto extends BaseDto {
     private Set<SslCertificateAttrDto> sslCertificateAttrSet = new HashSet<>();
 
     @ApiModelProperty(readOnly = true)
-    private JobState lastJobState;
+    private String lastJobState;
 
     @ApiModelProperty(readOnly = true)
-    private JobStatus lastJobStatus;
+    private String lastJobStatus;
 
     @ApiModelProperty(readOnly = true)
     private Long lastJobId;
@@ -190,7 +187,7 @@ public class VirtualizationConnectorDto extends BaseDto {
         this.sslCertificateAttrSet = sslCertificateAttrSet;
     }
 
-    public JobStatus getLastJobStatus() {
+    public String getLastJobStatus() {
         return this.lastJobStatus;
     }
 
@@ -202,15 +199,15 @@ public class VirtualizationConnectorDto extends BaseDto {
         this.lastJobId = lastJobId;
     }
 
-    public void setLastJobStatus(JobStatus lastJobStatus) {
+    public void setLastJobStatus(String lastJobStatus) {
         this.lastJobStatus = lastJobStatus;
     }
 
-    public JobState getLastJobState() {
+    public String getLastJobState() {
         return this.lastJobState;
     }
 
-    public void setLastJobState(JobState lastJobState) {
+    public void setLastJobState(String lastJobState) {
         this.lastJobState = lastJobState;
     }
 

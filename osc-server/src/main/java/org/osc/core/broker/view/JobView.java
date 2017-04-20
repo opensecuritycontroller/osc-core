@@ -214,8 +214,10 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
         updateAbortButtonState(jobRecordDto);
     }
 
+    private static final String JOB_COMPLETE = "COMPLETED";
+
     private void updateAbortButtonState(JobRecordDto jobRecordDto) {
-        if (jobRecordDto == null || jobRecordDto.getState().isTerminalState()) {
+        if (jobRecordDto == null || JOB_COMPLETE.equals(jobRecordDto.getState())) {
             ViewUtil.enableToolBarButtons(false, this.parentToolbar, Arrays.asList(ToolbarButtons.JOB_ABORT.getId()));
         }
     }
@@ -378,7 +380,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
                     out.printf("node_%d [%n", tr.getId());
                     out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
-                    if(org.osc.core.broker.service.dto.job.TaskState.valueOf(tr.getState().name()).isTerminalState()) {
+                    if(org.osc.core.broker.job.TaskState.valueOf(tr.getState().name()).isTerminalState()) {
                         if (tr.getStatus().equals(TaskStatus.PASSED)) {
                             if (tr.getChildren().isEmpty()) {
                                 out.printf("  fillcolor=%s fontcolor=white%n", "green4");

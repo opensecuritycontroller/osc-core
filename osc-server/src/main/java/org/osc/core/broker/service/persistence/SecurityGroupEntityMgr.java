@@ -37,8 +37,6 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.service.dto.job.JobState;
-import org.osc.core.broker.service.dto.job.JobStatus;
 import org.osc.core.broker.service.securitygroup.SecurityGroupDto;
 
 public class SecurityGroupEntityMgr {
@@ -63,8 +61,8 @@ public class SecurityGroupEntityMgr {
         dto.setTenantId(entity.getTenantId());
         dto.setTenantName(entity.getTenantName());
         if (entity.getLastJob() != null) {
-            dto.setLastJobStatus(JobStatus.valueOf(entity.getLastJob().getStatus().name()));
-            dto.setLastJobState(JobState.valueOf(entity.getLastJob().getState().name()));
+            dto.setLastJobStatus(entity.getLastJob().getStatus().name());
+            dto.setLastJobState(entity.getLastJob().getState().name());
             dto.setLastJobId(entity.getLastJob().getId());
         }
     }

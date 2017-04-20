@@ -30,8 +30,6 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
-import org.osc.core.broker.service.dto.job.JobState;
-import org.osc.core.broker.service.dto.job.JobStatus;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
@@ -74,8 +72,8 @@ public class ApplianceManagerConnectorEntityMgr {
         dto.setUsername(mc.getUsername());
         dto.setPassword(EncryptionUtil.decryptAESCTR(mc.getPassword()));
         if (mc.getLastJob() != null) {
-            dto.setLastJobStatus(JobStatus.valueOf(mc.getLastJob().getStatus().name()));
-            dto.setLastJobState(JobState.valueOf(mc.getLastJob().getState().name()));
+            dto.setLastJobStatus(mc.getLastJob().getStatus().name());
+            dto.setLastJobState(mc.getLastJob().getState().name());
             dto.setLastJobId(mc.getLastJob().getId());
         }
         dto.setApiKey(mc.getApiKey());

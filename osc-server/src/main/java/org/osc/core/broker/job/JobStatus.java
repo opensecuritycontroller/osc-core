@@ -14,34 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.dto.job;
+package org.osc.core.broker.job;
 
-import org.osc.sdk.manager.element.TaskStateElement;
+import org.osc.sdk.manager.element.JobStatusElement;
 
 /**
- *
- * TaskState represent the execution states that a {@link Task} can be
- * in.
+ *         The JobStatus represent how well a {@link Job} is executing.
  */
+public enum JobStatus implements JobStatusElement{
+    FAILED, PASSED, ABORTED;
 
-public enum TaskState implements TaskStateElement {
-    NOT_RUNNING, // Not scheduled.
-    QUEUED, // Scheduled for execution, pending job engine execution thread
-            // resource.
-    PENDING, // Pending all predecessor to complete.
-    RUNNING, // Executing
-    COMPLETED; // Execution completed
-
-    public boolean isTerminalState() {
-        return equals(COMPLETED);
-    }
-
-    public boolean isRunning() {
-        return equals(RUNNING);
-    }
-
-    public boolean neverScheduled() {
-        return equals(NOT_RUNNING);
+    public boolean isSuccessful() {
+        return this.equals(PASSED);
     }
 
 }
