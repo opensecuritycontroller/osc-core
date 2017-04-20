@@ -82,7 +82,10 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
+import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
@@ -117,6 +120,21 @@ public class VSConformanceCheckMetaTaskTest {
     @InjectMocks
     private VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
 
+    @InjectMocks
+    private CreateNsxServiceTask createNsxServiceTask;
+
+    @InjectMocks
+    private NsxDeploymentSpecCheckMetaTask nsxDeploymentSpecCheckMetaTask;
+
+    @InjectMocks
+    private PasswordUtil passwordUtil;
+
+    @InjectMocks
+    private UpdateNsxServiceAttributesTask updateNsxServiceAttributesTask;
+
+    @InjectMocks
+    private UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
+
     private ServiceManagerApi serviceManagerApiMock;
     private ServiceApi serviceApiMock;
 
@@ -138,8 +156,8 @@ public class VSConformanceCheckMetaTaskTest {
 
     @BeforeClass
     public static void testSuiteInitialize() throws EncryptionException {
-        DEFAULT_SERVICEMANAGER_PASSWORD = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
-        DEFAULT_SERVICE_PASSWORD = EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS);
+        DEFAULT_SERVICEMANAGER_PASSWORD = EncryptionUtil.encryptAESCTR("");
+        DEFAULT_SERVICE_PASSWORD = EncryptionUtil.encryptAESCTR("");
     }
 
     @Before
@@ -149,6 +167,11 @@ public class VSConformanceCheckMetaTaskTest {
         // @InjectMocks doesn't inject these fields
         this.vsConformanceCheckMetaTask.createNsxServiceManagerTask = this.createNsxServiceManagerTask;
         this.vsConformanceCheckMetaTask.updateNsxServiceManagerTask = this.updateNsxServiceManagerTask;
+        this.vsConformanceCheckMetaTask.createNsxServiceTask = this.createNsxServiceTask;
+        this.vsConformanceCheckMetaTask.nsxDeploymentSpecCheckMetaTask = this.nsxDeploymentSpecCheckMetaTask;
+        this.vsConformanceCheckMetaTask.passwordUtil = this.passwordUtil;
+        this.vsConformanceCheckMetaTask.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
+        this.vsConformanceCheckMetaTask.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
 
         this.serviceManagerApiMock = Mockito.mock(ServiceManagerApi.class);
         this.serviceApiMock = Mockito.mock(ServiceApi.class);

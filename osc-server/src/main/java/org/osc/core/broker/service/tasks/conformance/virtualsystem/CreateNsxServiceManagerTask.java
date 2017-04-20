@@ -46,6 +46,9 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
     @Reference
     public ApiFactoryService apiFactoryService;
 
+    @Reference
+    private PasswordUtil passwordUtil;
+
     public CreateNsxServiceManagerTask create(VirtualSystem vs) {
         CreateNsxServiceManagerTask task = new CreateNsxServiceManagerTask();
         task.vs = vs;
@@ -70,9 +73,9 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
                 serviceManagerName,
                 serviceManagerName,
                 buildRestCallbackUrl(),
-                NsxAuthFilter.VMIDC_NSX_LOGIN,
-                NsxAuthFilter.VMIDC_NSX_PASS,
-                NsxAuthFilter.VMIDC_NSX_PASS);
+                RestConstants.VMIDC_NSX_LOGIN,
+                this.passwordUtil.getVmidcNsxPass(),
+                this.passwordUtil.getVmidcNsxPass());
 
         String serviceManagerId = serviceManagerApi.createServiceManager(input);
         serviceManager = serviceManagerApi.getServiceManager(serviceManagerId);

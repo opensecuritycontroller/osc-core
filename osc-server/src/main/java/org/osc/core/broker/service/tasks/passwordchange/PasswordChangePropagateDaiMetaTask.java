@@ -33,11 +33,19 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-
+@Component(service = PasswordChangePropagateDaiMetaTask.class)
 public class PasswordChangePropagateDaiMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(PasswordChangePropagateDaiMetaTask.class);
+
+    @Reference
+    private UpdateNsxServiceAttributesTask updateNsxServiceAttributesTask;
+
+    @Reference
+    private UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
     private TaskGraph tg;
 
@@ -65,10 +73,10 @@ public class PasswordChangePropagateDaiMetaTask extends TransactionalMetaTask {
                 if (!vs.getMarkedForDeletion()) {
                     // Updating NSX service attribute 'vmidcPassword' so newly
                     // deployed SVAs has the correct agent password.
-                    propagateTaskGraph.addTask(new UpdateNsxServiceAttributesTask(vs),
+                    propagateTaskGraph.addTask(this.updateNsxServiceAttributesTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating NSX service instance attribute "vmidcPassword'
-                    propagateTaskGraph.addTask(new UpdateNsxServiceInstanceAttributesTask(vs),
+                    propagateTaskGraph.addTask(this.updateNsxServiceInstanceAttributesTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                 }
             }

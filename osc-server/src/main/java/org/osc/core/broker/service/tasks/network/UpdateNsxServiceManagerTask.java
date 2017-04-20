@@ -44,6 +44,9 @@ public class UpdateNsxServiceManagerTask extends TransactionalTask {
     @Reference
     public ApiFactoryService apiFactoryService;
 
+    @Reference
+    private PasswordUtil passwordUtil;
+
     public UpdateNsxServiceManagerTask create(VirtualSystem vs) {
         UpdateNsxServiceManagerTask task = new UpdateNsxServiceManagerTask();
         task.vs = vs;
@@ -60,8 +63,8 @@ public class UpdateNsxServiceManagerTask extends TransactionalTask {
         ServiceManager serviceManager = new ServiceManager(serviceManagerElement);
 
         serviceManager.setRestUrl(CreateNsxServiceManagerTask.buildRestCallbackUrl());
-        serviceManager.setPassword(NsxAuthFilter.VMIDC_NSX_PASS);
-        serviceManager.setVerifyPassword(NsxAuthFilter.VMIDC_NSX_PASS);
+        serviceManager.setPassword(this.passwordUtil.getVmidcNsxPass());
+        serviceManager.setVerifyPassword(this.passwordUtil.getVmidcNsxPass());
 
         serviceManager.setVendorName(this.apiFactoryService.generateServiceManagerName(this.vs));
         serviceManager.setVendorId(this.apiFactoryService.generateServiceManagerName(this.vs));

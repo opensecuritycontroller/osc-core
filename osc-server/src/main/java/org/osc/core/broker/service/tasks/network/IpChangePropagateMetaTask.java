@@ -54,6 +54,15 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
     @Reference
     private UpdateNsxServiceManagerTask updateNsxServiceManagerTask;
 
+    @Reference
+    private MCConformanceCheckMetaTask mcConformanceCheckMetaTask;
+
+    @Reference
+    private UpdateNsxServiceAttributesTask updateNsxServiceAttributesTask;
+
+    @Reference
+    private UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
+
     public IpChangePropagateMetaTask() {
         this.name = getName();
     }
@@ -85,13 +94,13 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
                     propagateTaskGraph.addTask(this.updateNsxServiceManagerTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating Service Attribute which include vmiDC server IP
-                    propagateTaskGraph.addTask(new UpdateNsxServiceAttributesTask(vs),
+                    propagateTaskGraph.addTask(this.updateNsxServiceAttributesTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating Service Deployment Spec OVF Image URL
                     propagateTaskGraph.addTask(new UpdateNsxDeploymentSpecTask(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating Service Instance Attributes which include vmiDC server IP
-                    propagateTaskGraph.addTask(new UpdateNsxServiceInstanceAttributesTask(vs),
+                    propagateTaskGraph.addTask(this.updateNsxServiceInstanceAttributesTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                 }
 
@@ -119,7 +128,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
 
                     propagateTaskGraph.addTask(lockTask);
                     propagateTaskGraph.addTaskGraph(
-                            MCConformanceCheckMetaTask.syncPersistedUrlNotification(em, mc), lockTask);
+                            this.mcConformanceCheckMetaTask.syncPersistedUrlNotification(em, mc), lockTask);
                     propagateTaskGraph.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
                     this.tg.addTaskGraph(propagateTaskGraph);
                 }

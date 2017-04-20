@@ -115,6 +115,9 @@ public class Server {
     @Reference
     private ApiFactoryService apiFactoryService;
 
+    @Reference
+    private PasswordUtil passwordUtil;
+
     private Thread thread;
 
     @Activate
@@ -174,8 +177,8 @@ public class Server {
             DatabaseUtils.createDefaultDB();
             DatabaseUtils.markRunningJobAborted();
 
-            PasswordUtil.initPasswordFromDb(NsxAuthFilter.VMIDC_NSX_LOGIN);
-            PasswordUtil.initPasswordFromDb(OscAuthFilter.OSC_DEFAULT_LOGIN);
+            this.passwordUtil.initPasswordFromDb(RestConstants.VMIDC_NSX_LOGIN);
+            this.passwordUtil.initPasswordFromDb(RestConstants.OSC_DEFAULT_LOGIN);
 
             JobEngine.getEngine().addJobCompletionListener(new AlertGenerator());
 

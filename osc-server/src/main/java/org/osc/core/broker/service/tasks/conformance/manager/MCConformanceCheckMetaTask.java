@@ -43,14 +43,34 @@ import org.osc.core.util.ServerUtil;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.element.ManagerNotificationRegistrationElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = MCConformanceCheckMetaTask.class)
 public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 	private static final Logger log = Logger.getLogger(MCConformanceCheckMetaTask.class);
 
 	private ApplianceManagerConnector mc;
 	private TaskGraph tg;
 	private UnlockObjectTask mcUnlockTask;
-	private ApiFactoryService apiFactoryService;
+
+	@Reference
+	ApiFactoryService apiFactoryService;
+
+	@Reference
+	private PasswordUtil passwordUtil;
+
+	@Reference
+	private RegisterMgrDomainNotificationTask registerMgrDomainNotificationTask;
+
+	@Reference
+	private RegisterMgrPolicyNotificationTask registerMgrPolicyNotificationTask;
+
+	@Reference
+	private UpdateMgrDomainNotificationTask updateMgrDomainNotificationTask;
+
+	@Reference
+	private UpdateMgrPolicyNotificationTask updateMgrPolicyNotificationTask;
 
 	/**
 	 * Start MC conformance task. A write lock exists for the duration of this task and any tasks kicked off by this
@@ -63,11 +83,15 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 	 * If unlock task is not provided(null) then we acquire a write lock and RELEASE it after the tasks are finished.
 	 * </p>
 	 */
-	public MCConformanceCheckMetaTask(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask, ApiFactoryService apiFactoryService) {
-		this.mc = mc;
-		this.mcUnlockTask = mcUnlockTask;
-		this.name = getName();
-		this.apiFactoryService = apiFactoryService;
+	public MCConformanceCheckMetaTask create(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask) {
+	    MCConformanceCheckMetaTask task = new MCConformanceCheckMetaTask();
+		task.mc = mc;
+		task.mcUnlockTask = mcUnlockTask;
+		task.name = task.getName();
+		task.apiFactoryService = this.apiFactoryService;
+		task.passwordUtil = this.passwordUtil;
+		task.registerMgrDomainNotificationTask = this.registerMgrDomainNotificationTask;
+		return task;
 	}
 
 	@Override
@@ -141,7 +165,7 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 		return tg;
 	}
 
-	public static TaskGraph syncPersistedUrlNotification(EntityManager em, ApplianceManagerConnector mc)
+	public TaskGraph syncPersistedUrlNotification(EntityManager em, ApplianceManagerConnector mc)
 			throws Exception {
 		TaskGraph tg = new TaskGraph();
 
@@ -160,18 +184,18 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 			ManagerNotificationRegistrationElement pgr = mgrApi.getPolicyGroupNotificationRegistration();
 
 			if (dr == null || dr.isEmpty()) {
-				tg.addTask(new RegisterMgrDomainNotificationTask(mc));
+				tg.addTask(this.registerMgrDomainNotificationTask.create(mc));
 			} else {
 				if (isOutOfSyncRegistration(dr)) {
-					tg.appendTask(new UpdateMgrDomainNotificationTask(mc, oldIpAddress));
+					tg.appendTask(this.updateMgrDomainNotificationTask.create(mc, oldIpAddress));
 				}
 			}
 
 			if (pgr == null || pgr.isEmpty()) {
-				tg.appendTask(new RegisterMgrPolicyNotificationTask(mc));
+				tg.appendTask(this.registerMgrPolicyNotificationTask.create(mc));
 			} else {
 				if (isOutOfSyncRegistration(pgr)) {
-					tg.appendTask(new UpdateMgrPolicyNotificationTask(mc, oldIpAddress));
+					tg.appendTask(this.updateMgrPolicyNotificationTask.create(mc, oldIpAddress));
 				}
 			}
 
@@ -185,8 +209,8 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 		return tg;
 	}
 
-    private static boolean isOutOfSyncRegistration(ManagerNotificationRegistrationElement registration) {
-        if (registration.getPassword() == null || !registration.getPassword().equals(OscAuthFilter.OSC_DEFAULT_PASS)) {
+    private boolean isOutOfSyncRegistration(ManagerNotificationRegistrationElement registration) {
+        if (registration.getPassword() == null || !registration.getPassword().equals(this.passwordUtil.getOscDefaultPass())) {
             return true;
         }
         if (registration.getIpAddress() == null || !registration.getIpAddress().equals(ServerUtil.getServerIP())) {

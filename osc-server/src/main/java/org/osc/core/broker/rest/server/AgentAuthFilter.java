@@ -25,18 +25,29 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
 
 import java.io.IOException;
+import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.util.PasswordUtil;
+import org.osc.core.rest.annotations.AgentAuth;
+import org.osc.core.util.AuthUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+import com.google.common.collect.ImmutableMap;
+
+@Component(service = AgentAuthFilter.class)
 @Provider
 @AgentAuth
 public class AgentAuthFilter implements ContainerRequestFilter {
+    @Reference
+    private PasswordUtil passwordUtil;
 
     public static final String VMIDC_AGENT_LOGIN = "agent";
     public static String VMIDC_AGENT_PASS = "";
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
-        AuthUtil.authenticate(containerRequestContext, ImmutableMap.of(VMIDC_AGENT_LOGIN, VMIDC_AGENT_PASS,
-                OscAuthFilter.OSC_DEFAULT_LOGIN, OscAuthFilter.OSC_DEFAULT_PASS));
+        AuthUtil.authenticate(containerRequestContext, ImmutableMap.of(RestConstants.VMIDC_AGENT_LOGIN, this.passwordUtil.getVmidcAgentPass(),
+                RestConstants.OSC_DEFAULT_LOGIN, this.passwordUtil.getOscDefaultPass()));
     }
 
 }

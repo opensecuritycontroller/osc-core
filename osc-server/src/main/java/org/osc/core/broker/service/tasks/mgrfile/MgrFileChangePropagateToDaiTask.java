@@ -26,12 +26,16 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.rest.client.agent.api.VmidcAgentStreamingApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-
-
+@Component(service = MgrFileChangePropagateToDaiTask.class)
 public class MgrFileChangePropagateToDaiTask extends TransactionalTask {
 
     final Logger log = Logger.getLogger(MgrFileChangePropagateToDaiTask.class);
+
+    @Reference
+    private PasswordUtil passwordUtil;
 
     private DistributedApplianceInstance dai;
     private byte[] mgrFile = null;
@@ -41,18 +45,21 @@ public class MgrFileChangePropagateToDaiTask extends TransactionalTask {
         return this.dai;
     }
 
-    public MgrFileChangePropagateToDaiTask(DistributedApplianceInstance dai, byte[] mgrFile, String mgrFileName) {
-        this.dai = dai;
-        this.name = getName();
-        this.mgrFile = mgrFile;
-        this.mgrFileName = mgrFileName;
+    public MgrFileChangePropagateToDaiTask create(DistributedApplianceInstance dai, byte[] mgrFile, String mgrFileName) {
+        MgrFileChangePropagateToDaiTask task = new MgrFileChangePropagateToDaiTask();
+        task.dai = dai;
+        task.name = task.getName();
+        task.mgrFile = mgrFile;
+        task.mgrFileName = mgrFileName;
+        task.passwordUtil = this.passwordUtil;
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
 
         VmidcAgentStreamingApi agentApi = new VmidcAgentStreamingApi(this.dai.getIpAddress(), 8090,
-                AgentAuthFilter.VMIDC_AGENT_LOGIN, AgentAuthFilter.VMIDC_AGENT_PASS);
+                RestConstants.VMIDC_AGENT_LOGIN, this.passwordUtil.getVmidcAgentPass());
 
         agentApi.updateMgrFile(this.mgrFile, this.mgrFileName);
     }

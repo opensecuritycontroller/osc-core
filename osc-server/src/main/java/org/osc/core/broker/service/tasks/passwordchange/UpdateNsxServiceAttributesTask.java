@@ -28,16 +28,24 @@ import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.ServiceApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = UpdateNsxServiceAttributesTask.class)
 public class UpdateNsxServiceAttributesTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(UpdateNsxServiceAttributesTask.class);
 
+    @Reference
+    public PasswordUtil passwordUtil;
+
     private VirtualSystem vs;
 
-    public UpdateNsxServiceAttributesTask(VirtualSystem vs) {
-        super();
-        this.vs = vs;
-        this.name = getName();
+    public UpdateNsxServiceAttributesTask create(VirtualSystem vs) {
+        UpdateNsxServiceAttributesTask task = new UpdateNsxServiceAttributesTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.passwordUtil = this.passwordUtil;
+        return task;
     }
 
     @Override
@@ -55,8 +63,8 @@ public class UpdateNsxServiceAttributesTask extends TransactionalTask {
                 this.vs.getDistributedAppliance().getAppliance().getModel(),
                 this.vs.getDistributedAppliance().getApplianceVersion(),
                 ServerUtil.getServerIP(),
-                NsxAuthFilter.VMIDC_NSX_PASS,
-                NsxAuthFilter.VMIDC_NSX_LOGIN,
+                this.passwordUtil.getVmidcNsxPass(),
+                RestConstants.VMIDC_NSX_LOGIN,
                 this.vs.getDistributedAppliance().getName()
                 );
     }
