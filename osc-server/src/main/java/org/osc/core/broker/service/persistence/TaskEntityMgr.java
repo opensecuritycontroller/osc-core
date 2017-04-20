@@ -35,7 +35,7 @@ import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.dto.TaskFailureRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
-import org.osc.core.broker.service.dto.job.ObjectType;
+import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 
 public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
 
@@ -72,7 +72,7 @@ public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
         Set<LockObjectDto> objects = new HashSet<LockObjectDto>();
         for (TaskObject jo : task.getObjects()) {
             objects.add(new LockObjectDto(jo.getObjectId(), jo.getName(),
-                    ObjectType.valueOf(jo.getObjectType().name())));
+                    new ObjectTypeDto(jo.getObjectType().name(), jo.getObjectType().toString())));
         }
         return objects;
     }

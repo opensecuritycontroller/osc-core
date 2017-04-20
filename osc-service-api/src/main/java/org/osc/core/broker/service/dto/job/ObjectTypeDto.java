@@ -16,24 +16,32 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto.job;
 
-import org.osc.core.broker.service.dto.BaseDto;
+public class ObjectTypeDto {
+    public static final ObjectTypeDto VIRTUALIZATION_CONNECTOR = new ObjectTypeDto
+            ("VIRTUALIZATION_CONNECTOR", "Virtualization Connector");
 
-import io.swagger.annotations.ApiModelProperty;
+    public static final ObjectTypeDto SECURITY_GROUP = new ObjectTypeDto
+            ("SECURITY_GROUP", "Security Group");
 
-public class LockObjectDto extends BaseDto {
+    public static final ObjectTypeDto APPLIANCE_MANAGER_CONNECTOR = new ObjectTypeDto
+            ("APPLIANCE_MANAGER_CONNECTOR", "Manager Connector");
 
-    @ApiModelProperty(required = true)
-    private ObjectTypeDto type;
-    @ApiModelProperty(required = true)
+    public static final ObjectTypeDto VIRTUAL_SYSTEM = new ObjectTypeDto
+            ("VIRTUAL_SYSTEM", "Virtual System");
+
     private String name;
+    private String displayText;
 
-    public LockObjectDto() {
+    public ObjectTypeDto() { }
+
+    public ObjectTypeDto(String name, String displayText) {
+        setName(name);
+        setDisplayText(displayText);
     }
 
-    public LockObjectDto(Long id, String name, ObjectTypeDto type) {
-        setId(id);
-        this.name = name;
-        this.type = type;
+    @Override
+    public String toString() {
+        return getDisplayText();
     }
 
     public String getName() {
@@ -44,17 +52,11 @@ public class LockObjectDto extends BaseDto {
         this.name = name;
     }
 
-    public ObjectTypeDto getType() {
-        return this.type;
+    public String getDisplayText() {
+        return this.displayText;
     }
 
-    public void setType(ObjectTypeDto type) {
-        this.type = type;
+    public void setDisplayText(String displayText) {
+        this.displayText = displayText;
     }
-
-    @Override
-    public String toString() {
-        return "LockObjectDto [name=" + this.name + ", type=" + this.type + ", id=" + getId() +"]";
-    }
-
 }

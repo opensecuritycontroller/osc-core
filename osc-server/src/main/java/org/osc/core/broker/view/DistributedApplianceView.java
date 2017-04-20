@@ -31,7 +31,7 @@ import org.osc.core.broker.service.ListDistributedApplianceService;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
-import org.osc.core.broker.service.dto.job.ObjectType;
+import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.ConformRequest;
@@ -193,7 +193,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         .getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(new LockObjectDto(distributedApplianceDto.getMcId(),
                         distributedApplianceDto.getApplianceManagerConnectorName(),
-                        ObjectType.APPLIANCE_MANAGER_CONNECTOR));
+                        ObjectTypeDto.APPLIANCE_MANAGER_CONNECTOR));
             }
         });
 
@@ -242,7 +242,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                 VirtualSystemDto vsDto = DistributedApplianceView.this.childContainer.getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(
                         new LockObjectDto(vsDto.getVcId(), vsDto.getVirtualizationConnectorName(),
-                                ObjectType.VIRTUALIZATION_CONNECTOR));
+                                ObjectTypeDto.VIRTUALIZATION_CONNECTOR));
             }
         });
 

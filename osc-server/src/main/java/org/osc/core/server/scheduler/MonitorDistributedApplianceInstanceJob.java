@@ -23,12 +23,12 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.osc.core.broker.service.dto.job.ObjectType;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.quartz.Job;

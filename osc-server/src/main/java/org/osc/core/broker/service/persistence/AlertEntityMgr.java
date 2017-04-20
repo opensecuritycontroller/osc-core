@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.ObjectType;
 import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.service.alert.AlertDto;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
+import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 
 public class AlertEntityMgr {
 
@@ -37,7 +38,7 @@ public class AlertEntityMgr {
         alert.setType(dto.getEventType());
         if (dto.getObject() != null) {
             alert.setObjectId(dto.getObject().getId());
-            alert.setObjectType(ObjectType.valueOf(dto.getObject().getType().name()));
+            alert.setObjectType(ObjectType.valueOf(dto.getObject().getType().getName()));
             alert.setObjectName(dto.getObject().getName());
         }
         alert.setSeverity(dto.getSeverity());
@@ -55,9 +56,8 @@ public class AlertEntityMgr {
         dto.setEventType(alert.getType());
 
         if (alert.getObjectId() != null) {
-            LockObjectReference object = new LockObjectReference(alert.getObjectId(), alert.getObjectName(),
-                    org.osc.core.broker.service.dto.job.ObjectType.valueOf(
-                            alert.getObjectType().name()));
+            LockObjectDto object = new LockObjectDto(alert.getObjectId(), alert.getObjectName(),
+                    new ObjectTypeDto(alert.getObjectType().name(), alert.getObjectType().toString()));
             dto.setObject(object);
         }
         dto.setSeverity(alert.getSeverity());

@@ -291,60 +291,60 @@ public class ViewUtil {
     public static Object generateObjectLink(LockObjectDto or) {
         String viewFragment;
         String paramObjectId;
-        switch (or.getType()) {
-        case VIRTUALIZATION_CONNECTOR:
+        switch (or.getType().getName()) {
+        case "VIRTUALIZATION_CONNECTOR":
             viewFragment = MainUI.VIEW_FRAGMENT_VIRTUALIZATION_CONNECTORS;
             paramObjectId = VC_ID_PARAM_KEY;
             break;
-        case APPLIANCE_MANAGER_CONNECTOR:
+        case "APPLIANCE_MANAGER_CONNECTOR":
             viewFragment = MainUI.VIEW_FRAGMENT_SECURITY_MANAGER_CONNECTORS;
             paramObjectId = MC_ID_PARAM_KEY;
             break;
-        case DISTRIBUTED_APPLIANCE:
+        case "DISTRIBUTED_APPLIANCE":
             viewFragment = MainUI.VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES;
             paramObjectId = DA_ID_PARAM_KEY;
             break;
-        case VIRTUAL_SYSTEM:
+        case "VIRTUAL_SYSTEM":
             viewFragment = MainUI.VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES;
             paramObjectId = VS_ID_PARAM_KEY;
             break;
-        case DEPLOYMENT_SPEC:
+        case "DEPLOYMENT_SPEC":
             viewFragment = MainUI.VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES;
             paramObjectId = DS_ID_PARAM_KEY;
             break;
-        case DISTRIBUTED_APPLIANCE_INSTANCE:
+        case "DISTRIBUTED_APPLIANCE_INSTANCE":
             viewFragment = MainUI.VIEW_FRAGMENT_APPLIANCE_INSTANCES;
             paramObjectId = DAI_ID_PARAM_KEY;
             break;
-        case SECURITY_GROUP:
+        case "SECURITY_GROUP":
             viewFragment = MainUI.VIEW_FRAGMENT_VIRTUALIZATION_CONNECTORS;
             paramObjectId = SG_ID_PARAM_KEY;
             break;
-        case SECURITY_GROUP_INTERFACE:
+        case "SECURITY_GROUP_INTERFACE":
             viewFragment = MainUI.VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES;
             paramObjectId = SGI_ID_PARAM_KEY;
             break;
-        case JOB:
+        case "JOB":
             viewFragment = MainUI.VIEW_FRAGMENT_JOBS;
             paramObjectId = JOB_ID_PARAM_KEY;
             break;
-        case EMAIL:
+        case "EMAIL":
             viewFragment = MainUI.VIEW_FRAGMENT_SERVER;
             paramObjectId = EMAIL_PARAM_KEY;
             break;
-        case SSL_CONFIGURATION:
+        case "SSL_CONFIGURATION":
             viewFragment = MainUI.VIEW_FRAGMENT_SERVER;
             paramObjectId = SSL_CONFIGURATION_PARAM_KEY;
             break;
-        case NETWORK:
+        case "NETWORK":
             viewFragment = MainUI.VIEW_FRAGMENT_SERVER;
             paramObjectId = NETWORK_PARAM_KEY;
             break;
-        case ARCHIVE:
+        case "ARCHIVE":
             viewFragment = MainUI.VIEW_FRAGMENT_SERVER;
             paramObjectId = ARCHIVE_PARAM_KEY;
             break;
-        case ALERT:
+        case "ALERT":
             viewFragment = MainUI.VIEW_FRAGMENT_ALERTS;
             paramObjectId = ALERT_ID_PARAM_KEY;
             break;

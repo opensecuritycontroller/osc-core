@@ -27,7 +27,7 @@ import org.osc.core.broker.service.ListDistributedApplianceInstanceService;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
-import org.osc.core.broker.service.dto.job.ObjectType;
+import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -79,7 +79,7 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
                         .getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(new LockObjectDto(daiDto.getMcId(),
                         daiDto.getApplianceManagerConnectorName(),
-                        ObjectType.APPLIANCE_MANAGER_CONNECTOR));
+                        ObjectTypeDto.APPLIANCE_MANAGER_CONNECTOR));
             }
         });
 
@@ -90,7 +90,7 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
                         .getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(new LockObjectDto(daiDto.getVcId(),
                         daiDto.getVirtualConnectorName(),
-                        ObjectType.VIRTUALIZATION_CONNECTOR));
+                        ObjectTypeDto.VIRTUALIZATION_CONNECTOR));
             }
         });
 
@@ -101,7 +101,7 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
                         .getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(new LockObjectDto(daiDto.getVirtualsystemId(),
                         daiDto.getDistributedApplianceName(),
-                        ObjectType.VIRTUAL_SYSTEM));
+                        ObjectTypeDto.VIRTUAL_SYSTEM));
             }
         });
 

@@ -26,7 +26,7 @@ import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
-import org.osc.core.broker.service.dto.job.ObjectType;
+import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.ListResponse;
@@ -117,7 +117,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
                         .getBean();
                 if (dto.getSecurityGroupId() != null) {
                     return ViewUtil.generateObjectLink(new LockObjectDto(dto.getSecurityGroupId(), dto
-                            .getSecurityGroupName(), ObjectType.SECURITY_GROUP));
+                            .getSecurityGroupName(), ObjectTypeDto.SECURITY_GROUP));
                 } else {
                     return null;
                 }

@@ -33,7 +33,7 @@ import org.osc.core.broker.model.entities.job.JobObject;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
-import org.osc.core.broker.service.dto.job.ObjectType;
+import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.transaction.control.ScopedWorkException;
@@ -62,7 +62,7 @@ public class JobEntityManager {
         Set<LockObjectDto> objects = new HashSet<LockObjectDto>();
         for (JobObject jo : job.getObjects()) {
             objects.add(new LockObjectDto(jo.getObjectId(), jo.getName(),
-                    ObjectType.valueOf(jo.getObjectType().name())));
+                    new ObjectTypeDto(jo.getObjectType().name(), jo.getObjectType().toString())));
         }
         return objects;
     }
