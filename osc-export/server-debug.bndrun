@@ -85,8 +85,10 @@ x-runproperties.debug: \
 	org.hibernate.osgi;version='[5.2.8,5.2.9)',\
 	io.swagger.annotations;version='[1.5.13,1.5.14)',\
 	osc-service-api;version='[1.0.0,1.0.1)',\
+	openstack-nova;version='[2.0.0,2.0.1)',\
 	jclouds-compute;version='[2.0.0,2.0.1)',\
 	jclouds-core;version='[2.0.0,2.0.1)',\
+	jclouds-scriptbuilder;version='[2.0.0,2.0.1)',\
+	openstack-glance;version='[2.0.0,2.0.1)',\
 	openstack-neutron;version='[2.0.0,2.0.1)',\
-	openstack-nova;version='[2.0.0,2.0.1)',\
 	org.glassfish.jersey.media.jersey-media-jaxb;version='[2.25.0,2.25.1)'
