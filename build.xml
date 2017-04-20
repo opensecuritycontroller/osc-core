@@ -85,7 +85,7 @@
 	<target name="checkImagesTocopy">
 		<condition property="isvmdkImage">
 			<OR>
-				<equals arg1="vmdk" arg2="${image-format}" />
+				<equals arg1="vmdk_only" arg2="${image-format}" />
 				<equals arg1="qcow2-vmdk" arg2="${image-format}" />
 			</OR>
 		</condition>
