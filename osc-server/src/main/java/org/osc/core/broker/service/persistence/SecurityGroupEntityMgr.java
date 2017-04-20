@@ -78,7 +78,7 @@ public class SecurityGroupEntityMgr {
         Join<DistributedAppliance, SecurityGroupInterface> sgi = root.join("virtualSystems").join("securityGroupInterfaces");
         Join<SecurityGroupInterface, SecurityGroup> sgEntity = sgi.join("securityGroups");
 
-        query = query.select(sgEntity.get("name"))
+        query = query.select(root.get("name"))
                 .where(cb.equal(sgEntity.get("id"), dto.getId()))
                 .orderBy(cb.asc(sgi.get("order")));
 
