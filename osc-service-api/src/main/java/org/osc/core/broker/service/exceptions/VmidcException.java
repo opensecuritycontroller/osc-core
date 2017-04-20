@@ -17,10 +17,11 @@
 package org.osc.core.broker.service.exceptions;
 
 public class VmidcException extends Exception {
+    private static final String OPEN_SECURITY_CONTROLLER = "Open Security Controller: ";
     private static final long serialVersionUID = 1L;
 
     public VmidcException(String s) {
-        super("Open Security Controller: " + s);
+        super(OPEN_SECURITY_CONTROLLER + s);
     }
 
     public VmidcException(Throwable e) {
