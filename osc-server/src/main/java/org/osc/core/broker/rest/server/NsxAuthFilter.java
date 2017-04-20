@@ -22,19 +22,24 @@ import javax.ws.rs.ext.Provider;
 
 import org.osc.core.rest.annotations.NsxAuth;
 import org.osc.core.util.AuthUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import java.io.IOException;
 
+@Component(service = NsxAuthFilter.class)
 @Provider
 @NsxAuth
 public class NsxAuthFilter implements ContainerRequestFilter {
+    @Reference
+    PasswordUtil passwordUtil;
 
     public static final String VMIDC_NSX_LOGIN = "nsx";
     public static String VMIDC_NSX_PASS = "";
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
-        AuthUtil.authenticate(containerRequestContext, VMIDC_NSX_LOGIN, VMIDC_NSX_PASS);
+        AuthUtil.authenticate(containerRequestContext, RestConstants.VMIDC_NSX_LOGIN, this.passwordUtil.getVmidcNsxPass());
     }
 
 }

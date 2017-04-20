@@ -51,6 +51,9 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
     @Reference
     private PasswordChangePropagateNsxMetaTask passwordChangePropagateNsxMetaTask;
 
+    @Reference
+    private PasswordUtil passwordUtil;
+
     @Override
     public UpdateUserResponse exec(UpdateUserRequest request, EntityManager em) throws Exception {
         OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
@@ -69,13 +72,13 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
         // If user changes password, need to reflect it in auth-filter objects
         if (user.getLoginName().equals(OscAuthFilter.OSC_DEFAULT_LOGIN)) {
 
-            OscAuthFilter.OSC_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
+            this.passwordUtil.setOscDefaultPass(EncryptionUtil.decryptAESCTR(user.getPassword()));
             user.setRole(RoleType.ADMIN);
             response.setJobId(startPasswordPropagateMgrJob());
 
         } else if (user.getLoginName().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
 
-            NsxAuthFilter.VMIDC_NSX_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
+            this.passwordUtil.setVmidcNsxPass(EncryptionUtil.decryptAESCTR(user.getPassword()));
             user.setRole(RoleType.SYSTEM_NSX);
             response.setJobId(startPasswordPropagateNsxJob());
         }

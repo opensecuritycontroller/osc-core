@@ -30,17 +30,26 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = RegisterMgrPolicyNotificationTask.class)
 public class RegisterMgrPolicyNotificationTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(RegisterMgrPolicyNotificationTask.class);
 
+    @Reference
+    private PasswordUtil passwordUtil;
+
     private ApplianceManagerConnector mc;
 
-    public RegisterMgrPolicyNotificationTask(ApplianceManagerConnector mc) {
-        this.mc = mc;
-        this.name = getName();
+    public RegisterMgrPolicyNotificationTask create(ApplianceManagerConnector mc) {
+        RegisterMgrPolicyNotificationTask task = new RegisterMgrPolicyNotificationTask();
+        task.mc = mc;
+        task.name = task.getName();
+        task.passwordUtil = this.passwordUtil;
+        return task;
     }
 
     @Override
@@ -52,8 +61,8 @@ public class RegisterMgrPolicyNotificationTask extends TransactionalTask {
         ManagerCallbackNotificationApi mgrApi = null;
         try {
             mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(this.mc);
-            mgrApi.createPolicyGroupNotificationRegistration(Server.getApiPort(), OscAuthFilter.OSC_DEFAULT_LOGIN,
-                    OscAuthFilter.OSC_DEFAULT_PASS);
+            mgrApi.createPolicyGroupNotificationRegistration(Server.getApiPort(), RestConstants.OSC_DEFAULT_LOGIN,
+                    this.passwordUtil.getOscDefaultPass());
             this.mc.setLastKnownNotificationIpAddress(ServerUtil.getServerIP());
             OSCEntityManager.update(em, this.mc);
         } finally {
