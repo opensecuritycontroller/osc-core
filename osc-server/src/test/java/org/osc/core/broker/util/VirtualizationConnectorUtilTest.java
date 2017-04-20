@@ -256,8 +256,7 @@ public class VirtualizationConnectorUtilTest {
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
 		VirtualizationConnector spyVc = spy(vc);
 		VimUtils utils = mock(VimUtils.class);
-		this.util.setVimUtils(utils);
-
+		PowerMockito.whenNew(VimUtils.class).withAnyArguments().thenReturn(utils);
 
 		// Act.
 		this.util.checkVmwareConnection(spyRequest, spyVc);

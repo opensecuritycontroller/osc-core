@@ -16,10 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Map;
-
+import com.rabbitmq.client.ShutdownSignalException;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -39,21 +36,18 @@ import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class VirtualizationConnectorUtil {
 
     private static final Logger LOG = Logger.getLogger(VirtualizationConnectorUtil.class);
 
-    private VimUtils vimUtils = null;
     private X509TrustManagerFactory managerFactory = null;
     private OsRabbitMQClient rabbitClient = null;
     private Endpoint endPoint = null;
     private JCloudKeyStone keystoneAPi = null;
-
-    public void setVimUtils(VimUtils vimUtils) {
-        this.vimUtils = vimUtils;
-    }
 
     /**
      * Checks connection for vmware.
@@ -90,9 +84,7 @@ public class VirtualizationConnectorUtil {
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "vmware");
                 try {
-                    if (this.vimUtils == null) {
-                        this.vimUtils = new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(), request.getDto().getProviderPassword());
-                    }
+                    new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(), request.getDto().getProviderPassword());
                 } catch (RemoteException remoteException) {
                     errorTypeException = new ErrorTypeException(remoteException, ErrorType.PROVIDER_EXCEPTION);
                     LOG.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, " +

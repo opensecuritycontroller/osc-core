@@ -16,16 +16,16 @@
  *******************************************************************************/
 package org.osc.core.rest.client.crypto;
 
-import org.apache.log4j.Logger;
-import org.osc.core.util.KeyStoreProvider;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-public class SslContextProvider {
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+
+import org.apache.log4j.Logger;
+
+public final class SslContextProvider {
 
     private static final Logger LOG = Logger.getLogger(SslContextProvider.class);
 
@@ -35,15 +35,15 @@ public class SslContextProvider {
         // load SSL context
         TrustManager[] trustManager = new TrustManager[]{X509TrustManagerFactory.getInstance()};
         try {
-            sslContext = SSLContext.getInstance("TLSv1.2");
-            sslContext.init(null, trustManager, new SecureRandom());
+            this.sslContext = SSLContext.getInstance("TLSv1.2");
+            this.sslContext.init(null, trustManager, new SecureRandom());
 
             // disable SSL session caching - we load SSL certificates dinamically so we need to ensure
             // that we have up to date cached certificates list
-            sslContext.getClientSessionContext().setSessionCacheSize(1);
-            sslContext.getClientSessionContext().setSessionTimeout(1);
-            sslContext.getServerSessionContext().setSessionCacheSize(1);
-            sslContext.getServerSessionContext().setSessionTimeout(1);
+            this.sslContext.getClientSessionContext().setSessionCacheSize(1);
+            this.sslContext.getClientSessionContext().setSessionTimeout(1);
+            this.sslContext.getServerSessionContext().setSessionCacheSize(1);
+            this.sslContext.getServerSessionContext().setSessionTimeout(1);
 
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             LOG.error("Encountering security exception in SSL context", e);
@@ -71,6 +71,6 @@ public class SslContextProvider {
      * @return SSLContext
      */
     public SSLContext getSSLContext() {
-        return sslContext;
+        return this.sslContext;
     }
 }
