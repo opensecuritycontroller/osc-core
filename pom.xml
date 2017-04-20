@@ -95,7 +95,7 @@
 	</dependencyManagement>
 	<profiles>
 		<profile>
-			<!-- The 'default' profile includes only OSC projects and plugins -->
+			<!-- The 'default' profile includes only osc-core projects -->
 			<id>default</id>
 			<modules>
 				<module>osc-tools</module>
@@ -117,7 +117,7 @@
 			</activation>
 		</profile>
 		<profile>
-			<!-- The 'all' profile includes all projects and supported plugins  
+			<!-- The 'all' profile includes osc-core projects, SDK/API projects, sample plugins, and possible partner plugins  
 				Example usage: 'mvn install -Pall' -->
 			<id>all</id>
 			<modules>

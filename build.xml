@@ -55,7 +55,7 @@
 		<delete file="/tmp/build_marker" />
 	</target>
 
-	<target name="ovfCopy" depends="repoVersion,prodVersion,createBuildDir,copyPlugins,copyImages" description="Copy result files to build dir">
+	<target name="ovfCopy" depends="repoVersion,prodVersion,createBuildDir,copyServerUpgradeBundle,copyPlugins,copyImages" description="Copy result files to build dir">
 		<copy file="osc-server-bom/OSC.ovf" tofile="Build${buildNumber}/OSC-${buildNumber}.ovf" />
 		<replace file="Build${buildNumber}/OSC-${buildNumber}.ovf" token="$OSC_VERSION" value="${productVersion}" />
 		<zip destfile="Build${buildNumber}/OSC-${productVersion}_Build${buildNumber}.zip">
@@ -70,8 +70,11 @@
 		<mkdir dir="Build${buildNumber}" />
 	</target>
 
-	<target name="copyPlugins">
+	<target name="copyServerUpgradeBundle">
 		<copy file="target/serverUpgradeBundle.zip" tofile="Build${buildNumber}/serverUpgradeBundle-${buildNumber}.zip" />
+	</target>
+		
+	<target name="copyPlugins" if:true="${all}">
 		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" failonerror="false" />
 		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" failonerror="false" />
 		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" failonerror="false" />
