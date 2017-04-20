@@ -26,7 +26,7 @@ import javax.xml.bind.Marshaller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.osc.core.rest.client.annotations.VmidcLogHidden;
+import org.osc.core.broker.service.annotations.VmidcLogHidden;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

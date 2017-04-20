@@ -29,7 +29,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZ
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.Host;
 import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate;
-import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -40,6 +39,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
+import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 
 public class UpdateDeploymentSpecService extends
@@ -96,7 +96,7 @@ public class UpdateDeploymentSpecService extends
 
     @Override
     protected void validate(EntityManager em, DeploymentSpecDto dto) throws Exception {
-        BaseDto.checkForNullId(dto);
+        BaseDtoValidator.checkForNullId(dto);
 
         this.ds = em.find(DeploymentSpec.class, dto.getId());
         if (this.ds == null) {

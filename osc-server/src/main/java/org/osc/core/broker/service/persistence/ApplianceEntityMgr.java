@@ -23,7 +23,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.osc.core.broker.model.entities.appliance.Appliance;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceDto;
 
 
@@ -45,7 +44,7 @@ public class ApplianceEntityMgr {
         // transform from dto to entity
         a.setId(dto.getId());
         a.setModel(dto.getModel());
-        a.setManagerType(dto.getManagerType().getValue());
+        a.setManagerType(dto.getManagerType());
         a.setManagerSoftwareVersion(dto.getManagerVersion());
     }
 
@@ -54,8 +53,8 @@ public class ApplianceEntityMgr {
         // transform from entity to dto
         dto.setId(a.getId());
         dto.setModel(a.getModel());
-        dto.setManagerType(ManagerType.fromText(a.getManagerType().toString()));
-        dto.setManagerVersion(a.getManagerSoftwareVersion().toString());
+        dto.setManagerType(a.getManagerType());
+        dto.setManagerVersion(a.getManagerSoftwareVersion());
     }
 
     public static Appliance findById(EntityManager em, Long id) {

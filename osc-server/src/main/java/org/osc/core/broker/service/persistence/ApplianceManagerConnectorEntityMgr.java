@@ -16,16 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
@@ -50,13 +49,17 @@ public class ApplianceManagerConnectorEntityMgr {
         // Transform from dto to entity
         mc.setId(dto.getId());
         mc.setName(dto.getName());
-        mc.setManagerType(dto.getManagerType().getValue());
-        mc.setServiceType(ManagerApiFactory.getServiceName(dto.getManagerType()));
+        mc.setManagerType(dto.getManagerType());
+        mc.setServiceType(ManagerApiFactory.getServiceName(
+                ManagerType.fromText(dto.getManagerType())));
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
         mc.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
         mc.setApiKey(dto.getApiKey());
-        mc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
+        mc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
+                .stream()
+                .map(SslCertificateAttrEntityMgr::createEntity)
+                .collect(toSet()));
     }
 
     public static void fromEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) throws EncryptionException {
@@ -64,17 +67,19 @@ public class ApplianceManagerConnectorEntityMgr {
         // transform from entity to dto
         dto.setId(mc.getId());
         dto.setName(mc.getName());
-        dto.setManagerType(ManagerType.fromText(mc.getManagerType()));
+        dto.setManagerType(mc.getManagerType());
         dto.setIpAddress(mc.getIpAddress());
         dto.setUsername(mc.getUsername());
         dto.setPassword(EncryptionUtil.decryptAESCTR(mc.getPassword()));
         if (mc.getLastJob() != null) {
-            dto.setLastJobStatus(JobStatus.valueOf(mc.getLastJob().getStatus().name()));
-            dto.setLastJobState(JobState.valueOf(mc.getLastJob().getState().name()));
+            dto.setLastJobStatus(mc.getLastJob().getStatus().name());
+            dto.setLastJobState(mc.getLastJob().getState().name());
             dto.setLastJobId(mc.getLastJob().getId());
         }
         dto.setApiKey(mc.getApiKey());
-        dto.setSslCertificateAttrSet(mc.getSslCertificateAttrSet().stream().collect(Collectors.toSet()));
+        dto.setSslCertificateAttrSet(mc.getSslCertificateAttrSet().stream()
+                .map(SslCertificateAttrEntityMgr::fromEntity)
+                .collect(toSet()));
     }
 
     public static ApplianceManagerConnector findById(EntityManager em, Long id) {

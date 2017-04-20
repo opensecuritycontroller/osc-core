@@ -16,16 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.view;
 
-import com.vaadin.data.util.BeanContainer;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.CustomTable;
-import com.vaadin.ui.CustomTable.ColumnGenerator;
-import com.vaadin.ui.Notification;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
@@ -44,9 +42,13 @@ import org.osc.core.broker.window.add.AddManagerConnectorWindow;
 import org.osc.core.broker.window.delete.DeleteManagerConnectorWindow;
 import org.osc.core.broker.window.update.UpdateManagerConnectorWindow;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import com.vaadin.data.util.BeanContainer;
+import com.vaadin.data.util.BeanItem;
+import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.CustomTable;
+import com.vaadin.ui.CustomTable.ColumnGenerator;
+import com.vaadin.ui.Notification;
 
 public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnectorDto, PolicyDto> {
     private static final String MC_HELP_GUID = "GUID-14BF1C4E-4729-437A-BF60-A53EED74009C.html";
@@ -121,8 +123,9 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
                 try {
                     return ViewUtil.generateMgrLink(
                             managerConnectorDto.getIpAddress(),
-                            ManagerConnectorView.this.apiFactoryService.createApplianceManagerApi(managerConnectorDto.getManagerType()).getManagerUrl(
-                                    managerConnectorDto.getIpAddress()));
+                            ManagerConnectorView.this.apiFactoryService.createApplianceManagerApi(
+                                    ManagerType.fromText(managerConnectorDto.getManagerType()))
+                                .getManagerUrl(managerConnectorDto.getIpAddress()));
                 } catch (Exception e) {
                     return ViewUtil.generateMgrLink("http://", managerConnectorDto.getIpAddress(), "", "");
                 }

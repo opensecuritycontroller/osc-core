@@ -61,6 +61,7 @@ import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr
 import org.osc.core.broker.service.persistence.AvailabilityZoneEntityMgr;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
+import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.JobEntityManager;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
@@ -139,7 +140,7 @@ ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> {
         } else if (entityName.equals("DistributedApplianceInstance")) {
             DistributedApplianceInstance entity = getEntity(entityId, entityName, DistributedApplianceInstance.class,
                     em);
-            DistributedApplianceInstanceDto dto = new DistributedApplianceInstanceDto(entity);
+            DistributedApplianceInstanceDto dto = DistributedApplianceInstanceEntityMgr.fromEntity(entity);
             res.setDto((R) dto);
         } else if (entityName.equals("VirtualSystem")) {
             VirtualSystem entity = getEntity(entityId, entityName, VirtualSystem.class, em);

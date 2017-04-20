@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.nsx.model;
 
-import org.osc.core.rest.client.annotations.VmidcLogHidden;
+import org.osc.core.broker.service.annotations.VmidcLogHidden;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
 
 public class ServiceManager implements ServiceManagerElement {

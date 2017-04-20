@@ -26,8 +26,6 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -67,8 +65,8 @@ public class DistributedApplianceEntityMgr {
         dto.setApplianceManagerConnectorName(da.getApplianceManagerConnector().getName());
         dto.setMcId(da.getApplianceManagerConnector().getId());
         if (da.getLastJob() != null) {
-            dto.setLastJobStatus(JobStatus.valueOf(da.getLastJob().getStatus().name()));
-            dto.setLastJobState(JobState.valueOf(da.getLastJob().getState().name()));
+            dto.setLastJobStatus(da.getLastJob().getStatus().name());
+            dto.setLastJobState(da.getLastJob().getState().name());
             dto.setLastJobId(da.getLastJob().getId());
         }
         dto.setSecretKey(EncryptionUtil.decryptAESCTR(da.getMgrSecretKey()));

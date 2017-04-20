@@ -34,14 +34,15 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
+import org.osc.core.broker.service.validator.DeploymentSpecDtoValidator;
 
 public abstract class BaseDeploymentSpecService<I extends Request, O extends Response> extends ServiceDispatcher<I, O> {
 
     protected VirtualSystem vs;
 
     protected void validate(EntityManager em, DeploymentSpecDto dto) throws Exception {
-        DeploymentSpecDto.checkForNullFields(dto);
-        DeploymentSpecDto.checkFieldLength(dto);
+        DeploymentSpecDtoValidator.checkForNullFields(dto);
+        DeploymentSpecDtoValidator.checkFieldLength(dto);
 
         this.vs = VirtualSystemEntityMgr.findById(em, dto.getParentId());
 

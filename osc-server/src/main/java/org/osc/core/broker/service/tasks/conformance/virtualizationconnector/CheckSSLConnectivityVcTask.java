@@ -16,17 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
+import static java.util.stream.Collectors.toSet;
+
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
+import org.osc.core.broker.service.dto.VirtualizationType;
+import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.tasks.BaseTask;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.util.EncryptionUtil;
-
-import java.util.Set;
 
 public class CheckSSLConnectivityVcTask extends BaseTask {
     private static final Logger log = Logger.getLogger(CheckSSLConnectivityVcTask.class);
@@ -76,7 +79,9 @@ public class CheckSSLConnectivityVcTask extends BaseTask {
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
         dto.setProviderPassword(EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
-        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet());
+        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
+                .map(SslCertificateAttrEntityMgr::fromEntity)
+                .collect(toSet()));
         dto.setAdminTenantName(vc.getProviderAdminTenantName());
         return request;
     }

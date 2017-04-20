@@ -23,8 +23,8 @@ import java.util.Map;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
+import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.request.DryRunRequest;
 
 public class VirtualizationConnectorServiceData {
@@ -170,8 +170,7 @@ public class VirtualizationConnectorServiceData {
 
          if (controllerTypeStr != null && (!controllerTypeStr.isEmpty())) {
              ControllerType.addType(controllerTypeStr);
-             ControllerType controllerType = ControllerType.fromText(controllerTypeStr);
-             vcDto.setControllerType(controllerType);
+             vcDto.setControllerType(controllerTypeStr);
          }
     }
 

@@ -30,10 +30,8 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
-import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.view.MainUI;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -265,7 +263,7 @@ public class ViewUtil {
      *
      * @return link to job page if both last Job status and the last Job id are not null
      */
-    public static Object generateJobLink(JobStatus lastJobStatus, JobState lastJobState, Long lastJobId) {
+    public static Object generateJobLink(String lastJobStatus, String lastJobState, Long lastJobId) {
         if (lastJobStatus != null && lastJobId != null) {
             return createJobLink(VmidcMessages.getString(VmidcMessages_.JOB_LINK_CAPTION_ID,
                     resolveJobStateAndStatus(lastJobStatus, lastJobState), lastJobId), lastJobId);
@@ -290,63 +288,63 @@ public class ViewUtil {
         return mgrLink;
     }
 
-    public static Object generateObjectLink(LockObjectReference or) {
+    public static Object generateObjectLink(LockObjectDto or) {
         String viewFragment;
         String paramObjectId;
-        switch (or.getType()) {
-        case VIRTUALIZATION_CONNECTOR:
+        switch (or.getType().getName()) {
+        case "VIRTUALIZATION_CONNECTOR":
             viewFragment = MainUI.VIEW_FRAGMENT_VIRTUALIZATION_CONNECTORS;
             paramObjectId = VC_ID_PARAM_KEY;
             break;
-        case APPLIANCE_MANAGER_CONNECTOR:
+        case "APPLIANCE_MANAGER_CONNECTOR":
             viewFragment = MainUI.VIEW_FRAGMENT_SECURITY_MANAGER_CONNECTORS;
             paramObjectId = MC_ID_PARAM_KEY;
             break;
-        case DISTRIBUTED_APPLIANCE:
+        case "DISTRIBUTED_APPLIANCE":
             viewFragment = MainUI.VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES;
             paramObjectId = DA_ID_PARAM_KEY;
             break;
-        case VIRTUAL_SYSTEM:
+        case "VIRTUAL_SYSTEM":
             viewFragment = MainUI.VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES;
             paramObjectId = VS_ID_PARAM_KEY;
             break;
-        case DEPLOYMENT_SPEC:
+        case "DEPLOYMENT_SPEC":
             viewFragment = MainUI.VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES;
             paramObjectId = DS_ID_PARAM_KEY;
             break;
-        case DISTRIBUTED_APPLIANCE_INSTANCE:
+        case "DISTRIBUTED_APPLIANCE_INSTANCE":
             viewFragment = MainUI.VIEW_FRAGMENT_APPLIANCE_INSTANCES;
             paramObjectId = DAI_ID_PARAM_KEY;
             break;
-        case SECURITY_GROUP:
+        case "SECURITY_GROUP":
             viewFragment = MainUI.VIEW_FRAGMENT_VIRTUALIZATION_CONNECTORS;
             paramObjectId = SG_ID_PARAM_KEY;
             break;
-        case SECURITY_GROUP_INTERFACE:
+        case "SECURITY_GROUP_INTERFACE":
             viewFragment = MainUI.VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES;
             paramObjectId = SGI_ID_PARAM_KEY;
             break;
-        case JOB:
+        case "JOB":
             viewFragment = MainUI.VIEW_FRAGMENT_JOBS;
             paramObjectId = JOB_ID_PARAM_KEY;
             break;
-        case EMAIL:
+        case "EMAIL":
             viewFragment = MainUI.VIEW_FRAGMENT_SERVER;
             paramObjectId = EMAIL_PARAM_KEY;
             break;
-        case SSL_CONFIGURATION:
+        case "SSL_CONFIGURATION":
             viewFragment = MainUI.VIEW_FRAGMENT_SERVER;
             paramObjectId = SSL_CONFIGURATION_PARAM_KEY;
             break;
-        case NETWORK:
+        case "NETWORK":
             viewFragment = MainUI.VIEW_FRAGMENT_SERVER;
             paramObjectId = NETWORK_PARAM_KEY;
             break;
-        case ARCHIVE:
+        case "ARCHIVE":
             viewFragment = MainUI.VIEW_FRAGMENT_SERVER;
             paramObjectId = ARCHIVE_PARAM_KEY;
             break;
-        case ALERT:
+        case "ALERT":
             viewFragment = MainUI.VIEW_FRAGMENT_ALERTS;
             paramObjectId = ALERT_ID_PARAM_KEY;
             break;
@@ -366,12 +364,12 @@ public class ViewUtil {
         return jobLink;
     }
 
-    public static Object generateObjectLink(Set<LockObjectReference> ors) {
+    public static Object generateObjectLink(Set<LockObjectDto> ors) {
         if (ors == null || ors.isEmpty()) {
             return null;
         }
 
-        LockObjectReference or = (LockObjectReference) ors.toArray()[0];
+        LockObjectDto or = (LockObjectDto) ors.toArray()[0];
         return generateObjectLink(or);
     }
 
@@ -415,11 +413,22 @@ public class ViewUtil {
         return paramMap;
     }
 
-    private static String resolveJobStateAndStatus(JobStatus lastJobStatus, JobState lastJobState) {
-        if (lastJobStatus.isSuccessful() && !lastJobState.isTerminalState()) {
+    private static String resolveJobStateAndStatus(String lastJobStatus, String lastJobState) {
+        if (isJobSuccessful(lastJobStatus) && !isJobComplete(lastJobState)) {
             return lastJobState.toString();
         }
         return lastJobStatus.toString();
+    }
+
+    private static final String JOB_COMPLETE = "COMPLETED";
+    private static final String JOB_SUCCESSFUL = "PASSED";
+
+    public static boolean isJobComplete(String jobState) {
+        return JOB_COMPLETE.equals(jobState);
+    }
+
+    public static boolean isJobSuccessful(String jobStatus) {
+        return JOB_SUCCESSFUL.equals(jobStatus);
     }
 
     private static Link createJobLink(String caption, Long lastJobId) {

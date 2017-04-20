@@ -115,7 +115,7 @@ public class AddUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 addRequest.setLoginName(this.loginName.getValue().trim());
                 addRequest.setEmail(this.email.getValue().trim());
                 addRequest.setPassword(this.password.getValue());
-                addRequest.setRole(RoleType.valueOf(this.role.getValue().toString()));
+                addRequest.setRole(this.role.getValue().toString());
 
                 // calling add service
                 AddUserService addService = new AddUserService();

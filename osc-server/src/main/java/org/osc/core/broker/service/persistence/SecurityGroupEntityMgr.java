@@ -28,8 +28,6 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 
 import org.apache.commons.lang.StringUtils;
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -63,8 +61,8 @@ public class SecurityGroupEntityMgr {
         dto.setTenantId(entity.getTenantId());
         dto.setTenantName(entity.getTenantName());
         if (entity.getLastJob() != null) {
-            dto.setLastJobStatus(JobStatus.valueOf(entity.getLastJob().getStatus().name()));
-            dto.setLastJobState(JobState.valueOf(entity.getLastJob().getState().name()));
+            dto.setLastJobStatus(entity.getLastJob().getStatus().name());
+            dto.setLastJobState(entity.getLastJob().getState().name());
             dto.setLastJobId(entity.getLastJob().getId());
         }
     }

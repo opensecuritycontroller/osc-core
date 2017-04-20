@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.util.EncryptionUtil;
@@ -40,7 +41,8 @@ public class UserEntityMgr {
         user.setEmail(dto.getEmail());
         //default value for phone
         user.setPhone("");
-        user.setRole(dto.getRole());
+        String role = dto.getRole();
+        user.setRole(role == null ? null : RoleType.valueOf(role));
     }
 
     public static void fromEntity(User user, UserDto dto) throws EncryptionException {
@@ -51,7 +53,7 @@ public class UserEntityMgr {
         dto.setLoginName(user.getLoginName());
         dto.setPassword(EncryptionUtil.decryptAESCTR(user.getPassword()));
         dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole());
+        dto.setRole(user.getRole().name());
 
     }
 }

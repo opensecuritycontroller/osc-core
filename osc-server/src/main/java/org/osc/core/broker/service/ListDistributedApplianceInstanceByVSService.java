@@ -36,7 +36,7 @@ public class ListDistributedApplianceInstanceByVSService extends
         List<DistributedApplianceInstanceDto> dtoList = new ArrayList<DistributedApplianceInstanceDto>();
         for (DistributedApplianceInstance dai : DistributedApplianceInstanceEntityMgr.listByVsId(em,
                 request.getId())) {
-            DistributedApplianceInstanceDto dto = new DistributedApplianceInstanceDto(dai);
+            DistributedApplianceInstanceDto dto = DistributedApplianceInstanceEntityMgr.fromEntity(dai);
             dtoList.add(dto);
         }
         this.response.setList(dtoList);
