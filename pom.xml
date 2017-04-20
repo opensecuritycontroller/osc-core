@@ -94,21 +94,12 @@
 		</dependencies>
 	</dependencyManagement>
     <profiles>
-        <profile>
+       <profile>
             <id>default</id>
             <modules>
-                <module>../sdn-controller-api</module>
-                <module>../security-mgr-api</module>
-                <module>../vmware-nsx-api</module>
-
-                <module>../vmware-nsx-plugin</module>
-                <module>../sdn-controller-nsc-plugin</module>
-                <module>../security-mgr-nsm-plugin</module>
-                <module>../security-mgr-smc-plugin</module>
-                <module>../security-mgr-sample-plugin</module>
-                
                 <module>osc-tools</module>
                 <module>osc-common</module>
+                <module>osc-domain</module>
                 <module>osc-server</module>
 
                 <module>osc-uber</module>
@@ -125,11 +116,20 @@
             </activation>
         </profile>
         <profile>
-            <id>useGit</id>
+            <id>all</id>
             <modules>
+                <module>../sdn-controller-api</module>
+                <module>../security-mgr-api</module>
+                <module>../vmware-nsx-api</module>
+
+                <module>../vmware-nsx-plugin</module>
+                <module>../sdn-controller-nsc-plugin</module>
+                <module>../security-mgr-nsm-plugin</module>
+                <module>../security-mgr-smc-plugin</module>
+                <module>../security-mgr-sample-plugin</module>
+                
                 <module>osc-tools</module>
                 <module>osc-common</module>
-                <module>osc-domain</module>
                 <module>osc-server</module>
 
                 <module>osc-uber</module>
@@ -172,7 +172,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- This plugin is used to integrate CheckStyle into the build process. -->
+			<!-- This plugin is used to integrate CheckStyle into the build process. 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
@@ -195,12 +195,12 @@
 							<suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
 							<suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
 							<includeTestSourceDirectory>true</includeTestSourceDirectory>
-							<!-- Turning the fail-on-violation flag on -->
+							 Turning the fail-on-violation flag on 
 							<failOnViolation>true</failOnViolation>
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin> -->
 			<!-- This plugin is used to integrate Findbugs into the build process -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>

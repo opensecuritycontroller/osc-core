@@ -19,6 +19,7 @@
 			<arg value="install" />
 			<arg value="-Dmaven.test.skip=true" />
             <arg value="-PuseGit" if:true="${useGit}"/>
+			<arg value="-Pall" if:true="${all}"/>
 		</exec>
 	</target>
 
@@ -57,8 +58,8 @@
 		</delete>
 		<mkdir dir="Build${buildNumber}" />
 	</target>
-
-	<target name="copyPlugins">
+    <!-- //TODO: change to relative paths -->
+	<target name="copyPlugins"> 
 		<copy file="target/serverUpgradeBundle.zip" tofile="Build${buildNumber}/serverUpgradeBundle-${buildNumber}.zip" />
 		<copy file="${user.home}/.m2/repository/org/osc/plugin/security-mgr-sample-plugin/1.0/security-mgr-sample-plugin-1.0.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" />
 		<copy file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />
