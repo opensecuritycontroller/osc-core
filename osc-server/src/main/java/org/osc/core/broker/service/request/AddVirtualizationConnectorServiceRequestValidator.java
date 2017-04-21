@@ -17,9 +17,10 @@
 package org.osc.core.broker.service.request;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
+import org.osc.core.broker.service.validator.DtoValidator;
+import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 
 import javax.persistence.EntityManager;

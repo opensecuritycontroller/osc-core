@@ -16,16 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
+import java.util.ArrayList;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
-import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -36,14 +40,12 @@ import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
-import java.util.ArrayList;
 
 @Component(service = AddApplianceManagerConnectorService.class)
 public class AddApplianceManagerConnectorService extends
@@ -103,7 +105,7 @@ public class AddApplianceManagerConnectorService extends
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
         for (CertificateResolverModel certObj : sslCertificatesException.getCertificateResolverModels()) {
             trustManagerFactory.addEntry(certObj.getCertificate(), certObj.getAlias());
-            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttr(certObj.getAlias(), certObj.getSha1()));
+            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttrDto(certObj.getAlias(), certObj.getSha1()));
         }
         return request;
     }
@@ -111,8 +113,8 @@ public class AddApplianceManagerConnectorService extends
     private void validate(DryRunRequest<ApplianceManagerConnectorDto> request,
                           OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
-        ApplianceManagerConnectorDto.checkForNullFields(request.getDto());
-        ApplianceManagerConnectorDto.checkFieldLength(request.getDto());
+        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto());
+        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto());
 
         // check for uniqueness of mc name
         if (emgr.isExisting("name", request.getDto().getName())) {

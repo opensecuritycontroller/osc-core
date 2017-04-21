@@ -26,8 +26,6 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
@@ -71,8 +69,8 @@ public class DeploymentSpecEntityMgr {
         dto.setInspectionNetworkId(ds.getInspectionNetworkId());
         dto.setCount(ds.getInstanceCount());
         if (ds.getLastJob() != null) {
-            dto.setLastJobStatus(JobStatus.valueOf(ds.getLastJob().getStatus().name()));
-            dto.setLastJobState(JobState.valueOf(ds.getLastJob().getState().name()));
+            dto.setLastJobStatus(ds.getLastJob().getStatus().name());
+            dto.setLastJobState(ds.getLastJob().getState().name());
             dto.setLastJobId(ds.getLastJob().getId());
         }
         dto.setShared(ds.isShared());

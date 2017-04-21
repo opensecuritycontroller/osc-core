@@ -31,8 +31,6 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
-import org.osc.core.broker.service.dto.DistributedApplianceDtoValidator;
-import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
@@ -41,6 +39,8 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
+import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
+import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.util.PKIUtil;
 
 public class AddDistributedApplianceService extends

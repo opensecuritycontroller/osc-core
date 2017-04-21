@@ -74,7 +74,7 @@ public class ApplianceSoftwareVersionEntityMgr {
         dto.setId(av.getId());
         dto.setParentId(av.getAppliance().getId());
         dto.setSwVersion(av.getApplianceSoftwareVersion());
-        dto.setVirtualizationType(org.osc.core.broker.model.virtualization.VirtualizationType.valueOf(
+        dto.setVirtualizationType(org.osc.core.broker.service.dto.VirtualizationType.valueOf(
                 av.getVirtualizationType().name()));
         dto.setVirtualizationVersion(av.getVirtualizarionSoftwareVersion());
         dto.setImageUrl(av.getImageUrl());

@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
-import org.osc.core.rest.client.annotations.VmidcLogHidden;
+import org.osc.core.broker.service.annotations.VmidcLogHidden;
 
 
 public class UpdateMCPublicKeyRequest implements Request {

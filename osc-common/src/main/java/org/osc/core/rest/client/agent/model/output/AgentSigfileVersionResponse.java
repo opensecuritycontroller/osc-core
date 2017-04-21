@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.rest.client.annotations.VmidcLogHidden;
+import org.osc.core.broker.service.annotations.VmidcLogHidden;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.validator.NATSettingsDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.util.ServerUtil;
 import org.osgi.service.component.annotations.Component;
@@ -42,7 +43,7 @@ public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSe
     private SetNetworkSettingsService setNetworkSettingsService;
 
     void validate(DryRunRequest<NATSettingsDto> req) throws Exception {
-        NATSettingsDto.checkForNullFields(req.getDto());
+        NATSettingsDtoValidator.checkForNullFields(req.getDto());
         // check for valid IP address format
         ValidateUtil.checkForValidIpAddressFormat(req.getDto().getPublicIPAddress());
     }

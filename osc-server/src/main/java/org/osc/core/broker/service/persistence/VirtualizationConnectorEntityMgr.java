@@ -16,27 +16,26 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
-import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
-import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
-import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
-import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
-import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
+import static java.util.stream.Collectors.toSet;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+
+import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
+import org.osc.core.broker.service.dto.VirtualizationType;
+import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 public class VirtualizationConnectorEntityMgr {
 
@@ -55,9 +54,9 @@ public class VirtualizationConnectorEntityMgr {
                 org.osc.core.broker.model.entities.appliance.VirtualizationType.valueOf(
                         dto.getType().name()));
 
-        ControllerType controllerType = dto.getControllerType();
+        String controllerType = dto.getControllerType();
         if(controllerType != null) {
-            vc.setControllerType(controllerType.getValue());
+            vc.setControllerType(controllerType);
         }
         if (dto.isControllerDefined()) {
             vc.setControllerIpAddress(dto.getControllerIP());
@@ -74,7 +73,10 @@ public class VirtualizationConnectorEntityMgr {
         vc.setProviderPassword(EncryptionUtil.encryptAESCTR(dto.getProviderPassword()));
         vc.setAdminTenantName(dto.getAdminTenantName());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
-        vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet());
+        vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
+                .stream()
+                .map(SslCertificateAttrEntityMgr::createEntity)
+                .collect(toSet()));
 
         vc.setVirtualizationSoftwareVersion(dto.getSoftwareVersion());
     }
@@ -86,7 +88,7 @@ public class VirtualizationConnectorEntityMgr {
         dto.setName(vc.getName());
         dto.setType(VirtualizationType.valueOf(vc.getVirtualizationType().name()));
 
-        dto.setControllerType(ControllerType.fromText(vc.getControllerType()));
+        dto.setControllerType(vc.getControllerType());
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
         dto.setControllerPassword(EncryptionUtil.decryptAESCTR(vc.getControllerPassword()));
@@ -96,13 +98,15 @@ public class VirtualizationConnectorEntityMgr {
         dto.setProviderPassword(EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
         dto.setAdminTenantName(vc.getProviderAdminTenantName());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
-        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream().collect(Collectors.toSet()));
+        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
+                .map(SslCertificateAttrEntityMgr::fromEntity)
+                .collect(toSet()));
 
         dto.setSoftwareVersion(vc.getVirtualizationSoftwareVersion());
 
         if (vc.getLastJob() != null) {
-            dto.setLastJobStatus(JobStatus.valueOf(vc.getLastJob().getStatus().name()));
-            dto.setLastJobState(JobState.valueOf(vc.getLastJob().getState().name()));
+            dto.setLastJobStatus(vc.getLastJob().getStatus().name());
+            dto.setLastJobState(vc.getLastJob().getState().name());
             dto.setLastJobId(vc.getLastJob().getId());
         }
     }

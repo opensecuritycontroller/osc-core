@@ -26,6 +26,7 @@ import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.request.SetNetworkSettingsRequest;
 import org.osc.core.broker.service.response.SetNetworkSettingsResponse;
 import org.osc.core.broker.service.tasks.network.IpChangePropagateMetaTask;
+import org.osc.core.broker.service.validator.NetworkSettingsDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.util.NetworkUtil;
@@ -83,7 +84,7 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
     }
 
     void validate(SetNetworkSettingsRequest req) throws Exception {
-        NetworkSettingsDto.checkForNullFields(req);
+        NetworkSettingsDtoValidator.checkForNullFields(req);
         // check for valid IP address format
         ValidateUtil.checkForValidIpAddressFormat(req.getHostIpAddress());
         ValidateUtil.checkForValidIpAddressFormat(req.getHostSubnetMask());

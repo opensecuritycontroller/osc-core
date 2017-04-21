@@ -29,13 +29,11 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.osc.core.broker.job.JobState;
-import org.osc.core.broker.job.JobStatus;
-import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.job.JobObject;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.service.dto.JobRecordDto;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
+import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.transaction.control.ScopedWorkException;
@@ -47,8 +45,8 @@ public class JobEntityManager {
         dto.setId(job.getId());
         dto.setName(job.getName());
         dto.setFailureReason(job.getFailureReason());
-        dto.setState(JobState.valueOf(job.getState().name()));
-        dto.setStatus(JobStatus.valueOf(job.getStatus().name()));
+        dto.setState(job.getState().name());
+        dto.setStatus(job.getStatus().name());
         dto.setQueued(job.getQueuedTimestamp());
         dto.setStarted(job.getStartedTimestamp());
         dto.setCompleted(job.getCompletedTimestamp());
@@ -56,15 +54,15 @@ public class JobEntityManager {
         dto.setSubmittedBy(job.getSubmittedBy());
     }
 
-    private static Set<LockObjectReference> getJobObjects(JobRecord job) {
+    private static Set<LockObjectDto> getJobObjects(JobRecord job) {
         if (job.getObjects() == null) {
             return null;
         }
 
-        Set<LockObjectReference> objects = new HashSet<LockObjectReference>();
+        Set<LockObjectDto> objects = new HashSet<LockObjectDto>();
         for (JobObject jo : job.getObjects()) {
-            objects.add(new LockObjectReference(jo.getObjectId(), jo.getName(),
-                    ObjectType.valueOf(jo.getObjectType().name())));
+            objects.add(new LockObjectDto(jo.getObjectId(), jo.getName(),
+                    new ObjectTypeDto(jo.getObjectType().name(), jo.getObjectType().toString())));
         }
         return objects;
     }

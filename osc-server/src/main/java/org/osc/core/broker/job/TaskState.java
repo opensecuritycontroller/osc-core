@@ -33,15 +33,15 @@ public enum TaskState implements TaskStateElement {
     COMPLETED; // Execution completed
 
     public boolean isTerminalState() {
-        return this.equals(COMPLETED);
+        return equals(COMPLETED);
     }
 
     public boolean isRunning() {
-        return this.equals(RUNNING);
+        return equals(RUNNING);
     }
 
     public boolean neverScheduled() {
-        return this.equals(NOT_RUNNING);
+        return equals(NOT_RUNNING);
     }
 
 }

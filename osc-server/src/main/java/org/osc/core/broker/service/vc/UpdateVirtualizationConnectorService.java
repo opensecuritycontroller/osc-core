@@ -16,6 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import static java.util.stream.Collectors.toSet;
+
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -27,7 +34,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -42,6 +49,8 @@ import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
+import org.osc.core.broker.service.validator.BaseDtoValidator;
+import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
@@ -53,10 +62,6 @@ import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
-import java.util.List;
-import java.util.Set;
 
 @Component(service = UpdateVirtualizationConnectorService.class)
 public class UpdateVirtualizationConnectorService
@@ -78,7 +83,7 @@ public class UpdateVirtualizationConnectorService
     @Override
     public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorDto> request, EntityManager em) throws Exception {
 
-        BaseDto.checkForNullId(request.getDto());
+        BaseDtoValidator.checkForNullId(request.getDto());
 
         OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
 
@@ -107,7 +112,10 @@ public class UpdateVirtualizationConnectorService
 
             updateVirtualizationConnector(request, vc);
             SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em);
-            vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet(), request.getDto().getId(), persistentSslCertificatesSet));
+            vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet().stream()
+                    .map(SslCertificateAttrEntityMgr::createEntity)
+                    .collect(toSet()),
+                request.getDto().getId(), persistentSslCertificatesSet));
             vcEntityMgr.update(vc);
 
             // Broadcast notifications to UI if VC name has changed, so that Appliance Instances view and Virtual System
@@ -146,7 +154,7 @@ public class UpdateVirtualizationConnectorService
         for (CertificateResolverModel certObj : sslCertificatesException.getCertificateResolverModels()) {
             String newAlias = certObj.getAlias().replaceFirst(SslCertificateAttrEntityMgr.replaceTimestampPattern, "_" + request.getDto().getId() + "_" + i);
             trustManagerFactory.addEntry(certObj.getCertificate(), newAlias);
-            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttr(newAlias, certObj.getSha1()));
+            request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttrDto(newAlias, certObj.getSha1()));
             i++;
         }
         return request;
@@ -157,8 +165,8 @@ public class UpdateVirtualizationConnectorService
 
         // check for null/empty values
         VirtualizationConnectorDto dto = request.getDto();
-        VirtualizationConnectorDto.checkForNullFields(dto, request.isApi());
-        VirtualizationConnectorDto.checkFieldLength(dto);
+        VirtualizationConnectorDtoValidator.checkForNullFields(dto, request.isApi());
+        VirtualizationConnectorDtoValidator.checkFieldLength(dto);
 
         // entry must pre-exist in db
         if (existingVc == null) {
@@ -184,7 +192,7 @@ public class UpdateVirtualizationConnectorService
             }
         }
 
-        VirtualizationConnectorDto.checkFieldFormat(dto);
+        VirtualizationConnectorDtoValidator.checkFieldFormat(dto);
 
         // check for uniqueness of vc vCenter IP
         if (emgr.isDuplicate("providerIpAddress", dto.getProviderIP(), dto.getId())) {
@@ -210,7 +218,7 @@ public class UpdateVirtualizationConnectorService
 
         // If controller type is changed, only NONE->new-type is allowed unconditionally.
         // For all other cases (current-type->NONE, current-type->new-type), there should not be any virtual systems using it.
-        if (!existingVc.getControllerType().equals(dto.getControllerType().getValue())
+        if (!existingVc.getControllerType().equals(dto.getControllerType())
                 && !existingVc.getControllerType().equals(ControllerType.NONE.getValue())
                 && (existingVc.getVirtualSystems().size() > 0 || existingVc.getSecurityGroups().size() > 0)) {
             throw new VmidcBrokerInvalidRequestException(

@@ -21,12 +21,12 @@ import javax.persistence.EntityManager;
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.events.Alarm;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.AlarmEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
+import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 
 public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>, BaseResponse> {
@@ -52,7 +52,7 @@ public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>,
 
     void validate(EntityManager em, AlarmDto dto, Alarm existingAlarm, OSCEntityManager<Alarm> emgr) throws Exception {
 
-        BaseDto.checkForNullId(dto);
+        BaseDtoValidator.checkForNullId(dto);
 
         // check for null/empty values
         AlarmDto.checkForNullFields(dto);

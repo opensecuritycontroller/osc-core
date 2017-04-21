@@ -24,13 +24,14 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDistributedApplianceService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDistributedApplianceService;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
+import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.ConformRequest;
@@ -190,9 +191,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
             public Object generateCell(CustomTable source, Object itemId, Object columnId) {
                 DistributedApplianceDto distributedApplianceDto = DistributedApplianceView.this.parentContainer
                         .getItem(itemId).getBean();
-                return ViewUtil.generateObjectLink(new LockObjectReference(distributedApplianceDto.getMcId(),
+                return ViewUtil.generateObjectLink(new LockObjectDto(distributedApplianceDto.getMcId(),
                         distributedApplianceDto.getApplianceManagerConnectorName(),
-                        LockObjectReference.ObjectType.APPLIANCE_MANAGER_CONNECTOR));
+                        ObjectTypeDto.APPLIANCE_MANAGER_CONNECTOR));
             }
         });
 
@@ -240,8 +241,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
             public Object generateCell(CustomTable source, Object itemId, Object columnId) {
                 VirtualSystemDto vsDto = DistributedApplianceView.this.childContainer.getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(
-                        new LockObjectReference(vsDto.getVcId(), vsDto.getVirtualizationConnectorName(),
-                                LockObjectReference.ObjectType.VIRTUALIZATION_CONNECTOR));
+                        new LockObjectDto(vsDto.getVcId(), vsDto.getVirtualizationConnectorName(),
+                                ObjectTypeDto.VIRTUALIZATION_CONNECTOR));
             }
         });
 

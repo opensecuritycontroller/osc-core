@@ -25,11 +25,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.Severity;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.util.ValidateUtil;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -41,7 +41,7 @@ public class AlertDto extends BaseDto {
     @ApiModelProperty(required=true)
     private String name;
 
-    private LockObjectReference object;
+    private LockObjectDto object;
 
     @ApiModelProperty(required=true)
     private Severity severity;
@@ -66,11 +66,11 @@ public class AlertDto extends BaseDto {
         this.name = name;
     }
 
-    public LockObjectReference getObject() {
+    public LockObjectDto getObject() {
         return this.object;
     }
 
-    public void setObject(LockObjectReference object) {
+    public void setObject(LockObjectDto object) {
         this.object = object;
     }
 

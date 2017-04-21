@@ -1,10 +1,23 @@
-<project name="vmidcDeployMgr" default="build" basedir="." 
-    xmlns:if="ant:if"
-    xmlns:unless="ant:unless"
->
+<!-- 
+    Copyright (c) Intel Corporation
+    Copyright (c) 2017
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+       http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License. 
+-->
+<project name="vmidcDeployMgr" default="build" basedir="." xmlns:if="ant:if" xmlns:unless="ant:unless">
 	<description>a vmidc deploy tool</description>
 
-	<property name="image-format" value="vmdk" />
+	<property name="image-format" value="vmdk_only" />
 	<target name="ovf" depends="build,ovfOnly,ovfCopy" description="build all and generate vmidc ovf" />
 
 	<target name="build">
@@ -18,70 +31,72 @@
 			<arg value="clean" />
 			<arg value="install" />
 			<arg value="-Dmaven.test.skip=true" />
-            <arg value="-PuseGit" if:true="${useGit}"/>
+			<arg value="-Pall" if:true="${all}" />
 		</exec>
 	</target>
 
 	<target name="ovfOnly" depends="repoVersion,prodVersion" description="Runs ovfBuild and cleans up on error">
 		<waitfor maxwait="20" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
 			<not>
-				<available file="/tmp/build_marker"/>
+				<available file="/tmp/build_marker" />
 			</not>
 		</waitfor>
-		<touch file="/tmp/build_marker"/>
+		<touch file="/tmp/build_marker" />
 		<exec executable="schroot" resultproperty="ovf.result" dir="osc-server-bom/">
 			<arg value="-c" />
 			<arg value="centos" />
 			<arg value="--" />
 			<arg value="ant" />
-			<arg value="-Dimage-format=${image-format}"/>
+			<arg value="-Dimage-format=${image-format}" />
 			<arg value="-Dbranchname=${branchname}" />
 			<arg value="-DbuildNumber=${buildNumber}" />
 			<arg value="-DproductVersion=${productVersion}" />
 		</exec>
-		<delete file="/tmp/build_marker"/>
+		<delete file="/tmp/build_marker" />
 	</target>
 
-	<target name="ovfCopy" depends="repoVersion,prodVersion,createBuildDir,copyPlugins,copyImages" description="Copy result files to build dir">
+	<target name="ovfCopy" depends="repoVersion,prodVersion,createBuildDir,copyServerUpgradeBundle,copyPlugins,copyImages" description="Copy result files to build dir">
 		<copy file="osc-server-bom/OSC.ovf" tofile="Build${buildNumber}/OSC-${buildNumber}.ovf" />
-		<replace file="Build${buildNumber}/OSC-${buildNumber}.ovf" token="$OSC_VERSION" value="${productVersion}"/>
+		<replace file="Build${buildNumber}/OSC-${buildNumber}.ovf" token="$OSC_VERSION" value="${productVersion}" />
 		<zip destfile="Build${buildNumber}/OSC-${productVersion}_Build${buildNumber}.zip">
-			<fileset dir="Build${buildNumber}"
-				includes="**/*.vmdk **/*.ovf **/serverUpgradeBundle-*.zip" />
+			<fileset dir="Build${buildNumber}" includes="**/*.vmdk **/*.ovf **/serverUpgradeBundle-*.zip" />
 		</zip>
 	</target>
 
 	<target name="createBuildDir">
 		<delete includeemptydirs="true">
-		    <fileset dir="." includes="Build*/**"/>
+			<fileset dir="." includes="Build*/**" />
 		</delete>
 		<mkdir dir="Build${buildNumber}" />
 	</target>
 
-	<target name="copyPlugins">
+	<target name="copyServerUpgradeBundle">
 		<copy file="target/serverUpgradeBundle.zip" tofile="Build${buildNumber}/serverUpgradeBundle-${buildNumber}.zip" />
-		<copy file="${user.home}/.m2/repository/org/osc/plugin/security-mgr-sample-plugin/1.0/security-mgr-sample-plugin-1.0.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" />
-		<copy file="${user.home}/.m2/repository/com/mcafee/osc/security-mgr-nsm-plugin/1.0/security-mgr-nsm-plugin-1.0.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />
-		<copy file="${user.home}/.m2/repository/com/forcepoint/osc/security-mgr-smc-plugin/1.0/security-mgr-smc-plugin-1.0.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" />
-		<copy file="${user.home}/.m2/repository/org/osc/plugin/sdn-controller-nsc-plugin/1.0/sdn-controller-nsc-plugin-1.0.bar" tofile="Build${buildNumber}/NscSdnControllerPlugin.bar" />
-		<copy file="${user.home}/.m2/repository/com/vmware/osc/vmware-nsx-plugin/1.0/vmware-nsx-plugin-1.0.bar" tofile="Build${buildNumber}/VMwareNsxPlugin.bar" />
+	</target>
+		
+	<target name="copyPlugins" if="${all}">
+		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" />
+		<copy file="${basedir}/../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" tofile="Build${buildNumber}/NscSdnControllerPlugin.bar" />
+		<copy file="${basedir}/../vmware-nsx-plugin/target/VMwareNsxPlugin.bar" tofile="Build${buildNumber}/VMwareNsxPlugin.bar" />
 	</target>
 
 	<target name="checkImagesTocopy">
 		<condition property="isvmdkImage">
-		<OR>
-			<equals arg1="vmdk" arg2="${image-format}"/>
-			<equals arg1="qcow2-vmdk" arg2="${image-format}"/>
-		</OR>
+			<OR>
+				<equals arg1="vmdk_only" arg2="${image-format}" />
+				<equals arg1="qcow2-vmdk" arg2="${image-format}" />
+			</OR>
 		</condition>
 		<condition property="isqcow2Image">
-		<OR>
-			<equals arg1="qcow2-only" arg2="${image-format}"/>
-			<equals arg1="qcow2-vmdk" arg2="${image-format}"/>
-		</OR>
+			<OR>
+				<equals arg1="qcow2-only" arg2="${image-format}" />
+				<equals arg1="qcow2-vmdk" arg2="${image-format}" />
+			</OR>
 		</condition>
 		<condition property="israwImage">
-			<equals arg1="raw-only" arg2="${image-format}"/>
+			<equals arg1="raw-only" arg2="${image-format}" />
 		</condition>
 	</target>
 
@@ -97,10 +112,9 @@
 	</target>
 
 	<target name="repoVersion">
-		<exec outputproperty="buildNumber" dir="."
-            executable="sh" failonerror="true" >
+		<exec outputproperty="buildNumber" dir="." executable="sh" failonerror="true">
 			<arg value="-c" />
-            <arg value="git describe | cut -d '-' -f 2-3" />
+			<arg value="git describe | cut -d '-' -f 2-3" />
 		</exec>
 		<echo>Committed Revision: ${buildNumber}</echo>
 	</target>

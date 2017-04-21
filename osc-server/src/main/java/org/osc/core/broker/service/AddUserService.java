@@ -19,13 +19,13 @@ package org.osc.core.broker.service;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.UserDto;
-import org.osc.core.broker.service.dto.UserDtoValidator;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
 import org.osc.core.broker.service.request.AddUserRequest;
 import org.osc.core.broker.service.response.AddUserResponse;
+import org.osc.core.broker.service.validator.DtoValidator;
+import org.osc.core.broker.service.validator.UserDtoValidator;
 
 public class AddUserService extends ServiceDispatcher<AddUserRequest, AddUserResponse> {
     private DtoValidator<UserDto, User> validator;

@@ -54,6 +54,7 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.rest.client.util.LoggingUtil;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -78,7 +79,6 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import elemental.events.KeyboardEvent.KeyCode;
-import org.osc.core.rest.client.util.LoggingUtil;
 
 public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
@@ -214,8 +214,10 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
         updateAbortButtonState(jobRecordDto);
     }
 
+    private static final String JOB_COMPLETE = "COMPLETED";
+
     private void updateAbortButtonState(JobRecordDto jobRecordDto) {
-        if (jobRecordDto == null || jobRecordDto.getState().isTerminalState()) {
+        if (jobRecordDto == null || JOB_COMPLETE.equals(jobRecordDto.getState())) {
             ViewUtil.enableToolBarButtons(false, this.parentToolbar, Arrays.asList(ToolbarButtons.JOB_ABORT.getId()));
         }
     }

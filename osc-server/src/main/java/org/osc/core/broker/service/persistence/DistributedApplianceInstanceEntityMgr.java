@@ -30,9 +30,51 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
 public class DistributedApplianceInstanceEntityMgr {
+
+    public static DistributedApplianceInstanceDto fromEntity(DistributedApplianceInstance dai) throws Exception {
+        Boolean providesDeviceStatus = ManagerApiFactory.providesDeviceStatus(dai.getVirtualSystem());
+
+        String discovered = providesDeviceStatus ? (dai.getDiscovered() != null ? dai.getDiscovered().toString() : "") : "N/A";
+        String inspectionReady = providesDeviceStatus ? (dai.getInspectionReady() != null ? dai.getInspectionReady().toString() : "") : "N/A";
+        String lastStatus = providesDeviceStatus ? (dai.getLastStatus() != null ? dai.getLastStatus().toString() : "") : "N/A";
+
+        DistributedApplianceInstanceDto dto = new DistributedApplianceInstanceDto(
+                providesDeviceStatus, discovered, inspectionReady, lastStatus);
+        dto.setId(dai.getId());
+
+        dto.setVirtualsystemId(dai.getVirtualSystem().getId());
+        dto.setVcId(dai.getVirtualSystem().getVirtualizationConnector().getId());
+        dto.setMcId(dai.getVirtualSystem().getDistributedAppliance().getApplianceManagerConnector().getId());
+        dto.setName(dai.getName());
+        dto.setIpAddress(dai.getIpAddress());
+
+        dto.setApplianceModel(dai.getVirtualSystem().getDistributedAppliance().getAppliance().getModel());
+        dto.setSwVersion(dai.getVirtualSystem().getDistributedAppliance().getApplianceVersion());
+
+        dto.setDistributedApplianceName(dai.getVirtualSystem().getDistributedAppliance().getName());
+        dto.setApplianceManagerConnectorName(dai.getVirtualSystem().getDistributedAppliance()
+                .getApplianceManagerConnector().getName());
+        dto.setVirtualConnectorName(dai.getVirtualSystem().getVirtualizationConnector().getName());
+        dto.setHostname(dai.getHostName());
+
+        dto.setOsVmId(dai.getOsServerId());
+        dto.setOsHostname(dai.getOsHostName());
+        dto.setOsInspectionIngressPortId(dai.getInspectionOsIngressPortId());
+        dto.setOsInspectionIngressMacAddress(dai.getInspectionIngressMacAddress());
+        dto.setOsInspectionEgressPortId(dai.getInspectionOsEgressPortId());
+        dto.setOsInspectionEgressMacAddress(dai.getInspectionEgressMacAddress());
+
+        dto.setMgmtIpAddress(dai.getMgmtIpAddress());
+        dto.setMgmtSubnetPrefixLength(dai.getMgmtSubnetPrefixLength());
+        dto.setMgmtGateway(dai.getMgmtGateway());
+
+        return dto;
+    }
 
     public static boolean doesDAIExist(EntityManager em) {
 

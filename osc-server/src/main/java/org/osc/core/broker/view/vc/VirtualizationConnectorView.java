@@ -16,21 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import com.vaadin.data.util.BeanContainer;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.CustomTable;
-import com.vaadin.ui.CustomTable.ColumnGenerator;
-import com.vaadin.ui.Notification;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
+import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.ActionNotSupportedException;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseJobRequest;
@@ -53,9 +50,13 @@ import org.osc.core.broker.view.vc.securitygroup.BindSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.UpdateSecurityGroupWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import com.vaadin.data.util.BeanContainer;
+import com.vaadin.data.util.BeanItem;
+import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.CustomTable;
+import com.vaadin.ui.CustomTable.ColumnGenerator;
+import com.vaadin.ui.Notification;
 
 public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConnectorDto, SecurityGroupDto> {
 
@@ -202,7 +203,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
         }
         if (event.getButton().getId().equals(ToolbarButtons.ADD_CHILD.getId())) {
             VirtualizationConnectorDto vc = getParentItem().getBean();
-            if (vc.getControllerType().equals(ControllerType.NONE)) {
+            if (vc.getControllerType().equals(ControllerType.NONE.getValue())) {
                 ViewUtil.iscNotification("Creation of Security Groups is not allowed in the absence of SDN Controller.",
                         Notification.Type.ERROR_MESSAGE);
             } else {

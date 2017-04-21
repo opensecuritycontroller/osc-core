@@ -16,11 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.Job;
-import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
@@ -34,8 +36,6 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
 
 @Component(service = AddVirtualizationConnectorService.class)
 public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>,
@@ -89,7 +89,7 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
         if (trustManagerFactory != null) {
             for (CertificateResolverModel certObj : sslCertificatesException.getCertificateResolverModels()) {
                 trustManagerFactory.addEntry(certObj.getCertificate(), certObj.getAlias());
-                request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttr(certObj.getAlias(), certObj.getSha1()));
+                request.getDto().getSslCertificateAttrSet().add(new SslCertificateAttrDto(certObj.getAlias(), certObj.getSha1()));
             }
         }
 

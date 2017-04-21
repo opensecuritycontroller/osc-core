@@ -24,6 +24,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
+import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
@@ -39,7 +40,7 @@ ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<DistributedApplianceInstanc
                 DistributedApplianceInstance.class, em);
         List<DistributedApplianceInstanceDto> daiList = new ArrayList<DistributedApplianceInstanceDto>();
         for (DistributedApplianceInstance dai : emgr.listAll("name")) {
-            DistributedApplianceInstanceDto dto = new DistributedApplianceInstanceDto(dai);
+            DistributedApplianceInstanceDto dto = DistributedApplianceInstanceEntityMgr.fromEntity(dai);
             daiList.add(dto);
         }
         this.response.setList(daiList);
