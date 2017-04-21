@@ -36,9 +36,6 @@ public class NsxAuthFilter implements ContainerRequestFilter {
     @Reference
     PasswordUtil passwordUtil;
 
-    public static final String VMIDC_NSX_LOGIN = "nsx";
-    public static String VMIDC_NSX_PASS = "";
-
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
         AuthUtil.authenticate(containerRequestContext, RestConstants.VMIDC_NSX_LOGIN, this.passwordUtil.getVmidcNsxPass());

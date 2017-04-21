@@ -40,7 +40,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.model.ServerStatusResponse;
 import org.osc.core.broker.service.AddSslCertificateService;
@@ -76,7 +76,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = ServerMgmtApis.class)
 @Api(tags = "Operations for OSC server", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/serverManagement")
+@Path(RestConstants.SERVER_API_PATH_PREFIX + "/serverManagement")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 public class ServerMgmtApis {
@@ -192,7 +192,7 @@ public class ServerMgmtApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) apiUtil
+        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) this.apiUtil
                 .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
 
         return response.getList();
@@ -211,7 +211,7 @@ public class ServerMgmtApis {
         logger.info("Adding new SSL certificate to truststore");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         AddSslEntryRequest addSslEntryRequest = new AddSslEntryRequest(sslEntry.getAlias(), sslEntry.getCertificate());
-        return apiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
+        return this.apiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
     }
 
     /**
@@ -229,6 +229,6 @@ public class ServerMgmtApis {
     public Response deleteSslCertificate(@Context HttpHeaders headers, @ApiParam(value = "SSL certificate alias") @PathParam("alias") String alias) {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
+        return this.apiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
     }
 }

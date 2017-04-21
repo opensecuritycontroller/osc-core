@@ -33,9 +33,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
-import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.broker.util.api.ApiUtil;
-import org.osc.core.rest.annotations.OscAuth;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.alert.AcknowledgeAlertService;
@@ -48,7 +46,10 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -56,11 +57,10 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
-import org.osgi.service.component.annotations.Reference;
 
 @Component(service = AlertApis.class)
 @Api(tags = "Operations for Alerts", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/alerts")
+@Path(RestConstants.SERVER_API_PATH_PREFIX + "/alerts")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth
@@ -81,7 +81,7 @@ public class AlertApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<AlertDto> response = (ListResponse<AlertDto>) apiUtil.getListResponse(new ListAlertService(),
+        ListResponse<AlertDto> response = (ListResponse<AlertDto>) this.apiUtil.getListResponse(new ListAlertService(),
                 new BaseRequest<>(true));
 
         return response.getList();
@@ -102,7 +102,7 @@ public class AlertApis {
         getDtoRequest.setEntityName("Alert");
 
         GetDtoFromEntityService<AlertDto> getDtoService = new GetDtoFromEntityService<AlertDto>();
-        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     //TODO: Future. Allow multi update/delete of alerts
@@ -122,12 +122,12 @@ public class AlertApis {
 
         logger.info("Updating Alert " + alertId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        apiUtil.setIdOrThrow(alertDto, alertId, "Alert");
+        this.apiUtil.setIdOrThrow(alertDto, alertId, "Alert");
 
         AlertRequest alertRequest = createAcknowledgeRequest(alertId, alertDto);
         AcknowledgeAlertService service = new AcknowledgeAlertService();
 
-        return apiUtil.getResponseForBaseRequest(service, alertRequest);
+        return this.apiUtil.getResponseForBaseRequest(service, alertRequest);
     }
 
     /**
@@ -150,7 +150,7 @@ public class AlertApis {
 
         DeleteAlertService deleteService = new DeleteAlertService();
 
-        return apiUtil.getResponseForBaseRequest(deleteService, alertRequest);
+        return this.apiUtil.getResponseForBaseRequest(deleteService, alertRequest);
     }
 
     private AlertRequest createDeleteRequest(Long alertId) {

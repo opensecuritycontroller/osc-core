@@ -25,7 +25,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -46,7 +46,7 @@ public class SyncSecurityGroupJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
+        SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             List<SecurityGroup> sgs = HibernateUtil.getTransactionControl().required(() -> {
@@ -63,7 +63,7 @@ public class SyncSecurityGroupJob implements Job {
                     public void run() {
                         try {
                             HibernateUtil.getTransactionControl().required(() -> {
-                                SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
+                                SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
                                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
                                     SecurityGroup found = em.find(SecurityGroup.class, sg.getId());

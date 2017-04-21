@@ -36,9 +36,6 @@ public class OscAuthFilter implements ContainerRequestFilter {
     @Reference
     private PasswordUtil passwordUtil;
 
-    public static final String OSC_DEFAULT_LOGIN = "admin";
-    public static String OSC_DEFAULT_PASS = "";
-
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
         AuthUtil.authenticate(containerRequestContext, RestConstants.OSC_DEFAULT_LOGIN, this.passwordUtil.getOscDefaultPass());

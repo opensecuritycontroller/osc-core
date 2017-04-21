@@ -16,14 +16,23 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.DeleteApplianceManagerConnectorService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -46,23 +55,16 @@ import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.List;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 @Component(service = ManagerConnectorApis.class)
 @Api(tags = "Operations for Manager Connectors", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/applianceManagerConnectors")
+@Path(RestConstants.SERVER_API_PATH_PREFIX + "/applianceManagerConnectors")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth
@@ -92,7 +94,7 @@ public class ManagerConnectorApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<ApplianceManagerConnectorDto> response = (ListResponse<ApplianceManagerConnectorDto>) apiUtil
+        ListResponse<ApplianceManagerConnectorDto> response = (ListResponse<ApplianceManagerConnectorDto>) this.apiUtil
                 .getListResponse(new ListApplianceManagerConnectorService(), new BaseRequest<>(true));
 
         return response.getList();
@@ -116,7 +118,7 @@ public class ManagerConnectorApis {
         getDtoRequest.setEntityId(amcId);
         getDtoRequest.setEntityName("ApplianceManagerConnector");
         GetDtoFromEntityService<ApplianceManagerConnectorDto> getDtoService = new GetDtoFromEntityService<>();
-        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Creates an Manager Connector",
@@ -136,7 +138,7 @@ public class ManagerConnectorApis {
         this.addService.setForceAddSSLCertificates(amcRequest.isForceAddSSLCertificates());
         Response responseForBaseRequest;
         try {
-            responseForBaseRequest = apiUtil.getResponseForBaseRequest(this.addService,
+            responseForBaseRequest = this.apiUtil.getResponseForBaseRequest(this.addService,
                     new DryRunRequest<>(amcRequest, amcRequest.isSkipRemoteValidation()));
         } finally {
             this.addService.setForceAddSSLCertificates(false);
@@ -163,13 +165,13 @@ public class ManagerConnectorApis {
         logger.info("Updating Appliance Manager Connector " + amcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        apiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
+        this.apiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
 
         this.updateService.setForceAddSSLCertificates(amcRequest.isForceAddSSLCertificates());
 
         Response responseForBaseRequest;
         try {
-            responseForBaseRequest = apiUtil.getResponseForBaseRequest(this.updateService,
+            responseForBaseRequest = this.apiUtil.getResponseForBaseRequest(this.updateService,
                     new DryRunRequest<>(amcRequest, amcRequest.isSkipRemoteValidation()));
         } finally {
             this.updateService.setForceAddSSLCertificates(false);
@@ -193,7 +195,7 @@ public class ManagerConnectorApis {
         logger.info("Deleting Appliance Manager Connector " + amcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return apiUtil.getResponseForBaseRequest(new DeleteApplianceManagerConnectorService(),
+        return this.apiUtil.getResponseForBaseRequest(new DeleteApplianceManagerConnectorService(),
                 new BaseIdRequest(amcId));
     }
 
@@ -212,7 +214,7 @@ public class ManagerConnectorApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<DomainDto> response = (ListResponse<DomainDto>) apiUtil
+        ListResponse<DomainDto> response = (ListResponse<DomainDto>) this.apiUtil
                 .getListResponse(new ListDomainsByMcIdService(), new BaseIdRequest(amcId));
         return response.getList();
     }

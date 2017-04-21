@@ -37,7 +37,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockInformationDto;
 import org.osc.core.broker.job.lock.LockManager;
-import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.client.RestBaseClient;
@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 import com.mcafee.vmidc.server.Server;
 
 @Component(service = ServerDebugApis.class)
-@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/serverDebug")
+@Path(RestConstants.SERVER_API_PATH_PREFIX + "/serverDebug")
 @Consumes(MediaType.TEXT_PLAIN)
 @Produces(MediaType.TEXT_PLAIN)
 @LocalHostAuth

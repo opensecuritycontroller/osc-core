@@ -33,9 +33,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.broker.util.api.ApiUtil;
-import org.osc.core.rest.annotations.OscAuth;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.DeleteApplianceService;
@@ -55,7 +53,10 @@ import org.osc.core.broker.service.request.ListApplianceSoftwareVersionRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -63,11 +64,10 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
-import org.osgi.service.component.annotations.Reference;
 
 @Component(service = ApplianceApis.class)
 @Api(tags = "Operations for Security Functions Catalog", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/catalog")
+@Path(RestConstants.SERVER_API_PATH_PREFIX + "/catalog")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth
@@ -91,7 +91,7 @@ public class ApplianceApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<ApplianceDto> response = (ListResponse<ApplianceDto>) apiUtil
+        ListResponse<ApplianceDto> response = (ListResponse<ApplianceDto>) this.apiUtil
                 .getListResponse(new ListApplianceService(), new BaseRequest<BaseDto>(true));
 
         return response.getList();
@@ -115,7 +115,7 @@ public class ApplianceApis {
         getDtoRequest.setEntityId(applianceId);
         getDtoRequest.setEntityName("Appliance");
         GetDtoFromEntityService<ApplianceDto> getDtoService = new GetDtoFromEntityService<ApplianceDto>();
-        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Deletes a Security Function Model",
@@ -128,7 +128,7 @@ public class ApplianceApis {
             required = true) @PathParam("applianceId") Long applianceId) {
         logger.info("Deleting Appliance " + applianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponseForBaseRequest(new DeleteApplianceService(), new BaseIdRequest(applianceId));
+        return this.apiUtil.getResponseForBaseRequest(new DeleteApplianceService(), new BaseIdRequest(applianceId));
     }
 
     @ApiOperation(value = "Lists Software Function Software Versions",
@@ -180,7 +180,7 @@ public class ApplianceApis {
         getDtoRequest.setParentId(applianceId);
 
         GetDtoFromEntityService<ApplianceSoftwareVersionDto> getDtoService = new GetDtoFromEntityService<ApplianceSoftwareVersionDto>();
-        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Deletes a Security Function Software Version",
@@ -196,7 +196,7 @@ public class ApplianceApis {
         logger.info(
                 "Deleting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponseForBaseRequest(new DeleteApplianceSoftwareVersionService(),
+        return this.apiUtil.getResponseForBaseRequest(new DeleteApplianceSoftwareVersionService(),
                 new BaseIdRequest(applianceSoftwareVersionId, applianceId));
     }
 
@@ -214,7 +214,7 @@ public class ApplianceApis {
                                   @ApiParam(required = true) InputStream uploadedInputStream) {
         logger.info("Started uploading file " + fileName);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponseForBaseRequest(new UploadApplianceVersionFileService(),
+        return this.apiUtil.getResponseForBaseRequest(new UploadApplianceVersionFileService(),
                 new UploadRequest(fileName, uploadedInputStream));
     }
 

@@ -25,6 +25,7 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.DeleteUserRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -36,6 +37,9 @@ public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, Empt
 
     @Reference
     private Server server;
+
+    @Reference
+    private PasswordUtil passwordUtil;
 
     @Override
     public EmptySuccessResponse exec(DeleteUserRequest request, EntityManager em) throws Exception {
@@ -59,15 +63,15 @@ public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, Empt
 
             throw new VmidcBrokerValidationException("User entry with name " + request.getId() + " is not found.");
         }
-        if (user.getLoginName().equals(OscAuthFilter.OSC_DEFAULT_LOGIN)) {
+        if (user.getLoginName().equals(RestConstants.OSC_DEFAULT_LOGIN)) {
 
             throw new VmidcBrokerValidationException("Cannot delete pre-configured 'admin' user.");
         }
-        if (user.getLoginName().equals(AgentAuthFilter.VMIDC_AGENT_LOGIN)) {
+        if (user.getLoginName().equals(RestConstants.VMIDC_AGENT_LOGIN)) {
 
             throw new VmidcBrokerValidationException("Cannot delete pre-configured 'agent' user.");
         }
-        if (user.getLoginName().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
+        if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {
 
             throw new VmidcBrokerValidationException("Cannot delete pre-configured 'nsx' user.");
         }
