@@ -26,7 +26,6 @@ import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.service.test.InMemDB;
-import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator;
 
 /**
  * The base class for the {@link VirtualizationConnectorDtoValidator} unit tests.
