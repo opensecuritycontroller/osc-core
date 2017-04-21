@@ -16,29 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Date;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
-
+import com.mcafee.vmidc.server.Server;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.OscRestServlet;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
@@ -65,14 +49,27 @@ import org.osc.core.util.VersionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import com.mcafee.vmidc.server.Server;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Date;
+import java.util.List;
 
 @Component(service = ServerMgmtApis.class)
 @Api(tags = "Operations for OSC server", authorizations = { @Authorization(value = "Basic Auth") })
@@ -109,7 +106,7 @@ public class ServerMgmtApis {
     }
 
     @ApiOperation(value = "Backs up server database",
-            notes = "Trigger database backup, place backup on server and make it avaliable for download",
+            notes = "Trigger database backup, place backup on server and make it available for download",
             response = ServerStatusResponse.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
@@ -120,7 +117,7 @@ public class ServerMgmtApis {
     public Response getDbBackupFile(@Context HttpHeaders headers, @ApiParam(required = true) BackupRequest request) {
 
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        logger.info(SessionUtil.getCurrentUser()+" is generating a backap of the database");
+        logger.info(SessionUtil.getCurrentUser()+" is generating a backup of the database");
         StreamingOutput fileStream = new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {
@@ -192,7 +189,7 @@ public class ServerMgmtApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) apiUtil
+        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) this.apiUtil
                 .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
 
         return response.getList();
@@ -201,7 +198,8 @@ public class ServerMgmtApis {
     /**
      * Add a SSL certificate entry
      */
-    @ApiOperation(value = "Add SSL certificate")
+    @ApiOperation(value = "Add SSL certificate",
+            notes = "Adds a SSL certificate entry with custom alias provided by the user. Caution: As JSON string certificate needs to have all break lines converted to \\n.")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class)})
     @Path("/sslcertificate")
@@ -211,7 +209,7 @@ public class ServerMgmtApis {
         logger.info("Adding new SSL certificate to truststore");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         AddSslEntryRequest addSslEntryRequest = new AddSslEntryRequest(sslEntry.getAlias(), sslEntry.getCertificate());
-        return apiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
+        return this.apiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
     }
 
     /**
@@ -229,6 +227,6 @@ public class ServerMgmtApis {
     public Response deleteSslCertificate(@Context HttpHeaders headers, @ApiParam(value = "SSL certificate alias") @PathParam("alias") String alias) {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
+        return this.apiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
     }
 }
