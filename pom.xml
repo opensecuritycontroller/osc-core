@@ -26,7 +26,7 @@
 	<properties>
 		<jclouds.version>2.0.0</jclouds.version>
 		<powermock.version>1.6.5</powermock.version>
-        <repoVersionCmd>git describe | cut -d '-' -f 2-3</repoVersionCmd>
+		<repoVersionCmd>git describe | cut -d '-' -f 2-3</repoVersionCmd>
 	</properties>
 
 	<repositories>
@@ -86,66 +86,67 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-			    <groupId>org.assertj</groupId>
-			    <artifactId>assertj-core</artifactId>
-			    <version>2.5.0</version>
-			    <scope>test</scope>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>2.5.0</version>
+				<scope>test</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-    <profiles>
-        <profile>
-            <id>default</id>
-            <modules>
-                <module>../sdn-controller-api</module>
-                <module>../security-mgr-api</module>
-                <module>../vmware-nsx-api</module>
-
-                <module>../vmware-nsx-plugin</module>
-                <module>../sdn-controller-nsc-plugin</module>
-                <module>../security-mgr-nsm-plugin</module>
-                <module>../security-mgr-smc-plugin</module>
-                <module>../security-mgr-sample-plugin</module>
-                
-                <module>osc-tools</module>
-                <module>osc-common</module>
-                <module>osc-domain</module>
-                <module>osc-service-api</module>
-                <module>osc-server</module>
-
-                <module>osc-uber</module>
-                <module>osc-uber-jcloud</module>
-                <module>osc-control</module>
-                <module>osc-installer</module>
-                <module>osc-installer-test</module>
-                <module>osc-installer-simple</module>
-                <module>osc-resolver</module>
-                <module>osc-export</module>
+	<profiles>
+		<profile>
+			<!-- The 'default' profile includes only osc-core projects -->
+			<id>default</id>
+			<modules>
+				<module>osc-common</module>
+				<module>osc-control</module>
+				<module>osc-domain</module>
+				<module>osc-export</module>
+				<module>osc-installer-simple</module>
+				<module>osc-installer-test</module>
+				<module>osc-installer</module>
+				<module>osc-resolver</module>
+				<module>osc-server-bom</module>
+				<module>osc-server</module>
+				<module>osc-service-api</module>
+				<module>osc-tools</module>
+				<module>osc-uber-jcloud</module>
+				<module>osc-uber</module>
             </modules>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
         <profile>
-            <id>useGit</id>
+            <id>all</id>
             <modules>
-                <module>osc-tools</module>
+                <module>../sdn-controller-api</module>
+                <module>../security-mgr-api</module>
+                <module>../vmware-nsx-api</module>
+            
+                <module>../vmware-nsx-plugin</module>
+                <module>../sdn-controller-nsc-plugin</module>
+                <module>../security-mgr-nsm-plugin</module>
+                <module>../security-mgr-smc-plugin</module>
+                <module>../security-mgr-sample-plugin</module>
+                
                 <module>osc-common</module>
-                <module>osc-domain</module>
-                <module>osc-service-api</module>
-                <module>osc-server</module>
-
-                <module>osc-uber</module>
-                <module>osc-uber-jcloud</module>
                 <module>osc-control</module>
-                <module>osc-installer</module>
-                <module>osc-installer-test</module>
-                <module>osc-installer-simple</module>
-                <module>osc-resolver</module>
+                <module>osc-domain</module>
                 <module>osc-export</module>
-            </modules>
-        </profile>
-    </profiles>
+                <module>osc-installer-simple</module>
+                <module>osc-installer-test</module>
+                <module>osc-installer</module>
+                <module>osc-resolver</module>
+                <module>osc-server-bom</module>
+                <module>osc-server</module>
+                <module>osc-service-api</module>
+                <module>osc-tools</module>
+                <module>osc-uber-jcloud</module>
+                <module>osc-uber</module>
+			</modules>
+		</profile>
+	</profiles>
 	<build>
 		<plugins>
 			<plugin>
@@ -165,7 +166,7 @@
 								</exec>
 								<exec outputproperty="buildNumber" dir="." executable="sh">
 									<arg value="-c" />
-                                    <arg value="${repoVersionCmd}" />
+									<arg value="${repoVersionCmd}" />
 								</exec>
 								<echo>Version: ${productVersion}</echo>
 								<echo>Committed Revision: ${buildNumber}</echo>
@@ -262,9 +263,9 @@
 						</lifecycleMappingMetadata>
 					</configuration>
 				</plugin>
-				<!-- This plugin configuration adds OSGi metadata to
-				     the manifests of projects that use it. It also
-				     generates Declarative Services metadata if needed -->
+				<!-- This plugin configuration adds OSGi metadata to the manifests of 
+					projects that use it. It also generates Declarative Services metadata if 
+					needed -->
 				<plugin>
 					<groupId>biz.aQute.bnd</groupId>
 					<artifactId>bnd-maven-plugin</artifactId>
@@ -280,8 +281,8 @@
 						</execution>
 					</executions>
 				</plugin>
-				<!-- This configuration is necessary to ensure that the
-				     manifest generated by the bnd-maven-plugin is used -->
+				<!-- This configuration is necessary to ensure that the manifest generated 
+					by the bnd-maven-plugin is used -->
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
