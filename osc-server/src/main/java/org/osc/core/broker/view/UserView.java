@@ -20,9 +20,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.DeleteUserService;
 import org.osc.core.broker.service.ListUserService;
 import org.osc.core.broker.service.UpdateUserService;
+import org.osc.core.broker.service.api.DeleteUserServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.request.ListUserRequest;
@@ -50,7 +50,7 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
 
     private static final Logger log = Logger.getLogger(UserView.class);
 
-    private final DeleteUserService deleteUserService = StaticRegistry.deleteUserService();
+    private final DeleteUserServiceApi deleteUserService = StaticRegistry.deleteUserService();
     private final UpdateUserService updateUserService = StaticRegistry.updateUserService();
 
     public UserView() {

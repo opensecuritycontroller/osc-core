@@ -24,8 +24,8 @@ import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
-import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.service.api.UpdateUserServiceApi;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
@@ -44,7 +44,8 @@ import org.osgi.service.component.annotations.Reference;
 import com.mcafee.vmidc.server.Server;
 
 @Component(service = UpdateUserService.class)
-public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, UpdateUserResponse> {
+public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, UpdateUserResponse>
+        implements UpdateUserServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateUserService.class);
     private DtoValidator<UserDto, User> validator;

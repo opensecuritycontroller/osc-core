@@ -19,6 +19,7 @@ package org.osc.core.broker.service;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.Appliance;
+import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
@@ -28,7 +29,8 @@ import org.osc.core.broker.service.response.EmptySuccessResponse;
 
 
 
-public class DeleteApplianceService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse> {
+public class DeleteApplianceService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse>
+        implements DeleteApplianceServiceApi {
 
     @Override
     public EmptySuccessResponse exec(BaseIdRequest request, EntityManager em) throws Exception {

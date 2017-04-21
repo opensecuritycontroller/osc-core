@@ -39,10 +39,10 @@ import org.osc.core.broker.service.ListDistributedApplianceInstanceService;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
-import org.osc.core.broker.service.response.GetAgentStatusResponseDto;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.xxx.request.DistributedApplianceInstancesRequest;
+import org.osc.core.broker.service.xxx.response.GetAgentStatusResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -114,12 +114,12 @@ public class DistributedApplianceInstanceApis {
 
     @ApiOperation(value = "Retrieves the Distributed Appliance Instances status",
             notes = "Retrieves the Distributed Appliance Instances statuses specified by the Ids",
-            response = GetAgentStatusResponseDto.class)
+            response = GetAgentStatusResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/status")
     @PUT
-    public GetAgentStatusResponseDto getDistributedApplianceInstanceStatus(@Context HttpHeaders headers,
+    public GetAgentStatusResponse getDistributedApplianceInstanceStatus(@Context HttpHeaders headers,
                                                                            @ApiParam(value = "The Ids of the Distributed Appliance Instances to get status for",
                                                                                    required = true) DistributedApplianceInstancesRequest req) {
 

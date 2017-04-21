@@ -39,7 +39,7 @@ import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
-import org.osc.core.broker.service.request.SslCertificatesExtendedException;
+import org.osc.core.broker.service.xxx.request.SslCertificatesExtendedException;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;

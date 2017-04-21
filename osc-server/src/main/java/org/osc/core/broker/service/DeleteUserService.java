@@ -19,9 +19,8 @@ package org.osc.core.broker.service;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
-import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.service.api.DeleteUserServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.DeleteUserRequest;
@@ -31,8 +30,9 @@ import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
-@Component(service = DeleteUserService.class)
-public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, EmptySuccessResponse> {
+@Component
+public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, EmptySuccessResponse>
+        implements DeleteUserServiceApi {
 
     @Reference
     private Server server;

@@ -22,6 +22,7 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -29,8 +30,9 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.util.ValidateUtil;
 
-public class SyncDeploymentSpecService extends
-        BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse> {
+public class SyncDeploymentSpecService
+        extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
+        implements SyncDeploymentSpecServiceApi {
 
     private DeploymentSpec ds;
 

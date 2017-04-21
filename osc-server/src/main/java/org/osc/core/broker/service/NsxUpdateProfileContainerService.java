@@ -28,10 +28,10 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
-import org.osc.core.broker.service.request.NsxUpdateProfileContainerRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxServiceProfileContainerCheckMetaTask;
+import org.osc.core.broker.service.xxx.request.NsxUpdateProfileContainerRequest;
 import org.osc.core.util.NetworkUtil;
 
 public class NsxUpdateProfileContainerService extends

@@ -30,6 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.maintenance.ApplianceUploader;
 import org.osc.core.util.ArchiveUtil;

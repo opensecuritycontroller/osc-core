@@ -19,6 +19,7 @@ package org.osc.core.broker.service;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.service.api.GetVSPublicKeyServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.GetVSPublicKeyRequest;
@@ -26,7 +27,8 @@ import org.osc.core.broker.service.response.GetVSPublicKeyResponse;
 import org.osc.core.util.PKIUtil;
 
 
-public class GetVSPublicKeyService extends ServiceDispatcher<GetVSPublicKeyRequest, GetVSPublicKeyResponse> {
+public class GetVSPublicKeyService extends ServiceDispatcher<GetVSPublicKeyRequest, GetVSPublicKeyResponse>
+        implements GetVSPublicKeyServiceApi {
 
     @Override
     public GetVSPublicKeyResponse exec(GetVSPublicKeyRequest request, EntityManager em) throws Exception {

@@ -20,6 +20,7 @@ import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -32,7 +33,8 @@ import org.osgi.service.component.annotations.Reference;
 import com.mcafee.vmidc.server.Server;
 
 @Component(service = SetNATSettingsService.class)
-public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSettingsDto>, BaseJobResponse> {
+public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSettingsDto>, BaseJobResponse>
+        implements SetNATSettingsServiceApi {
 
     private static final Logger log = Logger.getLogger(SetNATSettingsService.class);
 

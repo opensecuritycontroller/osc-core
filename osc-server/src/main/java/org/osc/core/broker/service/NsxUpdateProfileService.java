@@ -31,13 +31,13 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
-import org.osc.core.broker.service.request.NsxUpdateProfileRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.NsxServiceProfileCheckMetaTask;
+import org.osc.core.broker.service.xxx.request.NsxUpdateProfileRequest;
 
 public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileRequest, EmptySuccessResponse> {
 

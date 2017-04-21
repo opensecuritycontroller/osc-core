@@ -42,6 +42,8 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
+import org.osc.core.broker.service.api.ConformServiceApi;
+import org.osc.core.broker.service.dto.job.ObjectType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -66,7 +68,7 @@ import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
 @Component(service = ConformService.class)
-public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> {
+public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> implements ConformServiceApi {
     private static final Logger log = Logger.getLogger(ConformService.class);
 
     @Reference

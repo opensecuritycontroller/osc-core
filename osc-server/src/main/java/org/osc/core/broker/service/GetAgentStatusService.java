@@ -41,8 +41,8 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
-import org.osc.core.broker.service.response.GetAgentStatusResponseDto;
+import org.osc.core.broker.service.xxx.request.DistributedApplianceInstancesRequest;
+import org.osc.core.broker.service.xxx.response.GetAgentStatusResponse;
 import org.osc.core.rest.client.agent.model.output.AgentDpaInfo;
 import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
 import org.osc.core.util.VersionUtil;
@@ -53,7 +53,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = GetAgentStatusService.class)
-public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianceInstancesRequest, GetAgentStatusResponseDto> {
+public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianceInstancesRequest, GetAgentStatusResponse> {
 
     private static final Logger LOG = Logger.getLogger(GetAgentStatusService.class);
     private List<DistributedApplianceInstance> daiList = null;
@@ -63,11 +63,11 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
     private ApiFactoryService apiFactoryService;
 
     @Override
-    public GetAgentStatusResponseDto exec(DistributedApplianceInstancesRequest request, EntityManager em) throws Exception {
+    public GetAgentStatusResponse exec(DistributedApplianceInstancesRequest request, EntityManager em) throws Exception {
         this.em = em;
         DistributedApplianceInstancesRequest.checkForNullFields(request);
 
-        GetAgentStatusResponseDto response = new GetAgentStatusResponseDto();
+        GetAgentStatusResponse response = new GetAgentStatusResponse();
 
         this.daiList =  DistributedApplianceInstanceEntityMgr.getByIds(em, request.getDtoIdList());
 

@@ -27,7 +27,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.client.nsx.model.Agent;
 import org.osc.core.broker.rest.client.nsx.model.Agent.AllocatedIpAddress;
 import org.osc.core.broker.rest.client.nsx.model.Agent.HostInfo;
-import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
+import org.osc.core.broker.service.xxx.request.AgentRegisterServiceRequest;
 import org.osc.core.rest.client.agent.model.output.AgentDpaInfo;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.VersionUtil;

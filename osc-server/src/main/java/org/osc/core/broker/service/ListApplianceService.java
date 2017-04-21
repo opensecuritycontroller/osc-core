@@ -22,6 +22,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.Appliance;
+import org.osc.core.broker.service.api.ListApplianceServiceApi;
 import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
@@ -30,8 +31,8 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
 
-
-public class ListApplianceService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<ApplianceDto>> {
+public class ListApplianceService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<ApplianceDto>>
+        implements ListApplianceServiceApi {
 
     ListResponse<ApplianceDto> response = new ListResponse<ApplianceDto>();
 

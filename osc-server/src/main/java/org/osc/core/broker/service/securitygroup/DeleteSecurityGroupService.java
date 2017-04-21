@@ -36,6 +36,7 @@ import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ForceDeleteSecurityGroupTask;
+import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
 public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse> {
 
@@ -87,7 +88,7 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
     }
 
     private void validate(EntityManager em, BaseDeleteRequest request) throws Exception {
-        BaseDeleteRequest.checkForNullIdAndParentNullId(request);
+        BaseIdRequestValidator.checkForNullIdAndParentNullId(request);
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, request.getParentId());
 

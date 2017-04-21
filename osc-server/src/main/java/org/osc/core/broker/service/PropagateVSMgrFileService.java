@@ -35,6 +35,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.PropagateVSMgrFileServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -48,7 +49,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = PropagateVSMgrFileService.class)
-public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrFileRequest, BaseJobResponse> {
+public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrFileRequest, BaseJobResponse>
+        implements PropagateVSMgrFileServiceApi {
 
     private static final Logger log = Logger.getLogger(PropagateVSMgrFileService.class);
 

@@ -21,8 +21,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
-import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
-import org.osc.core.broker.service.response.GetAgentStatusResponseDto;
+import org.osc.core.broker.service.xxx.request.DistributedApplianceInstancesRequest;
+import org.osc.core.broker.service.xxx.response.GetAgentStatusResponse;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
 
@@ -111,7 +111,7 @@ public class AgentStatusWindow extends Window {
         DistributedApplianceInstancesRequest req = new DistributedApplianceInstancesRequest(this.daiList);
 
         try {
-            GetAgentStatusResponseDto response = this.getAgentStatusService.dispatch(req);
+            GetAgentStatusResponse response = this.getAgentStatusService.dispatch(req);
             for (AgentStatusResponse status : response.getAgentStatusList()) {
                 // TODO emanoel: For now assuming that if the dpa info is null the status is not supported by the manager.
                 // may change the status response for an enum: DISCOVERED, INSPECTION_READY, NOT_PROVIDED, etc.

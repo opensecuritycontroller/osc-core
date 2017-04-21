@@ -16,15 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import com.mcafee.vmidc.server.Server;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDistributedApplianceService;
-import org.osc.core.broker.service.DeleteUserService;
 import org.osc.core.broker.service.SetNATSettingsService;
 import org.osc.core.broker.service.SetNetworkSettingsService;
 import org.osc.core.broker.service.UpdateUserService;
 import org.osc.core.broker.service.UpgradeService;
+import org.osc.core.broker.service.api.DeleteUserServiceApi;
 import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.SyncManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
@@ -33,6 +32,8 @@ import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import com.mcafee.vmidc.server.Server;
 
 /**
  * This registry is a work-around to temporarily allow some static calls to remain after they have been removed from the
@@ -79,7 +80,7 @@ public class StaticRegistry {
     private SyncManagerConnectorService syncManagerConnectorService;
 
     @Reference
-    private DeleteUserService deleteUserService;
+    private DeleteUserServiceApi deleteUserService;
 
     @Reference
     private UpdateUserService updateUserService;
@@ -138,7 +139,7 @@ public class StaticRegistry {
         return instance.updateVirtualizationConnectorService;
     }
 
-    public static DeleteUserService deleteUserService() {
+    public static DeleteUserServiceApi deleteUserService() {
         return instance.deleteUserService;
     }
 

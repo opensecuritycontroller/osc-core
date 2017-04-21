@@ -16,9 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import com.mcafee.vmidc.server.Server;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.osc.core.broker.service.api.RestoreServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
@@ -29,13 +36,10 @@ import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.encryption.EncryptionException;
 
-import javax.persistence.EntityManager;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import com.mcafee.vmidc.server.Server;
 
-public class RestoreService extends BackupFileService<RestoreRequest, EmptySuccessResponse> {
+public class RestoreService extends BackupFileService<RestoreRequest, EmptySuccessResponse>
+        implements RestoreServiceApi {
 
     @Override
     public EmptySuccessResponse exec(RestoreRequest request, EntityManager em) throws Exception {

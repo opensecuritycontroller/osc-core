@@ -21,6 +21,7 @@ import java.io.File;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.UpgradeRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
@@ -31,7 +32,7 @@ import org.osgi.service.component.annotations.Reference;
 import com.mcafee.vmidc.server.Server;
 
 @Component(service = UpgradeService.class)
-public class UpgradeService extends ServiceDispatcher<UpgradeRequest, EmptySuccessResponse> {
+public class UpgradeService extends ServiceDispatcher<UpgradeRequest, EmptySuccessResponse> implements UpgradeServiceApi {
     private static final Logger log = Logger.getLogger(UpgradeService.class);
 
     @Reference
