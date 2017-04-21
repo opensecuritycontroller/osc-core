@@ -28,11 +28,10 @@ import org.osc.core.broker.service.response.SetNetworkSettingsResponse;
 import org.osc.core.broker.service.tasks.network.IpChangePropagateMetaTask;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
+import org.osc.core.server.Server;
 import org.osc.core.util.NetworkUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = SetNetworkSettingsService.class)
 public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSettingsRequest, SetNetworkSettingsResponse> {

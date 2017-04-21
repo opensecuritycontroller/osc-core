@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.exceptions;
 
-import com.mcafee.vmidc.server.Server;
+import org.osc.core.server.Server;
 
 public class VmidcException extends Exception {
     private static final long serialVersionUID = 1L;

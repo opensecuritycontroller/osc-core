@@ -36,11 +36,10 @@ import org.osc.core.broker.service.response.UpdateUserResponse;
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateDaiMetaTask;
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateMgrMetaTask;
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateNsxMetaTask;
+import org.osc.core.server.Server;
 import org.osc.core.util.EncryptionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = UpdateUserService.class)
 public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, UpdateUserResponse> {
