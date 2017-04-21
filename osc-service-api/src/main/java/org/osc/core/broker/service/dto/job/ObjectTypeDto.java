@@ -17,17 +17,17 @@
 package org.osc.core.broker.service.dto.job;
 
 public class ObjectTypeDto {
-    public static final ObjectTypeDto VIRTUALIZATION_CONNECTOR = new ObjectTypeDto
-            ("VIRTUALIZATION_CONNECTOR", "Virtualization Connector");
+    public static final ObjectTypeDto VIRTUALIZATION_CONNECTOR = new ObjectTypeDto(
+            "VIRTUALIZATION_CONNECTOR", "Virtualization Connector");
 
-    public static final ObjectTypeDto SECURITY_GROUP = new ObjectTypeDto
-            ("SECURITY_GROUP", "Security Group");
+    public static final ObjectTypeDto SECURITY_GROUP = new ObjectTypeDto(
+            "SECURITY_GROUP", "Security Group");
 
-    public static final ObjectTypeDto APPLIANCE_MANAGER_CONNECTOR = new ObjectTypeDto
-            ("APPLIANCE_MANAGER_CONNECTOR", "Manager Connector");
+    public static final ObjectTypeDto APPLIANCE_MANAGER_CONNECTOR = new ObjectTypeDto(
+            "APPLIANCE_MANAGER_CONNECTOR", "Manager Connector");
 
-    public static final ObjectTypeDto VIRTUAL_SYSTEM = new ObjectTypeDto
-            ("VIRTUAL_SYSTEM", "Virtual System");
+    public static final ObjectTypeDto VIRTUAL_SYSTEM = new ObjectTypeDto(
+            "VIRTUAL_SYSTEM", "Virtual System");
 
     private String name;
     private String displayText;
