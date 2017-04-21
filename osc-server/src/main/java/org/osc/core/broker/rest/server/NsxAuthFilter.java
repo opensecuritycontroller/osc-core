@@ -16,16 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server;
 
+import java.io.IOException;
+
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
 
+import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.rest.annotations.NsxAuth;
 import org.osc.core.util.AuthUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import java.io.IOException;
 
 @Component(service = NsxAuthFilter.class)
 @Provider
