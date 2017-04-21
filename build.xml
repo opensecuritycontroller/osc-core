@@ -74,7 +74,7 @@
 		<copy file="target/serverUpgradeBundle.zip" tofile="Build${buildNumber}/serverUpgradeBundle-${buildNumber}.zip" />
 	</target>
 		
-	<target name="copyPlugins" if:true="${all}">
+	<target name="copyPlugins" if="${all}">
 		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" />
 		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />
 		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" />
