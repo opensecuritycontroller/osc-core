@@ -36,6 +36,7 @@ import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateM
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateNsxMetaTask;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.service.validator.UserDtoValidator;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.EncryptionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

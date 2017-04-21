@@ -38,8 +38,6 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -63,6 +61,7 @@ import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.Secu
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.ServiceApi;
