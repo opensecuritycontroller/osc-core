@@ -106,7 +106,6 @@
                 <module>osc-installer-test</module>
                 <module>osc-installer</module>
                 <module>osc-resolver</module>
-                <module>osc-server-bom</module>
                 <module>osc-server</module>
                 <module>osc-service-api</module>
                 <module>osc-tools</module>
@@ -138,7 +137,6 @@
                 <module>osc-installer-test</module>
                 <module>osc-installer</module>
                 <module>osc-resolver</module>
-                <module>osc-server-bom</module>
                 <module>osc-server</module>
                 <module>osc-service-api</module>
                 <module>osc-tools</module>
