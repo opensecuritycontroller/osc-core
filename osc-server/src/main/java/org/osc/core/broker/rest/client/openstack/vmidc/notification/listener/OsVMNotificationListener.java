@@ -69,21 +69,23 @@ public class OsVMNotificationListener extends OsNotificationListener {
 
                 log.info(" [Instance] : message received - " + message);
                 try {
-                    if (this.entity instanceof SecurityGroup) {
+                    HibernateUtil.getTransactionControl().required(() -> {
+                        if (this.entity instanceof SecurityGroup) {
 
-                        if (!eventType.contains(OsNotificationEventState.POWER_OFF.toString())) {
-                            // if the listener is tied to SG then handle SG messages
-                            handleSGMessages(vmOpenstackId, message);
+                            if (!eventType.contains(OsNotificationEventState.POWER_OFF.toString())) {
+                                // if the listener is tied to SG then handle SG messages
+                                handleSGMessages(vmOpenstackId, message);
+                            }
+
+                        } else if (this.entity instanceof DeploymentSpec) {
+                            // / if the listener is tied to DAI which belongs to a DS then handle DAI messages
+                            if (!eventType.contains(OsNotificationEventState.CREATE.toString())) {
+                                // If DAI/SVA is migrated, deleted or powered off then trigger DS sync
+                                handleDAIMessages(vmOpenstackId, eventType, message);
+                            }
                         }
-
-                    } else if (this.entity instanceof DeploymentSpec) {
-                        // / if the listener is tied to DAI which belongs to a DS then handle DAI messages
-                        if (!eventType.contains(OsNotificationEventState.CREATE.toString())) {
-                            // If DAI/SVA is migrated, deleted or powered off then trigger DS sync
-                            handleDAIMessages(vmOpenstackId, eventType, message);
-                        }
-
-                    }
+                        return null;
+                    });
                 } catch (Exception e) {
                     log.error(
                             "Fail to process Openstack VM (" + vmOpenstackId + ") notification - "
