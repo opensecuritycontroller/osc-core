@@ -75,19 +75,21 @@ class VmPortHookCreateTask extends TransactionalTask {
                     this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
+            TagEncapsulationType encapsulationType = vs.getEncapsulationType() != null
+                    ? TagEncapsulationType.valueOf(vs.getEncapsulationType().name()) : null;
             if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
                 String portGroupId = this.securityGroupInterface.getSecurityGroup().getNetworkElementId();
                 if (portGroupId != null){
                     PortGroup portGroup = new PortGroup();
                     portGroup.setPortGroupId(portGroupId);
                     controller.installInspectionHook(portGroup, new DefaultInspectionPort(ingressPort, egressPort),
-                            this.securityGroupInterface.getTagValue(), TagEncapsulationType.valueOf(vs.getEncapsulationType().name()),
+                            this.securityGroupInterface.getTagValue(), encapsulationType,
                             this.securityGroupInterface.getOrder(), FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
                 }
             } else {
                 controller.installInspectionHook(new NetworkElementImpl(this.vmPort),
                         new DefaultInspectionPort(ingressPort, egressPort),
-                        this.securityGroupInterface.getTagValue(), TagEncapsulationType.valueOf(vs.getEncapsulationType().name()),
+                        this.securityGroupInterface.getTagValue(), encapsulationType,
                         this.securityGroupInterface.getOrder(), FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
             }
         } finally {
