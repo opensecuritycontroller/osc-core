@@ -61,6 +61,9 @@ public class NsmMgrApis {
     @Reference
     private ApiUtil apiUtil;
 
+    @Reference
+    private PropagateVSMgrFileService propagateVSMgrFileService;
+
     @Path("/notification")
     @POST
     public Response postNotification(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
@@ -83,7 +86,7 @@ public class NsmMgrApis {
         request.setMgrFile(mgrFile.getMgrFile());
         request.setMgrFileName(mgrFile.getMgrFileName());
 
-        return apiUtil.getResponse(new PropagateVSMgrFileService(), request);
+        return this.apiUtil.getResponse(this.propagateVSMgrFileService, request);
 
     }
 

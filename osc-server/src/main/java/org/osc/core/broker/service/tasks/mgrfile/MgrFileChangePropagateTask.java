@@ -24,23 +24,31 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 
-
+@Component(service = MgrFileChangePropagateTask.class)
 public class MgrFileChangePropagateTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(MgrFileChangePropagateTask.class);
+
+    @Reference
+    private MgrFileChangePropagateToDaiTask mgrFileChangePropagateToDaiTask;
 
     private TaskGraph tg;
     private byte[] mgrFile = null;
     private String mgrFileName;
     private List<DistributedApplianceInstance> daiList;
 
-    public MgrFileChangePropagateTask(String mgrFileName, byte[] mgrFile, List<DistributedApplianceInstance> daiList) {
-        this.mgrFileName = mgrFileName;
-        this.mgrFile = mgrFile;
-        this.daiList = daiList;
-        this.name = getName();
+    public MgrFileChangePropagateTask create(String mgrFileName, byte[] mgrFile, List<DistributedApplianceInstance> daiList) {
+        MgrFileChangePropagateTask task = new MgrFileChangePropagateTask();
+        task.mgrFileName = mgrFileName;
+        task.mgrFile = mgrFile;
+        task.daiList = daiList;
+        task.name = task.getName();
+        task.mgrFileChangePropagateToDaiTask = this.mgrFileChangePropagateToDaiTask;
+        return task;
     }
 
     @Override
@@ -51,7 +59,7 @@ public class MgrFileChangePropagateTask extends TransactionalMetaTask {
         this.tg = new TaskGraph();
 
         for (DistributedApplianceInstance dai : this.daiList) {
-            this.tg.addTask(new MgrFileChangePropagateToDaiTask(dai, this.mgrFile, this.mgrFileName));
+            this.tg.addTask(this.mgrFileChangePropagateToDaiTask.create(dai, this.mgrFile, this.mgrFileName));
         }
 
     }

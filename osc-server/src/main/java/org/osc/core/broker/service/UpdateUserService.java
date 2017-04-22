@@ -36,6 +36,7 @@ import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateM
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateNsxMetaTask;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.service.validator.UserDtoValidator;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.EncryptionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -50,6 +51,9 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
 
     @Reference
     private PasswordChangePropagateNsxMetaTask passwordChangePropagateNsxMetaTask;
+
+    @Reference
+    private PasswordUtil passwordUtil;
 
     @Override
     public UpdateUserResponse exec(UpdateUserRequest request, EntityManager em) throws Exception {
@@ -69,13 +73,13 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
         // If user changes password, need to reflect it in auth-filter objects
         if (user.getLoginName().equals(OscAuthFilter.OSC_DEFAULT_LOGIN)) {
 
-            OscAuthFilter.OSC_DEFAULT_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
+            this.passwordUtil.setOscDefaultPass(EncryptionUtil.decryptAESCTR(user.getPassword()));
             user.setRole(RoleType.ADMIN);
             response.setJobId(startPasswordPropagateMgrJob());
 
         } else if (user.getLoginName().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
 
-            NsxAuthFilter.VMIDC_NSX_PASS = EncryptionUtil.decryptAESCTR(user.getPassword());
+            this.passwordUtil.setVmidcNsxPass(EncryptionUtil.decryptAESCTR(user.getPassword()));
             user.setRole(RoleType.SYSTEM_NSX);
             response.setJobId(startPasswordPropagateNsxJob());
         }

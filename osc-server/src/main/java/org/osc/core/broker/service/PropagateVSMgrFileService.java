@@ -44,10 +44,16 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.mgrfile.MgrFileChangePropagateTask;
 import org.osc.core.broker.service.tasks.mgrfile.MgrFileChangePropagateToDaiTask;
 import org.osc.sdk.manager.api.IscJobNotificationApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = PropagateVSMgrFileService.class)
 public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrFileRequest, BaseJobResponse> {
 
     private static final Logger log = Logger.getLogger(PropagateVSMgrFileService.class);
+
+    @Reference
+    private MgrFileChangePropagateTask mgrFileChangePropagateTask;
 
     @Override
     public BaseJobResponse exec(PropagateVSMgrFileRequest request, EntityManager em) throws Exception {
@@ -124,7 +130,7 @@ public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrF
         TaskGraph tg = new TaskGraph();
 
         final VirtualSystem vs = daiList.get(0).getVirtualSystem();
-        tg.addTask(new MgrFileChangePropagateTask(req.getMgrFileName(), req.getMgrFile(), daiList));
+        tg.addTask(this.mgrFileChangePropagateTask.create(req.getMgrFileName(), req.getMgrFile(), daiList));
 
         IscJobNotificationApi mgrApi = ManagerApiFactory.createIscJobNotificationApi(vs);
 

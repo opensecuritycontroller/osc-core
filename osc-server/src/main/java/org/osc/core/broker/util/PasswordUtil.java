@@ -19,17 +19,44 @@ package org.osc.core.broker.util;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
-import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.component.annotations.Component;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
+@Component(service = PasswordUtil.class)
 public class PasswordUtil {
+    private String vmidcAgentPass = "";
+    private String vmidcNsxPass = "";
+    private String oscDefaultPass = "";
 
-    public static void initPasswordFromDb(String loginName) throws InterruptedException, VmidcException {
+    public void setVmidcAgentPass(String vmidcAgentPass) {
+        this.vmidcAgentPass = vmidcAgentPass;
+    }
+
+    public void setVmidcNsxPass(String vmidcNsxPass) {
+        this.vmidcNsxPass = vmidcNsxPass;
+    }
+
+    public void setOscDefaultPass(String oscDefaultPass) {
+        this.oscDefaultPass = oscDefaultPass;
+    }
+
+    public String getVmidcAgentPass() {
+        return this.vmidcAgentPass;
+    }
+
+    public String getVmidcNsxPass() {
+        return this.vmidcNsxPass;
+    }
+
+    public String getOscDefaultPass() {
+        return this.oscDefaultPass;
+    }
+
+    public void initPasswordFromDb(String loginName) throws InterruptedException, VmidcException {
 
         EntityManager em = HibernateUtil.getTransactionalEntityManager();
         User user;
@@ -39,12 +66,12 @@ public class PasswordUtil {
                 OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
                 return  emgr.findByFieldName("loginName", loginName);
             });
-            if (user.getLoginName().equals(AgentAuthFilter.VMIDC_AGENT_LOGIN)) {
-                AgentAuthFilter.VMIDC_AGENT_PASS = user.getPassword();
-            } else if (user.getLoginName().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
-                NsxAuthFilter.VMIDC_NSX_PASS = user.getPassword();
-            } else if (user.getLoginName().equals(OscAuthFilter.OSC_DEFAULT_LOGIN)) {
-                OscAuthFilter.OSC_DEFAULT_PASS = user.getPassword();
+            if (user.getLoginName().equals(RestConstants.VMIDC_AGENT_LOGIN)) {
+                setVmidcAgentPass(user.getPassword());
+            } else if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {
+                setVmidcNsxPass(user.getPassword());
+            } else if (user.getLoginName().equals(RestConstants.OSC_DEFAULT_LOGIN)) {
+                setOscDefaultPass(user.getPassword());
             }
 
         } catch (ScopedWorkException swe) {

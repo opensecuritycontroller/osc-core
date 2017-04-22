@@ -80,6 +80,9 @@ public class ManagerApis {
     @Reference
     private ApiUtil apiUtil;
 
+    @Reference
+    private PropagateVSMgrFileService propagateVSMgrFileService;
+
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
                     + "request is reported by and responds to the notification accordingly",
@@ -120,7 +123,7 @@ public class ManagerApis {
         request.setMgrFile(mgrFile.getMgrFile());
         request.setMgrFileName(mgrFile.getMgrFileName());
 
-        return apiUtil.getResponse(new PropagateVSMgrFileService(), request);
+        return this.apiUtil.getResponse(this.propagateVSMgrFileService, request);
     }
 
     @ApiOperation(value = "Query Virtual Machine information",

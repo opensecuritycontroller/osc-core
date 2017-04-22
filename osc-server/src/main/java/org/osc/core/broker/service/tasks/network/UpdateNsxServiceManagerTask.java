@@ -26,9 +26,9 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.ServiceManager;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.CreateNsxServiceManagerTask;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
 import org.osgi.service.component.annotations.Component;
@@ -43,6 +43,9 @@ public class UpdateNsxServiceManagerTask extends TransactionalTask {
 
     @Reference
     public ApiFactoryService apiFactoryService;
+
+    @Reference
+    private PasswordUtil passwordUtil;
 
     public UpdateNsxServiceManagerTask create(VirtualSystem vs) {
         UpdateNsxServiceManagerTask task = new UpdateNsxServiceManagerTask();
@@ -60,8 +63,8 @@ public class UpdateNsxServiceManagerTask extends TransactionalTask {
         ServiceManager serviceManager = new ServiceManager(serviceManagerElement);
 
         serviceManager.setRestUrl(CreateNsxServiceManagerTask.buildRestCallbackUrl());
-        serviceManager.setPassword(NsxAuthFilter.VMIDC_NSX_PASS);
-        serviceManager.setVerifyPassword(NsxAuthFilter.VMIDC_NSX_PASS);
+        serviceManager.setPassword(this.passwordUtil.getVmidcNsxPass());
+        serviceManager.setVerifyPassword(this.passwordUtil.getVmidcNsxPass());
 
         serviceManager.setVendorName(this.apiFactoryService.generateServiceManagerName(this.vs));
         serviceManager.setVendorId(this.apiFactoryService.generateServiceManagerName(this.vs));

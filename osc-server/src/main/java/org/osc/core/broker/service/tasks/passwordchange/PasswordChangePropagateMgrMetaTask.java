@@ -33,12 +33,19 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.mcafee.vmidc.server.Server;
 
+@Component(service = PasswordChangePropagateMgrMetaTask.class)
 public class PasswordChangePropagateMgrMetaTask extends TransactionalMetaTask {
 
     final static Logger log = Logger.getLogger(PasswordChangePropagateMgrMetaTask.class);
+
+    @Reference
+    private MCConformanceCheckMetaTask mcConformanceCheckMetaTask;
+
     private TaskGraph tg;
 
     public PasswordChangePropagateMgrMetaTask() {
@@ -76,7 +83,7 @@ public class PasswordChangePropagateMgrMetaTask extends TransactionalMetaTask {
 
                     propagateTaskGraph.addTask(lockTask);
                     propagateTaskGraph.addTaskGraph(
-                            MCConformanceCheckMetaTask.syncPersistedUrlNotification(em, mc), lockTask);
+                            this.mcConformanceCheckMetaTask.syncPersistedUrlNotification(em, mc), lockTask);
                     propagateTaskGraph.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
                     this.tg.addTaskGraph(propagateTaskGraph);

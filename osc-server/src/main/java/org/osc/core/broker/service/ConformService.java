@@ -78,6 +78,9 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     @Reference
     private DAConformanceCheckMetaTask daConformanceCheckMetaTask;
 
+    @Reference
+    MCConformanceCheckMetaTask mcConformanceCheckMetaTask;
+
     public Long startDAConformJob(EntityManager em, DistributedAppliance da) throws Exception {
         return startDAConformJob(em, da, null, true);
     }
@@ -122,7 +125,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             UnlockObjectTask daWriteUnlocktask = daMcUnlockTask
                     .getUnlockTaskByTypeAndId(ObjectType.DISTRIBUTED_APPLIANCE, da.getId());
 
-            Task mcCheck = new MCConformanceCheckMetaTask(mc, mcReadUnlocktask, this.apiFactoryService);
+            Task mcCheck = this.mcConformanceCheckMetaTask.create(mc, mcReadUnlocktask);
             tg.addTask(mcCheck);
             tg.appendTask(new DowngradeLockObjectTask(new LockRequest(daWriteUnlocktask)),
                     TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -212,7 +215,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new MCConformanceCheckMetaTask(mc, mcUnlock, this.apiFactoryService));
+        tg.addTask(this.mcConformanceCheckMetaTask.create(mc, mcUnlock));
         if (mcUnlock != null) {
             tg.appendTask(mcUnlock, TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
