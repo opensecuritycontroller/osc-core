@@ -37,8 +37,6 @@ import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.encryption.EncryptionException;
 
-import com.mcafee.vmidc.server.Server;
-
 public class RestoreService extends BackupFileService<RestoreRequest, EmptySuccessResponse>
         implements RestoreServiceApi {
 

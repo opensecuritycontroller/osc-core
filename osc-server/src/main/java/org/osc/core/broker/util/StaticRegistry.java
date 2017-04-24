@@ -34,8 +34,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import com.mcafee.vmidc.server.Server;
-
 /**
  * This registry is a work-around to temporarily allow some static calls to remain after they have been removed from the
  * REST API.
