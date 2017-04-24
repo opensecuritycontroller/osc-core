@@ -43,7 +43,8 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
+import org.osc.core.broker.service.response.CertificateBasicInfoModel;
+import org.osc.core.rest.client.crypto.model.CertificateBasicInfoUtil;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.KeyStoreProvider;
@@ -186,7 +187,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
             if ("X.509".equals(this.keyStore.getCertificate(alias).getType())) {
                 X509Certificate certificate = (X509Certificate) this.keyStore.getCertificate(alias);
                 try {
-                    CertificateBasicInfoModel infoModel = new CertificateBasicInfoModel(
+                    CertificateBasicInfoModel infoModel = CertificateBasicInfoUtil.create(
                             alias, getSha1Fingerprint(certificate), certificate.getIssuerDN().getName(),
                             certificate.getNotBefore(), certificate.getNotAfter(), certificate.getSigAlgName(),
                             certificate);
@@ -196,7 +197,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
                     LOG.error("Failed to add certificate basic info model", e);
                 }
             } else {
-                list.add(new CertificateBasicInfoModel(alias));
+                list.add(CertificateBasicInfoUtil.create(alias));
             }
         }
         return list;

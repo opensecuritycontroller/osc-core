@@ -35,19 +35,19 @@ import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
-import org.osc.core.broker.rest.server.model.QueryVmInfoRequest;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.PropagateVSMgrFileService;
-import org.osc.core.broker.service.QueryVmInfoService;
 import org.osc.core.broker.service.TagVmService;
 import org.osc.core.broker.service.UnTagVmService;
+import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.mc.MCChangeNotificationService;
 import org.osc.core.broker.service.request.MCChangeNotificationRequest;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
+import org.osc.core.broker.service.request.QueryVmInfoRequest;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.xxx.response.QueryVmInfoResponse;
+import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
@@ -82,6 +82,9 @@ public class ManagerApis {
 
     @Reference
     private PropagateVSMgrFileService propagateVSMgrFileService;
+
+    @Reference
+    private QueryVmInfoServiceApi queryVmInfoService;
 
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
@@ -142,7 +145,7 @@ public class ManagerApis {
         log.info("Query VM info request: " + queryVmInfo);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return this.apiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
+        return this.apiUtil.getResponse(this.queryVmInfoService, queryVmInfo);
     }
 
     @Path("/tagVm")

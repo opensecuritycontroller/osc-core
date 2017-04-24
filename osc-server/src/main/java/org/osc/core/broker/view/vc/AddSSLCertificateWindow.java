@@ -16,22 +16,24 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Table;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateEncodingException;
+import java.util.ArrayList;
+import java.util.Date;
+
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseApproveWindow;
 import org.osc.core.broker.window.button.ApproveCancelButtonModel;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
+import org.osc.core.rest.client.crypto.model.CertificateBasicInfoUtil;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateEncodingException;
-import java.util.ArrayList;
-import java.util.Date;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Table;
 
 @SuppressWarnings("serial")
 public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
@@ -100,7 +102,7 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
 
         for (CertificateResolverModel basicInfoModel : this.certificateResolverModels) {
             try {
-                certificateBasicInfoModels.add(new CertificateBasicInfoModel(
+                certificateBasicInfoModels.add(CertificateBasicInfoUtil.create(
                         basicInfoModel.getAlias(),
                         X509TrustManagerFactory.getSha1Fingerprint(basicInfoModel.getCertificate()),
                         basicInfoModel.getCertificate().getIssuerDN().getName(),

@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api.proprietary;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,22 +38,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.rest.client.nsx.model.Attribute;
-import org.osc.core.broker.rest.client.nsx.model.ContainerSet;
-import org.osc.core.broker.rest.client.nsx.model.FabricAgents;
 import org.osc.core.broker.rest.client.nsx.model.ServiceInstance;
-import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
 import org.osc.core.broker.service.NsxDeleteAgentsService;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.NsxUpdateProfileContainerService;
 import org.osc.core.broker.service.NsxUpdateProfileService;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.request.Attribute;
+import org.osc.core.broker.service.request.ContainerSet;
+import org.osc.core.broker.service.request.FabricAgents;
 import org.osc.core.broker.service.request.NsxDeleteAgentsRequest;
+import org.osc.core.broker.service.request.NsxUpdateAgentsRequest;
+import org.osc.core.broker.service.request.NsxUpdateProfileContainerRequest;
+import org.osc.core.broker.service.request.NsxUpdateProfileRequest;
+import org.osc.core.broker.service.request.ServiceProfile;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.xxx.request.NsxUpdateAgentsRequest;
-import org.osc.core.broker.service.xxx.request.NsxUpdateProfileContainerRequest;
-import org.osc.core.broker.service.xxx.request.NsxUpdateProfileRequest;
-import org.osc.core.broker.service.xxx.response.NsxUpdateAgentsResponse;
+import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.rest.annotations.NsxAuth;
 import org.osc.core.server.Server;
@@ -67,20 +66,6 @@ import org.osgi.service.component.annotations.Component;
 public class NsxApis {
 
     private static final Logger log = Logger.getLogger(NsxApis.class);
-
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
-    public static class UpdatedAgents {
-        public List<UpdatedAgent> updatedAgent = new ArrayList<UpdatedAgent>();
-    }
-
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
-    public static class UpdatedAgent {
-        public String agentId;
-        public String responseString = "{data to be written back to SVM}";
-
-    }
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)

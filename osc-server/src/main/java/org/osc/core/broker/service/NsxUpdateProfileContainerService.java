@@ -25,17 +25,19 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.service.api.NsxUpdateProfileContainerServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
+import org.osc.core.broker.service.request.NsxUpdateProfileContainerRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxServiceProfileContainerCheckMetaTask;
-import org.osc.core.broker.service.xxx.request.NsxUpdateProfileContainerRequest;
 import org.osc.core.util.NetworkUtil;
 
-public class NsxUpdateProfileContainerService extends
-ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse> {
+public class NsxUpdateProfileContainerService
+        extends ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse>
+        implements NsxUpdateProfileContainerServiceApi {
 
     //private static final Logger log = Logger.getLogger(NsxUpdateProfileContainerService.class);
 

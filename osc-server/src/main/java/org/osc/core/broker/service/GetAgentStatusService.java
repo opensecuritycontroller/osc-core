@@ -39,12 +39,14 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.service.xxx.request.DistributedApplianceInstancesRequest;
-import org.osc.core.broker.service.xxx.response.GetAgentStatusResponse;
-import org.osc.core.rest.client.agent.model.output.AgentDpaInfo;
-import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
+import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
+import org.osc.core.broker.service.response.AgentDpaInfo;
+import org.osc.core.broker.service.response.AgentStatusResponse;
+import org.osc.core.broker.service.response.GetAgentStatusResponse;
+import org.osc.core.broker.service.validator.DistributedApplianceInstancesRequestValidator;
 import org.osc.core.util.VersionUtil;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.element.DistributedApplianceInstanceElement;
@@ -53,7 +55,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = GetAgentStatusService.class)
-public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianceInstancesRequest, GetAgentStatusResponse> {
+public class GetAgentStatusService
+        extends ServiceDispatcher<DistributedApplianceInstancesRequest, GetAgentStatusResponse>
+        implements GetAgentStatusServiceApi {
 
     private static final Logger LOG = Logger.getLogger(GetAgentStatusService.class);
     private List<DistributedApplianceInstance> daiList = null;
@@ -65,7 +69,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
     @Override
     public GetAgentStatusResponse exec(DistributedApplianceInstancesRequest request, EntityManager em) throws Exception {
         this.em = em;
-        DistributedApplianceInstancesRequest.checkForNullFields(request);
+        DistributedApplianceInstancesRequestValidator.checkForNullFields(request);
 
         GetAgentStatusResponse response = new GetAgentStatusResponse();
 
@@ -155,7 +159,7 @@ public class GetAgentStatusService extends ServiceDispatcher<DistributedApplianc
             AgentStatusResponse agentStatus = new AgentStatusResponse();
             VersionUtil.Version version = new VersionUtil.Version();
             version.setVersionStr(agentElem.getVersion());
-            agentStatus.setVersion(version);
+            agentStatus.setVersion(version.getVersionStr());
 
             agentStatus.setApplianceId(agentElem.getDistributedApplianceInstanceElement().getId());
             agentStatus.setApplianceName(agentElem.getDistributedApplianceInstanceElement().getName());

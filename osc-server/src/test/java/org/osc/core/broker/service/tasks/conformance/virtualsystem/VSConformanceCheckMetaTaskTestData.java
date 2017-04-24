@@ -43,9 +43,9 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorRefer
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.rest.client.nsx.model.Service;
-import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
+import org.osc.core.broker.service.request.Service;
+import org.osc.core.broker.service.request.ServiceProfile;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.conformance.GenerateVSSKeysTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;

@@ -32,22 +32,29 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
-import org.osc.core.broker.rest.server.model.QueryVmInfoRequest;
+import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
-import org.osc.core.broker.service.xxx.response.QueryVmInfoResponse;
-import org.osc.core.broker.service.xxx.response.QueryVmInfoResponse.FlowVmInfo;
-import org.osc.core.broker.service.xxx.response.QueryVmInfoResponse.VmInfo;
+import org.osc.core.broker.service.request.QueryVmInfoRequest;
+import org.osc.core.broker.service.response.QueryVmInfoResponse;
+import org.osc.core.broker.service.response.QueryVmInfoResponse.FlowVmInfo;
+import org.osc.core.broker.service.response.QueryVmInfoResponse.VmInfo;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VimUtils;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
+import org.osgi.service.component.annotations.Component;
 
+import com.vmware.vim25.mo.HostSystem;
 import com.vmware.vim25.mo.VirtualMachine;
 
-public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse> {
+@Component
+public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse>
+        implements QueryVmInfoServiceApi {
+
+    private QueryVmInfoService() {}
 
     private static final Logger log =
             Logger.getLogger(QueryVmInfoService.class);
@@ -76,7 +83,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
 
                     VmInfo vmInfo = null;
                     if (vm != null) {
-                        vmInfo = new VmInfo(vm, vmi);
+                        vmInfo = newVmInfo(vm, vmi);
                     }
                     response.vmInfo.put(ipAddress, vmInfo);
                 }
@@ -88,7 +95,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                     VirtualMachine vm = vmi.findVmByInstanceUuid(vmUuid);
 
                     if (vm != null) {
-                        vmInfo = new VmInfo(vm, vmi);
+                        vmInfo = newVmInfo(vm, vmi);
                     }
                     response.vmInfo.put(vmUuid, vmInfo);
                 }
@@ -122,7 +129,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                         VM vm = VMPortEntityManager.findByIpAddress(em, dai, ipAddress);
 
                         if (vm != null) {
-                            vmInfo = new VmInfo(vm);
+                            vmInfo = newVmInfo(vm);
                             vmInfo.vmIpAddress = ipAddress;
                         } else {
                             vmInfo = findVmByIpAddress(nova, neutron, dai, ipAddress);
@@ -151,7 +158,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                         VM vm = VMPortEntityManager.findByMacAddress(em, macAddress);
 
                         if (vm != null) {
-                            vmInfo = new VmInfo(vm);
+                            vmInfo = newVmInfo(vm);
                             vmInfo.vmMacAddress = macAddress;
                         } else {
                             vmInfo = findVmByMacAddress(nova, neutron, dai, macAddress);
@@ -233,7 +240,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         }
         VirtualMachine vm = vmi.findVmByIp(ipAddress);
         if (vm != null) {
-            return new VmInfo(vm, vmi);
+            return newVmInfo(vm, vmi);
         }
         return null;
     }
@@ -246,7 +253,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
             throw new VmidcBrokerValidationException("Unable to find Server attached to the port " + portId);
         }
         Server vm = nova.getServer(region, vmId);
-        return new VmInfo(vm);
+        return newVmInfo(vm);
     }
 
     private VmInfo findVmByMacOrIp(EntityManager em, JCloudNova nova, JCloudNeutron neutron,
@@ -256,7 +263,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
             VM vm = VMPortEntityManager.findByMacAddress(em, macAddress);
             if (vm != null) {
                 // From local cache
-                vmInfo = new VmInfo(vm);
+                vmInfo = newVmInfo(vm);
                 vmInfo.vmMacAddress = macAddress;
             } else {
                 // From openstack
@@ -267,7 +274,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
             VM vm = VMPortEntityManager.findByIpAddress(em, dai, ipAddress);
             if (vm != null) {
                 // From local cache
-                vmInfo = new VmInfo(vm);
+                vmInfo = newVmInfo(vm);
                 vmInfo.vmIpAddress = ipAddress;
             } else {
                 // From openstack
@@ -327,6 +334,40 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         String region = dai.getDeploymentSpec().getRegion();
         String vmId = neutron.getVmIdByMacAddress(region, macAddress);
         Server server = nova.getServer(region, vmId);
-        return new VmInfo(server);
+        return newVmInfo(server);
+    }
+
+    private VmInfo newVmInfo(VirtualMachine vm, VimUtils vmu) {
+        VmInfo vmi = new VmInfo();
+        vmi.vmName = vm.getName();
+        vmi.vmId = vm.getMOR().getVal();
+        vmi.vmUuid = vm.getConfig().getInstanceUuid();
+        vmi.vmIpAddress = vm.getGuest().getIpAddress();
+        HostSystem host = vmu.getVmHost(vm);
+        vmi.hostName = host.getName();
+        vmi.hostId = host.getMOR().get_value();
+        return vmi;
+    }
+
+    private VmInfo newVmInfo(VM vm) {
+        VmInfo vmi = new VmInfo();
+        vmi.vmName = vm.getName();
+        vmi.vmId = vm.getId().toString();
+        vmi.vmUuid = vm.getOpenstackId();
+        vmi.hostName = vm.getHost();
+        vmi.hostId = vm.getHost();
+        return vmi;
+    }
+
+    private VmInfo newVmInfo(Server vm) {
+        VmInfo vmi = new VmInfo();
+        vmi.vmName = vm.getName();
+        vmi.vmId = vm.getId();
+        vmi.vmUuid = vm.getId();
+        // TODO: Future Maybe add comma seperated list of ip addresses
+        vmi.vmIpAddress = "";
+        vmi.hostName = vm.getHostId();
+        vmi.hostId = vm.getHostId();
+        return vmi;
     }
 }

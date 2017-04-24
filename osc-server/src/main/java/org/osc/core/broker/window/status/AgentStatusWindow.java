@@ -21,10 +21,10 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
-import org.osc.core.broker.service.xxx.request.DistributedApplianceInstancesRequest;
-import org.osc.core.broker.service.xxx.response.GetAgentStatusResponse;
+import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
+import org.osc.core.broker.service.response.AgentStatusResponse;
+import org.osc.core.broker.service.response.GetAgentStatusResponse;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.rest.client.agent.model.output.AgentStatusResponse;
 
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Alignment;
@@ -170,7 +170,7 @@ public class AgentStatusWindow extends Window {
         statusTable.addItem(new Object[] { "Discovered: ", "" }, new Integer(10));
         statusTable.addItem(new Object[] { "Inspection Ready: ", "" }, new Integer(11));
 
-        if (null != res.getVersion() && null != res.getVersion().getVersionStr()) {
+        if (null != res.getVersion()) {
             statusTable.getItem(6).getItemProperty("Value").setValue(res.getCurrentServerTime().toString());
         } else {
             statusTable.getItem(6).getItemProperty("Value").setValue("Not Available due to communication error.");
@@ -179,7 +179,7 @@ public class AgentStatusWindow extends Window {
         try {
             addCommonTableItemValues(res, statusTable);
 
-            if (null != res.getVersion() && null != res.getVersion().getVersionStr()) {
+            if (null != res.getVersion()) {
                 statusTable.getItem(7).getItemProperty("Value")
                 .setValue(res.getAgentDpaInfo().netXDpaRuntimeInfo.dpaPid);
                 statusTable.getItem(8).getItemProperty("Value")

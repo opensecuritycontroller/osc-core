@@ -23,7 +23,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.service.xxx.request.AgentRegisterServiceRequest;
+import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 
 public class AgentRegisterServiceRequestValidator implements RequestValidator<AgentRegisterServiceRequest, DistributedApplianceInstance> {
     private EntityManager em;

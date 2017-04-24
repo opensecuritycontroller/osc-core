@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.rest.client.nsx.model.ServiceProfileReference.ServiceReference;
+import org.osc.core.broker.service.request.ServiceProfileReference.ServiceReference;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

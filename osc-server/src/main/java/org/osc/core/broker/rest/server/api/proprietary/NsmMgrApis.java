@@ -33,12 +33,12 @@ import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
-import org.osc.core.broker.rest.server.model.QueryVmInfoRequest;
 import org.osc.core.broker.service.PropagateVSMgrFileService;
-import org.osc.core.broker.service.QueryVmInfoService;
 import org.osc.core.broker.service.TagVmService;
 import org.osc.core.broker.service.UnTagVmService;
+import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
+import org.osc.core.broker.service.request.QueryVmInfoRequest;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
@@ -63,6 +63,9 @@ public class NsmMgrApis {
 
     @Reference
     private PropagateVSMgrFileService propagateVSMgrFileService;
+
+    @Reference
+    private QueryVmInfoServiceApi queryVmInfoService;
 
     @Path("/notification")
     @POST
@@ -97,7 +100,7 @@ public class NsmMgrApis {
         log.info("Query VM info request: " + queryVmInfo);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return this.apiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
+        return this.apiUtil.getResponse(this.queryVmInfoService, queryVmInfo);
     }
 
     @Path("/tagVm")
