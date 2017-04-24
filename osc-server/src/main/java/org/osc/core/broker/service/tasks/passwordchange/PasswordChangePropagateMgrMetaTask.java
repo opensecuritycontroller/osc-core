@@ -35,8 +35,7 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
+import org.osc.core.server.Server;
 
 @Component(service = PasswordChangePropagateMgrMetaTask.class)
 public class PasswordChangePropagateMgrMetaTask extends TransactionalMetaTask {

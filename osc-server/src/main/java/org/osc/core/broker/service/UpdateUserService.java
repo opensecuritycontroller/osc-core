@@ -37,11 +37,10 @@ import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateN
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.service.validator.UserDtoValidator;
 import org.osc.core.broker.util.PasswordUtil;
+import org.osc.core.server.Server;
 import org.osc.core.util.EncryptionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = UpdateUserService.class)
 public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, UpdateUserResponse>

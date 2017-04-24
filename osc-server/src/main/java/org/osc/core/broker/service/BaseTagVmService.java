@@ -27,10 +27,10 @@ import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.TagVmResponse;
 import org.osc.core.broker.service.validator.RequestValidator;
 import org.osc.core.broker.util.VimUtils;
+import org.osc.core.server.Server;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.sdn.api.SecurityTagApi;
 
-import com.mcafee.vmidc.server.Server;
 import com.vmware.vim25.mo.VirtualMachine;
 
 abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmResponse> {

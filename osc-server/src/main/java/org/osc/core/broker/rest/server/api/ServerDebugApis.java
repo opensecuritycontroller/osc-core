@@ -42,11 +42,10 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.rest.client.util.LoggingUtil;
+import org.osc.core.server.Server;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = ServerDebugApis.class)
 @Path(RestConstants.SERVER_API_PATH_PREFIX + "/serverDebug")

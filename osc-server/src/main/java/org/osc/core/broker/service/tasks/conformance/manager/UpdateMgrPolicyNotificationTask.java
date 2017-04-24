@@ -29,12 +29,11 @@ import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.PasswordUtil;
+import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = UpdateMgrPolicyNotificationTask.class)
 public class UpdateMgrPolicyNotificationTask extends TransactionalTask {

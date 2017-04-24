@@ -30,10 +30,9 @@ import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
-
-import com.mcafee.vmidc.server.Server;
 
 public class RegisterDeploymentSpecTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(RegisterDeploymentSpecTask.class);

@@ -26,12 +26,11 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
+import org.osc.core.server.Server;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
-
-import com.mcafee.vmidc.server.Server;
 
 abstract class BackupFileService<I extends Request, O extends Response> extends ServiceDispatcher<I, O> {
 	protected static final String DEFAULT_BACKUP_FILE_NAME = "BrokerServerDBBackup";

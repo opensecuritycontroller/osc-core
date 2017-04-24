@@ -25,11 +25,10 @@ import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.UpgradeRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = UpgradeService.class)
 public class UpgradeService extends ServiceDispatcher<UpgradeRequest, EmptySuccessResponse> implements UpgradeServiceApi {

@@ -29,7 +29,7 @@ import org.osc.core.broker.util.PasswordUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import com.mcafee.vmidc.server.Server;
+import org.osc.core.server.Server;
 
 @Component
 public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, EmptySuccessResponse>
