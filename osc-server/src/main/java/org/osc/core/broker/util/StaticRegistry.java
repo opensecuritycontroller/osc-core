@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import com.mcafee.vmidc.server.Server;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDistributedApplianceService;
@@ -30,6 +29,7 @@ import org.osc.core.broker.service.mc.SyncManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osc.core.broker.service.vc.AddVirtualizationConnectorService;
 import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
+import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

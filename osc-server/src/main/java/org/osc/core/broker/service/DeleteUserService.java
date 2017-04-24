@@ -26,10 +26,9 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.DeleteUserRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = DeleteUserService.class)
 public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, EmptySuccessResponse> {

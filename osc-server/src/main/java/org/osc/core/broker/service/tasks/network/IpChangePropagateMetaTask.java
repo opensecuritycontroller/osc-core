@@ -39,10 +39,9 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
+import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = IpChangePropagateMetaTask.class)
 public class IpChangePropagateMetaTask extends TransactionalMetaTask {

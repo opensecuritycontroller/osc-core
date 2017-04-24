@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import com.mcafee.vmidc.server.Server;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.osc.core.broker.service.exceptions.VmidcException;
@@ -25,6 +24,7 @@ import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.RestoreUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.server.Server;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.encryption.EncryptionException;
