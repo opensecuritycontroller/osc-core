@@ -59,13 +59,12 @@ import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
+import org.osc.core.server.Server;
 import org.osc.core.util.PKIUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
