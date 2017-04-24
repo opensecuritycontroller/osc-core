@@ -54,8 +54,6 @@ import com.vmware.vim25.mo.VirtualMachine;
 public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse>
         implements QueryVmInfoServiceApi {
 
-    private QueryVmInfoService() {}
-
     private static final Logger log =
             Logger.getLogger(QueryVmInfoService.class);
 
