@@ -19,12 +19,11 @@ package org.osc.core.broker.util.db;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.osc.core.server.Server;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osgi.service.component.annotations.Component;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service=DBConnectionParameters.class)
 public class DBConnectionParameters {

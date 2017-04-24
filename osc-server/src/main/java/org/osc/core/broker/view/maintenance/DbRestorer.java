@@ -29,8 +29,8 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
 import org.osc.core.broker.window.add.PasswordWindow;
+import org.osc.core.server.Server;
 
-import com.mcafee.vmidc.server.Server;
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.Notification;

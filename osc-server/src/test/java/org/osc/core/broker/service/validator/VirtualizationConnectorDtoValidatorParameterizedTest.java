@@ -32,10 +32,9 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.server.Server;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
-
-import com.mcafee.vmidc.server.Server;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)

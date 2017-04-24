@@ -29,13 +29,12 @@ import org.osc.core.broker.rest.client.nsx.model.ServiceManager;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = CreateNsxServiceManagerTask.class)
 public class CreateNsxServiceManagerTask extends TransactionalTask {
