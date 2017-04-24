@@ -16,7 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.job;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.List;
 
@@ -25,6 +28,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.internal.InOrderImpl;
@@ -65,6 +69,7 @@ public class JobQueuerTest {
     }
 
     @Test
+    @Ignore // this test is unstable
     public void testPutJob() {
 
         final TaskGraph tg = new TaskGraph();
