@@ -56,6 +56,12 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
     @Reference
     private PasswordUtil passwordUtil;
 
+    @Reference
+    private PasswordChangePropagateDaiMetaTask passwordChangePropagateDaiMetaTask;
+
+    @Reference
+    private PasswordChangePropagateMgrMetaTask passwordChangePropagateMgrMetaTask;
+
     @Override
     public UpdateUserResponse exec(UpdateUserRequest request, EntityManager em) throws Exception {
         OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
@@ -103,13 +109,13 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
 
     }
 
-    public static Long startPasswordPropagateDaiJob() throws Exception {
+    public Long startPasswordPropagateDaiJob() throws Exception {
 
         log.info("Start propagating new password to all DAIs");
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new PasswordChangePropagateDaiMetaTask());
+        tg.addTask(this.passwordChangePropagateDaiMetaTask.create());
 
         Job job = JobEngine.getEngine().submit(
                 "Update " + Server.SHORT_PRODUCT_NAME + " Appliance Instance Agent(s) password", tg, null);
@@ -118,10 +124,10 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
 
     }
 
-    public static Long startPasswordPropagateMgrJob() throws Exception {
+    public Long startPasswordPropagateMgrJob() throws Exception {
         log.info("Start propagating new password to all managers");
         TaskGraph tg = new TaskGraph();
-        tg.addTask(new PasswordChangePropagateMgrMetaTask());
+        tg.addTask(this.passwordChangePropagateMgrMetaTask.create());
         Job job = JobEngine.getEngine().submit("Update " + Server.SHORT_PRODUCT_NAME + " Password in manager(s)", tg,
                 null);
         log.info("Done submitting with jobId: " + job.getId());

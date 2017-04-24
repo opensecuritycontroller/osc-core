@@ -63,8 +63,14 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
     @Reference
     private UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
-    public IpChangePropagateMetaTask() {
-        this.name = getName();
+    public IpChangePropagateMetaTask create() {
+        IpChangePropagateMetaTask task = new IpChangePropagateMetaTask();
+        task.updateNsxServiceManagerTask = this.updateNsxServiceManagerTask;
+        task.mcConformanceCheckMetaTask = this.mcConformanceCheckMetaTask;
+        task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
+        task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
+        task.name = task.getName();
+        return task;
     }
 
     @Override

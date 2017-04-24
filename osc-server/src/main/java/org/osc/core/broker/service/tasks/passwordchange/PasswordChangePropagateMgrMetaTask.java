@@ -48,8 +48,11 @@ public class PasswordChangePropagateMgrMetaTask extends TransactionalMetaTask {
 
     private TaskGraph tg;
 
-    public PasswordChangePropagateMgrMetaTask() {
-        this.name = getName();
+    public PasswordChangePropagateMgrMetaTask create() {
+        PasswordChangePropagateMgrMetaTask task = new PasswordChangePropagateMgrMetaTask();
+        task.name = task.getName();
+        task.mcConformanceCheckMetaTask = this.mcConformanceCheckMetaTask;
+        return task;
     }
 
     @Override

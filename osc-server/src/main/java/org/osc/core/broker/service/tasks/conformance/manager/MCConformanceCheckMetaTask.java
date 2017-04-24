@@ -83,16 +83,19 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 	 * If unlock task is not provided(null) then we acquire a write lock and RELEASE it after the tasks are finished.
 	 * </p>
 	 */
-	public MCConformanceCheckMetaTask create(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask) {
-	    MCConformanceCheckMetaTask task = new MCConformanceCheckMetaTask();
-		task.mc = mc;
-		task.mcUnlockTask = mcUnlockTask;
-		task.name = task.getName();
-		task.apiFactoryService = this.apiFactoryService;
-		task.passwordUtil = this.passwordUtil;
-		task.registerMgrDomainNotificationTask = this.registerMgrDomainNotificationTask;
-		return task;
-	}
+    public MCConformanceCheckMetaTask create(ApplianceManagerConnector mc, UnlockObjectTask mcUnlockTask) {
+        MCConformanceCheckMetaTask task = new MCConformanceCheckMetaTask();
+        task.mc = mc;
+        task.mcUnlockTask = mcUnlockTask;
+        task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.passwordUtil = this.passwordUtil;
+        task.registerMgrDomainNotificationTask = this.registerMgrDomainNotificationTask;
+        task.registerMgrPolicyNotificationTask = this.registerMgrPolicyNotificationTask;
+        task.updateMgrDomainNotificationTask = this.updateMgrDomainNotificationTask;
+        task.updateMgrPolicyNotificationTask = this.updateMgrPolicyNotificationTask;
+        return task;
+    }
 
 	@Override
 	public void executeTransaction(EntityManager em) throws Exception {

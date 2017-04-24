@@ -54,6 +54,7 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
         CreateNsxServiceManagerTask task = new CreateNsxServiceManagerTask();
         task.vs = vs;
         task.apiFactoryService = this.apiFactoryService;
+        task.passwordUtil = this.passwordUtil;
         task.name = task.getName();
         return task;
     }

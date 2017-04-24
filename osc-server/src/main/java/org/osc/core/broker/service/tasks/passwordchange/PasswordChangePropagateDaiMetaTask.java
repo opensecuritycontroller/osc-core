@@ -49,8 +49,12 @@ public class PasswordChangePropagateDaiMetaTask extends TransactionalMetaTask {
 
     private TaskGraph tg;
 
-    public PasswordChangePropagateDaiMetaTask() {
-        this.name = getName();
+    public PasswordChangePropagateDaiMetaTask create() {
+        PasswordChangePropagateDaiMetaTask task = new PasswordChangePropagateDaiMetaTask();
+        task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
+        task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
+        task.name = task.getName();
+        return task;
     }
 
     @Override

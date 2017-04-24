@@ -106,7 +106,7 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(this.ipChangePropagateMetaTask);
+        tg.addTask(this.ipChangePropagateMetaTask.create());
 
         Job job = JobEngine.getEngine().submit(
                 "Updating " + Server.SHORT_PRODUCT_NAME
