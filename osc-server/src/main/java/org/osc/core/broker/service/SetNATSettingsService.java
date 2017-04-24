@@ -25,11 +25,10 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.NATSettingsDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = SetNATSettingsService.class)
 public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSettingsDto>, BaseJobResponse> {

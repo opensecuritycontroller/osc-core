@@ -30,10 +30,10 @@ import org.osc.core.broker.view.util.BroadcasterUtil;
 import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.view.vc.VirtualizationConnectorView;
+import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
 
-import com.mcafee.vmidc.server.Server;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;

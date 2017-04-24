@@ -57,9 +57,8 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.rest.annotations.NsxAuth;
+import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
-
-import com.mcafee.vmidc.server.Server;
 
 
 @Component(service = NsxApis.class)
