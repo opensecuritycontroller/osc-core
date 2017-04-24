@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import com.mcafee.vmidc.server.Server;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -107,7 +106,7 @@ public class ServerMgmtApis {
     }
 
     @ApiOperation(value = "Backs up server database",
-            notes = "Trigger database backup, place backup on server and make it available for download",
+            notes = "Trigger database backup, place backup on server and make it avaliable for download",
             response = ServerStatusResponse.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
@@ -118,7 +117,7 @@ public class ServerMgmtApis {
     public Response getDbBackupFile(@Context HttpHeaders headers, @ApiParam(required = true) BackupRequest request) {
 
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        logger.info(SessionUtil.getCurrentUser()+" is generating a backup of the database");
+        logger.info(SessionUtil.getCurrentUser()+" is generating a backap of the database");
         StreamingOutput fileStream = new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {
@@ -190,7 +189,7 @@ public class ServerMgmtApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) this.apiUtil
+        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) apiUtil
                 .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
 
         return response.getList();
