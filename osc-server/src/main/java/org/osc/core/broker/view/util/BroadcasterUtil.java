@@ -19,6 +19,7 @@ package org.osc.core.broker.view.util;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.osc.core.broker.service.broadcast.BroadcastListener;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
@@ -45,6 +46,15 @@ public class BroadcasterUtil implements Broadcaster {
     @Deactivate
     synchronized void stop() {
         this.executorService.shutdown();
+        boolean forceShutdown;
+        try {
+            forceShutdown = !this.executorService.awaitTermination(500, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ie) {
+            forceShutdown = true;
+        }
+        if(forceShutdown) {
+            this.executorService.shutdownNow();
+        }
     }
 
     /**
