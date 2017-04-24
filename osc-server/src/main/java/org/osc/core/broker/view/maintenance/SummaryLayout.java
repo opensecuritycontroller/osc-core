@@ -31,12 +31,12 @@ import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.server.Server;
 import org.osc.core.util.ArchiveUtil;
 import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
 
-import com.mcafee.vmidc.server.Server;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.FileDownloader;

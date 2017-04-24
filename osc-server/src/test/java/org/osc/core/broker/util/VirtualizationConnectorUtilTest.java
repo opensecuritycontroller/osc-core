@@ -47,6 +47,7 @@ import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.server.Server;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
@@ -55,7 +56,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.mcafee.vmidc.server.Server;
 import com.rabbitmq.client.ShutdownSignalException;
 
 @RunWith(PowerMockRunner.class)

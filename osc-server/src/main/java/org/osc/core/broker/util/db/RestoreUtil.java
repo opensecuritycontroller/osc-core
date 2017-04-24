@@ -28,9 +28,8 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
+import org.osc.core.server.Server;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
-
-import com.mcafee.vmidc.server.Server;
 
 public class RestoreUtil {
 
