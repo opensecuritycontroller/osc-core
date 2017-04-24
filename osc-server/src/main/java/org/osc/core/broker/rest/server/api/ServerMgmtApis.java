@@ -43,6 +43,7 @@ import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
+import org.osc.core.server.Server;
 import org.osc.core.util.PKIUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;

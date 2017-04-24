@@ -295,13 +295,13 @@
 						<version>1.7</version>
 						<executions>
 							<execution>
-								<phase>package</phase>
+								<phase>prepare-package</phase>
 								<goals>
 									<goal>run</goal>
 								</goals>
 								<configuration>
 									<tasks>
-										<!-- copy bundled plugins for bundled profile -->
+										<!-- copy bundled plugins for bundled profile "all". -->
 										<copy tofile="${basedir}/mgr_plugins/SmcMgrPlugin.bar"
 											file="${basedir}/../../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" />
 										<copy tofile="${basedir}/mgr_plugins/NsmMgrPlugin.bar"
@@ -309,9 +309,9 @@
 										<copy tofile="${basedir}/sdn_ctrl_plugins/VMwareNsxPlugin.bar"
 											file="${basedir}/../../vmware-nsx-plugin/target/VMwareNsxPlugin.bar" />
 										<copy tofile="${basedir}/mgr_plugins/SampleMgrPlugin.bar"
-                                            file="${basedir}/../../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" />
-                                        <copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
-                                            file="${basedir}/../../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" />
+											file="${basedir}/../../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" />
+										<copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"
+											file="${basedir}/../../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" />
 									</tasks>
 								</configuration>
 							</execution>
@@ -412,7 +412,6 @@
 									<fileset dir="${basedir}/../osc-server/target/webapp"
 										includes="api-doc/**" />
 								</copy>
-
 								<unzip dest="${basedir}/webapp/WebHelp" src="${basedir}/../osc-server/techdoc/WebHelp.zip" />
 
 								<copy todir="${basedir}/webapp/SDK">
@@ -425,7 +424,6 @@
 										<include name="**/*-sources.jar" />
 									</fileset>
 								</copy>
-
 
 								<!-- serverBOM -->
 								<unjar dest="${basedir}/../osc-server-bom/root/opt/vmidc/bin"

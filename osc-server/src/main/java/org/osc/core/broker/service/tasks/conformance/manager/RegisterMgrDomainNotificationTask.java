@@ -28,10 +28,9 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
-
-import com.mcafee.vmidc.server.Server;
 
 public class RegisterMgrDomainNotificationTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(RegisterMgrDomainNotificationTask.class);

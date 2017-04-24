@@ -33,10 +33,9 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
+import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.mcafee.vmidc.server.Server;
 
 @Component(service = PasswordChangePropagateNsxMetaTask.class)
 public class PasswordChangePropagateNsxMetaTask extends TransactionalMetaTask {

@@ -33,8 +33,7 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
-
-import com.mcafee.vmidc.server.Server;
+import org.osc.core.server.Server;
 
 public class PasswordChangePropagateMgrMetaTask extends TransactionalMetaTask {
 

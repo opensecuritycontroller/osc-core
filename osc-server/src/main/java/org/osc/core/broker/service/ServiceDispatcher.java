@@ -33,12 +33,12 @@ import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.mcafee.vmidc.server.Server;
 
 public abstract class ServiceDispatcher<I extends Request, O extends Response> {
 
