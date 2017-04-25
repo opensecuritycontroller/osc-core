@@ -24,6 +24,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
@@ -31,7 +32,8 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListVirtualSystemPolicyService extends ServiceDispatcher<BaseIdRequest, ListResponse<PolicyDto>> {
+public class ListVirtualSystemPolicyService extends ServiceDispatcher<BaseIdRequest, ListResponse<PolicyDto>>
+        implements ListVirtualSystemPolicyServiceApi {
 
     private VirtualSystem vs;
 
