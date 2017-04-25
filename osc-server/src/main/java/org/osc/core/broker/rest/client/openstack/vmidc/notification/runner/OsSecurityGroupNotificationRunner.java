@@ -76,13 +76,13 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            List<SecurityGroup> sgList = HibernateUtil.getTransactionControl().required(() -> {
+            HibernateUtil.getTransactionControl().required(() -> {
                 OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
-                return sgEmgr.listAll();
+                for (SecurityGroup sg : sgEmgr.listAll()) {
+                    addListener(sg);
+                }
+                return null;
             });
-            for (SecurityGroup sg : sgList) {
-                addListener(sg);
-            }
         } catch (ScopedWorkException swe) {
             throw swe.asRuntimeException();
         }
@@ -113,19 +113,20 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         } else {
             try {
                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
-                SecurityGroup sg = HibernateUtil.getTransactionControl().required(() ->
-                    SecurityGroupEntityMgr.findById(em, msg.getEntityId()));
-                if (sg == null) {
-                    log.error("Processing " + msg.getEventType() + " notification for Security Group ("
-                            + msg.getEntityId() + ") but couldn't find it in the DB");
-                    return;
-                }
+                HibernateUtil.getTransactionControl().required(() -> {
+                     SecurityGroup sg =
+                             SecurityGroupEntityMgr.findById(em, msg.getEntityId());
+                    if (sg == null) {
+                        log.error("Processing " + msg.getEventType() + " notification for Security Group ("
+                                + msg.getEntityId() + ") but couldn't find it in the DB");
+                    } else if (msg.getEventType() == EventType.ADDED) {
+                        addListener(sg);
+                    } else if (msg.getEventType() == EventType.UPDATED) {
+                        updateListeners(sg);
+                    }
+                    return null;
+                });
 
-                if (msg.getEventType() == EventType.ADDED) {
-                    addListener(sg);
-                } else if (msg.getEventType() == EventType.UPDATED) {
-                    updateListeners(sg);
-                }
             } catch (ScopedWorkException e) {
                 log.error("An error occurred updating the Security Group Listeners", e.getCause());
                 throw e.asRuntimeException();
