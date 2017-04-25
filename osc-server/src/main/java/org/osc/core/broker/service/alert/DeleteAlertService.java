@@ -20,11 +20,15 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.DeleteAlertServiceApi;
+import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.request.AlertRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 
-public class DeleteAlertService extends ServiceDispatcher<AlertRequest, EmptySuccessResponse> {
+public class DeleteAlertService extends ServiceDispatcher<AlertRequest, EmptySuccessResponse>
+        implements DeleteAlertServiceApi {
 
     @Override
     public EmptySuccessResponse exec(AlertRequest request, EntityManager em) throws Exception {

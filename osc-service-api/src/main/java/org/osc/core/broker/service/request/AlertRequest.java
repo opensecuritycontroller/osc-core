@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.alert;
+package org.osc.core.broker.service.request;
 
 import java.util.List;
 
+import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.service.request.BaseRequest;
 
 public class AlertRequest extends BaseRequest<BaseDto> {
 

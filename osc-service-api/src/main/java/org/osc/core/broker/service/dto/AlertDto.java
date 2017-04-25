@@ -14,11 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.alert;
+package org.osc.core.broker.service.dto;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -28,9 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.Severity;
-import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
-import org.osc.core.broker.util.ValidateUtil;
 
 import io.swagger.annotations.ApiModelProperty;
 
@@ -138,17 +134,4 @@ public class AlertDto extends BaseDto {
                 + "]";
     }
 
-    public static void checkForNullFields(AlertDto dto) throws Exception {
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("name", dto.getName());
-        map.put("eventType", dto.getEventType());
-        map.put("severity", dto.getSeverity());
-        map.put("status", dto.getStatus());
-
-        ValidateUtil.checkForNullFields(map);
-
-    }
 }

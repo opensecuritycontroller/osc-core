@@ -34,6 +34,7 @@ import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.events.EmailSettings;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
+import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.email.EmailSettingsDto;
@@ -41,6 +42,7 @@ import org.osc.core.broker.service.persistence.AlertEntityMgr;
 import org.osc.core.broker.service.persistence.EmailSettingsEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
+import org.osc.core.broker.service.validator.AlertDtoValidator;
 import org.osc.core.broker.util.EmailUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.transaction.control.ScopedWorkException;
@@ -158,7 +160,7 @@ public class AlertGenerator implements JobCompletionListener {
         request.getDto().setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT);
         request.getDto().setMessage(message);
 
-        AlertDto.checkForNullFields(request.getDto());
+        AlertDtoValidator.checkForNullFields(request.getDto());
 
         Alert alert = AlertEntityMgr.createEntity(request.getDto());
 
