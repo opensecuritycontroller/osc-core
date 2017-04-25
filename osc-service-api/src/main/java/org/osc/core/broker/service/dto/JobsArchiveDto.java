@@ -14,12 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.archive;
+package org.osc.core.broker.service.dto;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -27,8 +25,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.archive.ThresholdType;
-import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.util.ValidateUtil;
 
 @XmlRootElement(name ="jobArchive")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -43,7 +39,7 @@ public class JobsArchiveDto extends BaseDto implements Serializable {
     private Date lastTriggerTimestamp;
 
 	public Boolean getAutoSchedule() {
-		return autoSchedule;
+		return this.autoSchedule;
 	}
 
 	public void setAutoSchedule(Boolean autoSchedule) {
@@ -51,7 +47,7 @@ public class JobsArchiveDto extends BaseDto implements Serializable {
 	}
 
 	public FreqType getFrequency() {
-		return frequency;
+		return this.frequency;
 	}
 
 	public void setFrequency(FreqType frequency) {
@@ -59,7 +55,7 @@ public class JobsArchiveDto extends BaseDto implements Serializable {
 	}
 
 	public ThresholdType getThresholdUnit() {
-		return thresholdUnit;
+		return this.thresholdUnit;
 	}
 
 	public void setThresholdUnit(ThresholdType thresholdUnit) {
@@ -67,7 +63,7 @@ public class JobsArchiveDto extends BaseDto implements Serializable {
 	}
 
 	public Integer getThresholdValue() {
-		return thresholdValue;
+		return this.thresholdValue;
 	}
 
 	public void setThresholdValue(Integer thresholdValue) {
@@ -75,32 +71,19 @@ public class JobsArchiveDto extends BaseDto implements Serializable {
 	}
 
 	public Date getLastTriggerTimestamp() {
-		return lastTriggerTimestamp;
+		return this.lastTriggerTimestamp;
 	}
 
 	public void setLastTriggerTimestamp(Date lastTriggerTimestamp) {
 		this.lastTriggerTimestamp = lastTriggerTimestamp;
 	}
 
-	public static void checkForNullFields(JobsArchiveDto dto) throws Exception {
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("frequency", dto.getFrequency());
-        map.put("autoSchedule", dto.getAutoSchedule());
-        map.put("thresholdUnit", dto.getThresholdUnit());
-        map.put("thresholdValue", dto.getThresholdValue());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
 	@Override
 	public String toString() {
-		return "JobsArchiveDto [autoSchedule=" + autoSchedule + ", frequency="
-				+ frequency + ", thresholdUnit=" + thresholdUnit
-				+ ", thresholdValue=" + thresholdValue
-				+ ", lastTriggerTimestamp=" + lastTriggerTimestamp
+		return "JobsArchiveDto [autoSchedule=" + this.autoSchedule + ", frequency="
+				+ this.frequency + ", thresholdUnit=" + this.thresholdUnit
+				+ ", thresholdValue=" + this.thresholdValue
+				+ ", lastTriggerTimestamp=" + this.lastTriggerTimestamp
 				+ ", getId()=" + getId() + "]";
 	}
 }

@@ -17,7 +17,7 @@
 package org.osc.core.broker.service.persistence;
 
 import org.osc.core.broker.model.entities.archive.JobsArchive;
-import org.osc.core.broker.service.archive.JobsArchiveDto;
+import org.osc.core.broker.service.dto.JobsArchiveDto;
 
 public class JobsArchiveEntityMgr {
 

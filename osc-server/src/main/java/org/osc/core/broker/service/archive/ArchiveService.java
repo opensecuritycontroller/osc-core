@@ -41,6 +41,8 @@ import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.ArchiveServiceApi;
+import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.Response;
@@ -51,7 +53,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 /**
  * Archive service which performs job archive to CSV files.
  */
-public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto>, Response> {
+public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto>, Response>
+        implements ArchiveServiceApi {
 
     private static final Logger log = Logger.getLogger(ArchiveService.class);
 
