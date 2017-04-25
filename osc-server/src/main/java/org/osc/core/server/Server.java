@@ -57,9 +57,11 @@ import org.osc.core.util.LogUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.util.VersionUtil;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceScope;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -109,13 +111,18 @@ public class Server {
     private ConformService conformService;
 
     @Reference
-    private ManagerApis managerApis;
-
-    @Reference
     private ApiFactoryService apiFactoryService;
 
     @Reference
     private PasswordUtil passwordUtil;
+
+    @Reference(service=WebSocketRunner.class,
+            scope=ReferenceScope.PROTOTYPE_REQUIRED)
+    private ComponentServiceObjects<WebSocketRunner> webSocketFactory;
+
+    @Reference(service=RabbitMQRunner.class,
+            scope=ReferenceScope.PROTOTYPE_REQUIRED)
+    private ComponentServiceObjects<RabbitMQRunner> rabbitRunnerFactory;
 
     private Thread thread;
 
@@ -506,19 +513,19 @@ public class Server {
     }
 
     public void shutdownRabbitMq() {
-        this.rabbitMQRunner.shutdown();
+        this.rabbitRunnerFactory.ungetService(this.rabbitMQRunner);
         log.info("Shutdown of RabbitMQ succeeded");
         this.rabbitMQRunner = null;
     }
 
     public void shutdownWebsocket() {
-        this.wsRunner.shutdown();
+        this.webSocketFactory.ungetService(this.wsRunner);
         log.info("Shutdown of WebSocket succeeded");
         this.wsRunner = null;
     }
 
     public void startRabbitMq() {
-        this.rabbitMQRunner = new RabbitMQRunner();
+        this.rabbitMQRunner = this.rabbitRunnerFactory.getService();
         log.info("Started RabbitMQ Runner");
     }
 
@@ -528,8 +535,12 @@ public class Server {
          * This class is responsible for creating web socket communication with all existing SMCs upon server
          * start/restart
          */
-        this.wsRunner = new WebSocketRunner(this.managerApis, this.apiFactoryService);
+        this.wsRunner = this.webSocketFactory.getService();
         log.info("Started Web Socket Runner");
+    }
+
+    public RabbitMQRunner getActiveRabbitMQRunner() {
+        return this.rabbitMQRunner;
     }
 
     public static boolean isInMaintenance() {

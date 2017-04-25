@@ -35,16 +35,24 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.WebSocketClient;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.broadcast.BroadcastListener;
+import org.osc.core.broker.service.broadcast.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.util.BroadcastMessage;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
-import org.osc.core.broker.view.util.EventType;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
+@Component(scope=ServiceScope.PROTOTYPE,
+  service=WebSocketRunner.class)
 public class WebSocketRunner implements BroadcastListener {
     private static final int MAX_TRIES = 10;
     private static final int TRY_WAIT_MS = 500;
@@ -55,13 +63,20 @@ public class WebSocketRunner implements BroadcastListener {
     private List<ApplianceManagerConnector> amcs = new ArrayList<>();
     private ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
     private int count = MAX_TRIES;
-    private final ManagerApis managerApis;
-    private final ApiFactoryService apiFactoryService;
 
-    public WebSocketRunner(ManagerApis managerApis, ApiFactoryService apiFactoryService) {
-        this.managerApis = managerApis;
-        this.apiFactoryService = apiFactoryService;
-        BroadcasterUtil.register(this);
+    @Reference
+    private ManagerApis managerApis;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    private ServiceRegistration<BroadcastListener> registration;
+
+    @Activate
+    void start(BundleContext ctx) {
+        // This is not done automatically by DS as we do not want the broadcast whiteboard
+        // to activate another instance of this component, only people getting the runner!
+        this.registration = ctx.registerService(BroadcastListener.class, this, null);
 
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
@@ -169,8 +184,14 @@ public class WebSocketRunner implements BroadcastListener {
      * This method will gracefully terminate all open web socket connections
      * Used before server shutdown
      */
-    public void shutdown() {
-        BroadcasterUtil.unregister(this);
+    @Deactivate
+    void shutdown() {
+        try {
+            this.registration.unregister();
+        } catch (IllegalStateException ise) {
+            // No problem - this means the service was
+            // already unregistered (e.g. by bundle stop)
+        }
         closeAllConnections();
         this.webSocketConnections.clear();
     }

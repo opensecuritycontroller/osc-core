@@ -33,15 +33,20 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.NotificationListenerFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.OsNotificationListener;
+import org.osc.core.broker.service.broadcast.BroadcastListener;
+import org.osc.core.broker.service.broadcast.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.util.BroadcastMessage;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
-import org.osc.core.broker.view.util.EventType;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -52,16 +57,21 @@ import com.google.common.collect.Multimap;
  * Class will be instantiated whenever server is started and will run forever until server shutdown
  *
  */
-
+@Component(scope=ServiceScope.PROTOTYPE,
+ service=OsDeploymentSpecNotificationRunner.class)
 public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
-    private static final Multimap<Long, OsNotificationListener> dsToListenerMap = ArrayListMultimap.create();
-    private static final HashMap<Long, VirtualizationConnector> dsToVCMap = new HashMap<Long, VirtualizationConnector>();
+    private final Multimap<Long, OsNotificationListener> dsToListenerMap = ArrayListMultimap.create();
+    private final HashMap<Long, VirtualizationConnector> dsToVCMap = new HashMap<Long, VirtualizationConnector>();
+    private ServiceRegistration<BroadcastListener> registration;
 
     private static final Logger log = Logger.getLogger(OsDeploymentSpecNotificationRunner.class);
 
-    public OsDeploymentSpecNotificationRunner() throws InterruptedException, VmidcException {
+    @Activate
+    void start(BundleContext ctx) throws InterruptedException, VmidcException {
+        // This is not done automatically by DS as we do not want the broadcast whiteboard
+        // to activate another instance of this component, only people getting the runner!
+        this.registration = ctx.registerService(BroadcastListener.class, this, null);
         try {
-            BroadcasterUtil.register(this);
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
 
             List<DeploymentSpec> dsList = HibernateUtil.getTransactionControl().required(() -> {
@@ -83,10 +93,16 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         }
     }
 
-    public void shutdown() {
-        BroadcasterUtil.unregister(this);
-        dsToListenerMap.clear();
-        dsToVCMap.clear();
+    @Deactivate
+    void shutdown() {
+        try {
+            this.registration.unregister();
+        } catch (IllegalStateException ise) {
+            // No problem - this means the service was
+            // already unregistered (e.g. by bundle stop)
+        }
+        this.dsToListenerMap.clear();
+        this.dsToVCMap.clear();
     }
 
     private void updateListenerMap(BroadcastMessage msg) {
@@ -102,7 +118,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                     if (msg.getEventType() == EventType.ADDED) {
                         addListener(ds);
                     } else if (msg.getEventType() == EventType.UPDATED) {
-                        for (OsNotificationListener listener : dsToListenerMap.get(ds.getId())) {
+                        for (OsNotificationListener listener : this.dsToListenerMap.get(ds.getId())) {
                             // Only Updating DS Member listener here.. DAI/SVA listener will be updated through SVA tasks
                             if (listener.getObjectType() != OsNotificationObjectType.VM) {
                                 OsNotificationUtil.updateListener(listener, ds, getMemberIdsFromDS(ds));
@@ -179,7 +195,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
             addTenantListener(ds);
 
             // Add DS and VC to the map. We will use this for unregistering all listeners for this DS
-            dsToVCMap.put(ds.getId(), ds.getVirtualSystem().getVirtualizationConnector());
+            this.dsToVCMap.put(ds.getId(), ds.getVirtualSystem().getVirtualizationConnector());
 
         } catch (VmidcBrokerInvalidEntryException e) {
             log.error("Invalid Object Type requested to register this listener with", e);
@@ -195,7 +211,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                         memberObjectType, getMemberIdsFromDS(ds), ds);
 
         // Register Member change listener
-        dsToListenerMap.put(ds.getId(), memberListener);
+        this.dsToListenerMap.put(ds.getId(), memberListener);
 
     }
 
@@ -208,7 +224,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                         OsNotificationObjectType.TENANT, tenenatIdList, ds);
 
         // Register Tenant deletion listener
-        dsToListenerMap.put(ds.getId(), tenantListener);
+        this.dsToListenerMap.put(ds.getId(), tenantListener);
     }
 
     private void addNetworkListener(DeploymentSpec ds) throws VmidcBrokerInvalidEntryException {
@@ -227,7 +243,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                         OsNotificationObjectType.NETWORK, networkIdList, ds);
 
         // Register Network change listener
-        dsToListenerMap.put(ds.getId(), networkListener);
+        this.dsToListenerMap.put(ds.getId(), networkListener);
     }
 
     private void addDAIListener(DeploymentSpec ds) throws VmidcBrokerInvalidEntryException {
@@ -236,12 +252,12 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                 .createAndRegisterNotificationListener(ds.getVirtualSystem().getVirtualizationConnector(),
                         OsNotificationObjectType.VM, getDAIIdsFromDS(ds), ds);
         // Register DAI change listener
-        dsToListenerMap.put(ds.getId(), daiChangeListener);
+        this.dsToListenerMap.put(ds.getId(), daiChangeListener);
     }
 
     private void removeListener(Long dsId) {
-        for (OsNotificationListener listener : dsToListenerMap.get(dsId)) {
-            listener.unRegister(dsToVCMap.get(dsId), listener.getObjectType());
+        for (OsNotificationListener listener : this.dsToListenerMap.get(dsId)) {
+            listener.unRegister(this.dsToVCMap.get(dsId), listener.getObjectType());
         }
     }
 
@@ -257,8 +273,8 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
      * @param daiId
      *            SVA Open Stack UUID to remove from the listener list
      */
-    public static synchronized void removeIdFromListener(Long dsId, String daiId) {
-        for (OsNotificationListener listener : dsToListenerMap.get(dsId)) {
+    public synchronized void removeIdFromListener(Long dsId, String daiId) {
+        for (OsNotificationListener listener : this.dsToListenerMap.get(dsId)) {
             if (listener.getObjectType() == OsNotificationObjectType.VM) {
                 List<String> idList = listener.getObjectIdList();
                 if (!idList.isEmpty() || idList.contains(daiId)) {
@@ -275,8 +291,8 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
      * @param daiId
      *            SVA Open Stack UUID to add into the listener list
      */
-    public static synchronized void addSVAIdToListener(Long dsId, String daiId) {
-        for (OsNotificationListener listener : dsToListenerMap.get(dsId)) {
+    public synchronized void addSVAIdToListener(Long dsId, String daiId) {
+        for (OsNotificationListener listener : this.dsToListenerMap.get(dsId)) {
             if (listener.getObjectType() == OsNotificationObjectType.VM) {
                 List<String> idList = listener.getObjectIdList();
                 if (!idList.contains(daiId)) {

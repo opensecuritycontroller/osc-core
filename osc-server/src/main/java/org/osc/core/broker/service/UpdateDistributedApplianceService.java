@@ -33,6 +33,7 @@ import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
+import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -48,7 +49,6 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
-import org.osc.core.broker.view.util.EventType;
 import org.osc.core.util.PKIUtil;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 

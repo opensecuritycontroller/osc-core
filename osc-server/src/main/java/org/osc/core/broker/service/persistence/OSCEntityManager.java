@@ -32,10 +32,10 @@ import javax.persistence.criteria.Root;
 import org.osc.core.broker.model.entities.IscEntity;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.job.TaskRecord;
+import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
-import org.osc.core.broker.view.util.EventType;
 
 /**
  * EntityManager: a generic entity manager that handles all common CRUD

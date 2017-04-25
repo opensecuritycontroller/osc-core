@@ -20,12 +20,12 @@ import java.util.Arrays;
 import java.util.Set;
 
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.broadcast.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
-import org.osc.core.broker.util.BroadcastMessage;
 import org.osc.core.broker.view.common.StyleConstants;
-import org.osc.core.broker.view.util.EventType;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.tepi.filtertable.FilterTable;
@@ -47,7 +47,7 @@ import com.vaadin.ui.themes.Reindeer;
 import com.vaadin.ui.themes.ValoTheme;
 
 /**
- * 
+ *
  * @param <P>
  *            Parent DTO for this subView
  * @param <C>

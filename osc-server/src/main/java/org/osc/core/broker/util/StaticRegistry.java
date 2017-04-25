@@ -24,6 +24,7 @@ import org.osc.core.broker.service.SetNetworkSettingsService;
 import org.osc.core.broker.service.UpdateUserService;
 import org.osc.core.broker.service.UpgradeService;
 import org.osc.core.broker.service.api.DeleteUserServiceApi;
+import org.osc.core.broker.service.broadcast.Broadcaster;
 import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.SyncManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
@@ -87,6 +88,9 @@ public class StaticRegistry {
     @Reference
     private DeleteDistributedApplianceService deleteDistributedApplianceService;
 
+    @Reference
+    private Broadcaster broadcaster;
+
     private static StaticRegistry instance = null;
 
     @Activate
@@ -148,6 +152,10 @@ public class StaticRegistry {
 
     public static UpdateUserService updateUserService() {
         return instance.updateUserService;
+    }
+
+    public static Broadcaster broadcaster() {
+        return instance.broadcaster;
     }
 
 }
