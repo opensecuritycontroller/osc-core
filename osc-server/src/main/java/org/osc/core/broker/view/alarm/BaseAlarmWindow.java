@@ -21,7 +21,7 @@ import org.osc.core.broker.model.entities.events.AlarmAction;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.Severity;
 import org.osc.core.broker.service.dto.AlarmDto;
-import org.osc.core.broker.service.email.EmailSettingsDto;
+import org.osc.core.broker.service.dto.EmailSettingsDto;
 import org.osc.core.broker.service.email.GetEmailSettingsService;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.BaseRequest;

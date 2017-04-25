@@ -17,7 +17,7 @@
 package org.osc.core.broker.service.persistence;
 
 import org.osc.core.broker.model.entities.events.EmailSettings;
-import org.osc.core.broker.service.email.EmailSettingsDto;
+import org.osc.core.broker.service.dto.EmailSettingsDto;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
 

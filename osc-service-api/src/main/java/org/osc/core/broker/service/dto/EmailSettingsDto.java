@@ -14,13 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.email;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.util.ValidateUtil;
+package org.osc.core.broker.service.dto;
 
 public class EmailSettingsDto extends BaseDto {
 
@@ -30,7 +24,7 @@ public class EmailSettingsDto extends BaseDto {
     private String password;
 
     public String getMailServer() {
-        return mailServer;
+        return this.mailServer;
     }
 
     public void setMailServer(String mailServer) {
@@ -38,7 +32,7 @@ public class EmailSettingsDto extends BaseDto {
     }
 
     public String getPort() {
-        return port;
+        return this.port;
     }
 
     public void setPort(String port) {
@@ -46,7 +40,7 @@ public class EmailSettingsDto extends BaseDto {
     }
 
     public String getEmailId() {
-        return emailId;
+        return this.emailId;
     }
 
     public void setEmailId(String emailId) {
@@ -54,27 +48,16 @@ public class EmailSettingsDto extends BaseDto {
     }
 
     public String getPassword() {
-        return password;
+        return this.password;
     }
 
     public void setPassword(String password) {
         this.password = password;
     }
 
-    public static void checkForNullFields(EmailSettingsDto dto) throws Exception {
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("mailServer", dto.getMailServer());
-        map.put("port", dto.getPort());
-        map.put("emailId", dto.getEmailId());
-        ValidateUtil.checkForNullFields(map);
-    }
-
     @Override
     public String toString() {
-        return "EmailSettingsDto [mailServer=" + mailServer + ", port=" + port + ", emailId=" + emailId + ", password="
-                + password + ", getId()=" + getId() + "]";
+        return "EmailSettingsDto [mailServer=" + this.mailServer + ", port=" + this.port + ", emailId=" + this.emailId + ", password="
+                + this.password + ", getId()=" + getId() + "]";
     }
 }
