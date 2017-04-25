@@ -17,7 +17,7 @@
 package org.osc.core.broker.service.persistence;
 
 import org.osc.core.broker.model.entities.events.Alarm;
-import org.osc.core.broker.service.alarm.AlarmDto;
+import org.osc.core.broker.service.dto.AlarmDto;
 
 public class AlarmEntityMgr {
 

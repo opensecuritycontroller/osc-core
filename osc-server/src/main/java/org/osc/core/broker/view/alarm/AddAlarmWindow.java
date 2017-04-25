@@ -18,7 +18,7 @@ package org.osc.core.broker.view.alarm;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.alarm.AddAlarmService;
-import org.osc.core.broker.service.alarm.AlarmDto;
+import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.util.ViewUtil;

@@ -20,12 +20,14 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.events.Alarm;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 
-public class DeleteAlarmService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse> {
+public class DeleteAlarmService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse>
+        implements DeleteAlarmServiceApi {
 
     @Override
     public EmptySuccessResponse exec(BaseIdRequest request, EntityManager em) throws Exception {

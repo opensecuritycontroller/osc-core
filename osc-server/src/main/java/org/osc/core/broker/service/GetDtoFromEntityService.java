@@ -37,9 +37,9 @@ import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZ
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.service.alarm.AlarmDto;
 import org.osc.core.broker.service.alert.AlertDto;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;

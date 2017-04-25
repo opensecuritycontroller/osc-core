@@ -21,14 +21,18 @@ import javax.persistence.EntityManager;
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.events.Alarm;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.AddAlarmServiceApi;
+import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.AlarmEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
+import org.osc.core.broker.service.validator.AlarmDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 
-public class AddAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>, BaseResponse> {
+public class AddAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>, BaseResponse>
+        implements AddAlarmServiceApi {
 
     @Override
     public BaseResponse exec(BaseRequest<AlarmDto> request, EntityManager em) throws Exception {
@@ -51,15 +55,15 @@ public class AddAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>, Ba
 
     void validate(EntityManager em, AlarmDto dto, OSCEntityManager<Alarm> emgr) throws Exception {
 
-        AlarmDto.checkForNullFields(dto);
+        AlarmDtoValidator.checkForNullFields(dto);
         //validating email address formatting
         if (!StringUtils.isBlank(dto.getReceipientEmail())) {
             ValidateUtil.checkForValidEmailAddress(dto.getReceipientEmail());
         }
         //validating the user entered syntax
-        AlarmDto.checkRegexSyntax(dto);
+        AlarmDtoValidator.checkRegexSyntax(dto);
 
-        AlarmDto.checkFieldLength(dto);
+        AlarmDtoValidator.checkFieldLength(dto);
 
         // check for uniqueness of alarm name
         if (emgr.isExisting("name", dto.getName())) {
