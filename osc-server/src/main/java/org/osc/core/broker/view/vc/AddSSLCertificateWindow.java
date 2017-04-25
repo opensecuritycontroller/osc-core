@@ -29,7 +29,6 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseApproveWindow;
 import org.osc.core.broker.window.button.ApproveCancelButtonModel;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoUtil;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 
 import com.vaadin.ui.Notification;
@@ -102,14 +101,14 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
 
         for (CertificateResolverModel basicInfoModel : this.certificateResolverModels) {
             try {
-                certificateBasicInfoModels.add(CertificateBasicInfoUtil.create(
+                certificateBasicInfoModels.add(new CertificateBasicInfoModel(
                         basicInfoModel.getAlias(),
                         X509TrustManagerFactory.getSha1Fingerprint(basicInfoModel.getCertificate()),
                         basicInfoModel.getCertificate().getIssuerDN().getName(),
                         basicInfoModel.getCertificate().getNotBefore(),
                         basicInfoModel.getCertificate().getNotAfter(),
                         basicInfoModel.getCertificate().getSigAlgName(),
-                        basicInfoModel.getCertificate())
+                        X509TrustManagerFactory.certificateToString(basicInfoModel.getCertificate()))
                 );
             } catch (NoSuchAlgorithmException | CertificateEncodingException e) {
                 log.error("Cannot create certificate basic information model", e);

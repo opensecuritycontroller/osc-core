@@ -43,6 +43,28 @@ public class CertificateBasicInfoModel {
 
     private boolean isConnected;
 
+    public CertificateBasicInfoModel(String alias) {
+        setAlias(alias);
+        setCertificate(null);
+        setAlgorithmType("-");
+        setValidFrom(null);
+        setValidTo(null);
+        setSha1Fingerprint(null);
+        setCertificateContent("");
+        setIssuer("");
+    }
+
+    public CertificateBasicInfoModel(String alias, String sha1Fingerprint, String issuer, Date validFrom, Date validTo, String algorithmType, String certificateContent) {
+        setAlias(alias);
+        setSha1Fingerprint(sha1Fingerprint);
+        setIssuer(issuer);
+        setValidFrom(validFrom);
+        setValidTo(validTo);
+        setAlgorithmType(algorithmType);
+        setCertificate(this.certificate);
+        setCertificateContent(certificateContent);
+    }
+
     public String getAlias() {
         return this.alias;
     }
