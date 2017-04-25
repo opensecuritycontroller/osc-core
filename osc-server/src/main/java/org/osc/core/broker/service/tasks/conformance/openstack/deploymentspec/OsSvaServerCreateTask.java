@@ -37,10 +37,10 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova.CreatedServerDetails;
-import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDeploymentSpecNotificationRunner;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
@@ -139,8 +139,9 @@ class OsSvaServerCreateTask extends TransactionalTask {
                     createdServer.getEgressInspectionPortId()
                     );
             // Add new server ID to VM notification listener for this DS
-            OsDeploymentSpecNotificationRunner.addSVAIdToListener(this.dai.getDeploymentSpec().getId(),
-                    createdServer.getServerId());
+
+            StaticRegistry.server().getActiveRabbitMQRunner().getOsDeploymentSpecNotificationRunner()
+                .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
             if (vc.isControllerDefined()) {
                 try {
