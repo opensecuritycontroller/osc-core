@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.appliance;
+package org.osc.core.broker.service.request;
 
 import java.io.InputStream;
 
 import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.service.request.BaseRequest;
 
 
 public class UploadRequest extends BaseRequest<BaseDto> {

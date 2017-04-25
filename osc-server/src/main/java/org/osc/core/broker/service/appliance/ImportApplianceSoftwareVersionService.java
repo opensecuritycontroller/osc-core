@@ -31,6 +31,7 @@ import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -49,7 +50,8 @@ import org.osc.core.util.ServerUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
-public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<ImportFileRequest, BaseResponse> {
+public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
+        implements ImportApplianceSoftwareVersionServiceApi {
 
     private static final Logger log = Logger.getLogger(ImportApplianceSoftwareVersionService.class);
 
