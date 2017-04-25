@@ -73,14 +73,16 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         this.registration = ctx.registerService(BroadcastListener.class, this, null);
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            HibernateUtil.getTransactionControl().required(() -> {
+                OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class,
+                        em);
+                List<DeploymentSpec> dsList = dsEmgr.listAll();
 
-            List<DeploymentSpec> dsList = HibernateUtil.getTransactionControl().required(() -> {
-                OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
-                return dsEmgr.listAll();
+                for (DeploymentSpec ds : dsList) {
+                    addListener(ds);
+                }
+                return null;
             });
-            for (DeploymentSpec ds : dsList) {
-                addListener(ds);
-            }
         } catch (ScopedWorkException ex) {
             throw ex.asRuntimeException();
         }
@@ -111,21 +113,23 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         } else {
             try {
                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
-                DeploymentSpec ds = HibernateUtil.getTransactionControl().required(() ->
-                         DeploymentSpecEntityMgr.findById(em, msg.getEntityId()));
-                if (ds != null) {
-                    // if DS is deleted after update notification was sent
-                    if (msg.getEventType() == EventType.ADDED) {
-                        addListener(ds);
-                    } else if (msg.getEventType() == EventType.UPDATED) {
-                        for (OsNotificationListener listener : this.dsToListenerMap.get(ds.getId())) {
-                            // Only Updating DS Member listener here.. DAI/SVA listener will be updated through SVA tasks
-                            if (listener.getObjectType() != OsNotificationObjectType.VM) {
-                                OsNotificationUtil.updateListener(listener, ds, getMemberIdsFromDS(ds));
+                HibernateUtil.getTransactionControl().required(() -> {
+                    DeploymentSpec ds = DeploymentSpecEntityMgr.findById(em, msg.getEntityId());
+                    if (ds != null) {
+                        // if DS is deleted after update notification was sent
+                        if (msg.getEventType() == EventType.ADDED) {
+                            addListener(ds);
+                        } else if (msg.getEventType() == EventType.UPDATED) {
+                            for (OsNotificationListener listener : dsToListenerMap.get(ds.getId())) {
+                                // Only Updating DS Member listener here.. DAI/SVA listener will be updated through SVA tasks
+                                if (listener.getObjectType() != OsNotificationObjectType.VM) {
+                                    OsNotificationUtil.updateListener(listener, ds, getMemberIdsFromDS(ds));
+                                }
                             }
                         }
                     }
-                }
+                    return null;
+                });
             } catch (ScopedWorkException e) {
                 log.error("An error occurred updating the Deployment Spec listeners", e.getCause());
                 throw e.asRuntimeException();

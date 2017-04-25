@@ -30,6 +30,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.util.db.HibernateUtil;
 
 public class OsNetworkNotificationListener extends OsNotificationListener {
 
@@ -53,14 +54,16 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
             if (keyValue != null) {
                 log.info(" [Network] : message received - " + message);
                 try {
-                    if (this.entity instanceof SecurityGroup) {
-                        ConformService.startSecurityGroupConformanceJob((SecurityGroup) this.entity);
-                    }
+                    HibernateUtil.getTransactionControl().required(() -> {
+                        if (this.entity instanceof SecurityGroup) {
+                            ConformService.startSecurityGroupConformanceJob((SecurityGroup) this.entity);
+                        }
 
-                    if (this.entity instanceof DeploymentSpec) {
-                        ConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
-                    }
-
+                        if (this.entity instanceof DeploymentSpec) {
+                            ConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+                        }
+                        return null;
+                    });
                 } catch (Exception e) {
                     log.error("Failed post notification processing  - " + this.vc.getControllerIpAddress(), e);
                     AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
