@@ -28,14 +28,16 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.util.encryption.EncryptionException;
 
-public class ListAvailabilityZonesService extends
-        ServiceDispatcher<BaseOpenStackRequest, ListResponse<AvailabilityZoneDto>> {
+public class ListAvailabilityZonesService
+        extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<AvailabilityZoneDto>>
+        implements ListAvailabilityZonesServiceApi {
 
     private ListResponse<AvailabilityZoneDto> response = new ListResponse<AvailabilityZoneDto>();
 

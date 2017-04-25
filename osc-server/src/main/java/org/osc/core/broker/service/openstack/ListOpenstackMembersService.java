@@ -32,6 +32,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -47,8 +48,9 @@ import org.osc.core.broker.service.response.ListResponse;
  * security group.
  * If the id is not set, all servers from that VC are listed
  */
-public class ListOpenstackMembersService extends
-        ServiceDispatcher<ListOpenstackMembersRequest, ListResponse<SecurityGroupMemberItemDto>> {
+public class ListOpenstackMembersService
+        extends ServiceDispatcher<ListOpenstackMembersRequest, ListResponse<SecurityGroupMemberItemDto>>
+        implements ListOpenstackMembersServiceApi {
 
     private VirtualizationConnector vc;
 

@@ -26,12 +26,14 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListHostService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<HostDto>> {
+public class ListHostService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<HostDto>>
+        implements ListHostServiceApi {
 
     @Override
     public ListResponse<HostDto> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
