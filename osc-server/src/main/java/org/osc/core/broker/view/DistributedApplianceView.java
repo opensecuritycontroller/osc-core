@@ -158,7 +158,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
         ConformRequest request = new ConformRequest();
         request.setDaId(daId);
         BaseJobResponse response = new BaseJobResponse();
-        ConformService service = new ConformService();
+        ConformService service = StaticRegistry.conformService();
 
         try {
             response = service.dispatch(request);
