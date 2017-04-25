@@ -27,10 +27,10 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
-import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDeploymentSpecNotificationRunner;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.StaticRegistry;
 
 class DeleteSvaServerTask extends TransactionalTask {
 
@@ -77,7 +77,8 @@ class DeleteSvaServerTask extends TransactionalTask {
                 serverId = sva.getId();
             }
 
-            OsDeploymentSpecNotificationRunner.removeIdFromListener(this.dai.getDeploymentSpec().getId(), serverId);
+            StaticRegistry.server().getActiveRabbitMQRunner().getOsDeploymentSpecNotificationRunner()
+                .removeIdFromListener(this.dai.getDeploymentSpec().getId(), serverId);
 
             this.log.info("Deleting Server " + serverId + " from region " + this.region);
             boolean serverDeleted = serverId == null ? true : nova.terminateInstance(this.region, serverId);

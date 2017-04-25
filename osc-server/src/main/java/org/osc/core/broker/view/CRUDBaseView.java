@@ -25,12 +25,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.broadcast.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
-import org.osc.core.broker.util.BroadcastMessage;
 import org.osc.core.broker.view.common.StyleConstants;
-import org.osc.core.broker.view.util.EventType;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ToolbarButtons.HorizontalAlignment;
 import org.osc.core.broker.view.util.ViewUtil;
