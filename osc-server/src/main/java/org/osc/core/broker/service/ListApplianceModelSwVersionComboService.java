@@ -21,13 +21,15 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
 import org.osc.core.broker.service.request.ListApplianceModelSwVersionComboRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
 public class ListApplianceModelSwVersionComboService extends
-        ServiceDispatcher<ListApplianceModelSwVersionComboRequest, ListResponse<ApplianceModelSoftwareVersionDto>> {
+        ServiceDispatcher<ListApplianceModelSwVersionComboRequest, ListResponse<ApplianceModelSoftwareVersionDto>>
+        implements ListApplianceModelSwVersionComboServiceApi {
 
     ListResponse<ApplianceModelSoftwareVersionDto> response = new ListResponse<ApplianceModelSoftwareVersionDto>();
 
@@ -35,7 +37,7 @@ public class ListApplianceModelSwVersionComboService extends
     public ListResponse<ApplianceModelSoftwareVersionDto> exec(ListApplianceModelSwVersionComboRequest request,
             EntityManager em) {
 
-        ManagerType mcType = request.getType();
+        ManagerType mcType = ManagerType.fromText(request.getType());
 
         List<ApplianceModelSoftwareVersionDto> ls = ApplianceSoftwareVersionEntityMgr.findByMcType(em, mcType);
         this.response.setList(ls);

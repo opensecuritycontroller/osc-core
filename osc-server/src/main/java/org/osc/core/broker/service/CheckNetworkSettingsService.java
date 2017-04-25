@@ -18,11 +18,13 @@ package org.osc.core.broker.service;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.service.api.CheckNetworkSettingsServiceApi;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.CheckNetworkSettingResponse;
 
-public class CheckNetworkSettingsService extends ServiceDispatcher<Request, CheckNetworkSettingResponse> {
+public class CheckNetworkSettingsService extends ServiceDispatcher<Request, CheckNetworkSettingResponse>
+        implements CheckNetworkSettingsServiceApi {
 
     @Override
     public CheckNetworkSettingResponse exec(Request request, EntityManager em) throws Exception {

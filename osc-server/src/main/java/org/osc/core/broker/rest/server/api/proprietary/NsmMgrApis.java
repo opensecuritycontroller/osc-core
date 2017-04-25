@@ -29,17 +29,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
-import org.osc.core.broker.rest.server.model.QueryVmInfoRequest;
-import org.osc.core.broker.rest.server.model.TagVmRequest;
 import org.osc.core.broker.service.PropagateVSMgrFileService;
-import org.osc.core.broker.service.QueryVmInfoService;
 import org.osc.core.broker.service.TagVmService;
 import org.osc.core.broker.service.UnTagVmService;
+import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
+import org.osc.core.broker.service.request.QueryVmInfoRequest;
+import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = NsmMgrApis.class)
-@Path(OscRestServlet.MGR_NSM_API_PATH_PREFIX)
+@Path(RestConstants.MGR_NSM_API_PATH_PREFIX)
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth
@@ -60,6 +60,12 @@ public class NsmMgrApis {
 
     @Reference
     private ApiUtil apiUtil;
+
+    @Reference
+    private PropagateVSMgrFileService propagateVSMgrFileService;
+
+    @Reference
+    private QueryVmInfoServiceApi queryVmInfoService;
 
     @Path("/notification")
     @POST
@@ -83,7 +89,7 @@ public class NsmMgrApis {
         request.setMgrFile(mgrFile.getMgrFile());
         request.setMgrFileName(mgrFile.getMgrFileName());
 
-        return apiUtil.getResponse(new PropagateVSMgrFileService(), request);
+        return this.apiUtil.getResponse(this.propagateVSMgrFileService, request);
 
     }
 
@@ -94,7 +100,7 @@ public class NsmMgrApis {
         log.info("Query VM info request: " + queryVmInfo);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return apiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
+        return this.apiUtil.getResponse(this.queryVmInfoService, queryVmInfo);
     }
 
     @Path("/tagVm")
@@ -104,7 +110,7 @@ public class NsmMgrApis {
         log.info("Tag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return apiUtil.getResponse(new TagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(new TagVmService(), tagVmRequest);
     }
 
     @Path("/untagVm")
@@ -114,7 +120,7 @@ public class NsmMgrApis {
         log.info("UnTag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
     }
 
 }

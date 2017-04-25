@@ -16,15 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import org.osc.core.broker.rest.server.model.TagVmRequest;
+import org.osc.core.broker.service.api.UnTagVmServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.TagVmResponse;
 import org.osc.core.broker.util.VimUtils;
 import org.osc.sdk.sdn.api.SecurityTagApi;
 
 import com.vmware.vim25.mo.VirtualMachine;
 
-public class UnTagVmService extends BaseTagVmService {
+public class UnTagVmService extends BaseTagVmService implements UnTagVmServiceApi {
     @Override
     protected void customValidate(TagVmRequest request) throws VmidcBrokerValidationException {
         if (request.getVmUuid() == null || request.getVmUuid().isEmpty()) {

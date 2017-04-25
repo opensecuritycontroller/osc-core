@@ -18,12 +18,14 @@ package org.osc.core.broker.service;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.service.api.GetNATSettingsServiceApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.util.ServerUtil;
 
-public class GetNATSettingsService extends ServiceDispatcher<Request, BaseDtoResponse<NATSettingsDto>> {
+public class GetNATSettingsService extends ServiceDispatcher<Request, BaseDtoResponse<NATSettingsDto>>
+        implements GetNATSettingsServiceApi {
     @Override
     public BaseDtoResponse<NATSettingsDto> exec(Request request, EntityManager em) throws Exception {
         BaseDtoResponse<NATSettingsDto> response = new BaseDtoResponse<NATSettingsDto>();

@@ -84,7 +84,9 @@ public class MCConformanceCheckMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        MCConformanceCheckMetaTask task = new MCConformanceCheckMetaTask(this.mc, null, this.apiFactoryServiceMock);
+        MCConformanceCheckMetaTask task = new MCConformanceCheckMetaTask();
+        task.apiFactoryService = this.apiFactoryServiceMock;
+        task = task.create(this.mc, null);
 
         // Act.
         task.executeTransaction(this.em);

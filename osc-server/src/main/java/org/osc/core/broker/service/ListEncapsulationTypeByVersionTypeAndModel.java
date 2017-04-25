@@ -22,13 +22,15 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
 import org.osc.core.broker.service.request.ListEncapsulationTypeByVersionTypeAndModelRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.sdk.controller.TagEncapsulationType;
 
-public class ListEncapsulationTypeByVersionTypeAndModel extends
-        ServiceDispatcher<ListEncapsulationTypeByVersionTypeAndModelRequest, ListResponse<TagEncapsulationType>> {
+public class ListEncapsulationTypeByVersionTypeAndModel
+        extends ServiceDispatcher<ListEncapsulationTypeByVersionTypeAndModelRequest, ListResponse<TagEncapsulationType>>
+        implements ListEncapsulationTypeByVersionTypeAndModelApi {
 
     ListResponse<TagEncapsulationType> response = new ListResponse<>();
 

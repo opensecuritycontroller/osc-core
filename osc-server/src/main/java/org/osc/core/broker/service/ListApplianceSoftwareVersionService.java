@@ -22,6 +22,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.service.api.ListApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -30,8 +31,9 @@ import org.osc.core.broker.service.response.ListResponse;
 
 
 
-public class ListApplianceSoftwareVersionService extends
-        ServiceDispatcher<ListApplianceSoftwareVersionRequest, ListResponse<ApplianceSoftwareVersionDto>> {
+public class ListApplianceSoftwareVersionService
+        extends ServiceDispatcher<ListApplianceSoftwareVersionRequest, ListResponse<ApplianceSoftwareVersionDto>>
+        implements ListApplianceSoftwareVersionServiceApi {
 
     @Override
     public ListResponse<ApplianceSoftwareVersionDto> exec(ListApplianceSoftwareVersionRequest request, EntityManager em) {

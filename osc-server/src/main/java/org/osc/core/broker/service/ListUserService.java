@@ -22,13 +22,15 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
+import org.osc.core.broker.service.api.ListUserServiceApi;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
 import org.osc.core.broker.service.request.ListUserRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListUserService extends ServiceDispatcher<ListUserRequest, ListResponse<UserDto>> {
+public class ListUserService extends ServiceDispatcher<ListUserRequest, ListResponse<UserDto>>
+        implements ListUserServiceApi {
 
     @Override
     public ListResponse<UserDto> exec(ListUserRequest request, EntityManager em) throws Exception {

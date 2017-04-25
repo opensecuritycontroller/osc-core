@@ -17,15 +17,16 @@
 package org.osc.core.broker.service;
 
 import org.apache.commons.lang.StringUtils;
-import org.osc.core.broker.rest.server.model.TagVmRequest;
+import org.osc.core.broker.service.api.TagVmServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.TagVmResponse;
 import org.osc.core.broker.util.VimUtils;
 import org.osc.sdk.sdn.api.SecurityTagApi;
 
 import com.vmware.vim25.mo.VirtualMachine;
 
-public class TagVmService extends BaseTagVmService {
+public class TagVmService extends BaseTagVmService implements TagVmServiceApi {
 
     @Override
     protected void customValidate(TagVmRequest request) throws VmidcBrokerValidationException {

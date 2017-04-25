@@ -26,6 +26,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
@@ -33,8 +34,10 @@ import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.ForceDeleteDSTask;
+import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
-public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse> {
+public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
+        implements DeleteDeploymentSpecServiceApi {
 
     private DeploymentSpec ds;
 
@@ -83,7 +86,7 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
     }
 
     private void validateAndLoad(EntityManager em, BaseDeleteRequest request) throws Exception {
-        BaseDeleteRequest.checkForNullIdAndParentNullId(request);
+        BaseIdRequestValidator.checkForNullIdAndParentNullId(request);
 
         VirtualSystem vs = VirtualSystemEntityMgr.findById(em, request.getParentId());
 

@@ -28,10 +28,11 @@ import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
+import org.osc.core.broker.service.api.NsxUpdateProfileServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.NsxUpdateProfileRequest;
+import org.osc.core.broker.service.request.ServiceProfile;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
@@ -39,7 +40,8 @@ import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGr
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.NsxServiceProfileCheckMetaTask;
 
-public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileRequest, EmptySuccessResponse> {
+public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileRequest, EmptySuccessResponse>
+        implements NsxUpdateProfileServiceApi {
 
     private static final Logger log = Logger.getLogger(NsxUpdateProfileService.class);
 

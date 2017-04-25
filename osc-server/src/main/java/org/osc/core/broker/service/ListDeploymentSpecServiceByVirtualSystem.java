@@ -23,15 +23,18 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemApi;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
-public class ListDeploymentSpecServiceByVirtualSystem extends
-        ServiceDispatcher<BaseIdRequest, ListResponse<DeploymentSpecDto>> {
+public class ListDeploymentSpecServiceByVirtualSystem
+        extends ServiceDispatcher<BaseIdRequest, ListResponse<DeploymentSpecDto>>
+        implements ListDeploymentSpecServiceByVirtualSystemApi {
 
     private VirtualSystem vs;
     ListResponse<DeploymentSpecDto> response = new ListResponse<DeploymentSpecDto>();
@@ -55,7 +58,7 @@ public class ListDeploymentSpecServiceByVirtualSystem extends
     }
 
     private void validateAndLoad(BaseIdRequest req, EntityManager em) throws Exception {
-        BaseIdRequest.checkForNullId(req);
+        BaseIdRequestValidator.checkForNullId(req);
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
         this.vs = emgr.findByPrimaryKey(req.getId());
         if (this.vs == null) {

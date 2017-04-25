@@ -29,10 +29,9 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
-import org.osc.core.broker.service.request.DeleteDistributedApplianceRequestValidator;
-import org.osc.core.broker.service.request.RequestValidator;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAFromDbTask;
@@ -41,12 +40,15 @@ import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformance
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
+import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
+import org.osc.core.broker.service.validator.RequestValidator;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = DeleteDistributedApplianceService.class)
-public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse> {
+public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
+        implements DeleteDistributedApplianceServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteDistributedApplianceService.class);
     private RequestValidator<BaseDeleteRequest, DistributedAppliance> validator;

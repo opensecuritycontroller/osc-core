@@ -29,6 +29,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
 public class ListSecurityGroupInterfaceServiceByVirtualSystem extends
         ServiceDispatcher<BaseIdRequest, ListResponse<SecurityGroupInterfaceDto>> {
@@ -55,7 +56,7 @@ public class ListSecurityGroupInterfaceServiceByVirtualSystem extends
     }
 
     private void validateAndLoad(BaseIdRequest req, EntityManager em) throws Exception {
-        BaseIdRequest.checkForNullId(req);
+        BaseIdRequestValidator.checkForNullId(req);
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
         this.vs = emgr.findByPrimaryKey(req.getId());
         if (this.vs == null) {

@@ -24,19 +24,29 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.ServiceInstanceApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = UpdateNsxServiceInstanceAttributesTask.class)
 public class UpdateNsxServiceInstanceAttributesTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(UpdateNsxServiceInstanceAttributesTask.class);
 
+    @Reference
+    public PasswordUtil passwordUtil;
+
     private VirtualSystem vs;
 
-    public UpdateNsxServiceInstanceAttributesTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public UpdateNsxServiceInstanceAttributesTask create(VirtualSystem vs) {
+        UpdateNsxServiceInstanceAttributesTask task = new UpdateNsxServiceInstanceAttributesTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.passwordUtil = this.passwordUtil;
+        return task;
     }
 
     @Override
@@ -51,8 +61,8 @@ public class UpdateNsxServiceInstanceAttributesTask extends TransactionalTask {
         serviceInstanceApi.updateServiceInstance(
                 this.vs.getNsxServiceInstanceId(),
                 this.vs.getNsxServiceId(),
-                NsxAuthFilter.VMIDC_NSX_LOGIN,
-                NsxAuthFilter.VMIDC_NSX_PASS,
+                RestConstants.VMIDC_NSX_LOGIN,
+                this.passwordUtil.getVmidcNsxPass(),
                 ServerUtil.getServerIP(),
                 this.vs.getDistributedAppliance().getApplianceVersion(),
                 this.vs.getDistributedAppliance().getAppliance().getModel());

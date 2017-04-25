@@ -25,23 +25,33 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.rest.client.nsx.model.Service;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.request.Service;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
 import org.osc.sdk.sdn.api.ServiceApi;
 import org.osc.sdk.sdn.element.ServiceElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = CreateNsxServiceTask.class)
 public class CreateNsxServiceTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(CreateNsxServiceTask.class);
 
+    @Reference
+    PasswordUtil passwordUtil;
+
     private VirtualSystem vs;
 
-    public CreateNsxServiceTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public CreateNsxServiceTask create(VirtualSystem vs) {
+        CreateNsxServiceTask task = new CreateNsxServiceTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.passwordUtil = this.passwordUtil;
+        return task;
     }
 
     @Override
@@ -63,8 +73,8 @@ public class CreateNsxServiceTask extends TransactionalTask {
                     this.vs.getNsxServiceManagerId().toString(),
                     serviceFunctionalityType,
                     this.vs.getId().toString(),
-                    NsxAuthFilter.VMIDC_NSX_LOGIN,
-                    NsxAuthFilter.VMIDC_NSX_PASS,
+                    RestConstants.VMIDC_NSX_LOGIN,
+                    this.passwordUtil.getVmidcNsxPass(),
                     ServerUtil.getServerIP(),
                     this.vs.getApplianceSoftwareVersion().getAppliance().getModel(),
                     this.vs.getApplianceSoftwareVersion().getApplianceSoftwareVersion());

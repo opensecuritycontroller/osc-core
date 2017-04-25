@@ -25,23 +25,33 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = UpdateMgrPolicyNotificationTask.class)
 public class UpdateMgrPolicyNotificationTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(UpdateMgrPolicyNotificationTask.class);
+
+    @Reference
+    private PasswordUtil passwordUtil;
 
     private ApplianceManagerConnector mc;
     private String oldBrokerIp;
 
-    public UpdateMgrPolicyNotificationTask(ApplianceManagerConnector mc, String oldBrokerIp) {
-        this.mc = mc;
-        this.name = getName();
-        this.oldBrokerIp = oldBrokerIp;
+    public UpdateMgrPolicyNotificationTask create(ApplianceManagerConnector mc, String oldBrokerIp) {
+        UpdateMgrPolicyNotificationTask task = new UpdateMgrPolicyNotificationTask();
+        task.mc = mc;
+        task.name = task.getName();
+        task.oldBrokerIp = oldBrokerIp;
+        task.passwordUtil = this.passwordUtil;
+        return task;
     }
 
     @Override
@@ -54,7 +64,7 @@ public class UpdateMgrPolicyNotificationTask extends TransactionalTask {
         try {
             mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(this.mc);
             mgrApi.updatePolicyGroupNotificationRegistration(this.oldBrokerIp, Server.getApiPort(),
-                    OscAuthFilter.OSC_DEFAULT_LOGIN, OscAuthFilter.OSC_DEFAULT_PASS);
+                    RestConstants.OSC_DEFAULT_LOGIN, this.passwordUtil.getOscDefaultPass());
             this.mc.setLastKnownNotificationIpAddress(ServerUtil.getServerIP());
             OSCEntityManager.update(em, this.mc);
         } finally {

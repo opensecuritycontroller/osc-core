@@ -20,12 +20,15 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.service.api.ListVirtualSystemServiceApi;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.ListVirtualSystemRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListVirtualSystemService extends ServiceDispatcher<ListVirtualSystemRequest, ListResponse<VirtualSystemDto>> {
+public class ListVirtualSystemService
+        extends ServiceDispatcher<ListVirtualSystemRequest, ListResponse<VirtualSystemDto>>
+        implements ListVirtualSystemServiceApi {
 
     ListResponse<VirtualSystemDto> response = new ListResponse<VirtualSystemDto>();
 

@@ -28,6 +28,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
 public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse> {
 
@@ -59,7 +60,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
     }
 
     private void validate(EntityManager em, BaseIdRequest request) throws Exception {
-        BaseIdRequest.checkForNullIdAndParentNullId(request);
+        BaseIdRequestValidator.checkForNullIdAndParentNullId(request);
 
         VirtualSystem vs = VirtualSystemEntityMgr.findById(em, request.getParentId());
 

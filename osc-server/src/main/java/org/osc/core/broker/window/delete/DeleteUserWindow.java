@@ -17,7 +17,7 @@
 package org.osc.core.broker.window.delete;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.DeleteUserService;
+import org.osc.core.broker.service.api.DeleteUserServiceApi;
 import org.osc.core.broker.service.request.DeleteUserRequest;
 import org.osc.core.broker.view.UserView;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -38,9 +38,9 @@ public class DeleteUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     final String CAPTION = "Delete User";
 
     private final UserView userView;
-    private final DeleteUserService deleteUserService;
+    private final DeleteUserServiceApi deleteUserService;
 
-    public DeleteUserWindow(UserView userView, DeleteUserService deleteUserService) throws Exception {
+    public DeleteUserWindow(UserView userView, DeleteUserServiceApi deleteUserService) throws Exception {
         this.userView = userView;
         this.deleteUserService = deleteUserService;
         createWindow(this.CAPTION);

@@ -29,6 +29,7 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
 public class ListSecurityGroupByVcService extends ServiceDispatcher<BaseIdRequest, ListResponse<SecurityGroupDto>> {
 
@@ -56,7 +57,7 @@ public class ListSecurityGroupByVcService extends ServiceDispatcher<BaseIdReques
     }
 
     protected void validate(EntityManager em, BaseIdRequest request) throws Exception {
-        BaseIdRequest.checkForNullId(request);
+        BaseIdRequestValidator.checkForNullId(request);
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, request.getId());
 

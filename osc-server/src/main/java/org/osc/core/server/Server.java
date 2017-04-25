@@ -35,9 +35,9 @@ import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
-import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
@@ -113,6 +113,9 @@ public class Server {
     @Reference
     private ApiFactoryService apiFactoryService;
 
+    @Reference
+    private PasswordUtil passwordUtil;
+
     @Reference(service=WebSocketRunner.class,
             scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private ComponentServiceObjects<WebSocketRunner> webSocketFactory;
@@ -180,8 +183,8 @@ public class Server {
             DatabaseUtils.createDefaultDB();
             DatabaseUtils.markRunningJobAborted();
 
-            PasswordUtil.initPasswordFromDb(NsxAuthFilter.VMIDC_NSX_LOGIN);
-            PasswordUtil.initPasswordFromDb(OscAuthFilter.OSC_DEFAULT_LOGIN);
+            this.passwordUtil.initPasswordFromDb(RestConstants.VMIDC_NSX_LOGIN);
+            this.passwordUtil.initPasswordFromDb(RestConstants.OSC_DEFAULT_LOGIN);
 
             JobEngine.getEngine().addJobCompletionListener(new AlertGenerator());
 

@@ -27,15 +27,17 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
-import org.osc.core.broker.service.appliance.ImportFileRequest;
+import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.ServerUtil;
 
-public class ImportSdnControllerPluginService extends ServiceDispatcher<ImportFileRequest, BaseResponse> {
+public class ImportSdnControllerPluginService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
+        implements ImportSdnControllerPluginServiceApi {
 
     private static final Logger log = Logger.getLogger(ImportSdnControllerPluginService.class);
 
