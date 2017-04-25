@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.mc;
+package org.osc.core.broker.service.request;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
-import org.osc.core.broker.service.request.Request;
 
 // Appliance Manager Connector Data Transfer Object associated with MC Entity
 @XmlRootElement(name ="applianceManagerConnectorRequest")

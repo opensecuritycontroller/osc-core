@@ -25,6 +25,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.MCChangeNotificationServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -32,8 +33,8 @@ import org.osc.core.broker.service.request.MCChangeNotificationRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.sdk.manager.element.MgrChangeNotification.MgrObjectType;
 
-public class MCChangeNotificationService extends
-ServiceDispatcher<MCChangeNotificationRequest, BaseJobResponse> {
+public class MCChangeNotificationService extends ServiceDispatcher<MCChangeNotificationRequest, BaseJobResponse>
+        implements MCChangeNotificationServiceApi {
 
     private static final Logger log = Logger.getLogger(MCChangeNotificationService.class);
 

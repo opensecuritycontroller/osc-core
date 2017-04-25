@@ -16,9 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseJobRequest;
@@ -26,10 +29,9 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import javax.persistence.EntityManager;
-
 @Component(service = SyncManagerConnectorService.class)
-public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobRequest, BaseJobResponse> {
+public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobRequest, BaseJobResponse>
+        implements SyncManagerConnectorServiceApi {
 
     @Reference
     private ConformService conformService;

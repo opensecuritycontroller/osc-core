@@ -35,6 +35,7 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.SslCertificatesExtendedException;
+import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
@@ -62,8 +63,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = UpdateApplianceManagerConnectorService.class)
-public class UpdateApplianceManagerConnectorService extends
-        ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
+public class UpdateApplianceManagerConnectorService
+        extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse>
+        implements UpdateApplianceManagerConnectorServiceApi {
 
     static final Logger log = Logger.getLogger(UpdateApplianceManagerConnectorService.class);
 
