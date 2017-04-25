@@ -69,16 +69,17 @@ public class OsPortNotificationListener extends OsNotificationListener {
         }
     }
 
-    private Void doTranscationalAction(final String eventType, final String message)
-            throws Exception {
+    private void doTranscationalAction(final String eventType, final String message) throws Exception {
         EntityManager em = HibernateUtil.getTransactionalEntityManager();
-        if (eventType.contains(OsNotificationEventState.DELETE.toString())
-                || eventType.contains(OsNotificationEventState.INTERFACE_DELETE.toString())) {
-            handleSGPortDeletionMessages(em, message);
-        } else {
-            handleSGPortMessages(em, message);
-        }
-        return null;
+        HibernateUtil.getTransactionControl().required(() -> {
+            if (eventType.contains(OsNotificationEventState.DELETE.toString())
+                    || eventType.contains(OsNotificationEventState.INTERFACE_DELETE.toString())) {
+                handleSGPortDeletionMessages(em, message);
+            } else {
+                handleSGPortMessages(em, message);
+            }
+            return null;
+        });
     }
 
     private void handleError(Throwable e) {
