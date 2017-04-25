@@ -14,17 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.securityinterface;
-
-import java.util.HashMap;
-import java.util.Map;
+package org.osc.core.broker.service.dto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.util.ValidateUtil;
 import org.osc.sdk.controller.FailurePolicyType;
 
 import io.swagger.annotations.ApiModel;
@@ -142,20 +137,6 @@ public class SecurityGroupInterfaceDto extends BaseDto {
         this.failurePolicyType = failurePolicyType;
     }
 
-    public static void checkForNullFields(SecurityGroupInterfaceDto dto) throws Exception {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("Name", dto.getName());
-        map.put("Policy", dto.getPolicyId());
-        map.put("Tag", dto.getTagValue());
-        map.put("Failure Policy", dto.getFailurePolicyType());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
     public Long getOrder() {
         return this.order;
     }
@@ -170,15 +151,6 @@ public class SecurityGroupInterfaceDto extends BaseDto {
 
     public void setMarkForDeletion(boolean markForDeletion) {
         this.markForDeletion = markForDeletion;
-    }
-
-    public static void checkFieldLength(SecurityGroupInterfaceDto dto) throws Exception {
-
-        Map<String, String> map = new HashMap<String, String>();
-
-        map.put("Name", dto.getName());
-
-        ValidateUtil.validateFieldLength(map, ValidateUtil.DEFAULT_MAX_LEN);
     }
 
 }

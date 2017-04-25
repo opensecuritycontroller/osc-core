@@ -19,8 +19,8 @@ package org.osc.core.broker.view.securityinterface;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.policy.ListVirtualSystemPolicyService;
-import org.osc.core.broker.service.policy.PolicyDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;

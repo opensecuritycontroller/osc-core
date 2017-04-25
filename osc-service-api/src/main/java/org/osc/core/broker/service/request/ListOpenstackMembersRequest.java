@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.openstack.request;
+package org.osc.core.broker.service.request;
 
 import java.util.Set;
 
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
-import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
+import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 
 public class ListOpenstackMembersRequest extends BaseOpenStackRequest {
 

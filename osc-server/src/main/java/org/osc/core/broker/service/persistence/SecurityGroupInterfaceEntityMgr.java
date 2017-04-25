@@ -28,7 +28,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
+import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.sdk.controller.FailurePolicyType;
 
 public class SecurityGroupInterfaceEntityMgr {

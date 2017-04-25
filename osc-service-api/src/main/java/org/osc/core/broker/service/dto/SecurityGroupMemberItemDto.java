@@ -14,21 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.securitygroup;
-
-import io.swagger.annotations.ApiModelProperty;
-
-import java.util.HashMap;
-import java.util.Map;
+package org.osc.core.broker.service.dto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
-import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
-import org.osc.core.broker.util.ValidateUtil;
+
+import io.swagger.annotations.ApiModelProperty;
 
 @XmlRootElement(name = "securityGroupMember")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -111,7 +105,7 @@ public class SecurityGroupMemberItemDto extends BaseDto {
     }
 
     public boolean isProtectExternal() {
-        return protectExternal;
+        return this.protectExternal;
     }
 
     public void setProtectExternal(boolean mode) {
@@ -119,29 +113,11 @@ public class SecurityGroupMemberItemDto extends BaseDto {
     }
 
     public String getParentOpenStackId() {
-        return parentOpenStackId;
+        return this.parentOpenStackId;
     }
 
     public void setParentOpenStackId(String parentOpenStackId) {
         this.parentOpenStackId = parentOpenStackId;
-    }
-
-    public static void checkForNullFields(SecurityGroupMemberItemDto dto) throws VmidcBrokerInvalidEntryException {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("Name", dto.getName());
-        map.put("Region", dto.getRegion());
-        map.put("Openstack Id", dto.getOpenstackId());
-        map.put("Type", dto.getType());
-
-        if (dto.getType().equals(SecurityGroupMemberType.SUBNET)) {
-            map.put("Network  Id", dto.getParentOpenStackId());
-        }
-
-        ValidateUtil.checkForNullFields(map);
     }
 
 }

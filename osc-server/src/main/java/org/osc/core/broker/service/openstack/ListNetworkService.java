@@ -24,8 +24,8 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.openstack.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
 public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<Network>> {

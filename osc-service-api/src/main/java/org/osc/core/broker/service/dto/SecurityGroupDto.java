@@ -14,17 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.securitygroup;
-
-import java.util.HashMap;
-import java.util.Map;
+package org.osc.core.broker.service.dto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.util.ValidateUtil;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -154,37 +148,4 @@ public class SecurityGroupDto extends BaseDto {
         this.lastJobId = lastJobId;
     }
 
-    public static void checkForNullIdFields(SecurityGroupDto dto) throws Exception {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("Id", dto.getId());
-        map.put("Virtualization Connector Id", dto.getParentId());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
-    public static void checkForNullFields(SecurityGroupDto dto) throws Exception {
-
-        // build a map of (field,value) pairs to be checked for null/empty
-        // values
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        map.put("Name", dto.getName());
-        map.put("Tenant Id", dto.getTenantId());
-        map.put("Tenant Name", dto.getTenantName());
-
-        ValidateUtil.checkForNullFields(map);
-    }
-
-    public static void checkFieldLength(SecurityGroupDto dto) throws Exception {
-
-        Map<String, String> map = new HashMap<String, String>();
-
-        map.put("Name", dto.getName());
-
-        ValidateUtil.validateFieldLength(map, ValidateUtil.DEFAULT_MAX_LEN);
-    }
 }

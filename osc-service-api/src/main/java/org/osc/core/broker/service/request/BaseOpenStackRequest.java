@@ -14,9 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.openstack.request;
-
-import org.osc.core.broker.service.request.BaseIdRequest;
+package org.osc.core.broker.service.request;
 
 public class BaseOpenStackRequest extends BaseIdRequest {
 

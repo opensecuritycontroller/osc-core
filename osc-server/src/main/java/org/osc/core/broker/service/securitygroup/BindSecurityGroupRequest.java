@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.util.ValidateUtil;
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.securitygroup;
+package org.osc.core.broker.service.dto;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,7 +24,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.service.policy.PolicyDto;
 import org.osc.sdk.controller.FailurePolicyType;
 
 import io.swagger.annotations.ApiModelProperty;
