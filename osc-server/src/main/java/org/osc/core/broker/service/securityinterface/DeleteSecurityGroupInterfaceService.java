@@ -23,6 +23,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
@@ -30,7 +31,8 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
-public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse> {
+public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
+        implements DeleteSecurityGroupInterfaceServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteSecurityGroupInterfaceService.class);
     private SecurityGroupInterface sgi = null;
