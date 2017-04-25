@@ -35,6 +35,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto.VirtualSystemPolicyBindingDtoComparator;
@@ -45,13 +46,16 @@ import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
+import org.osc.core.broker.service.request.BindSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
+import org.osc.core.broker.service.validator.BindSecurityGroupRequestValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.sdk.controller.FailurePolicyType;
 
-public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGroupRequest, BaseJobResponse> {
+public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGroupRequest, BaseJobResponse>
+        implements BindSecurityGroupServiceApi {
 
     private static final Logger log = Logger.getLogger(BindSecurityGroupService.class);
 
@@ -211,7 +215,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
     }
 
     protected void validateAndLoad(EntityManager em, BindSecurityGroupRequest request) throws Exception {
-        BindSecurityGroupRequest.checkForNullFields(request);
+        BindSecurityGroupRequestValidator.checkForNullFields(request);
 
         this.securityGroup = SecurityGroupEntityMgr.findById(em, request.getSecurityGroupId());
 

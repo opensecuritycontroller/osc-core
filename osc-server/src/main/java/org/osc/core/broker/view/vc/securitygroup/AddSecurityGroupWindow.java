@@ -20,8 +20,8 @@ import org.apache.log4j.Logger;
 import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
+import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.securitygroup.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.securitygroup.AddSecurityGroupService;
 import org.osc.core.broker.view.util.ViewUtil;
 

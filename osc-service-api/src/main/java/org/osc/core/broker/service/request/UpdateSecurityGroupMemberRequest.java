@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.securitygroup;
+package org.osc.core.broker.service.request;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -24,7 +24,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
-import org.osc.core.broker.service.request.BaseIdRequest;
 
 @XmlRootElement(name = "updateMemberRequest")
 @XmlAccessorType(XmlAccessType.FIELD)
