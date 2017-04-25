@@ -28,6 +28,7 @@ import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
+import org.osc.core.broker.service.dto.openstack.TenantBean;
 import org.osc.core.broker.service.openstack.ListOpenstackMembersService;
 import org.osc.core.broker.service.openstack.ListRegionByVcIdService;
 import org.osc.core.broker.service.openstack.ListTenantByVcIdService;
@@ -436,12 +437,12 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
                 req.setId(vcId);
                 ListTenantByVcIdService service = new ListTenantByVcIdService();
 
-                List<Tenant> tenantList = service.dispatch(req).getList();
+                List<TenantBean> tenantList = service.dispatch(req).getList();
 
                 this.tenant.removeValueChangeListener(this.tenantChangedListener);
                 this.tenant.removeAllItems();
 
-                BeanItemContainer<Tenant> tenantListContainer = new BeanItemContainer<Tenant>(Tenant.class, tenantList);
+                BeanItemContainer<TenantBean> tenantListContainer = new BeanItemContainer<>(TenantBean.class, tenantList);
                 this.tenant.setContainerDataSource(tenantListContainer);
                 this.tenant.setItemCaptionPropertyId("name");
 

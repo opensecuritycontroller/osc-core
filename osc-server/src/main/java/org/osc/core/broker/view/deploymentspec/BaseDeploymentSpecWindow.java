@@ -21,12 +21,13 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
-import org.jclouds.openstack.neutron.v2.domain.Network;
 import org.osc.core.broker.rest.client.openstack.jcloud.exception.ExtensionNotPresentException;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
+import org.osc.core.broker.service.dto.openstack.NetworkBean;
+import org.osc.core.broker.service.dto.openstack.TenantBean;
 import org.osc.core.broker.service.openstack.ListAvailabilityZonesService;
 import org.osc.core.broker.service.openstack.ListFloatingIpPoolsService;
 import org.osc.core.broker.service.openstack.ListHostAggregateService;
@@ -210,12 +211,12 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
 
     }
 
-    private void populateNetworks(ComboBox networkComboBox, List<Network> networkList) {
+    private void populateNetworks(ComboBox networkComboBox, List<NetworkBean> networkList) {
         try {
             networkComboBox.removeAllItems();
             if (networkList != null) {
                 // Calling List Network Service
-                BeanItemContainer<Network> networkListContainer = new BeanItemContainer<Network>(Network.class,
+                BeanItemContainer<NetworkBean> networkListContainer = new BeanItemContainer<>(NetworkBean.class,
                         networkList);
 
                 networkComboBox.setContainerDataSource(networkListContainer);
@@ -230,7 +231,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
         }
     }
 
-    private List<Network> getNetworks() {
+    private List<NetworkBean> getNetworks() {
         try {
             Tenant selectedTenant = (Tenant) this.tenant.getValue();
             if (selectedTenant != null && this.region.getValue() != null) {
@@ -242,7 +243,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                 req.setTenantId(selectedTenant.getId());
 
                 ListNetworkService service = new ListNetworkService();
-                List<Network> res = service.dispatch(req).getList();
+                List<NetworkBean> res = service.dispatch(req).getList();
 
                 return res;
             }
@@ -304,12 +305,12 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
             req.setId(this.vsId);
             ListTenantService service = new ListTenantService();
 
-            List<Tenant> tenantList = service.dispatch(req).getList();
+            List<TenantBean> tenantList = service.dispatch(req).getList();
 
             this.tenant.removeValueChangeListener(this.tenantChangedListener);
             this.tenant.removeAllItems();
 
-            BeanItemContainer<Tenant> tenantListContainer = new BeanItemContainer<Tenant>(Tenant.class, tenantList);
+            BeanItemContainer<TenantBean> tenantListContainer = new BeanItemContainer<>(TenantBean.class, tenantList);
             this.tenant.setContainerDataSource(tenantListContainer);
             this.tenant.setItemCaptionPropertyId("name");
 
@@ -511,7 +512,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                 }
                 if (BaseDeploymentSpecWindow.this.managementNetwork != null
                         && BaseDeploymentSpecWindow.this.inspectionNetwork != null) {
-                    List<Network> networks = getNetworks();
+                    List<NetworkBean> networks = getNetworks();
                     populateNetworks(BaseDeploymentSpecWindow.this.managementNetwork, networks);
                     populateNetworks(BaseDeploymentSpecWindow.this.inspectionNetwork, networks);
                 }
