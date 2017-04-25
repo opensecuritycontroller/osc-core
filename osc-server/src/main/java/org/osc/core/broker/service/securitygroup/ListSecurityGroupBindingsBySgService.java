@@ -37,6 +37,7 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.policy.PolicyDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osc.sdk.controller.FailurePolicyType;
 
 public class ListSecurityGroupBindingsBySgService extends
@@ -116,7 +117,7 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
     }
 
     protected void validate(EntityManager em, BaseIdRequest request) throws Exception {
-        BaseIdRequest.checkForNullId(request);
+        BaseIdRequestValidator.checkForNullId(request);
 
         this.sg = SecurityGroupEntityMgr.findById(em, request.getId());
 

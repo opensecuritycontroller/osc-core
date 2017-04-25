@@ -28,12 +28,12 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache.VmInfo;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
-import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
@@ -65,7 +65,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
             String vmOpenstackId = OsNotificationUtil.isMessageRelevant(message, this.objectIdList,
                     OsNotificationKeyType.INSTANCE_ID.toString());
             if (vmOpenstackId != null) {
-                SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
+                SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
 
                 log.info(" [Instance] : message received - " + message);
                 try {

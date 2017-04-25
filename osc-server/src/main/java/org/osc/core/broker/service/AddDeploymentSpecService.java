@@ -28,6 +28,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZ
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.Host;
 import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate;
+import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -39,12 +40,11 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 
-public class AddDeploymentSpecService extends
-        BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse> {
+public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
+        implements AddDeploymentSpecServiceApi {
 
     @Override
     public BaseJobResponse exec(BaseRequest<DeploymentSpecDto> request, EntityManager em) throws Exception {
-
 
         UnlockObjectMetaTask unlockTask = null;
         validate(em, request.getDto());

@@ -23,13 +23,15 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
+import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListDomainsByMcIdService extends ServiceDispatcher<BaseIdRequest, ListResponse<DomainDto>> {
+public class ListDomainsByMcIdService extends ServiceDispatcher<BaseIdRequest, ListResponse<DomainDto>>
+        implements ListDomainsByMcIdServiceApi {
 
     @Override
     public ListResponse<DomainDto> exec(BaseIdRequest request, EntityManager em) throws Exception {

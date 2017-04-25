@@ -22,13 +22,15 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.job.JobRecord;
+import org.osc.core.broker.service.api.ListJobServiceApi;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.persistence.JobEntityManager;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.ListJobRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListJobService extends ServiceDispatcher<ListJobRequest, ListResponse<JobRecordDto>> {
+public class ListJobService extends ServiceDispatcher<ListJobRequest, ListResponse<JobRecordDto>>
+        implements ListJobServiceApi {
 
     ListResponse<JobRecordDto> response = new ListResponse<JobRecordDto>();
 

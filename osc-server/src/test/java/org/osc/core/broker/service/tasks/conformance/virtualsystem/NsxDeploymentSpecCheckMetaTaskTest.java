@@ -51,6 +51,8 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
+import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
+import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
 import org.powermock.api.mockito.PowerMockito;
@@ -79,11 +81,19 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
 
     private boolean updateNsxServiceAttributesScheduled;
 
+    private NsxDeploymentSpecCheckMetaTask nsxDeploymentSpecCheckMetaTask;
+
     public NsxDeploymentSpecCheckMetaTaskTest(VirtualSystem vs, TaskGraph tg,
             boolean updateNsxServiceAttributesScheduled) {
         this.vs = vs;
         this.expectedGraph = tg;
         this.updateNsxServiceAttributesScheduled = updateNsxServiceAttributesScheduled;
+
+        UpdateNsxServiceAttributesTask updateNsxServiceAttributesTask = new UpdateNsxServiceAttributesTask();
+        UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask = new UpdateNsxServiceInstanceAttributesTask();
+        this.nsxDeploymentSpecCheckMetaTask = new NsxDeploymentSpecCheckMetaTask();
+        this.nsxDeploymentSpecCheckMetaTask.updateNsxServiceAttributesTask = updateNsxServiceAttributesTask;
+        this.nsxDeploymentSpecCheckMetaTask.updateNsxServiceInstanceAttributesTask = updateNsxServiceInstanceAttributesTask;
     }
 
     @Before
@@ -118,7 +128,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousVirtualSystems_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        NsxDeploymentSpecCheckMetaTask task = new NsxDeploymentSpecCheckMetaTask(this.vs, this.updateNsxServiceAttributesScheduled);
+        NsxDeploymentSpecCheckMetaTask task = this.nsxDeploymentSpecCheckMetaTask.create(this.vs, this.updateNsxServiceAttributesScheduled);
 
         // Act.
         task.executeTransaction(this.em);

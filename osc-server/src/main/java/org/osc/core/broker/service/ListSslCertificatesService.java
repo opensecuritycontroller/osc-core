@@ -20,15 +20,18 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
+import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 
-public class ListSslCertificatesService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<CertificateBasicInfoModel>> {
+public class ListSslCertificatesService
+        extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<CertificateBasicInfoModel>>
+        implements ListSslCertificatesServiceApi {
 
     @Override
     protected ListResponse<CertificateBasicInfoModel> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {

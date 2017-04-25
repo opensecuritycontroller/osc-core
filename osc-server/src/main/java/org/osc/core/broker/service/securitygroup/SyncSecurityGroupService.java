@@ -30,6 +30,7 @@ import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osgi.service.component.annotations.Reference;
 
 public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse> {
@@ -51,7 +52,7 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
 
     private void validateAndLoad(BaseIdRequest request, EntityManager em) throws Exception,
             VmidcBrokerValidationException {
-        BaseIdRequest.checkForNullIdAndParentNullId(request);
+        BaseIdRequestValidator.checkForNullIdAndParentNullId(request);
 
         this.securityGroup = SecurityGroupEntityMgr.findById(em, request.getId());
 

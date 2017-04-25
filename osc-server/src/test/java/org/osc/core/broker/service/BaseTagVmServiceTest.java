@@ -27,8 +27,8 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.server.model.TagVmRequest;
 import org.osc.core.broker.rest.server.model.TagVmRequestValidator;
+import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.util.VimUtils;
 import org.osc.sdk.sdn.api.SecurityTagApi;
 

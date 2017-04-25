@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.rest.client.nsx.model.Attribute;
+import org.osc.core.broker.service.request.Attribute;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

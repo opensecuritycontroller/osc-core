@@ -20,6 +20,7 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.service.api.NsxDeleteAgentsServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -27,7 +28,8 @@ import org.osc.core.broker.service.request.NsxDeleteAgentsRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteMemberDeviceTask;
 
-public class NsxDeleteAgentsService extends ServiceDispatcher<NsxDeleteAgentsRequest, EmptySuccessResponse> {
+public class NsxDeleteAgentsService extends ServiceDispatcher<NsxDeleteAgentsRequest, EmptySuccessResponse>
+        implements NsxDeleteAgentsServiceApi {
 
     private static final Logger log = Logger.getLogger(NsxDeleteAgentsService.class);
 

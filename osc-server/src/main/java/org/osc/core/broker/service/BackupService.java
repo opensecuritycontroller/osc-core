@@ -16,8 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
@@ -26,13 +34,7 @@ import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
 
-import javax.persistence.EntityManager;
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
-
-public class BackupService extends BackupFileService<BackupRequest, BackupResponse> {
+public class BackupService extends BackupFileService<BackupRequest, BackupResponse> implements BackupServiceApi {
 
 
     @Override
@@ -40,14 +42,14 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
         BackupResponse res = new BackupResponse();
         try {
         	// check for backup custom filename
-            final String backupFileName = StringUtils.isBlank(request.getBackupFileName()) ? 
+            final String backupFileName = StringUtils.isBlank(request.getBackupFileName()) ?
             							  DEFAULT_BACKUP_FILE_NAME : request.getBackupFileName();
-            
+
             ensureBackupFolderExists();
-            
+
             // delete old backup files
             deleteBackupFiles();
-            
+
             // create temporary backup zip
             createBackupZipFile(em, backupFileName);
 
@@ -59,13 +61,13 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
 
             // encrypt the concatenation with AES-GCM
             byte[] encryptedBackupFileBytes = encryptBackupFileBytes(backupData.serialize(), request.getBackupPassword());
-            
+
             // remove temporary backup zip
             deleteFile(resolveBackupZipPath(backupFileName));
-            
+
             // write encrypted backup file
             writeEncryptedBackupFile(backupFileName, encryptedBackupFileBytes);
-            
+
             res.setSuccess(true);
         } catch (Exception ex) {
             res.setSuccess(false);
@@ -73,31 +75,31 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
         }
         return res;
     }
-    
+
     void ensureBackupFolderExists() throws IOException {
     	FileUtils.forceMkdir(new File(BACKUPS_FOLDER));
     }
-    
+
     public void deleteBackupFilesFrom(String directory) {
     	deleteBackupFilesFrom(directory, DEFAULT_BACKUP_FILE_NAME);
     }
-    
+
     public void deleteBackupFilesFrom(String directory, String backupFileName) {
     	deleteFile(new StringBuilder().append(directory)
 					    			  .append(File.separator)
 					    			  .append(backupFileName)
 					    			  .append(EXT_ENCRYPTED_BACKUP).toString());
     }
-    
+
     public void deleteBackupFiles() {
     	deleteBackupFiles(DEFAULT_BACKUP_FILE_NAME);
     }
-    
+
     public void deleteBackupFiles(String backupFileName) {
     	deleteFile(resolveBackupZipPath(backupFileName));
         deleteFile(resolveEncryptedBackupPath(backupFileName));
     }
-    
+
     void deleteFile(String filePath) {
     	File file = new File(filePath);
         if (file.exists()) {
@@ -111,7 +113,7 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
         log.info("Execute sql: " + sql);
         em.createNativeQuery(sql).executeUpdate();
     }
-    
+
     void writeEncryptedBackupFile(String backupFileName, byte[] encryptedBackupFileBytes) throws IOException {
     	FileUtils.writeByteArrayToFile(getEncryptedBackupFile(backupFileName), encryptedBackupFileBytes);
     }
@@ -119,11 +121,11 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
     byte[] getBackupZipFileBytes(String backupFileName) throws IOException {
     	return FileUtils.readFileToByteArray(new File(resolveBackupZipPath(backupFileName)));
     }
-    
+
     public File getEncryptedBackupFile() {
     	return getEncryptedBackupFile(DEFAULT_BACKUP_FILE_NAME);
     }
-    
+
     public File getEncryptedBackupFile(String backupFileName) {
     	return new File(new StringBuilder().append(BACKUPS_FOLDER)
 										   .append(File.separator)

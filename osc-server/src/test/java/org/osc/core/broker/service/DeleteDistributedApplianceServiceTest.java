@@ -43,13 +43,13 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
-import org.osc.core.broker.service.request.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteDATask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
+import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.TaskGraphMatcher;
 import org.osc.core.test.util.TestTransactionControl;

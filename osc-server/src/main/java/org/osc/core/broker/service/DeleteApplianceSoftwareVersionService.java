@@ -27,6 +27,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
@@ -35,7 +36,8 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.view.maintenance.ApplianceUploader;
 
-public class DeleteApplianceSoftwareVersionService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse> {
+public class DeleteApplianceSoftwareVersionService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse>
+        implements DeleteApplianceSoftwareVersionServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteApplianceSoftwareVersionService.class);
 

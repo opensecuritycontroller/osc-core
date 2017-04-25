@@ -40,6 +40,7 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.service.validator.UpdateDaiConsolePasswordRequestValidator;
 
 import com.google.common.collect.Sets;
 

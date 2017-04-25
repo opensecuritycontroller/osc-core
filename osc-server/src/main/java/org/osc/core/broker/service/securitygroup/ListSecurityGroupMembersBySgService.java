@@ -29,6 +29,7 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupMemberEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.SetResponse;
+import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
 public class ListSecurityGroupMembersBySgService extends
         ServiceDispatcher<BaseIdRequest, SetResponse<SecurityGroupMemberItemDto>> {
@@ -56,7 +57,7 @@ public class ListSecurityGroupMembersBySgService extends
     }
 
     protected void validate(EntityManager em, BaseIdRequest request) throws Exception {
-        BaseIdRequest.checkForNullId(request);
+        BaseIdRequestValidator.checkForNullId(request);
 
         this.sg = SecurityGroupEntityMgr.findById(em, request.getId());
 

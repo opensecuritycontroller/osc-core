@@ -19,13 +19,15 @@ package org.osc.core.broker.service;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.service.api.UpdateVSKeyStoreServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.UpdateVSKeyStoreRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 
 
-public class UpdateVSKeyStoreService extends ServiceDispatcher<UpdateVSKeyStoreRequest, EmptySuccessResponse> {
+public class UpdateVSKeyStoreService extends ServiceDispatcher<UpdateVSKeyStoreRequest, EmptySuccessResponse>
+        implements UpdateVSKeyStoreServiceApi {
 
     @Override
     public EmptySuccessResponse exec(UpdateVSKeyStoreRequest request, EntityManager em) throws Exception {

@@ -30,22 +30,22 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
-import org.osc.core.broker.rest.server.model.QueryVmInfoRequest;
-import org.osc.core.broker.rest.server.model.TagVmRequest;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.PropagateVSMgrFileService;
-import org.osc.core.broker.service.QueryVmInfoService;
 import org.osc.core.broker.service.TagVmService;
 import org.osc.core.broker.service.UnTagVmService;
+import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.mc.MCChangeNotificationService;
 import org.osc.core.broker.service.request.MCChangeNotificationRequest;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
+import org.osc.core.broker.service.request.QueryVmInfoRequest;
+import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.util.SessionUtil;
@@ -66,7 +66,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = ManagerApis.class)
 @Api(tags = "Operations for Manager Plugin", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(OscRestServlet.MANAGER_API_PATH_PREFIX)
+@Path(RestConstants.MANAGER_API_PATH_PREFIX)
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth
@@ -79,6 +79,12 @@ public class ManagerApis {
 
     @Reference
     private ApiUtil apiUtil;
+
+    @Reference
+    private PropagateVSMgrFileService propagateVSMgrFileService;
+
+    @Reference
+    private QueryVmInfoServiceApi queryVmInfoService;
 
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
@@ -120,7 +126,7 @@ public class ManagerApis {
         request.setMgrFile(mgrFile.getMgrFile());
         request.setMgrFileName(mgrFile.getMgrFileName());
 
-        return apiUtil.getResponse(new PropagateVSMgrFileService(), request);
+        return this.apiUtil.getResponse(this.propagateVSMgrFileService, request);
     }
 
     @ApiOperation(value = "Query Virtual Machine information",
@@ -139,7 +145,7 @@ public class ManagerApis {
         log.info("Query VM info request: " + queryVmInfo);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return apiUtil.getResponse(new QueryVmInfoService(), queryVmInfo);
+        return this.apiUtil.getResponse(this.queryVmInfoService, queryVmInfo);
     }
 
     @Path("/tagVm")
@@ -149,7 +155,7 @@ public class ManagerApis {
         log.info("Tag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return apiUtil.getResponse(new TagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(new TagVmService(), tagVmRequest);
     }
 
     @Path("/untagVm")
@@ -159,7 +165,7 @@ public class ManagerApis {
         log.info("UnTag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
     }
 
     public Response triggerMcSync(String username, String ipAddress, Notification notification) {

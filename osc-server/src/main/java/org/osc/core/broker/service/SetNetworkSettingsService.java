@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.request.SetNetworkSettingsRequest;
 import org.osc.core.broker.service.response.SetNetworkSettingsResponse;
@@ -35,7 +36,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = SetNetworkSettingsService.class)
-public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSettingsRequest, SetNetworkSettingsResponse> {
+public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSettingsRequest, SetNetworkSettingsResponse>
+        implements SetNetworkSettingsServiceApi {
 
     private static final Logger log = Logger.getLogger(SetNetworkSettingsService.class);
 
@@ -103,7 +105,7 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(this.ipChangePropagateMetaTask);
+        tg.addTask(this.ipChangePropagateMetaTask.create());
 
         Job job = JobEngine.getEngine().submit(
                 "Updating " + Server.SHORT_PRODUCT_NAME

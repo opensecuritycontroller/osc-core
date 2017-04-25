@@ -142,6 +142,10 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
                     null
             );
 
+
+    private static UpdateNsxServiceAttributesTask updateNsxServiceAttributesTask = new UpdateNsxServiceAttributesTask();
+    private static UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask = new UpdateNsxServiceInstanceAttributesTask();
+
     public static VirtualSystem createVmwareNoDeploymentSpecData(
             Long vsId,
             Long vcId,
@@ -318,8 +322,8 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
             spec.setOvfUrl(IMAGE_URL_OUT_OF_SYNC);
             expectedGraph.addTask(new UpdateNsxDeploymentSpecTask(vs, spec));
         }
-        expectedGraph.addTask(new UpdateNsxServiceAttributesTask(vs));
-        expectedGraph.addTask(new UpdateNsxServiceInstanceAttributesTask(vs));
+        expectedGraph.addTask(updateNsxServiceAttributesTask.create(vs));
+        expectedGraph.addTask(updateNsxServiceInstanceAttributesTask.create(vs));
         return expectedGraph;
     }
 
@@ -333,7 +337,7 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
             spec.setOvfUrl(IMAGE_URL_OUT_OF_SYNC);
             expectedGraph.addTask(new UpdateNsxDeploymentSpecTask(vs, spec));
         }
-        expectedGraph.addTask(new UpdateNsxServiceInstanceAttributesTask(vs));
+        expectedGraph.addTask(updateNsxServiceInstanceAttributesTask.create(vs));
         return expectedGraph;
     }
 
