@@ -51,7 +51,6 @@ public final class X509TrustManagerFactory implements X509TrustManager {
 
     private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
-    //:TODO combine with vmidckeystore as part of US11664
     // vmidctruststore stores public certificates needed to establish SSL connection
     public static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
     // key entry to properties file that contains password
@@ -105,7 +104,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         } catch (CertificateException cx) {
             try {
                 X509Certificate x509Certificate = chain[0];
-                //x509Certificate.checkValidity(); //:TODO uncomment if certificate should be checked against expiration
+                x509Certificate.checkValidity();
                 long unixTimestamp = Instant.now().getEpochSecond();
                 CertificateResolverModel resolverModel = new CertificateResolverModel(
                         x509Certificate, String.valueOf(unixTimestamp), getSha1Fingerprint(x509Certificate));
@@ -145,7 +144,6 @@ public final class X509TrustManagerFactory implements X509TrustManager {
             throw new Exception("Failed to load certificate from trust store", e);
         }
 
-        // :TODO remove after solving US11330
         this.keyStore.setCertificateEntry("internal", loadInternalCertificate());
 
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509", "SunJSSE");
@@ -162,7 +160,6 @@ public final class X509TrustManagerFactory implements X509TrustManager {
 
     }
 
-    // :TODO remove after solving US11330
     private X509Certificate loadInternalCertificate() throws Exception {
         KeyStore keystoreInternal = KeyStore.getInstance(KEYSTORE_TYPE);
         LOG.debug("Opening internal keystore file....");
