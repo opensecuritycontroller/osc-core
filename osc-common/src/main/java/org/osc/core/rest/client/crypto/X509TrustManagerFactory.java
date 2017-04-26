@@ -16,17 +16,6 @@
  *******************************************************************************/
 package org.osc.core.rest.client.crypto;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.KeyStoreProvider;
-
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -46,6 +35,18 @@ import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.service.response.CertificateBasicInfoModel;
+import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.KeyStoreProvider;
 
 public final class X509TrustManagerFactory implements X509TrustManager {
 
@@ -186,7 +187,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
                     CertificateBasicInfoModel infoModel = new CertificateBasicInfoModel(
                             alias, getSha1Fingerprint(certificate), certificate.getIssuerDN().getName(),
                             certificate.getNotBefore(), certificate.getNotAfter(), certificate.getSigAlgName(),
-                            certificate);
+                            certificateToString(certificate));
 
                     list.add(infoModel);
                 } catch (NoSuchAlgorithmException | CertificateEncodingException e) {
@@ -330,5 +331,18 @@ public final class X509TrustManagerFactory implements X509TrustManager {
      */
     public interface TruststoreChangedListener {
         void truststoreChanged();
+    }
+
+    public static String certificateToString(X509Certificate certificate) {
+        try {
+            StringBuilder cert = new StringBuilder();
+            cert.append("-----BEGIN CERTIFICATE----- ");
+            cert.append(DatatypeConverter.printBase64Binary(certificate.getEncoded()));
+            cert.append(" -----END CERTIFICATE-----");
+            return cert.toString();
+        } catch (CertificateEncodingException e) {
+            LOG.error("Cannot encode certificate", e);
+            return "";
+        }
     }
 }

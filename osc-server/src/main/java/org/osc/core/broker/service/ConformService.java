@@ -42,6 +42,7 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
+import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -66,7 +67,7 @@ import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
 @Component(service = ConformService.class)
-public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> {
+public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> implements ConformServiceApi {
     private static final Logger log = Logger.getLogger(ConformService.class);
 
     @Reference
@@ -77,6 +78,9 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
     @Reference
     private DAConformanceCheckMetaTask daConformanceCheckMetaTask;
+
+    @Reference
+    MCConformanceCheckMetaTask mcConformanceCheckMetaTask;
 
     public Long startDAConformJob(EntityManager em, DistributedAppliance da) throws Exception {
         return startDAConformJob(em, da, null, true);
@@ -122,7 +126,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             UnlockObjectTask daWriteUnlocktask = daMcUnlockTask
                     .getUnlockTaskByTypeAndId(ObjectType.DISTRIBUTED_APPLIANCE, da.getId());
 
-            Task mcCheck = new MCConformanceCheckMetaTask(mc, mcReadUnlocktask, this.apiFactoryService);
+            Task mcCheck = this.mcConformanceCheckMetaTask.create(mc, mcReadUnlocktask);
             tg.addTask(mcCheck);
             tg.appendTask(new DowngradeLockObjectTask(new LockRequest(daWriteUnlocktask)),
                     TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -212,7 +216,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new MCConformanceCheckMetaTask(mc, mcUnlock, this.apiFactoryService));
+        tg.addTask(this.mcConformanceCheckMetaTask.create(mc, mcUnlock));
         if (mcUnlock != null) {
             tg.appendTask(mcUnlock, TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }

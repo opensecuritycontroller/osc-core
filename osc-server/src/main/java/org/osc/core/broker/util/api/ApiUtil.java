@@ -16,11 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.util.api;
 
+import java.rmi.RemoteException;
+
+import javax.ws.rs.core.Response;
+
 import org.osc.core.broker.rest.server.exception.OscBadRequestException;
 import org.osc.core.broker.rest.server.exception.OscInternalServerErrorException;
 import org.osc.core.broker.rest.server.exception.OscNotFoundException;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ServiceDispatcherApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
@@ -32,9 +37,6 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
 import org.osc.core.rest.client.exception.RestClientException;
 import org.osgi.service.component.annotations.Component;
-
-import javax.ws.rs.core.Response;
-import java.rmi.RemoteException;
 
 @Component(service = ApiUtil.class)
 public class ApiUtil {
@@ -51,7 +53,7 @@ public class ApiUtil {
      *             Exception either in case of any exceptions thrown by the service or in case of exceptions submitting
      *             the request
      */
-    public <R extends Request, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> O submitRequestToService(
+    public <R extends Request, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcherApi<R, O>> O submitRequestToService(
             T service, R request) {
         try {
             return service.dispatch(request);
@@ -93,7 +95,7 @@ public class ApiUtil {
         return Response.status(Response.Status.OK).entity(submitBaseRequestToService(service, request)).build();
     }
 
-    public <R extends Request, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> Response getResponse(
+    public <R extends Request, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcherApi<R, O>> Response getResponse(
             T service, R request) {
         return Response.status(Response.Status.OK).entity(submitRequestToService(service, request)).build();
     }

@@ -28,12 +28,12 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache.VmInfo;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
-import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
@@ -65,25 +65,27 @@ public class OsVMNotificationListener extends OsNotificationListener {
             String vmOpenstackId = OsNotificationUtil.isMessageRelevant(message, this.objectIdList,
                     OsNotificationKeyType.INSTANCE_ID.toString());
             if (vmOpenstackId != null) {
-                SessionUtil.setUser(OscAuthFilter.OSC_DEFAULT_LOGIN);
+                SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
 
                 log.info(" [Instance] : message received - " + message);
                 try {
-                    if (this.entity instanceof SecurityGroup) {
+                    HibernateUtil.getTransactionControl().required(() -> {
+                        if (this.entity instanceof SecurityGroup) {
 
-                        if (!eventType.contains(OsNotificationEventState.POWER_OFF.toString())) {
-                            // if the listener is tied to SG then handle SG messages
-                            handleSGMessages(vmOpenstackId, message);
+                            if (!eventType.contains(OsNotificationEventState.POWER_OFF.toString())) {
+                                // if the listener is tied to SG then handle SG messages
+                                handleSGMessages(vmOpenstackId, message);
+                            }
+
+                        } else if (this.entity instanceof DeploymentSpec) {
+                            // / if the listener is tied to DAI which belongs to a DS then handle DAI messages
+                            if (!eventType.contains(OsNotificationEventState.CREATE.toString())) {
+                                // If DAI/SVA is migrated, deleted or powered off then trigger DS sync
+                                handleDAIMessages(vmOpenstackId, eventType, message);
+                            }
                         }
-
-                    } else if (this.entity instanceof DeploymentSpec) {
-                        // / if the listener is tied to DAI which belongs to a DS then handle DAI messages
-                        if (!eventType.contains(OsNotificationEventState.CREATE.toString())) {
-                            // If DAI/SVA is migrated, deleted or powered off then trigger DS sync
-                            handleDAIMessages(vmOpenstackId, eventType, message);
-                        }
-
-                    }
+                        return null;
+                    });
                 } catch (Exception e) {
                     log.error(
                             "Fail to process Openstack VM (" + vmOpenstackId + ") notification - "

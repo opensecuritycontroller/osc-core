@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.osc.core.broker.service.request.Attribute;
+
 @XmlRootElement(name = "serviceInstanceAttributes")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServiceInstanceAttributes {

@@ -22,17 +22,19 @@ import java.util.Locale;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.LoginService;
+import org.osc.core.broker.service.broadcast.BroadcastListener;
+import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.request.LoginRequest;
 import org.osc.core.broker.service.response.LoginResponse;
-import org.osc.core.broker.util.BroadcastMessage;
 import org.osc.core.broker.view.alarm.AlarmView;
-import org.osc.core.broker.view.util.BroadcasterUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.view.vc.VirtualizationConnectorView;
 import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
@@ -79,6 +81,8 @@ import com.vaadin.ui.themes.Reindeer;
 @SuppressWarnings("serial")
 @PreserveOnRefresh
 @Push(value = PushMode.AUTOMATIC, transport = Transport.WEBSOCKET)
+@org.osgi.service.component.annotations.Component(service=MainUI.class,
+        scope=ServiceScope.PROTOTYPE)
 public class MainUI extends UI implements BroadcastListener {
 
     private static final int SESSION_EXPIRE_TIME_OUT_IN_SECS = 1800;
@@ -147,6 +151,8 @@ public class MainUI extends UI implements BroadcastListener {
     };
 
     private Navigator nav;
+
+    private ServiceRegistration<BroadcastListener> registration;
 
     @Override
     protected void init(VaadinRequest request) {
@@ -309,7 +315,10 @@ public class MainUI extends UI implements BroadcastListener {
         buildHeader();
         buildMainLayout();
         this.root.setExpandRatio(this.mainLayout, 1);
-        BroadcasterUtil.register(this);
+
+        this.registration = FrameworkUtil.getBundle(MainUI.class).getBundleContext()
+            .registerService(BroadcastListener.class, this, null);
+
         // adding view change listener to navigator
         addViewChangeListener();
         String uriFragment = Page.getCurrent().getUriFragment();
@@ -510,7 +519,14 @@ public class MainUI extends UI implements BroadcastListener {
     public void detach() {
         try {
             // unregister before closing
-            BroadcasterUtil.unregister(this);
+            if(this.registration != null) {
+                try {
+                    this.registration.unregister();
+                } catch (IllegalStateException ise) {
+                    // The listener was already unregistered,
+                    // so no problems here.
+                }
+            }
             log.info("MainUI.detach() called");
             super.detach();
         } catch (Exception e) {

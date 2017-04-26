@@ -16,7 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -25,20 +28,18 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
+import org.osc.core.broker.service.SslCertificatesExtendedException;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
-import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Map;
+import com.rabbitmq.client.ShutdownSignalException;
 
 public class VirtualizationConnectorUtil {
 
@@ -167,7 +168,8 @@ public class VirtualizationConnectorUtil {
                 } catch (ShutdownSignalException shutdownException) {
                     // If its an existing VC which we are connected to, then this exception is expected
                     if (vc.getId() != null) {
-                        OsRabbitMQClient osRabbitMQClient = RabbitMQRunner.getVcToRabbitMQClientMap().get(vc.getId());
+                        OsRabbitMQClient osRabbitMQClient = StaticRegistry.server()
+                                .getActiveRabbitMQRunner().getVcToRabbitMQClientMap().get(vc.getId());
                         if (osRabbitMQClient != null && osRabbitMQClient.isConnected()) {
                             LOG.info("Exception encountered when connecting to RabbitMQ, ignoring since we are already connected", shutdownException);
                         } else {

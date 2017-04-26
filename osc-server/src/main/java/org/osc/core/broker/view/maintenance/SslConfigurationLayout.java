@@ -32,6 +32,7 @@ import org.osc.core.broker.service.ListSslCertificatesService;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
+import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -40,7 +41,6 @@ import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 
 import java.util.ArrayList;
 import java.util.Calendar;

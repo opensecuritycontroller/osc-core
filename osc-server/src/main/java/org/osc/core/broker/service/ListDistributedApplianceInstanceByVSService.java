@@ -22,13 +22,15 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.service.api.ListDistributedApplianceInstanceByVSServiceApi;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListDistributedApplianceInstanceByVSService extends
-        ServiceDispatcher<BaseIdRequest, ListResponse<DistributedApplianceInstanceDto>> {
+public class ListDistributedApplianceInstanceByVSService
+        extends ServiceDispatcher<BaseIdRequest, ListResponse<DistributedApplianceInstanceDto>>
+        implements ListDistributedApplianceInstanceByVSServiceApi {
     ListResponse<DistributedApplianceInstanceDto> response = new ListResponse<DistributedApplianceInstanceDto>();
 
     @Override

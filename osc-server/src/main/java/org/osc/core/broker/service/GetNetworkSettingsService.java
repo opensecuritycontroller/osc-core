@@ -18,12 +18,14 @@ package org.osc.core.broker.service;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.service.api.GetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.request.GetNetworkSettingsRequest;
 import org.osc.core.broker.service.response.GetNetworkSettingsResponse;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 
-public class GetNetworkSettingsService extends ServiceDispatcher<GetNetworkSettingsRequest, GetNetworkSettingsResponse> {
+public class GetNetworkSettingsService extends ServiceDispatcher<GetNetworkSettingsRequest, GetNetworkSettingsResponse>
+        implements GetNetworkSettingsServiceApi {
 
     @Override
     public GetNetworkSettingsResponse exec(GetNetworkSettingsRequest request, EntityManager em) throws Exception {

@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.rest.client.nsx.model.ServiceProfile;
+import org.osc.core.broker.service.request.ServiceProfile;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 
 public class NsxServiceProfileCheckMetaTask extends TransactionalMetaTask {

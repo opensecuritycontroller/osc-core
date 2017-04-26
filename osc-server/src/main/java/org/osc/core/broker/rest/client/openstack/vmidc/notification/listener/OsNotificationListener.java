@@ -22,14 +22,14 @@ import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
-import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
+import org.osc.core.broker.util.StaticRegistry;
 
 /**
  * This abstract class implements a generic listener object which will listen to Notifications of the registered type
  * and act upon receiving them.
- * 
+ *
  * This class holds shared code across listeners
- * 
+ *
  */
 public abstract class OsNotificationListener implements NotificationListener {
 
@@ -57,7 +57,8 @@ public abstract class OsNotificationListener implements NotificationListener {
 
     @Override
     public void register(VirtualizationConnector vc, OsNotificationObjectType objectType) {
-        OsRabbitMQClient client = RabbitMQRunner.getVcToRabbitMQClientMap().get(vc.getId());
+        OsRabbitMQClient client = StaticRegistry.server().getActiveRabbitMQRunner()
+                .getVcToRabbitMQClientMap().get(vc.getId());
         if (client != null) {
             client.registerListener(this, objectType);
         }
@@ -66,7 +67,8 @@ public abstract class OsNotificationListener implements NotificationListener {
 
     @Override
     public void unRegister(VirtualizationConnector vc, OsNotificationObjectType objectType) {
-        OsRabbitMQClient client = RabbitMQRunner.getVcToRabbitMQClientMap().get(vc.getId());
+        OsRabbitMQClient client = StaticRegistry.server().getActiveRabbitMQRunner()
+                .getVcToRabbitMQClientMap().get(vc.getId());
         if (client != null) {
             client.removeListener(this, objectType);
         }

@@ -32,16 +32,21 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.NotificationListenerFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.OsNotificationListener;
+import org.osc.core.broker.service.broadcast.BroadcastListener;
+import org.osc.core.broker.service.broadcast.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
-import org.osc.core.broker.util.BroadcastMessage;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil;
-import org.osc.core.broker.view.util.BroadcasterUtil.BroadcastListener;
-import org.osc.core.broker.view.util.EventType;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -53,24 +58,31 @@ import com.google.common.collect.Multimap;
  *
  */
 
+@Component(scope=ServiceScope.PROTOTYPE,
+ service=OsSecurityGroupNotificationRunner.class)
 public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
-    private static final Multimap<Long, OsNotificationListener> sgToListenerMap = ArrayListMultimap.create();
-    private static final HashMap<Long, VirtualizationConnector> sgToVCMap = new HashMap<Long, VirtualizationConnector>();
+    private final Multimap<Long, OsNotificationListener> sgToListenerMap = ArrayListMultimap.create();
+    private final HashMap<Long, VirtualizationConnector> sgToVCMap = new HashMap<Long, VirtualizationConnector>();
 
     private static final Logger log = Logger.getLogger(OsSecurityGroupNotificationRunner.class);
+    private ServiceRegistration<BroadcastListener> registration;
 
-    public OsSecurityGroupNotificationRunner() throws InterruptedException, VmidcException {
+    @Activate
+    void start(BundleContext ctx) throws InterruptedException, VmidcException {
+        // This is not done automatically by DS as we do not want the broadcast whiteboard
+        // to activate another instance of this component, only people getting the runner!
+        this.registration = ctx.registerService(BroadcastListener.class, this, null);
+
         try {
-            BroadcasterUtil.register(this);
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            List<SecurityGroup> sgList = HibernateUtil.getTransactionControl().required(() -> {
+            HibernateUtil.getTransactionControl().required(() -> {
                 OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
-                return sgEmgr.listAll();
+                for (SecurityGroup sg : sgEmgr.listAll()) {
+                    addListener(sg);
+                }
+                return null;
             });
-            for (SecurityGroup sg : sgList) {
-                addListener(sg);
-            }
         } catch (ScopedWorkException swe) {
             throw swe.asRuntimeException();
         }
@@ -83,10 +95,16 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         }
     }
 
-    public void shutdown() {
-        BroadcasterUtil.unregister(this);
-        sgToListenerMap.clear();
-        sgToVCMap.clear();
+    @Deactivate
+    void shutdown() {
+        try {
+            this.registration.unregister();
+        } catch (IllegalStateException ise) {
+            // No problem - this means the service was
+            // already unregistered (e.g. by bundle stop)
+        }
+        this.sgToListenerMap.clear();
+        this.sgToVCMap.clear();
     }
 
     private void updateListenerMap(BroadcastMessage msg) {
@@ -95,19 +113,19 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         } else {
             try {
                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
-                SecurityGroup sg = HibernateUtil.getTransactionControl().required(() ->
-                    SecurityGroupEntityMgr.findById(em, msg.getEntityId()));
-                if (sg == null) {
-                    log.error("Processing " + msg.getEventType() + " notification for Security Group ("
-                            + msg.getEntityId() + ") but couldn't find it in the DB");
-                    return;
-                }
+                HibernateUtil.getTransactionControl().required(() -> {
+                    SecurityGroup sg = SecurityGroupEntityMgr.findById(em, msg.getEntityId());
+                    if (sg == null) {
+                        log.error("Processing " + msg.getEventType() + " notification for Security Group ("
+                                + msg.getEntityId() + ") but couldn't find it in the DB");
+                    } else if (msg.getEventType() == EventType.ADDED) {
+                        addListener(sg);
+                    } else if (msg.getEventType() == EventType.UPDATED) {
+                        updateListeners(sg);
+                    }
+                    return null;
+                });
 
-                if (msg.getEventType() == EventType.ADDED) {
-                    addListener(sg);
-                } else if (msg.getEventType() == EventType.UPDATED) {
-                    updateListeners(sg);
-                }
             } catch (ScopedWorkException e) {
                 log.error("An error occurred updating the Security Group Listeners", e.getCause());
                 throw e.asRuntimeException();
@@ -186,7 +204,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
             }
 
             // Add new entry in SG-to-VC map
-            sgToVCMap.put(sg.getId(), sg.getVirtualizationConnector());
+            this.sgToVCMap.put(sg.getId(), sg.getVirtualizationConnector());
 
         } catch (VmidcBrokerInvalidEntryException e) {
             log.error("Invalid Object Type requested to register this listener with", e);
@@ -195,7 +213,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
     private void updateListeners(SecurityGroup sg) {
 
-        for (OsNotificationListener listener : sgToListenerMap.get(sg.getId())) {
+        for (OsNotificationListener listener : this.sgToListenerMap.get(sg.getId())) {
 
             if (listener.getObjectType().equals(OsNotificationObjectType.VM)) {
 
@@ -239,7 +257,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                         Arrays.asList(sg.getTenantId()), sg);
 
         // Register Member change listener
-        sgToListenerMap.put(sg.getId(), listener);
+        this.sgToListenerMap.put(sg.getId(), listener);
     }
 
     private void addTenantDeletionListener(SecurityGroup sg, OsNotificationObjectType type)
@@ -250,7 +268,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                         Arrays.asList(sg.getTenantId()), sg);
 
         // Register Member change listener
-        sgToListenerMap.put(sg.getId(), listener);
+        this.sgToListenerMap.put(sg.getId(), listener);
     }
 
     private void addMemberListener(SecurityGroup sg, OsNotificationObjectType type, SecurityGroupMemberType memberType)
@@ -268,13 +286,13 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         }
 
         // Register Member change listener
-        sgToListenerMap.put(sg.getId(), listener);
+        this.sgToListenerMap.put(sg.getId(), listener);
     }
 
     private void removeListener(Long sgId) {
 
-        for (OsNotificationListener listener : sgToListenerMap.get(sgId)) {
-            listener.unRegister(sgToVCMap.get(sgId), listener.getObjectType());
+        for (OsNotificationListener listener : this.sgToListenerMap.get(sgId)) {
+            listener.unRegister(this.sgToVCMap.get(sgId), listener.getObjectType());
         }
     }
 }

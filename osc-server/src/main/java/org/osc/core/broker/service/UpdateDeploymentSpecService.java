@@ -29,6 +29,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZ
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.Host;
 import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate;
+import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -42,8 +43,9 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 
-public class UpdateDeploymentSpecService extends
-        BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse> {
+public class UpdateDeploymentSpecService
+        extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
+        implements UpdateDeploymentSpecServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateDeploymentSpecService.class);
     private DeploymentSpec ds;

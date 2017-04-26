@@ -22,6 +22,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
+import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
@@ -31,8 +32,9 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.util.encryption.EncryptionException;
 
 
-public class ListDistributedApplianceService extends
-        ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<DistributedApplianceDto>> {
+public class ListDistributedApplianceService
+        extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<DistributedApplianceDto>>
+        implements ListDistributedApplianceServiceApi {
 
     ListResponse<DistributedApplianceDto> response = new ListResponse<DistributedApplianceDto>();
 

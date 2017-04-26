@@ -22,6 +22,7 @@ import javax.security.auth.login.LoginException;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
+import org.osc.core.broker.service.api.LoginServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -30,7 +31,7 @@ import org.osc.core.broker.service.response.LoginResponse;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
 
-public class LoginService extends ServiceDispatcher<LoginRequest, LoginResponse> {
+public class LoginService extends ServiceDispatcher<LoginRequest, LoginResponse> implements LoginServiceApi {
     private static final Logger LOG = Logger.getLogger(LoginService.class);
 
     @Override

@@ -25,10 +25,11 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.client.nsx.model.ServiceManager;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
@@ -45,10 +46,14 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
     @Reference
     public ApiFactoryService apiFactoryService;
 
+    @Reference
+    private PasswordUtil passwordUtil;
+
     public CreateNsxServiceManagerTask create(VirtualSystem vs) {
         CreateNsxServiceManagerTask task = new CreateNsxServiceManagerTask();
         task.vs = vs;
         task.apiFactoryService = this.apiFactoryService;
+        task.passwordUtil = this.passwordUtil;
         task.name = task.getName();
         return task;
     }
@@ -69,9 +74,9 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
                 serviceManagerName,
                 serviceManagerName,
                 buildRestCallbackUrl(),
-                NsxAuthFilter.VMIDC_NSX_LOGIN,
-                NsxAuthFilter.VMIDC_NSX_PASS,
-                NsxAuthFilter.VMIDC_NSX_PASS);
+                RestConstants.VMIDC_NSX_LOGIN,
+                this.passwordUtil.getVmidcNsxPass(),
+                this.passwordUtil.getVmidcNsxPass());
 
         String serviceManagerId = serviceManagerApi.createServiceManager(input);
         serviceManager = serviceManagerApi.getServiceManager(serviceManagerId);

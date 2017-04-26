@@ -22,12 +22,14 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.job.TaskRecord;
+import org.osc.core.broker.service.api.ListTaskServiceApi;
 import org.osc.core.broker.service.dto.TaskRecordDto;
 import org.osc.core.broker.service.persistence.TaskEntityMgr;
 import org.osc.core.broker.service.request.ListTaskRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListTaskService extends ServiceDispatcher<ListTaskRequest, ListResponse<TaskRecordDto>> {
+public class ListTaskService extends ServiceDispatcher<ListTaskRequest, ListResponse<TaskRecordDto>>
+        implements ListTaskServiceApi {
 
     @Override
     public ListResponse<TaskRecordDto> exec(ListTaskRequest request, EntityManager em) throws Exception {

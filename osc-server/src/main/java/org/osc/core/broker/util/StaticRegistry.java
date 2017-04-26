@@ -19,11 +19,12 @@ package org.osc.core.broker.util;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDistributedApplianceService;
-import org.osc.core.broker.service.DeleteUserService;
 import org.osc.core.broker.service.SetNATSettingsService;
 import org.osc.core.broker.service.SetNetworkSettingsService;
 import org.osc.core.broker.service.UpdateUserService;
 import org.osc.core.broker.service.UpgradeService;
+import org.osc.core.broker.service.api.DeleteUserServiceApi;
+import org.osc.core.broker.service.broadcast.Broadcaster;
 import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.SyncManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
@@ -79,13 +80,16 @@ public class StaticRegistry {
     private SyncManagerConnectorService syncManagerConnectorService;
 
     @Reference
-    private DeleteUserService deleteUserService;
+    private DeleteUserServiceApi deleteUserService;
 
     @Reference
     private UpdateUserService updateUserService;
 
     @Reference
     private DeleteDistributedApplianceService deleteDistributedApplianceService;
+
+    @Reference
+    private Broadcaster broadcaster;
 
     private static StaticRegistry instance = null;
 
@@ -138,7 +142,7 @@ public class StaticRegistry {
         return instance.updateVirtualizationConnectorService;
     }
 
-    public static DeleteUserService deleteUserService() {
+    public static DeleteUserServiceApi deleteUserService() {
         return instance.deleteUserService;
     }
 
@@ -148,6 +152,10 @@ public class StaticRegistry {
 
     public static UpdateUserService updateUserService() {
         return instance.updateUserService;
+    }
+
+    public static Broadcaster broadcaster() {
+        return instance.broadcaster;
     }
 
 }

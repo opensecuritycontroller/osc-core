@@ -32,7 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.AddDeploymentSpecService;
 import org.osc.core.broker.service.ConformService;
@@ -73,7 +73,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = VirtualSystemApis.class)
 @Api(tags = "Operations for Virtual Systems", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/virtualSystems")
+@Path(RestConstants.SERVER_API_PATH_PREFIX + "/virtualSystems")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth
@@ -103,7 +103,7 @@ public class VirtualSystemApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) apiUtil
+        ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) this.apiUtil
                 .getListResponse(new ListDistributedApplianceInstanceByVSService(), new BaseIdRequest(vsId));
         return response.getList();
     }
@@ -123,7 +123,7 @@ public class VirtualSystemApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<PolicyDto> response = (ListResponse<PolicyDto>) apiUtil.getListResponse(new ListVirtualSystemPolicyService(),
+        ListResponse<PolicyDto> response = (ListResponse<PolicyDto>) this.apiUtil.getListResponse(new ListVirtualSystemPolicyService(),
                 new BaseIdRequest(vsId));
         return response.getList();
     }
@@ -143,7 +143,7 @@ public class VirtualSystemApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<DeploymentSpecDto> response = (ListResponse<DeploymentSpecDto>) apiUtil
+        ListResponse<DeploymentSpecDto> response = (ListResponse<DeploymentSpecDto>) this.apiUtil
                 .getListResponse(new ListDeploymentSpecServiceByVirtualSystem(), new BaseIdRequest(vsId));
         return response.getList();
     }
@@ -164,9 +164,9 @@ public class VirtualSystemApis {
         getDtoRequest.setEntityId(dsId);
         getDtoRequest.setEntityName("DeploymentSpec");
         GetDtoFromEntityService<DeploymentSpecDto> getDtoService = new GetDtoFromEntityService<DeploymentSpecDto>();
-        DeploymentSpecDto dto = apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        DeploymentSpecDto dto = this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
-        apiUtil.validateParentIdMatches(dto, vsId, "SecurityGroup");
+        this.apiUtil.validateParentIdMatches(dto, vsId, "SecurityGroup");
 
         return dto;
     }
@@ -183,8 +183,8 @@ public class VirtualSystemApis {
                                          @ApiParam(required = true) DeploymentSpecDto dsDto) {
         logger.info("Creating Deployment Spec ...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        apiUtil.setParentIdOrThrow(dsDto, vsId, "Deployment Specification");
-        return apiUtil.getResponseForBaseRequest(new AddDeploymentSpecService(),
+        this.apiUtil.setParentIdOrThrow(dsDto, vsId, "Deployment Specification");
+        return this.apiUtil.getResponseForBaseRequest(new AddDeploymentSpecService(),
                 new BaseRequest<DeploymentSpecDto>(dsDto));
     }
 
@@ -201,8 +201,8 @@ public class VirtualSystemApis {
                                          @ApiParam(required = true) DeploymentSpecDto dsDto) {
         logger.info("Updating Deployment Spec " + dsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        apiUtil.setIdAndParentIdOrThrow(dsDto, dsId, vsId, "Deployment Spec");
-        return apiUtil.getResponseForBaseRequest(new UpdateDeploymentSpecService(),
+        this.apiUtil.setIdAndParentIdOrThrow(dsDto, dsId, vsId, "Deployment Spec");
+        return this.apiUtil.getResponseForBaseRequest(new UpdateDeploymentSpecService(),
                 new BaseRequest<DeploymentSpecDto>(dsDto));
     }
 
@@ -218,7 +218,7 @@ public class VirtualSystemApis {
                                          @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
+        return this.apiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
                 new BaseDeleteRequest(dsId, vsId, false));// false as this is not force delete
     }
 
@@ -234,7 +234,7 @@ public class VirtualSystemApis {
                                               @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
+        return this.apiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
                 new BaseDeleteRequest(dsId, vsId, true));
     }
 
@@ -252,7 +252,7 @@ public class VirtualSystemApis {
         logger.info("Listing Traffic Policy Mappings");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         @SuppressWarnings("unchecked")
-        ListResponse<SecurityGroupInterfaceDto> response = (ListResponse<SecurityGroupInterfaceDto>) apiUtil
+        ListResponse<SecurityGroupInterfaceDto> response = (ListResponse<SecurityGroupInterfaceDto>) this.apiUtil
                 .getListResponse(new ListSecurityGroupInterfaceServiceByVirtualSystem(), new BaseIdRequest(vsId));
         return response.getList();
     }
@@ -273,9 +273,9 @@ public class VirtualSystemApis {
         getDtoRequest.setEntityId(sgiId);
         getDtoRequest.setEntityName("SecurityGroupInterface");
         GetDtoFromEntityService<SecurityGroupInterfaceDto> getDtoService = new GetDtoFromEntityService<SecurityGroupInterfaceDto>();
-        SecurityGroupInterfaceDto dto = apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        SecurityGroupInterfaceDto dto = this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
-        apiUtil.validateParentIdMatches(dto, vsId, "SecurityGroupInterface");
+        this.apiUtil.validateParentIdMatches(dto, vsId, "SecurityGroupInterface");
 
         return dto;
     }
@@ -292,8 +292,8 @@ public class VirtualSystemApis {
                                                  @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
         logger.info("Creating Security Group Interface ...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        apiUtil.setParentIdOrThrow(sgiDto, vsId, "Traffic Policy Mapping");
-        return apiUtil.getResponseForBaseRequest(new AddSecurityGroupInterfaceService(this.conformService),
+        this.apiUtil.setParentIdOrThrow(sgiDto, vsId, "Traffic Policy Mapping");
+        return this.apiUtil.getResponseForBaseRequest(new AddSecurityGroupInterfaceService(this.conformService),
                 new BaseRequest<SecurityGroupInterfaceDto>(sgiDto));
     }
 
@@ -310,8 +310,8 @@ public class VirtualSystemApis {
                                                  @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
         logger.info("Updating Security Group Interface " + sgiId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        apiUtil.setIdAndParentIdOrThrow(sgiDto, sgiId, vsId, "Traffic Policy Mapping");
-        return apiUtil.getResponseForBaseRequest(new UpdateSecurityGroupInterfaceService(this.conformService),
+        this.apiUtil.setIdAndParentIdOrThrow(sgiDto, sgiId, vsId, "Traffic Policy Mapping");
+        return this.apiUtil.getResponseForBaseRequest(new UpdateSecurityGroupInterfaceService(this.conformService),
                 new BaseRequest<SecurityGroupInterfaceDto>(sgiDto));
     }
 
@@ -327,7 +327,7 @@ public class VirtualSystemApis {
                                                  @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
         logger.info("Deleting Security Group Interface.. " + sgiId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponseForBaseRequest(new DeleteSecurityGroupInterfaceService(this.conformService),
+        return this.apiUtil.getResponseForBaseRequest(new DeleteSecurityGroupInterfaceService(this.conformService),
                 new BaseIdRequest(sgiId, vsId));
     }
 
@@ -343,7 +343,7 @@ public class VirtualSystemApis {
                                              @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Deleting Virtual System " + vsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return apiUtil.getResponseForBaseRequest(new ForceDeleteVirtualSystemService(),
+        return this.apiUtil.getResponseForBaseRequest(new ForceDeleteVirtualSystemService(),
                 new BaseDeleteRequest(vsId, true));
     }
 }

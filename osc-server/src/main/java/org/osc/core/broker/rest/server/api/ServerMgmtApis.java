@@ -23,7 +23,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.OscRestServlet;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.model.ServerStatusResponse;
 import org.osc.core.broker.service.AddSslCertificateService;
@@ -35,13 +35,13 @@ import org.osc.core.broker.service.request.AddSslEntryRequest;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
+import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.annotations.OscAuth;
-import org.osc.core.rest.client.crypto.model.CertificateBasicInfoModel;
 import org.osc.core.server.Server;
 import org.osc.core.util.PKIUtil;
 import org.osc.core.util.ServerUtil;
@@ -73,7 +73,7 @@ import java.util.List;
 
 @Component(service = ServerMgmtApis.class)
 @Api(tags = "Operations for OSC server", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/serverManagement")
+@Path(RestConstants.SERVER_API_PATH_PREFIX + "/serverManagement")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 public class ServerMgmtApis {
@@ -189,7 +189,7 @@ public class ServerMgmtApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) apiUtil
+        ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) this.apiUtil
                 .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
 
         return response.getList();

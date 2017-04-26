@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
-
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,6 +39,8 @@ import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttribu
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
 import org.osc.sdk.sdn.element.DeploymentSpecElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This task handles the following
@@ -51,16 +51,28 @@ import org.osc.sdk.sdn.element.DeploymentSpecElement;
  * synchronize expired/deleted deploymentspecs on NSX
  *
  */
+@Component(service = NsxDeploymentSpecCheckMetaTask.class)
 public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
     private static final Logger log = Logger.getLogger(MCConformanceCheckMetaTask.class);
+
+    @Reference
+    UpdateNsxServiceAttributesTask updateNsxServiceAttributesTask;
+
+    @Reference
+    UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
+
     private TaskGraph tg;
     private VirtualSystem vs;
     private boolean updateNsxServiceAttributesScheduled;
 
-    public NsxDeploymentSpecCheckMetaTask(VirtualSystem vs, boolean updateNsxServiceAttributesScheduled) {
-        this.vs = vs;
-        this.name = getName();
-        this.updateNsxServiceAttributesScheduled = updateNsxServiceAttributesScheduled;
+    public NsxDeploymentSpecCheckMetaTask create(VirtualSystem vs, boolean updateNsxServiceAttributesScheduled) {
+        NsxDeploymentSpecCheckMetaTask task = new NsxDeploymentSpecCheckMetaTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.updateNsxServiceAttributesScheduled = updateNsxServiceAttributesScheduled;
+        task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
+        task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
+        return task;
     }
 
     @Override
@@ -138,10 +150,10 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
             // So add an update service attributes task if it not been
             // added already
             if (!this.updateNsxServiceAttributesScheduled) {
-                this.tg.addTask(new UpdateNsxServiceAttributesTask(this.vs));
+                this.tg.addTask(this.updateNsxServiceAttributesTask.create(this.vs));
             }
 
-            this.tg.addTask(new UpdateNsxServiceInstanceAttributesTask(this.vs));
+            this.tg.addTask(this.updateNsxServiceInstanceAttributesTask.create(this.vs));
         }
     }
 

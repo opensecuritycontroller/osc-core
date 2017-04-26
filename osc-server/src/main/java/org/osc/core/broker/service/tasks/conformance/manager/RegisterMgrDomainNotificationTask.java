@@ -25,21 +25,31 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = RegisterMgrDomainNotificationTask.class)
 public class RegisterMgrDomainNotificationTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(RegisterMgrDomainNotificationTask.class);
 
+    @Reference
+    private PasswordUtil passwordUtil;
+
     private ApplianceManagerConnector mc;
 
-    public RegisterMgrDomainNotificationTask(ApplianceManagerConnector mc) {
-        this.mc = mc;
-        this.name = getName();
+    public RegisterMgrDomainNotificationTask create(ApplianceManagerConnector mc) {
+        RegisterMgrDomainNotificationTask task = new RegisterMgrDomainNotificationTask();
+        task.mc = mc;
+        task.name = task.getName();
+        task.passwordUtil = this.passwordUtil;
+        return task;
     }
 
     @Override
@@ -51,8 +61,8 @@ public class RegisterMgrDomainNotificationTask extends TransactionalTask {
         ManagerCallbackNotificationApi mgrApi = null;
         try {
             mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(this.mc);
-            mgrApi.createDomainNotificationRegistration(Server.getApiPort(), OscAuthFilter.OSC_DEFAULT_LOGIN,
-                    OscAuthFilter.OSC_DEFAULT_PASS);
+            mgrApi.createDomainNotificationRegistration(Server.getApiPort(), RestConstants.OSC_DEFAULT_LOGIN,
+                    this.passwordUtil.getOscDefaultPass());
             this.mc.setLastKnownNotificationIpAddress(ServerUtil.getServerIP());
             OSCEntityManager.update(em, this.mc);
         } finally {

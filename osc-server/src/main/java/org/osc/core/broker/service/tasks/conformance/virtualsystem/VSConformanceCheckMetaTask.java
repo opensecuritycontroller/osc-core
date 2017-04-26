@@ -38,8 +38,6 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -63,6 +61,7 @@ import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.Secu
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
+import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.ServiceApi;
@@ -87,6 +86,21 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     @Reference
     UpdateNsxServiceManagerTask updateNsxServiceManagerTask;
 
+    @Reference
+    CreateNsxServiceTask createNsxServiceTask;
+
+    @Reference
+    UpdateNsxServiceAttributesTask updateNsxServiceAttributesTask;
+
+    @Reference
+    NsxDeploymentSpecCheckMetaTask nsxDeploymentSpecCheckMetaTask;
+
+    @Reference
+    UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
+
+    @Reference
+    PasswordUtil passwordUtil;
+
     private VirtualSystem vs;
     private TaskGraph tg;
 
@@ -95,7 +109,12 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         task.vs = vs;
         task.apiFactoryService = this.apiFactoryService;
         task.createNsxServiceManagerTask = this.createNsxServiceManagerTask;
+        task.createNsxServiceTask = this.createNsxServiceTask;
         task.updateNsxServiceManagerTask = this.updateNsxServiceManagerTask;
+        task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
+        task.nsxDeploymentSpecCheckMetaTask = this.nsxDeploymentSpecCheckMetaTask;
+        task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
+        task.passwordUtil = this.passwordUtil;
         task.name = task.getName();
         return task;
     }
@@ -187,24 +206,24 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
             boolean updateNsxServiceAttributesScheduled = false;
 
             if (this.vs.getNsxServiceId() == null) {
-                tg.appendTask(new CreateNsxServiceTask(this.vs));
+                tg.appendTask(this.createNsxServiceTask.create(this.vs));
             } else {
                 // Ensure NSX service attributes has correct IP and password.
                 if (isNsxServiceOutOfSync(this.vs)) {
                     updateNsxServiceAttributesScheduled = true;
-                    tg.addTask(new UpdateNsxServiceAttributesTask(this.vs));
+                    tg.addTask(this.updateNsxServiceAttributesTask.create(this.vs));
                 }
             }
 
             DistributedAppliance distributedAppliance = this.vs.getDistributedAppliance();
 
-            tg.appendTask(new NsxDeploymentSpecCheckMetaTask(this.vs, updateNsxServiceAttributesScheduled));
+            tg.appendTask(this.nsxDeploymentSpecCheckMetaTask.create(this.vs, updateNsxServiceAttributesScheduled));
 
             if (this.vs.getNsxServiceInstanceId() == null) {
                 tg.appendTask(new RegisterServiceInstanceTask(this.vs));
             } else {
                 // Ensure NSX service instance attributes has correct attributes.
-                tg.addTask(new UpdateNsxServiceInstanceAttributesTask(this.vs));
+                tg.addTask(this.updateNsxServiceInstanceAttributesTask.create(this.vs));
             }
 
             syncNsxPolicies(this.vs, tg, distributedAppliance);
@@ -275,7 +294,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         }
 
         // Check password
-        if (!Objects.equal(serviceManager.getOscPassword(), NsxAuthFilter.VMIDC_NSX_PASS)) {
+        if (!Objects.equal(serviceManager.getOscPassword(), this.passwordUtil.getVmidcNsxPass())) {
             LOG.info("Nsx Service Manager password is out of sync");
             return true;
         }
@@ -300,7 +319,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         }
 
         // Check password
-        if (!service.getOscPassword().equals(EncryptionUtil.encryptAESCTR(AgentAuthFilter.VMIDC_AGENT_PASS))) {
+        if (!service.getOscPassword().equals(EncryptionUtil.encryptAESCTR(this.passwordUtil.getVmidcAgentPass()))) {
             LOG.info("NSX service out of sync: OSC password.");
             return true;
         }

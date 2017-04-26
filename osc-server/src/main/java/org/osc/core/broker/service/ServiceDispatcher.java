@@ -25,11 +25,11 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.exception.ConstraintViolationException;
+import org.osc.core.broker.service.api.ServiceDispatcherApi;
 import org.osc.core.broker.service.exceptions.VmidcDbConcurrencyException;
 import org.osc.core.broker.service.exceptions.VmidcDbConstraintViolationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.Request;
-import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -40,7 +40,7 @@ import org.osgi.service.transaction.control.TransactionControl;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public abstract class ServiceDispatcher<I extends Request, O extends Response> {
+public abstract class ServiceDispatcher<I extends Request, O extends Response> implements ServiceDispatcherApi<I, O> {
 
     private static final Logger log = Logger.getLogger(ServiceDispatcher.class);
     private EntityManager em = null;
@@ -49,6 +49,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
 
     // generalized method to dispatch incoming requests to the appropriate
     // service handler
+    @Override
     public O dispatch(I request) throws Exception {
         log.info("Service dispatch " + this.getClass().getSimpleName() + ". User: " + SessionUtil.getCurrentUser()
         + ", Request: " + request);
@@ -77,7 +78,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
 			try {
 				final O previousResponse = response;
 				final ChainedDispatch<O> tempNext = nextDispatch;
-				response = txControl.required(() -> tempNext.dispatch(previousResponse, em));
+				response = txControl.required(() -> tempNext.dispatch(previousResponse, this.em));
 			} catch (ScopedWorkException e) {
 				handleException((Exception) e.getCause());
 			}
@@ -86,10 +87,10 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
         log.info("Service response: " + response);
         return response;
     }
-    
+
     private ChainedDispatch<O> popChain() {
-    	synchronized (chainedDispatches) {
-    		return chainedDispatches.poll();
+    	synchronized (this.chainedDispatches) {
+    		return this.chainedDispatches.poll();
 		}
     }
 
@@ -101,12 +102,12 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
 	 * step during the execution of the main transaction and/or during a
 	 * previously added step.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This variation of the method is convenient for chaining method
 	 * references, for example:
 	 * </p>
-	 * 
+	 *
 	 * <pre>
 	 * &#64;Override
 	 * protected B exec(A a, EntityManager em) throws Exception {
@@ -120,7 +121,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
 	 *     return new B(...);
 	 * }
 	 * </pre>
-	 * 
+	 *
 	 * @param dispatch
 	 *            A function that shall be executed in its own transaction. The
 	 *            input to the function shall be the result from the previous
@@ -130,17 +131,17 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
 	 *            dispatch.
 	 */
 	protected void chain(ChainedDispatch<O> dispatch) {
-		synchronized (chainedDispatches) {
-			chainedDispatches.add(dispatch);
+		synchronized (this.chainedDispatches) {
+			this.chainedDispatches.add(dispatch);
 		}
 	}
 
 	/**
 	 * <p>See {@link #chain(ChainedDispatch)}.</p>
-	 * 
+	 *
 	 * <p>This variation of the method is useful for chaining lambdas, which can
 	 * have visibility of the outer scope. For example:</p>
-	 * 
+	 *
 	 * <pre>
 	 * &#64;Override
 	 * protected B exec(A a, EntityManager em) throws Exception {
@@ -151,16 +152,16 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> {
 	 *     });
 	 *     return interimResult;
 	 * }
-	 * 
+	 *
 	 * </pre>
-	 * 
+	 *
 	 * @param call
 	 * @see #chain(ChainedDispatch)
 	 */
 	protected void chain(Callable<O> call) {
 		ChainedDispatch<O> dispatch = (em, o) -> call.call();
-		synchronized (chainedDispatches) {
-			chainedDispatches.add(dispatch);
+		synchronized (this.chainedDispatches) {
+			this.chainedDispatches.add(dispatch);
 		}
 	}
 

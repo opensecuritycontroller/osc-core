@@ -29,9 +29,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.server.OscRestServlet;
-import org.osc.core.broker.util.api.ApiUtil;
-import org.osc.core.rest.annotations.OscAuth;
+import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -41,9 +39,11 @@ import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
-import org.osc.core.broker.service.response.GetAgentStatusResponseDto;
+import org.osc.core.broker.service.response.GetAgentStatusResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -56,7 +56,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = DistributedApplianceInstanceApis.class)
 @Api(tags = "Operations for Distributed Appliance Instances", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(OscRestServlet.SERVER_API_PATH_PREFIX + "/distributedApplianceInstances")
+@Path(RestConstants.SERVER_API_PATH_PREFIX + "/distributedApplianceInstances")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth
@@ -84,7 +84,7 @@ public class DistributedApplianceInstanceApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) apiUtil
+        ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) this.apiUtil
         .getListResponse(new ListDistributedApplianceInstanceService(), new BaseRequest<>(true));
 
         return response.getList();
@@ -109,23 +109,23 @@ public class DistributedApplianceInstanceApis {
         getDtoRequest.setEntityName("DistributedApplianceInstance");
         GetDtoFromEntityService<DistributedApplianceInstanceDto> getDtoService = new GetDtoFromEntityService<DistributedApplianceInstanceDto>();
 
-        return apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
     @ApiOperation(value = "Retrieves the Distributed Appliance Instances status",
             notes = "Retrieves the Distributed Appliance Instances statuses specified by the Ids",
-            response = GetAgentStatusResponseDto.class)
+            response = GetAgentStatusResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/status")
     @PUT
-    public GetAgentStatusResponseDto getDistributedApplianceInstanceStatus(@Context HttpHeaders headers,
+    public GetAgentStatusResponse getDistributedApplianceInstanceStatus(@Context HttpHeaders headers,
                                                                            @ApiParam(value = "The Ids of the Distributed Appliance Instances to get status for",
                                                                                    required = true) DistributedApplianceInstancesRequest req) {
 
         logger.info("Getting Distributed Appliance Instance Status " + req);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return apiUtil.submitRequestToService(this.getAgentStatusService, req);
+        return this.apiUtil.submitRequestToService(this.getAgentStatusService, req);
     }
 }

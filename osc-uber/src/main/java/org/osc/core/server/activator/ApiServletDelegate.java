@@ -103,6 +103,13 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
     @Reference
     private VirtualizationConnectorApis virtualizationConnectorApis;
 
+    @Reference
+    private AgentAuthFilter agentAuthFilter;
+    @Reference
+    private NsxAuthFilter nsxAuthFilter;
+    @Reference
+    private OscAuthFilter oscAuthFilter;
+
     /** The Jersey REST container */
     private ServletContainer container;
 
@@ -112,10 +119,8 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
         super.register(JacksonJaxbJsonProvider.class);
 
         //Auth Filters
-        super.register(AgentAuthFilter.class);
-        super.register(NsxAuthFilter.class);
         super.register(LocalHostAuthFilter.class);
-        super.register(OscAuthFilter.class);
+        super.registerInstances(this.agentAuthFilter, this.nsxAuthFilter, this.oscAuthFilter);
 
         //Exception mappers
         super.register(BadRequestExceptionMapper.class);

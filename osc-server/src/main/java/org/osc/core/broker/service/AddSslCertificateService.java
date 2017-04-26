@@ -24,12 +24,14 @@ import java.security.cert.X509Certificate;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.request.AddSslEntryRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 
-public class AddSslCertificateService extends ServiceDispatcher<AddSslEntryRequest, EmptySuccessResponse> {
+public class AddSslCertificateService extends ServiceDispatcher<AddSslEntryRequest, EmptySuccessResponse>
+        implements AddSslCertificateServiceApi {
 
     private static final Logger log = Logger.getLogger(AddSslCertificateService.class);
 

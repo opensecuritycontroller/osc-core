@@ -32,16 +32,17 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.AgentStatusElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.rest.client.nsx.model.Agent;
-import org.osc.core.broker.rest.server.api.proprietary.NsxApis.UpdatedAgent;
-import org.osc.core.broker.rest.server.api.proprietary.NsxApis.UpdatedAgents;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.NsxUpdateAgentsServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
+import org.osc.core.broker.service.request.Agent;
 import org.osc.core.broker.service.request.NsxUpdateAgentsRequest;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
+import org.osc.core.broker.service.response.NsxUpdateAgentsResponse.UpdatedAgent;
+import org.osc.core.broker.service.response.NsxUpdateAgentsResponse.UpdatedAgents;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
 import org.osc.core.util.NetworkUtil;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
@@ -50,7 +51,8 @@ import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.element.AgentElement;
 import org.osc.sdk.sdn.element.AgentStatusElement;
 
-public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsRequest, NsxUpdateAgentsResponse> {
+public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsRequest, NsxUpdateAgentsResponse>
+        implements NsxUpdateAgentsServiceApi {
 
     private static final Logger LOG = Logger.getLogger(NsxUpdateAgentsService.class);
 
