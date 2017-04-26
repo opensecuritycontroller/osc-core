@@ -16,13 +16,7 @@
  *******************************************************************************/
 package org.osc.core.server.activator;
 
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_INIT_PARAM_PREFIX;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,19 +37,13 @@ import org.osgi.service.http.context.ServletContextHelper;
         HTTP_WHITEBOARD_RESOURCE_PATTERN + "=/WebHelp/*", HTTP_WHITEBOARD_RESOURCE_PATTERN + "=/SDK/*",
         HTTP_WHITEBOARD_RESOURCE_PREFIX + "=" + UiServletContext.OSC_RESOURCE_PREFIX,
         HTTP_WHITEBOARD_CONTEXT_SELECT + "=(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + UiServletContext.OSC_UI_NAME + ")",
-        HTTP_WHITEBOARD_TARGET + "=(" + UiServletContext.FELIX_HTTP_NAME + "=" + UiServletContext.OSC_UI_NAME + ")",
-        UiServletContext.CONTEXT_P1
+        HTTP_WHITEBOARD_TARGET + "=(" + UiServletContext.FELIX_HTTP_NAME + "=" + UiServletContext.OSC_UI_NAME + ")"
 
 })
 public class UiServletContext extends ServletContextHelper {
     static final String FELIX_HTTP_NAME = "org.apache.felix.http.name";
     static final String OSC_UI_NAME = "OSC-UI";
     static final String OSC_RESOURCE_PREFIX = "/webapp";
-
-    private static final String CONTEXT_PARAM = HTTP_WHITEBOARD_CONTEXT_INIT_PARAM_PREFIX;
-
-    // ClassLoader parameter is needed for Vaadin to load MainUI in OSGi
-    static final String CONTEXT_P1 = CONTEXT_PARAM + "ClassLoader=org.osc.core.server.activator.VaadinLoader";
 
     private static final String[] resources = { "", "/WebHelp", "/SDK" };
 

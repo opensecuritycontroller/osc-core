@@ -16,23 +16,20 @@
  *******************************************************************************/
 package org.osc.core.server.activator;
 
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
-
-import java.io.IOException;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.*;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
-import org.osgi.service.component.annotations.Activate;
+import org.osc.core.broker.view.MainUIProvider;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+import com.vaadin.server.DeploymentConfiguration;
+import com.vaadin.server.ServiceException;
+import com.vaadin.server.VaadinServlet;
+import com.vaadin.server.VaadinServletService;
 
 @Component(name = "ui.servlet", property = {
 
@@ -42,34 +39,22 @@ import org.osgi.service.component.annotations.Component;
 		HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED + "=true"
 
 })
-public class UiServletDelegate implements Servlet {
-	private Servlet delegate;
+public class UiServlet extends VaadinServlet implements Servlet {
 
-	@Activate
-	void activate() {
-		this.delegate = new com.vaadin.server.VaadinServlet();
-	}
+    /**
+     *
+     */
+    private static final long serialVersionUID = 222397637292917068L;
 
-	@Override
-	public void destroy() {
-		this.delegate.destroy();
-	}
+    @Reference
+    MainUIProvider uiProvider;
 
-	@Override
-	public ServletConfig getServletConfig() {
-		return this.delegate.getServletConfig();
-	}
-
-	@Override
-	public String getServletInfo() {
-		return this.delegate.getServletInfo();
-	}
 
 	/*
 	 * Atmosphere tries to load websocket support using the ContextClassLoader.
 	 * So set ContextClassLoader to our uber-bundle classloader.
 	 * The uber-bundle also needs to import the Jetty websocket packages for this to work.
-	 * 
+	 *
 	 * @see {@DefaultAsyncSupportResolver.newCometSupport()}
 	 */
 	@Override
@@ -77,15 +62,17 @@ public class UiServletDelegate implements Servlet {
 		final ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
 		try {
 			Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-			this.delegate.init(config);
+			super.init(config);
 		} finally {
 			Thread.currentThread().setContextClassLoader(oldLoader);
 		}
 	}
 
-	@Override
-	public void service(ServletRequest request, ServletResponse response) throws ServletException, IOException {
-		this.delegate.service(request, response);
-	}
-
+    @Override
+    protected VaadinServletService createServletService(DeploymentConfiguration deploymentConfiguration)
+            throws ServiceException {
+        VaadinServletService servletService = super.createServletService(deploymentConfiguration);
+        servletService.addSessionInitListener(e -> e.getSession().addUIProvider(this.uiProvider));
+        return servletService;
+    }
 }

@@ -34,6 +34,7 @@ import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
@@ -80,6 +81,8 @@ import com.vaadin.ui.themes.Reindeer;
 @SuppressWarnings("serial")
 @PreserveOnRefresh
 @Push(value = PushMode.AUTOMATIC, transport = Transport.WEBSOCKET)
+@org.osgi.service.component.annotations.Component(service=MainUI.class,
+        scope=ServiceScope.PROTOTYPE)
 public class MainUI extends UI implements BroadcastListener {
 
     private static final int SESSION_EXPIRE_TIME_OUT_IN_SECS = 1800;
