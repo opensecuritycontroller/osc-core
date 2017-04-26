@@ -28,18 +28,18 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListTenantServiceApi;
-import org.osc.core.broker.service.dto.openstack.TenantBean;
+import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResponse<TenantBean>>
+public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResponse<OsTenantDto>>
         implements ListTenantServiceApi {
 
-    private ListResponse<TenantBean> response = new ListResponse<>();
+    private ListResponse<OsTenantDto> response = new ListResponse<>();
 
     @Override
-    public ListResponse<TenantBean> exec(BaseIdRequest request, EntityManager em) throws Exception {
+    public ListResponse<OsTenantDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
 
         // Initializing Entity Manager
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
@@ -49,10 +49,10 @@ public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResp
         JCloudKeyStone keystoneApi = new JCloudKeyStone(new Endpoint(vc));
 
         try {
-            List<TenantBean> tenantList = new ArrayList<>();
+            List<OsTenantDto> tenantList = new ArrayList<>();
 
             for (Tenant tenant : keystoneApi.listTenants()) {
-                tenantList.add(new TenantBean(tenant.getName()));
+                tenantList.add(new OsTenantDto(tenant.getName()));
             }
 
             this.response.setList(tenantList);

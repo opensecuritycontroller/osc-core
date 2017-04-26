@@ -28,18 +28,18 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
-import org.osc.core.broker.service.dto.openstack.NetworkBean;
+import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<NetworkBean>>
+public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<OsNetworkDto>>
         implements ListNetworkServiceApi {
 
-    private ListResponse<NetworkBean> response = new ListResponse<>();
+    private ListResponse<OsNetworkDto> response = new ListResponse<>();
 
     @Override
-    public ListResponse<NetworkBean> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
+    public ListResponse<OsNetworkDto> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
 
         // Initializing Entity Manager
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
@@ -50,10 +50,10 @@ public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, 
         JCloudNeutron neutronApi = new JCloudNeutron(new Endpoint(vc, request.getTenantName()));
 
         try {
-            List<NetworkBean> networkList = new ArrayList<>();
+            List<OsNetworkDto> networkList = new ArrayList<>();
 
             for (Network network : neutronApi.listNetworkByTenant(request.getRegion(), request.getTenantId())) {
-                networkList.add(new NetworkBean(network.getName()));
+                networkList.add(new OsNetworkDto(network.getName()));
             }
 
             this.response.setList(networkList);

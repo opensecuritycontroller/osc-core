@@ -16,12 +16,22 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto.openstack;
 
-public class NetworkBean {
+public class OsTenantDto {
 
+    private String id;
     private String name;
 
-    public NetworkBean(String name) {
+    public OsTenantDto(String name) {
+        this.id = name;
         this.name = name;
+    }
+
+    public String getId() {
+        return this.id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {

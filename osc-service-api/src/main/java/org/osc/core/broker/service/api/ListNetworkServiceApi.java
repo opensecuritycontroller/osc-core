@@ -16,10 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
-import org.osc.core.broker.service.dto.openstack.NetworkBean;
+import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
 public interface ListNetworkServiceApi
-        extends ServiceDispatcherApi<BaseOpenStackRequest, ListResponse<NetworkBean>> {
+        extends ServiceDispatcherApi<BaseOpenStackRequest, ListResponse<OsNetworkDto>> {
 }

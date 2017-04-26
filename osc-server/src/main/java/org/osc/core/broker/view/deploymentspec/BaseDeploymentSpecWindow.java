@@ -20,14 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.rest.client.openstack.jcloud.exception.ExtensionNotPresentException;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
-import org.osc.core.broker.service.dto.openstack.NetworkBean;
-import org.osc.core.broker.service.dto.openstack.TenantBean;
+import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
+import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.openstack.ListAvailabilityZonesService;
 import org.osc.core.broker.service.openstack.ListFloatingIpPoolsService;
 import org.osc.core.broker.service.openstack.ListHostAggregateService;
@@ -211,12 +210,12 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
 
     }
 
-    private void populateNetworks(ComboBox networkComboBox, List<NetworkBean> networkList) {
+    private void populateNetworks(ComboBox networkComboBox, List<OsNetworkDto> networkList) {
         try {
             networkComboBox.removeAllItems();
             if (networkList != null) {
                 // Calling List Network Service
-                BeanItemContainer<NetworkBean> networkListContainer = new BeanItemContainer<>(NetworkBean.class,
+                BeanItemContainer<OsNetworkDto> networkListContainer = new BeanItemContainer<>(OsNetworkDto.class,
                         networkList);
 
                 networkComboBox.setContainerDataSource(networkListContainer);
@@ -231,9 +230,9 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
         }
     }
 
-    private List<NetworkBean> getNetworks() {
+    private List<OsNetworkDto> getNetworks() {
         try {
-            Tenant selectedTenant = (Tenant) this.tenant.getValue();
+            OsTenantDto selectedTenant = (OsTenantDto) this.tenant.getValue();
             if (selectedTenant != null && this.region.getValue() != null) {
                 // Calling List Network Service
                 BaseOpenStackRequest req = new BaseOpenStackRequest();
@@ -243,7 +242,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                 req.setTenantId(selectedTenant.getId());
 
                 ListNetworkService service = new ListNetworkService();
-                List<NetworkBean> res = service.dispatch(req).getList();
+                List<OsNetworkDto> res = service.dispatch(req).getList();
 
                 return res;
             }
@@ -305,12 +304,12 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
             req.setId(this.vsId);
             ListTenantService service = new ListTenantService();
 
-            List<TenantBean> tenantList = service.dispatch(req).getList();
+            List<OsTenantDto> tenantList = service.dispatch(req).getList();
 
             this.tenant.removeValueChangeListener(this.tenantChangedListener);
             this.tenant.removeAllItems();
 
-            BeanItemContainer<TenantBean> tenantListContainer = new BeanItemContainer<>(TenantBean.class, tenantList);
+            BeanItemContainer<OsTenantDto> tenantListContainer = new BeanItemContainer<>(OsTenantDto.class, tenantList);
             this.tenant.setContainerDataSource(tenantListContainer);
             this.tenant.setItemCaptionPropertyId("name");
 
@@ -328,7 +327,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
 
     private void populateRegion() {
         try {
-            Tenant tenantDto = (Tenant) this.tenant.getValue();
+            OsTenantDto tenantDto = (OsTenantDto) this.tenant.getValue();
 
             if (tenantDto != null) {
                 this.region.removeValueChangeListener(this.regionChangedListener);
@@ -361,7 +360,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
         try {
             this.form.replaceComponent(this.optionPanel, getOptionTable());
 
-            Tenant selectedTenant = (Tenant) this.tenant.getValue();
+            OsTenantDto selectedTenant = (OsTenantDto) this.tenant.getValue();
             if (selectedTenant != null && this.region.getValue() != null) {
                 BaseOpenStackRequest req = new BaseOpenStackRequest();
                 req.setId(this.vsId);
@@ -420,7 +419,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
     private void populateFloatingPool() {
         this.floatingIpPool.removeAllItems();
         try {
-            Tenant selectedTenant = (Tenant) this.tenant.getValue();
+            OsTenantDto selectedTenant = (OsTenantDto) this.tenant.getValue();
             if (selectedTenant != null && this.region.getValue() != null) {
                 BaseOpenStackRequest req = new BaseOpenStackRequest();
                 req.setId(this.vsId);
@@ -512,7 +511,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                 }
                 if (BaseDeploymentSpecWindow.this.managementNetwork != null
                         && BaseDeploymentSpecWindow.this.inspectionNetwork != null) {
-                    List<NetworkBean> networks = getNetworks();
+                    List<OsNetworkDto> networks = getNetworks();
                     populateNetworks(BaseDeploymentSpecWindow.this.managementNetwork, networks);
                     populateNetworks(BaseDeploymentSpecWindow.this.inspectionNetwork, networks);
                 }
