@@ -17,10 +17,10 @@
 package org.osc.core.broker.view.vc.securitygroup;
 
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
+import org.osc.core.broker.service.dto.SecurityGroupDto;
+import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.securitygroup.AddOrUpdateSecurityGroupRequest;
-import org.osc.core.broker.service.securitygroup.SecurityGroupDto;
 import org.osc.core.broker.service.securitygroup.UpdateSecurityGroupService;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
@@ -87,8 +87,8 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
                 newDto.setId(this.currentSecurityGroup.getId());
 
                 newDto.setName(this.name.getValue().trim());
-                newDto.setTenantId(((Tenant) this.tenant.getValue()).getId());
-                newDto.setTenantName(((Tenant) this.tenant.getValue()).getName());
+                newDto.setTenantId(((OsTenantDto) this.tenant.getValue()).getId());
+                newDto.setTenantName(((OsTenantDto) this.tenant.getValue()).getName());
                 newDto.setProtectAll(this.protectionTypeOption.getValue() == TYPE_ALL);
 
                 request.setDto(newDto);

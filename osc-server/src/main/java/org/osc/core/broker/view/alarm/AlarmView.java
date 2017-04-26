@@ -20,8 +20,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.alarm.AlarmDto;
 import org.osc.core.broker.service.alarm.ListAlarmService;
+import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;

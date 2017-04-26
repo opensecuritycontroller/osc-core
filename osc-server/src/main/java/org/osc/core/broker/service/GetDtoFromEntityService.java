@@ -37,9 +37,9 @@ import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZ
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.service.alarm.AlarmDto;
-import org.osc.core.broker.service.alert.AlertDto;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.dto.AlarmDto;
+import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
@@ -47,6 +47,8 @@ import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.dto.JobRecordDto;
+import org.osc.core.broker.service.dto.SecurityGroupDto;
+import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -73,8 +75,6 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
-import org.osc.core.broker.service.securitygroup.SecurityGroupDto;
-import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
 
 public class GetDtoFromEntityService<R extends BaseDto> extends
         ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDtoFromEntityServiceApi<R> {

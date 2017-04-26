@@ -21,14 +21,17 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 
-public class UpdateSecurityGroupInterfaceService extends
-BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJobResponse> {
+public class UpdateSecurityGroupInterfaceService
+        extends BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJobResponse>
+        implements UpdateSecurityGroupInterfaceServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateSecurityGroupInterfaceService.class);
 

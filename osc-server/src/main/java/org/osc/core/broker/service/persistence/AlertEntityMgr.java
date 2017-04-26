@@ -18,7 +18,7 @@ package org.osc.core.broker.service.persistence;
 
 import org.osc.core.broker.model.entities.ObjectType;
 import org.osc.core.broker.model.entities.events.Alert;
-import org.osc.core.broker.service.alert.AlertDto;
+import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 

@@ -29,7 +29,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
-import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
+import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 
 public class SecurityGroupMemberEntityMgr {
 

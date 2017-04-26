@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.EntityManager;
 
 import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
@@ -24,16 +27,19 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListTenantServiceApi;
+import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResponse<Tenant>> {
+public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResponse<OsTenantDto>>
+        implements ListTenantServiceApi {
 
-    private ListResponse<Tenant> response = new ListResponse<Tenant>();
+    private ListResponse<OsTenantDto> response = new ListResponse<>();
 
     @Override
-    public ListResponse<Tenant> exec(BaseIdRequest request, EntityManager em) throws Exception {
+    public ListResponse<OsTenantDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
 
         // Initializing Entity Manager
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
@@ -41,9 +47,15 @@ public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResp
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
         JCloudKeyStone keystoneApi = new JCloudKeyStone(new Endpoint(vc));
-        try {
 
-            this.response.setList(keystoneApi.listTenants());
+        try {
+            List<OsTenantDto> tenantList = new ArrayList<>();
+
+            for (Tenant tenant : keystoneApi.listTenants()) {
+                tenantList.add(new OsTenantDto(tenant.getName(), tenant.getId()));
+            }
+
+            this.response.setList(tenantList);
         } finally {
             if (keystoneApi != null) {
                 keystoneApi.close();

@@ -20,13 +20,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
-import org.jclouds.openstack.neutron.v2.domain.Network;
 import org.osc.core.broker.service.AddDeploymentSpecService;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
+import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
+import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -54,16 +54,16 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
             if (validateForm()) {
                 DeploymentSpecDto dto = new DeploymentSpecDto();
                 dto.setName(this.name.getValue().trim());
-                dto.setTenantId(((Tenant) this.tenant.getValue()).getId());
-                dto.setTenantName(((Tenant) this.tenant.getValue()).getName());
+                dto.setTenantId(((OsTenantDto) this.tenant.getValue()).getId());
+                dto.setTenantName(((OsTenantDto) this.tenant.getValue()).getName());
                 dto.setParentId(this.vsId);
                 dto.setCount(this.count.getValue());
                 dto.setShared(this.shared.getValue() == null ? false : this.shared.getValue());
                 dto.setFloatingIpPoolName((String) this.floatingIpPool.getValue());
-                dto.setManagementNetworkId(((Network) this.managementNetwork.getValue()).getId());
-                dto.setManagementNetworkName(((Network) this.managementNetwork.getValue()).getName());
-                dto.setInspectionNetworkId(((Network) this.inspectionNetwork.getValue()).getId());
-                dto.setInspectionNetworkName(((Network) this.inspectionNetwork.getValue()).getName());
+                dto.setManagementNetworkId(((OsNetworkDto) this.managementNetwork.getValue()).getId());
+                dto.setManagementNetworkName(((OsNetworkDto) this.managementNetwork.getValue()).getName());
+                dto.setInspectionNetworkId(((OsNetworkDto) this.inspectionNetwork.getValue()).getId());
+                dto.setInspectionNetworkName(((OsNetworkDto) this.inspectionNetwork.getValue()).getName());
                 dto.setRegion(this.region.getValue().toString().trim());
 
                 if (this.userOption.getValue() == AVAILABILITY_ZONES) {

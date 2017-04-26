@@ -20,13 +20,16 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.archive.JobsArchive;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
+import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.JobsArchiveEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 
-public class UpdateJobsArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto>, BaseResponse> {
+public class UpdateJobsArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto>, BaseResponse>
+        implements UpdateJobsArchiveServiceApi {
 
     @Override
     public BaseResponse exec(BaseRequest<JobsArchiveDto> request, EntityManager em) throws Exception {

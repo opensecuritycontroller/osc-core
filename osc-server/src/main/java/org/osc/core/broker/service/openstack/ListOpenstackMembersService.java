@@ -32,13 +32,14 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
+import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.openstack.request.ListOpenstackMembersRequest;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
+import org.osc.core.broker.service.request.ListOpenstackMembersRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
 
 /**
  * Lists servers based on the openstack request. The Parent ID is assumed to be of the VC
@@ -47,8 +48,9 @@ import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
  * security group.
  * If the id is not set, all servers from that VC are listed
  */
-public class ListOpenstackMembersService extends
-        ServiceDispatcher<ListOpenstackMembersRequest, ListResponse<SecurityGroupMemberItemDto>> {
+public class ListOpenstackMembersService
+        extends ServiceDispatcher<ListOpenstackMembersRequest, ListResponse<SecurityGroupMemberItemDto>>
+        implements ListOpenstackMembersServiceApi {
 
     private VirtualizationConnector vc;
 

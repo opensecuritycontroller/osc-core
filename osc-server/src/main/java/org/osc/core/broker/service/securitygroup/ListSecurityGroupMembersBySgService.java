@@ -24,6 +24,8 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
+import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupMemberEntityMgr;
@@ -31,8 +33,9 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.SetResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
-public class ListSecurityGroupMembersBySgService extends
-        ServiceDispatcher<BaseIdRequest, SetResponse<SecurityGroupMemberItemDto>> {
+public class ListSecurityGroupMembersBySgService
+        extends ServiceDispatcher<BaseIdRequest, SetResponse<SecurityGroupMemberItemDto>>
+        implements ListSecurityGroupMembersBySgServiceApi {
 
     private SecurityGroup sg;
 

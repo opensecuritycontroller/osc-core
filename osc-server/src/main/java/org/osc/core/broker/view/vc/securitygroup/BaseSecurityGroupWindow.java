@@ -24,19 +24,19 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.service.dto.SecurityGroupDto;
+import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
+import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.openstack.ListOpenstackMembersService;
 import org.osc.core.broker.service.openstack.ListRegionByVcIdService;
 import org.osc.core.broker.service.openstack.ListTenantByVcIdService;
-import org.osc.core.broker.service.openstack.request.BaseOpenStackRequest;
-import org.osc.core.broker.service.openstack.request.ListOpenstackMembersRequest;
 import org.osc.core.broker.service.request.BaseIdRequest;
+import org.osc.core.broker.service.request.BaseOpenStackRequest;
+import org.osc.core.broker.service.request.ListOpenstackMembersRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
 import org.osc.core.broker.service.securitygroup.ListSecurityGroupMembersBySgService;
-import org.osc.core.broker.service.securitygroup.SecurityGroupDto;
-import org.osc.core.broker.service.securitygroup.SecurityGroupMemberItemDto;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -436,12 +436,12 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
                 req.setId(vcId);
                 ListTenantByVcIdService service = new ListTenantByVcIdService();
 
-                List<Tenant> tenantList = service.dispatch(req).getList();
+                List<OsTenantDto> tenantList = service.dispatch(req).getList();
 
                 this.tenant.removeValueChangeListener(this.tenantChangedListener);
                 this.tenant.removeAllItems();
 
-                BeanItemContainer<Tenant> tenantListContainer = new BeanItemContainer<Tenant>(Tenant.class, tenantList);
+                BeanItemContainer<OsTenantDto> tenantListContainer = new BeanItemContainer<>(OsTenantDto.class, tenantList);
                 this.tenant.setContainerDataSource(tenantListContainer);
                 this.tenant.setItemCaptionPropertyId("name");
 
@@ -460,7 +460,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
 
     private void populateRegion() {
         try {
-            Tenant tenantDto = (Tenant) this.tenant.getValue();
+            OsTenantDto tenantDto = (OsTenantDto) this.tenant.getValue();
 
             if (tenantDto != null) {
                 this.region.removeValueChangeListener(this.triggerPopulateFromListListener);
@@ -492,7 +492,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
     private void populateFromList() {
         try {
 
-            Tenant tenantDto = (Tenant) this.tenant.getValue();
+            OsTenantDto tenantDto = (OsTenantDto) this.tenant.getValue();
             String region = (String) this.region.getValue();
             SecurityGroupMemberType memberType = (SecurityGroupMemberType) this.protectionEntityType.getValue();
             boolean isProtectAll = this.protectionTypeOption.getValue() == TYPE_ALL;

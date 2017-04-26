@@ -29,7 +29,7 @@ import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.archive.ArchiveService;
 import org.osc.core.broker.service.archive.GetJobsArchiveService;
-import org.osc.core.broker.service.archive.JobsArchiveDto;
+import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;

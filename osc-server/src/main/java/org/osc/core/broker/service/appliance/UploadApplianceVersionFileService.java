@@ -29,13 +29,16 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.UploadApplianceVersionFileServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.ImportFileRequest;
+import org.osc.core.broker.service.request.UploadRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.maintenance.ApplianceUploader;
 import org.osc.core.util.ArchiveUtil;
 
-public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadRequest, BaseResponse> {
+public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadRequest, BaseResponse>
+        implements UploadApplianceVersionFileServiceApi {
 
     private static final Logger log = Logger.getLogger(UploadApplianceVersionFileService.class);
 

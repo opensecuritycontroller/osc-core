@@ -24,6 +24,8 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
+import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
@@ -31,8 +33,9 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 
-public class ListSecurityGroupInterfaceServiceByVirtualSystem extends
-        ServiceDispatcher<BaseIdRequest, ListResponse<SecurityGroupInterfaceDto>> {
+public class ListSecurityGroupInterfaceServiceByVirtualSystem
+        extends ServiceDispatcher<BaseIdRequest, ListResponse<SecurityGroupInterfaceDto>>
+        implements ListSecurityGroupInterfaceServiceByVirtualSystemApi {
 
     private VirtualSystem vs;
     ListResponse<SecurityGroupInterfaceDto> response = new ListResponse<SecurityGroupInterfaceDto>();

@@ -24,16 +24,18 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osc.core.broker.util.api.ApiUtil;
 import org.osgi.service.component.annotations.Reference;
 
-public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse> {
+public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
+        implements SyncSecurityGroupServiceApi {
 
     private SecurityGroup securityGroup;
     private VirtualizationConnector vc;
@@ -74,7 +76,7 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
 
         // For service calls makes sure the VC's match
         if (this.securityGroup.getVirtualizationConnector() != this.vc) {
-            throw apiUtil.createParentChildMismatchException(request.getParentId(), "Security Group");
+            throw this.apiUtil.createParentChildMismatchException(request.getParentId(), "Security Group");
         }
 
         if(this.vc.getVirtualizationType() != VirtualizationType.OPENSTACK) {

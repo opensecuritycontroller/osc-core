@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.EntityManager;
 
 import org.jclouds.openstack.neutron.v2.domain.Network;
@@ -24,16 +27,19 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.openstack.request.BaseOpenStackRequest;
+import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<Network>> {
+public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<OsNetworkDto>>
+        implements ListNetworkServiceApi {
 
-    private ListResponse<Network> response = new ListResponse<Network>();
+    private ListResponse<OsNetworkDto> response = new ListResponse<>();
 
     @Override
-    public ListResponse<Network> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
+    public ListResponse<OsNetworkDto> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
 
         // Initializing Entity Manager
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
@@ -42,8 +48,15 @@ public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, 
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
         JCloudNeutron neutronApi = new JCloudNeutron(new Endpoint(vc, request.getTenantName()));
+
         try {
-            this.response.setList(neutronApi.listNetworkByTenant(request.getRegion(), request.getTenantId()));
+            List<OsNetworkDto> networkList = new ArrayList<>();
+
+            for (Network network : neutronApi.listNetworkByTenant(request.getRegion(), request.getTenantId())) {
+                networkList.add(new OsNetworkDto(network.getName(), network.getId()));
+            }
+
+            this.response.setList(networkList);
 
         } finally {
             if (neutronApi != null) {

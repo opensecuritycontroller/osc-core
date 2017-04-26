@@ -20,10 +20,13 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.archive.JobsArchive;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
+import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 
-public class GetJobsArchiveService extends ServiceDispatcher<Request, BaseDtoResponse<JobsArchiveDto>> {
+public class GetJobsArchiveService extends ServiceDispatcher<Request, BaseDtoResponse<JobsArchiveDto>>
+        implements GetJobsArchiveServiceApi {
 
     @Override
     public BaseDtoResponse<JobsArchiveDto> exec(Request request, EntityManager em) throws Exception {

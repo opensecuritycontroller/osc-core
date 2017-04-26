@@ -28,15 +28,21 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
+import org.osc.core.broker.service.dto.SecurityGroupDto;
+import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
+import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
+import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 
-public class UpdateSecurityGroupService extends
-        BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse> {
+public class UpdateSecurityGroupService
+        extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
+        implements UpdateSecurityGroupServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateSecurityGroupService.class);
 
@@ -106,7 +112,7 @@ public class UpdateSecurityGroupService extends
         if(request.isApi() && dto.getName() == null) {
             // If update request is coming from API and name is not specified(its a required field),
             // assumes it a member update request. Load existing values from the DB and pass to service
-            SecurityGroupDto.checkForNullIdFields(dto);
+            SecurityGroupDtoValidator.checkForNullIdFields(dto);
             this.securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
 
             if (this.securityGroup == null) {

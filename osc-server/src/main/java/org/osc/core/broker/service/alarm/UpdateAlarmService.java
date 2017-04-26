@@ -21,15 +21,19 @@ import javax.persistence.EntityManager;
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.events.Alarm;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
+import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.AlarmEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
+import org.osc.core.broker.service.validator.AlarmDtoValidator;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 
-public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>, BaseResponse> {
+public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>, BaseResponse>
+        implements UpdateAlarmServiceApi {
 
     @Override
     public BaseResponse exec(BaseRequest<AlarmDto> request, EntityManager em) throws Exception {
@@ -55,9 +59,9 @@ public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>,
         BaseDtoValidator.checkForNullId(dto);
 
         // check for null/empty values
-        AlarmDto.checkForNullFields(dto);
+        AlarmDtoValidator.checkForNullFields(dto);
         //field length should not exceed current MAX_LEN = 155 chars
-        AlarmDto.checkFieldLength(dto);
+        AlarmDtoValidator.checkFieldLength(dto);
 
         //validating email address formatting
         if (!StringUtils.isBlank(dto.getReceipientEmail())) {
@@ -65,7 +69,7 @@ public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>,
         }
 
         //validating the user entered regex syntax
-        AlarmDto.checkRegexSyntax(dto);
+        AlarmDtoValidator.checkRegexSyntax(dto);
 
         // entry must pre-exist in db
         if (existingAlarm == null) {

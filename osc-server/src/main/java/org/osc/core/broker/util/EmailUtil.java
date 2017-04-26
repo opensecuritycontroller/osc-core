@@ -30,7 +30,8 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.events.Alert;
-import org.osc.core.broker.service.email.EmailSettingsDto;
+import org.osc.core.broker.service.dto.EmailSettingsDto;
+import org.osc.core.broker.service.validator.EmailSettingsDtoValidator;
 import org.osc.core.util.ServerUtil;
 
 public class EmailUtil {
@@ -113,7 +114,7 @@ public class EmailUtil {
      * @throws Exception
      */
     public static void validateEmailSettings(EmailSettingsDto dto) throws Exception {
-        EmailSettingsDto.checkForNullFields(dto);
+        EmailSettingsDtoValidator.checkForNullFields(dto);
         ValidateUtil.checkForValidPortNumber(dto.getPort());
         ValidateUtil.checkForValidEmailAddress(dto.getEmailId());
         ValidateUtil.checkForValidFqdn(dto.getMailServer());

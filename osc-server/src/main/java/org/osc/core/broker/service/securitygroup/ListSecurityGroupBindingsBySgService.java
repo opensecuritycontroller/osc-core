@@ -30,18 +30,21 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
+import org.osc.core.broker.service.dto.PolicyDto;
+import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
 import org.osc.core.broker.service.exceptions.ActionNotSupportedException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
-import org.osc.core.broker.service.policy.PolicyDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osc.sdk.controller.FailurePolicyType;
 
-public class ListSecurityGroupBindingsBySgService extends
-ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
+public class ListSecurityGroupBindingsBySgService
+        extends ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>>
+        implements ListSecurityGroupBindingsBySgServiceApi {
 
     private SecurityGroup sg;
 

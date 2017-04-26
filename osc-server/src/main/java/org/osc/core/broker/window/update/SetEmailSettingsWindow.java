@@ -17,7 +17,7 @@
 package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.email.EmailSettingsDto;
+import org.osc.core.broker.service.dto.EmailSettingsDto;
 import org.osc.core.broker.service.email.GetEmailSettingsService;
 import org.osc.core.broker.service.email.SetEmailSettingsService;
 import org.osc.core.broker.service.request.BaseRequest;

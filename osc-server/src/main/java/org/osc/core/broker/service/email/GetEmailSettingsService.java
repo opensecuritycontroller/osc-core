@@ -20,11 +20,14 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.events.EmailSettings;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
+import org.osc.core.broker.service.dto.EmailSettingsDto;
 import org.osc.core.broker.service.persistence.EmailSettingsEntityMgr;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 
-public class GetEmailSettingsService extends ServiceDispatcher<Request, BaseDtoResponse<EmailSettingsDto>> {
+public class GetEmailSettingsService extends ServiceDispatcher<Request, BaseDtoResponse<EmailSettingsDto>>
+        implements GetEmailSettingsServiceApi {
 
     @Override
     public BaseDtoResponse<EmailSettingsDto> exec(Request request, EntityManager em) throws Exception {

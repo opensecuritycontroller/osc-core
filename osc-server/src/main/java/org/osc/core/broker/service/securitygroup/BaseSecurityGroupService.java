@@ -40,6 +40,8 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.dto.SecurityGroupDto;
+import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.NetworkEntityManager;
@@ -50,6 +52,8 @@ import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPartOfAnotherSecurityGroupException;
+import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
+import org.osc.core.broker.service.validator.SecurityGroupMemberItemDtoValidator;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 
@@ -64,8 +68,8 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
      * Validates Virtualization connector and tenant exists
      */
     protected void validateAndLoad(EntityManager em, SecurityGroupDto dto) throws Exception {
-        SecurityGroupDto.checkForNullFields(dto);
-        SecurityGroupDto.checkFieldLength(dto);
+        SecurityGroupDtoValidator.checkForNullFields(dto);
+        SecurityGroupDtoValidator.checkFieldLength(dto);
 
         if (dto.getParentId() == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector Id needs to be specified");
@@ -112,7 +116,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
      */
     protected void validate(SecurityGroupMemberItemDto memberItem) throws VmidcBrokerInvalidEntryException,
             VmidcBrokerValidationException {
-        SecurityGroupMemberItemDto.checkForNullFields(memberItem);
+        SecurityGroupMemberItemDtoValidator.checkForNullFields(memberItem);
         if (!this.regions.contains(memberItem.getRegion())) {
             throw new VmidcBrokerValidationException(String.format("Region: '%s' does not exist for member '%s'",
                     memberItem.getRegion(), memberItem.getName()));

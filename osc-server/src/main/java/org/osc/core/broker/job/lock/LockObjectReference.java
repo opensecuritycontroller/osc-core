@@ -33,7 +33,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.service.securityinterface.SecurityGroupInterfaceDto;
+import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 
 import io.swagger.annotations.ApiModelProperty;
 

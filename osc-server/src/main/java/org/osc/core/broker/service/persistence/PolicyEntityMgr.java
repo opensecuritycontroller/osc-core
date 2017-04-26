@@ -19,7 +19,7 @@ package org.osc.core.broker.service.persistence;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.management.Policy;
-import org.osc.core.broker.service.policy.PolicyDto;
+import org.osc.core.broker.service.dto.PolicyDto;
 
 public class PolicyEntityMgr {
 

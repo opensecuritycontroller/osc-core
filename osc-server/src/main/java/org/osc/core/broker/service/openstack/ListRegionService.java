@@ -26,11 +26,13 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.openstack.request.BaseOpenStackRequest;
+import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListRegionService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>> {
+public class ListRegionService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>>
+        implements ListRegionServiceApi {
 
     private ListResponse<String> response = new ListResponse<String>();
 

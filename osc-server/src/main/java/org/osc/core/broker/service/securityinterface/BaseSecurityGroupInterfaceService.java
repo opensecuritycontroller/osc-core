@@ -23,11 +23,13 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
+import org.osc.core.broker.service.validator.SecurityGroupInterfaceDtoValidator;
 
 public abstract class BaseSecurityGroupInterfaceService<I extends Request, O extends Response> extends
 ServiceDispatcher<I, O> {
@@ -36,8 +38,8 @@ ServiceDispatcher<I, O> {
     protected Policy policy;
 
     protected void validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
-        SecurityGroupInterfaceDto.checkForNullFields(dto);
-        SecurityGroupInterfaceDto.checkFieldLength(dto);
+        SecurityGroupInterfaceDtoValidator.checkForNullFields(dto);
+        SecurityGroupInterfaceDtoValidator.checkFieldLength(dto);
 
         this.vs = VirtualSystemEntityMgr.findById(em, dto.getParentId());
 

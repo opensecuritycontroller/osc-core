@@ -23,13 +23,16 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListAlertServiceApi;
+import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.persistence.AlertEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListAlertService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<AlertDto>> {
+public class ListAlertService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<AlertDto>>
+        implements ListAlertServiceApi {
 
     @Override
     public ListResponse<AlertDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {

@@ -23,13 +23,16 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.events.Alarm;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListAlarmServiceApi;
+import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.persistence.AlarmEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public class ListAlarmService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<AlarmDto>> {
+public class ListAlarmService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<AlarmDto>>
+        implements ListAlarmServiceApi {
 
     @Override
     public ListResponse<AlarmDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {

@@ -20,13 +20,15 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.UpdateMCPublicKeyServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.UpdateMCPublicKeyRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 
 
-public class UpdateMCPublicKeyService extends ServiceDispatcher<UpdateMCPublicKeyRequest, EmptySuccessResponse> {
+public class UpdateMCPublicKeyService extends ServiceDispatcher<UpdateMCPublicKeyRequest, EmptySuccessResponse>
+        implements UpdateMCPublicKeyServiceApi {
 
     @Override
     public EmptySuccessResponse exec(UpdateMCPublicKeyRequest request, EntityManager em) throws Exception {
