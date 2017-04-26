@@ -17,9 +17,6 @@
 package org.osc.core.broker.service.archive;
 
 import java.io.File;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -27,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -77,8 +75,6 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
                 request.getDto().setThresholdValue(jobsArchive.getThresholdValue());
             }
 
-            Connection connection = em.unwrap(Connection.class);
-
                     try {
                         // calculate threshold date
                         Period period = getPeriod(request);
@@ -90,36 +86,36 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
 
 
                         //prepare callable statements to export files as .csv
-                        List<CallableStatement> cStatements = Arrays.asList(
-                                getCallableStatementForJob(connection, sqlTimeString, dir),
-                                getCallableStatementJobObject(connection, sqlTimeString, dir),
-                                getCallableStatementTask(connection, sqlTimeString, dir),
-                                getCallableStatementTaskPredecessor(connection, sqlTimeString, dir),
-                                getCallableStatementTaskSuccessor(connection, sqlTimeString, dir),
-                                getCallableStatementTaskChild(connection, sqlTimeString, dir),
-                                getCallableStatementTaskObject(connection, sqlTimeString, dir),
-                                getCallableStatementReleaseInfo(connection, sqlTimeString, dir),
-                                getCallableStatementAlert(connection, sqlTimeString, dir)
+                        List<Query> cStatements = Arrays.asList(
+                                getCallableStatementForJob(em, sqlTimeString, dir),
+                                getCallableStatementJobObject(em, sqlTimeString, dir),
+                                getCallableStatementTask(em, sqlTimeString, dir),
+                                getCallableStatementTaskPredecessor(em, sqlTimeString, dir),
+                                getCallableStatementTaskSuccessor(em, sqlTimeString, dir),
+                                getCallableStatementTaskChild(em, sqlTimeString, dir),
+                                getCallableStatementTaskObject(em, sqlTimeString, dir),
+                                getCallableStatementReleaseInfo(em, sqlTimeString, dir),
+                                getCallableStatementAlert(em, sqlTimeString, dir)
                         );
 
                         //prepare statements to clear tables
-                        List<PreparedStatement> pStatements = Arrays.asList(
-                                getPreparedStatementDeleteTaskObject(connection, sqlTimeString),
-                                getPreparedStatementDeleteTaskSuccessor(connection, sqlTimeString),
-                                getPreparedStatementDeleteTaskPredecessor(connection, sqlTimeString),
-                                getPreparedStatementDeleteTaskChild(connection, sqlTimeString),
-                                getPreparedStatementDeleteTask(connection, sqlTimeString),
-                                getPreparedStatementDeleteJobObject(connection, sqlTimeString),
-                                getPreparedStatementDeleteJob(connection, sqlTimeString),
-                                getPreparedStatementDeleteAlert(connection, sqlTimeString)
+                        List<Query> pStatements = Arrays.asList(
+                                getPreparedStatementDeleteTaskObject(em, sqlTimeString),
+                                getPreparedStatementDeleteTaskSuccessor(em, sqlTimeString),
+                                getPreparedStatementDeleteTaskPredecessor(em, sqlTimeString),
+                                getPreparedStatementDeleteTaskChild(em, sqlTimeString),
+                                getPreparedStatementDeleteTask(em, sqlTimeString),
+                                getPreparedStatementDeleteJobObject(em, sqlTimeString),
+                                getPreparedStatementDeleteJob(em, sqlTimeString),
+                                getPreparedStatementDeleteAlert(em, sqlTimeString)
                         );
 
                         //Execute callable and then prepared statements
-                        for (CallableStatement cStmt : cStatements) {
-                            archive(cStmt);
+                        for (Query spq : cStatements) {
+                            archive(spq);
                         }
-                        for (PreparedStatement pStmt : pStatements) {
-                            delete(pStmt);
+                        for (Query q : pStatements) {
+                            delete(q);
                         }
 
                         ArchiveUtil.archive(dir, "archive/osc-archive-" + archiveFileName + ".zip");
@@ -146,156 +142,152 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
         };
     }
 
-    private PreparedStatement getPreparedStatementDeleteTaskObject(Connection connection, Timestamp sqlTimeString) throws SQLException {
-        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK_OBJECT WHERE task_fk IN "
+    private Query getPreparedStatementDeleteTaskObject(EntityManager em, Timestamp sqlTimeString) throws SQLException {
+        Query query = em.createNativeQuery("DELETE FROM TASK_OBJECT WHERE task_fk IN "
                 + "(SELECT ID FROM TASK WHERE job_fk IN "
                 + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?)) ");
-        pStmt.setTimestamp(1, sqlTimeString);
-        return pStmt;
+        query.setParameter(1, sqlTimeString);
+        return query;
     }
 
-    private PreparedStatement getPreparedStatementDeleteTaskSuccessor(Connection connection, Timestamp sqlTimeString) throws SQLException {
-        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK_SUCCESSOR WHERE task_id IN "
+    private Query getPreparedStatementDeleteTaskSuccessor(EntityManager em, Timestamp sqlTimeString) throws SQLException {
+        Query query = em.createNativeQuery("DELETE FROM TASK_SUCCESSOR WHERE task_id IN "
                 + "(SELECT ID FROM TASK WHERE job_fk IN "
                 + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?)) ");
-        pStmt.setTimestamp(1, sqlTimeString);
-        return pStmt;
+        query.setParameter(1, sqlTimeString);
+        return query;
     }
 
-    private PreparedStatement getPreparedStatementDeleteTaskPredecessor(Connection connection, Timestamp sqlTimeString) throws SQLException {
-        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK_PREDECESSOR WHERE task_id IN "
+    private Query getPreparedStatementDeleteTaskPredecessor(EntityManager em, Timestamp sqlTimeString) throws SQLException {
+        Query query = em.createNativeQuery("DELETE FROM TASK_PREDECESSOR WHERE task_id IN "
                 + "(SELECT ID FROM TASK WHERE job_fk IN "
                 + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?))");
-        pStmt.setTimestamp(1, sqlTimeString);
-        return pStmt;
+        query.setParameter(1, sqlTimeString);
+        return query;
     }
 
-    private PreparedStatement getPreparedStatementDeleteTaskChild(Connection connection, Timestamp sqlTimeString) throws SQLException {
-        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK_CHILD WHERE task_id IN "
+    private Query getPreparedStatementDeleteTaskChild(EntityManager em, Timestamp sqlTimeString) throws SQLException {
+        Query query = em.createNativeQuery("DELETE FROM TASK_CHILD WHERE task_id IN "
                 + "(SELECT ID FROM TASK WHERE job_fk IN "
                 + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?))");
-        pStmt.setTimestamp(1, sqlTimeString);
-        return pStmt;
+        query.setParameter(1, sqlTimeString);
+        return query;
     }
 
-    private PreparedStatement getPreparedStatementDeleteTask(Connection connection, Timestamp sqlTimeString) throws SQLException {
-        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM TASK WHERE id IN (SELECT ID FROM TASK WHERE job_fk IN "
+    private Query getPreparedStatementDeleteTask(EntityManager em, Timestamp sqlTimeString) throws SQLException {
+        Query query = em.createNativeQuery("DELETE FROM TASK WHERE id IN (SELECT ID FROM TASK WHERE job_fk IN "
                 + "(SELECT ID FROM JOB WHERE completed_timestamp <= ?))");
-        pStmt.setTimestamp(1, sqlTimeString);
-        return pStmt;
+        query.setParameter(1, sqlTimeString);
+        return query;
     }
 
-    private PreparedStatement getPreparedStatementDeleteJobObject(Connection connection, Timestamp sqlTimeString) throws SQLException {
-        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM JOB_OBJECT WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= ?)");
-        pStmt.setTimestamp(1, sqlTimeString);
-        return pStmt;
+    private Query getPreparedStatementDeleteJobObject(EntityManager em, Timestamp sqlTimeString) throws SQLException {
+        Query query = em.createNativeQuery("DELETE FROM JOB_OBJECT WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= ?)");
+        query.setParameter(1, sqlTimeString);
+        return query;
     }
 
-    private PreparedStatement getPreparedStatementDeleteJob(Connection connection, Timestamp sqlTimeString) throws SQLException {
-        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM JOB WHERE completed_timestamp <= ?");
-        pStmt.setTimestamp(1, sqlTimeString);
-        return pStmt;
+    private Query getPreparedStatementDeleteJob(EntityManager em, Timestamp sqlTimeString) throws SQLException {
+        Query query = em.createNativeQuery("DELETE FROM JOB WHERE completed_timestamp <= ?");
+        query.setParameter(1, sqlTimeString);
+        return query;
     }
 
-    private PreparedStatement getPreparedStatementDeleteAlert(Connection connection, Timestamp sqlTimeString) throws SQLException {
-        PreparedStatement pStmt = connection.prepareStatement("DELETE FROM ALERT WHERE created_timestamp <= ?");
-        pStmt.setTimestamp(1, sqlTimeString);
-        return pStmt;
+    private Query getPreparedStatementDeleteAlert(EntityManager em, Timestamp sqlTimeString) throws SQLException {
+        Query query = em.createNativeQuery("DELETE FROM ALERT WHERE created_timestamp <= ?");
+        query.setParameter(1, sqlTimeString);
+        return query;
     }
 
-    private CallableStatement getCallableStatementAlert(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+    private Query getCallableStatementAlert(EntityManager em, Timestamp sqlTimeString, String dir) throws SQLException {
         File cvsFile = new File(dir + "alert.csv");
-        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
-        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
-        cs.setString(2, "SELECT * FROM ALERT WHERE created_timestamp <= '"+sqlTimeString+"'");
-        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
-        return cs;
+        Query spq = em.createNativeQuery("{CALL CSVWRITE(?, ?, ?)}");
+        spq.setParameter(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        spq.setParameter(2, "SELECT * FROM ALERT WHERE created_timestamp <= '"+sqlTimeString+"'");
+        spq.setParameter(3,"charset=UTF-8 fieldSeparator=,");
+        return spq;
     }
 
-    private CallableStatement getCallableStatementReleaseInfo(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+    private Query getCallableStatementReleaseInfo(EntityManager em, Timestamp sqlTimeString, String dir) throws SQLException {
         File cvsFile = new File(dir + "release_info.csv");
-        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
-        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
-        cs.setString(2, "SELECT * FROM RELEASE_INFO");
-        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
-        return cs;
+        Query spq = em.createNativeQuery("{CALL CSVWRITE(?, ?, ?)}");
+        spq.setParameter(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        spq.setParameter(2, "SELECT * FROM RELEASE_INFO");
+        spq.setParameter(3,"charset=UTF-8 fieldSeparator=,");
+        return spq;
     }
 
-    private CallableStatement getCallableStatementTaskObject(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+    private Query getCallableStatementTaskObject(EntityManager em, Timestamp sqlTimeString, String dir) throws SQLException {
         File cvsFile = new File(dir + "task_object.csv");
-        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
-        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
-        cs.setString(2, "SELECT * FROM TASK_OBJECT WHERE task_fk IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
-        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
-        return cs;
+        Query spq = em.createNativeQuery("{CALL CSVWRITE(?, ?, ?)}");
+        spq.setParameter(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        spq.setParameter(2, "SELECT * FROM TASK_OBJECT WHERE task_fk IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
+        spq.setParameter(3,"charset=UTF-8 fieldSeparator=,");
+        return spq;
     }
 
-    private CallableStatement getCallableStatementTaskChild(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+    private Query getCallableStatementTaskChild(EntityManager em, Timestamp sqlTimeString, String dir) throws SQLException {
         File cvsFile = new File(dir + "task_child.csv");
-        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
-        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
-        cs.setString(2, "SELECT * FROM TASK_CHILD WHERE task_id IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
-        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
-        return cs;
+        Query spq = em.createNativeQuery("{CALL CSVWRITE(?, ?, ?)}");
+        spq.setParameter(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        spq.setParameter(2, "SELECT * FROM TASK_CHILD WHERE task_id IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
+        spq.setParameter(3,"charset=UTF-8 fieldSeparator=,");
+        return spq;
     }
 
-    private CallableStatement getCallableStatementTaskSuccessor(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+    private Query getCallableStatementTaskSuccessor(EntityManager em, Timestamp sqlTimeString, String dir) throws SQLException {
         File cvsFile = new File(dir + "task_successor.csv");
-        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
-        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
-        cs.setString(2, "SELECT * FROM TASK_SUCCESSOR WHERE task_id IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
-        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
-        return cs;
+        Query spq = em.createNativeQuery("{CALL CSVWRITE(?, ?, ?)}");
+        spq.setParameter(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        spq.setParameter(2, "SELECT * FROM TASK_SUCCESSOR WHERE task_id IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
+        spq.setParameter(3,"charset=UTF-8 fieldSeparator=,");
+        return spq;
     }
 
-    private CallableStatement getCallableStatementTaskPredecessor(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+    private Query getCallableStatementTaskPredecessor(EntityManager em, Timestamp sqlTimeString, String dir) throws SQLException {
         File cvsFile = new File(dir + "task_predecessor.csv");
-        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
-        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
-        cs.setString(2, "SELECT * FROM TASK_PREDECESSOR WHERE task_id IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
-        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
-        return cs;
+        Query spq = em.createNativeQuery("{CALL CSVWRITE(?, ?, ?)}");
+        spq.setParameter(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        spq.setParameter(2, "SELECT * FROM TASK_PREDECESSOR WHERE task_id IN (SELECT ID FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"'))");
+        spq.setParameter(3,"charset=UTF-8 fieldSeparator=,");
+        return spq;
     }
 
-    private CallableStatement getCallableStatementTask(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+    private Query getCallableStatementTask(EntityManager em, Timestamp sqlTimeString, String dir) throws SQLException {
         File cvsFile = new File(dir + "task.csv");
-        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
-        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
-        cs.setString(2, "SELECT * FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"')");
-        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
-        return cs;
+        Query spq = em.createNativeQuery("{CALL CSVWRITE(?, ?, ?)}");
+        spq.setParameter(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        spq.setParameter(2, "SELECT * FROM TASK WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"')");
+        spq.setParameter(3,"charset=UTF-8 fieldSeparator=,");
+        return spq;
     }
 
-    private CallableStatement getCallableStatementJobObject(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+    private Query getCallableStatementJobObject(EntityManager em, Timestamp sqlTimeString, String dir) throws SQLException {
         File cvsFile = new File(dir + "job_object.csv");
-        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
-        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
-        cs.setString(2, "SELECT * FROM JOB_OBJECT WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"')");
-        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
-        return cs;
+        Query spq = em.createNativeQuery("{CALL CSVWRITE(?, ?, ?)}");
+        spq.setParameter(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        spq.setParameter(2, "SELECT * FROM JOB_OBJECT WHERE job_fk IN (SELECT ID FROM JOB WHERE completed_timestamp <= '"+sqlTimeString+"')");
+        spq.setParameter(3,"charset=UTF-8 fieldSeparator=,");
+        return spq;
     }
 
-    private CallableStatement getCallableStatementForJob(Connection connection, Timestamp sqlTimeString, String dir) throws SQLException {
+    private Query getCallableStatementForJob(EntityManager em, Timestamp sqlTimeString, String dir) throws SQLException {
         File cvsFile = new File(dir + "job.csv");
-        CallableStatement cs = connection.prepareCall("{CALL CSVWRITE(?, ?, ?)}");
-        cs.setString(1, String.valueOf(cvsFile.getAbsoluteFile()));
-        cs.setString(2, "SELECT * FROM JOB WHERE completed_timestamp <= '" + sqlTimeString+"'");
-        cs.setString(3,"charset=UTF-8 fieldSeparator=,");
-        return cs;
+        Query spq = em.createNativeQuery("{CALL CSVWRITE(?, ?, ?)}");
+        spq.setParameter(1, String.valueOf(cvsFile.getAbsoluteFile()));
+        spq.setParameter(2, "SELECT * FROM JOB WHERE completed_timestamp <= '" + sqlTimeString+"'");
+        spq.setParameter(3,"charset=UTF-8 fieldSeparator=,");
+        return spq;
     }
 
-    private void archive(CallableStatement cs) throws SQLException {
-        log.info("Execute sql: " + cs.toString());
-        try(CallableStatement cStmt = cs) {
-            log.info("Rows archived: " + cStmt.executeUpdate());
-        }
+    private void archive(Query spq) throws SQLException {
+        log.info("Execute sql: " + spq.toString());
+        log.info("Rows archived: " + spq.executeUpdate());
     }
 
-    private void delete(PreparedStatement ps) throws SQLException {
-        log.info("Execute sql: " + ps.toString());
-        try(PreparedStatement pStmt = ps) {
-            log.info("Rows deleted: " + pStmt.executeUpdate());
-        }
+    private void delete(Query q) throws SQLException {
+        log.info("Execute sql: " + q.toString());
+        log.info("Rows deleted: " + q.executeUpdate());
     }
 
     private String calculateThresholdDate(Period period, String datePattern){

@@ -29,6 +29,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.util.db.HibernateUtil;
 
 public class OsHostAggregrateNotificationListener extends OsNotificationListener {
 
@@ -52,10 +53,11 @@ public class OsHostAggregrateNotificationListener extends OsNotificationListener
             if (keyValue != null) {
                 log.info(" [Aggregrate] : message received - " + message);
                 try {
-
-                    // Trigger Sync for the related Deployment Spec
-                    ConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
-
+                    HibernateUtil.getTransactionControl().required(() -> {
+                        // Trigger Sync for the related Deployment Spec
+                        ConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+                        return null;
+                    });
                 } catch (Exception e) {
                     log.error("Failed post notification processing  - " + this.vc.getControllerIpAddress(), e);
                     AlertGenerator.processSystemFailureEvent(
