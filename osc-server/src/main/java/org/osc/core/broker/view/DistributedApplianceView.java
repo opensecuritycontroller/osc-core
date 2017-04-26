@@ -25,9 +25,11 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.DeleteDistributedApplianceService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDistributedApplianceService;
+import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -67,7 +69,11 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private DeploymentSpecSubView dsSubView = null;
     private SecurityGroupInterfaceSubView sgiSubView = null;
 
-    private DeleteDistributedApplianceService deleteDistributedApplianceService = StaticRegistry.deleteDistributedApplianceService();
+    private AddDistributedApplianceServiceApi addDistributedApplianceServiceApi = StaticRegistry.addDistributedApplianceServiceApi();
+
+    private DeleteDistributedApplianceServiceApi deleteDistributedApplianceServiceApi = StaticRegistry.deleteDistributedApplianceServiceApi();
+
+    private UpdateDistributedApplianceServiceApi updateDistributedApplianceServiceApi = StaticRegistry.updateDistributedApplianceServiceApi();
 
     public DistributedApplianceView() {
 
@@ -89,7 +95,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.info("Redirecting to Add Distributed Appliance Window");
-            ViewUtil.addWindow(new AddDistributedApplianceWindow(this));
+            ViewUtil.addWindow(new AddDistributedApplianceWindow(this, this.addDistributedApplianceServiceApi));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.info("Redirecting to Update Appliance Window");
@@ -100,12 +106,12 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         Notification.Type.WARNING_MESSAGE);
 
             } else {
-                ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this));
+                ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this, this.updateDistributedApplianceServiceApi));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.info("Redirecting to Delete Distributed Appliance Window");
-            DeleteWindowUtil.deleteDistributedAppliance(getParentItem().getBean(), this.deleteDistributedApplianceService);
+            DeleteWindowUtil.deleteDistributedAppliance(getParentItem().getBean(), this.deleteDistributedApplianceServiceApi);
         }
         if (event.getButton().getId().equals(ToolbarButtons.CONFORM.getId())) {
             conformDistributedAppliace(getParentItemId());

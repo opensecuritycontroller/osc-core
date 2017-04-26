@@ -46,7 +46,8 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = DeleteDistributedApplianceService.class)
+// FIXME(paremus) only publish interface when API parameters resolved
+@Component(service = { DeleteDistributedApplianceServiceApi.class, DeleteDistributedApplianceService.class })
 public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
         implements DeleteDistributedApplianceServiceApi {
 

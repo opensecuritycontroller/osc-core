@@ -19,8 +19,7 @@ package org.osc.core.broker.window.add;
 import java.util.HashSet;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.AddDistributedApplianceService;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -28,7 +27,6 @@ import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.DistributedApplianceView;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.BaseDAWindow;
@@ -48,11 +46,13 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
     // current view reference
     private DistributedApplianceView daView = null;
 
-    private ConformService conformService = StaticRegistry.conformService();
+    private AddDistributedApplianceServiceApi addDistributedApplianceServiceApi;
 
-    public AddDistributedApplianceWindow(DistributedApplianceView distributedApplianceView) throws Exception {
+    public AddDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
+            AddDistributedApplianceServiceApi addDistributedApplianceServiceApi) throws Exception {
         super();
         this.daView = distributedApplianceView;
+        this.addDistributedApplianceServiceApi = addDistributedApplianceServiceApi;
         createWindow(this.CAPTION);
     }
 
@@ -115,7 +115,6 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
                 }
 
                 BaseRequest<DistributedApplianceDto> addRequest = new BaseRequest<DistributedApplianceDto>();
-                AddDistributedApplianceService addService = new AddDistributedApplianceService(this.conformService);
 
                 DistributedApplianceDto daDto = new DistributedApplianceDto();
                 daDto.setName(this.name.getValue().trim());
@@ -126,7 +125,7 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
                 daDto.setVirtualizationSystems(vsSet);
                 addRequest.setDto(daDto);
 
-                AddDistributedApplianceResponse addResponse = addService.dispatch(addRequest);
+                AddDistributedApplianceResponse addResponse = this.addDistributedApplianceServiceApi.dispatch(addRequest);
 
                 this.daView.getParentContainer().addItemAt(0, addResponse.getId(), addResponse);
                 this.daView.parentTableClicked(addResponse.getId());

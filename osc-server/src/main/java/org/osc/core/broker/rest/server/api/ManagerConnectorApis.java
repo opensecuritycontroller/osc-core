@@ -37,9 +37,9 @@ import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.DeleteApplianceManagerConnectorService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDomainsByMcIdService;
+import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DomainDto;
-import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
@@ -73,7 +73,7 @@ public class ManagerConnectorApis {
     private static final Logger logger = Logger.getLogger(ManagerConnectorApis.class);
 
     @Reference
-    private AddApplianceManagerConnectorService addService;
+    private AddApplianceManagerConnectorServiceApi addService;
 
     @Reference
     private UpdateApplianceManagerConnectorService updateService;

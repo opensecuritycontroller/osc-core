@@ -48,7 +48,7 @@ import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = AddApplianceManagerConnectorService.class)
+@Component
 public class AddApplianceManagerConnectorService
         extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse>
         implements AddApplianceManagerConnectorServiceApi {
@@ -63,6 +63,7 @@ public class AddApplianceManagerConnectorService
     @Reference
     private ConformService conformService;
 
+    @Override
     public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
         this.forceAddSSLCertificates = forceAddSSLCertificates;
     }
@@ -131,10 +132,11 @@ public class AddApplianceManagerConnectorService
             throw new VmidcBrokerValidationException("Appliance Manager IP Address: " + request.getDto().getIpAddress() + " already exists.");
         }
 
-        checkManagerConnection(LOG, request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
+        checkManagerConnection(request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
     }
 
-    void checkManagerConnection(Logger log, DryRunRequest<ApplianceManagerConnectorDto> request,
+    @Override
+    public void checkManagerConnection(DryRunRequest<ApplianceManagerConnectorDto> request,
                                        ApplianceManagerConnector mc) throws ErrorTypeException {
         if (!request.isSkipAllDryRun() && !request.isIgnoreErrorsAndCommit(ErrorType.MANAGER_CONNECTOR_EXCEPTION)) {
 
@@ -151,7 +153,7 @@ public class AddApplianceManagerConnectorService
                 this.apiFactoryService.checkConnection(mc);
             } catch (Exception e) {
                 ErrorTypeException errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
-                log.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
+                LOG.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
                 if (!resolverModels.isEmpty()) {
                     throw new SslCertificatesExtendedException(errorTypeException, resolverModels);
                 }

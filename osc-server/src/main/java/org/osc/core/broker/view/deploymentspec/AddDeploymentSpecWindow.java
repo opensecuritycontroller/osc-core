@@ -20,7 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.AddDeploymentSpecService;
+import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -43,8 +43,11 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
     final String CAPTION = "Add Deployment Specification";
 
-    public AddDeploymentSpecWindow(Long vsId) throws Exception {
+private AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
+
+    public AddDeploymentSpecWindow(Long vsId, AddDeploymentSpecServiceApi addDeploymentSpecServiceApi) throws Exception {
         super(new DeploymentSpecDto().withParentId(vsId));
+        this.addDeploymentSpecServiceApi = addDeploymentSpecServiceApi;
         createWindow(this.CAPTION);
     }
 
@@ -97,8 +100,7 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
                 BaseRequest<DeploymentSpecDto> req = new BaseRequest<DeploymentSpecDto>();
                 req.setDto(dto);
 
-                AddDeploymentSpecService addService = new AddDeploymentSpecService();
-                BaseJobResponse response = addService.dispatch(req);
+                BaseJobResponse response = this.addDeploymentSpecServiceApi.dispatch(req);
                 close();
 
                 ViewUtil.showJobNotification(response.getJobId());

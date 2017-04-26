@@ -21,10 +21,12 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.alarm.ListAlarmService;
+import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -46,6 +48,8 @@ public class AlarmView extends CRUDBaseView<AlarmDto, BaseDto> {
 
     private static final Logger log = Logger.getLogger(AlarmView.class);
 
+    private AddAlarmServiceApi addAlarmServiceApi = StaticRegistry.addAlarmServiceApi();
+
     public AlarmView() {
         createView("Alarms", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE));
     }
@@ -54,7 +58,7 @@ public class AlarmView extends CRUDBaseView<AlarmDto, BaseDto> {
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Alarm Window");
-            ViewUtil.addWindow(new AddAlarmWindow(this));
+            ViewUtil.addWindow(new AddAlarmWindow(this, this.addAlarmServiceApi));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Alarm Window");

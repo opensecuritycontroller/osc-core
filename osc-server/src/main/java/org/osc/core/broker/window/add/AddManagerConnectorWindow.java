@@ -26,9 +26,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.SslCertificatesExtendedException;
+import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
@@ -78,7 +78,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private PasswordField apiKey = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private AddApplianceManagerConnectorService addMCService = StaticRegistry.addApplianceManagerConnectorService();
+    private AddApplianceManagerConnectorServiceApi addMCService = StaticRegistry.addApplianceManagerConnectorService();
 
     public AddManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
         this.mcView = mcView;

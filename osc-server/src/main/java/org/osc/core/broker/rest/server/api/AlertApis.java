@@ -36,9 +36,9 @@ import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.alert.AcknowledgeAlertService;
 import org.osc.core.broker.service.alert.DeleteAlertService;
 import org.osc.core.broker.service.alert.ListAlertService;
+import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.request.AlertRequest;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -70,6 +70,9 @@ public class AlertApis {
 
     @Reference
     private ApiUtil apiUtil;
+
+    @Reference
+    private AcknowledgeAlertServiceApi AcknowledgeAlertServiceApi;
 
     @ApiOperation(value = "Lists all Alerts", response = AlertDto.class, responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -125,9 +128,8 @@ public class AlertApis {
         this.apiUtil.setIdOrThrow(alertDto, alertId, "Alert");
 
         AlertRequest alertRequest = createAcknowledgeRequest(alertId, alertDto);
-        AcknowledgeAlertService service = new AcknowledgeAlertService();
 
-        return this.apiUtil.getResponseForBaseRequest(service, alertRequest);
+        return this.apiUtil.getResponseForBaseRequest(this.AcknowledgeAlertServiceApi, alertRequest);
     }
 
     /**

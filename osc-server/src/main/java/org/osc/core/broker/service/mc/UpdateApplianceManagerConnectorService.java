@@ -35,6 +35,7 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.SslCertificatesExtendedException;
+import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
@@ -75,7 +76,7 @@ public class UpdateApplianceManagerConnectorService
     private ConformService conformService;
 
     @Reference
-    private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
+    private AddApplianceManagerConnectorServiceApi addApplianceManagerConnectorService;
 
     public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
         this.forceAddSSLCertificates = forceAddSSLCertificates;
@@ -225,7 +226,7 @@ public class UpdateApplianceManagerConnectorService
         // Transforms the existing mc based on the update request
         updateApplianceManagerConnector(request, existingMc);
 
-        this.addApplianceManagerConnectorService.checkManagerConnection(log, request, existingMc);
+        this.addApplianceManagerConnectorService.checkManagerConnection(request, existingMc);
     }
 
     /**
