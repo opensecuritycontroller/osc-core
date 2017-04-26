@@ -52,7 +52,7 @@ public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResp
             List<OsTenantDto> tenantList = new ArrayList<>();
 
             for (Tenant tenant : keystoneApi.listTenants()) {
-                tenantList.add(new OsTenantDto(tenant.getName()));
+                tenantList.add(new OsTenantDto(tenant.getName(), tenant.getId()));
             }
 
             this.response.setList(tenantList);

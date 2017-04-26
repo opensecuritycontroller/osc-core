@@ -50,7 +50,7 @@ public class ListTenantByVcIdService extends ServiceDispatcher<BaseIdRequest, Li
             List<OsTenantDto> tenantList = new ArrayList<>();
 
             for (Tenant tenant : keystoneApi.listTenants()) {
-                tenantList.add(new OsTenantDto(tenant.getName()));
+                tenantList.add(new OsTenantDto(tenant.getName(), tenant.getId()));
             }
 
             this.response.setList(tenantList);

@@ -21,8 +21,8 @@ public class OsNetworkDto {
     private String id;
     private String name;
 
-    public OsNetworkDto(String name) {
-        this.id = name;
+    public OsNetworkDto(String name, String id) {
+        this.id = id;
         this.name = name;
     }
 

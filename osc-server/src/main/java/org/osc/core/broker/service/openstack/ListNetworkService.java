@@ -53,7 +53,7 @@ public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, 
             List<OsNetworkDto> networkList = new ArrayList<>();
 
             for (Network network : neutronApi.listNetworkByTenant(request.getRegion(), request.getTenantId())) {
-                networkList.add(new OsNetworkDto(network.getName()));
+                networkList.add(new OsNetworkDto(network.getName(), network.getId()));
             }
 
             this.response.setList(networkList);

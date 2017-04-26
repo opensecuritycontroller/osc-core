@@ -21,8 +21,8 @@ public class OsTenantDto {
     private String id;
     private String name;
 
-    public OsTenantDto(String name) {
-        this.id = name;
+    public OsTenantDto(String name, String id) {
+        this.id = id;
         this.name = name;
     }
 
