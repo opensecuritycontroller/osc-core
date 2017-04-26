@@ -20,10 +20,10 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.DeleteDeploymentSpecService;
 import org.osc.core.broker.service.ForceDeleteVirtualSystemService;
 import org.osc.core.broker.service.alarm.DeleteAlarmService;
 import org.osc.core.broker.service.alert.DeleteAlertService;
+import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.AlertDto;
@@ -54,7 +54,8 @@ public class DeleteWindowUtil {
 
     private static final Logger log = Logger.getLogger(DeleteWindowUtil.class);
 
-    public static void deleteDeploymentSpec(final DeploymentSpecDto dto) {
+    public static void deleteDeploymentSpec(final DeleteDeploymentSpecServiceApi deleteDeploymentSpecService,
+            final DeploymentSpecDto dto) {
         final VmidcWindow<? extends OkCancelButtonModel> deleteWindow;
         if (dto.isMarkForDeletion()) {
             deleteWindow = WindowUtil.createForceDeleteWindow("Delete Deployment Specification ",
@@ -85,8 +86,7 @@ public class DeleteWindowUtil {
                     delRequest.setId(dto.getId());
                     log.info("deleting Deployment Spec - " + dto.getName());
 
-                    DeleteDeploymentSpecService dsDeleteService = new DeleteDeploymentSpecService();
-                    BaseJobResponse response = dsDeleteService.dispatch(delRequest);
+                    BaseJobResponse response = deleteDeploymentSpecService.dispatch(delRequest);
                     deleteWindow.close();
 
                     if (response.getJobId() != null) {
@@ -102,7 +102,7 @@ public class DeleteWindowUtil {
 
     }
 
-    public static void deleteDistributedAppliance(final DistributedApplianceDto dto, DeleteDistributedApplianceServiceApi deleteDistributedApplianceServiceApi) {
+    public static void deleteDistributedAppliance(final DistributedApplianceDto dto, DeleteDistributedApplianceServiceApi deleteDistributedApplianceService) {
         final VmidcWindow<? extends OkCancelButtonModel> deleteWindow;
         if (dto.isMarkForDeletion()) {
             deleteWindow = WindowUtil.createForceDeleteWindow("Delete Distributed Appliance ",
@@ -132,7 +132,7 @@ public class DeleteWindowUtil {
 
                     delRequest.setId(dto.getId());
                     log.info("deleting Distributed Appliance - " + dto.getName());
-                    BaseJobResponse response = deleteDistributedApplianceServiceApi.dispatch(delRequest);
+                    BaseJobResponse response = deleteDistributedApplianceService.dispatch(delRequest);
                     deleteWindow.close();
 
                     if (response.getJobId() != null) {

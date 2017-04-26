@@ -35,7 +35,9 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.ForceDeleteDSTask;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
         implements DeleteDeploymentSpecServiceApi {
 

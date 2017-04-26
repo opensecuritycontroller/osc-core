@@ -34,10 +34,10 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.service.DeleteApplianceManagerConnectorService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDomainsByMcIdService;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
@@ -77,6 +77,9 @@ public class ManagerConnectorApis {
 
     @Reference
     private UpdateApplianceManagerConnectorService updateService;
+
+    @Reference
+    private DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService;
 
     @Reference
     private ApiUtil apiUtil;
@@ -195,7 +198,7 @@ public class ManagerConnectorApis {
         logger.info("Deleting Appliance Manager Connector " + amcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return this.apiUtil.getResponseForBaseRequest(new DeleteApplianceManagerConnectorService(),
+        return this.apiUtil.getResponseForBaseRequest(this.deleteApplianceManagerConnectorService,
                 new BaseIdRequest(amcId));
     }
 

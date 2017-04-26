@@ -39,8 +39,8 @@ import org.osc.core.broker.model.entities.job.TaskGuard;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.model.entities.job.TaskState;
 import org.osc.core.broker.model.entities.job.TaskStatus;
-import org.osc.core.broker.service.ListJobService;
-import org.osc.core.broker.service.ListTaskService;
+import org.osc.core.broker.service.api.ListJobServiceApi;
+import org.osc.core.broker.service.api.ListTaskServiceApi;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
@@ -55,6 +55,8 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.rest.client.util.LoggingUtil;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -80,6 +82,8 @@ import com.vaadin.ui.Window;
 
 import elemental.events.KeyboardEvent.KeyCode;
 
+@org.osgi.service.component.annotations.Component(service={JobView.class},
+scope=ServiceScope.PROTOTYPE)
 public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
     private static final String TASK_PREDECESSORS_COLUMN_ID = "predecessors";
@@ -104,6 +108,12 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
     private File dotFile;
     private Embedded embeddedImage;
+
+    @Reference
+    private ListJobServiceApi listJobService;
+
+    @Reference
+    private ListTaskServiceApi listTaskService;
 
     public JobView() {
         createView("Jobs", Arrays.asList(ToolbarButtons.JOB_VIEW, ToolbarButtons.JOB_ABORT), "Tasks", null);
@@ -172,9 +182,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
         ListJobRequest listRequest = null;
         ListResponse<JobRecordDto> res;
-        ListJobService listService = new ListJobService();
         try {
-            res = listService.dispatch(listRequest);
+            res = this.listJobService.dispatch(listRequest);
             List<JobRecordDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // creating table with list of jobs
@@ -274,8 +283,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             try {
                 ListTaskRequest listRequest = new ListTaskRequest();
                 listRequest.setJobId(getParentItemId());
-                ListTaskService listService = new ListTaskService();
-                ListResponse<TaskRecordDto> res = listService.dispatch(listRequest);
+                ListResponse<TaskRecordDto> res = this.listTaskService.dispatch(listRequest);
 
                 this.childContainer.removeAllItems();
                 for (TaskRecordDto task : res.getList()) {

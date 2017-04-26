@@ -17,7 +17,7 @@
 package org.osc.core.broker.window.delete;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.DeleteApplianceService;
+import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.view.ApplianceView;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -39,10 +39,14 @@ public class DeleteApplianceWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     // current view reference
     private ApplianceView applianceView = null;
 
+    private DeleteApplianceServiceApi deleteApplianceService;
+
     final String CAPTION = "Delete Appliance";
 
-    public DeleteApplianceWindow(ApplianceView applianceView) throws Exception {
+    public DeleteApplianceWindow(ApplianceView applianceView,
+            DeleteApplianceServiceApi deleteApplianceService) throws Exception {
         this.applianceView = applianceView;
+        this.deleteApplianceService = deleteApplianceService;
         createWindow(this.CAPTION);
     }
 
@@ -66,13 +70,12 @@ public class DeleteApplianceWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         // Delete appliance service has no response so not needed.
         try {
             delRequest.setId(this.applianceView.getParentItemId());
-            DeleteApplianceService dmc = new DeleteApplianceService();
 
             log.info("deleting Appliance - "
                     + this.applianceView.getParentContainer().getItem(this.applianceView.getParentItemId())
                             .getItemProperty("model").getValue().toString());
 
-            dmc.dispatch(delRequest);
+            this.deleteApplianceService.dispatch(delRequest);
 
             // deleting a row from the table reference provided by the current
             // view

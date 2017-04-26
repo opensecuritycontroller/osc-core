@@ -66,7 +66,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
-@Component(service = ConformService.class)
+@Component(service = {ConformServiceApi.class, ConformService.class})
 public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> implements ConformServiceApi {
     private static final Logger log = Logger.getLogger(ConformService.class);
 

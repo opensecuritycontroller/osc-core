@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ListApplianceService;
-import org.osc.core.broker.service.ListApplianceSoftwareVersionService;
+import org.osc.core.broker.service.api.ListApplianceServiceApi;
+import org.osc.core.broker.service.api.ListApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -37,6 +37,9 @@ import org.osc.core.broker.window.add.ImportApplianceSoftwareVersionWindow;
 import org.osc.core.broker.window.delete.DeleteApplianceSoftwareVersionWindow;
 import org.osc.core.broker.window.delete.DeleteApplianceWindow;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -44,10 +47,17 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification;
 
 @SuppressWarnings("serial")
+@Component(service={ApplianceView.class}, scope=ServiceScope.PROTOTYPE)
 public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareVersionDto> {
 
     private static final String APPLIANCE_HELP_GUID = "GUID-34E04177-4993-4072-B43D-FC70C8B94E04.html";
     private static final Logger log = Logger.getLogger(ApplianceView.class);
+
+    @Reference
+    ListApplianceServiceApi listApplianceService;
+
+    @Reference
+    ListApplianceSoftwareVersionServiceApi listApplianceSoftwareVersionService;
 
     public ApplianceView() {
 
@@ -104,9 +114,8 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
 
         BaseRequest<BaseDto> listRequest = null;
         ListResponse<ApplianceDto> res;
-        ListApplianceService listService = new ListApplianceService();
         try {
-            res = listService.dispatch(listRequest);
+            res = this.listApplianceService.dispatch(listRequest);
             List<ApplianceDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // creating table with list of vendors
@@ -142,9 +151,8 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
                 ListApplianceSoftwareVersionRequest listRequest = new ListApplianceSoftwareVersionRequest();
                 listRequest.setApplianceId(ap.getId());
                 ListResponse<ApplianceSoftwareVersionDto> res;
-                ListApplianceSoftwareVersionService listService = new ListApplianceSoftwareVersionService();
                 this.childContainer.removeAllItems();
-                res = listService.dispatch(listRequest);
+                res = this.listApplianceSoftwareVersionService.dispatch(listRequest);
                 List<ApplianceSoftwareVersionDto> listResponse = res.getList();
                 for (ApplianceSoftwareVersionDto aVersion : listResponse) {
                     this.childContainer.addItem(aVersion.getId(), aVersion);

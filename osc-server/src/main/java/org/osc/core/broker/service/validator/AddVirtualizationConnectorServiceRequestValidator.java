@@ -16,13 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
 
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
-
-import javax.persistence.EntityManager;
 
 public class AddVirtualizationConnectorServiceRequestValidator
 		implements RequestValidator<DryRunRequest<VirtualizationConnectorDto>, VirtualizationConnector> {

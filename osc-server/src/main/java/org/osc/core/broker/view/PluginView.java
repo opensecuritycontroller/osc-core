@@ -22,6 +22,8 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.maintenance.ManagerPluginsLayout;
 import org.osc.core.broker.view.maintenance.SdnControllerPluginsLayout;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
@@ -32,6 +34,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
 @SuppressWarnings("serial")
+@Component(service={PluginView.class}, scope=ServiceScope.PROTOTYPE)
 public class PluginView extends VerticalLayout implements View {
 
     private static final String MAINTENANCE_MANAGER_PLUGIN_GUID = "GUID-07FFF1BC-EA9E-426B-A247-4AF6BD12B350.html";

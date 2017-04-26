@@ -46,13 +46,13 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
     // current view reference
     private DistributedApplianceView daView = null;
 
-    private AddDistributedApplianceServiceApi addDistributedApplianceServiceApi;
+    private AddDistributedApplianceServiceApi addDistributedApplianceService;
 
     public AddDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
-            AddDistributedApplianceServiceApi addDistributedApplianceServiceApi) throws Exception {
+            AddDistributedApplianceServiceApi addDistributedApplianceService) throws Exception {
         super();
         this.daView = distributedApplianceView;
-        this.addDistributedApplianceServiceApi = addDistributedApplianceServiceApi;
+        this.addDistributedApplianceService = addDistributedApplianceService;
         createWindow(this.CAPTION);
     }
 
@@ -125,7 +125,8 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
                 daDto.setVirtualizationSystems(vsSet);
                 addRequest.setDto(daDto);
 
-                AddDistributedApplianceResponse addResponse = this.addDistributedApplianceServiceApi.dispatch(addRequest);
+                AddDistributedApplianceResponse addResponse = this.addDistributedApplianceService
+                        .dispatch(addRequest);
 
                 this.daView.getParentContainer().addItemAt(0, addResponse.getId(), addResponse);
                 this.daView.parentTableClicked(addResponse.getId());

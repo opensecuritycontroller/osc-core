@@ -100,7 +100,7 @@ public class ApiUtil {
         return Response.status(Response.Status.OK).entity(submitRequestToService(service, request)).build();
     }
 
-    public <R extends Request, O extends ListResponse<?>, T extends ServiceDispatcher<R, O>> ListResponse<?> getListResponse(
+    public <R extends Request, O extends ListResponse<?>, T extends ServiceDispatcherApi<R, O>> ListResponse<?> getListResponse(
             T service, R request) {
         return submitRequestToService(service, request);
     }

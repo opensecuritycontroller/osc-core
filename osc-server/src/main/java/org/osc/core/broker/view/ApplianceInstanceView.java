@@ -22,8 +22,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.GetAgentStatusService;
-import org.osc.core.broker.service.ListDistributedApplianceInstanceService;
+import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
+import org.osc.core.broker.service.api.ListDistributedApplianceInstanceServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
@@ -35,6 +35,9 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.status.AgentStatusWindow;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -44,6 +47,7 @@ import com.vaadin.ui.CustomTable;
 import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
+@Component(service={ApplianceInstanceView.class}, scope=ServiceScope.PROTOTYPE)
 public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInstanceDto, BaseDto> {
 
     private static final String DAI_HELP_GUID = "GUID-E4986D6E-C481-43C4-8801-670CAF8C1581.html";
@@ -52,7 +56,11 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
 
     private static final Logger LOG = Logger.getLogger(ApplianceInstanceView.class);
 
-    private GetAgentStatusService getAgentStatusService;
+    @Reference
+    private GetAgentStatusServiceApi getAgentStatusService;
+
+    @Reference
+    private ListDistributedApplianceInstanceServiceApi listDAIService;
 
     public ApplianceInstanceView() {
         super();
@@ -122,10 +130,9 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
     public void populateParentTable() {
 
         this.parentContainer.removeAllItems();
-        ListDistributedApplianceInstanceService listService = new ListDistributedApplianceInstanceService();
 
         try {
-            ListResponse<DistributedApplianceInstanceDto> res = listService.dispatch(new BaseRequest<>());
+            ListResponse<DistributedApplianceInstanceDto> res = this.listDAIService.dispatch(new BaseRequest<>());
             List<DistributedApplianceInstanceDto> listResponse = res.getList();
             for (DistributedApplianceInstanceDto dto : listResponse) {
                 this.parentContainer.addItem(dto.getId(), dto);

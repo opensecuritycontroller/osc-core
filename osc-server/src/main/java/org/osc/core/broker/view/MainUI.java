@@ -16,12 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.view;
 
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.LoginService;
+import org.osc.core.broker.service.api.LoginServiceApi;
 import org.osc.core.broker.service.broadcast.BroadcastListener;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.request.LoginRequest;
@@ -32,8 +33,10 @@ import org.osc.core.broker.view.vc.VirtualizationConnectorView;
 import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
-import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.ComponentServiceObjects;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.annotations.PreserveOnRefresh;
@@ -43,8 +46,8 @@ import com.vaadin.data.Validator.EmptyValueException;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.Navigator;
-import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.navigator.ViewProvider;
 import com.vaadin.server.CustomizedSystemMessages;
 import com.vaadin.server.ErrorHandler;
 import com.vaadin.server.Page;
@@ -124,35 +127,84 @@ public class MainUI extends UI implements BroadcastListener {
     CssLayout menu = new CssLayout();
     CssLayout content = new CssLayout();
 
-    LinkedHashMap<String, Class<? extends View>> statusViews = new LinkedHashMap<String, Class<? extends View>>() {
-        {
-            put(VIEW_FRAGMENT_ALERTS, AlertView.class);
-            put(VIEW_FRAGMENT_APPLIANCE_INSTANCES, ApplianceInstanceView.class);
-            put(VIEW_FRAGMENT_JOBS, JobView.class);
-        }
-    };
+    @Reference
+    LoginServiceApi loginService;
 
-    LinkedHashMap<String, Class<? extends View>> setupViews = new LinkedHashMap<String, Class<? extends View>>() {
-        {
-            put(VIEW_FRAGMENT_VIRTUALIZATION_CONNECTORS, VirtualizationConnectorView.class);
-            put(VIEW_FRAGMENT_SECURITY_MANAGER_CONNECTORS, ManagerConnectorView.class);
-            put(VIEW_FRAGMENT_SECURITY_FUNCTION_CATALOG, ApplianceView.class);
-            put(VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES, DistributedApplianceView.class);
-        }
-    };
+    @Reference
+    ComponentServiceObjects<AlertView> alertViewFactory;
 
-    LinkedHashMap<String, Class<? extends View>> manageViews = new LinkedHashMap<String, Class<? extends View>>() {
-        {
-            put(VIEW_FRAGMENT_USERS, UserView.class);
-            put(VIEW_FRAGMENT_ALARMS, AlarmView.class);
-            put(VIEW_FRAGMENT_PLUGIN, PluginView.class);
-            put(VIEW_FRAGMENT_SERVER, MaintenanceView.class);
-        }
-    };
+    @Reference
+    ComponentServiceObjects<ApplianceInstanceView> applianceInstanceViewFactory;
+
+    @Reference
+    ComponentServiceObjects<JobView> jobViewFactory;
+
+    @Reference
+    ComponentServiceObjects<VirtualizationConnectorView> virtualizationConnectorViewFactory;
+
+    @Reference
+    ComponentServiceObjects<ManagerConnectorView> managerConnectorViewFactory;
+
+    @Reference
+    ComponentServiceObjects<ApplianceView> applicanceViewFactory;
+
+    @Reference
+    ComponentServiceObjects<DistributedApplianceView> distributedApplicanceViewFactory;
+
+    @Reference
+    ComponentServiceObjects<UserView> userViewFactory;
+
+    @Reference
+    ComponentServiceObjects<AlarmView> alarmViewFactory;
+
+    @Reference
+    ComponentServiceObjects<PluginView> pluginViewFactory;
+
+    @Reference
+    ComponentServiceObjects<MaintenanceView> maintenanceViewFactory;
+
+
+    Set<OSCViewProvider<?>> statusViews = new LinkedHashSet<>();
+
+    Set<OSCViewProvider<?>> setupViews = new LinkedHashSet<>();
+
+    Set<OSCViewProvider<?>> manageViews = new LinkedHashSet<>();
 
     private Navigator nav;
 
     private ServiceRegistration<BroadcastListener> registration;
+
+    private BundleContext ctx;
+
+    void start(BundleContext ctx) {
+
+        this.ctx = ctx;
+
+        this.statusViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_ALERTS, AlertView.class, this.alertViewFactory));
+        this.statusViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_APPLIANCE_INSTANCES,
+                ApplianceInstanceView.class, this.applianceInstanceViewFactory));
+        this.statusViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_JOBS, JobView.class,
+                this.jobViewFactory));
+
+        this.setupViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_VIRTUALIZATION_CONNECTORS,
+                VirtualizationConnectorView.class, this.virtualizationConnectorViewFactory));
+        this.setupViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_SECURITY_MANAGER_CONNECTORS,
+                ManagerConnectorView.class, this.managerConnectorViewFactory));
+        this.setupViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_SECURITY_FUNCTION_CATALOG,
+                ApplianceView.class, this.applicanceViewFactory));
+        this.setupViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES,
+                DistributedApplianceView.class, this.distributedApplicanceViewFactory));
+
+        this.manageViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_USERS, UserView.class,
+                this.userViewFactory));
+        this.manageViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_ALARMS, AlarmView.class,
+                this.alarmViewFactory));
+        this.manageViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_PLUGIN, PluginView.class,
+                this.pluginViewFactory));
+        this.manageViews.add(new OSCViewProvider<>(VIEW_FRAGMENT_SERVER, MaintenanceView.class,
+                this.maintenanceViewFactory));
+    }
+
 
     @Override
     protected void init(VaadinRequest request) {
@@ -167,14 +219,14 @@ public class MainUI extends UI implements BroadcastListener {
         this.nav.addView("", AlertView.class);
         this.nav.setErrorView(AlertView.class);
 
-        for (String page : this.statusViews.keySet()) {
-            this.nav.addView(page, this.statusViews.get(page));
+        for (ViewProvider page : this.statusViews) {
+            this.nav.addProvider(page);
         }
-        for (String page : this.setupViews.keySet()) {
-            this.nav.addView(page, this.setupViews.get(page));
+        for (ViewProvider page : this.setupViews) {
+            this.nav.addProvider(page);
         }
-        for (String page : this.manageViews.keySet()) {
-            this.nav.addView(page, this.manageViews.get(page));
+        for (ViewProvider page : this.manageViews) {
+            this.nav.addProvider(page);
         }
 
         // setting idle timeout to 30 minutes here instead of web.xml
@@ -286,8 +338,7 @@ public class MainUI extends UI implements BroadcastListener {
                     LoginRequest request = new LoginRequest();
                     request.setLoginName(username.getValue().trim());
                     request.setPassword(password.getValue());
-                    LoginService loginService = new LoginService();
-                    LoginResponse response = loginService.dispatch(request);
+                    LoginResponse response = MainUI.this.loginService.dispatch(request);
                     if (response != null) {
                         login.removeShortcutListener(enter);
                         if (getSession() != null) {
@@ -316,8 +367,7 @@ public class MainUI extends UI implements BroadcastListener {
         buildMainLayout();
         this.root.setExpandRatio(this.mainLayout, 1);
 
-        this.registration = FrameworkUtil.getBundle(MainUI.class).getBundleContext()
-            .registerService(BroadcastListener.class, this, null);
+        this.registration = this.ctx.registerService(BroadcastListener.class, this, null);
 
         // adding view change listener to navigator
         addViewChangeListener();
@@ -424,11 +474,12 @@ public class MainUI extends UI implements BroadcastListener {
         return this.menu;
     }
 
-    private void buildSubmenu(CssLayout submenu, LinkedHashMap<String, Class<? extends View>> views) {
-        for (final String view : views.keySet()) {
-            NativeButton b = new NativeButton(view);
+    private void buildSubmenu(CssLayout submenu, Set<OSCViewProvider<?>> views) {
+        for (final OSCViewProvider<?> view : views) {
+            String viewName = view.getName();
+            NativeButton b = new NativeButton(viewName);
             // selecting default menu button
-            if (view.equals(VIEW_FRAGMENT_ALERTS)) {
+            if (view.getName().equals(VIEW_FRAGMENT_ALERTS)) {
                 b.addStyleName("selected");
             }
             b.addClickListener(new ClickListener() {
@@ -436,8 +487,8 @@ public class MainUI extends UI implements BroadcastListener {
                 public void buttonClick(ClickEvent event) {
                     clearMenuSelection();
                     event.getButton().addStyleName("selected");
-                    if (!MainUI.this.nav.getState().equals(view)) {
-                        MainUI.this.nav.navigateTo(view);
+                    if (!MainUI.this.nav.getState().equals(viewName)) {
+                        MainUI.this.nav.navigateTo(viewName);
                     }
                 }
             });
@@ -574,10 +625,10 @@ public class MainUI extends UI implements BroadcastListener {
             }
 
             private boolean updateAccordion(ViewChangeEvent event,
-                    LinkedHashMap<String, Class<? extends View>> viewMap, CssLayout subMenu) {
+                    Set<OSCViewProvider<?>> views, CssLayout subMenu) {
                 int i = 0;
-                for (Class<? extends View> view : viewMap.values()) {
-                    if (event.getNewView().getClass().equals(view)) {
+                for (OSCViewProvider<?> view : views) {
+                    if (event.getNewView().getClass().equals(view.getType())) {
                         clearMenuSelection();
                         MainUI.this.accordion.setSelectedTab(subMenu);
                         if (subMenu.getComponent(i) != null) {

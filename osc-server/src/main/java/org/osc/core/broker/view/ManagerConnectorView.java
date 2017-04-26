@@ -35,12 +35,14 @@ import org.osc.core.broker.service.request.BaseJobRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddManagerConnectorWindow;
 import org.osc.core.broker.window.delete.DeleteManagerConnectorWindow;
 import org.osc.core.broker.window.update.UpdateManagerConnectorWindow;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -50,6 +52,7 @@ import com.vaadin.ui.CustomTable;
 import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
+@Component(service={ManagerConnectorView.class}, scope=ServiceScope.PROTOTYPE)
 public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnectorDto, PolicyDto> {
     private static final String MC_HELP_GUID = "GUID-14BF1C4E-4729-437A-BF60-A53EED74009C.html";
     private static final String POLICY_HELP_GUID = "GUID-14BF1C4E-4729-437A-BF60-A53EED74009C.html";
@@ -58,8 +61,11 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
 
     private static final Logger log = Logger.getLogger(ManagerConnectorView.class);
 
-    private ApiFactoryService apiFactoryService = StaticRegistry.apiFactoryService();
-    private SyncManagerConnectorService syncManagerConnectorService = StaticRegistry.syncManagerConnectorService();
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private SyncManagerConnectorService syncManagerConnectorService;
 
     public ManagerConnectorView() {
 

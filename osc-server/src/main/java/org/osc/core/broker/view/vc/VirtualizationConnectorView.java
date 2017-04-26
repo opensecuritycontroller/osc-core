@@ -41,7 +41,6 @@ import org.osc.core.broker.service.securitygroup.ListSecurityGroupByVcService;
 import org.osc.core.broker.service.securitygroup.SyncSecurityGroupService;
 import org.osc.core.broker.service.vc.ListVirtualizationConnectorService;
 import org.osc.core.broker.service.vc.SyncVirtualizationConnectorService;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -49,6 +48,9 @@ import org.osc.core.broker.view.vc.securitygroup.AddSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.BindSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.UpdateSecurityGroupWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -58,6 +60,7 @@ import com.vaadin.ui.CustomTable;
 import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
+@Component(service={VirtualizationConnectorView.class}, scope=ServiceScope.PROTOTYPE)
 public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConnectorDto, SecurityGroupDto> {
 
     private static final String VC_HELP_GUID = "GUID-334FD869-4AEE-4CA7-AF22-E0925C623C00.html";
@@ -67,7 +70,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     private static final Logger log = Logger.getLogger(VirtualizationConnectorView.class);
 
-    private final ConformService conformService = StaticRegistry.conformService();
+    @Reference
+    private ConformService conformService;
 
     public VirtualizationConnectorView() {
         createView("Virtualization Connector",

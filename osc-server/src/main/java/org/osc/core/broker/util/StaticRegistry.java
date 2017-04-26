@@ -20,15 +20,11 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.SetNATSettingsService;
 import org.osc.core.broker.service.SetNetworkSettingsService;
-import org.osc.core.broker.service.UpdateUserService;
 import org.osc.core.broker.service.UpgradeService;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
-import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
-import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
-import org.osc.core.broker.service.api.DeleteUserServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.broadcast.Broadcaster;
 import org.osc.core.broker.service.mc.SyncManagerConnectorService;
@@ -85,18 +81,6 @@ public class StaticRegistry {
     private SyncManagerConnectorService syncManagerConnectorService;
 
     @Reference
-    private DeleteUserServiceApi deleteUserService;
-
-    @Reference
-    private UpdateUserService updateUserService;
-
-    @Reference
-    private AddDistributedApplianceServiceApi addDistributedApplianceServiceApi;
-
-    @Reference
-    private DeleteDistributedApplianceServiceApi deleteDistributedApplianceServiceApi;
-
-    @Reference
     private Broadcaster broadcaster;
 
     @Reference
@@ -138,10 +122,6 @@ public class StaticRegistry {
         return instance.setNATSettingsService;
     }
 
-    public static UpgradeService upgradeService() {
-        return instance.upgradeService;
-    }
-
     public static AddApplianceManagerConnectorServiceApi addApplianceManagerConnectorService() {
         return instance.addApplianceManagerConnectorService;
     }
@@ -162,18 +142,6 @@ public class StaticRegistry {
         return instance.updateVirtualizationConnectorService;
     }
 
-    public static DeleteUserServiceApi deleteUserService() {
-        return instance.deleteUserService;
-    }
-
-    public static DeleteDistributedApplianceServiceApi deleteDistributedApplianceServiceApi() {
-        return instance.deleteDistributedApplianceServiceApi;
-    }
-
-    public static UpdateUserService updateUserService() {
-        return instance.updateUserService;
-    }
-
     public static Broadcaster broadcaster() {
         return instance.broadcaster;
     }
@@ -188,13 +156,5 @@ public class StaticRegistry {
 
     public static AddDeploymentSpecServiceApi addDeploymentSpecServiceApi() {
         return instance.addDeploymentSpecServiceApi;
-    }
-
-    public static UpdateDistributedApplianceServiceApi updateDistributedApplianceServiceApi() {
-        return instance.updateDistributedApplianceServiceApi;
-    }
-
-    public static AddDistributedApplianceServiceApi addDistributedApplianceServiceApi() {
-        return instance.addDistributedApplianceServiceApi;
     }
 }

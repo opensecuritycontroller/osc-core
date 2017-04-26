@@ -17,9 +17,9 @@
 package org.osc.core.broker.view.maintenance;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.CheckNetworkSettingsService;
 import org.osc.core.broker.service.GetNATSettingsService;
 import org.osc.core.broker.service.GetNetworkSettingsService;
+import org.osc.core.broker.service.api.CheckNetworkSettingsServiceApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.GetNetworkSettingsRequest;
 import org.osc.core.broker.service.request.Request;
@@ -59,6 +59,8 @@ public class NetworkLayout extends FormLayout {
     private Button editNATSettings = null;
     public Table natTable;
 
+    private CheckNetworkSettingsServiceApi checkNetworkSettingsServiceApi;
+
     public NetworkLayout() {
         super();
         try {
@@ -91,7 +93,7 @@ public class NetworkLayout extends FormLayout {
             // populating Network Information in the Table
             populateNetworkTable();
 
-            // populating NAT information in the Table 
+            // populating NAT information in the Table
             populateNATTable();
 
             addComponent(networkPanel);
@@ -199,8 +201,7 @@ public class NetworkLayout extends FormLayout {
     }
 
     private boolean hasDeployedInstances() throws Exception {
-        CheckNetworkSettingsService checkService = new CheckNetworkSettingsService();
-        CheckNetworkSettingResponse response = checkService.dispatch(new Request() {
+        CheckNetworkSettingResponse response = this.checkNetworkSettingsServiceApi.dispatch(new Request() {
         });
         return response.hasDeployedInstances();
     }

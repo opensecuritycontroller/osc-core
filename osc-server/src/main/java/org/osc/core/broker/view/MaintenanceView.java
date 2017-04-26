@@ -20,6 +20,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.RestoreServiceApi;
+import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -31,6 +33,9 @@ import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
 import org.osc.core.broker.view.maintenance.SummaryLayout;
 import org.osc.core.broker.view.maintenance.SupportLayout;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
@@ -40,6 +45,7 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
+@Component(service={MaintenanceView.class}, scope=ServiceScope.PROTOTYPE)
 public class MaintenanceView extends VerticalLayout implements View {
 
 
@@ -58,6 +64,12 @@ public class MaintenanceView extends VerticalLayout implements View {
 
     TabSheet subMenu = null;
     TabSheet tabs = new TabSheet();
+    
+    @Reference
+    UpgradeServiceApi upgradeService;
+    
+    @Reference
+    RestoreServiceApi restoreService;
 
     public MaintenanceView() throws Exception {
         setSizeFull();
@@ -126,7 +138,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildUpgradeForm() {
-        return new ManageLayout();
+        return new ManageLayout(upgradeService, restoreService);
     }
 
     private FormLayout buildSummary() {

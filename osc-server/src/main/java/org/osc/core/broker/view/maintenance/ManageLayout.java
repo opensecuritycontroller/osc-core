@@ -19,7 +19,9 @@ package org.osc.core.broker.view.maintenance;
 import java.io.File;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.BackupService;
+import org.osc.core.broker.service.api.BackupServiceApi;
+import org.osc.core.broker.service.api.RestoreServiceApi;
+import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -48,18 +50,22 @@ public class ManageLayout extends FormLayout {
     private Link downloadBackup = null;
     private HorizontalLayout linkContainer = null;
 
-    public ManageLayout() {
+    private BackupServiceApi backupService;
+
+    public ManageLayout(BackupServiceApi backupService, UpgradeServiceApi upgradeService,
+            RestoreServiceApi restoreService) {
         super();
+        this.backupService = backupService;
 
         VerticalLayout upgradeContainer = new VerticalLayout();
         VerticalLayout backupContainer = new VerticalLayout();
         VerticalLayout restoreContainer = new VerticalLayout();
 
         // Component to Upgrade Server
-        Upgrader upgrader = new Upgrader();
+        Upgrader upgrader = new Upgrader(upgradeService);
         upgrader.setSizeFull();
 
-        DbRestorer restorer = new DbRestorer();
+        DbRestorer restorer = new DbRestorer(restoreService);
         restorer.setSizeFull();
 
         // Component to Backup Database
@@ -95,12 +101,11 @@ public class ManageLayout extends FormLayout {
                 		try {
 							BackupRequest req = new BackupRequest();
 		                    req.setBackupPassword(password);
-		                    BackupService backupService = new BackupService();
-		                    BackupResponse res = backupService.dispatch(req);
+		                    BackupResponse res = ManageLayout.this.backupService.dispatch(req);
 		                    if (res.isSuccess()) {
 		                        ViewUtil.iscNotification("Backup Successful!", null, Notification.Type.TRAY_NOTIFICATION);
 		                        ManageLayout.this.linkContainer.removeAllComponents();
-		                        createDownloadLink(backupService.getEncryptedBackupFile());
+		                        createDownloadLink(ManageLayout.this.backupService.getEncryptedBackupFile());
 		                    }
 						} catch (Exception e) {
 		                    ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -119,8 +124,7 @@ public class ManageLayout extends FormLayout {
 
         bkpLayout.addComponent(this.backupButton);
         this.linkContainer = new HorizontalLayout();
-        BackupService backupService = new BackupService();
-        File backupFile = backupService.getEncryptedBackupFile();
+        File backupFile = this.backupService.getEncryptedBackupFile();
         if (backupFile.exists()) {
             createDownloadLink(backupFile);
         }

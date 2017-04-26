@@ -42,7 +42,7 @@ import org.osc.core.util.EncryptionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = UpdateUserService.class)
+@Component(service = {UpdateUserServiceApi.class, UpdateUserService.class})
 public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, UpdateUserResponse>
         implements UpdateUserServiceApi {
 

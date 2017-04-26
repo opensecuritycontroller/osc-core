@@ -55,13 +55,13 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
 
     private final DistributedApplianceView daView;
 
-    private UpdateDistributedApplianceServiceApi updateDistributedApplianceServiceApi;
+    private UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
 
     public UpdateDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
-            UpdateDistributedApplianceServiceApi updateDistributedApplianceServiceApi) throws Exception {
+            UpdateDistributedApplianceServiceApi updateDistributedApplianceService) throws Exception {
         super();
         this.daView = distributedApplianceView;
-        this.updateDistributedApplianceServiceApi = updateDistributedApplianceServiceApi;
+        this.updateDistributedApplianceService = updateDistributedApplianceService;
         this.currentDAObject = this.daView.getParentContainer().getItem(this.daView.getParentItemId()).getBean();
         createWindow(this.CAPTION);
     }
@@ -217,7 +217,7 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
             updateRequest.getDto().setApplianceModel(applianceDefinitionValue.getApplianceModel());
             updateRequest.getDto().setVirtualizationSystems(vsSet);
 
-            BaseJobResponse response = this.updateDistributedApplianceServiceApi.dispatch(updateRequest);
+            BaseJobResponse response = this.updateDistributedApplianceService.dispatch(updateRequest);
 
             close();
 

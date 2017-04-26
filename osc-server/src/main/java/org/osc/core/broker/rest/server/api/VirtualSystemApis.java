@@ -35,13 +35,13 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.DeleteDeploymentSpecService;
-import org.osc.core.broker.service.ForceDeleteVirtualSystemService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDeploymentSpecServiceByVirtualSystem;
 import org.osc.core.broker.service.ListDistributedApplianceInstanceByVSService;
 import org.osc.core.broker.service.UpdateDeploymentSpecService;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.dto.PolicyDto;
@@ -88,7 +88,13 @@ public class VirtualSystemApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
+    private AddDeploymentSpecServiceApi addDeploymentSpecService;
+
+    @Reference
+    private DeleteDeploymentSpecServiceApi deleteDeploymentSpecService;
+
+    @Reference
+    private ForceDeleteVirtualSystemServiceApi forceDeleteVirtualSystemService;
 
     // DAI APIs
     @ApiOperation(value = "Lists Appliance Instances",
@@ -187,7 +193,7 @@ public class VirtualSystemApis {
         logger.info("Creating Deployment Spec ...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         this.apiUtil.setParentIdOrThrow(dsDto, vsId, "Deployment Specification");
-        return this.apiUtil.getResponseForBaseRequest(this.addDeploymentSpecServiceApi,
+        return this.apiUtil.getResponseForBaseRequest(this.addDeploymentSpecService,
                 new BaseRequest<DeploymentSpecDto>(dsDto));
     }
 
@@ -221,7 +227,7 @@ public class VirtualSystemApis {
                                          @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
+        return this.apiUtil.getResponseForBaseRequest(this.deleteDeploymentSpecService,
                 new BaseDeleteRequest(dsId, vsId, false));// false as this is not force delete
     }
 
@@ -237,7 +243,7 @@ public class VirtualSystemApis {
                                               @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
+        return this.apiUtil.getResponseForBaseRequest(this.deleteDeploymentSpecService,
                 new BaseDeleteRequest(dsId, vsId, true));
     }
 
@@ -346,7 +352,7 @@ public class VirtualSystemApis {
                                              @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Deleting Virtual System " + vsId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new ForceDeleteVirtualSystemService(),
+        return this.apiUtil.getResponseForBaseRequest(this.forceDeleteVirtualSystemService,
                 new BaseDeleteRequest(vsId, true));
     }
 }

@@ -31,12 +31,15 @@ import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification;
 
+@Component(service={AlarmView.class}, scope=ServiceScope.PROTOTYPE)
 public class AlarmView extends CRUDBaseView<AlarmDto, BaseDto> {
 
     private static final String ALARM_HELP_GUID = "GUID-98B127AC-2A18-4537-B0FA-CA3DDD4A733C.html";

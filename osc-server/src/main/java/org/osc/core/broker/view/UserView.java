@@ -20,25 +20,28 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ListUserService;
-import org.osc.core.broker.service.UpdateUserService;
 import org.osc.core.broker.service.api.DeleteUserServiceApi;
+import org.osc.core.broker.service.api.ListUserServiceApi;
+import org.osc.core.broker.service.api.UpdateUserServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.request.ListUserRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddUserWindow;
 import org.osc.core.broker.window.delete.DeleteUserWindow;
 import org.osc.core.broker.window.update.UpdateUserWindow;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification;
 
+@Component(service={UserView.class}, scope=ServiceScope.PROTOTYPE)
 public class UserView extends CRUDBaseView<UserDto, BaseDto> {
 
     private static final String USER_HELP_GUID = "GUID-0F15567D-E6F9-470C-97BE-4F0224048233.html";
@@ -50,8 +53,14 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
 
     private static final Logger log = Logger.getLogger(UserView.class);
 
-    private final DeleteUserServiceApi deleteUserService = StaticRegistry.deleteUserService();
-    private final UpdateUserService updateUserService = StaticRegistry.updateUserService();
+    @Reference
+    private ListUserServiceApi listUserService;
+
+    @Reference
+    private DeleteUserServiceApi deleteUserService;
+
+    @Reference
+    private UpdateUserServiceApi updateUserService;
 
     public UserView() {
         createView("Users", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE));
@@ -91,10 +100,9 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
     public void populateParentTable() {
 
         ListUserRequest listRequest = new ListUserRequest();
-        ListUserService listService = new ListUserService();
 
         try {
-            ListResponse<UserDto> res = listService.dispatch(listRequest);
+            ListResponse<UserDto> res = this.listUserService.dispatch(listRequest);
             List<UserDto> listResponse = res.getList();
 
             // Creating table with list of vendors

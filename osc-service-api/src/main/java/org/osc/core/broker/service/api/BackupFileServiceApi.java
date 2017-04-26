@@ -16,19 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
-import java.io.File;
+import org.osc.core.broker.service.request.Request;
+import org.osc.core.broker.service.response.Response;
 
-import org.osc.core.broker.service.request.BackupRequest;
-import org.osc.core.broker.service.response.BackupResponse;
+public interface BackupFileServiceApi<I extends Request, O extends Response>
+        extends ServiceDispatcherApi<I, O> {
 
-public interface BackupServiceApi
-        extends BackupFileServiceApi<BackupRequest, BackupResponse> {
+    boolean isValidBackupFilename(String filename);
 
-    File getEncryptedBackupFile();
+    boolean isValidZipBackupFilename(String filename);
 
-    File getEncryptedBackupFile(String backupFileName);
-
-    void deleteBackupFiles();
-
-    void deleteBackupFilesFrom(String directory);
+    boolean isValidEncryptedBackupFilename(String filename);
 }

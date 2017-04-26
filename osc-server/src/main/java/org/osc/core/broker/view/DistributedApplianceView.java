@@ -24,11 +24,11 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.ListDistributedApplianceService;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
@@ -42,7 +42,6 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.deploymentspec.DeploymentSpecSubView;
 import org.osc.core.broker.view.securityinterface.SecurityGroupInterfaceSubView;
 import org.osc.core.broker.view.util.ToolbarButtons;
@@ -50,6 +49,9 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddDistributedApplianceWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 import org.osc.core.broker.window.update.UpdateDistributedApplianceWindow;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -60,6 +62,7 @@ import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
 @SuppressWarnings("serial")
+@Component(service={DistributedApplianceView.class}, scope=ServiceScope.PROTOTYPE)
 public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceDto, VirtualSystemDto> {
 
     private static final String DA_HELP_GUID = "GUID-3FB92C5B-7F20-4B6A-B368-CA37C3E67007.html";
@@ -69,11 +72,20 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private DeploymentSpecSubView dsSubView = null;
     private SecurityGroupInterfaceSubView sgiSubView = null;
 
-    private AddDistributedApplianceServiceApi addDistributedApplianceServiceApi = StaticRegistry.addDistributedApplianceServiceApi();
+    @Reference
+    private AddDistributedApplianceServiceApi addDistributedApplianceService;
 
-    private DeleteDistributedApplianceServiceApi deleteDistributedApplianceServiceApi = StaticRegistry.deleteDistributedApplianceServiceApi();
+    @Reference
+    private UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
 
-    private UpdateDistributedApplianceServiceApi updateDistributedApplianceServiceApi = StaticRegistry.updateDistributedApplianceServiceApi();
+    @Reference
+    private DeleteDistributedApplianceServiceApi deleteDistributedApplianceService;
+
+    @Reference
+    private ListDistributedApplianceServiceApi listDistributedApplianceService;
+
+    @Reference
+    private ConformServiceApi conformService;
 
     public DistributedApplianceView() {
 
@@ -95,7 +107,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.info("Redirecting to Add Distributed Appliance Window");
-            ViewUtil.addWindow(new AddDistributedApplianceWindow(this, this.addDistributedApplianceServiceApi));
+            ViewUtil.addWindow(new AddDistributedApplianceWindow(this, this.addDistributedApplianceService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.info("Redirecting to Update Appliance Window");
@@ -106,12 +118,12 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         Notification.Type.WARNING_MESSAGE);
 
             } else {
-                ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this, this.updateDistributedApplianceServiceApi));
+                ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this, this.updateDistributedApplianceService));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.info("Redirecting to Delete Distributed Appliance Window");
-            DeleteWindowUtil.deleteDistributedAppliance(getParentItem().getBean(), this.deleteDistributedApplianceServiceApi);
+            DeleteWindowUtil.deleteDistributedAppliance(getParentItem().getBean(), this.deleteDistributedApplianceService);
         }
         if (event.getButton().getId().equals(ToolbarButtons.CONFORM.getId())) {
             conformDistributedAppliace(getParentItemId());
@@ -164,10 +176,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
         ConformRequest request = new ConformRequest();
         request.setDaId(daId);
         BaseJobResponse response = new BaseJobResponse();
-        ConformService service = StaticRegistry.conformService();
 
         try {
-            response = service.dispatch(request);
+            response = this.conformService.dispatch(request);
             ViewUtil.showJobNotification(response.getJobId());
         } catch (Exception e) {
             log.error("Error!", e);
@@ -216,9 +227,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     public void populateParentTable() {
 
         ListResponse<DistributedApplianceDto> res;
-        ListDistributedApplianceService listService = new ListDistributedApplianceService();
         try {
-            res = listService.dispatch(new BaseRequest<>());
+            res = this.listDistributedApplianceService.dispatch(new BaseRequest<>());
             List<DistributedApplianceDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // creating table with list of vendors
