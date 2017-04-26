@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ListApplianceModelSwVersionComboService;
-import org.osc.core.broker.service.ListDomainsByMcIdService;
-import org.osc.core.broker.service.ListEncapsulationTypeByVersionTypeAndModel;
+import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
+import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
+import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -71,9 +71,17 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     protected PasswordField sharedKey;
     protected Table vsTable = null;
     protected DistributedApplianceDto currentDAObject = null;
+    private ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService;
+    private ListDomainsByMcIdServiceApi listDomainsByMcIdService;
+    private ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
 
-    public BaseDAWindow() {
+    public BaseDAWindow(ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
+            ListDomainsByMcIdServiceApi listDomainsByMcIdService,
+            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel) {
         super();
+        this.listApplianceModelSwVersionComboService = listApplianceModelSwVersionComboService;
+        this.listDomainsByMcIdService = listDomainsByMcIdService;
+        this.listEncapsulationTypeByVersionTypeAndModel = listEncapsulationTypeByVersionTypeAndModel;
     }
 
     protected Panel getAttributesPanel() {
@@ -181,8 +189,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             VirtualizationType type) throws Exception {
         ListEncapsulationTypeByVersionTypeAndModelRequest req = new ListEncapsulationTypeByVersionTypeAndModelRequest(
                 currentAppliance.getSwVersion(), currentAppliance.getApplianceModel(), type);
-        ListEncapsulationTypeByVersionTypeAndModel listService = new ListEncapsulationTypeByVersionTypeAndModel();
-        return listService.dispatch(req).getList();
+        return this.listEncapsulationTypeByVersionTypeAndModel.dispatch(req).getList();
     }
 
     protected ComboBox getDomainComboBox(Object id) {
@@ -252,10 +259,9 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         if (currentMC != null) {
             ListApplianceModelSwVersionComboRequest adRequest = new ListApplianceModelSwVersionComboRequest();
             adRequest.setType(currentMC.getManagerType());
-            ListApplianceModelSwVersionComboService adService = new ListApplianceModelSwVersionComboService();
             ListResponse<ApplianceModelSoftwareVersionDto> adResponse = null;
             try {
-                adResponse = adService.dispatch(adRequest);
+                adResponse = this.listApplianceModelSwVersionComboService.dispatch(adRequest);
                 BeanItemContainer<ApplianceModelSoftwareVersionDto> adList = new BeanItemContainer<ApplianceModelSoftwareVersionDto>(
                         ApplianceModelSoftwareVersionDto.class, adResponse.getList());
 
@@ -356,8 +362,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 // List Domains Service
                 BaseIdRequest agRequest = new BaseIdRequest();
                 agRequest.setId(mc.getId());
-                ListDomainsByMcIdService service = new ListDomainsByMcIdService();
-                response = service.dispatch(agRequest);
+                response = this.listDomainsByMcIdService.dispatch(agRequest);
             } catch (Exception e) {
                 log.error("Error populating domain combobox", e);
             }

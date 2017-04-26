@@ -39,7 +39,9 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.NsxServiceProfileCheckMetaTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileRequest, EmptySuccessResponse>
         implements NsxUpdateProfileServiceApi {
 

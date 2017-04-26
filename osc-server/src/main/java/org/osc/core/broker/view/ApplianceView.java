@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
+import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.ListApplianceServiceApi;
 import org.osc.core.broker.service.api.ListApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.dto.ApplianceDto;
@@ -54,7 +56,13 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
     private static final Logger log = Logger.getLogger(ApplianceView.class);
 
     @Reference
+    DeleteApplianceServiceApi deleteApplianceService;
+
+    @Reference
     ListApplianceServiceApi listApplianceService;
+
+    @Reference
+    DeleteApplianceSoftwareVersionServiceApi deleteApplianceSoftwareVersionService;
 
     @Reference
     ListApplianceSoftwareVersionServiceApi listApplianceSoftwareVersionService;
@@ -72,7 +80,7 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
 
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.info("Redirecting to Delete Appliance Window");
-            ViewUtil.addWindow(new DeleteApplianceWindow(this));
+            ViewUtil.addWindow(new DeleteApplianceWindow(this, this.deleteApplianceService));
         }
 
         if (event.getButton().getId().equals(ToolbarButtons.AUTO_IMPORT_APPLIANCE.getId())) {
@@ -92,7 +100,8 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
 
         if (event.getButton().getId().equals(ToolbarButtons.DELETE_CHILD.getId())) {
             log.info("Redirecting to Delete Appliance Version Window");
-            ViewUtil.addWindow(new DeleteApplianceSoftwareVersionWindow(this));
+            ViewUtil.addWindow(new DeleteApplianceSoftwareVersionWindow(this,
+                    this.deleteApplianceSoftwareVersionService));
         }
 
     }

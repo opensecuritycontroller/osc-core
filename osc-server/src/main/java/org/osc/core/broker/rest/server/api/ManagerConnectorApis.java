@@ -35,9 +35,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.ListDomainsByMcIdService;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
@@ -80,6 +80,9 @@ public class ManagerConnectorApis {
 
     @Reference
     private DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService;
+
+    @Reference
+    private ListDomainsByMcIdServiceApi listDomainsByMcIdService;
 
     @Reference
     private ApiUtil apiUtil;
@@ -218,7 +221,7 @@ public class ManagerConnectorApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<DomainDto> response = (ListResponse<DomainDto>) this.apiUtil
-                .getListResponse(new ListDomainsByMcIdService(), new BaseIdRequest(amcId));
+                .getListResponse(this.listDomainsByMcIdService, new BaseIdRequest(amcId));
         return response.getList();
     }
 

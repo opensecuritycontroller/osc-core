@@ -25,8 +25,10 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.ConformServiceApi;
+import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
@@ -83,6 +85,12 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
 
     @Reference
     private ListDistributedApplianceServiceApi listDistributedApplianceService;
+
+    @Reference
+    private AddDeploymentSpecServiceApi addDeploymentSpecService;
+
+    @Reference
+    private DeleteDeploymentSpecServiceApi deleteDeploymentSpecService;
 
     @Reference
     private ConformServiceApi conformService;
@@ -148,7 +156,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         + dto.getVirtualizationConnectorName() + "')",
                         new ToolbarButtons[] { ToolbarButtons.BACK, ToolbarButtons.ADD, ToolbarButtons.EDIT,
                                 ToolbarButtons.DELETE, ToolbarButtons.CONFORM },
-                        this, this.childContainer.getItem(getChildItemId()).getBean());
+                        this, this.childContainer.getItem(getChildItemId()).getBean(),
+                        this.addDeploymentSpecService, this.deleteDeploymentSpecService);
 
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages

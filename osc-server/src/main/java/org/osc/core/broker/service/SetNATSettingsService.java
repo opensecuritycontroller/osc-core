@@ -31,7 +31,7 @@ import org.osc.core.util.ServerUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = SetNATSettingsService.class)
+@Component
 public class SetNATSettingsService extends ServiceDispatcher<DryRunRequest<NATSettingsDto>, BaseJobResponse>
         implements SetNATSettingsServiceApi {
 

@@ -29,7 +29,9 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListDomainsByMcIdService extends ServiceDispatcher<BaseIdRequest, ListResponse<DomainDto>>
         implements ListDomainsByMcIdServiceApi {
 

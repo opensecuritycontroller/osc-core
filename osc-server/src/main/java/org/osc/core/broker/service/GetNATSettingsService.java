@@ -23,7 +23,9 @@ import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class GetNATSettingsService extends ServiceDispatcher<Request, BaseDtoResponse<NATSettingsDto>>
         implements GetNATSettingsServiceApi {
     @Override

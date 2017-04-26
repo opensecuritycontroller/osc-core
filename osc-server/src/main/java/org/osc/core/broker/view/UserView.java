@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.AddUserServiceApi;
 import org.osc.core.broker.service.api.DeleteUserServiceApi;
 import org.osc.core.broker.service.api.ListUserServiceApi;
 import org.osc.core.broker.service.api.UpdateUserServiceApi;
@@ -54,6 +55,9 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
     private static final Logger log = Logger.getLogger(UserView.class);
 
     @Reference
+    private AddUserServiceApi addUserService;
+
+    @Reference
     private ListUserServiceApi listUserService;
 
     @Reference
@@ -70,7 +74,7 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add User Window");
-            ViewUtil.addWindow(new AddUserWindow(this));
+            ViewUtil.addWindow(new AddUserWindow(this, this.addUserService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update User Window");

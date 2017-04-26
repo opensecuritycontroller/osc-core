@@ -30,18 +30,18 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component
 public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
         implements DeleteSecurityGroupInterfaceServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteSecurityGroupInterfaceService.class);
     private SecurityGroupInterface sgi = null;
 
-    private final ConformService conformService;
-
-    public DeleteSecurityGroupInterfaceService(ConformService conformService) {
-        this.conformService = conformService;
-    }
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {

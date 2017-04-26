@@ -16,19 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
 
-import com.vaadin.data.Item;
-import com.vaadin.server.ThemeResource;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.Reindeer;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.DeleteSslCertificateService;
-import org.osc.core.broker.service.ListSslCertificatesService;
+import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
+import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
@@ -42,10 +37,16 @@ import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import com.vaadin.data.Item;
+import com.vaadin.server.ThemeResource;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.Reindeer;
 
 public class SslConfigurationLayout extends FormLayout implements X509TrustManagerFactory.TruststoreChangedListener {
 
@@ -57,8 +58,13 @@ public class SslConfigurationLayout extends FormLayout implements X509TrustManag
     private Table sslConfigTable;
     private VmidcWindow<OkCancelButtonModel> deleteWindow;
 
-    public SslConfigurationLayout() {
+    private DeleteSslCertificateServiceApi deleteSslCertificateService;
+    private ListSslCertificatesServiceApi listSslCertificateService;
+
+    public SslConfigurationLayout(DeleteSslCertificateServiceApi deleteSslCertificate,
+            ListSslCertificatesServiceApi listSslCertificateService) {
         super();
+        this.deleteSslCertificateService = deleteSslCertificate;
         VerticalLayout sslUploadContainer = new VerticalLayout();
         try {
             SslCertificateUploader certificateUploader = new SslCertificateUploader(X509TrustManagerFactory.getInstance());
@@ -121,10 +127,9 @@ public class SslConfigurationLayout extends FormLayout implements X509TrustManag
 
         BaseRequest<BaseDto> listRequest = new BaseRequest<>();
         ListResponse<CertificateBasicInfoModel> res;
-        ListSslCertificatesService listService = new ListSslCertificatesService();
 
         try {
-            res = listService.dispatch(listRequest);
+            res = this.listSslCertificateService.dispatch(listRequest);
             basicInfoModels = res.getList();
         } catch (Exception e) {
             log.error("Failed to get information from SSL attributes table", e);
@@ -165,7 +170,7 @@ public class SslConfigurationLayout extends FormLayout implements X509TrustManag
                         info.getValidFrom(),
                         info.getValidTo(),
                         info.getAlgorithmType(),
-                        this.createDeleteEntry(info)
+                        createDeleteEntry(info)
                 }, info.getAlias().toLowerCase());
             }
         } catch (Exception e) {
@@ -178,7 +183,7 @@ public class SslConfigurationLayout extends FormLayout implements X509TrustManag
 
         this.sslConfigTable.sort(new Object[]{"Alias"}, new boolean[]{false});
 
-        this.colorizeValidUntilRows();
+        colorizeValidUntilRows();
     }
 
     @SuppressWarnings("serial")
@@ -228,10 +233,9 @@ public class SslConfigurationLayout extends FormLayout implements X509TrustManag
             boolean succeed;
 
             DeleteSslEntryRequest deleteRequest = new DeleteSslEntryRequest(alias);
-            DeleteSslCertificateService deleteService = new DeleteSslCertificateService();
 
             try {
-                deleteService.dispatch(deleteRequest);
+                SslConfigurationLayout.this.deleteSslCertificateService.dispatch(deleteRequest);
                 succeed = true;
             } catch (Exception e) {
                 succeed = false;

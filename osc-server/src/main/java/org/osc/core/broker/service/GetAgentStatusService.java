@@ -54,7 +54,7 @@ import org.osc.sdk.manager.element.ManagerDeviceMemberStatusElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = GetAgentStatusService.class)
+@Component
 public class GetAgentStatusService
         extends ServiceDispatcher<DistributedApplianceInstancesRequest, GetAgentStatusResponse>
         implements GetAgentStatusServiceApi {

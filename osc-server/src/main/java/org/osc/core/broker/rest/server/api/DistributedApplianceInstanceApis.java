@@ -31,8 +31,8 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceInstanceServiceApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
@@ -68,7 +68,7 @@ public class DistributedApplianceInstanceApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private GetAgentStatusService getAgentStatusService;
+    private GetAgentStatusServiceApi getAgentStatusService;
 
     @Reference
     private ListDistributedApplianceInstanceServiceApi listDAIService;

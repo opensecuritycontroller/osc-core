@@ -22,9 +22,11 @@ import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.TagVmResponse;
 import org.osc.core.broker.util.VimUtils;
 import org.osc.sdk.sdn.api.SecurityTagApi;
+import org.osgi.service.component.annotations.Component;
 
 import com.vmware.vim25.mo.VirtualMachine;
 
+@Component
 public class UnTagVmService extends BaseTagVmService implements UnTagVmServiceApi {
     @Override
     protected void customValidate(TagVmRequest request) throws VmidcBrokerValidationException {

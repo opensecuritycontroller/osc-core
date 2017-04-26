@@ -48,7 +48,7 @@ import org.osc.sdk.manager.api.IscJobNotificationApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = PropagateVSMgrFileService.class)
+@Component
 public class PropagateVSMgrFileService extends ServiceDispatcher<PropagateVSMgrFileRequest, BaseJobResponse>
         implements PropagateVSMgrFileServiceApi {
 

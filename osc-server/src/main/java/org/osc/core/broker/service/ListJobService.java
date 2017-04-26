@@ -28,7 +28,9 @@ import org.osc.core.broker.service.persistence.JobEntityManager;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.ListJobRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListJobService extends ServiceDispatcher<ListJobRequest, ListResponse<JobRecordDto>>
         implements ListJobServiceApi {
 

@@ -24,11 +24,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
-import org.osc.core.broker.service.mc.SyncManagerConnectorService;
 import org.osc.core.broker.service.policy.ListManagerConnectoryPolicyService;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseJobRequest;
@@ -65,7 +66,10 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     private ApiFactoryService apiFactoryService;
 
     @Reference
-    private SyncManagerConnectorService syncManagerConnectorService;
+    private DeleteApplianceManagerConnectorServiceApi deleteManagerConnectorService;
+
+    @Reference
+    private SyncManagerConnectorServiceApi syncManagerConnectorService;
 
     public ManagerConnectorView() {
 
@@ -85,7 +89,7 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Manager Connector Window");
-            ViewUtil.addWindow(new DeleteManagerConnectorWindow(this));
+            ViewUtil.addWindow(new DeleteManagerConnectorWindow(this, this.deleteManagerConnectorService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.CONFORM.getId())) {
             conformManagerConnector(getParentItemId());

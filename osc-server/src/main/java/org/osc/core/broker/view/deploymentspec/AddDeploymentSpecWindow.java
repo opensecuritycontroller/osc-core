@@ -43,20 +43,12 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
     final String CAPTION = "Add Deployment Specification";
 
-<<<<<<< HEAD
-private AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
-
-    public AddDeploymentSpecWindow(Long vsId, AddDeploymentSpecServiceApi addDeploymentSpecServiceApi) throws Exception {
-        super(new DeploymentSpecDto().withParentId(vsId));
-        this.addDeploymentSpecServiceApi = addDeploymentSpecServiceApi;
-=======
     private AddDeploymentSpecServiceApi addDeploymentSpecService;
 
     public AddDeploymentSpecWindow(Long vsId,
             AddDeploymentSpecServiceApi addDeploymentSpecService) throws Exception {
         super(new DeploymentSpecDto().withParentId(vsId));
         this.addDeploymentSpecService = addDeploymentSpecService;
->>>>>>> 4679919... [vaadin-ui] Make the UI views into DS components so that they can have injected services
         createWindow(this.CAPTION);
     }
 
@@ -109,11 +101,7 @@ private AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
                 BaseRequest<DeploymentSpecDto> req = new BaseRequest<DeploymentSpecDto>();
                 req.setDto(dto);
 
-<<<<<<< HEAD
-                BaseJobResponse response = this.addDeploymentSpecServiceApi.dispatch(req);
-=======
                 BaseJobResponse response = this.addDeploymentSpecService.dispatch(req);
->>>>>>> 4679919... [vaadin-ui] Make the UI views into DS components so that they can have injected services
                 close();
 
                 ViewUtil.showJobNotification(response.getJobId());

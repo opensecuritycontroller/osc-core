@@ -20,7 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.UpdateDeploymentSpecService;
+import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -43,8 +43,11 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
     private static final Logger log = Logger.getLogger(UpdateDeploymentSpecWindow.class);
     final String CAPTION = "Edit Deployment Specification";
 
-    public UpdateDeploymentSpecWindow(DeploymentSpecDto dto) throws Exception {
+    private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
+
+    public UpdateDeploymentSpecWindow(DeploymentSpecDto dto, UpdateDeploymentSpecServiceApi updateDeploymentSpecService) throws Exception {
         super(dto);
+        this.updateDeploymentSpecService = updateDeploymentSpecService;
         createWindow(this.CAPTION);
     }
 
@@ -199,8 +202,7 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
                 BaseRequest<DeploymentSpecDto> req = new BaseRequest<DeploymentSpecDto>();
                 req.setDto(requestDto);
 
-                UpdateDeploymentSpecService updateService = new UpdateDeploymentSpecService();
-                BaseJobResponse response = updateService.dispatch(req);
+                BaseJobResponse response = this.updateDeploymentSpecService.dispatch(req);
 
                 close();
 

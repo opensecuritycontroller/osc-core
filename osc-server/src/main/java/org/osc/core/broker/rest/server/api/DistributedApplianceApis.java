@@ -36,9 +36,9 @@ import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.ListDistributedApplianceService;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -87,6 +87,9 @@ public class DistributedApplianceApis {
     @Reference
     private UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
 
+    @Reference
+    private ListDistributedApplianceServiceApi listDistributedApplianceService;
+
     @ApiOperation(value = "Lists All Distributed Appliances",
             notes = "Lists all the Distributed Appliances",
             response = DistributedApplianceDto.class,
@@ -101,7 +104,7 @@ public class DistributedApplianceApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<DistributedApplianceDto> response = (ListResponse<DistributedApplianceDto>) this.apiUtil
-                .getListResponse(new ListDistributedApplianceService(), new BaseRequest<BaseDto>(true));
+                .getListResponse(this.listDistributedApplianceService, new BaseRequest<BaseDto>(true));
         return response.getList();
     }
 

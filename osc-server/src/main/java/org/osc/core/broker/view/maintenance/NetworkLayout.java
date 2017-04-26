@@ -17,9 +17,9 @@
 package org.osc.core.broker.view.maintenance;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.GetNATSettingsService;
-import org.osc.core.broker.service.GetNetworkSettingsService;
 import org.osc.core.broker.service.api.CheckNetworkSettingsServiceApi;
+import org.osc.core.broker.service.api.GetNATSettingsServiceApi;
+import org.osc.core.broker.service.api.GetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.GetNetworkSettingsRequest;
 import org.osc.core.broker.service.request.Request;
@@ -59,10 +59,19 @@ public class NetworkLayout extends FormLayout {
     private Button editNATSettings = null;
     public Table natTable;
 
-    private CheckNetworkSettingsServiceApi checkNetworkSettingsServiceApi;
+    private GetNetworkSettingsServiceApi getNetworkSettingsService;
 
-    public NetworkLayout() {
+    private CheckNetworkSettingsServiceApi checkNetworkSettingsService;
+
+    private GetNATSettingsServiceApi getNATSettingsService;
+
+    public NetworkLayout(GetNetworkSettingsServiceApi getNetworkSettingsService,
+            CheckNetworkSettingsServiceApi checkNetworkSettingsService,
+            GetNATSettingsServiceApi getNATSettingsService) {
         super();
+        this.getNetworkSettingsService = getNetworkSettingsService;
+        this.checkNetworkSettingsService = checkNetworkSettingsService;
+        this.getNATSettingsService = getNATSettingsService;
         try {
 
             // creating layout to hold option group and edit button
@@ -201,7 +210,7 @@ public class NetworkLayout extends FormLayout {
     }
 
     private boolean hasDeployedInstances() throws Exception {
-        CheckNetworkSettingResponse response = this.checkNetworkSettingsServiceApi.dispatch(new Request() {
+        CheckNetworkSettingResponse response = this.checkNetworkSettingsService.dispatch(new Request() {
         });
         return response.hasDeployedInstances();
     }
@@ -275,9 +284,8 @@ public class NetworkLayout extends FormLayout {
     public void populateNetworkTable() {
         try {
             GetNetworkSettingsRequest getNetworkSettingsRequest = new GetNetworkSettingsRequest();
-            GetNetworkSettingsService getNetworkSettingsService = new GetNetworkSettingsService();
 
-            GetNetworkSettingsResponse getNetworkSettingsResponse = getNetworkSettingsService
+            GetNetworkSettingsResponse getNetworkSettingsResponse = this.getNetworkSettingsService
                     .dispatch(getNetworkSettingsRequest);
 
             this.networkTable.getItem(1).getItemProperty("Value")
@@ -304,8 +312,7 @@ public class NetworkLayout extends FormLayout {
     @SuppressWarnings("unchecked")
     public void populateNATTable() {
         try {
-            GetNATSettingsService service = new GetNATSettingsService();
-            BaseDtoResponse<NATSettingsDto> response = service.dispatch(new Request() {
+            BaseDtoResponse<NATSettingsDto> response = this.getNATSettingsService.dispatch(new Request() {
             });
             this.natTable.getItem(1).getItemProperty("Value").setValue(response.getDto().getPublicIPAddress());
         } catch (Exception ex) {

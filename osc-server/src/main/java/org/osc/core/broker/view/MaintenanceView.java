@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.RestoreServiceApi;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.view.common.StyleConstants;
@@ -33,6 +34,7 @@ import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
 import org.osc.core.broker.view.maintenance.SummaryLayout;
 import org.osc.core.broker.view.maintenance.SupportLayout;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -64,10 +66,16 @@ public class MaintenanceView extends VerticalLayout implements View {
 
     TabSheet subMenu = null;
     TabSheet tabs = new TabSheet();
-    
+
+    @Reference
+    Server server;
+
+    @Reference
+    BackupServiceApi backupService;
+
     @Reference
     UpgradeServiceApi upgradeService;
-    
+
     @Reference
     RestoreServiceApi restoreService;
 
@@ -138,11 +146,11 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildUpgradeForm() {
-        return new ManageLayout(upgradeService, restoreService);
+        return new ManageLayout(this.backupService, this.upgradeService, this.restoreService);
     }
 
     private FormLayout buildSummary() {
-        return new SummaryLayout();
+        return new SummaryLayout(this.server, this.backupService);
     }
 
     @Override

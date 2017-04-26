@@ -33,10 +33,10 @@ import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
-import org.osc.core.broker.service.PropagateVSMgrFileService;
-import org.osc.core.broker.service.TagVmService;
-import org.osc.core.broker.service.UnTagVmService;
+import org.osc.core.broker.service.api.PropagateVSMgrFileServiceApi;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
+import org.osc.core.broker.service.api.TagVmServiceApi;
+import org.osc.core.broker.service.api.UnTagVmServiceApi;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.service.request.QueryVmInfoRequest;
 import org.osc.core.broker.service.request.TagVmRequest;
@@ -62,10 +62,16 @@ public class NsmMgrApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private PropagateVSMgrFileService propagateVSMgrFileService;
+    private PropagateVSMgrFileServiceApi propagateVSMgrFileService;
 
     @Reference
     private QueryVmInfoServiceApi queryVmInfoService;
+
+    @Reference
+    private TagVmServiceApi tagVmService;
+
+    @Reference
+    private UnTagVmServiceApi untagVmService;
 
     @Path("/notification")
     @POST
@@ -110,7 +116,7 @@ public class NsmMgrApis {
         log.info("Tag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return this.apiUtil.getResponse(new TagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(this.tagVmService, tagVmRequest);
     }
 
     @Path("/untagVm")
@@ -120,7 +126,7 @@ public class NsmMgrApis {
         log.info("UnTag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return this.apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(this.untagVmService, tagVmRequest);
     }
 
 }

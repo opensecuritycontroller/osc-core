@@ -19,12 +19,13 @@ package org.osc.core.broker.window.delete;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.ForceDeleteVirtualSystemService;
-import org.osc.core.broker.service.alarm.DeleteAlarmService;
-import org.osc.core.broker.service.alert.DeleteAlertService;
+import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
+import org.osc.core.broker.service.api.DeleteAlertServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
+import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -38,8 +39,6 @@ import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.securitygroup.DeleteSecurityGroupService;
-import org.osc.core.broker.service.securityinterface.DeleteSecurityGroupInterfaceService;
-import org.osc.core.broker.service.vc.DeleteVirtualizationConnectorService;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
@@ -149,7 +148,8 @@ public class DeleteWindowUtil {
     }
 
     @SuppressWarnings("serial")
-    public static void deleteVirtualSystem(final VirtualSystemDto dto) {
+    public static void deleteVirtualSystem(final ForceDeleteVirtualSystemServiceApi forceDeleteVsService,
+            final VirtualSystemDto dto) {
 
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil
                 .createAlertWindow("Force Delete Virtual System", "Force Delete Virtual System - " + dto.getName());
@@ -159,8 +159,7 @@ public class DeleteWindowUtil {
             @Override
             public void buttonClick(ClickEvent event) {
                 try {
-                    ForceDeleteVirtualSystemService deleteService = new ForceDeleteVirtualSystemService();
-                    BaseJobResponse response = deleteService.dispatch(new BaseDeleteRequest(dto.getId(), true));
+                    BaseJobResponse response = forceDeleteVsService.dispatch(new BaseDeleteRequest(dto.getId(), true));
                     deleteWindow.close();
                     if (response.getJobId() != null) {
                         ViewUtil.showJobNotification(response.getJobId());
@@ -174,7 +173,8 @@ public class DeleteWindowUtil {
         ViewUtil.addWindow(deleteWindow);
     }
 
-    public static void deleteSecurityGroupInterface(final SecurityGroupInterfaceDto dto, ConformService conformService) {
+    public static void deleteSecurityGroupInterface(final SecurityGroupInterfaceDto dto,
+            DeleteSecurityGroupInterfaceServiceApi deleteSecurityGroupInterfaceService) {
 
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow(
                 "Delete Security Group interface", "Delete Security Group interface  - " + dto.getName());
@@ -195,8 +195,7 @@ public class DeleteWindowUtil {
                     delRequest.setId(dto.getId());
                     log.info("deleting Security Group interface - " + dto.getName());
 
-                    DeleteSecurityGroupInterfaceService deleteService = new DeleteSecurityGroupInterfaceService(conformService);
-                    deleteService.dispatch(delRequest);
+                    deleteSecurityGroupInterfaceService.dispatch(delRequest);
                     deleteWindow.close();
                 } catch (Exception e) {
                     ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -208,7 +207,8 @@ public class DeleteWindowUtil {
 
     }
 
-    public static void deleteVirtualizationConnector(final VirtualizationConnectorDto dto) {
+    public static void deleteVirtualizationConnector(DeleteVirtualizationConnectorServiceApi deleteVcService,
+            final VirtualizationConnectorDto dto) {
 
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow(
                 "Delete Virtualization Connector", "Delete Virtualization Connector  - " + dto.getName());
@@ -227,8 +227,7 @@ public class DeleteWindowUtil {
                 try {
                     delRequest.setId(dto.getId());
                     log.info("deleting Virtualization Connector - " + dto.getName());
-                    DeleteVirtualizationConnectorService deleteService = new DeleteVirtualizationConnectorService();
-                    BaseJobResponse response = deleteService.dispatch(delRequest);
+                    BaseJobResponse response = deleteVcService.dispatch(delRequest);
                     ViewUtil.showJobNotification(response.getJobId());
                     deleteWindow.close();
                 } catch (Exception e) {
@@ -291,7 +290,7 @@ public class DeleteWindowUtil {
 
     }
 
-    public static void deleteAlarm(final AlarmDto dto) {
+    public static void deleteAlarm(final DeleteAlarmServiceApi deleteAlarmService, final AlarmDto dto) {
 
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow("Delete Alarm",
                 "Delete Alarm  - " + dto.getName());
@@ -310,8 +309,7 @@ public class DeleteWindowUtil {
                 try {
                     delRequest.setId(dto.getId());
                     log.info("deleting alarm - " + dto.getName());
-                    DeleteAlarmService delService = new DeleteAlarmService();
-                    delService.dispatch(delRequest);
+                    deleteAlarmService.dispatch(delRequest);
                     deleteWindow.close();
 
                 } catch (Exception e) {
@@ -324,7 +322,7 @@ public class DeleteWindowUtil {
 
     }
 
-    public static void deleteAlert(final List<AlertDto> dtoList) {
+    public static void deleteAlert(final DeleteAlertServiceApi deleteAlertService, final List<AlertDto> dtoList) {
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow("Delete Alert",
                 "Delete selected alert(s)? ");
 
@@ -338,8 +336,7 @@ public class DeleteWindowUtil {
                 try {
                     AlertRequest req = new AlertRequest();
                     req.setDtoList(dtoList);
-                    DeleteAlertService deleteService = new DeleteAlertService();
-                    deleteService.dispatch(req);
+                    deleteAlertService.dispatch(req);
                     deleteWindow.close();
                     log.info("Delete Alert(s) Successful!");
                 } catch (Exception e) {

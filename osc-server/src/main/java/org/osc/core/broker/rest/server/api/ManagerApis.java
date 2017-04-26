@@ -36,10 +36,10 @@ import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.PropagateVSMgrFileService;
-import org.osc.core.broker.service.TagVmService;
-import org.osc.core.broker.service.UnTagVmService;
+import org.osc.core.broker.service.api.PropagateVSMgrFileServiceApi;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
+import org.osc.core.broker.service.api.TagVmServiceApi;
+import org.osc.core.broker.service.api.UnTagVmServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.mc.MCChangeNotificationService;
 import org.osc.core.broker.service.request.MCChangeNotificationRequest;
@@ -81,10 +81,16 @@ public class ManagerApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private PropagateVSMgrFileService propagateVSMgrFileService;
+    private PropagateVSMgrFileServiceApi propagateVSMgrFileService;
 
     @Reference
     private QueryVmInfoServiceApi queryVmInfoService;
+
+    @Reference
+    private TagVmServiceApi tagVmService;
+
+    @Reference
+    private UnTagVmServiceApi untagVmService;
 
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
@@ -155,7 +161,7 @@ public class ManagerApis {
         log.info("Tag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return this.apiUtil.getResponse(new TagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(this.tagVmService, tagVmRequest);
     }
 
     @Path("/untagVm")
@@ -165,7 +171,7 @@ public class ManagerApis {
         log.info("UnTag VM info request: " + tagVmRequest);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return this.apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(this.untagVmService, tagVmRequest);
     }
 
     public Response triggerMcSync(String username, String ipAddress, Notification notification) {

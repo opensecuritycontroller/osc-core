@@ -35,7 +35,7 @@ import org.osc.core.util.NetworkUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = SetNetworkSettingsService.class)
+@Component(service={SetNetworkSettingsService.class, SetNetworkSettingsServiceApi.class})
 public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSettingsRequest, SetNetworkSettingsResponse>
         implements SetNetworkSettingsServiceApi {
 

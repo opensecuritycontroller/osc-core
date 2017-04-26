@@ -17,11 +17,10 @@
 package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.SetNATSettingsService;
+import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.maintenance.NetworkLayout;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -42,9 +41,12 @@ public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     private NetworkLayout networkLayout = null;
 
-    public SetNATSettingsWindow(NetworkLayout networkLayout) throws Exception {
+    private SetNATSettingsServiceApi setNATSettingsService;
+
+    public SetNATSettingsWindow(NetworkLayout networkLayout, SetNATSettingsServiceApi setNATSettingsService) throws Exception {
         super();
         this.networkLayout = networkLayout;
+        this.setNATSettingsService = setNATSettingsService;
         createWindow(this.CAPTION);
 
     }
@@ -90,8 +92,7 @@ public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 DryRunRequest<NATSettingsDto> req = new DryRunRequest<NATSettingsDto>();
                 req.setDto(dto);
 
-                SetNATSettingsService service = StaticRegistry.setNATSettingsService();
-                BaseJobResponse response = service.dispatch(req);
+                BaseJobResponse response = this.setNATSettingsService.dispatch(req);
                 this.networkLayout.populateNATTable();
                 if (response.getJobId() != null) {
                     ViewUtil.showJobNotification(response.getJobId());

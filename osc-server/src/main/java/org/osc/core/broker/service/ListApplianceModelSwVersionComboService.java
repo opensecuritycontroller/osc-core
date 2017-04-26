@@ -26,7 +26,9 @@ import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
 import org.osc.core.broker.service.request.ListApplianceModelSwVersionComboRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListApplianceModelSwVersionComboService extends
         ServiceDispatcher<ListApplianceModelSwVersionComboRequest, ListResponse<ApplianceModelSoftwareVersionDto>>
         implements ListApplianceModelSwVersionComboServiceApi {

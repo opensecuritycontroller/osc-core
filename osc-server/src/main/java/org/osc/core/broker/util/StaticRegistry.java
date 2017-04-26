@@ -18,16 +18,10 @@ package org.osc.core.broker.util;
 
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.SetNATSettingsService;
-import org.osc.core.broker.service.SetNetworkSettingsService;
-import org.osc.core.broker.service.UpgradeService;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
-import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
-import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
-import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.broadcast.Broadcaster;
-import org.osc.core.broker.service.mc.SyncManagerConnectorService;
+import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osc.core.broker.service.vc.AddVirtualizationConnectorService;
 import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
@@ -57,16 +51,7 @@ public class StaticRegistry {
     private ConformService conformService;
 
     @Reference
-    private SetNetworkSettingsService setNetworkSettingsService;
-
-    @Reference
-    private SetNATSettingsService setNATSettingsService;
-
-    @Reference
-    private UpgradeService upgradeService;
-
-    @Reference
-    private AddApplianceManagerConnectorServiceApi addApplianceManagerConnectorService;
+    private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
 
     @Reference
     private UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService;
@@ -78,9 +63,6 @@ public class StaticRegistry {
     private UpdateVirtualizationConnectorService updateVirtualizationConnectorService;
 
     @Reference
-    private SyncManagerConnectorService syncManagerConnectorService;
-
-    @Reference
     private Broadcaster broadcaster;
 
     @Reference
@@ -88,12 +70,6 @@ public class StaticRegistry {
 
     @Reference
     private AddAlarmServiceApi addAlarmServiceApi;
-
-    @Reference
-    AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
-
-    @Reference
-    private UpdateDistributedApplianceServiceApi updateDistributedApplianceServiceApi;
 
     private static StaticRegistry instance = null;
 
@@ -114,24 +90,12 @@ public class StaticRegistry {
         return instance.conformService;
     }
 
-    public static SetNetworkSettingsService setNetworkSettingsService() {
-        return instance.setNetworkSettingsService;
-    }
-
-    public static SetNATSettingsService setNATSettingsService() {
-        return instance.setNATSettingsService;
-    }
-
-    public static AddApplianceManagerConnectorServiceApi addApplianceManagerConnectorService() {
+    public static AddApplianceManagerConnectorService addApplianceManagerConnectorService() {
         return instance.addApplianceManagerConnectorService;
     }
 
     public static UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService() {
         return instance.updateApplianceManagerConnectorService;
-    }
-
-    public static SyncManagerConnectorService syncManagerConnectorService() {
-        return instance.syncManagerConnectorService;
     }
 
     public static AddVirtualizationConnectorService addVirtualizationConnectorService() {
@@ -152,9 +116,5 @@ public class StaticRegistry {
 
     public static AddAlarmServiceApi addAlarmServiceApi() {
         return instance.addAlarmServiceApi;
-    }
-
-    public static AddDeploymentSpecServiceApi addDeploymentSpecServiceApi() {
-        return instance.addDeploymentSpecServiceApi;
     }
 }

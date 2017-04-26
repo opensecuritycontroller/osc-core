@@ -25,6 +25,7 @@ import org.osc.core.broker.model.plugin.Plugin.State;
 import org.osc.core.broker.model.plugin.PluginEvent;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.ImportSdnControllerPluginService;
+import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -69,8 +70,11 @@ public class SdnControllerPluginsLayout extends FormLayout {
     private Panel pluginsPanel;
     PluginUploader uploader = new PluginUploader(PluginType.SDN);
 
-    public SdnControllerPluginsLayout() throws Exception {
+    private ImportSdnControllerPluginServiceApi importSdnControllerPluginService;
+
+    public SdnControllerPluginsLayout(ImportSdnControllerPluginServiceApi importSdnControllerPluginService) throws Exception {
         super();
+        this.importSdnControllerPluginService = importSdnControllerPluginService;
 
         VerticalLayout uploadContainer = new VerticalLayout();
         VerticalLayout pluginsContainer = new VerticalLayout();

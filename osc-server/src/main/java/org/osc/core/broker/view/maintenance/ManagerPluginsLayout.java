@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.Plugin;
 import org.osc.core.broker.model.plugin.Plugin.State;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.service.ImportApplianceManagerPluginService;
+import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -68,8 +68,11 @@ public class ManagerPluginsLayout extends FormLayout {
     private Panel pluginsPanel;
     PluginUploader uploader = new PluginUploader(PluginType.MANAGER);
 
-    public ManagerPluginsLayout() throws Exception {
+    private ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService;
+
+    public ManagerPluginsLayout(ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService) throws Exception {
         super();
+        this.importApplianceManagerPluginService = importApplianceManagerPluginService;
 
         // Create Controls
         VerticalLayout uploadContainer = new VerticalLayout();
@@ -198,8 +201,7 @@ public class ManagerPluginsLayout extends FormLayout {
                 try {
                     ImportFileRequest importRequest = new ImportFileRequest(uploadPath);
 
-                    ImportApplianceManagerPluginService service = new ImportApplianceManagerPluginService();
-                    service.dispatch(importRequest);
+                    ManagerPluginsLayout.this.importApplianceManagerPluginService.dispatch(importRequest);
 
                     ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_MANAGER_SUCCESSFUL),
                             null, Notification.Type.TRAY_NOTIFICATION);
