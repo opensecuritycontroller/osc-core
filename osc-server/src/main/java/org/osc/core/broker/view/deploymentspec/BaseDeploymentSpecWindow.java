@@ -90,24 +90,25 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
     protected Long vsId;
     protected Panel optionPanel;
 
-    private ListAvailabilityZonesServiceApi listAvailabilityZonesService;
+    private final ListAvailabilityZonesServiceApi listAvailabilityZonesService;
 
-    private ListFloatingIpPoolsServiceApi listFloatingIpPoolsService;
+    private final ListFloatingIpPoolsServiceApi listFloatingIpPoolsService;
 
-    private ListHostAggregateServiceApi listHostAggregateService;
+    private final ListHostAggregateServiceApi listHostAggregateService;
 
-    private ListHostServiceApi listHostService;
+    private final ListHostServiceApi listHostService;
 
-    private ListNetworkServiceApi listNetworkService;
+    private final ListNetworkServiceApi listNetworkService;
 
-    private ListRegionServiceApi listRegionService;
+    private final ListRegionServiceApi listRegionService;
 
-    private ListTenantServiceApi listTenantService;
+    private final ListTenantServiceApi listTenantService;
 
     public BaseDeploymentSpecWindow(DeploymentSpecDto deploymentSpecDto,
             ListAvailabilityZonesServiceApi listAvailabilityZonesService,
             ListFloatingIpPoolsServiceApi listFloatingIpPoolsService,
             ListHostServiceApi listHostService,
+            ListHostAggregateServiceApi listHostAggregateService,
             ListNetworkServiceApi listNetworkService,
             ListRegionServiceApi listRegionService,
             ListTenantServiceApi listTenantService) {
@@ -117,6 +118,8 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
         this.listNetworkService = listNetworkService;
         this.listRegionService = listRegionService;
         this.listTenantService = listTenantService;
+        this.listHostService = listHostService;
+        this.listHostAggregateService = listHostAggregateService;
         this.vsId = deploymentSpecDto.getParentId();
         initListeners();
     }

@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
+import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
@@ -53,10 +54,12 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
     public AddDeploymentSpecWindow(Long vsId,
             AddDeploymentSpecServiceApi addDeploymentSpecService, ListAvailabilityZonesServiceApi listAvailabilityZonesService,
-            ListFloatingIpPoolsServiceApi listFloatingIpPoolsService, ListHostServiceApi listHostService, ListNetworkServiceApi listNetworkService,
+            ListFloatingIpPoolsServiceApi listFloatingIpPoolsService, ListHostServiceApi listHostService,
+            ListHostAggregateServiceApi listHostAggregateService,
+            ListNetworkServiceApi listNetworkService,
             ListRegionServiceApi listRegionService, ListTenantServiceApi listTenantService) throws Exception {
         super(new DeploymentSpecDto().withParentId(vsId), listAvailabilityZonesService,
-                listFloatingIpPoolsService, listHostService, listNetworkService,
+                listFloatingIpPoolsService, listHostService, listHostAggregateService, listNetworkService,
                 listRegionService, listTenantService);
         this.addDeploymentSpecService = addDeploymentSpecService;
         createWindow(this.CAPTION);

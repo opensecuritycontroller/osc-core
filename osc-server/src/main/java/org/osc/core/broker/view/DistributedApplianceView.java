@@ -41,6 +41,7 @@ import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
 import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
+import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
@@ -146,6 +147,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private ListHostServiceApi listHostService;
 
     @Reference
+    private ListHostAggregateServiceApi listHostAggregateService;
+
+    @Reference
     private ListNetworkServiceApi listNetworkService;
 
     @Reference
@@ -243,7 +247,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         this.addDeploymentSpecService, this.updateDeploymentSpecService,
                         this.deleteDeploymentSpecService, this.listDeploymentSpecServiceByVirtualSystem,
                         this.syncDeploymentSpecService, this.listAvailabilityZonesService,
-                        this.listFloatingIpPoolsService, this.listHostService, this.listNetworkService,
+                        this.listFloatingIpPoolsService, this.listHostService,
+                        this.listHostAggregateService, this.listNetworkService,
                         this.listRegionService, this.listTenantService);
 
         // Replacing childSubView map entry with the newly instantiated class on the same key

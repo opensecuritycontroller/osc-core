@@ -22,6 +22,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
+import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
@@ -53,9 +54,9 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
     public UpdateDeploymentSpecWindow(DeploymentSpecDto dto, UpdateDeploymentSpecServiceApi updateDeploymentSpecService,
             ListAvailabilityZonesServiceApi listAvailabilityZonesService, ListFloatingIpPoolsServiceApi listFloatingIpPoolsService,
-            ListHostServiceApi listHostService, ListNetworkServiceApi listNetworkService, ListRegionServiceApi listRegionService,
+            ListHostServiceApi listHostService, ListHostAggregateServiceApi listHostAggregateService, ListNetworkServiceApi listNetworkService, ListRegionServiceApi listRegionService,
             ListTenantServiceApi listTenantService) throws Exception {
-        super(dto, listAvailabilityZonesService, listFloatingIpPoolsService, listHostService,
+        super(dto, listAvailabilityZonesService, listFloatingIpPoolsService, listHostService, listHostAggregateService,
                 listNetworkService, listRegionService, listTenantService);
         this.updateDeploymentSpecService = updateDeploymentSpecService;
         createWindow(this.CAPTION);

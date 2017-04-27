@@ -24,6 +24,7 @@ import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
+import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
@@ -57,21 +58,22 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
     private static final Logger log = Logger.getLogger(DeploymentSpecSubView.class);
     private static final String DEPLOYMENT_SPEC_HELP_GUID = "GUID-53968F65-9F9C-4D75-996C-4B48185A5A4E.html";
 
-    private AddDeploymentSpecServiceApi addDeploymentSpecService;
+    private final AddDeploymentSpecServiceApi addDeploymentSpecService;
 
-    private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
+    private final UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
 
-    private DeleteDeploymentSpecServiceApi deleteDeploymentSpecService;
+    private final DeleteDeploymentSpecServiceApi deleteDeploymentSpecService;
 
-    private ListDeploymentSpecServiceByVirtualSystemApi listDeploymentSpecServiceByVirtualSystem;
+    private final ListDeploymentSpecServiceByVirtualSystemApi listDeploymentSpecServiceByVirtualSystem;
 
-    private SyncDeploymentSpecServiceApi syncDeploymentSpecService;
-    private ListAvailabilityZonesServiceApi listAvailabilityZonesService;
-    private ListFloatingIpPoolsServiceApi listFloatingIpPoolsService;
-    private ListHostServiceApi listHostService;
-    private ListNetworkServiceApi listNetworkService;
-    private ListRegionServiceApi listRegionService;
-    private ListTenantServiceApi listTenantService;
+    private final SyncDeploymentSpecServiceApi syncDeploymentSpecService;
+    private final ListAvailabilityZonesServiceApi listAvailabilityZonesService;
+    private final ListFloatingIpPoolsServiceApi listFloatingIpPoolsService;
+    private final ListHostServiceApi listHostService;
+    private final ListHostAggregateServiceApi listHostAggregateService;
+    private final ListNetworkServiceApi listNetworkService;
+    private final ListRegionServiceApi listRegionService;
+    private final ListTenantServiceApi listTenantService;
 
     public DeploymentSpecSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
             VirtualSystemDto parent, AddDeploymentSpecServiceApi addDeploymentSpecService,
@@ -82,9 +84,11 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
             ListAvailabilityZonesServiceApi listAvailabilityZonesService,
             ListFloatingIpPoolsServiceApi listFloatingIpPoolsService,
             ListHostServiceApi listHostService,
+            ListHostAggregateServiceApi listHostAggregateService,
             ListNetworkServiceApi listNetworkService,
             ListRegionServiceApi listRegionService,
-            ListTenantServiceApi listTenantService) {
+            ListTenantServiceApi listTenantService
+            ) {
         super(currentView, title, buttons, parent);
         this.addDeploymentSpecService = addDeploymentSpecService;
         this.deleteDeploymentSpecService = deleteDeploymentSpecService;
@@ -93,9 +97,11 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
         this.listAvailabilityZonesService = listAvailabilityZonesService;
         this.listFloatingIpPoolsService = listFloatingIpPoolsService;
         this.listHostService = listHostService;
+        this.listHostAggregateService = listHostAggregateService;
         this.listNetworkService = listNetworkService;
         this.listRegionService = listRegionService;
         this.listTenantService = listTenantService;
+        this.updateDeploymentSpecService = updateDeploymentSpecService;
         if (parent.isMarkForDeletion()) {
             //Disable CRUD buttons
             ViewUtil.setButtonsEnabled(false, this.toolbar,
@@ -158,8 +164,8 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
             log.debug("Redirecting to Add Deployment Spec Window");
             ViewUtil.addWindow(new AddDeploymentSpecWindow(getDtoInContext().getId(),
                     this.addDeploymentSpecService, this.listAvailabilityZonesService,
-                    this.listFloatingIpPoolsService, this.listHostService, this.listNetworkService,
-                    this.listRegionService, this.listTenantService));
+                    this.listFloatingIpPoolsService, this.listHostService, this.listHostAggregateService,
+                    this.listNetworkService, this.listRegionService, this.listTenantService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Deployment Spec Window");
@@ -172,8 +178,8 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
                         new UpdateDeploymentSpecWindow(
                                 getTableContainer().getItem(getSelectedItemId()).getBean(),
                                 this.updateDeploymentSpecService, this.listAvailabilityZonesService,
-                                this.listFloatingIpPoolsService, this.listHostService, this.listNetworkService,
-                                this.listRegionService, this.listTenantService));
+                                this.listFloatingIpPoolsService, this.listHostService, this.listHostAggregateService,
+                                this.listNetworkService, this.listRegionService, this.listTenantService));
             }
         }
         if (event.getButton().getId() == ToolbarButtons.DELETE.getId()) {
