@@ -38,40 +38,41 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ForceDeleteSecurityGroupTask;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
         implements DeleteSecurityGroupServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteSecurityGroupService.class);
-    private SecurityGroup securityGroup = null;
 
     @Override
     public BaseJobResponse exec(BaseDeleteRequest request, EntityManager em) throws Exception {
-        validate(em, request);
+        SecurityGroup securityGroup = validate(em, request);
 
         UnlockObjectMetaTask unlockTask = null;
         BaseJobResponse response = new BaseJobResponse();
-        log.info("Deleting SecurityGroup: " + this.securityGroup.getName());
+        log.info("Deleting SecurityGroup: " + securityGroup.getName());
         try {
-            unlockTask = LockUtil.tryLockSecurityGroup(this.securityGroup,
-                    this.securityGroup.getVirtualizationConnector());
+            unlockTask = LockUtil.tryLockSecurityGroup(securityGroup,
+                    securityGroup.getVirtualizationConnector());
             if (request.isForceDelete()) {
                 TaskGraph tg = new TaskGraph();
-                tg.addTask(new ForceDeleteSecurityGroupTask(this.securityGroup));
+                tg.addTask(new ForceDeleteSecurityGroupTask(securityGroup));
                 tg.appendTask(unlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 Job job = JobEngine.getEngine().submit(
-                        "Force Delete Security Group '" + this.securityGroup.getName() + "'", tg,
-                        LockObjectReference.getObjectReferences(this.securityGroup));
+                        "Force Delete Security Group '" + securityGroup.getName() + "'", tg,
+                        LockObjectReference.getObjectReferences(securityGroup));
 
                 response.setJobId(job.getId());
             } else {
 
                 // Mark this security Group for Deletion and Trigger  Sync Job
-                OSCEntityManager.markDeleted(em, this.securityGroup);
+                OSCEntityManager.markDeleted(em, securityGroup);
                 UnlockObjectMetaTask forLambda = unlockTask;
                 chain(() -> {
                     try {
-                        Job job = ConformService.startSecurityGroupConformanceJob(em, this.securityGroup,
+                        Job job = ConformService.startSecurityGroupConformanceJob(em, securityGroup,
                             forLambda, false);
                         response.setJobId(job.getId());
                         return response;
@@ -89,7 +90,7 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
         return response;
     }
 
-    private void validate(EntityManager em, BaseDeleteRequest request) throws Exception {
+    private SecurityGroup validate(EntityManager em, BaseDeleteRequest request) throws Exception {
         BaseIdRequestValidator.checkForNullIdAndParentNullId(request);
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, request.getParentId());
@@ -99,17 +100,18 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
                     + "  is not found.");
         }
 
-        this.securityGroup = em.find(SecurityGroup.class, request.getId());
-        if (this.securityGroup == null) {
+        SecurityGroup securityGroup = em.find(SecurityGroup.class, request.getId());
+        if (securityGroup == null) {
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");
         }
 
-        if (!this.securityGroup.getMarkedForDeletion() && request.isForceDelete()) {
+        if (!securityGroup.getMarkedForDeletion() && request.isForceDelete()) {
             throw new VmidcBrokerValidationException(
                     "Security Group with ID "
                             + request.getId()
                             + " is not marked for deletion and force delete operation is applicable only for entries marked for deletion.");
         }
+        return securityGroup;
     }
 
 }

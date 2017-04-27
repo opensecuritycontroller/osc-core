@@ -24,7 +24,6 @@ import org.osc.core.broker.rest.server.exception.OscBadRequestException;
 import org.osc.core.broker.rest.server.exception.OscInternalServerErrorException;
 import org.osc.core.broker.rest.server.exception.OscNotFoundException;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
-import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ServiceDispatcherApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
@@ -105,7 +104,7 @@ public class ApiUtil {
         return submitRequestToService(service, request);
     }
 
-    public <R extends Request, O extends SetResponse<?>, T extends ServiceDispatcher<R, O>> SetResponse<?> getSetResponse(
+    public <R extends Request, O extends SetResponse<?>, T extends ServiceDispatcherApi<R, O>> SetResponse<?> getSetResponse(
             T service, R request) {
         return submitRequestToService(service, request);
     }

@@ -36,6 +36,15 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupByVcServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
+import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.UpdateSecurityGroupPropertiesServiceApi;
+import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
@@ -51,15 +60,6 @@ import org.osc.core.broker.service.request.UpdateSecurityGroupMemberRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
-import org.osc.core.broker.service.securitygroup.AddSecurityGroupService;
-import org.osc.core.broker.service.securitygroup.BindSecurityGroupService;
-import org.osc.core.broker.service.securitygroup.DeleteSecurityGroupService;
-import org.osc.core.broker.service.securitygroup.ListSecurityGroupBindingsBySgService;
-import org.osc.core.broker.service.securitygroup.ListSecurityGroupByVcService;
-import org.osc.core.broker.service.securitygroup.ListSecurityGroupMembersBySgService;
-import org.osc.core.broker.service.securitygroup.SyncSecurityGroupService;
-import org.osc.core.broker.service.securitygroup.UpdateSecurityGroupPropertiesService;
-import org.osc.core.broker.service.securitygroup.UpdateSecurityGroupService;
 import org.osc.core.broker.service.vc.AddVirtualizationConnectorService;
 import org.osc.core.broker.service.vc.DeleteVirtualizationConnectorService;
 import org.osc.core.broker.service.vc.ListVirtualizationConnectorService;
@@ -96,6 +96,33 @@ public class VirtualizationConnectorApis {
 
     @Reference
     private AddVirtualizationConnectorService addVirtualizationConnectorService;
+
+    @Reference
+    private AddSecurityGroupServiceApi addSecurityGroupService;
+
+    @Reference
+    private UpdateSecurityGroupServiceApi updateSecurityGroupService;
+
+    @Reference
+    private UpdateSecurityGroupPropertiesServiceApi updateSecurityGroupPropertiesService;
+
+    @Reference
+    private DeleteSecurityGroupServiceApi deleteSecurityGroupService;
+
+    @Reference
+    private ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService;
+
+    @Reference
+    private BindSecurityGroupServiceApi bindSecurityGroupService;
+
+    @Reference
+    private ListSecurityGroupByVcServiceApi listSecurityGroupByVcService;
+
+    @Reference
+    private ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService;
+
+    @Reference
+    private SyncSecurityGroupServiceApi syncSecurityGroupService;
 
     @ApiOperation(value = "Lists All Virtualization Connectors",
             notes = "Password information is not returned as it is sensitive information",
@@ -230,7 +257,7 @@ public class VirtualizationConnectorApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         @SuppressWarnings("unchecked")
         ListResponse<SecurityGroupDto> response = (ListResponse<SecurityGroupDto>) this.apiUtil
-                .getListResponse(new ListSecurityGroupByVcService(), new BaseIdRequest(vcId));
+                .getListResponse(this.listSecurityGroupByVcService, new BaseIdRequest(vcId));
         return response.getList();
     }
 
@@ -272,7 +299,7 @@ public class VirtualizationConnectorApis {
         this.apiUtil.setIdAndParentIdOrThrow(sgDto, null, vcId, "Security Group");
         AddOrUpdateSecurityGroupRequest request = new AddOrUpdateSecurityGroupRequest();
         request.setDto(sgDto);
-        return this.apiUtil.getResponseForBaseRequest(new AddSecurityGroupService(), request);
+        return this.apiUtil.getResponseForBaseRequest(this.addSecurityGroupService, request);
     }
 
     @ApiOperation(value = "Updates a Security Group (Openstack Only)",
@@ -291,7 +318,7 @@ public class VirtualizationConnectorApis {
         this.apiUtil.setIdAndParentIdOrThrow(sgDto, sgId, vcId, "Security Group");
         AddOrUpdateSecurityGroupRequest request = new AddOrUpdateSecurityGroupRequest();
         request.setDto(sgDto);
-        return this.apiUtil.getResponseForBaseRequest(new UpdateSecurityGroupPropertiesService(), request);
+        return this.apiUtil.getResponseForBaseRequest(this.updateSecurityGroupPropertiesService, request);
     }
 
     @ApiOperation(value = "Deletes a Security Group (Openstack Only)",
@@ -306,7 +333,7 @@ public class VirtualizationConnectorApis {
                                         @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Deleting Security Group.. " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new DeleteSecurityGroupService(),
+        return this.apiUtil.getResponseForBaseRequest(this.deleteSecurityGroupService,
                 new BaseDeleteRequest(sgId, vcId, false)); // false as this is not force delete
     }
 
@@ -323,7 +350,7 @@ public class VirtualizationConnectorApis {
                                              @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Deleting Security Group.. " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new DeleteSecurityGroupService(),
+        return this.apiUtil.getResponseForBaseRequest(this.deleteSecurityGroupService,
                 new BaseDeleteRequest(sgId, vcId, true));
     }
 
@@ -339,7 +366,7 @@ public class VirtualizationConnectorApis {
                                       @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Sync Security Group" + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new SyncSecurityGroupService(), new BaseIdRequest(sgId, vcId));
+        return this.apiUtil.getResponseForBaseRequest(this.syncSecurityGroupService, new BaseIdRequest(sgId, vcId));
     }
 
     // Security Group member APIs
@@ -366,7 +393,7 @@ public class VirtualizationConnectorApis {
 
         @SuppressWarnings("unchecked")
         SetResponse<SecurityGroupMemberItemDto> memberList = (SetResponse<SecurityGroupMemberItemDto>) this.apiUtil
-                .getSetResponse(new ListSecurityGroupMembersBySgService(), new BaseIdRequest(sgId));
+                .getSetResponse(this.listSecurityGroupMembersBySgService, new BaseIdRequest(sgId));
 
         return memberList.getSet();
     }
@@ -396,7 +423,7 @@ public class VirtualizationConnectorApis {
         request.getDto().setId(sgId);
         request.getDto().setParentId(vcId);
 
-        return this.apiUtil.getResponseForBaseRequest(new UpdateSecurityGroupService(), request);
+        return this.apiUtil.getResponseForBaseRequest(this.updateSecurityGroupService, request);
     }
 
     // SG Interface APIS
@@ -425,7 +452,7 @@ public class VirtualizationConnectorApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<VirtualSystemPolicyBindingDto> memberList = (ListResponse<VirtualSystemPolicyBindingDto>) this.apiUtil
-                .getListResponse(new ListSecurityGroupBindingsBySgService(), new BaseIdRequest(sgId));
+                .getListResponse(this.listSecurityGroupBindingsBySgService, new BaseIdRequest(sgId));
 
         return memberList.getList();
     }
@@ -445,14 +472,13 @@ public class VirtualizationConnectorApis {
                                                         @ApiParam(value = "List of Bindings", required = true) Set<VirtualSystemPolicyBindingDto> bindings) {
         logger.info("Update Bindings for Security Group - " + sgId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        BindSecurityGroupService bindService = new BindSecurityGroupService();
         BindSecurityGroupRequest bindRequest = new BindSecurityGroupRequest();
         bindRequest.setVcId(vcId);
         bindRequest.setSecurityGroupId(sgId);
         for (VirtualSystemPolicyBindingDto vsBinding : bindings) {
             bindRequest.addServiceToBindTo(vsBinding);
         }
-        return this.apiUtil.getResponseForBaseRequest(bindService, bindRequest);
+        return this.apiUtil.getResponseForBaseRequest(this.bindSecurityGroupService, bindRequest);
     }
 
 }

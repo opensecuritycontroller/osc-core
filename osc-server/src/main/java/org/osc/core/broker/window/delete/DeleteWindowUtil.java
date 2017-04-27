@@ -24,6 +24,7 @@ import org.osc.core.broker.service.api.DeleteAlertServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
@@ -38,7 +39,6 @@ import org.osc.core.broker.service.request.AlertRequest;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.securitygroup.DeleteSecurityGroupService;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
@@ -239,7 +239,7 @@ public class DeleteWindowUtil {
         ViewUtil.addWindow(deleteWindow);
     }
 
-    public static void deleteSecurityGroup(final SecurityGroupDto dto) {
+    public static void deleteSecurityGroup(DeleteSecurityGroupServiceApi deleteService, final SecurityGroupDto dto) {
 
         final VmidcWindow<? extends OkCancelButtonModel> deleteWindow;
         if (dto.isMarkForDeletion()) {
@@ -271,7 +271,6 @@ public class DeleteWindowUtil {
                     delRequest.setId(dto.getId());
                     delRequest.setParentId(dto.getParentId());
                     log.info("deleting Security Group - " + dto.getName());
-                    DeleteSecurityGroupService deleteService = new DeleteSecurityGroupService();
                     BaseJobResponse response = deleteService.dispatch(delRequest);
                     deleteWindow.close();
 

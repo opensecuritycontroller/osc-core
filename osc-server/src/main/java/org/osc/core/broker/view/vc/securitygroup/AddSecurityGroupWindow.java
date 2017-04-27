@@ -17,6 +17,7 @@
 package org.osc.core.broker.view.vc.securitygroup;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
@@ -25,7 +26,6 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.securitygroup.AddSecurityGroupService;
 import org.osc.core.broker.view.util.ViewUtil;
 
 import com.vaadin.ui.Notification;
@@ -41,11 +41,15 @@ public class AddSecurityGroupWindow extends BaseSecurityGroupWindow {
 
     private static final Logger log = Logger.getLogger(AddSecurityGroupWindow.class);
 
+    private AddSecurityGroupServiceApi addSecurityGroupService;
+
     public AddSecurityGroupWindow(VirtualizationConnectorDto vcDto,
             ListOpenstackMembersServiceApi listOpenstackMembersService,
             ListRegionByVcIdServiceApi listRegionByVcIdService,
-            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi) throws Exception {
+            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi,
+            AddSecurityGroupServiceApi addSecurityGroupService) throws Exception {
         super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi);
+        this.addSecurityGroupService = addSecurityGroupService;
         this.currentSecurityGroup = new SecurityGroupDto();
         this.currentSecurityGroup.setParentId(vcDto.getId());
         createWindow(this.CAPTION);
@@ -69,8 +73,7 @@ public class AddSecurityGroupWindow extends BaseSecurityGroupWindow {
                 request.setDto(dto);
                 request.setMembers(getSelectedMembers());
 
-                AddSecurityGroupService addService = new AddSecurityGroupService();
-                BaseJobResponse response = addService.dispatch(request);
+                BaseJobResponse response = this.addSecurityGroupService.dispatch(request);
 
                 close();
                 ViewUtil.showJobNotification(response.getJobId());

@@ -20,16 +20,20 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.api.UpdateSecurityGroupPropertiesServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
+import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class UpdateSecurityGroupPropertiesService extends UpdateSecurityGroupService
         implements UpdateSecurityGroupPropertiesServiceApi {
 
@@ -40,23 +44,27 @@ public class UpdateSecurityGroupPropertiesService extends UpdateSecurityGroupSer
 
         SecurityGroupDto dto = request.getDto();
         validateAndLoad(em, request);
+
+        SecurityGroup securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
+
         UnlockObjectMetaTask unlockTask = null;
 
         try {
 
-            unlockTask = LockUtil.tryLockSecurityGroup(this.securityGroup, this.vc);
+            unlockTask = LockUtil.tryLockSecurityGroup(securityGroup,
+                    VirtualizationConnectorEntityMgr.findById(em, dto.getParentId()));
 
-            SecurityGroupEntityMgr.toEntity(this.securityGroup, dto);
+            SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
-            log.info("Updating SecurityGroup properties: " + this.securityGroup.toString());
-            OSCEntityManager.update(em, this.securityGroup);
+            log.info("Updating SecurityGroup properties: " + securityGroup.toString());
+            OSCEntityManager.update(em, securityGroup);
 
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {
                 try {
-                    Job job = ConformService.startSecurityGroupConformanceJob(this.securityGroup, forLambda);
+                    Job job = ConformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
-                    return new BaseJobResponse(this.securityGroup.getId(), job.getId());
+                    return new BaseJobResponse(securityGroup.getId(), job.getId());
                 } catch (Exception e) {
                     LockUtil.releaseLocks(forLambda);
                     throw e;

@@ -61,13 +61,10 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
 
     private static final Logger log = Logger.getLogger(BaseSecurityGroupService.class);
 
-    protected VirtualizationConnector vc;
-    protected List<String> regions = new ArrayList<>();
-
     /**
      * Validates Virtualization connector and tenant exists
      */
-    protected void validateAndLoad(EntityManager em, SecurityGroupDto dto) throws Exception {
+    protected List<String> validateAndLoad(EntityManager em, SecurityGroupDto dto) throws Exception {
         SecurityGroupDtoValidator.checkForNullFields(dto);
         SecurityGroupDtoValidator.checkFieldLength(dto);
 
@@ -75,14 +72,14 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
             throw new VmidcBrokerValidationException("Virtualization Connector Id needs to be specified");
         }
 
-        this.vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
 
-        if (this.vc == null) {
+        if (vc == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector with Id: " + dto.getParentId()
                     + "  is not found.");
         }
 
-        if (this.vc.getControllerType().equals(ControllerType.NONE.getValue())) {
+        if (vc.getControllerType().equals(ControllerType.NONE.getValue())) {
             throw new VmidcBrokerValidationException(
                     "Creation of Security Groups is not allowed in the absence of SDN Controller.");
         }
@@ -90,16 +87,16 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
         JCloudKeyStone keystone = null;
         JCloudNova novaApi = null;
         try {
-            keystone = new JCloudKeyStone(new Endpoint(this.vc));
+            keystone = new JCloudKeyStone(new Endpoint(vc));
             Tenant tenant = keystone.getTenantById(dto.getTenantId());
 
             if (tenant == null) {
                 throw new VmidcBrokerValidationException("Tenant: '" + dto.getTenantName() + "' does not exist.");
             }
 
-            novaApi = new JCloudNova(new Endpoint(this.vc, tenant.getName()));
+            novaApi = new JCloudNova(new Endpoint(vc, tenant.getName()));
 
-            this.regions.addAll(novaApi.listRegions());
+            return new ArrayList<>(novaApi.listRegions());
         } finally {
             if (keystone != null) {
                 keystone.close();
@@ -114,10 +111,10 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
      * Validates the member to check for null fields and also check the region specified exists
      *
      */
-    protected void validate(SecurityGroupMemberItemDto memberItem) throws VmidcBrokerInvalidEntryException,
+    protected void validate(SecurityGroupMemberItemDto memberItem, List<String> regions) throws VmidcBrokerInvalidEntryException,
             VmidcBrokerValidationException {
         SecurityGroupMemberItemDtoValidator.checkForNullFields(memberItem);
-        if (!this.regions.contains(memberItem.getRegion())) {
+        if (!regions.contains(memberItem.getRegion())) {
             throw new VmidcBrokerValidationException(String.format("Region: '%s' does not exist for member '%s'",
                     memberItem.getRegion(), memberItem.getName()));
         }
