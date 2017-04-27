@@ -34,7 +34,6 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.service.AddDeploymentSpecService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDeploymentSpecService;
 import org.osc.core.broker.service.ForceDeleteVirtualSystemService;
@@ -42,6 +41,7 @@ import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.ListDeploymentSpecServiceByVirtualSystem;
 import org.osc.core.broker.service.ListDistributedApplianceInstanceByVSService;
 import org.osc.core.broker.service.UpdateDeploymentSpecService;
+import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.dto.PolicyDto;
@@ -86,6 +86,9 @@ public class VirtualSystemApis {
 
     @Reference
     private ApiUtil apiUtil;
+
+    @Reference
+    private AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
 
     // DAI APIs
     @ApiOperation(value = "Lists Appliance Instances",
@@ -184,7 +187,7 @@ public class VirtualSystemApis {
         logger.info("Creating Deployment Spec ...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         this.apiUtil.setParentIdOrThrow(dsDto, vsId, "Deployment Specification");
-        return this.apiUtil.getResponseForBaseRequest(new AddDeploymentSpecService(),
+        return this.apiUtil.getResponseForBaseRequest(this.addDeploymentSpecServiceApi,
                 new BaseRequest<DeploymentSpecDto>(dsDto));
     }
 

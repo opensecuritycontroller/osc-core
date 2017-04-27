@@ -17,7 +17,7 @@
 package org.osc.core.broker.view.alarm;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.alarm.AddAlarmService;
+import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
@@ -33,10 +33,12 @@ public class AddAlarmWindow extends BaseAlarmWindow {
 
     private static final Logger log = Logger.getLogger(AddAlarmWindow.class);
 
-    public AddAlarmWindow(AlarmView alarmView) throws Exception {
+    private AddAlarmServiceApi addAlarmServiceApi;
 
+    public AddAlarmWindow(AlarmView alarmView, AddAlarmServiceApi addAlarmServiceApi) throws Exception {
         super();
         this.alarmView = alarmView;
+        this.addAlarmServiceApi = addAlarmServiceApi;
         createWindow(this.CAPTION);
     }
 
@@ -48,8 +50,7 @@ public class AddAlarmWindow extends BaseAlarmWindow {
                 BaseRequest<AlarmDto> request = createRequest();
 
                 // calling add service
-                AddAlarmService addService = new AddAlarmService();
-                BaseResponse addResponse = addService.dispatch(request);
+                BaseResponse addResponse = this.addAlarmServiceApi.dispatch(request);
                 log.info("adding new alarm - " + this.alarmName.getValue());
 
                 // adding returned ID to the request DTO object

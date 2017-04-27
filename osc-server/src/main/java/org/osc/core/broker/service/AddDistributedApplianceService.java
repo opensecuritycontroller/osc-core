@@ -43,19 +43,18 @@ import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.util.PKIUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component
 public class AddDistributedApplianceService
         extends ServiceDispatcher<BaseRequest<DistributedApplianceDto>, AddDistributedApplianceResponse>
         implements AddDistributedApplianceServiceApi {
 
     private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
 
-    // BEWARE: don't make this final as it  breaks @InjectMocks
+    @Reference
     private ConformService conformService;
-
-    public AddDistributedApplianceService(ConformService conformService) {
-        this.conformService = conformService;
-    }
 
     @Override
     public AddDistributedApplianceResponse exec(BaseRequest<DistributedApplianceDto> request, EntityManager em)

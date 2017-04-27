@@ -16,16 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.window.delete;
 
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Notification;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDeploymentSpecService;
-import org.osc.core.broker.service.DeleteDistributedApplianceService;
 import org.osc.core.broker.service.ForceDeleteVirtualSystemService;
 import org.osc.core.broker.service.alarm.DeleteAlarmService;
 import org.osc.core.broker.service.alert.DeleteAlertService;
+import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -47,7 +46,9 @@ import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.broker.window.button.OkCancelForceDeleteModel;
 
-import java.util.List;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Notification;
 
 public class DeleteWindowUtil {
 
@@ -101,7 +102,7 @@ public class DeleteWindowUtil {
 
     }
 
-    public static void deleteDistributedAppliance(final DistributedApplianceDto dto, DeleteDistributedApplianceService deleteDistributedApplianceService) {
+    public static void deleteDistributedAppliance(final DistributedApplianceDto dto, DeleteDistributedApplianceServiceApi deleteDistributedApplianceServiceApi) {
         final VmidcWindow<? extends OkCancelButtonModel> deleteWindow;
         if (dto.isMarkForDeletion()) {
             deleteWindow = WindowUtil.createForceDeleteWindow("Delete Distributed Appliance ",
@@ -131,8 +132,7 @@ public class DeleteWindowUtil {
 
                     delRequest.setId(dto.getId());
                     log.info("deleting Distributed Appliance - " + dto.getName());
-                    DeleteDistributedApplianceService daDeleteService = deleteDistributedApplianceService;
-                    BaseJobResponse response = daDeleteService.dispatch(delRequest);
+                    BaseJobResponse response = deleteDistributedApplianceServiceApi.dispatch(delRequest);
                     deleteWindow.close();
 
                     if (response.getJobId() != null) {

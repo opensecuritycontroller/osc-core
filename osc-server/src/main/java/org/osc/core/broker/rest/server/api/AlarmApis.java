@@ -35,10 +35,10 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.alarm.AddAlarmService;
 import org.osc.core.broker.service.alarm.DeleteAlarmService;
 import org.osc.core.broker.service.alarm.ListAlarmService;
 import org.osc.core.broker.service.alarm.UpdateAlarmService;
+import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
@@ -72,6 +72,10 @@ public class AlarmApis {
 
     @Reference
     private ApiUtil apiUtil;
+
+    @Reference
+    private AddAlarmServiceApi addAlarmServiceApi;
+
 
     @ApiOperation(value = "Lists all configured Alarms", response = AlarmDto.class, responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -121,7 +125,7 @@ public class AlarmApis {
 
         logger.info("Creating Alarm...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new AddAlarmService(), new BaseRequest<AlarmDto>(alarmDto));
+        return this.apiUtil.getResponseForBaseRequest(this.addAlarmServiceApi, new BaseRequest<AlarmDto>(alarmDto));
     }
 
     /**

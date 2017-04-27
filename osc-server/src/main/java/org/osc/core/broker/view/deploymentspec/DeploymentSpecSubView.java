@@ -21,12 +21,14 @@ import java.util.Arrays;
 import org.jboss.logging.Logger;
 import org.osc.core.broker.service.ListDeploymentSpecServiceByVirtualSystem;
 import org.osc.core.broker.service.SyncDeploymentSpecService;
+import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.CRUDBaseSubView;
 import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.util.ToolbarButtons;
@@ -47,6 +49,8 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(DeploymentSpecSubView.class);
     private static final String DEPLOYMENT_SPEC_HELP_GUID = "GUID-53968F65-9F9C-4D75-996C-4B48185A5A4E.html";
+
+    private AddDeploymentSpecServiceApi addDeploymentSpecServiceApi = StaticRegistry.addDeploymentSpecServiceApi();
 
     public DeploymentSpecSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
             VirtualSystemDto parent) {
@@ -112,7 +116,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Deployment Spec Window");
-            ViewUtil.addWindow(new AddDeploymentSpecWindow(getDtoInContext().getId()));
+            ViewUtil.addWindow(new AddDeploymentSpecWindow(getDtoInContext().getId(), this.addDeploymentSpecServiceApi));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Deployment Spec Window");

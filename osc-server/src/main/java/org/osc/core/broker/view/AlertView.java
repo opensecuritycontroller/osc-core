@@ -23,13 +23,14 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
-import org.osc.core.broker.service.alert.AcknowledgeAlertService;
 import org.osc.core.broker.service.alert.ListAlertService;
+import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.AlertRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
@@ -58,6 +59,8 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
 
     private static final long serialVersionUID = 1L;
     private static final String ALERT_HELP_GUID = "GUID-977FE812-0813-41D0-A6A4-28A9E18CD8F6.html";
+
+    private AcknowledgeAlertServiceApi acknowledgeAlertServiceApi = StaticRegistry.acknowledgeAlertServiceApi();
 
     public AlertView() {
         super();
@@ -150,8 +153,7 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
             AlertRequest req = new AlertRequest();
             req.setDtoList(this.itemList);
             req.setAcknowledge(acknowledge);
-            AcknowledgeAlertService acknowledgeService = new AcknowledgeAlertService();
-            acknowledgeService.dispatch(req);
+            this.acknowledgeAlertServiceApi.dispatch(req);
             log.info("Acknowledge/Unacknowledge Alert(s) Successful!");
         } catch (Exception e) {
             log.error("Failed to acknowledge/unacknowledge alert(s)", e);

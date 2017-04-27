@@ -18,14 +18,19 @@ package org.osc.core.broker.util;
 
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.DeleteDistributedApplianceService;
 import org.osc.core.broker.service.SetNATSettingsService;
 import org.osc.core.broker.service.SetNetworkSettingsService;
 import org.osc.core.broker.service.UpdateUserService;
 import org.osc.core.broker.service.UpgradeService;
+import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
+import org.osc.core.broker.service.api.AddAlarmServiceApi;
+import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteUserServiceApi;
+import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.broadcast.Broadcaster;
-import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.SyncManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osc.core.broker.service.vc.AddVirtualizationConnectorService;
@@ -65,7 +70,7 @@ public class StaticRegistry {
     private UpgradeService upgradeService;
 
     @Reference
-    private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
+    private AddApplianceManagerConnectorServiceApi addApplianceManagerConnectorService;
 
     @Reference
     private UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService;
@@ -86,10 +91,25 @@ public class StaticRegistry {
     private UpdateUserService updateUserService;
 
     @Reference
-    private DeleteDistributedApplianceService deleteDistributedApplianceService;
+    private AddDistributedApplianceServiceApi addDistributedApplianceServiceApi;
+
+    @Reference
+    private DeleteDistributedApplianceServiceApi deleteDistributedApplianceServiceApi;
 
     @Reference
     private Broadcaster broadcaster;
+
+    @Reference
+    private AcknowledgeAlertServiceApi acknowledgeAlertServiceApi;
+
+    @Reference
+    private AddAlarmServiceApi addAlarmServiceApi;
+
+    @Reference
+    AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
+
+    @Reference
+    private UpdateDistributedApplianceServiceApi updateDistributedApplianceServiceApi;
 
     private static StaticRegistry instance = null;
 
@@ -122,7 +142,7 @@ public class StaticRegistry {
         return instance.upgradeService;
     }
 
-    public static AddApplianceManagerConnectorService addApplianceManagerConnectorService() {
+    public static AddApplianceManagerConnectorServiceApi addApplianceManagerConnectorService() {
         return instance.addApplianceManagerConnectorService;
     }
 
@@ -146,8 +166,8 @@ public class StaticRegistry {
         return instance.deleteUserService;
     }
 
-    public static DeleteDistributedApplianceService deleteDistributedApplianceService() {
-        return instance.deleteDistributedApplianceService;
+    public static DeleteDistributedApplianceServiceApi deleteDistributedApplianceServiceApi() {
+        return instance.deleteDistributedApplianceServiceApi;
     }
 
     public static UpdateUserService updateUserService() {
@@ -158,4 +178,23 @@ public class StaticRegistry {
         return instance.broadcaster;
     }
 
+    public static AcknowledgeAlertServiceApi acknowledgeAlertServiceApi() {
+        return instance.acknowledgeAlertServiceApi ;
+    }
+
+    public static AddAlarmServiceApi addAlarmServiceApi() {
+        return instance.addAlarmServiceApi;
+    }
+
+    public static AddDeploymentSpecServiceApi addDeploymentSpecServiceApi() {
+        return instance.addDeploymentSpecServiceApi;
+    }
+
+    public static UpdateDistributedApplianceServiceApi updateDistributedApplianceServiceApi() {
+        return instance.updateDistributedApplianceServiceApi;
+    }
+
+    public static AddDistributedApplianceServiceApi addDistributedApplianceServiceApi() {
+        return instance.addDistributedApplianceServiceApi;
+    }
 }

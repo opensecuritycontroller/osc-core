@@ -84,13 +84,13 @@ public class ApiUtil {
      *             Exception either in case of any exceptions thrown by the service or in case of exceptions submitting
      *             the request
      */
-    public <R extends BaseRequest<?>, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> O submitBaseRequestToService(
+    public <R extends BaseRequest<?>, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcherApi<R, O>> O submitBaseRequestToService(
             T service, R request) {
         request.setApi(true);
         return submitRequestToService(service, request);
     }
 
-    public <R extends BaseRequest<?>, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcher<R, O>> Response getResponseForBaseRequest(
+    public <R extends BaseRequest<?>, O extends org.osc.core.broker.service.response.Response, T extends ServiceDispatcherApi<R, O>> Response getResponseForBaseRequest(
             T service, R request) {
         return Response.status(Response.Status.OK).entity(submitBaseRequestToService(service, request)).build();
     }

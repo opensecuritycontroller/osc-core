@@ -39,7 +39,9 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
         implements AddDeploymentSpecServiceApi {
 
