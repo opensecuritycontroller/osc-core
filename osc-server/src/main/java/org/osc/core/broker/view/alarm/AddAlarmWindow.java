@@ -33,12 +33,12 @@ public class AddAlarmWindow extends BaseAlarmWindow {
 
     private static final Logger log = Logger.getLogger(AddAlarmWindow.class);
 
-    private AddAlarmServiceApi addAlarmServiceApi;
+    private AddAlarmServiceApi addAlarmService;
 
-    public AddAlarmWindow(AlarmView alarmView, AddAlarmServiceApi addAlarmServiceApi) throws Exception {
+    public AddAlarmWindow(AlarmView alarmView, AddAlarmServiceApi addAlarmService) throws Exception {
         super();
         this.alarmView = alarmView;
-        this.addAlarmServiceApi = addAlarmServiceApi;
+        this.addAlarmService = addAlarmService;
         createWindow(this.CAPTION);
     }
 
@@ -50,7 +50,7 @@ public class AddAlarmWindow extends BaseAlarmWindow {
                 BaseRequest<AlarmDto> request = createRequest();
 
                 // calling add service
-                BaseResponse addResponse = this.addAlarmServiceApi.dispatch(request);
+                BaseResponse addResponse = this.addAlarmService.dispatch(request);
                 log.info("adding new alarm - " + this.alarmName.getValue());
 
                 // adding returned ID to the request DTO object

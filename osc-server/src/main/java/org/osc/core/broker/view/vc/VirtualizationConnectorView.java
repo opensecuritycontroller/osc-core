@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -69,6 +70,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     private static final long serialVersionUID = 1L;
 
     private static final Logger log = Logger.getLogger(VirtualizationConnectorView.class);
+
+    @Reference
+    private DeleteVirtualizationConnectorServiceApi deleteVirtualizationConnectorService;
 
     @Reference
     private ConformService conformService;
@@ -203,7 +207,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
             ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
-            DeleteWindowUtil.deleteVirtualizationConnector(getParentItem().getBean());
+            DeleteWindowUtil.deleteVirtualizationConnector(this.deleteVirtualizationConnectorService,
+                    getParentItem().getBean());
         }
         if (event.getButton().getId().equals(ToolbarButtons.ADD_CHILD.getId())) {
             VirtualizationConnectorDto vc = getParentItem().getBean();

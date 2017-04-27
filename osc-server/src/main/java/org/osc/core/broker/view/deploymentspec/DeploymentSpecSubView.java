@@ -23,6 +23,7 @@ import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
@@ -52,6 +53,8 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
 
     private AddDeploymentSpecServiceApi addDeploymentSpecService;
 
+    private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
+
     private DeleteDeploymentSpecServiceApi deleteDeploymentSpecService;
 
     private ListDeploymentSpecServiceByVirtualSystemApi listDeploymentSpecServiceByVirtualSystem;
@@ -60,6 +63,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
 
     public DeploymentSpecSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
             VirtualSystemDto parent, AddDeploymentSpecServiceApi addDeploymentSpecService,
+            UpdateDeploymentSpecServiceApi updateDeploymentSpecService,
             DeleteDeploymentSpecServiceApi deleteDeploymentSpecService,
             ListDeploymentSpecServiceByVirtualSystemApi listDeploymentSpecServiceByVirtualSystem,
             SyncDeploymentSpecServiceApi syncDeploymentSpecService) {
@@ -139,7 +143,9 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
                         Notification.Type.WARNING_MESSAGE);
             } else {
                 ViewUtil.addWindow(
-                        new UpdateDeploymentSpecWindow(getTableContainer().getItem(getSelectedItemId()).getBean()));
+                        new UpdateDeploymentSpecWindow(
+                                getTableContainer().getItem(getSelectedItemId()).getBean(),
+                                this.updateDeploymentSpecService));
             }
         }
         if (event.getButton().getId() == ToolbarButtons.DELETE.getId()) {

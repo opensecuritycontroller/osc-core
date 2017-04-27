@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.view;
 
+import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
+import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -23,6 +25,7 @@ import org.osc.core.broker.view.maintenance.ManagerPluginsLayout;
 import org.osc.core.broker.view.maintenance.SdnControllerPluginsLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.navigator.View;
@@ -43,6 +46,12 @@ public class PluginView extends VerticalLayout implements View {
     TabSheet subMenu = null;
     TabSheet tabs = new TabSheet();
 
+    @Reference
+    ImportSdnControllerPluginServiceApi importSdnControllerPluginService;
+
+    @Reference
+    ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService;
+
     public PluginView() throws Exception {
         setSizeFull();
         addStyleName(StyleConstants.BASE_CONTAINER);
@@ -53,11 +62,13 @@ public class PluginView extends VerticalLayout implements View {
 
         // adding SDN Controller Plugin
         this.tabs.addTab(createTab("SDN Controller Plugins", "SDN Controller Plugins",
-                new SdnControllerPluginsLayout(), MAINTENANCE_CONTROLLER_PLUGIN_GUID));
+                new SdnControllerPluginsLayout(this.importSdnControllerPluginService),
+                MAINTENANCE_CONTROLLER_PLUGIN_GUID));
 
         // Adding Manager Plugin tab
         this.tabs.addTab(createTab(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_TITLE),
-                VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_NAME), new ManagerPluginsLayout(),
+                VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_NAME),
+                new ManagerPluginsLayout(this.importApplianceManagerPluginService),
                 MAINTENANCE_MANAGER_PLUGIN_GUID));
 
         // adding tab sheet to the view

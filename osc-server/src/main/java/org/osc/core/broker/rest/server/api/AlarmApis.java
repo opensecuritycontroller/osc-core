@@ -35,10 +35,10 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.alarm.DeleteAlarmService;
-import org.osc.core.broker.service.alarm.ListAlarmService;
-import org.osc.core.broker.service.alarm.UpdateAlarmService;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
+import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
+import org.osc.core.broker.service.api.ListAlarmServiceApi;
+import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
@@ -74,8 +74,16 @@ public class AlarmApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private AddAlarmServiceApi addAlarmServiceApi;
+    private AddAlarmServiceApi addAlarmService;
 
+    @Reference
+    private UpdateAlarmServiceApi updateAlarmService;
+
+    @Reference
+    private DeleteAlarmServiceApi deleteAlarmService;
+
+    @Reference
+    private ListAlarmServiceApi listAlarmService;
 
     @ApiOperation(value = "Lists all configured Alarms", response = AlarmDto.class, responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -87,7 +95,7 @@ public class AlarmApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<AlarmDto> response = (ListResponse<AlarmDto>) this.apiUtil.getListResponse(new ListAlarmService(),
+        ListResponse<AlarmDto> response = (ListResponse<AlarmDto>) this.apiUtil.getListResponse(this.listAlarmService,
                 new BaseRequest<BaseDto>(true));
 
         return response.getList();
@@ -125,7 +133,7 @@ public class AlarmApis {
 
         logger.info("Creating Alarm...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(this.addAlarmServiceApi, new BaseRequest<AlarmDto>(alarmDto));
+        return this.apiUtil.getResponseForBaseRequest(this.addAlarmService, new BaseRequest<AlarmDto>(alarmDto));
     }
 
     /**
@@ -144,7 +152,7 @@ public class AlarmApis {
         logger.info("Updating Alarm " + alarmId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         this.apiUtil.setIdOrThrow(alarmDto, alarmId, "Alarm");
-        return this.apiUtil.getResponseForBaseRequest(new UpdateAlarmService(), new BaseRequest<AlarmDto>(alarmDto));
+        return this.apiUtil.getResponseForBaseRequest(this.updateAlarmService, new BaseRequest<AlarmDto>(alarmDto));
     }
 
     /**
@@ -163,6 +171,6 @@ public class AlarmApis {
         logger.info("Deleting the Alarm " + alarmId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return this.apiUtil.getResponseForBaseRequest(new DeleteAlarmService(), new BaseIdRequest(alarmId));
+        return this.apiUtil.getResponseForBaseRequest(this.deleteAlarmService, new BaseIdRequest(alarmId));
     }
 }

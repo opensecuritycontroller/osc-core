@@ -36,9 +36,9 @@ import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.alert.DeleteAlertService;
-import org.osc.core.broker.service.alert.ListAlertService;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
+import org.osc.core.broker.service.api.DeleteAlertServiceApi;
+import org.osc.core.broker.service.api.ListAlertServiceApi;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.request.AlertRequest;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -72,7 +72,13 @@ public class AlertApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private AcknowledgeAlertServiceApi AcknowledgeAlertServiceApi;
+    private AcknowledgeAlertServiceApi acknowledgeAlertService;
+
+    @Reference
+    private DeleteAlertServiceApi deleteAlertService;
+
+    @Reference
+    private ListAlertServiceApi listAlertService;
 
     @ApiOperation(value = "Lists all Alerts", response = AlertDto.class, responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
@@ -84,7 +90,7 @@ public class AlertApis {
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<AlertDto> response = (ListResponse<AlertDto>) this.apiUtil.getListResponse(new ListAlertService(),
+        ListResponse<AlertDto> response = (ListResponse<AlertDto>) this.apiUtil.getListResponse(this.listAlertService,
                 new BaseRequest<>(true));
 
         return response.getList();
@@ -129,7 +135,7 @@ public class AlertApis {
 
         AlertRequest alertRequest = createAcknowledgeRequest(alertId, alertDto);
 
-        return this.apiUtil.getResponseForBaseRequest(this.AcknowledgeAlertServiceApi, alertRequest);
+        return this.apiUtil.getResponseForBaseRequest(this.acknowledgeAlertService, alertRequest);
     }
 
     /**
@@ -150,9 +156,7 @@ public class AlertApis {
 
         AlertRequest alertRequest = createDeleteRequest(alertId);
 
-        DeleteAlertService deleteService = new DeleteAlertService();
-
-        return this.apiUtil.getResponseForBaseRequest(deleteService, alertRequest);
+        return this.apiUtil.getResponseForBaseRequest(this.deleteAlertService, alertRequest);
     }
 
     private AlertRequest createDeleteRequest(Long alertId) {

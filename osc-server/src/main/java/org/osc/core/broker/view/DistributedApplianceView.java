@@ -30,7 +30,14 @@ import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
+import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
+import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
+import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
+import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
@@ -90,7 +97,28 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private AddDeploymentSpecServiceApi addDeploymentSpecService;
 
     @Reference
+    private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
+
+    @Reference
     private DeleteDeploymentSpecServiceApi deleteDeploymentSpecService;
+
+    @Reference
+    private ListDeploymentSpecServiceByVirtualSystemApi listDeploymentSpecServiceByVirtualSystem;
+
+    @Reference
+    private SyncDeploymentSpecServiceApi syncDeploymentSpecService;
+
+    @Reference
+    private ForceDeleteVirtualSystemServiceApi forceDeleteVirtualSystemService;
+
+    @Reference
+    private ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboServiceApi;
+
+    @Reference
+    private ListDomainsByMcIdServiceApi listDomainsByMcIdService;
+
+    @Reference
+    private ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
 
     @Reference
     private ConformServiceApi conformService;
@@ -115,7 +143,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.info("Redirecting to Add Distributed Appliance Window");
-            ViewUtil.addWindow(new AddDistributedApplianceWindow(this, this.addDistributedApplianceService));
+            ViewUtil.addWindow(new AddDistributedApplianceWindow(this,
+                    this.addDistributedApplianceService, this.listApplianceModelSwVersionComboServiceApi,
+                    this.listDomainsByMcIdService, this.listEncapsulationTypeByVersionTypeAndModel));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.info("Redirecting to Update Appliance Window");
@@ -126,7 +156,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         Notification.Type.WARNING_MESSAGE);
 
             } else {
-                ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this, this.updateDistributedApplianceService));
+                ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this, this.updateDistributedApplianceService,
+                        this.listApplianceModelSwVersionComboServiceApi, this.listDomainsByMcIdService,
+                        this.listEncapsulationTypeByVersionTypeAndModel));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
@@ -145,7 +177,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
         }
 
         if (event.getButton().getId().equals(ToolbarButtons.DELETE_CHILD.getId())) {
-            DeleteWindowUtil.deleteVirtualSystem(getChildItem().getBean());
+            DeleteWindowUtil.deleteVirtualSystem(this.forceDeleteVirtualSystemService, getChildItem().getBean());
         }
     }
 
@@ -157,7 +189,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         new ToolbarButtons[] { ToolbarButtons.BACK, ToolbarButtons.ADD, ToolbarButtons.EDIT,
                                 ToolbarButtons.DELETE, ToolbarButtons.CONFORM },
                         this, this.childContainer.getItem(getChildItemId()).getBean(),
-                        this.addDeploymentSpecService, this.deleteDeploymentSpecService);
+                        this.addDeploymentSpecService, this.updateDeploymentSpecService,
+                        this.deleteDeploymentSpecService, this.listDeploymentSpecServiceByVirtualSystem,
+                        this.syncDeploymentSpecService);
 
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages
