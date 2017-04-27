@@ -16,10 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
 
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Files;
-
+import com.vaadin.data.Item;
+import com.vaadin.server.ExternalResource;
+import com.vaadin.server.FileDownloader;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.Plugin;
 import org.osc.core.broker.model.plugin.Plugin.State;
@@ -38,16 +44,11 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.server.installer.InstallableUnit;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 
-import com.vaadin.data.Item;
-import com.vaadin.server.ExternalResource;
-import com.vaadin.server.FileDownloader;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
 
 public class ManagerPluginsLayout extends FormLayout {
 
@@ -58,7 +59,7 @@ public class ManagerPluginsLayout extends FormLayout {
     private static final String PROP_PLUGIN_VERSION = "Version";
     private static final String PROP_PLUGIN_DELETE = "";
 
-    private static final String OSC_SDN_MGR_SDK_JAR_PATH = "/SDK/OscMgrPlugin-sources.jar";
+    private static final String OSC_SDN_MGR_SDK_JAR_PATH = "/SDK/security-mgr-api-1.0-sources.jar";
 
     private static final long serialVersionUID = 1L;
 
@@ -98,15 +99,8 @@ public class ManagerPluginsLayout extends FormLayout {
         pluginsContainer.addComponent(ViewUtil.createSubHeader("Plugins", null));
         pluginsContainer.addComponent(this.pluginsPanel);
 
-        Button downloadSdk = new Button(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_DOWNLOAD_SDK));
-
-        URI currentLocation = UI.getCurrent().getPage().getLocation();
-        FileDownloader downloader = new FileDownloader(
-                new ExternalResource("https://" + currentLocation.getHost() + OSC_SDN_MGR_SDK_JAR_PATH));
-
-        downloader.extend(downloadSdk);
-
         Panel sdkLinkPanel = new Panel();
+        Button downloadSdk = getDownloadSdkButton();
         sdkLinkPanel.setContent(downloadSdk);
 
         sdkContainer.addComponent(ViewUtil.createSubHeader("SDK", null));
@@ -143,6 +137,16 @@ public class ManagerPluginsLayout extends FormLayout {
             	break;
             }
         }, PluginType.MANAGER);
+    }
+
+    private Button getDownloadSdkButton() throws URISyntaxException, MalformedURLException {
+        Button downloadSdk = new Button(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_DOWNLOAD_SDK));
+        URI currentLocation = UI.getCurrent().getPage().getLocation();
+        URI downloadLocation = new URI(currentLocation.getScheme(), null, currentLocation.getHost(),
+                currentLocation.getPort(), OSC_SDN_MGR_SDK_JAR_PATH, null, null);
+        FileDownloader downloader = new FileDownloader(new ExternalResource(downloadLocation.toURL().toString()));
+        downloader.extend(downloadSdk);
+        return downloadSdk;
     }
 
     @SuppressWarnings("unchecked")
