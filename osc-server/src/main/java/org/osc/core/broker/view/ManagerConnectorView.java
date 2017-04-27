@@ -24,8 +24,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.PolicyDto;
@@ -66,6 +68,12 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     private ApiFactoryService apiFactoryService;
 
     @Reference
+    private AddApplianceManagerConnectorServiceApi addManagerConnectorService;
+
+    @Reference
+    private UpdateApplianceManagerConnectorServiceApi updateManagerConnectorService;
+
+    @Reference
     private DeleteApplianceManagerConnectorServiceApi deleteManagerConnectorService;
 
     @Reference
@@ -81,11 +89,11 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Manager Connector Window");
-            ViewUtil.addWindow(new AddManagerConnectorWindow(this));
+            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Manager Connector Window");
-            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this));
+            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Manager Connector Window");

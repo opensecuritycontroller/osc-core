@@ -27,13 +27,12 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.SslCertificatesExtendedException;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
-import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
+import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.ManagerConnectorView;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -78,10 +77,12 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private PasswordField apiKey = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private AddApplianceManagerConnectorServiceApi addMCService = StaticRegistry.addApplianceManagerConnectorService();
+    private AddApplianceManagerConnectorServiceApi addMCService;
 
-    public AddManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
+    public AddManagerConnectorWindow(ManagerConnectorView mcView,
+            AddApplianceManagerConnectorServiceApi addMCService) throws Exception {
         this.mcView = mcView;
+        this.addMCService = addMCService;
         createWindow(this.CAPTION);
     }
 
@@ -202,8 +203,8 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
      */
     private void createAndSubmitRequest(List<ErrorType> errorTypesToIgnore) throws Exception {
         // creating add request with user entered data
-        DryRunRequest<ApplianceManagerConnectorDto> addRequest = new DryRunRequest<>();
-        addRequest.setDto(new ApplianceManagerConnectorDto());
+        DryRunRequest<ApplianceManagerConnectorRequest> addRequest = new DryRunRequest<>();
+        addRequest.setDto(new ApplianceManagerConnectorRequest());
         addRequest.getDto().setName(this.name.getValue().trim());
         addRequest.getDto().setManagerType(((String) this.type.getValue()).trim());
         addRequest.getDto().setIpAddress(this.ip.getValue().trim());

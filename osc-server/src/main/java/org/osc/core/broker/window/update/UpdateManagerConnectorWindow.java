@@ -25,14 +25,14 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.SslCertificatesExtendedException;
+import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
+import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.ManagerConnectorView;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -77,10 +77,12 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     private BeanItem<ApplianceManagerConnectorDto> currentMCObject = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private UpdateApplianceManagerConnectorService updateMCService = StaticRegistry.updateApplianceManagerConnectorService();
+    private UpdateApplianceManagerConnectorServiceApi updateMCService;
 
-    public UpdateManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
+    public UpdateManagerConnectorWindow(ManagerConnectorView mcView,
+            UpdateApplianceManagerConnectorServiceApi updateMCService) throws Exception {
         this.mcView = mcView;
+        this.updateMCService = updateMCService;
         this.currentMCObject = mcView.getParentContainer().getItem(mcView.getParentItemId());
         createWindow(this.CAPTION);
     }
@@ -189,8 +191,8 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     @SuppressWarnings("unchecked")
     private void createAndSubmitRequest() throws Exception {
         // creating update request with user modified data
-        DryRunRequest<ApplianceManagerConnectorDto> updateRequest = new DryRunRequest<ApplianceManagerConnectorDto>();
-        updateRequest.setDto(new ApplianceManagerConnectorDto());
+        DryRunRequest<ApplianceManagerConnectorRequest> updateRequest = new DryRunRequest<>();
+        updateRequest.setDto(new ApplianceManagerConnectorRequest());
         updateRequest.getDto().setId(this.currentMCObject.getBean().getId());
         updateRequest.getDto().setName(this.name.getValue().trim());
         updateRequest.getDto().setManagerType(this.type.getValue().trim());

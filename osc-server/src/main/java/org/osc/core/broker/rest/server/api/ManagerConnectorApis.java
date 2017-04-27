@@ -141,14 +141,8 @@ public class ManagerConnectorApis {
 
         logger.info("Creating Appliance Manager Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        this.addService.setForceAddSSLCertificates(amcRequest.isForceAddSSLCertificates());
-        Response responseForBaseRequest;
-        try {
-            responseForBaseRequest = this.apiUtil.getResponseForBaseRequest(this.addService,
+        Response responseForBaseRequest = this.apiUtil.getResponseForBaseRequest(this.addService,
                     new DryRunRequest<>(amcRequest, amcRequest.isSkipRemoteValidation()));
-        } finally {
-            this.addService.setForceAddSSLCertificates(false);
-        }
         return responseForBaseRequest;
     }
 
@@ -173,15 +167,8 @@ public class ManagerConnectorApis {
 
         this.apiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
 
-        this.updateService.setForceAddSSLCertificates(amcRequest.isForceAddSSLCertificates());
-
-        Response responseForBaseRequest;
-        try {
-            responseForBaseRequest = this.apiUtil.getResponseForBaseRequest(this.updateService,
+        Response responseForBaseRequest = this.apiUtil.getResponseForBaseRequest(this.updateService,
                     new DryRunRequest<>(amcRequest, amcRequest.isSkipRemoteValidation()));
-        } finally {
-            this.updateService.setForceAddSSLCertificates(false);
-        }
         return responseForBaseRequest;
     }
 
