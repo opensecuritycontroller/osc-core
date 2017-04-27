@@ -43,6 +43,7 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddManagerConnectorWindow;
 import org.osc.core.broker.window.delete.DeleteManagerConnectorWindow;
 import org.osc.core.broker.window.update.UpdateManagerConnectorWindow;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -85,7 +86,8 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     @Reference
     private ListManagerConnectoryPolicyServiceApi listManagerConnectoryPolicyService;
 
-    public ManagerConnectorView() {
+    @Activate
+    private void activate() {
 
         createView("Manager Connector", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT,
                 ToolbarButtons.DELETE, ToolbarButtons.CONFORM), "Policies", null);

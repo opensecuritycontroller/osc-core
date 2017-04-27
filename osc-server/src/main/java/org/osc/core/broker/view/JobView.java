@@ -55,6 +55,7 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.rest.client.util.LoggingUtil;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
@@ -115,7 +116,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
     @Reference
     private ListTaskServiceApi listTaskService;
 
-    public JobView() {
+    @Activate
+    private void activate() {
         createView("Jobs", Arrays.asList(ToolbarButtons.JOB_VIEW, ToolbarButtons.JOB_ABORT), "Tasks", null);
     }
 

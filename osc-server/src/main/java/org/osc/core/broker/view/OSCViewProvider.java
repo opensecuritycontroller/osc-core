@@ -37,7 +37,7 @@ public class OSCViewProvider<T extends View> implements ViewProvider {
     public OSCViewProvider(String name, Class<T> type, ComponentServiceObjects<T> factory) {
         this.name = Objects.requireNonNull(name, "The view must have a name");
         Objects.requireNonNull(type, "The view must have a type");
-        if(!type.isInstance(Component.class)) {
+        if (!Component.class.isAssignableFrom(type)) {
             throw new IllegalArgumentException("The type must be a Vaadin Component");
         }
         this.type = type;

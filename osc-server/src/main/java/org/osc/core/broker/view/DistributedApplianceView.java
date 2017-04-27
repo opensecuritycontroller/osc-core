@@ -70,6 +70,7 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddDistributedApplianceWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 import org.osc.core.broker.window.update.UpdateDistributedApplianceWindow;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -171,7 +172,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     @Reference
     private UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
 
-    public DistributedApplianceView() {
+    @Activate
+    private void activate() {
 
         Map<String, CRUDBaseSubView<?, ?>> childSubViewMap = new HashMap<String, CRUDBaseSubView<?, ?>>();
         childSubViewMap.put("Deployment Specification View", this.dsSubView);

@@ -56,6 +56,7 @@ import org.osc.core.broker.view.vc.securitygroup.AddSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.BindSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.UpdateSecurityGroupWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -111,7 +112,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     @Reference
     private SyncSecurityGroupServiceApi syncSecurityGroupService;
 
-    public VirtualizationConnectorView() {
+    @Activate
+    private void activate() {
         createView("Virtualization Connector",
                 Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE, ToolbarButtons.CONFORM_VC),
                 "Security Group",

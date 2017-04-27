@@ -33,6 +33,7 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddUserWindow;
 import org.osc.core.broker.window.delete.DeleteUserWindow;
 import org.osc.core.broker.window.update.UpdateUserWindow;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -66,7 +67,8 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
     @Reference
     private UpdateUserServiceApi updateUserService;
 
-    public UserView() {
+    @Activate
+    private void activate() {
         createView("Users", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE));
     }
 

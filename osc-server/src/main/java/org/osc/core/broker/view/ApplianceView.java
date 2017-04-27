@@ -40,6 +40,7 @@ import org.osc.core.broker.window.add.ImportApplianceSoftwareVersionWindow;
 import org.osc.core.broker.window.delete.DeleteApplianceSoftwareVersionWindow;
 import org.osc.core.broker.window.delete.DeleteApplianceWindow;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -71,8 +72,8 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
     @Reference
     ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
 
-    public ApplianceView() {
-
+    @Activate
+    private void activate() {
         createView("Model", Arrays.asList(ToolbarButtons.DELETE, ToolbarButtons.AUTO_IMPORT_APPLIANCE),
                 "Software Version", Arrays.asList(ToolbarButtons.DELETE_CHILD));
 

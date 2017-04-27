@@ -24,6 +24,7 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.maintenance.ManagerPluginsLayout;
 import org.osc.core.broker.view.maintenance.SdnControllerPluginsLayout;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -52,7 +53,8 @@ public class PluginView extends VerticalLayout implements View {
     @Reference
     ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService;
 
-    public PluginView() throws Exception {
+    @Activate
+    private void activate() throws Exception {
         setSizeFull();
         addStyleName(StyleConstants.BASE_CONTAINER);
 

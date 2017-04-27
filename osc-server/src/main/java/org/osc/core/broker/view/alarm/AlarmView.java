@@ -33,6 +33,7 @@ import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -69,7 +70,8 @@ public class AlarmView extends CRUDBaseView<AlarmDto, BaseDto> {
     @Reference
     private GetEmailSettingsServiceApi getEmailSettingsService;
 
-    public AlarmView() {
+    @Activate
+    private void activate() {
         createView("Alarms", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE));
     }
 

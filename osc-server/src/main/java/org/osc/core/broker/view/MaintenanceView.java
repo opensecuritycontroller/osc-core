@@ -47,6 +47,7 @@ import org.osc.core.broker.view.maintenance.SummaryLayout;
 import org.osc.core.broker.view.maintenance.SupportLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.server.Server;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -127,7 +128,8 @@ public class MaintenanceView extends VerticalLayout implements View {
     @Reference
     SetEmailSettingsServiceApi setEmailSettingsService;
 
-    public MaintenanceView() throws Exception {
+    @Activate
+    private void activate() throws Exception {
         setSizeFull();
         addStyleName(StyleConstants.BASE_CONTAINER);
 

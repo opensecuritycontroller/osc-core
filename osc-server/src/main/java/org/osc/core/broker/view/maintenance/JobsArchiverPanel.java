@@ -93,6 +93,7 @@ public class JobsArchiverPanel extends CustomComponent {
         super();
         this.parentLayout = parentLayout;
         this.archiveService = archiveService;
+        this.getJobsArchiveService = getJobsArchiveService;
 
         try {
             this.dto = populateJobsArchiveDto().getDto();

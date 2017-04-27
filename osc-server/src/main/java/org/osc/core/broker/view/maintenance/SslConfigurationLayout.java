@@ -65,6 +65,7 @@ public class SslConfigurationLayout extends FormLayout implements X509TrustManag
             ListSslCertificatesServiceApi listSslCertificateService) {
         super();
         this.deleteSslCertificateService = deleteSslCertificate;
+        this.listSslCertificateService = listSslCertificateService;
         VerticalLayout sslUploadContainer = new VerticalLayout();
         try {
             SslCertificateUploader certificateUploader = new SslCertificateUploader(X509TrustManagerFactory.getInstance());

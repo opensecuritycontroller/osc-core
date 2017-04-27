@@ -35,6 +35,7 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.status.AgentStatusWindow;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -62,8 +63,8 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
     @Reference
     private ListDistributedApplianceInstanceServiceApi listDAIService;
 
-    public ApplianceInstanceView() {
-        super();
+    @Activate
+    private void activate() {
         createView(VmidcMessages.getString(VmidcMessages_.DAI_TITLE), Arrays.asList(ToolbarButtons.APPLIANCE_STATUS), true);
         setInfoText(VmidcMessages.getString(VmidcMessages_.PAGE_INFO_HELP_TITLE),
                 VmidcMessages.getString(VmidcMessages_.DAI_HELP_MESSAGE));
