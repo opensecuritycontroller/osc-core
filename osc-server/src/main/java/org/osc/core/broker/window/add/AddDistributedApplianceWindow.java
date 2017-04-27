@@ -20,6 +20,7 @@ import java.util.HashSet;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
@@ -55,8 +56,10 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
             AddDistributedApplianceServiceApi addDistributedApplianceService,
             ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
             ListDomainsByMcIdServiceApi listDomainsByMcIdService,
-            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel) throws Exception {
-        super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel);
+            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
+            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService) throws Exception {
+        super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel,
+                listApplianceManagerConnectorService);
         this.daView = distributedApplianceView;
         this.addDistributedApplianceService = addDistributedApplianceService;
         createWindow(this.CAPTION);

@@ -26,12 +26,12 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.PolicyDto;
-import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
 import org.osc.core.broker.service.policy.ListManagerConnectoryPolicyService;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseJobRequest;
@@ -78,6 +78,9 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
 
     @Reference
     private SyncManagerConnectorServiceApi syncManagerConnectorService;
+
+    @Reference
+    private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
 
     public ManagerConnectorView() {
 
@@ -163,9 +166,8 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
 
         BaseRequest<BaseDto> listRequest = new BaseRequest<>();
         ListResponse<ApplianceManagerConnectorDto> res;
-        ListApplianceManagerConnectorService listService = new ListApplianceManagerConnectorService();
         try {
-            res = listService.dispatch(listRequest);
+            res = this.listApplianceManagerConnectorService.dispatch(listRequest);
             List<ApplianceManagerConnectorDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // Creating table with list of vendors

@@ -19,6 +19,7 @@ package org.osc.core.broker.window.update;
 import java.util.HashSet;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
@@ -64,8 +65,10 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
             UpdateDistributedApplianceServiceApi updateDistributedApplianceService,
             ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
             ListDomainsByMcIdServiceApi listDomainsByMcIdService,
-            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel) throws Exception {
-        super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel);
+            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
+            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService) throws Exception {
+        super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel,
+                listApplianceManagerConnectorService);
         this.daView = distributedApplianceView;
         this.updateDistributedApplianceService = updateDistributedApplianceService;
         this.currentDAObject = this.daView.getParentContainer().getItem(this.daView.getParentItemId()).getBean();

@@ -37,11 +37,11 @@ import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
+import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DomainDto;
-import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
-import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -76,13 +76,16 @@ public class ManagerConnectorApis {
     private AddApplianceManagerConnectorServiceApi addService;
 
     @Reference
-    private UpdateApplianceManagerConnectorService updateService;
+    private UpdateApplianceManagerConnectorServiceApi updateService;
 
     @Reference
     private DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService;
 
     @Reference
     private ListDomainsByMcIdServiceApi listDomainsByMcIdService;
+
+    @Reference
+    private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
 
     @Reference
     private ApiUtil apiUtil;
@@ -101,7 +104,7 @@ public class ManagerConnectorApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<ApplianceManagerConnectorDto> response = (ListResponse<ApplianceManagerConnectorDto>) this.apiUtil
-                .getListResponse(new ListApplianceManagerConnectorService(), new BaseRequest<>(true));
+                .getListResponse(this.listApplianceManagerConnectorService, new BaseRequest<>(true));
 
         return response.getList();
     }

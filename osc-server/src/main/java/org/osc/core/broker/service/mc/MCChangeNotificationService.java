@@ -32,17 +32,17 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.MCChangeNotificationRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.sdk.manager.element.MgrChangeNotification.MgrObjectType;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component
 public class MCChangeNotificationService extends ServiceDispatcher<MCChangeNotificationRequest, BaseJobResponse>
         implements MCChangeNotificationServiceApi {
 
     private static final Logger log = Logger.getLogger(MCChangeNotificationService.class);
 
-    private final ConformService conformService;
-
-    public MCChangeNotificationService(ConformService conformService) {
-        this.conformService = conformService;
-    }
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(MCChangeNotificationRequest request, EntityManager em) throws Exception {

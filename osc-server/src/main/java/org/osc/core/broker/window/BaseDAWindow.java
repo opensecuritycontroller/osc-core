@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
@@ -29,7 +30,6 @@ import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
-import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.ListApplianceModelSwVersionComboRequest;
@@ -74,14 +74,17 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService;
     private ListDomainsByMcIdServiceApi listDomainsByMcIdService;
     private ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
+    private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
 
     public BaseDAWindow(ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
             ListDomainsByMcIdServiceApi listDomainsByMcIdService,
-            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel) {
+            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
+            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService) {
         super();
         this.listApplianceModelSwVersionComboService = listApplianceModelSwVersionComboService;
         this.listDomainsByMcIdService = listDomainsByMcIdService;
         this.listEncapsulationTypeByVersionTypeAndModel = listEncapsulationTypeByVersionTypeAndModel;
+        this.listApplianceManagerConnectorService = listApplianceManagerConnectorService;
     }
 
     protected Panel getAttributesPanel() {
@@ -215,8 +218,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     @SuppressWarnings("serial")
     protected ComboBox getManagerConnector() {
         try {
-            ListApplianceManagerConnectorService listService = new ListApplianceManagerConnectorService();
-            ListResponse<ApplianceManagerConnectorDto> res = listService.dispatch(new BaseRequest<>());
+            ListResponse<ApplianceManagerConnectorDto> res = this.listApplianceManagerConnectorService.dispatch(new BaseRequest<>());
 
             BeanItemContainer<ApplianceManagerConnectorDto> mcList = new BeanItemContainer<ApplianceManagerConnectorDto>(
                     ApplianceManagerConnectorDto.class, res.getList());

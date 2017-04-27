@@ -31,6 +31,7 @@ import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
@@ -121,6 +122,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
 
     @Reference
+    private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorServiceApi;
+
+    @Reference
     private ConformServiceApi conformService;
 
     public DistributedApplianceView() {
@@ -145,7 +149,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
             log.info("Redirecting to Add Distributed Appliance Window");
             ViewUtil.addWindow(new AddDistributedApplianceWindow(this,
                     this.addDistributedApplianceService, this.listApplianceModelSwVersionComboServiceApi,
-                    this.listDomainsByMcIdService, this.listEncapsulationTypeByVersionTypeAndModel));
+                    this.listDomainsByMcIdService, this.listEncapsulationTypeByVersionTypeAndModel,
+                    this.listApplianceManagerConnectorServiceApi));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.info("Redirecting to Update Appliance Window");
@@ -158,7 +163,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
             } else {
                 ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this, this.updateDistributedApplianceService,
                         this.listApplianceModelSwVersionComboServiceApi, this.listDomainsByMcIdService,
-                        this.listEncapsulationTypeByVersionTypeAndModel));
+                        this.listEncapsulationTypeByVersionTypeAndModel, this.listApplianceManagerConnectorServiceApi));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {

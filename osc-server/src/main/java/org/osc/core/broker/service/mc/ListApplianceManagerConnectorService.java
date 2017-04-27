@@ -32,7 +32,9 @@ import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMg
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListApplianceManagerConnectorService
         extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<ApplianceManagerConnectorDto>>
         implements ListApplianceManagerConnectorServiceApi {

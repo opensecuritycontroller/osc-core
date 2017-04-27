@@ -35,13 +35,12 @@ import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.api.MCChangeNotificationServiceApi;
 import org.osc.core.broker.service.api.PropagateVSMgrFileServiceApi;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.api.TagVmServiceApi;
 import org.osc.core.broker.service.api.UnTagVmServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.mc.MCChangeNotificationService;
 import org.osc.core.broker.service.request.MCChangeNotificationRequest;
 import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.service.request.QueryVmInfoRequest;
@@ -75,9 +74,6 @@ public class ManagerApis {
     private static final Logger log = Logger.getLogger(ManagerApis.class);
 
     @Reference
-    private ConformService conformService;
-
-    @Reference
     private ApiUtil apiUtil;
 
     @Reference
@@ -91,6 +87,9 @@ public class ManagerApis {
 
     @Reference
     private UnTagVmServiceApi untagVmService;
+
+    @Reference
+    private MCChangeNotificationServiceApi mCChangeNotificationService;
 
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
@@ -216,8 +215,7 @@ public class ManagerApis {
         request.mgrIpAddress = ipAddress;
         request.notification = notification;
 
-        MCChangeNotificationService service = new MCChangeNotificationService(this.conformService);
-        BaseJobResponse response = service.dispatch(request);
+        BaseJobResponse response = this.mCChangeNotificationService.dispatch(request);
         return response;
     }
 }

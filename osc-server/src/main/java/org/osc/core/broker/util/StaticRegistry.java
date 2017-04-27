@@ -21,8 +21,6 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.broadcast.Broadcaster;
-import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
-import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
 import org.osc.core.broker.service.vc.AddVirtualizationConnectorService;
 import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
 import org.osc.core.server.Server;
@@ -49,12 +47,6 @@ public class StaticRegistry {
 
     @Reference
     private ConformService conformService;
-
-    @Reference
-    private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
-
-    @Reference
-    private UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService;
 
     @Reference
     private AddVirtualizationConnectorService addVirtualizationConnectorService;
@@ -88,14 +80,6 @@ public class StaticRegistry {
 
     public static ConformService conformService() {
         return instance.conformService;
-    }
-
-    public static AddApplianceManagerConnectorService addApplianceManagerConnectorService() {
-        return instance.addApplianceManagerConnectorService;
-    }
-
-    public static UpdateApplianceManagerConnectorService updateApplianceManagerConnectorService() {
-        return instance.updateApplianceManagerConnectorService;
     }
 
     public static AddVirtualizationConnectorService addVirtualizationConnectorService() {
