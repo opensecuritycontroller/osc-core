@@ -16,12 +16,24 @@
  *******************************************************************************/
 package org.osc.core.rest.client.crypto;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.service.response.CertificateBasicInfoModel;
+import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.KeyStoreProvider;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -36,23 +48,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.bind.DatatypeConverter;
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.broker.service.response.CertificateBasicInfoModel;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.KeyStoreProvider;
-
 public final class X509TrustManagerFactory implements X509TrustManager {
 
     private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
-    // TODO: bartek - combine with vmidckeystore as part of US11664
     // vmidctruststore stores public certificates needed to establish SSL connection
     public static final String TRUSTSTORE_FILE = "vmidctruststore.jks";
     // key entry to properties file that contains password
@@ -106,7 +105,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         } catch (CertificateException cx) {
             try {
                 X509Certificate x509Certificate = chain[0];
-                //x509Certificate.checkValidity(); // TODO: bartek - uncomment if certificate should be checked against expiration
+                x509Certificate.checkValidity();
                 long unixTimestamp = Instant.now().getEpochSecond();
                 CertificateResolverModel resolverModel = new CertificateResolverModel(
                         x509Certificate, String.valueOf(unixTimestamp), getSha1Fingerprint(x509Certificate));
@@ -146,7 +145,6 @@ public final class X509TrustManagerFactory implements X509TrustManager {
             throw new Exception("Failed to load certificate from trust store", e);
         }
 
-        // TODO: pawel - remove after solving US11330
         this.keyStore.setCertificateEntry("internal", loadInternalCertificate());
 
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509", "SunJSSE");
@@ -163,7 +161,6 @@ public final class X509TrustManagerFactory implements X509TrustManager {
 
     }
 
-    // TODO: pawel - remove after solving US11330
     private X509Certificate loadInternalCertificate() throws Exception {
         KeyStore keystoreInternal = KeyStore.getInstance(KEYSTORE_TYPE);
         LOG.debug("Opening internal keystore file....");
@@ -336,15 +333,14 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     }
 
     public static String certificateToString(X509Certificate certificate) {
+        StringWriter sw = new StringWriter();
         try {
-            StringBuilder cert = new StringBuilder();
-            cert.append("-----BEGIN CERTIFICATE----- ");
-            cert.append(DatatypeConverter.printBase64Binary(certificate.getEncoded()));
-            cert.append(" -----END CERTIFICATE-----");
-            return cert.toString();
+            sw.write("-----BEGIN CERTIFICATE-----\n");
+            sw.write(DatatypeConverter.printBase64Binary(certificate.getEncoded()).replaceAll("(.{64})", "$1\n"));
+            sw.write("\n-----END CERTIFICATE-----");
         } catch (CertificateEncodingException e) {
             LOG.error("Cannot encode certificate", e);
-            return "";
         }
+        return sw.toString();
     }
 }
