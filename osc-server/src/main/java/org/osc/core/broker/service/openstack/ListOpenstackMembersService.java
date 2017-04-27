@@ -40,6 +40,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.request.ListOpenstackMembersRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Lists servers based on the openstack request. The Parent ID is assumed to be of the VC
@@ -48,18 +49,18 @@ import org.osc.core.broker.service.response.ListResponse;
  * security group.
  * If the id is not set, all servers from that VC are listed
  */
+@Component
 public class ListOpenstackMembersService
         extends ServiceDispatcher<ListOpenstackMembersRequest, ListResponse<SecurityGroupMemberItemDto>>
         implements ListOpenstackMembersServiceApi {
 
-    private VirtualizationConnector vc;
 
     @Override
     public ListResponse<SecurityGroupMemberItemDto> exec(ListOpenstackMembersRequest request, EntityManager em)
             throws Exception {
 
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
-        this.vc = emgr.findByPrimaryKey(request.getParentId());
+        VirtualizationConnector vc = emgr.findByPrimaryKey(request.getParentId());
         List<String> existingMemberIds = new ArrayList<>();
         // If current selected members is set to null, assume this is first load and populate existing member ids from
         // DB
@@ -82,12 +83,12 @@ public class ListOpenstackMembersService
         if (request.getType() == SecurityGroupMemberType.VM) {
 
             List<String> existingSvaOsIds = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(em,
-                    this.vc.getId());
+                    vc.getId());
             existingMemberIds.addAll(existingSvaOsIds);
 
             JCloudNova nova = null;
             try {
-                nova = new JCloudNova(new Endpoint(this.vc, request.getTenantName()));
+                nova = new JCloudNova(new Endpoint(vc, request.getTenantName()));
 
                 for (Resource vmResource : nova.listServers(region)) {
                     if (!existingMemberIds.contains(vmResource.getId())) {
@@ -102,7 +103,7 @@ public class ListOpenstackMembersService
                 }
             }
         } else if (request.getType() == SecurityGroupMemberType.NETWORK) {
-            JCloudNeutron neutronApi = new JCloudNeutron(new Endpoint(this.vc, request.getTenantName()));
+            JCloudNeutron neutronApi = new JCloudNeutron(new Endpoint(vc, request.getTenantName()));
             try {
                 List<Network> tenantNetworks = neutronApi.listNetworkByTenant(request.getRegion(),
                         request.getTenantId());
@@ -119,7 +120,7 @@ public class ListOpenstackMembersService
                 }
             }
         } else if (request.getType() == SecurityGroupMemberType.SUBNET) {
-            JCloudNeutron neutronApi = new JCloudNeutron(new Endpoint(this.vc, request.getTenantName()));
+            JCloudNeutron neutronApi = new JCloudNeutron(new Endpoint(vc, request.getTenantName()));
             try {
                 List<Subnet> tenantSubnets = neutronApi.listSubnetByTenant(request.getRegion(), request.getTenantId());
                 for (Subnet subnet : tenantSubnets) {

@@ -21,19 +21,19 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.client.openstack.jcloud.exception.ExtensionNotPresentException;
+import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
+import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
+import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
+import org.osc.core.broker.service.api.ListHostServiceApi;
+import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.api.ListRegionServiceApi;
+import org.osc.core.broker.service.api.ListTenantServiceApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
 import org.osc.core.broker.service.dto.openstack.OsTenantDto;
-import org.osc.core.broker.service.openstack.ListAvailabilityZonesService;
-import org.osc.core.broker.service.openstack.ListFloatingIpPoolsService;
-import org.osc.core.broker.service.openstack.ListHostAggregateService;
-import org.osc.core.broker.service.openstack.ListHostService;
-import org.osc.core.broker.service.openstack.ListNetworkService;
-import org.osc.core.broker.service.openstack.ListRegionService;
-import org.osc.core.broker.service.openstack.ListTenantService;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
@@ -90,8 +90,33 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
     protected Long vsId;
     protected Panel optionPanel;
 
-    public BaseDeploymentSpecWindow(DeploymentSpecDto deploymentSpecDto) {
+    private ListAvailabilityZonesServiceApi listAvailabilityZonesService;
+
+    private ListFloatingIpPoolsServiceApi listFloatingIpPoolsService;
+
+    private ListHostAggregateServiceApi listHostAggregateService;
+
+    private ListHostServiceApi listHostService;
+
+    private ListNetworkServiceApi listNetworkService;
+
+    private ListRegionServiceApi listRegionService;
+
+    private ListTenantServiceApi listTenantService;
+
+    public BaseDeploymentSpecWindow(DeploymentSpecDto deploymentSpecDto,
+            ListAvailabilityZonesServiceApi listAvailabilityZonesService,
+            ListFloatingIpPoolsServiceApi listFloatingIpPoolsService,
+            ListHostServiceApi listHostService,
+            ListNetworkServiceApi listNetworkService,
+            ListRegionServiceApi listRegionService,
+            ListTenantServiceApi listTenantService) {
         this.deploymentSpecDto = deploymentSpecDto;
+        this.listAvailabilityZonesService = listAvailabilityZonesService;
+        this.listFloatingIpPoolsService = listFloatingIpPoolsService;
+        this.listNetworkService = listNetworkService;
+        this.listRegionService = listRegionService;
+        this.listTenantService = listTenantService;
         this.vsId = deploymentSpecDto.getParentId();
         initListeners();
     }
@@ -241,8 +266,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                 req.setTenantName(selectedTenant.getName());
                 req.setTenantId(selectedTenant.getId());
 
-                ListNetworkService service = new ListNetworkService();
-                List<OsNetworkDto> res = service.dispatch(req).getList();
+                List<OsNetworkDto> res = this.listNetworkService.dispatch(req).getList();
 
                 return res;
             }
@@ -302,9 +326,8 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
             // Calling List Service
             BaseIdRequest req = new BaseIdRequest();
             req.setId(this.vsId);
-            ListTenantService service = new ListTenantService();
 
-            List<OsTenantDto> tenantList = service.dispatch(req).getList();
+            List<OsTenantDto> tenantList = this.listTenantService.dispatch(req).getList();
 
             this.tenant.removeValueChangeListener(this.tenantChangedListener);
             this.tenant.removeAllItems();
@@ -336,8 +359,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                 BaseOpenStackRequest req = new BaseOpenStackRequest();
                 req.setTenantName(tenantDto.getName());
                 req.setId(this.vsId);
-                ListRegionService service = new ListRegionService();
-                ListResponse<String> response = service.dispatch(req);
+                ListResponse<String> response = this.listRegionService.dispatch(req);
 
                 this.region.addItems(response.getList());
 
@@ -377,16 +399,14 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                     getCount().setValue(1);
                     getCount().setEnabled(false);
 
-                    ListAvailabilityZonesService service = new ListAvailabilityZonesService();
-                    ListResponse<AvailabilityZoneDto> res = service.dispatch(req);
+                    ListResponse<AvailabilityZoneDto> res = this.listAvailabilityZonesService.dispatch(req);
                     for (AvailabilityZoneDto az : res.getList()) {
                         this.optionTable.addItem(new Object[] { az.getZone() }, az);
                     }
                 } else if (this.userOption.getValue() == HOSTS) {
                     getCount().setEnabled(true);
 
-                    ListHostService service = new ListHostService();
-                    ListResponse<HostDto> res = service.dispatch(req);
+                    ListResponse<HostDto> res = this.listHostService.dispatch(req);
                     for (HostDto host : res.getList()) {
                         this.optionTable.addItem(new Object[] { host.getName() }, host);
                     }
@@ -394,8 +414,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                     getCount().setValue(1);
                     getCount().setEnabled(false);
 
-                    ListHostAggregateService service = new ListHostAggregateService();
-                    ListResponse<HostAggregateDto> res = service.dispatch(req);
+                    ListResponse<HostAggregateDto> res = this.listHostAggregateService.dispatch(req);
                     for (HostAggregateDto hostAggr : res.getList()) {
                         this.optionTable.addItem(new Object[] { hostAggr.getName() }, hostAggr);
                     }
@@ -427,8 +446,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                 req.setTenantId(selectedTenant.getId());
                 req.setRegion((String) this.region.getValue());
 
-                ListFloatingIpPoolsService listFloatingPoolService = new ListFloatingIpPoolsService();
-                List<String> floatingIpPoolList = listFloatingPoolService.dispatch(req).getList();
+                List<String> floatingIpPoolList = this.listFloatingIpPoolsService.dispatch(req).getList();
 
                 if (floatingIpPoolList.get(0) != null) {
                     this.floatingIpPool.addItems(floatingIpPoolList);

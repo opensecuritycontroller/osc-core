@@ -32,14 +32,16 @@ import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<OsNetworkDto>>
         implements ListNetworkServiceApi {
 
-    private ListResponse<OsNetworkDto> response = new ListResponse<>();
 
     @Override
     public ListResponse<OsNetworkDto> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
+        ListResponse<OsNetworkDto> response = new ListResponse<>();
 
         // Initializing Entity Manager
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
@@ -56,13 +58,13 @@ public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, 
                 networkList.add(new OsNetworkDto(network.getName(), network.getId()));
             }
 
-            this.response.setList(networkList);
+            response.setList(networkList);
 
         } finally {
             if (neutronApi != null) {
                 neutronApi.close();
             }
         }
-        return this.response;
+        return response;
     }
 }

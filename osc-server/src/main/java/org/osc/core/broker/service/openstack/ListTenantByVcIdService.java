@@ -31,14 +31,15 @@ import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListTenantByVcIdService extends ServiceDispatcher<BaseIdRequest, ListResponse<OsTenantDto>>
         implements ListTenantByVcIdServiceApi {
 
-    private ListResponse<OsTenantDto> response = new ListResponse<>();
-
     @Override
     public ListResponse<OsTenantDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
+        ListResponse<OsTenantDto> response = new ListResponse<>();
 
         // Initializing Entity Manager
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(VirtualizationConnector.class, em);
@@ -53,14 +54,14 @@ public class ListTenantByVcIdService extends ServiceDispatcher<BaseIdRequest, Li
                 tenantList.add(new OsTenantDto(tenant.getName(), tenant.getId()));
             }
 
-            this.response.setList(tenantList);
+            response.setList(tenantList);
         } finally {
             if (keystoneApi != null) {
                 keystoneApi.close();
             }
         }
 
-        return this.response;
+        return response;
 
     }
 }

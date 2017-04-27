@@ -20,6 +20,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
+import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
+import org.osc.core.broker.service.api.ListHostServiceApi;
+import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.api.ListRegionServiceApi;
+import org.osc.core.broker.service.api.ListTenantServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
@@ -45,8 +51,12 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
     private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
 
-    public UpdateDeploymentSpecWindow(DeploymentSpecDto dto, UpdateDeploymentSpecServiceApi updateDeploymentSpecService) throws Exception {
-        super(dto);
+    public UpdateDeploymentSpecWindow(DeploymentSpecDto dto, UpdateDeploymentSpecServiceApi updateDeploymentSpecService,
+            ListAvailabilityZonesServiceApi listAvailabilityZonesService, ListFloatingIpPoolsServiceApi listFloatingIpPoolsService,
+            ListHostServiceApi listHostService, ListNetworkServiceApi listNetworkService, ListRegionServiceApi listRegionService,
+            ListTenantServiceApi listTenantService) throws Exception {
+        super(dto, listAvailabilityZonesService, listFloatingIpPoolsService, listHostService,
+                listNetworkService, listRegionService, listTenantService);
         this.updateDeploymentSpecService = updateDeploymentSpecService;
         createWindow(this.CAPTION);
     }

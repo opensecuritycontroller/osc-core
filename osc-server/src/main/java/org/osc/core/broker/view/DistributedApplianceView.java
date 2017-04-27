@@ -33,10 +33,16 @@ import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
+import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
+import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
+import org.osc.core.broker.service.api.ListHostServiceApi;
+import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.api.ListRegionServiceApi;
+import org.osc.core.broker.service.api.ListTenantServiceApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
@@ -125,6 +131,24 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorServiceApi;
 
     @Reference
+    private ListAvailabilityZonesServiceApi listAvailabilityZonesService;
+
+    @Reference
+    private ListFloatingIpPoolsServiceApi listFloatingIpPoolsService;
+
+    @Reference
+    private ListHostServiceApi listHostService;
+
+    @Reference
+    private ListNetworkServiceApi listNetworkService;
+
+    @Reference
+    private ListRegionServiceApi listRegionService;
+
+    @Reference
+    private ListTenantServiceApi listTenantService;
+
+    @Reference
     private ConformServiceApi conformService;
 
     public DistributedApplianceView() {
@@ -196,7 +220,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         this, this.childContainer.getItem(getChildItemId()).getBean(),
                         this.addDeploymentSpecService, this.updateDeploymentSpecService,
                         this.deleteDeploymentSpecService, this.listDeploymentSpecServiceByVirtualSystem,
-                        this.syncDeploymentSpecService);
+                        this.syncDeploymentSpecService, this.listAvailabilityZonesService,
+                        this.listFloatingIpPoolsService, this.listHostService, this.listNetworkService,
+                        this.listRegionService, this.listTenantService);
 
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages

@@ -17,6 +17,9 @@
 package org.osc.core.broker.view.vc.securitygroup;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
+import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
@@ -38,7 +41,8 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
 
     private static final Logger log = Logger.getLogger(UpdateSecurityGroupWindow.class);
 
-    public UpdateSecurityGroupWindow(SecurityGroupDto dto) throws Exception {
+    public UpdateSecurityGroupWindow(SecurityGroupDto dto, ListOpenstackMembersServiceApi listOpenstackMembersService, ListRegionByVcIdServiceApi listRegionByVcIdService, ListTenantByVcIdServiceApi listTenantByVcIdServiceApi) throws Exception {
+        super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi);
         this.currentSecurityGroup = dto;
         createWindow(this.CAPTION);
     }

@@ -25,6 +25,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
+import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
@@ -76,6 +79,15 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Reference
     private ConformService conformService;
+
+    @Reference
+    ListOpenstackMembersServiceApi listOpenstackMembersService;
+
+    @Reference
+    ListRegionByVcIdServiceApi listRegionByVcIdService;
+
+    @Reference
+    ListTenantByVcIdServiceApi listTenantByVcIdServiceApi;
 
     public VirtualizationConnectorView() {
         createView("Virtualization Connector",
@@ -216,7 +228,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                 ViewUtil.iscNotification("Creation of Security Groups is not allowed in the absence of SDN Controller.",
                         Notification.Type.ERROR_MESSAGE);
             } else {
-                ViewUtil.addWindow(new AddSecurityGroupWindow(getParentItem().getBean()));
+                ViewUtil.addWindow(new AddSecurityGroupWindow(getParentItem().getBean(),
+                        this.listOpenstackMembersService, this.listRegionByVcIdService, this.listTenantByVcIdServiceApi));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT_CHILD.getId())) {
@@ -226,7 +239,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                 ViewUtil.iscNotification("Modification of deleted Security Group is not allowed.",
                         Notification.Type.WARNING_MESSAGE);
             } else {
-                ViewUtil.addWindow(new UpdateSecurityGroupWindow(securityGroup));
+                ViewUtil.addWindow(new UpdateSecurityGroupWindow(securityGroup,
+                        this.listOpenstackMembersService, this.listRegionByVcIdService, this.listTenantByVcIdServiceApi));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE_CHILD.getId())) {
