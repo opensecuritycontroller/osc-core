@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.AlarmAction;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.Severity;
+import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
 import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -43,9 +44,10 @@ public class UpdateAlarmWindow extends BaseAlarmWindow {
 
     private UpdateAlarmServiceApi updateAlarmService;
 
-    public UpdateAlarmWindow(AlarmView alarmView, UpdateAlarmServiceApi updateAlarmService) throws Exception {
+    public UpdateAlarmWindow(AlarmView alarmView, UpdateAlarmServiceApi updateAlarmService,
+            GetEmailSettingsServiceApi getEmailSettingsService) throws Exception {
 
-        super();
+        super(getEmailSettingsService);
         this.alarmView = alarmView;
         this.updateAlarmService = updateAlarmService;
         this.currentAlarm = alarmView.getParentItem();

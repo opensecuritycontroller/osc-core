@@ -41,7 +41,7 @@ import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.ListApplianceServiceApi;
 import org.osc.core.broker.service.api.ListApplianceSoftwareVersionServiceApi;
-import org.osc.core.broker.service.appliance.UploadApplianceVersionFileService;
+import org.osc.core.broker.service.api.UploadApplianceVersionFileServiceApi;
 import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -89,6 +89,9 @@ public class ApplianceApis {
 
     @Reference
     DeleteApplianceSoftwareVersionServiceApi deleteApplianceSoftwareVersionService;
+
+    @Reference
+    UploadApplianceVersionFileServiceApi uploadApplianceVersionFileService;
 
     @ApiOperation(value = "Lists All Software Function Models",
             notes = "Lists all the Software Function Models",
@@ -224,7 +227,7 @@ public class ApplianceApis {
                                   @ApiParam(required = true) InputStream uploadedInputStream) {
         logger.info("Started uploading file " + fileName);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new UploadApplianceVersionFileService(),
+        return this.apiUtil.getResponseForBaseRequest(this.uploadApplianceVersionFileService,
                 new UploadRequest(fileName, uploadedInputStream));
     }
 

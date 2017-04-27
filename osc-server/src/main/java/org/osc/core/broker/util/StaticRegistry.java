@@ -18,8 +18,8 @@ package org.osc.core.broker.util;
 
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
-import org.osc.core.broker.service.api.AddAlarmServiceApi;
+import org.osc.core.broker.service.api.ArchiveServiceApi;
+import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.broadcast.Broadcaster;
 import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
 import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
@@ -66,10 +66,10 @@ public class StaticRegistry {
     private Broadcaster broadcaster;
 
     @Reference
-    private AcknowledgeAlertServiceApi acknowledgeAlertServiceApi;
+    private ArchiveServiceApi archiveService;
 
     @Reference
-    private AddAlarmServiceApi addAlarmServiceApi;
+    private GetJobsArchiveServiceApi getJobsArchiveService;
 
     private static StaticRegistry instance = null;
 
@@ -110,11 +110,11 @@ public class StaticRegistry {
         return instance.broadcaster;
     }
 
-    public static AcknowledgeAlertServiceApi acknowledgeAlertServiceApi() {
-        return instance.acknowledgeAlertServiceApi ;
+    public static ArchiveServiceApi archiveService() {
+        return instance.archiveService;
     }
 
-    public static AddAlarmServiceApi addAlarmServiceApi() {
-        return instance.addAlarmServiceApi;
+    public static GetJobsArchiveServiceApi getJobsArchiveService() {
+        return instance.getJobsArchiveService;
     }
 }

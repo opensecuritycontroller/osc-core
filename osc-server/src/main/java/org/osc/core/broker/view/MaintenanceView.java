@@ -20,15 +20,20 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.CheckNetworkSettingsServiceApi;
 import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
+import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
+import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.GetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.GetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
 import org.osc.core.broker.service.api.RestoreServiceApi;
+import org.osc.core.broker.service.api.SetEmailSettingsServiceApi;
 import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
+import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -107,6 +112,21 @@ public class MaintenanceView extends VerticalLayout implements View {
     @Reference
     ListSslCertificatesServiceApi listSslCertificatesService;
 
+    @Reference
+    ArchiveServiceApi archiveService;
+
+    @Reference
+    GetJobsArchiveServiceApi getJobsArchiveService;
+
+    @Reference
+    UpdateJobsArchiveServiceApi updateJobsArchiveService;
+
+    @Reference
+    GetEmailSettingsServiceApi getEmailSettingsService;
+
+    @Reference
+    SetEmailSettingsServiceApi setEmailSettingsService;
+
     public MaintenanceView() throws Exception {
         setSizeFull();
         addStyleName(StyleConstants.BASE_CONTAINER);
@@ -137,7 +157,8 @@ public class MaintenanceView extends VerticalLayout implements View {
                 MAINTENANCE_HELP_GUID));
         // adding Archive tab to tabSheet
         this.tabs.addTab(createTab(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_JOBSARCHIVE_TITLE),
-                VmidcMessages.getString(VmidcMessages_.MAINTENANCE_JOBSARCHIVE_NAME), new ArchiveLayout(),
+                VmidcMessages.getString(VmidcMessages_.MAINTENANCE_JOBSARCHIVE_NAME), new ArchiveLayout(this.archiveService,
+                        this.getJobsArchiveService, this.updateJobsArchiveService),
                 MAINTENANCE_ARCHIVE_GUID));
         // adding Support tab to tabSheet
         this.tabs.addTab(createTab(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SUPPORT_TITLE),
@@ -172,7 +193,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildEmailForm() {
-        return new EmailLayout();
+        return new EmailLayout(this.getEmailSettingsService, this.setEmailSettingsService);
     }
 
     private FormLayout buildUpgradeForm() {

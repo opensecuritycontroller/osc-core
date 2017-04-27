@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
+import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
 import org.osc.core.broker.service.api.ListAlarmServiceApi;
 import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
@@ -65,6 +66,9 @@ public class AlarmView extends CRUDBaseView<AlarmDto, BaseDto> {
     @Reference
     private ListAlarmServiceApi listAlarmService;
 
+    @Reference
+    private GetEmailSettingsServiceApi getEmailSettingsService;
+
     public AlarmView() {
         createView("Alarms", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE));
     }
@@ -73,11 +77,13 @@ public class AlarmView extends CRUDBaseView<AlarmDto, BaseDto> {
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Alarm Window");
-            ViewUtil.addWindow(new AddAlarmWindow(this, this.addAlarmService));
+            ViewUtil.addWindow(new AddAlarmWindow(this, this.addAlarmService,
+                    this.getEmailSettingsService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Alarm Window");
-            ViewUtil.addWindow(new UpdateAlarmWindow(this, this.updateAlarmService));
+            ViewUtil.addWindow(new UpdateAlarmWindow(this, this.updateAlarmService,
+                    this.getEmailSettingsService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Alarm Window");

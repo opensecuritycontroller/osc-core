@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.ListApplianceServiceApi;
 import org.osc.core.broker.service.api.ListApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.dto.ApplianceDto;
@@ -67,6 +68,9 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
     @Reference
     ListApplianceSoftwareVersionServiceApi listApplianceSoftwareVersionService;
 
+    @Reference
+    ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
+
     public ApplianceView() {
 
         createView("Model", Arrays.asList(ToolbarButtons.DELETE, ToolbarButtons.AUTO_IMPORT_APPLIANCE),
@@ -90,7 +94,7 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
                 }
 
                 log.info("Redirecting to Add Appliance Version Window");
-                ViewUtil.addWindow(new ImportApplianceSoftwareVersionWindow());
+                ViewUtil.addWindow(new ImportApplianceSoftwareVersionWindow(this.importApplianceSoftwareVersionService));
 
             } catch (Exception e) {
                 log.error("Failed to initiate adding a new Appliance Software Version", e);

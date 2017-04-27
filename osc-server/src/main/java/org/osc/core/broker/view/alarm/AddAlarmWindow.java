@@ -18,6 +18,7 @@ package org.osc.core.broker.view.alarm;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
+import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
@@ -35,8 +36,10 @@ public class AddAlarmWindow extends BaseAlarmWindow {
 
     private AddAlarmServiceApi addAlarmService;
 
-    public AddAlarmWindow(AlarmView alarmView, AddAlarmServiceApi addAlarmService) throws Exception {
-        super();
+    public AddAlarmWindow(AlarmView alarmView, AddAlarmServiceApi addAlarmService,
+            GetEmailSettingsServiceApi getEmailSettingsService) throws Exception {
+
+        super(getEmailSettingsService);
         this.alarmView = alarmView;
         this.addAlarmService = addAlarmService;
         createWindow(this.CAPTION);

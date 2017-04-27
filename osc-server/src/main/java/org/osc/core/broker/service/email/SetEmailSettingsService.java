@@ -27,7 +27,9 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.util.EmailUtil;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class SetEmailSettingsService extends ServiceDispatcher<BaseRequest<EmailSettingsDto>, EmptySuccessResponse>
         implements SetEmailSettingsServiceApi {
 

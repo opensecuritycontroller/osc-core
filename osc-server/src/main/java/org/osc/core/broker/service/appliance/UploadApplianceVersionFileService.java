@@ -29,6 +29,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.UploadApplianceVersionFileServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.ImportFileRequest;
@@ -36,11 +37,16 @@ import org.osc.core.broker.service.request.UploadRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.maintenance.ApplianceUploader;
 import org.osc.core.util.ArchiveUtil;
-
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+@Component
 public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadRequest, BaseResponse>
         implements UploadApplianceVersionFileServiceApi {
 
     private static final Logger log = Logger.getLogger(UploadApplianceVersionFileService.class);
+
+    @Reference
+    private ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
 
     @Override
     public BaseResponse exec(UploadRequest request, EntityManager em) throws Exception {
@@ -64,11 +70,9 @@ public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadR
 				new File(uploadedFilePath).delete();
 			}
 
-            ImportApplianceSoftwareVersionService importService = new ImportApplianceSoftwareVersionService();
-
             ImportFileRequest importRequest = new ImportFileRequest(uploadFolder);
 
-            return importService.dispatch(importRequest);
+            return this.importApplianceSoftwareVersionService.dispatch(importRequest);
         } finally {
             try {
                 FileUtils.deleteDirectory(new File(uploadFolder));
