@@ -36,6 +36,7 @@ import org.osc.core.util.VersionUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentServiceObjects;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 
@@ -175,8 +176,10 @@ public class MainUI extends UI implements BroadcastListener {
     private ServiceRegistration<BroadcastListener> registration;
 
     private BundleContext ctx;
+    private AlertView alertView;
 
-    void start(BundleContext ctx) {
+    @Activate
+    private void start(BundleContext ctx) {
 
         this.ctx = ctx;
 
@@ -216,8 +219,10 @@ public class MainUI extends UI implements BroadcastListener {
         this.root.setSizeFull();
 
         this.nav = new Navigator(this, this.content);
-        this.nav.addView("", AlertView.class);
-        this.nav.setErrorView(AlertView.class);
+        this.alertView = this.alertViewFactory.getService();
+
+        this.nav.addView("", this.alertView);
+        this.nav.setErrorView(this.alertView);
 
         for (ViewProvider page : this.statusViews) {
             this.nav.addProvider(page);
@@ -597,6 +602,9 @@ public class MainUI extends UI implements BroadcastListener {
     public void close() {
         try {
             log.info("MainUI.close() called");
+            if (this.alertView != null) {
+                this.alertViewFactory.ungetService(this.alertView);
+            }
             if (UI.getCurrent() != null && UI.getCurrent().getPage() != null) {
                 UI.getCurrent().getPage().setLocation(getLogoutUrl());
             }

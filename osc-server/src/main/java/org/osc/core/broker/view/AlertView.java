@@ -34,6 +34,7 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -73,8 +74,8 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
     @Reference
     AcknowledgeAlertServiceApi acknowledgeAlertService;
 
-    public AlertView() {
-        super();
+    @Activate
+    private void activate() {
         createView("Alerts", Arrays.asList(ToolbarButtons.ACKNOWLEDGE_ALERT, ToolbarButtons.UNACKNOWLEDGE_ALERT,
                 ToolbarButtons.DELETE, ToolbarButtons.SHOW_PENDING_ACKNOWLEDGE_ALERTS, ToolbarButtons.SHOW_ALL_ALERTS),
                 true);
