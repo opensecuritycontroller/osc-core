@@ -19,29 +19,29 @@ package org.osc.core.broker.service.securityinterface;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component
 public class UpdateSecurityGroupInterfaceService
         extends BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJobResponse>
         implements UpdateSecurityGroupInterfaceServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateSecurityGroupInterfaceService.class);
 
-    private SecurityGroupInterface sgi;
-
-    private final ConformService conformService;
-
-    public UpdateSecurityGroupInterfaceService(ConformService conformService) {
-        this.conformService = conformService;
-    }
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
@@ -49,46 +49,48 @@ public class UpdateSecurityGroupInterfaceService
         SecurityGroupInterfaceDto dto = request.getDto();
         validateAndLoad(em, dto);
 
-        SecurityGroupInterfaceEntityMgr.toEntity(this.sgi, dto, this.policy, SecurityGroupInterface.ISC_TAG_PREFIX);
+        SecurityGroupInterface sgi = new SecurityGroupInterface();
+        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, PolicyEntityMgr.findById(em, dto.getPolicyId()),
+                SecurityGroupInterface.ISC_TAG_PREFIX);
 
-        log.info("Updating SecurityGroupInterface: " + this.sgi.toString());
-        OSCEntityManager.update(em, this.sgi);
+        log.info("Updating SecurityGroupInterface: " + sgi.toString());
+        OSCEntityManager.update(em, sgi);
         chain(() -> {
-            Long jobId = this.conformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());
-            return new BaseJobResponse(this.sgi.getId(), jobId);
+            Long jobId = this.conformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
+            return new BaseJobResponse(sgi.getId(), jobId);
         });
         return null;
     }
 
     @Override
-    protected void validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
-        super.validateAndLoad(em, dto);
+    protected VirtualSystem validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
+        VirtualSystem vs = super.validateAndLoad(em, dto);
 
-        this.sgi = SecurityGroupInterfaceEntityMgr.findById(em, dto.getId());
+        SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr.findById(em, dto.getId());
 
-        if (this.sgi == null) {
+        if (sgi == null) {
             throw new VmidcBrokerValidationException(
                     "Traffic Policy Mapping with Id: " + dto.getId() + "  is not found.");
         }
 
-        if (!this.sgi.isUserConfigurable()) {
+        if (!sgi.isUserConfigurable()) {
             throw new VmidcBrokerValidationException(
                     "Invalid request. Only User configured Traffic Policy Mappings can be updated.");
         }
 
-        if (!this.sgi.getVirtualSystem().getId().equals(dto.getParentId())) {
+        if (!sgi.getVirtualSystem().getId().equals(dto.getParentId())) {
             throw new VmidcBrokerValidationException(
                     "Invalid request. Cannot change the Virtual System a Traffic Policy Mapping is associated with.");
         }
 
         SecurityGroupInterface existingSGI = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(
-                em, this.vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString());
+                em, vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString());
 
-        if (existingSGI != null && !existingSGI.equals(this.sgi)) {
+        if (existingSGI != null && !existingSGI.equals(sgi)) {
             throw new VmidcBrokerValidationException("A Traffic Policy Mapping: " + existingSGI.getName()
             + " exists for the specified virtual system and tag combination.");
         }
-
+        return vs;
     }
 
 }

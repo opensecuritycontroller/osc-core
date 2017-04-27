@@ -27,12 +27,12 @@ import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListManagerConnectoryPolicyServiceApi;
 import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.PolicyDto;
-import org.osc.core.broker.service.policy.ListManagerConnectoryPolicyService;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseJobRequest;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -81,6 +81,9 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
 
     @Reference
     private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
+
+    @Reference
+    private ListManagerConnectoryPolicyServiceApi listManagerConnectoryPolicyService;
 
     public ManagerConnectorView() {
 
@@ -200,8 +203,7 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
             try {
                 BaseIdRequest listRequest = new BaseIdRequest();
                 listRequest.setId(getParentItemId());
-                ListManagerConnectoryPolicyService listService = new ListManagerConnectoryPolicyService();
-                ListResponse<PolicyDto> res = listService.dispatch(listRequest);
+                ListResponse<PolicyDto> res = this.listManagerConnectoryPolicyService.dispatch(listRequest);
 
                 for (PolicyDto policy : res.getList()) {
                     this.childContainer.addItem(policy.getId(), policy);

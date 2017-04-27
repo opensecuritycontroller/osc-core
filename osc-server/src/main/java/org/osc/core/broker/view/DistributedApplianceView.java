@@ -27,9 +27,11 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
@@ -42,10 +44,13 @@ import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListTenantServiceApi;
+import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -151,6 +156,21 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     @Reference
     private ConformServiceApi conformService;
 
+    @Reference
+    private AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService;
+
+    @Reference
+    private DeleteSecurityGroupInterfaceServiceApi deleteSecurityGroupInterfaceService;
+
+    @Reference
+    private ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem;
+
+    @Reference
+    private ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
+
+    @Reference
+    private UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
+
     public DistributedApplianceView() {
 
         Map<String, CRUDBaseSubView<?, ?>> childSubViewMap = new HashMap<String, CRUDBaseSubView<?, ?>>();
@@ -237,7 +257,10 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         + this.childContainer.getItem(getChildItemId()).getBean().getName(),
                         new ToolbarButtons[] { ToolbarButtons.BACK, ToolbarButtons.ADD, ToolbarButtons.EDIT,
                                 ToolbarButtons.DELETE },
-                        this, this.childContainer.getItem(getChildItemId()).getBean());
+                        this, this.childContainer.getItem(getChildItemId()).getBean(),
+                        this.addSecurityGroupInterfaceService, this.deleteSecurityGroupInterfaceService,
+                        this.listSecurityGroupInterfaceServiceByVirtualSystem, this.listVirtualSystemPolicyService,
+                        this.updateSecurityGroupInterfaceService);
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages
         this.childSubViewMap.put(getKeyforChildSubView(2), this.sgiSubView);

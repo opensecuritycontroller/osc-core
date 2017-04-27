@@ -17,11 +17,11 @@
 package org.osc.core.broker.view.securityinterface;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.securityinterface.AddSecurityGroupInterfaceService;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.sdk.controller.FailurePolicyType;
 
@@ -38,11 +38,11 @@ public class AddSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfaceW
 
     final String CAPTION = "Add Policy Mapping";
 
-    private final ConformService conformService;
+    private final AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService;
 
-    public AddSecurityGroupInterfaceWindow(Long vsId, ConformService conformService) throws Exception {
-        super(vsId);
-        this.conformService = conformService;
+    public AddSecurityGroupInterfaceWindow(Long vsId, AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService, ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService) throws Exception {
+        super(vsId, listVirtualSystemPolicyService);
+        this.addSecurityGroupInterfaceService = addSecurityGroupInterfaceService;
         createWindow(this.CAPTION);
     }
 
@@ -74,8 +74,7 @@ public class AddSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfaceW
                 BaseRequest<SecurityGroupInterfaceDto> req = new BaseRequest<SecurityGroupInterfaceDto>();
                 req.setDto(dto);
 
-                AddSecurityGroupInterfaceService addService = new AddSecurityGroupInterfaceService(this.conformService);
-                addService.dispatch(req);
+                this.addSecurityGroupInterfaceService.dispatch(req);
 
                 close();
             }
