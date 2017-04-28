@@ -80,9 +80,6 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
     @Reference
     private GetJobsArchiveServiceApi jobsArchiveService;
 
-    @Reference
-    private ArchiveServiceApi archiveService;
-
     @Override
     @SuppressFBWarnings(value="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
     public Response exec(final BaseRequest<JobsArchiveDto> request, EntityManager em) throws Exception {
@@ -347,7 +344,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
             if (reponse.getDto().getAutoSchedule() && !doesJobExists) {
                 JobDataMap jobDataMap = new JobDataMap();
                 jobDataMap.put(GetJobsArchiveServiceApi.class.getName(), this.jobsArchiveService);
-                jobDataMap.put(ArchiveServiceApi.class.getName(), this.archiveService);
+                jobDataMap.put(ArchiveServiceApi.class.getName(), this);
 
                 JobDetail archiveJob = JobBuilder.newJob(ArchiveScheduledJob.class)
                         .usingJobData(jobDataMap)
