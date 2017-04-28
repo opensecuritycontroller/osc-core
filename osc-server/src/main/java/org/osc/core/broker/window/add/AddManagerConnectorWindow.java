@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("serial")
@@ -87,8 +88,8 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
 
     @Override
     public void populateForm() throws Exception {
-
-        if (ManagerType.values().size() == 0) {
+        Set<String> managerTypes = StaticRegistry.apiFactoryService().getManagerTypes();
+        if (managerTypes.size() == 0) {
             throw new VmidcException("No manager plugins found. Please add Manager plugin to perform action");
         }
 
@@ -165,7 +166,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         this.form.addComponent(this.apiKey);
 
         // select the first entry as default Manager Connector...
-        this.type.select(ManagerType.values().toArray()[0].toString());
+        this.type.select(managerTypes.toArray()[0].toString());
 
     }
 
