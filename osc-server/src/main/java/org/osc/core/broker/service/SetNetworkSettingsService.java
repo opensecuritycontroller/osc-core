@@ -35,6 +35,12 @@ import org.osc.core.util.NetworkUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * This component exposes both the API and the implementation so that the
+ * {@link SetNATSettingsService} can call the {@link #startIpPropagateJob()}
+ * method. This could be removed if {@link #startIpPropagateJob()} were made
+ * part of the {@link SetNetworkSettingsServiceApi}
+ */
 @Component(service={SetNetworkSettingsService.class, SetNetworkSettingsServiceApi.class})
 public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSettingsRequest, SetNetworkSettingsResponse>
         implements SetNetworkSettingsServiceApi {
