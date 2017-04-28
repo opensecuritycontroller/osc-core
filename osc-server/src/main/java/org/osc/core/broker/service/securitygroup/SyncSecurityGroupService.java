@@ -74,7 +74,7 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
         }
 
         // For service calls makes sure the VC's match
-        if (securityGroup.getVirtualizationConnector() != vc) {
+        if (!vc.equals(securityGroup.getVirtualizationConnector())) {
             throw this.apiUtil.createParentChildMismatchException(request.getParentId(), "Security Group");
         }
 
