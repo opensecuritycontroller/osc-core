@@ -48,6 +48,12 @@ import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * This component exposes both the API and the implementation so that the
+ * {@link AddApplianceManagerConnectorService} and {@link UpdateApplianceManagerConnectorService}
+ * can call the {@link #checkManagerConnection(DryRunRequest, ApplianceManagerConnector)}
+ * method.
+ */
 @Component(service={AddApplianceManagerConnectorService.class, AddApplianceManagerConnectorServiceApi.class})
 public class AddApplianceManagerConnectorService
         extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorRequest>, BaseJobResponse>

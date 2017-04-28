@@ -66,6 +66,12 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
+/**
+ * This component exposes both the API and the implementation so that various
+ * services can start conformance jobs. This could be removed if the relevant
+ * methods could be added to the {@link ConformServiceApi}, but these method
+ * signatures pull in external types.
+ */
 @Component(service = {ConformServiceApi.class, ConformService.class})
 public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobResponse> implements ConformServiceApi {
     private static final Logger log = Logger.getLogger(ConformService.class);
