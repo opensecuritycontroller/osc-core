@@ -44,6 +44,7 @@ import org.osc.core.broker.service.api.NsxDeleteAgentsServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateAgentsServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateProfileContainerServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateProfileServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.Attribute;
 import org.osc.core.broker.service.request.ContainerSet;
 import org.osc.core.broker.service.request.FabricAgents;
@@ -56,7 +57,6 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.rest.annotations.NsxAuth;
-import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -79,6 +79,9 @@ public class NsxApis {
 
     @Reference
     NsxUpdateProfileContainerServiceApi nsxUpdateProfileContainerService;
+
+    @Reference
+    ServerApi server;
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
@@ -209,12 +212,14 @@ public class NsxApis {
         NsxUpdateProfileRequest request = new NsxUpdateProfileRequest();
         request.serviceProfile = serviceProfile;
         ServiceProfileResponse response = new ServiceProfileResponse();
+
+        String productName = this.server.getProductName();
         try {
             this.nsxUpdateProfileService.dispatch(request);
-            response.message = Server.PRODUCT_NAME + " started Service Profile Synchronization Job";
+            response.message = productName + " started Service Profile Synchronization Job";
         } catch (Exception ex) {
             log.error("Error while updating service profile", ex);
-            response.message = Server.PRODUCT_NAME + ": Fail to trigger Synchronization Job for NSX Service Profile '"
+            response.message = productName + ": Fail to trigger Synchronization Job for NSX Service Profile '"
                     + serviceProfile.getName() + "' (" + ex.getMessage() + ")";
             AlertGenerator.processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION, response.message);
         }
@@ -238,14 +243,16 @@ public class NsxApis {
         request.containerSet = containerSet;
 
         ServiceProfileResponse response = new ServiceProfileResponse();
+
+        String productName = this.server.getProductName();
         try {
             BaseJobResponse serviceResponse = this.nsxUpdateProfileContainerService.dispatch(request);
-            response.message = Server.PRODUCT_NAME + " started Service Profile Cotainer Synchronization Job (id:"
+            response.message = productName + " started Service Profile Cotainer Synchronization Job (id:"
                     + serviceResponse.getJobId() + ").";
 
         } catch (Exception ex) {
             log.error("Error while updating service profile container set", ex);
-            response.message = Server.PRODUCT_NAME
+            response.message = productName
                     + ": Fail to trigger Synchronization Job for NSX Service Profile Container Set ID '"
                     + serviceProfileId + "' (" + ex.getMessage() + ")";
             AlertGenerator.processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION, response.message);

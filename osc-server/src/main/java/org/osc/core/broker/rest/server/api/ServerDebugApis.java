@@ -38,6 +38,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockInformationDto;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.client.RestBaseClient;
@@ -56,7 +57,7 @@ public class ServerDebugApis {
     private static final Logger logger = Logger.getLogger(ServerDebugApis.class);
 
     @Reference
-    Server server;
+    ServerApi server;
 
     @Path("/lock")
     @GET

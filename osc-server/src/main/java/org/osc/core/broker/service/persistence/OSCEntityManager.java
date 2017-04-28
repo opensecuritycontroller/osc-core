@@ -30,10 +30,12 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Root;
 
 import org.osc.core.broker.model.entities.IscEntity;
+import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
@@ -173,9 +175,17 @@ public class OSCEntityManager<T extends IscEntity> {
     public static void delete(EntityManager em, IscEntity entity) {
         em.remove(entity);
 
+        BaseDto dto = null;
+        if (entity instanceof User) {
+            dto = new UserDto();
+            User u = (User) entity;
+            dto.setId(u.getId());
+            ((UserDto)dto).setLoginName(u.getLoginName());
+        }
+
         // Broadcasting changes to UI
         TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
-                EventType.DELETED);
+                EventType.DELETED, dto);
 
         if (entity instanceof VirtualSystem) {
             // TODO: Future. Needs to be generalized broadcasting changes to UI

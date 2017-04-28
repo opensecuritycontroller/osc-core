@@ -22,6 +22,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 
+import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.view.MainUIProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -39,7 +40,7 @@ import com.vaadin.server.VaadinServletService;
 		HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED + "=true"
 
 })
-public class UiServlet extends VaadinServlet implements Servlet {
+public class UiServlet extends VaadinServlet implements Servlet, ServerTerminationListener {
 
     /**
      *
@@ -74,5 +75,11 @@ public class UiServlet extends VaadinServlet implements Servlet {
         VaadinServletService servletService = super.createServletService(deploymentConfiguration);
         servletService.addSessionInitListener(e -> e.getSession().addUIProvider(this.uiProvider));
         return servletService;
+    }
+
+    @Override
+    public void serverStopping() {
+        // Terminate Vaadin UI Application
+        destroy();
     }
 }
