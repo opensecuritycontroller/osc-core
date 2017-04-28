@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
 import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
@@ -36,7 +37,6 @@ import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.request.ListOpenstackMembersRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
-import org.osc.core.broker.service.securitygroup.ListSecurityGroupMembersBySgService;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -218,14 +218,17 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
     private ListOpenstackMembersServiceApi listOpenstackMembersService;
     private ListRegionByVcIdServiceApi listRegionByVcIdService;
     private ListTenantByVcIdServiceApi listTenantByVcIdServiceApi;
+    private ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService;
 
     public BaseSecurityGroupWindow(ListOpenstackMembersServiceApi listOpenstackMembersService,
             ListRegionByVcIdServiceApi listRegionByVcIdService,
-            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi) {
+            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi,
+            ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService) {
         super();
         this.listOpenstackMembersService = listOpenstackMembersService;
         this.listRegionByVcIdService = listRegionByVcIdService;
         this.listTenantByVcIdServiceApi = listTenantByVcIdServiceApi;
+        this.listSecurityGroupMembersBySgService = listSecurityGroupMembersBySgService;
         initListeners();
     }
 
@@ -417,9 +420,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
         this.selectedItemsTable.removeAllItems();
         if (this.protectionTypeOption.getValue() != TYPE_ALL && this.currentSecurityGroup.getId() != null) {
             try {
-                ListSecurityGroupMembersBySgService memberListService = new ListSecurityGroupMembersBySgService();
-
-                SetResponse<SecurityGroupMemberItemDto> response = memberListService.dispatch(new BaseIdRequest(
+                SetResponse<SecurityGroupMemberItemDto> response = this.listSecurityGroupMembersBySgService.dispatch(new BaseIdRequest(
                         this.currentSecurityGroup.getId()));
                 CustomTable toTable = this.selectedItemsTable;
                 for (SecurityGroupMemberItemDto memberItem : response.getSet()) {
