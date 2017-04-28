@@ -16,6 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Date;
+
+import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.ArchiveServiceApi;
+import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
+import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
+import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.broker.window.VmidcWindow;
+import org.osc.core.broker.window.WindowUtil;
+import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.util.FileUtil;
+
 import com.vaadin.server.FileResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -25,16 +39,6 @@ import com.vaadin.ui.Link;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
-import org.apache.log4j.Logger;
-import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.broker.window.VmidcWindow;
-import org.osc.core.broker.window.WindowUtil;
-import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.util.FileUtil;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Date;
 
 public class ArchiveLayout extends FormLayout {
     /**
@@ -46,14 +50,16 @@ public class ArchiveLayout extends FormLayout {
 
     private Table archiveTable;
 
-    public ArchiveLayout() {
+    public ArchiveLayout(ArchiveServiceApi archiveService, GetJobsArchiveServiceApi getJobsArchiveService,
+            UpdateJobsArchiveServiceApi updateJobsArchiveService) {
         super();
 
         VerticalLayout downloadContainer = new VerticalLayout();
         VerticalLayout archiveContainer = new VerticalLayout();
 
         // Component to Archive Jobs
-        JobsArchiverPanel archiveConfigurator = new JobsArchiverPanel(this);
+        JobsArchiverPanel archiveConfigurator = new JobsArchiverPanel(this, archiveService,
+                getJobsArchiveService, updateJobsArchiveService);
         archiveConfigurator.setSizeFull();
 
         archiveContainer.addComponent(ViewUtil.createSubHeader("Archive Jobs/Alerts", null));
@@ -87,7 +93,7 @@ public class ArchiveLayout extends FormLayout {
         try {
             fileList = FileUtil.getFileListFromDirectory("archive");
         } catch (FileNotFoundException e) {
-            log.error(e);
+            this.log.error(e);
         }
 
         for (File archiveFile : fileList) {

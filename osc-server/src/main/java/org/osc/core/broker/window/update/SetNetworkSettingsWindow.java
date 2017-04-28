@@ -17,9 +17,8 @@
 package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.SetNetworkSettingsService;
+import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.request.SetNetworkSettingsRequest;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.maintenance.NetworkLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
@@ -43,11 +42,13 @@ public class SetNetworkSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel
 
     private NetworkLayout networkLayout = null;
 
-    private SetNetworkSettingsService setNetworkSettingsService = StaticRegistry.setNetworkSettingsService();
+    private SetNetworkSettingsServiceApi setNetworkSettingsService;
 
-    public SetNetworkSettingsWindow(NetworkLayout networkLayout) throws Exception {
+    public SetNetworkSettingsWindow(NetworkLayout networkLayout,
+            SetNetworkSettingsServiceApi setNetworkSettingsService) throws Exception {
         super();
         this.networkLayout = networkLayout;
+        this.setNetworkSettingsService = setNetworkSettingsService;
         createWindow(this.CAPTION);
 
     }
@@ -140,8 +141,7 @@ public class SetNetworkSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel
                 req.setHostDnsServer1(this.dnsServer1.getValue().trim());
                 req.setHostDnsServer2(this.dnsServer2.getValue().trim());
 
-                SetNetworkSettingsService service = new SetNetworkSettingsService();
-                service.dispatch(req);
+                this.setNetworkSettingsService.dispatch(req);
 
                 this.networkLayout.populateNetworkTable();
             }

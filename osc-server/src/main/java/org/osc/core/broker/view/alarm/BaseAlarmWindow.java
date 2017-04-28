@@ -20,9 +20,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.AlarmAction;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.Severity;
+import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.EmailSettingsDto;
-import org.osc.core.broker.service.email.GetEmailSettingsService;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
@@ -58,8 +58,11 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
     protected ComboBox alarmAction = null;
     protected TextField email = null;
 
-    public BaseAlarmWindow() {
+    private GetEmailSettingsServiceApi getEmailSettingsService;
+
+    public BaseAlarmWindow(GetEmailSettingsServiceApi getEmailSettingsService) {
         super();
+        this.getEmailSettingsService = getEmailSettingsService;
         initListeners();
     }
 
@@ -72,9 +75,7 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
             this.alarmAction.validate();
             if (this.alarmAction.getValue().equals(AlarmAction.EMAIL)) {
                 this.email.validate();
-                GetEmailSettingsService emailService = new GetEmailSettingsService();
-
-                BaseDtoResponse<EmailSettingsDto> emailSettingsResponse = emailService.dispatch(new Request() {
+                BaseDtoResponse<EmailSettingsDto> emailSettingsResponse = this.getEmailSettingsService.dispatch(new Request() {
                 });
                 if (emailSettingsResponse.getDto() == null) {
                     throw new VmidcException("Email settings have not been configured! ");

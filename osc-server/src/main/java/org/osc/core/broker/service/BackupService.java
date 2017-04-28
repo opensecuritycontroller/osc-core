@@ -33,7 +33,9 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class BackupService extends BackupFileService<BackupRequest, BackupResponse> implements BackupServiceApi {
 
 

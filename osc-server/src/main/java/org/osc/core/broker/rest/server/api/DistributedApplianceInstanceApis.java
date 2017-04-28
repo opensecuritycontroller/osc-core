@@ -31,9 +31,9 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.ListDistributedApplianceInstanceService;
+import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
+import org.osc.core.broker.service.api.ListDistributedApplianceInstanceServiceApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -68,7 +68,10 @@ public class DistributedApplianceInstanceApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private GetAgentStatusService getAgentStatusService;
+    private GetAgentStatusServiceApi getAgentStatusService;
+
+    @Reference
+    private ListDistributedApplianceInstanceServiceApi listDAIService;
 
     @ApiOperation(value = "Lists All Distributed Appliance Instances",
             notes = "Lists all the Distributed Appliance Instances",
@@ -85,7 +88,7 @@ public class DistributedApplianceInstanceApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) this.apiUtil
-        .getListResponse(new ListDistributedApplianceInstanceService(), new BaseRequest<>(true));
+        .getListResponse(this.listDAIService, new BaseRequest<>(true));
 
         return response.getList();
     }

@@ -31,7 +31,9 @@ import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.manager.MCDeleteMetaTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class DeleteApplianceManagerConnectorService extends
         ServiceDispatcher<BaseIdRequest, BaseJobResponse> implements DeleteApplianceManagerConnectorServiceApi {
 

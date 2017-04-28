@@ -41,25 +41,25 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osc.sdk.controller.FailurePolicyType;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListSecurityGroupBindingsBySgService
         extends ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>>
         implements ListSecurityGroupBindingsBySgServiceApi {
 
-    private SecurityGroup sg;
-
     @Override
     public ListResponse<VirtualSystemPolicyBindingDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
 
-        validate(em, request);
+        SecurityGroup sg = validate(em, request);
 
         // to do mapping
         List<VirtualSystemPolicyBindingDto> dtoList = new ArrayList<>();
-        Set<VirtualSystem> vsSet = this.sg.getVirtualizationConnector().getVirtualSystems();
+        Set<VirtualSystem> vsSet = sg.getVirtualizationConnector().getVirtualSystems();
         long order = -1;
 
         //Existing bindings
-        for (SecurityGroupInterface sgInterface : this.sg.getSecurityGroupInterfaces()) {
+        for (SecurityGroupInterface sgInterface : sg.getSecurityGroupInterfaces()) {
             VirtualSystem vs = sgInterface.getVirtualSystem();
             vsSet.remove(vs);
             VirtualSystemPolicyBindingDto virtualSystemBindingDto = new VirtualSystemPolicyBindingDto(vs.getId(), vs
@@ -81,9 +81,9 @@ public class ListSecurityGroupBindingsBySgService
         }
 
         // Other available Bindings
-        if (this.sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
+        if (sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
             FailurePolicyType failurePolicyType =
-                    SdnControllerApiFactory.supportsFailurePolicy(this.sg) ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA;
+                    SdnControllerApiFactory.supportsFailurePolicy(sg) ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA;
 
             for (VirtualSystem vs : vsSet) {
                 // Only allow binding to non-deleted services
@@ -119,19 +119,20 @@ public class ListSecurityGroupBindingsBySgService
         return new ListResponse<>(dtoList);
     }
 
-    protected void validate(EntityManager em, BaseIdRequest request) throws Exception {
+    protected SecurityGroup validate(EntityManager em, BaseIdRequest request) throws Exception {
         BaseIdRequestValidator.checkForNullId(request);
 
-        this.sg = SecurityGroupEntityMgr.findById(em, request.getId());
+        SecurityGroup sg = SecurityGroupEntityMgr.findById(em, request.getId());
 
-        if (this.sg == null) {
+        if (sg == null) {
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");
         }
 
-        if (this.sg.getVirtualizationConnector().getControllerType().equals(ControllerType.NONE.getValue())
-                && this.sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
+        if (sg.getVirtualizationConnector().getControllerType().equals(ControllerType.NONE.getValue())
+                && sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
             throw new ActionNotSupportedException(
                     "Invalid Action. Controller is not defined for this Virtualization Connector.");
         }
+        return sg;
     }
 }

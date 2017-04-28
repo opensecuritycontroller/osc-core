@@ -39,11 +39,11 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.client.nsx.model.ServiceInstance;
-import org.osc.core.broker.service.NsxDeleteAgentsService;
-import org.osc.core.broker.service.NsxUpdateAgentsService;
-import org.osc.core.broker.service.NsxUpdateProfileContainerService;
-import org.osc.core.broker.service.NsxUpdateProfileService;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.NsxDeleteAgentsServiceApi;
+import org.osc.core.broker.service.api.NsxUpdateAgentsServiceApi;
+import org.osc.core.broker.service.api.NsxUpdateProfileContainerServiceApi;
+import org.osc.core.broker.service.api.NsxUpdateProfileServiceApi;
 import org.osc.core.broker.service.request.Attribute;
 import org.osc.core.broker.service.request.ContainerSet;
 import org.osc.core.broker.service.request.FabricAgents;
@@ -58,6 +58,7 @@ import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.rest.annotations.NsxAuth;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 
 @Component(service = NsxApis.class)
@@ -66,6 +67,18 @@ import org.osgi.service.component.annotations.Component;
 public class NsxApis {
 
     private static final Logger log = Logger.getLogger(NsxApis.class);
+
+    @Reference
+    NsxDeleteAgentsServiceApi nsxDeleteAgentsService;
+
+    @Reference
+    NsxUpdateAgentsServiceApi nsxUpdateAgentsService;
+
+    @Reference
+    NsxUpdateProfileServiceApi nsxUpdateProfileService;
+
+    @Reference
+    NsxUpdateProfileContainerServiceApi nsxUpdateProfileContainerService;
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
@@ -105,10 +118,9 @@ public class NsxApis {
         NsxUpdateAgentsRequest serviceRequest = new NsxUpdateAgentsRequest();
         serviceRequest.nsxIpAddress = nsxIpAddress;
         serviceRequest.fabricAgents = fabricAgents;
-        NsxUpdateAgentsService service = new NsxUpdateAgentsService();
         NsxUpdateAgentsResponse response = new NsxUpdateAgentsResponse();
         try {
-            response = service.dispatch(serviceRequest);
+            response = this.nsxUpdateAgentsService.dispatch(serviceRequest);
         } catch (Exception ex) {
             log.error("Fail to update agents.", ex);
             AlertGenerator.processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION,
@@ -132,9 +144,8 @@ public class NsxApis {
         NsxDeleteAgentsRequest serviceRequest = new NsxDeleteAgentsRequest();
         serviceRequest.nsxIpAddress = nsxIpAddress;
         serviceRequest.agentIds = agentIds;
-        NsxDeleteAgentsService service = new NsxDeleteAgentsService();
         try {
-            service.dispatch(serviceRequest);
+            this.nsxDeleteAgentsService.dispatch(serviceRequest);
         } catch (Exception ex) {
             log.error("Fail to delete agent " + agentIds, ex);
             AlertGenerator.processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION,
@@ -197,10 +208,9 @@ public class NsxApis {
 
         NsxUpdateProfileRequest request = new NsxUpdateProfileRequest();
         request.serviceProfile = serviceProfile;
-        NsxUpdateProfileService service = new NsxUpdateProfileService();
         ServiceProfileResponse response = new ServiceProfileResponse();
         try {
-            service.dispatch(request);
+            this.nsxUpdateProfileService.dispatch(request);
             response.message = Server.PRODUCT_NAME + " started Service Profile Synchronization Job";
         } catch (Exception ex) {
             log.error("Error while updating service profile", ex);
@@ -227,10 +237,9 @@ public class NsxApis {
         request.nsxIpAddress = nsxIpAddress;
         request.containerSet = containerSet;
 
-        NsxUpdateProfileContainerService service = new NsxUpdateProfileContainerService();
         ServiceProfileResponse response = new ServiceProfileResponse();
         try {
-            BaseJobResponse serviceResponse = service.dispatch(request);
+            BaseJobResponse serviceResponse = this.nsxUpdateProfileContainerService.dispatch(request);
             response.message = Server.PRODUCT_NAME + " started Service Profile Cotainer Synchronization Job (id:"
                     + serviceResponse.getJobId() + ").";
 

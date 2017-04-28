@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
@@ -23,16 +25,18 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.VCDeleteMetaTask;
+import org.osgi.service.component.annotations.Component;
 
-import javax.persistence.EntityManager;
-
-public class DeleteVirtualizationConnectorService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse> {
+@Component
+public class DeleteVirtualizationConnectorService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
+    implements DeleteVirtualizationConnectorServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteVirtualizationConnectorService.class);
 

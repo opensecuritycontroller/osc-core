@@ -45,12 +45,14 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.util.ArchiveUtil;
+import org.osgi.service.component.annotations.Component;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Archive service which performs job archive to CSV files.
  */
+@Component
 public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto>, Response>
         implements ArchiveServiceApi {
 

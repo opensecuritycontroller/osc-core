@@ -32,40 +32,40 @@ import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListSecurityGroupInterfaceServiceByVirtualSystem
         extends ServiceDispatcher<BaseIdRequest, ListResponse<SecurityGroupInterfaceDto>>
         implements ListSecurityGroupInterfaceServiceByVirtualSystemApi {
 
-    private VirtualSystem vs;
-    ListResponse<SecurityGroupInterfaceDto> response = new ListResponse<SecurityGroupInterfaceDto>();
-
     @Override
     public ListResponse<SecurityGroupInterfaceDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
+        ListResponse<SecurityGroupInterfaceDto> response = new ListResponse<SecurityGroupInterfaceDto>();
         // to do mapping
-        validateAndLoad(request, em);
+        VirtualSystem vs = validateAndLoad(request, em);
 
         List<SecurityGroupInterfaceDto> dtoList = new ArrayList<SecurityGroupInterfaceDto>();
 
         // Mapping all the da objects to da dto objects
-        for (SecurityGroupInterface sgi : this.vs.getSecurityGroupInterfaces()) {
+        for (SecurityGroupInterface sgi : vs.getSecurityGroupInterfaces()) {
             SecurityGroupInterfaceDto dto = new SecurityGroupInterfaceDto();
             SecurityGroupInterfaceEntityMgr.fromEntity(sgi, dto);
             dtoList.add(dto);
         }
 
-        this.response.setList(dtoList);
-        return this.response;
+        response.setList(dtoList);
+        return response;
     }
 
-    private void validateAndLoad(BaseIdRequest req, EntityManager em) throws Exception {
+    private VirtualSystem validateAndLoad(BaseIdRequest req, EntityManager em) throws Exception {
         BaseIdRequestValidator.checkForNullId(req);
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
-        this.vs = emgr.findByPrimaryKey(req.getId());
-        if (this.vs == null) {
+        VirtualSystem vs = emgr.findByPrimaryKey(req.getId());
+        if (vs == null) {
             throw new VmidcBrokerValidationException("Virtual System with Id: " + req.getId() + "  is not found.");
         }
-
+        return vs;
     }
 
 }

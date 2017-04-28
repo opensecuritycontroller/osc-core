@@ -20,6 +20,10 @@ import java.util.HashSet;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
+import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
+import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -46,13 +50,18 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
     // current view reference
     private DistributedApplianceView daView = null;
 
-    private AddDistributedApplianceServiceApi addDistributedApplianceServiceApi;
+    private AddDistributedApplianceServiceApi addDistributedApplianceService;
 
     public AddDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
-            AddDistributedApplianceServiceApi addDistributedApplianceServiceApi) throws Exception {
-        super();
+            AddDistributedApplianceServiceApi addDistributedApplianceService,
+            ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
+            ListDomainsByMcIdServiceApi listDomainsByMcIdService,
+            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
+            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService) throws Exception {
+        super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel,
+                listApplianceManagerConnectorService);
         this.daView = distributedApplianceView;
-        this.addDistributedApplianceServiceApi = addDistributedApplianceServiceApi;
+        this.addDistributedApplianceService = addDistributedApplianceService;
         createWindow(this.CAPTION);
     }
 
@@ -125,7 +134,8 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
                 daDto.setVirtualizationSystems(vsSet);
                 addRequest.setDto(daDto);
 
-                AddDistributedApplianceResponse addResponse = this.addDistributedApplianceServiceApi.dispatch(addRequest);
+                AddDistributedApplianceResponse addResponse = this.addDistributedApplianceService
+                        .dispatch(addRequest);
 
                 this.daView.getParentContainer().addItemAt(0, addResponse.getId(), addResponse);
                 this.daView.parentTableClicked(addResponse.getId());

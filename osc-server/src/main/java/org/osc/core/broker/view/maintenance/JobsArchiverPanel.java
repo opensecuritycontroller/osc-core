@@ -19,9 +19,9 @@ package org.osc.core.broker.view.maintenance;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.archive.ThresholdType;
-import org.osc.core.broker.service.archive.ArchiveService;
-import org.osc.core.broker.service.archive.GetJobsArchiveService;
-import org.osc.core.broker.service.archive.UpdateJobsArchiveService;
+import org.osc.core.broker.service.api.ArchiveServiceApi;
+import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
+import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
 import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
@@ -84,10 +84,16 @@ public class JobsArchiverPanel extends CustomComponent {
     private String ARCHIVE_STYLE = "archive-options";
     private JobsArchiveDto dto;
     private ArchiveLayout parentLayout;
+    private ArchiveServiceApi archiveService;
+    private GetJobsArchiveServiceApi getJobsArchiveService;
+    private UpdateJobsArchiveServiceApi updateJobsArchiveService;
 
-    public JobsArchiverPanel(ArchiveLayout parentLayout) {
+    public JobsArchiverPanel(ArchiveLayout parentLayout, ArchiveServiceApi archiveService,
+            GetJobsArchiveServiceApi getJobsArchiveService, UpdateJobsArchiveServiceApi updateJobsArchiveService) {
         super();
         this.parentLayout = parentLayout;
+        this.archiveService = archiveService;
+        this.getJobsArchiveService = getJobsArchiveService;
 
         try {
             this.dto = populateJobsArchiveDto().getDto();
@@ -139,8 +145,7 @@ public class JobsArchiverPanel extends CustomComponent {
     }
 
     private BaseDtoResponse<JobsArchiveDto> populateJobsArchiveDto() throws Exception {
-        GetJobsArchiveService listService = new GetJobsArchiveService();
-        BaseDtoResponse<JobsArchiveDto> res = listService.dispatch(new Request() {
+        BaseDtoResponse<JobsArchiveDto> res = this.getJobsArchiveService.dispatch(new Request() {
         });
         return res;
     }
@@ -253,8 +258,6 @@ public class JobsArchiverPanel extends CustomComponent {
             @Override
             public void buttonClick(ClickEvent event) {
 
-                UpdateJobsArchiveService service = new UpdateJobsArchiveService();
-
                 try {
                     BaseRequest<JobsArchiveDto> request = new BaseRequest<JobsArchiveDto>();
                     request.setDto(new JobsArchiveDto());
@@ -264,7 +267,7 @@ public class JobsArchiverPanel extends CustomComponent {
                     request.getDto().setThresholdUnit((ThresholdType) JobsArchiverPanel.this.thresOpt.getValue());
                     request.getDto().setThresholdValue(JobsArchiverPanel.this.archiveThreshold.getValue());
 
-                    service.dispatch(request);
+                    JobsArchiverPanel.this.updateJobsArchiveService.dispatch(request);
                     ArchiveScheduledJob.maybeScheduleArchiveJob();
 
                     ViewUtil.iscNotification(
@@ -308,7 +311,7 @@ public class JobsArchiverPanel extends CustomComponent {
                         request.getDto().setThresholdValue(JobsArchiverPanel.this.archiveThreshold.getValue());
 
                         try {
-                            new ArchiveService().dispatch(request);
+                            JobsArchiverPanel.this.archiveService.dispatch(request);
 
                             ViewUtil.iscNotification(
                                     VmidcMessages.getString(VmidcMessages_.MAINTENANCE_JOBSARCHIVE_ONDEMAND_SUCCESSFUL), null,

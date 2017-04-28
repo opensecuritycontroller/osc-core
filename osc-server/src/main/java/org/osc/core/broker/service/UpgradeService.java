@@ -30,7 +30,7 @@ import org.osc.core.util.ServerUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = UpgradeService.class)
+@Component
 public class UpgradeService extends ServiceDispatcher<UpgradeRequest, EmptySuccessResponse> implements UpgradeServiceApi {
     private static final Logger log = Logger.getLogger(UpgradeService.class);
 

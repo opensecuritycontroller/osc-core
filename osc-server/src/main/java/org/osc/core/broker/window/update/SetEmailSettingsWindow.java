@@ -17,9 +17,9 @@
 package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
+import org.osc.core.broker.service.api.SetEmailSettingsServiceApi;
 import org.osc.core.broker.service.dto.EmailSettingsDto;
-import org.osc.core.broker.service.email.GetEmailSettingsService;
-import org.osc.core.broker.service.email.SetEmailSettingsService;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
@@ -47,9 +47,16 @@ public class SetEmailSettingsWindow extends CRUDBaseValidateWindow {
     private PasswordField password = null;
     private EmailLayout emailLayout = null;
 
-    public SetEmailSettingsWindow(EmailLayout emailLayout) throws Exception {
+    private GetEmailSettingsServiceApi getEmailSettingsService;
+
+    private SetEmailSettingsServiceApi setEmailSettingsService;
+
+    public SetEmailSettingsWindow(EmailLayout emailLayout, GetEmailSettingsServiceApi getEmailSettingsService,
+            SetEmailSettingsServiceApi setEmailSettingsService) throws Exception {
         super(new OkCancelValidateButtonModel());
         this.emailLayout = emailLayout;
+        this.getEmailSettingsService = getEmailSettingsService;
+        this.setEmailSettingsService = setEmailSettingsService;
         createWindow(this.CAPTION);
 
     }
@@ -66,10 +73,9 @@ public class SetEmailSettingsWindow extends CRUDBaseValidateWindow {
         this.password.setImmediate(true);
 
         // filling form with existing data
-        GetEmailSettingsService emailService = new GetEmailSettingsService();
         BaseDtoResponse<EmailSettingsDto> res = new BaseDtoResponse<EmailSettingsDto>();
         try {
-            res = emailService.dispatch(new Request() {
+            res = this.getEmailSettingsService.dispatch(new Request() {
             });
 
             if (res.getDto() != null) {
@@ -121,8 +127,7 @@ public class SetEmailSettingsWindow extends CRUDBaseValidateWindow {
             if (validateForm()) {
                 BaseRequest<EmailSettingsDto> request = new BaseRequest<EmailSettingsDto>();
                 request.setDto(getDto());
-                SetEmailSettingsService service = new SetEmailSettingsService();
-                service.dispatch(request);
+                this.setEmailSettingsService.dispatch(request);
                 this.emailLayout.populateEmailtable();
                 close();
             }

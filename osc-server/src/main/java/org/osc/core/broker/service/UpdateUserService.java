@@ -42,7 +42,7 @@ import org.osc.core.util.EncryptionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = UpdateUserService.class)
+@Component
 public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, UpdateUserResponse>
         implements UpdateUserServiceApi {
 
@@ -93,7 +93,7 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
         return response;
     }
 
-    public Long startPasswordPropagateNsxJob() throws Exception {
+    private Long startPasswordPropagateNsxJob() throws Exception {
 
         log.info("Start propagating new password to all NSX managers");
 
@@ -108,7 +108,7 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
 
     }
 
-    public Long startPasswordPropagateDaiJob() throws Exception {
+    private Long startPasswordPropagateDaiJob() throws Exception {
 
         log.info("Start propagating new password to all DAIs");
 
@@ -123,7 +123,7 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
 
     }
 
-    public Long startPasswordPropagateMgrJob() throws Exception {
+    private Long startPasswordPropagateMgrJob() throws Exception {
         log.info("Start propagating new password to all managers");
         TaskGraph tg = new TaskGraph();
         tg.addTask(this.passwordChangePropagateMgrMetaTask.create());

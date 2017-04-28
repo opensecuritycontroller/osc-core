@@ -26,9 +26,9 @@ import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osgi.service.component.annotations.Component;
 
-
-
+@Component
 public class DeleteApplianceService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse>
         implements DeleteApplianceServiceApi {
 

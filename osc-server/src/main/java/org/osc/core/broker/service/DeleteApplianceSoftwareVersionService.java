@@ -35,7 +35,9 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.view.maintenance.ApplianceUploader;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class DeleteApplianceSoftwareVersionService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse>
         implements DeleteApplianceSoftwareVersionServiceApi {
 

@@ -27,7 +27,9 @@ import org.osc.core.broker.service.persistence.JobsArchiveEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class UpdateJobsArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto>, BaseResponse>
         implements UpdateJobsArchiveServiceApi {
 

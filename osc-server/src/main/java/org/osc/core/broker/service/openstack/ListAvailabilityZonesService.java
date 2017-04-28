@@ -34,15 +34,16 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListAvailabilityZonesService
         extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<AvailabilityZoneDto>>
         implements ListAvailabilityZonesServiceApi {
 
-    private ListResponse<AvailabilityZoneDto> response = new ListResponse<AvailabilityZoneDto>();
-
     @Override
     public ListResponse<AvailabilityZoneDto> exec(BaseOpenStackRequest request, EntityManager em) throws IOException, EncryptionException {
+        ListResponse<AvailabilityZoneDto> response = new ListResponse<AvailabilityZoneDto>();
         List<AvailabilityZoneDto> azList = new ArrayList<AvailabilityZoneDto>();
         // Initializing Entity Manager
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
@@ -60,7 +61,7 @@ public class ListAvailabilityZonesService
                     azList.add(azDto);
                 }
             }
-            this.response.setList(azList);
+            response.setList(azList);
 
         } finally {
             if (novaApi != null) {
@@ -68,6 +69,6 @@ public class ListAvailabilityZonesService
             }
 
         }
-        return this.response;
+        return response;
     }
 }

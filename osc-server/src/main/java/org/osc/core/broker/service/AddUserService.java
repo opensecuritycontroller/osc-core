@@ -27,7 +27,9 @@ import org.osc.core.broker.service.request.AddUserRequest;
 import org.osc.core.broker.service.response.AddUserResponse;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.service.validator.UserDtoValidator;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class AddUserService extends ServiceDispatcher<AddUserRequest, AddUserResponse> implements AddUserServiceApi {
     private DtoValidator<UserDto, User> validator;
 

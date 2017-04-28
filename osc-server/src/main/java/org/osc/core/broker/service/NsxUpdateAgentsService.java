@@ -50,7 +50,9 @@ import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
 import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.element.AgentElement;
 import org.osc.sdk.sdn.element.AgentStatusElement;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsRequest, NsxUpdateAgentsResponse>
         implements NsxUpdateAgentsServiceApi {
 

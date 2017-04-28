@@ -25,7 +25,9 @@ import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class DeleteSslCertificateService extends ServiceDispatcher<DeleteSslEntryRequest, EmptySuccessResponse>
         implements DeleteSslCertificateServiceApi {
 

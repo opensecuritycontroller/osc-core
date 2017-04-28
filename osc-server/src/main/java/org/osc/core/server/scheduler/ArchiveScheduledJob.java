@@ -27,12 +27,11 @@ import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.osc.core.broker.service.archive.ArchiveService;
-import org.osc.core.broker.service.archive.GetJobsArchiveService;
 import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -65,9 +64,8 @@ public class ArchiveScheduledJob implements Job {
      */
     public static void maybeScheduleArchiveJob() {
 
-        GetJobsArchiveService service = new GetJobsArchiveService();
         try {
-            BaseDtoResponse<JobsArchiveDto> reponse = service.dispatch(new Request() {
+            BaseDtoResponse<JobsArchiveDto> reponse = StaticRegistry.getJobsArchiveService().dispatch(new Request() {
             });
 
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
@@ -106,8 +104,7 @@ public class ArchiveScheduledJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         try {
-            GetJobsArchiveService service = new GetJobsArchiveService();
-            BaseDtoResponse<JobsArchiveDto> reponse = service.dispatch(new Request() {
+            BaseDtoResponse<JobsArchiveDto> reponse = StaticRegistry.getJobsArchiveService().dispatch(new Request() {
             });
 
             Period period = new Period();
@@ -123,7 +120,7 @@ public class ArchiveScheduledJob implements Job {
                 BaseRequest<JobsArchiveDto> request = new BaseRequest<JobsArchiveDto>();
                 request.setDto(new JobsArchiveDto());
                 request.getDto().setId(1L);
-                new ArchiveService().dispatch(request);
+                new StaticRegistry().archiveService().dispatch(request);
             }
         } catch (Exception e) {
             log.error("Failure during archive operation", e);

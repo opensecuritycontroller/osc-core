@@ -29,14 +29,15 @@ import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListRegionByVcIdService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>>
         implements ListRegionByVcIdServiceApi {
 
-    private ListResponse<String> response = new ListResponse<String>();
-
     @Override
     public ListResponse<String> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
+        ListResponse<String> response = new ListResponse<String>();
         List<String> regions = new ArrayList<String>();
 
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(VirtualizationConnector.class, em);
@@ -47,13 +48,13 @@ public class ListRegionByVcIdService extends ServiceDispatcher<BaseOpenStackRequ
             for (String region : novaApi.listRegions()) {
                 regions.add(region);
             }
-            this.response.setList(regions);
+            response.setList(regions);
         } finally {
             if (novaApi != null) {
                 novaApi.close();
             }
         }
-        return this.response;
+        return response;
     }
 
 }

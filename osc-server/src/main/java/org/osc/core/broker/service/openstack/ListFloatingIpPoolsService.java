@@ -31,7 +31,9 @@ import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListFloatingIpPoolsService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>>
         implements ListFloatingIpPoolsServiceApi {
 

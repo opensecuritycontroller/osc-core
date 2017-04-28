@@ -24,23 +24,29 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListManagerConnectoryPolicyServiceApi;
+import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.PolicyDto;
-import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
-import org.osc.core.broker.service.mc.SyncManagerConnectorService;
-import org.osc.core.broker.service.policy.ListManagerConnectoryPolicyService;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseJobRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddManagerConnectorWindow;
 import org.osc.core.broker.window.delete.DeleteManagerConnectorWindow;
 import org.osc.core.broker.window.update.UpdateManagerConnectorWindow;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -50,6 +56,7 @@ import com.vaadin.ui.CustomTable;
 import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
+@Component(service={ManagerConnectorView.class}, scope=ServiceScope.PROTOTYPE)
 public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnectorDto, PolicyDto> {
     private static final String MC_HELP_GUID = "GUID-14BF1C4E-4729-437A-BF60-A53EED74009C.html";
     private static final String POLICY_HELP_GUID = "GUID-14BF1C4E-4729-437A-BF60-A53EED74009C.html";
@@ -58,10 +65,29 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
 
     private static final Logger log = Logger.getLogger(ManagerConnectorView.class);
 
-    private ApiFactoryService apiFactoryService = StaticRegistry.apiFactoryService();
-    private SyncManagerConnectorService syncManagerConnectorService = StaticRegistry.syncManagerConnectorService();
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
-    public ManagerConnectorView() {
+    @Reference
+    private AddApplianceManagerConnectorServiceApi addManagerConnectorService;
+
+    @Reference
+    private UpdateApplianceManagerConnectorServiceApi updateManagerConnectorService;
+
+    @Reference
+    private DeleteApplianceManagerConnectorServiceApi deleteManagerConnectorService;
+
+    @Reference
+    private SyncManagerConnectorServiceApi syncManagerConnectorService;
+
+    @Reference
+    private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
+
+    @Reference
+    private ListManagerConnectoryPolicyServiceApi listManagerConnectoryPolicyService;
+
+    @Activate
+    private void activate() {
 
         createView("Manager Connector", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT,
                 ToolbarButtons.DELETE, ToolbarButtons.CONFORM), "Policies", null);
@@ -71,15 +97,15 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Manager Connector Window");
-            ViewUtil.addWindow(new AddManagerConnectorWindow(this));
+            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Manager Connector Window");
-            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this));
+            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Manager Connector Window");
-            ViewUtil.addWindow(new DeleteManagerConnectorWindow(this));
+            ViewUtil.addWindow(new DeleteManagerConnectorWindow(this, this.deleteManagerConnectorService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.CONFORM.getId())) {
             conformManagerConnector(getParentItemId());
@@ -145,9 +171,8 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
 
         BaseRequest<BaseDto> listRequest = new BaseRequest<>();
         ListResponse<ApplianceManagerConnectorDto> res;
-        ListApplianceManagerConnectorService listService = new ListApplianceManagerConnectorService();
         try {
-            res = listService.dispatch(listRequest);
+            res = this.listApplianceManagerConnectorService.dispatch(listRequest);
             List<ApplianceManagerConnectorDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // Creating table with list of vendors
@@ -180,8 +205,7 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
             try {
                 BaseIdRequest listRequest = new BaseIdRequest();
                 listRequest.setId(getParentItemId());
-                ListManagerConnectoryPolicyService listService = new ListManagerConnectoryPolicyService();
-                ListResponse<PolicyDto> res = listService.dispatch(listRequest);
+                ListResponse<PolicyDto> res = this.listManagerConnectoryPolicyService.dispatch(listRequest);
 
                 for (PolicyDto policy : res.getList()) {
                     this.childContainer.addItem(policy.getId(), policy);

@@ -30,14 +30,16 @@ import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListRegionService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>>
         implements ListRegionServiceApi {
 
-    private ListResponse<String> response = new ListResponse<String>();
-
     @Override
     public ListResponse<String> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
+        ListResponse<String> response = new ListResponse<String>();
+
         List<String> regions = new ArrayList<String>();
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
         // to do mapping
@@ -47,13 +49,13 @@ public class ListRegionService extends ServiceDispatcher<BaseOpenStackRequest, L
             for (String region : novaApi.listRegions()) {
                 regions.add(region);
             }
-            this.response.setList(regions);
+            response.setList(regions);
         } finally {
             if (novaApi != null) {
                 novaApi.close();
             }
         }
-        return this.response;
+        return response;
     }
 
 }

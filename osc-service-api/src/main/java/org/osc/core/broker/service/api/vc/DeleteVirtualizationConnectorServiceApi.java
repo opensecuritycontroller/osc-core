@@ -14,21 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.service.api.vc;
 
-import java.io.File;
+import org.osc.core.broker.service.api.ServiceDispatcherApi;
+import org.osc.core.broker.service.request.BaseIdRequest;
+import org.osc.core.broker.service.response.BaseJobResponse;
 
-import org.osc.core.broker.service.request.BackupRequest;
-import org.osc.core.broker.service.response.BackupResponse;
-
-public interface BackupServiceApi
-        extends BackupFileServiceApi<BackupRequest, BackupResponse> {
-
-    File getEncryptedBackupFile();
-
-    File getEncryptedBackupFile(String backupFileName);
-
-    void deleteBackupFiles();
-
-    void deleteBackupFilesFrom(String directory);
+public interface DeleteVirtualizationConnectorServiceApi
+        extends ServiceDispatcherApi<BaseIdRequest, BaseJobResponse> {
 }

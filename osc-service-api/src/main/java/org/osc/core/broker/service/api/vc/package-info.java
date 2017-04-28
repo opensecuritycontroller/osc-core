@@ -14,21 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
 
-import java.io.File;
-
-import org.osc.core.broker.service.request.BackupRequest;
-import org.osc.core.broker.service.response.BackupResponse;
-
-public interface BackupServiceApi
-        extends BackupFileServiceApi<BackupRequest, BackupResponse> {
-
-    File getEncryptedBackupFile();
-
-    File getEncryptedBackupFile(String backupFileName);
-
-    void deleteBackupFiles();
-
-    void deleteBackupFilesFrom(String directory);
-}
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.osc.core.broker.service.api.vc;

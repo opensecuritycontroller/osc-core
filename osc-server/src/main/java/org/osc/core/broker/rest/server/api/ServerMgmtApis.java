@@ -26,10 +26,10 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.model.ServerStatusResponse;
-import org.osc.core.broker.service.AddSslCertificateService;
-import org.osc.core.broker.service.BackupService;
-import org.osc.core.broker.service.DeleteSslCertificateService;
-import org.osc.core.broker.service.ListSslCertificatesService;
+import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
+import org.osc.core.broker.service.api.BackupServiceApi;
+import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
+import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
 import org.osc.core.broker.service.dto.SslCertificateDto;
 import org.osc.core.broker.service.request.AddSslEntryRequest;
 import org.osc.core.broker.service.request.BackupRequest;
@@ -83,7 +83,19 @@ public class ServerMgmtApis {
     Server server;
 
     @Reference
+    AddSslCertificateServiceApi addSSlCertificateService;
+
+    @Reference
     private ApiUtil apiUtil;
+
+    @Reference
+    private BackupServiceApi backupService;
+
+    @Reference
+    private DeleteSslCertificateServiceApi deleteSslCertificateService;
+
+    @Reference
+    private ListSslCertificatesServiceApi listSslCertificateService;
 
     @ApiOperation(value = "Get server status",
             notes = "Returns server status information",
@@ -122,9 +134,8 @@ public class ServerMgmtApis {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {
                 try {
-                    BackupService bkpservice = new BackupService();
-                    bkpservice.dispatch(request);
-                    byte[] data = PKIUtil.readBytesFromFile(bkpservice.getEncryptedBackupFile(request.getBackupFileName()));
+                    ServerMgmtApis.this.backupService.dispatch(request);
+                    byte[] data = PKIUtil.readBytesFromFile(ServerMgmtApis.this.backupService.getEncryptedBackupFile(request.getBackupFileName()));
                     output.write(data);
                     output.flush();
                 } catch (Exception e) {
@@ -190,7 +201,7 @@ public class ServerMgmtApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) this.apiUtil
-                .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
+                .getListResponse(this.listSslCertificateService, new BaseRequest<>(true));
 
         return response.getList();
     }
@@ -209,7 +220,7 @@ public class ServerMgmtApis {
         logger.info("Adding new SSL certificate to truststore");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         AddSslEntryRequest addSslEntryRequest = new AddSslEntryRequest(sslEntry.getAlias(), sslEntry.getCertificate());
-        return this.apiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
+        return this.apiUtil.getResponse(this.addSSlCertificateService, addSslEntryRequest);
     }
 
     /**
@@ -227,6 +238,6 @@ public class ServerMgmtApis {
     public Response deleteSslCertificate(@Context HttpHeaders headers, @ApiParam(value = "SSL certificate alias") @PathParam("alias") String alias) {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
+        return this.apiUtil.getResponse(this.deleteSslCertificateService, new DeleteSslEntryRequest(alias));
     }
 }

@@ -35,7 +35,9 @@ import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ImportApplianceManagerPluginService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
         implements ImportApplianceManagerPluginServiceApi {
 

@@ -17,7 +17,7 @@
 package org.osc.core.broker.window.delete;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.DeleteApplianceSoftwareVersionService;
+import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.view.ApplianceView;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -41,8 +41,12 @@ public class DeleteApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
 
     final String CAPTION = "Delete Appliance Software Version";
 
-    public DeleteApplianceSoftwareVersionWindow(ApplianceView applianceView) throws Exception {
+    private DeleteApplianceSoftwareVersionServiceApi deleteApplianceSoftwareVersionService;
+
+    public DeleteApplianceSoftwareVersionWindow(ApplianceView applianceView,
+            DeleteApplianceSoftwareVersionServiceApi deleteApplianceSoftwareVersionService) throws Exception {
         this.applianceView = applianceView;
+        this.deleteApplianceSoftwareVersionService = deleteApplianceSoftwareVersionService;
         createWindow(this.CAPTION);
     }
 
@@ -68,13 +72,12 @@ public class DeleteApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
         // needed.
         try {
             delRequest.setId(this.applianceView.getChildItemId());
-            DeleteApplianceSoftwareVersionService dmc = new DeleteApplianceSoftwareVersionService();
 
             log.info("deleting Appliance - "
                     + this.applianceView.getChildContainer().getItem(this.applianceView.getChildItemId())
                             .getItemProperty("swVersion").getValue().toString());
 
-            dmc.dispatch(delRequest);
+            this.deleteApplianceSoftwareVersionService.dispatch(delRequest);
 
             // deleting a row from the table reference provided by the current
             // view

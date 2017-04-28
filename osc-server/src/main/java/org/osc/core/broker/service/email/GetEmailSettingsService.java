@@ -25,7 +25,9 @@ import org.osc.core.broker.service.dto.EmailSettingsDto;
 import org.osc.core.broker.service.persistence.EmailSettingsEntityMgr;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class GetEmailSettingsService extends ServiceDispatcher<Request, BaseDtoResponse<EmailSettingsDto>>
         implements GetEmailSettingsServiceApi {
 

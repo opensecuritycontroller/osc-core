@@ -28,7 +28,9 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListSslCertificatesService
         extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<CertificateBasicInfoModel>>
         implements ListSslCertificatesServiceApi {

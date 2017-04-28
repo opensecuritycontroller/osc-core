@@ -32,14 +32,16 @@ import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListSecurityGroupByVcService extends ServiceDispatcher<BaseIdRequest, ListResponse<SecurityGroupDto>>
         implements ListSecurityGroupByVcServiceApi {
 
-    ListResponse<SecurityGroupDto> response = new ListResponse<SecurityGroupDto>();
 
     @Override
     public ListResponse<SecurityGroupDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
+        ListResponse<SecurityGroupDto> response = new ListResponse<SecurityGroupDto>();
 
         validate(em, request);
         // to do mapping
@@ -55,8 +57,8 @@ public class ListSecurityGroupByVcService extends ServiceDispatcher<BaseIdReques
             dtoList.add(dto);
         }
 
-        this.response.setList(dtoList);
-        return this.response;
+        response.setList(dtoList);
+        return response;
     }
 
     protected void validate(EntityManager em, BaseIdRequest request) throws Exception {

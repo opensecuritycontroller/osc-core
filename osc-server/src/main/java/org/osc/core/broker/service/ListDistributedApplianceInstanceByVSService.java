@@ -27,7 +27,9 @@ import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListDistributedApplianceInstanceByVSService
         extends ServiceDispatcher<BaseIdRequest, ListResponse<DistributedApplianceInstanceDto>>
         implements ListDistributedApplianceInstanceByVSServiceApi {

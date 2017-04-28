@@ -31,8 +31,8 @@ import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.ListJobService;
-import org.osc.core.broker.service.ListTaskService;
+import org.osc.core.broker.service.api.ListJobServiceApi;
+import org.osc.core.broker.service.api.ListTaskServiceApi;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
 import org.osc.core.broker.service.persistence.JobEntityManager;
@@ -42,6 +42,7 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -58,6 +59,11 @@ public class JobApis {
 
     private static final Logger logger = Logger.getLogger(JobApis.class);
 
+    @Reference
+    private ListJobServiceApi listJobService;
+    @Reference
+    private ListTaskServiceApi listTaskService;
+
     @ApiOperation(value = "Retrieves all jobs",
             notes = "Retrieves all jobs",
             response = JobRecordDto.class,
@@ -70,7 +76,7 @@ public class JobApis {
         logger.info("Listing job records");
 
         try {
-            ListResponse<JobRecordDto> res = new ListJobService().dispatch(null);
+            ListResponse<JobRecordDto> res = this.listJobService.dispatch(null);
             return res.getList();
         } catch (Exception e) {
             throw new VmidcRestServerException(Response.status(Status.INTERNAL_SERVER_ERROR), e.getMessage());
@@ -121,8 +127,7 @@ public class JobApis {
         try {
             ListTaskRequest listRequest = new ListTaskRequest();
             listRequest.setJobId(jobId);
-            ListTaskService listService = new ListTaskService();
-            ListResponse<TaskRecordDto> res = listService.dispatch(listRequest);
+            ListResponse<TaskRecordDto> res = this.listTaskService.dispatch(listRequest);
 
             return res.getList();
         } catch (Exception e) {

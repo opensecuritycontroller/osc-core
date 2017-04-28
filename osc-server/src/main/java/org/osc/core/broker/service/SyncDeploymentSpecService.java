@@ -29,7 +29,9 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class SyncDeploymentSpecService
         extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
         implements SyncDeploymentSpecServiceApi {

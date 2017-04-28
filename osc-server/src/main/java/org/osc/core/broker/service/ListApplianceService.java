@@ -29,15 +29,16 @@ import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
-
+@Component
 public class ListApplianceService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<ApplianceDto>>
         implements ListApplianceServiceApi {
 
-    ListResponse<ApplianceDto> response = new ListResponse<ApplianceDto>();
-
     @Override
     public ListResponse<ApplianceDto> exec(BaseRequest<BaseDto> request, EntityManager em) {
+        ListResponse<ApplianceDto> response = new ListResponse<ApplianceDto>();
+
         // Initializing Entity Manager
         OSCEntityManager<Appliance> emgr = new OSCEntityManager<Appliance>(Appliance.class, em);
         // to do mapping
@@ -53,8 +54,8 @@ public class ListApplianceService extends ServiceDispatcher<BaseRequest<BaseDto>
             dtoList.add(dto);
         }
 
-        this.response.setList(dtoList);
-        return this.response;
+        response.setList(dtoList);
+        return response;
     }
 
 }

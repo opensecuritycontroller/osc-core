@@ -25,7 +25,9 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class DeleteAlarmService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse>
         implements DeleteAlarmServiceApi {
 
