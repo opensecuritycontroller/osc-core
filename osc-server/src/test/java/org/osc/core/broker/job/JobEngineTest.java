@@ -20,24 +20,40 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Answers;
+import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.tasks.BaseTask;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.test.util.TestTransactionControl;
+import org.osgi.service.transaction.control.TransactionControl;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(HibernateUtil.class)
 public class JobEngineTest {
 
     static class EmptyMetaTask extends EmptyTask implements MetaTask {
@@ -104,6 +120,16 @@ public class JobEngineTest {
     EmptyTask C = new EmptyTask("C");
     EmptyTask D = new EmptyTask("D");
 
+    // These tests are highly multithreaded, so we need to provide per-thread instances
+    // of non thread safe test resources
+    private final ConcurrentMap<Thread, EntityManager> ems =
+            new ConcurrentHashMap<>();
+
+    private final ConcurrentMap<Thread, TestTransactionControl> txControls =
+            new ConcurrentHashMap<>();
+
+    EntityManagerFactory testEmf;
+
     @BeforeClass
     public static void initTests() {
         Logger hibernateLogger = Logger.getLogger("org.hibernate");
@@ -124,9 +150,41 @@ public class JobEngineTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        this.testEmf = InMemDB.getEntityManagerFactory();
+
+        PowerMockito.mockStatic(HibernateUtil.class);
+
+        Answer<EntityManager> createEm = i -> this.ems.computeIfAbsent(Thread.currentThread(),
+                k -> this.testEmf.createEntityManager());
+
+        Mockito.when(HibernateUtil.getTransactionalEntityManager()).then(
+                createEm);
+
+        Answer<TransactionControl> createTxControl = i -> this.txControls
+                        .computeIfAbsent(Thread.currentThread(),
+                                k -> {
+                                    TestTransactionControl testTxControl = Mockito.mock(TestTransactionControl.class,
+                                        Mockito.withSettings().defaultAnswer(Answers.CALLS_REAL_METHODS.get()));
+                                    try {
+                                        testTxControl.setEntityManager(createEm.answer(i));
+                                    } catch (Throwable t) {
+                                        t.printStackTrace();
+                                        Assert.fail(t.getMessage());
+                                    }
+                                    return testTxControl;
+                                });
+        Mockito.when(HibernateUtil.getTransactionControl()).then(createTxControl);
+
         this.je = JobEngine.getEngine();
         this.tg = new TaskGraph();
+    }
+
+    @After
+    public void tearDown() {
+        InMemDB.shutdown();
+        this.ems.clear();
+        this.txControls.clear();
     }
 
     @Test
@@ -178,11 +236,11 @@ public class JobEngineTest {
     }
 
     private void verifyJobPersistence(Job job) throws Exception {
-        EntityManager em = InMemDB.getEntityManagerFactory().createEntityManager();
+        EntityManager em = this.testEmf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
-            JobRecord jobRecord = em.find(JobRecord.class, job.getId());
+            JobRecord jobRecord =  em.find(JobRecord.class, job.getId());
             assertEquals(jobRecord.getName(), job.getName());
 
             for (TaskRecord ts : jobRecord.getTasks()) {
@@ -196,9 +254,9 @@ public class JobEngineTest {
                 Assert.assertNotNull(taskNode);
 
                 assertEquals(ts.getName(), taskNode.getTask().getName());
-                assertEquals(ts.getState(), taskNode.getState());
-                assertEquals(ts.getStatus(), taskNode.getStatus());
-                assertEquals(ts.getTaskGaurd(), taskNode.getTaskGaurd());
+                assertEquals(ts.getState().name(), taskNode.getState().name());
+                assertEquals(ts.getStatus().name(), taskNode.getStatus().name());
+                assertEquals(ts.getTaskGaurd().name(), taskNode.getTaskGaurd().name());
                 assertEquals(ts.getFailReason(), taskNode.getFailReason() != null ? taskNode.getFailReason()
                         .getMessage() : null);
                 assertEquals(taskNode.getCompletedTimestamp().toDate(), ts.getCompletedTimestamp());
@@ -245,8 +303,9 @@ public class JobEngineTest {
         } catch (Exception e) {
             e.printStackTrace();
             tx.rollback();
+            Assert.fail(e.getMessage());
         } finally {
-            InMemDB.shutdown();
+            em.close();
         }
     }
 
