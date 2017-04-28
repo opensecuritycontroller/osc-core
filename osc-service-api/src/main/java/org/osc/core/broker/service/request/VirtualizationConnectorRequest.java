@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.vc;
+package org.osc.core.broker.service.request;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
-import org.osc.core.broker.service.request.Request;
 
 @XmlRootElement(name = "virtualizationConnectorRequest")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -30,7 +29,7 @@ public class VirtualizationConnectorRequest extends VirtualizationConnectorDto i
     private boolean skipRemoteValidation;
     private boolean forceAddSSLCertificates;
 
-    VirtualizationConnectorRequest() {
+    public VirtualizationConnectorRequest() {
     }
 
     public boolean isSkipRemoteValidation() {
@@ -42,7 +41,7 @@ public class VirtualizationConnectorRequest extends VirtualizationConnectorDto i
     }
 
     public boolean isForceAddSSLCertificates() {
-        return forceAddSSLCertificates;
+        return this.forceAddSSLCertificates;
     }
 
     public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
@@ -52,8 +51,8 @@ public class VirtualizationConnectorRequest extends VirtualizationConnectorDto i
     @Override
     public String toString() {
         return "VirtualizationConnectorRequest{" +
-                "skipRemoteValidation=" + skipRemoteValidation +
-                ", forceAddSSLCertificates=" + forceAddSSLCertificates +
+                "skipRemoteValidation=" + this.skipRemoteValidation +
+                ", forceAddSSLCertificates=" + this.forceAddSSLCertificates +
                 '}';
     }
 }
