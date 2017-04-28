@@ -20,7 +20,7 @@
 	<property name="image-format" value="vmdk_only" />
 	<target name="ovf" depends="build,ovfOnly,ovfCopy" description="build all and generate vmidc ovf" />
 
-	<target name="build">
+	<target name="build" depends="deleteJavaJre">
 		<echo>Ant version: ${ant.version}</echo>
 		<echo>Ant Java/JVM version: ${ant.java.version}</echo>
 		<echo>Java/JVM detail version: ${java.version}</echo>
@@ -100,6 +100,11 @@
 		</condition>
 	</target>
 
+	<target name="checkFileExist">
+		<available file="${basedir}/osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz" property="isJavaJreExist"/>
+	</target>
+
+
 	<target name="copyImages" depends="vmdkImageCopy,qcow2ImageCopy,rawImageCopy" description="Checks image format and copy respective files" />
 	<target name="vmdkImageCopy" depends="checkImagesTocopy" if="isvmdkImage">
 		<move file="osc-server-bom/OSC_disk-0.vmdk" tofile="Build${buildNumber}/OSC_disk-0.vmdk" />
@@ -109,6 +114,10 @@
 	</target>
 	<target name="rawImageCopy" depends="checkImagesTocopy" if="israwImage">
 		<move file="osc-server-bom/OSC_disk-0-raw.img" tofile="Build${buildNumber}/OSC_disk-0-raw.img" />
+	</target>
+
+	<target name="deleteJavaJre" depends="checkFileExist" if="isJavaJreExist">
+		<delete file="${basedir}/osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz" />
 	</target>
 
 	<target name="repoVersion">
