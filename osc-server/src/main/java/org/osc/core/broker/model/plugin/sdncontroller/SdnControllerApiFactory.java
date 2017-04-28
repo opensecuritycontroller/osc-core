@@ -19,7 +19,6 @@ package org.osc.core.broker.model.plugin.sdncontroller;
 import static org.osc.sdk.controller.Constants.*;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -30,13 +29,10 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.PluginTracker;
-import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ServiceUnavailableException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
@@ -49,23 +45,12 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.google.common.collect.ImmutableMap;
-
 public class SdnControllerApiFactory {
 
     public static final String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
     private static final Logger log = Logger.getLogger(SdnControllerApiFactory.class);
 
     private static ApiFactoryService apiFactoryService;
-    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES =
-            ImmutableMap.<String, Class<?>>builder()
-            .put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class)
-            .put(SUPPORT_SFC, Boolean.class)
-            .put(SUPPORT_FAILURE_POLICY, Boolean.class)
-            .put(USE_PROVIDER_CREDS, Boolean.class)
-            .put(QUERY_PORT_INFO, Boolean.class)
-            .put(SUPPORT_PORT_GROUP, Boolean.class)
-            .build();
 
     private static BundleContext bundleContext;
 
@@ -129,15 +114,6 @@ public class SdnControllerApiFactory {
 
     private static SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception {
         return apiFactoryService.createNetworkControllerApi(controllerType);
-    }
-
-    public static <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
-            PluginType pluginType) throws ServiceUnavailableException, VmidcException {
-        Map<String, Class<?>> requiredProperties = null;
-        if (pluginClass == SdnControllerApi.class) {
-            requiredProperties = REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES;
-        }
-        return apiFactoryService.newPluginTracker(customizer, pluginClass, pluginType, requiredProperties);
     }
 
     public static Status getStatus(VirtualizationConnector vc, String region) throws Exception {

@@ -16,30 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.server.installer.InstallableUnit;
+import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.sdn.api.VMwareSdnApi;
 
-public final class Plugin<T> {
-
-	public static enum State {
-		/**
-		 * Plugin installed but no service published yet.
-		 */
-		INSTALL_WAIT,
-
-		/**
-		 * Plugin installed and service published.
-		 */
-		READY,
-
-		/**
-		 * Plugin not installed or ready due to an error.
-		 */
-		ERROR;
-	}
+public final class Plugin<T> implements org.osc.core.broker.service.api.plugin.Plugin {
 
 	private final Class<T> pluginClass;
 	private final List<T> services = new LinkedList<>();
@@ -56,7 +44,8 @@ public final class Plugin<T> {
 		return this.pluginClass;
 	}
 
-	public synchronized State getState() {
+	@Override
+    public synchronized State getState() {
 		return this.state;
 	}
 
@@ -74,7 +63,8 @@ public final class Plugin<T> {
 		return this.installUnit;
 	}
 
-	public synchronized String getError() {
+	@Override
+    public synchronized String getError() {
 		return this.error;
 	}
 
@@ -122,17 +112,63 @@ public final class Plugin<T> {
 	}
 
 	private synchronized boolean updateState() {
-		State oldState = this.state;
+		org.osc.core.broker.service.api.plugin.Plugin.State oldState = this.state;
 
 		if (this.error != null) {
-            this.state = State.ERROR;
+            this.state = org.osc.core.broker.service.api.plugin.Plugin.State.ERROR;
         } else if (this.installUnit != null && !this.services.isEmpty()) {
-            this.state = State.READY;
+            this.state = org.osc.core.broker.service.api.plugin.Plugin.State.READY;
         } else {
-            this.state = State.INSTALL_WAIT;
+            this.state = org.osc.core.broker.service.api.plugin.Plugin.State.INSTALL_WAIT;
         }
 
 		return !this.state.equals(oldState);
 	}
+
+    @Override
+    public int getServiceCount() {
+        return getServices().size();
+    }
+
+    @Override
+    public PluginType getType() {
+        if(ApplianceManagerApi.class.equals(this.pluginClass)) {
+            return PluginType.MANAGER;
+        }
+
+        if(SdnControllerApi.class.equals(this.pluginClass)) {
+            return PluginType.SDN;
+        }
+
+        if(VMwareSdnApi.class.equals(this.pluginClass)) {
+            return PluginType.NSX;
+        }
+
+        throw new IllegalArgumentException("The plugin class " + this.pluginClass + " is not recognised");
+    }
+
+    @Override
+    public String getSymbolicName() {
+        InstallableUnit unit = getInstallUnit();
+        return unit == null ? null : unit.getSymbolicName();
+    }
+
+    @Override
+    public String getVersion() {
+        InstallableUnit unit = getInstallUnit();
+        return unit == null ? null : unit.getVersion();
+    }
+
+    @Override
+    public String getName() {
+        InstallableUnit unit = getInstallUnit();
+        return unit == null ? null : unit.getName();
+    }
+
+    @Override
+    public File getOrigin() {
+        InstallableUnit unit = getInstallUnit();
+        return unit == null ? null : unit.getOrigin();
+    }
 
 }

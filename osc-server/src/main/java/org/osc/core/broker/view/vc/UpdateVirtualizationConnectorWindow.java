@@ -17,8 +17,8 @@
 package org.osc.core.broker.view.vc;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
@@ -36,7 +36,9 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
     private final UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService;
 
     public UpdateVirtualizationConnectorWindow(VirtualizationConnectorView vcView,
-            UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService) throws Exception {
+            UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService,
+            PluginService pluginService) throws Exception {
+        super(pluginService);
         this.currentVCObject = vcView.getParentContainer().getItem(vcView.getParentItemId());
         this.updateVirtualizationConnectorService = updateVirtualizationConnectorService;
         createWindow(this.CAPTION);
@@ -62,7 +64,7 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
             this.controllerPW.setValue(vcObject.getControllerPassword());
             this.controllerType.setValue(vcObject.getControllerType().toString());
         } else {
-            this.controllerType.setValue(ControllerType.NONE.toString());
+            this.controllerType.setValue(NO_CONTROLLER);
             this.controllerType.setEnabled(true);
         }
 

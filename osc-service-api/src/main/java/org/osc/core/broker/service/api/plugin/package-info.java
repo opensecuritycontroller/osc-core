@@ -14,13 +14,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
-
-import org.osc.core.broker.service.request.ImportFileRequest;
-import org.osc.core.broker.service.response.BaseResponse;
-
-public interface ImportApplianceManagerPluginServiceApi
-        extends ServiceDispatcherApi<ImportFileRequest, BaseResponse> {
-
-    public boolean isManagerTypeUsed(String managerType);
-}
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.osc.core.broker.service.api.plugin;

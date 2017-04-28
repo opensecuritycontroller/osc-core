@@ -16,18 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.manager;
 
-import static org.osc.sdk.manager.Constants.*;
-
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.PluginTracker;
-import org.osc.core.broker.model.plugin.PluginTrackerCustomizer;
-import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.IscJobNotificationApi;
@@ -42,27 +36,12 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.google.common.collect.ImmutableMap;
-
 public class ManagerApiFactory {
     public static final String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
     private static final Logger log = Logger.getLogger(ManagerApiFactory.class);
 
     private static ApiFactoryService apiFactoryService;
     private static BundleContext bundleContext;
-
-    private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES = ImmutableMap
-            .<String, Class<?>>builder().put(VENDOR_NAME, String.class).put(SERVICE_NAME, String.class)
-            .put(EXTERNAL_SERVICE_NAME, String.class).put(AUTHENTICATION_TYPE, String.class)
-            .put(NOTIFICATION_TYPE, String.class).put(SYNC_SECURITY_GROUP, Boolean.class)
-            .put(PROVIDE_DEVICE_STATUS, Boolean.class).put(SYNC_POLICY_MAPPING, Boolean.class).build();
-
-    public static PluginTracker<ApplianceManagerApi> newPluginTracker(
-            PluginTrackerCustomizer<ApplianceManagerApi> customizer, PluginType pluginType)
-                    throws ServiceUnavailableException {
-        return apiFactoryService.newPluginTracker(customizer, ApplianceManagerApi.class, pluginType,
-                REQUIRED_MANAGER_PLUGIN_PROPERTIES);
-    }
 
     public static void init() throws Exception {
         bundleContext = FrameworkUtil.getBundle(ManagerApiFactory.class).getBundleContext();
@@ -147,11 +126,6 @@ public class ManagerApiFactory {
 
     public static String getServiceName(ManagerType managerType) throws Exception {
         return apiFactoryService.getServiceName(managerType);
-    }
-
-    private static String getVendorName(VirtualSystem vs) throws Exception {
-        return apiFactoryService.getVendorName(
-                ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
     public static ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc)

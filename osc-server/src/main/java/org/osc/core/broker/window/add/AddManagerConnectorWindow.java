@@ -23,10 +23,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.SslCertificatesExtendedException;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
@@ -79,10 +78,14 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
 
     private final AddApplianceManagerConnectorServiceApi addMCService;
 
+    private PluginService pluginStatusService;
+
     public AddManagerConnectorWindow(ManagerConnectorView mcView,
-            AddApplianceManagerConnectorServiceApi addMCService) throws Exception {
+            AddApplianceManagerConnectorServiceApi addMCService,
+            PluginService pluginStatusService) throws Exception {
         this.mcView = mcView;
         this.addMCService = addMCService;
+        this.pluginStatusService = pluginStatusService;
         createWindow(this.CAPTION);
     }
 
@@ -102,7 +105,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         this.type.setImmediate(true);
         this.type.setTextInputAllowed(false);
         this.type.setNullSelectionAllowed(false);
-        for (String mt : ManagerType.values()) {
+        for (String mt : this.pluginStatusService.getManagerTypes()) {
             this.type.addItem(mt);
         }
 
@@ -110,8 +113,8 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
             @Override
             public void valueChange(ValueChangeEvent event) {
                 try {
-                    if (ManagerApiFactory.isKeyAuth(ManagerType.fromText(AddManagerConnectorWindow.this.type.getValue()
-                            .toString()))) {
+                    if (AddManagerConnectorWindow.this.pluginStatusService.isKeyAuth(AddManagerConnectorWindow.this.type.getValue()
+                            .toString())) {
                         AddManagerConnectorWindow.this.apiKey.setVisible(true);
                         AddManagerConnectorWindow.this.user.setVisible(false);
                         AddManagerConnectorWindow.this.pw.setVisible(false);
@@ -161,7 +164,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         this.form.addComponent(this.apiKey);
 
         // select the first entry as default Manager Connector...
-        this.type.select(ManagerType.values().toArray()[0].toString());
+        this.type.select(this.pluginStatusService.getManagerTypes().toArray()[0].toString());
 
     }
 
@@ -172,7 +175,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
             this.type.validate();
             this.ip.validate();
             ValidateUtil.checkForValidIpAddressFormat(this.ip.getValue());
-            if (ManagerApiFactory.isKeyAuth(ManagerType.fromText(this.type.getValue().toString()))) {
+            if (this.pluginStatusService.isKeyAuth(this.type.getValue().toString())) {
                 this.apiKey.validate();
             } else {
                 this.user.validate();

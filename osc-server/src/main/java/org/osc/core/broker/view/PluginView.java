@@ -24,6 +24,7 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.maintenance.ManagerPluginsLayout;
 import org.osc.core.broker.view.maintenance.SdnControllerPluginsLayout;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -54,7 +55,7 @@ public class PluginView extends VerticalLayout implements View {
     ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService;
 
     @Activate
-    private void activate() throws Exception {
+    void start(BundleContext ctx) throws Exception {
         setSizeFull();
         addStyleName(StyleConstants.BASE_CONTAINER);
 
@@ -64,13 +65,13 @@ public class PluginView extends VerticalLayout implements View {
 
         // adding SDN Controller Plugin
         this.tabs.addTab(createTab("SDN Controller Plugins", "SDN Controller Plugins",
-                new SdnControllerPluginsLayout(this.importSdnControllerPluginService),
+                new SdnControllerPluginsLayout(ctx, this.importSdnControllerPluginService),
                 MAINTENANCE_CONTROLLER_PLUGIN_GUID));
 
         // Adding Manager Plugin tab
         this.tabs.addTab(createTab(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_TITLE),
                 VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_NAME),
-                new ManagerPluginsLayout(this.importApplianceManagerPluginService),
+                new ManagerPluginsLayout(ctx, this.importApplianceManagerPluginService),
                 MAINTENANCE_MANAGER_PLUGIN_GUID));
 
         // adding tab sheet to the view

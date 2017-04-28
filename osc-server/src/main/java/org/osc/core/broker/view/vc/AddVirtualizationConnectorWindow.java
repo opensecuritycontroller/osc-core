@@ -18,6 +18,7 @@ package org.osc.core.broker.view.vc;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -34,7 +35,9 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
 
     private static final Logger log = Logger.getLogger(AddVirtualizationConnectorWindow.class);
 
-    public AddVirtualizationConnectorWindow(VirtualizationConnectorView vcView, AddVirtualizationConnectorServiceApi addVirtualizationConnectorService) throws Exception {
+    public AddVirtualizationConnectorWindow(VirtualizationConnectorView vcView, AddVirtualizationConnectorServiceApi addVirtualizationConnectorService,
+            PluginService pluginService) throws Exception {
+        super(pluginService);
         this.vcView = vcView;
         this.addVirtualizationConnectorService = addVirtualizationConnectorService;
         createWindow(this.CAPTION);

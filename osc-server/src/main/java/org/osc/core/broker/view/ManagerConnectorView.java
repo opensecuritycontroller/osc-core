@@ -22,14 +22,13 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListManagerConnectoryPolicyServiceApi;
 import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.PolicyDto;
@@ -66,7 +65,7 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     private static final Logger log = Logger.getLogger(ManagerConnectorView.class);
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    private PluginService pluginService;
 
     @Reference
     private AddApplianceManagerConnectorServiceApi addManagerConnectorService;
@@ -97,11 +96,11 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Manager Connector Window");
-            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService));
+            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService, this.pluginService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Manager Connector Window");
-            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService));
+            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService, this.pluginService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Manager Connector Window");
@@ -149,8 +148,8 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
                 try {
                     return ViewUtil.generateMgrLink(
                             managerConnectorDto.getIpAddress(),
-                            ManagerConnectorView.this.apiFactoryService.createApplianceManagerApi(
-                                    ManagerType.fromText(managerConnectorDto.getManagerType()))
+                            ManagerConnectorView.this.pluginService.createApplianceManagerApi(
+                                    managerConnectorDto.getManagerType())
                                 .getManagerUrl(managerConnectorDto.getIpAddress()));
                 } catch (Exception e) {
                     return ViewUtil.generateMgrLink("http://", managerConnectorDto.getIpAddress(), "", "");
