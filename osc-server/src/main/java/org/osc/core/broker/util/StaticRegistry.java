@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.broadcast.Broadcaster;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Activate;
@@ -36,13 +34,7 @@ import org.osgi.service.component.annotations.Reference;
 public class StaticRegistry {
 
     @Reference
-    private ApiFactoryService apiFactoryService;
-
-    @Reference
     private Server server;
-
-    @Reference
-    private ConformService conformService;
 
     @Reference
     private Broadcaster broadcaster;
@@ -54,16 +46,8 @@ public class StaticRegistry {
         instance = this;
     }
 
-    public static ApiFactoryService apiFactoryService() {
-        return instance.apiFactoryService;
-    }
-
     public static Server server() {
         return instance.server;
-    }
-
-    public static ConformService conformService() {
-        return instance.conformService;
     }
 
     public static Broadcaster broadcaster() {
