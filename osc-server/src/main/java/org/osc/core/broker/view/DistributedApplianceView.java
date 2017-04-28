@@ -48,6 +48,7 @@ import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListTenantServiceApi;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
@@ -126,7 +127,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private ForceDeleteVirtualSystemServiceApi forceDeleteVirtualSystemService;
 
     @Reference
-    private ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboServiceApi;
+    private ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService;
 
     @Reference
     private ListDomainsByMcIdServiceApi listDomainsByMcIdService;
@@ -135,7 +136,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
 
     @Reference
-    private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorServiceApi;
+    private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
 
     @Reference
     private ListAvailabilityZonesServiceApi listAvailabilityZonesService;
@@ -176,6 +177,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     @Reference
     private UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
 
+    @Reference
+    private ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService;
+
     @Activate
     private void activate() {
 
@@ -198,9 +202,10 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.info("Redirecting to Add Distributed Appliance Window");
             ViewUtil.addWindow(new AddDistributedApplianceWindow(this,
-                    this.addDistributedApplianceService, this.listApplianceModelSwVersionComboServiceApi,
+                    this.addDistributedApplianceService, this.listApplianceModelSwVersionComboService,
                     this.listDomainsByMcIdService, this.listEncapsulationTypeByVersionTypeAndModel,
-                    this.listApplianceManagerConnectorServiceApi));
+                    this.listApplianceManagerConnectorService,
+                    this.listVirtualizationConnectorBySwVersionService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.info("Redirecting to Update Appliance Window");
@@ -212,8 +217,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
 
             } else {
                 ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this, this.updateDistributedApplianceService,
-                        this.listApplianceModelSwVersionComboServiceApi, this.listDomainsByMcIdService,
-                        this.listEncapsulationTypeByVersionTypeAndModel, this.listApplianceManagerConnectorServiceApi));
+                        this.listApplianceModelSwVersionComboService, this.listDomainsByMcIdService,
+                        this.listEncapsulationTypeByVersionTypeAndModel, this.listApplianceManagerConnectorService,
+                        this.listVirtualizationConnectorBySwVersionService));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {

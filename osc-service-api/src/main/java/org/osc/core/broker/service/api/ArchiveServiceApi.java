@@ -22,4 +22,5 @@ import org.osc.core.broker.service.response.Response;
 
 public interface ArchiveServiceApi
         extends ServiceDispatcherApi<BaseRequest<JobsArchiveDto>, Response> {
+    void maybeScheduleArchiveJob();
 }

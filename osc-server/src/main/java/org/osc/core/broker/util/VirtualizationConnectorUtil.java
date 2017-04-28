@@ -55,7 +55,7 @@ public class VirtualizationConnectorUtil {
      * @throws ErrorTypeException in case of controller/provider connection issues
      * @throws Exception          in case of any other issues
      */
-    public void checkVmwareConnection(DryRunRequest<VirtualizationConnectorDto> request,
+    public <T extends VirtualizationConnectorDto> void checkVmwareConnection(DryRunRequest<T> request,
                                       VirtualizationConnector vc) throws Exception {
         if (!request.isSkipAllDryRun()) {
 
@@ -109,7 +109,7 @@ public class VirtualizationConnectorUtil {
      * @throws ErrorTypeException in case of keystone/controller/rabbitmq connection issues
      * @throws Exception          in case of any other issues
      */
-    public void checkOpenstackConnection(DryRunRequest<VirtualizationConnectorDto> request,
+    public <T extends VirtualizationConnectorDto> void checkOpenstackConnection(DryRunRequest<T> request,
                                          VirtualizationConnector vc) throws Exception {
         if (!request.isSkipAllDryRun()) {
 

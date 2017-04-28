@@ -30,7 +30,6 @@ import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.server.scheduler.ArchiveScheduledJob;
 import org.vaadin.risto.stepper.IntStepper;
 
 import com.vaadin.ui.Button;
@@ -268,7 +267,7 @@ public class JobsArchiverPanel extends CustomComponent {
                     request.getDto().setThresholdValue(JobsArchiverPanel.this.archiveThreshold.getValue());
 
                     JobsArchiverPanel.this.updateJobsArchiveService.dispatch(request);
-                    ArchiveScheduledJob.maybeScheduleArchiveJob();
+                    JobsArchiverPanel.this.archiveService.maybeScheduleArchiveJob();
 
                     ViewUtil.iscNotification(
                             VmidcMessages.getString(VmidcMessages_.MAINTENANCE_JOBSARCHIVE_SUBMIT_SUCCESSFUL), null,

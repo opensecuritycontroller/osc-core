@@ -23,17 +23,20 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
+import org.osc.core.broker.service.request.ListVirtualizationConnectorBySwVersionRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.service.component.annotations.Component;
 
 
+@Component
 public class ListVirtualizationConnectorBySwVersionService extends
-        ServiceDispatcher<ListVirtualizationConnectorBySwVersionRequest, ListResponse<VirtualizationConnectorDto>> {
-
+        ServiceDispatcher<ListVirtualizationConnectorBySwVersionRequest, ListResponse<VirtualizationConnectorDto>>
+        implements ListVirtualizationConnectorBySwVersionServiceApi {
     ListResponse<VirtualizationConnectorDto> response = new ListResponse<VirtualizationConnectorDto>();
-
     @Override
     public ListResponse<VirtualizationConnectorDto> exec(ListVirtualizationConnectorBySwVersionRequest request,
             EntityManager em) throws EncryptionException {

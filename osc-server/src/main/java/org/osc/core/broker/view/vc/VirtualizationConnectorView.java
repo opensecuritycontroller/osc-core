@@ -23,17 +23,20 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupByVcServiceApi;
 import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.SyncVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
@@ -47,8 +50,6 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.vc.ListVirtualizationConnectorService;
-import org.osc.core.broker.service.vc.SyncVirtualizationConnectorService;
 import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -83,9 +84,6 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     private DeleteVirtualizationConnectorServiceApi deleteVirtualizationConnectorService;
 
     @Reference
-    private ConformService conformService;
-
-    @Reference
     private ListSecurityGroupByVcServiceApi listSecurityGroupByVcService;
 
     @Reference
@@ -111,6 +109,18 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Reference
     private SyncSecurityGroupServiceApi syncSecurityGroupService;
+
+    @Reference
+    private SyncVirtualizationConnectorServiceApi syncVirtualizationConnectorService;
+
+    @Reference
+    private AddVirtualizationConnectorServiceApi addVirtualizationConnectorService;
+
+    @Reference
+    private UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService;
+
+    @Reference
+    private ListVirtualizationConnectorServiceApi listVirtualizationConnectorService;
 
     @Activate
     private void activate() {
@@ -152,10 +162,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
         BaseRequest<BaseDto> listRequest = new BaseRequest<>();
         ListResponse<VirtualizationConnectorDto> res;
-        ListVirtualizationConnectorService listService = new ListVirtualizationConnectorService();
 
         try {
-            res = listService.dispatch(listRequest);
+            res = this.listVirtualizationConnectorService.dispatch(listRequest);
             List<VirtualizationConnectorDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // Creating table with list of vendors
@@ -236,10 +245,10 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     @Override
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
-            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this));
+            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
-            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this));
+            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             DeleteWindowUtil.deleteVirtualizationConnector(this.deleteVirtualizationConnectorService,
@@ -302,10 +311,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     private void conformVirtualConnector(Long vcId) {
         log.info("Syncing VC " + vcId.toString());
         BaseJobRequest request = new BaseJobRequest(vcId);
-        SyncVirtualizationConnectorService service = new SyncVirtualizationConnectorService(this.conformService);
 
         try {
-            BaseJobResponse response = service.dispatch(request);
+            BaseJobResponse response = this.syncVirtualizationConnectorService.dispatch(request);
             ViewUtil.showJobNotification(response.getJobId());
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);

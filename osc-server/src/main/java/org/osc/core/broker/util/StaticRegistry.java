@@ -18,11 +18,7 @@ package org.osc.core.broker.util;
 
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.api.ArchiveServiceApi;
-import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.broadcast.Broadcaster;
-import org.osc.core.broker.service.vc.AddVirtualizationConnectorService;
-import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -49,19 +45,7 @@ public class StaticRegistry {
     private ConformService conformService;
 
     @Reference
-    private AddVirtualizationConnectorService addVirtualizationConnectorService;
-
-    @Reference
-    private UpdateVirtualizationConnectorService updateVirtualizationConnectorService;
-
-    @Reference
     private Broadcaster broadcaster;
-
-    @Reference
-    private ArchiveServiceApi archiveService;
-
-    @Reference
-    private GetJobsArchiveServiceApi getJobsArchiveService;
 
     private static StaticRegistry instance = null;
 
@@ -82,23 +66,8 @@ public class StaticRegistry {
         return instance.conformService;
     }
 
-    public static AddVirtualizationConnectorService addVirtualizationConnectorService() {
-        return instance.addVirtualizationConnectorService;
-    }
-
-    public static UpdateVirtualizationConnectorService updateVirtualizationConnectorService() {
-        return instance.updateVirtualizationConnectorService;
-    }
-
     public static Broadcaster broadcaster() {
         return instance.broadcaster;
     }
 
-    public static ArchiveServiceApi archiveService() {
-        return instance.archiveService;
-    }
-
-    public static GetJobsArchiveServiceApi getJobsArchiveService() {
-        return instance.getJobsArchiveService;
-    }
 }

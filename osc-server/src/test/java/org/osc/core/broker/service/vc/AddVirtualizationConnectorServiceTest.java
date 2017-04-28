@@ -16,6 +16,21 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.VMWARE_REQUEST;
+
+import java.util.ArrayList;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,20 +64,6 @@ import org.osc.core.util.EncryptionUtil;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import java.util.ArrayList;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.VMWARE_REQUEST;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({X509TrustManagerFactory.class, EncryptionUtil.class, HibernateUtil.class, LockUtil.class })
@@ -170,10 +171,11 @@ public class AddVirtualizationConnectorServiceTest {
         // Arrange.
         this.exception.expect(SslCertificatesExtendedException.class);
         ErrorTypeException exception = new ErrorTypeException("Error Thrown", ErrorType.CONTROLLER_EXCEPTION);
+
+        OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(true);
+
         doThrow(new SslCertificatesExtendedException(exception, new ArrayList<CertificateResolverModel>())).when(this.validatorMock)
                 .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
-        this.service.setForceAddSSLCertificates(true);
-
 
         // Act.
         this.service.dispatch(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
@@ -183,7 +185,7 @@ public class AddVirtualizationConnectorServiceTest {
                 .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // clean up
-        this.service.setForceAddSSLCertificates(false);
+        OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(false);
     }
 
     @Test
@@ -191,9 +193,11 @@ public class AddVirtualizationConnectorServiceTest {
 
         // Arrange.
         ErrorTypeException exception = new ErrorTypeException("Error Thrown", ErrorType.CONTROLLER_EXCEPTION);
+
+        OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(true);
+
         doThrow(new SslCertificatesExtendedException(exception, new ArrayList<>())).doNothing().when(this.validatorMock)
-                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
-        this.service.setForceAddSSLCertificates(true);
+                .validate(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Act.
         BaseJobResponse response = this.service.dispatch(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
@@ -207,7 +211,7 @@ public class AddVirtualizationConnectorServiceTest {
         Assert.assertNotNull("Not updated", vc.getUpdatedTimestamp());
 
         // clean up
-        this.service.setForceAddSSLCertificates(false);
+        OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(false);
     }
 
     private void validateResponse(BaseResponse response, Long id) {

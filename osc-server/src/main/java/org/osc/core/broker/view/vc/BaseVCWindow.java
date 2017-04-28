@@ -40,6 +40,7 @@ import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
+import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -432,9 +433,9 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
      *
      */
 
-    protected DryRunRequest<VirtualizationConnectorDto> createRequest() throws Exception {
-        DryRunRequest<VirtualizationConnectorDto> request = new DryRunRequest<VirtualizationConnectorDto>();
-        request.setDto(new VirtualizationConnectorDto());
+    protected DryRunRequest<VirtualizationConnectorRequest> createRequest() throws Exception {
+        DryRunRequest<VirtualizationConnectorRequest> request = new DryRunRequest<>();
+        request.setDto(new VirtualizationConnectorRequest());
 
         VirtualizationConnectorDto dto = request.getDto();
         dto.setName(this.name.getValue().trim());
