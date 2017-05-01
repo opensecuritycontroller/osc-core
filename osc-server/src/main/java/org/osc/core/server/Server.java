@@ -77,7 +77,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-@Component(immediate = true)
+/**
+ * This component exposes both the API and the implementation so that
+ * numerous types can access {@link #getActiveRabbitMQRunner()}. Making
+ * this part of the {@link ServerApi} would expose a lot of the server
+ * internals through the API.
+ */
+@Component(immediate = true, service = {ServerApi.class, Server.class})
 public class Server implements ServerApi {
     // Need to change the package name of Server class to org.osc.core.server
 
