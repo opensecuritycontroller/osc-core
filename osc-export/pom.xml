@@ -263,7 +263,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- OSGi enabled Hibernate dependencies for use at runtime -->
+		<!-- OSGi enabled Hibernate dependencies for use at runtime. -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-osgi</artifactId>
