@@ -140,6 +140,7 @@
                 <module>osc-resolver</module>
                 <module>osc-server</module>
                 <module>osc-service-api</module>
+                <module>osc-rest-server</module>
                 <module>osc-tools</module>
                 <module>osc-uber-jcloud</module>
                 <module>osc-uber</module>
