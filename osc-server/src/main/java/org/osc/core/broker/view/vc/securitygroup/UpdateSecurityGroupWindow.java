@@ -41,7 +41,7 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
 
     private static final Logger log = Logger.getLogger(UpdateSecurityGroupWindow.class);
 
-    private UpdateSecurityGroupServiceApi updateSecurityGroupService;
+    private final UpdateSecurityGroupServiceApi updateSecurityGroupService;
 
     public UpdateSecurityGroupWindow(SecurityGroupDto dto, ListOpenstackMembersServiceApi listOpenstackMembersService, ListRegionByVcIdServiceApi listRegionByVcIdService,
             ListTenantByVcIdServiceApi listTenantByVcIdServiceApi, UpdateSecurityGroupServiceApi updateSecurityGroupService) throws Exception {

@@ -60,7 +60,7 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
 
     private final DistributedApplianceView daView;
 
-    private UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
+    private final UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
 
     public UpdateDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
             UpdateDistributedApplianceServiceApi updateDistributedApplianceService,

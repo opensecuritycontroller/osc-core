@@ -55,7 +55,7 @@ public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
 
     private ApplianceUploader uploader = null;
 
-    private ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
+    private final ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
 
     public ImportApplianceSoftwareVersionWindow(ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService) throws Exception {
         this.importApplianceSoftwareVersionService = importApplianceSoftwareVersionService;

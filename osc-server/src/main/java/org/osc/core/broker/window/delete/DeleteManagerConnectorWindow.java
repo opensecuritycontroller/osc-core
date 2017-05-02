@@ -39,9 +39,9 @@ public class DeleteManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
     final String CAPTION = "Delete Manager Connector";
 
-    private ManagerConnectorView mcView = null;
+    private final ManagerConnectorView mcView;
 
-    private DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService;
+    private final DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService;
 
     public DeleteManagerConnectorWindow(ManagerConnectorView mcView,
             DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService) throws Exception {

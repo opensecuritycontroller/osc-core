@@ -64,7 +64,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     final String CAPTION = "Edit Manager Connector";
 
     // current view reference
-    private ManagerConnectorView mcView = null;
+    private final ManagerConnectorView mcView;
 
     // form fields
     private TextField name = null;
@@ -74,10 +74,10 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     private PasswordField pw = null;
     private PasswordField apiKey = null;
 
-    private BeanItem<ApplianceManagerConnectorDto> currentMCObject = null;
+    private final BeanItem<ApplianceManagerConnectorDto> currentMCObject;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private UpdateApplianceManagerConnectorServiceApi updateMCService;
+    private final UpdateApplianceManagerConnectorServiceApi updateMCService;
 
     public UpdateManagerConnectorWindow(ManagerConnectorView mcView,
             UpdateApplianceManagerConnectorServiceApi updateMCService) throws Exception {

@@ -49,9 +49,9 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
 
     private static final Logger log = Logger.getLogger(DistributedApplianceView.class);
     // current view reference
-    private DistributedApplianceView daView = null;
+    private final DistributedApplianceView daView;
 
-    private AddDistributedApplianceServiceApi addDistributedApplianceService;
+    private final AddDistributedApplianceServiceApi addDistributedApplianceService;
 
     public AddDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
             AddDistributedApplianceServiceApi addDistributedApplianceService,

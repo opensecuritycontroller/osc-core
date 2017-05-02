@@ -68,10 +68,10 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 	private static final Logger log = Logger.getLogger(BindSecurityGroupWindow.class);
 
-	private SecurityGroupDto currentSecurityGroup = null;
+	private final SecurityGroupDto currentSecurityGroup;
 	private Table serviceTable = null;
 
-	private BindSecurityGroupServiceApi bindSecurityGroupService;
+	private final BindSecurityGroupServiceApi bindSecurityGroupService;
 
 	public BindSecurityGroupWindow(SecurityGroupDto sgDto,
 	        BindSecurityGroupServiceApi bindSecurityGroupService) throws Exception {

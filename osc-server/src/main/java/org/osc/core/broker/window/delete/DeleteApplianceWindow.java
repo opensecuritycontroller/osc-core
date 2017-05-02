@@ -37,9 +37,9 @@ public class DeleteApplianceWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private static final Logger log = Logger.getLogger(DeleteApplianceWindow.class);
 
     // current view reference
-    private ApplianceView applianceView = null;
+    private final ApplianceView applianceView;
 
-    private DeleteApplianceServiceApi deleteApplianceService;
+    private final DeleteApplianceServiceApi deleteApplianceService;
 
     final String CAPTION = "Delete Appliance";
 

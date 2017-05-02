@@ -42,8 +42,8 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
     final String CAPTION = "Add SSL certificate";
 
     private Table sslConfigTable;
-    private ArrayList<CertificateResolverModel> certificateResolverModels;
-    private SSLCertificateWindowInterface sslCertificateWindowInterface;
+    private final ArrayList<CertificateResolverModel> certificateResolverModels;
+    private final SSLCertificateWindowInterface sslCertificateWindowInterface;
 
     public interface SSLCertificateWindowInterface {
         void submitFormAction(ArrayList<CertificateResolverModel> certificateResolverModels);

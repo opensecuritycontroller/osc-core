@@ -39,9 +39,9 @@ public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     private TextField ipAddress = null;
 
-    private NetworkLayout networkLayout = null;
+    private final NetworkLayout networkLayout;
 
-    private SetNATSettingsServiceApi setNATSettingsService;
+    private final SetNATSettingsServiceApi setNATSettingsService;
 
     public SetNATSettingsWindow(NetworkLayout networkLayout, SetNATSettingsServiceApi setNATSettingsService) throws Exception {
         super();

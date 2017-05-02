@@ -37,11 +37,11 @@ public class DeleteApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
     private static final Logger log = Logger.getLogger(DeleteApplianceWindow.class);
 
     // current view reference
-    private ApplianceView applianceView = null;
+    private final ApplianceView applianceView;
 
     final String CAPTION = "Delete Appliance Software Version";
 
-    private DeleteApplianceSoftwareVersionServiceApi deleteApplianceSoftwareVersionService;
+    private final DeleteApplianceSoftwareVersionServiceApi deleteApplianceSoftwareVersionService;
 
     public DeleteApplianceSoftwareVersionWindow(ApplianceView applianceView,
             DeleteApplianceSoftwareVersionServiceApi deleteApplianceSoftwareVersionService) throws Exception {

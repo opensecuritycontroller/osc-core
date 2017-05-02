@@ -52,7 +52,7 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private TextField email = null;
     private ComboBox role = null;
 
-    private BeanItem<UserDto> currentUser = null;
+    private final BeanItem<UserDto> currentUser;
     private final UpdateUserServiceApi updateUserService;
 
     public UpdateUserWindow(UserView userView, UpdateUserServiceApi updateUserService) throws Exception {
