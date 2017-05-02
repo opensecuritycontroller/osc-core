@@ -20,12 +20,11 @@ import java.rmi.RemoteException;
 
 import javax.ws.rs.core.Response;
 
-import org.osc.core.broker.rest.server.exception.OscBadRequestException;
-import org.osc.core.broker.rest.server.exception.OscInternalServerErrorException;
-import org.osc.core.broker.rest.server.exception.OscNotFoundException;
-import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.api.ServiceDispatcherApi;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.exceptions.OscBadRequestException;
+import org.osc.core.broker.service.exceptions.OscInternalServerErrorException;
+import org.osc.core.broker.service.exceptions.OscNotFoundException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -39,6 +38,9 @@ import org.osgi.service.component.annotations.Component;
 
 @Component(service = ApiUtil.class)
 public class ApiUtil {
+    public static final Long REMOTE_EXCEPTION_ERROR_CODE = 6000L;
+    public static final Long VMIDC_VALIDATION_EXCEPTION_ERROR_CODE = 4000L;
+    public static final Long VMIDC_EXCEPTION_ERROR_CODE = 5000L;
 
     /**
      * Submits a plain request to the service and return the response or throws a VmidcRestServerException in case of
@@ -57,15 +59,15 @@ public class ApiUtil {
         try {
             return service.dispatch(request);
         } catch (VmidcBrokerInvalidEntryException | VmidcBrokerInvalidRequestException expectedException) {
-            throw new OscBadRequestException(expectedException.getMessage(), VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+            throw new OscBadRequestException(expectedException.getMessage(), VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
         } catch (VmidcBrokerValidationException validationException){
-            throw new OscNotFoundException(validationException.getMessage(), VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+            throw new OscNotFoundException(validationException.getMessage(), VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
         } catch (RestClientException | RemoteException remoteException) {
-            throw new OscBadRequestException(remoteException.getMessage(), VmidcRestServerException.REMOTE_EXCEPTION_ERROR_CODE);
+            throw new OscBadRequestException(remoteException.getMessage(), REMOTE_EXCEPTION_ERROR_CODE);
         } catch (VmidcException generalVmidcException) {
-            throw new OscInternalServerErrorException(generalVmidcException.getMessage(), VmidcRestServerException.VMIDC_EXCEPTION_ERROR_CODE);
+            throw new OscInternalServerErrorException(generalVmidcException.getMessage(), VMIDC_EXCEPTION_ERROR_CODE);
         } catch (Exception e) {
-            throw new OscInternalServerErrorException(VmidcRestServerException.VMIDC_EXCEPTION_ERROR_CODE);
+            throw new OscInternalServerErrorException(VMIDC_EXCEPTION_ERROR_CODE);
         }
     }
 
@@ -154,12 +156,12 @@ public class ApiUtil {
 
     public <T extends BaseDto> OscBadRequestException createIdMismatchException(Long id, String objName) {
         return new OscBadRequestException(String.format("The ID %d specified in the '%s' data does not match the id specified in the URL", id, objName),
-                VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+                VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
     }
 
     public <T extends BaseDto> OscBadRequestException createParentChildMismatchException(Long parentId,
                                                                                          String objName) {
         return new OscBadRequestException(String.format("The Parent ID %d specified in the '%s' data does not match the id specified in the URL", parentId, objName),
-                VmidcRestServerException.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+                VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
     }
 }
