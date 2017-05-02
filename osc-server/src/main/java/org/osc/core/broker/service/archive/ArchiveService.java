@@ -16,10 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.archive;
 
-import static org.osc.core.server.scheduler.ArchiveScheduledJob.ARCHIVE_GROUP_NAME;
-import static org.osc.core.server.scheduler.ArchiveScheduledJob.ARCHIVE_JOB_NAME;
-import static org.osc.core.server.scheduler.ArchiveScheduledJob.ARCHIVE_STARTUP_DELAY_IN_MIN;
-
 import java.io.File;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -31,7 +27,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -49,22 +44,10 @@ import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.Request;
-import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.Response;
-import org.osc.core.server.scheduler.ArchiveScheduledJob;
 import org.osc.core.util.ArchiveUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.quartz.JobBuilder;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.quartz.JobKey;
-import org.quartz.Scheduler;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.quartz.impl.StdSchedulerFactory;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -325,55 +308,6 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
             period = Period.years(request.getDto().getThresholdValue());
         }
         return period;
-    }
-
-    /**
-     * Schedule the archiving job based on the interval defined in the DB.
-     *
-     * If archiving is disabled, deletes the archiving job.
-     */
-    @Override
-    public void maybeScheduleArchiveJob() {
-        try {
-            BaseDtoResponse<JobsArchiveDto> reponse = this.jobsArchiveService.dispatch(new Request() {
-            });
-
-            Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
-            boolean doesJobExists = scheduler.checkExists(new JobKey(ARCHIVE_JOB_NAME, ARCHIVE_GROUP_NAME));
-
-            if (reponse.getDto().getAutoSchedule() && !doesJobExists) {
-                JobDataMap jobDataMap = new JobDataMap();
-                jobDataMap.put(GetJobsArchiveServiceApi.class.getName(), this.jobsArchiveService);
-                jobDataMap.put(ArchiveServiceApi.class.getName(), this);
-
-                JobDetail archiveJob = JobBuilder.newJob(ArchiveScheduledJob.class)
-                        .usingJobData(jobDataMap)
-                        .withIdentity(ARCHIVE_JOB_NAME, ARCHIVE_GROUP_NAME).build();
-
-                Trigger archiveTrigger = TriggerBuilder
-                        .newTrigger()
-                        .startAt(DateUtils.addMinutes(new Date(), ARCHIVE_STARTUP_DELAY_IN_MIN))
-                        .withSchedule(
-                                SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(24).repeatForever()
-                                        .withMisfireHandlingInstructionFireNow()).build();
-
-                scheduler.scheduleJob(archiveJob, archiveTrigger);
-
-                log.info("Archiving job check is scheduled to run every 24 hours. Starting at: "
-                        + archiveTrigger.getStartTime());
-
-            } else if (!reponse.getDto().getAutoSchedule()) {
-                // If archiving is disabled, delete the job if it exists
-                if (scheduler.deleteJob(new JobKey(ArchiveScheduledJob.ARCHIVE_JOB_NAME, ARCHIVE_GROUP_NAME))) {
-                    log.info("Archiving job Deleted");
-                }
-            }
-        } catch (Exception e) {
-            log.error("Scheduler fail to start/stop Archiving job", e);
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
-                    new LockObjectReference(1L, "Archive Settings", ObjectType.ARCHIVE),
-                    "Failure during archive schedule configuration " + e.getMessage());
-        }
     }
 
 }

@@ -40,6 +40,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.Rabbi
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
+import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
 import org.osc.core.broker.util.PasswordUtil;
@@ -47,6 +48,7 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.server.scheduler.ArchiveScheduledJob;
 import org.osc.core.server.scheduler.MonitorDistributedApplianceInstanceJob;
 import org.osc.core.server.scheduler.SyncDistributedApplianceJob;
 import org.osc.core.server.scheduler.SyncSecurityGroupJob;
@@ -117,6 +119,9 @@ public class Server {
 
     @Reference
     private ArchiveServiceApi archiveService;
+
+    @Reference
+    private GetJobsArchiveServiceApi jobsArchiveService;
 
     @Reference(service=WebSocketRunner.class,
             scope=ReferenceScope.PROTOTYPE_REQUIRED)
@@ -323,7 +328,7 @@ public class Server {
 
         MonitorDistributedApplianceInstanceJob.scheduleMonitorDaiJob();
 
-        this.archiveService.maybeScheduleArchiveJob();
+        ArchiveScheduledJob.maybeScheduleArchiveJob(this.archiveService, this.jobsArchiveService);
     }
 
     private void stopScheduler() {
