@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.server.activator;
+package org.osc.core.broker.rest.server;
 
 import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.*;
 
@@ -29,8 +29,6 @@ import javax.servlet.ServletResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
-import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.api.AlarmApis;
 import org.osc.core.broker.rest.server.api.AlertApis;
 import org.osc.core.broker.rest.server.api.ApplianceApis;
