@@ -51,7 +51,7 @@ public class AddUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private TextField email = null;
     private ComboBox role = null;
 
-    private AddUserServiceApi addUserService;
+    private final AddUserServiceApi addUserService;
 
     public AddUserWindow(UserView userView, AddUserServiceApi addUserService) throws Exception {
         this.addUserService = addUserService;

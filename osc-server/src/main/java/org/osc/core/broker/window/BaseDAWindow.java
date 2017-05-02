@@ -24,6 +24,7 @@ import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -34,9 +35,8 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.ListApplianceModelSwVersionComboRequest;
 import org.osc.core.broker.service.request.ListEncapsulationTypeByVersionTypeAndModelRequest;
+import org.osc.core.broker.service.request.ListVirtualizationConnectorBySwVersionRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.vc.ListVirtualizationConnectorBySwVersionRequest;
-import org.osc.core.broker.service.vc.ListVirtualizationConnectorBySwVersionService;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
@@ -71,20 +71,23 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     protected PasswordField sharedKey;
     protected Table vsTable = null;
     protected DistributedApplianceDto currentDAObject = null;
-    private ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService;
-    private ListDomainsByMcIdServiceApi listDomainsByMcIdService;
-    private ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
-    private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
+    private final ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService;
+    private final ListDomainsByMcIdServiceApi listDomainsByMcIdService;
+    private final ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
+    private final ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
+    private final ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService;
 
     public BaseDAWindow(ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
             ListDomainsByMcIdServiceApi listDomainsByMcIdService,
             ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
-            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService) {
+            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService,
+            ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService) {
         super();
         this.listApplianceModelSwVersionComboService = listApplianceModelSwVersionComboService;
         this.listDomainsByMcIdService = listDomainsByMcIdService;
         this.listEncapsulationTypeByVersionTypeAndModel = listEncapsulationTypeByVersionTypeAndModel;
         this.listApplianceManagerConnectorService = listApplianceManagerConnectorService;
+        this.listVirtualizationConnectorBySwVersionService = listVirtualizationConnectorBySwVersionService;
     }
 
     protected Panel getAttributesPanel() {
@@ -159,8 +162,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             vcRequest.setSwVersion(currentAppliance.getSwVersion());
         }
 
-        ListVirtualizationConnectorBySwVersionService vcService = new ListVirtualizationConnectorBySwVersionService();
-        ListResponse<VirtualizationConnectorDto> vcResponse = vcService.dispatch(vcRequest);
+        ListResponse<VirtualizationConnectorDto> vcResponse = this.listVirtualizationConnectorBySwVersionService.dispatch(vcRequest);
 
         ApplianceManagerConnectorDto currentMC = (ApplianceManagerConnectorDto) this.managerConnector.getValue();
 

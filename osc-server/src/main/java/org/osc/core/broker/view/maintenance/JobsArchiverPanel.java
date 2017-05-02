@@ -83,10 +83,10 @@ public class JobsArchiverPanel extends CustomComponent {
 
     private String ARCHIVE_STYLE = "archive-options";
     private JobsArchiveDto dto;
-    private ArchiveLayout parentLayout;
-    private ArchiveServiceApi archiveService;
-    private GetJobsArchiveServiceApi getJobsArchiveService;
-    private UpdateJobsArchiveServiceApi updateJobsArchiveService;
+    private final ArchiveLayout parentLayout;
+    private final ArchiveServiceApi archiveService;
+    private final GetJobsArchiveServiceApi getJobsArchiveService;
+    private final UpdateJobsArchiveServiceApi updateJobsArchiveService;
 
     public JobsArchiverPanel(ArchiveLayout parentLayout, ArchiveServiceApi archiveService,
             GetJobsArchiveServiceApi getJobsArchiveService, UpdateJobsArchiveServiceApi updateJobsArchiveService) {
@@ -94,6 +94,7 @@ public class JobsArchiverPanel extends CustomComponent {
         this.parentLayout = parentLayout;
         this.archiveService = archiveService;
         this.getJobsArchiveService = getJobsArchiveService;
+        this.updateJobsArchiveService = updateJobsArchiveService;
 
         try {
             this.dto = populateJobsArchiveDto().getDto();
@@ -268,7 +269,7 @@ public class JobsArchiverPanel extends CustomComponent {
                     request.getDto().setThresholdValue(JobsArchiverPanel.this.archiveThreshold.getValue());
 
                     JobsArchiverPanel.this.updateJobsArchiveService.dispatch(request);
-                    ArchiveScheduledJob.maybeScheduleArchiveJob();
+                    ArchiveScheduledJob.maybeScheduleArchiveJob(JobsArchiverPanel.this.archiveService, JobsArchiverPanel.this.getJobsArchiveService);
 
                     ViewUtil.iscNotification(
                             VmidcMessages.getString(VmidcMessages_.MAINTENANCE_JOBSARCHIVE_SUBMIT_SUCCESSFUL), null,

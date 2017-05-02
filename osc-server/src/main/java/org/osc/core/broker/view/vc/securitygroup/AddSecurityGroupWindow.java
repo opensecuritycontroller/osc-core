@@ -42,7 +42,7 @@ public class AddSecurityGroupWindow extends BaseSecurityGroupWindow {
 
     private static final Logger log = Logger.getLogger(AddSecurityGroupWindow.class);
 
-    private AddSecurityGroupServiceApi addSecurityGroupService;
+    private final AddSecurityGroupServiceApi addSecurityGroupService;
 
     public AddSecurityGroupWindow(VirtualizationConnectorDto vcDto,
             ListOpenstackMembersServiceApi listOpenstackMembersService,

@@ -40,9 +40,9 @@ public class SetNetworkSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel
     private TextField dnsServer1 = null;
     private TextField dnsServer2 = null;
 
-    private NetworkLayout networkLayout = null;
+    private final NetworkLayout networkLayout;
 
-    private SetNetworkSettingsServiceApi setNetworkSettingsService;
+    private final SetNetworkSettingsServiceApi setNetworkSettingsService;
 
     public SetNetworkSettingsWindow(NetworkLayout networkLayout,
             SetNetworkSettingsServiceApi setNetworkSettingsService) throws Exception {

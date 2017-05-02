@@ -46,7 +46,7 @@ public abstract class BaseSecurityGroupInterfaceWindow extends CRUDBaseWindow<Ok
     protected TextField tag;
     protected Long vsId;
 
-    private ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
+    private final ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
 
     public BaseSecurityGroupInterfaceWindow(Long vsId, ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService) {
         super();

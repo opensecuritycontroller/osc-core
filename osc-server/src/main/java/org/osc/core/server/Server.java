@@ -38,6 +38,8 @@ import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.ArchiveServiceApi;
+import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
@@ -120,6 +122,12 @@ public class Server implements ServerApi {
 
     @Reference
     private PasswordUtil passwordUtil;
+
+    @Reference
+    private ArchiveServiceApi archiveService;
+
+    @Reference
+    private GetJobsArchiveServiceApi jobsArchiveService;
 
     @Reference(service=WebSocketRunner.class,
             scope=ReferenceScope.PROTOTYPE_REQUIRED)
@@ -329,7 +337,7 @@ public class Server implements ServerApi {
 
         MonitorDistributedApplianceInstanceJob.scheduleMonitorDaiJob();
 
-        ArchiveScheduledJob.maybeScheduleArchiveJob();
+        ArchiveScheduledJob.maybeScheduleArchiveJob(this.archiveService, this.jobsArchiveService);
     }
 
     private void stopScheduler() {

@@ -22,10 +22,11 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
+import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 
 public class AddVirtualizationConnectorServiceRequestValidator
-		implements RequestValidator<DryRunRequest<VirtualizationConnectorDto>, VirtualizationConnector> {
+		implements RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> {
 	private EntityManager em;
 
 	private DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> dtoValidator;
@@ -41,7 +42,7 @@ public class AddVirtualizationConnectorServiceRequestValidator
 	}
 
 	@Override
-	public void validate(DryRunRequest<VirtualizationConnectorDto> request) throws Exception {
+	public void validate(DryRunRequest<VirtualizationConnectorRequest> request) throws Exception {
 
 		if (this.dtoValidator == null) {
 			this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em);
@@ -63,7 +64,7 @@ public class AddVirtualizationConnectorServiceRequestValidator
 	}
 
 	@Override
-	public VirtualizationConnector validateAndLoad(DryRunRequest<VirtualizationConnectorDto> request) throws Exception {
+	public VirtualizationConnector validateAndLoad(DryRunRequest<VirtualizationConnectorRequest> request) throws Exception {
 		throw new UnsupportedOperationException();
 	}
 

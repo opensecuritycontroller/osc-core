@@ -66,7 +66,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private static final Logger log = Logger.getLogger(AddManagerConnectorWindow.class);
 
     // current view reference
-    private ManagerConnectorView mcView = null;
+    private final ManagerConnectorView mcView;
 
     // form fields
     private TextField name = null;
@@ -77,7 +77,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private PasswordField apiKey = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private AddApplianceManagerConnectorServiceApi addMCService;
+    private final AddApplianceManagerConnectorServiceApi addMCService;
 
     public AddManagerConnectorWindow(ManagerConnectorView mcView,
             AddApplianceManagerConnectorServiceApi addMCService) throws Exception {

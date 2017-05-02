@@ -27,13 +27,15 @@ import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.ArchiveServiceApi;
+import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -46,15 +48,45 @@ import org.quartz.impl.StdSchedulerFactory;
 
 public class ArchiveScheduledJob implements Job {
 
-    private static final int ARCHIVE_STARTUP_DELAY_IN_MIN = 15;
-
     private static final Logger log = Logger.getLogger(ArchiveScheduledJob.class);
-
-    private static final String ARCHIVE_JOB_NAME = "archiveJobName";
-    private static final String ARCHIVE_GROUP_NAME = "archiveGroupName";
+    public static final int ARCHIVE_STARTUP_DELAY_IN_MIN = 15;
+    public static final String ARCHIVE_JOB_NAME = "archiveJobName";
+    public static final String ARCHIVE_GROUP_NAME = "archiveGroupName";
 
     public ArchiveScheduledJob() {
 
+    }
+
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        GetJobsArchiveServiceApi jobsArchiveService = (GetJobsArchiveServiceApi) context.getMergedJobDataMap().get(GetJobsArchiveServiceApi.class.getName());
+        ArchiveServiceApi archiveService = (ArchiveServiceApi) context.getMergedJobDataMap().get(ArchiveServiceApi.class.getName());
+
+        try {
+            BaseDtoResponse<JobsArchiveDto> reponse = jobsArchiveService.dispatch(new Request() {
+            });
+
+            Period period = new Period();
+            if (reponse.getDto().getFrequency().equals(FreqType.MONTHLY)) {
+                period = Period.months(1);
+            } else {
+                period = Period.weeks(1);
+            }
+            DateTime futureJob = new DateTime(reponse.getDto().getLastTriggerTimestamp()).plus(period);
+
+            if (reponse.getDto().getLastTriggerTimestamp() == null || futureJob.isBeforeNow()) {
+                log.info("Archiving Job Trigggered at : " + new Date());
+                BaseRequest<JobsArchiveDto> request = new BaseRequest<JobsArchiveDto>();
+                request.setDto(new JobsArchiveDto());
+                request.getDto().setId(1L);
+                archiveService.dispatch(request);
+            }
+        } catch (Exception e) {
+            log.error("Failure during archive operation", e);
+            AlertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
+                    new LockObjectReference(1L, "Archive Settings", ObjectType.ARCHIVE),
+                    "Failure during archive operation " + e.getMessage());
+        }
     }
 
     /**
@@ -62,17 +94,21 @@ public class ArchiveScheduledJob implements Job {
      *
      * If archiving is disabled, deletes the archiving job.
      */
-    public static void maybeScheduleArchiveJob() {
-
+    public static void maybeScheduleArchiveJob(ArchiveServiceApi archiveService, GetJobsArchiveServiceApi jobsArchiveService) {
         try {
-            BaseDtoResponse<JobsArchiveDto> reponse = StaticRegistry.getJobsArchiveService().dispatch(new Request() {
+            BaseDtoResponse<JobsArchiveDto> reponse = jobsArchiveService.dispatch(new Request() {
             });
 
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             boolean doesJobExists = scheduler.checkExists(new JobKey(ARCHIVE_JOB_NAME, ARCHIVE_GROUP_NAME));
 
             if (reponse.getDto().getAutoSchedule() && !doesJobExists) {
+                JobDataMap jobDataMap = new JobDataMap();
+                jobDataMap.put(GetJobsArchiveServiceApi.class.getName(), jobsArchiveService);
+                jobDataMap.put(ArchiveServiceApi.class.getName(), archiveService);
+
                 JobDetail archiveJob = JobBuilder.newJob(ArchiveScheduledJob.class)
+                        .usingJobData(jobDataMap)
                         .withIdentity(ARCHIVE_JOB_NAME, ARCHIVE_GROUP_NAME).build();
 
                 Trigger archiveTrigger = TriggerBuilder
@@ -89,7 +125,7 @@ public class ArchiveScheduledJob implements Job {
 
             } else if (!reponse.getDto().getAutoSchedule()) {
                 // If archiving is disabled, delete the job if it exists
-                if (scheduler.deleteJob(new JobKey(ARCHIVE_JOB_NAME, ARCHIVE_GROUP_NAME))) {
+                if (scheduler.deleteJob(new JobKey(ArchiveScheduledJob.ARCHIVE_JOB_NAME, ARCHIVE_GROUP_NAME))) {
                     log.info("Archiving job Deleted");
                 }
             }
@@ -98,35 +134,6 @@ public class ArchiveScheduledJob implements Job {
             AlertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
                     new LockObjectReference(1L, "Archive Settings", ObjectType.ARCHIVE),
                     "Failure during archive schedule configuration " + e.getMessage());
-        }
-    }
-
-    @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException {
-        try {
-            BaseDtoResponse<JobsArchiveDto> reponse = StaticRegistry.getJobsArchiveService().dispatch(new Request() {
-            });
-
-            Period period = new Period();
-            if (reponse.getDto().getFrequency().equals(FreqType.MONTHLY)) {
-                period = Period.months(1);
-            } else {
-                period = Period.weeks(1);
-            }
-            DateTime futureJob = new DateTime(reponse.getDto().getLastTriggerTimestamp()).plus(period);
-
-            if (reponse.getDto().getLastTriggerTimestamp() == null || futureJob.isBeforeNow()) {
-                log.info("Archiving Job Trigggered at : " + new Date());
-                BaseRequest<JobsArchiveDto> request = new BaseRequest<JobsArchiveDto>();
-                request.setDto(new JobsArchiveDto());
-                request.getDto().setId(1L);
-                new StaticRegistry().archiveService().dispatch(request);
-            }
-        } catch (Exception e) {
-            log.error("Failure during archive operation", e);
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
-                    new LockObjectReference(1L, "Archive Settings", ObjectType.ARCHIVE),
-                    "Failure during archive operation " + e.getMessage());
         }
     }
 

@@ -37,14 +37,18 @@ import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupByVcServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupPropertiesServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
@@ -57,14 +61,10 @@ import org.osc.core.broker.service.request.BindSecurityGroupRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.request.UpdateSecurityGroupMemberRequest;
+import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
-import org.osc.core.broker.service.vc.AddVirtualizationConnectorService;
-import org.osc.core.broker.service.vc.DeleteVirtualizationConnectorService;
-import org.osc.core.broker.service.vc.ListVirtualizationConnectorService;
-import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
-import org.osc.core.broker.service.vc.VirtualizationConnectorRequest;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
@@ -92,10 +92,10 @@ public class VirtualizationConnectorApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private UpdateVirtualizationConnectorService updateVirtualizationConnectorService;
+    private UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService;
 
     @Reference
-    private AddVirtualizationConnectorService addVirtualizationConnectorService;
+    private AddVirtualizationConnectorServiceApi addVirtualizationConnectorService;
 
     @Reference
     private AddSecurityGroupServiceApi addSecurityGroupService;
@@ -124,6 +124,12 @@ public class VirtualizationConnectorApis {
     @Reference
     private SyncSecurityGroupServiceApi syncSecurityGroupService;
 
+    @Reference
+    private DeleteVirtualizationConnectorServiceApi deleteVirtualizationConnectorService;
+
+    @Reference
+    private ListVirtualizationConnectorServiceApi listVirtualizationConnectorService;
+
     @ApiOperation(value = "Lists All Virtualization Connectors",
             notes = "Password information is not returned as it is sensitive information",
             response = VirtualizationConnectorDto.class,
@@ -138,7 +144,7 @@ public class VirtualizationConnectorApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<VirtualizationConnectorDto> response = (ListResponse<VirtualizationConnectorDto>) this.apiUtil
-                .getListResponse(new ListVirtualizationConnectorService(), new BaseRequest<>(true));
+                .getListResponse(this.listVirtualizationConnectorService, new BaseRequest<>(true));
 
         return response.getList();
     }
@@ -185,7 +191,6 @@ public class VirtualizationConnectorApis {
 
         logger.info("Creating Virtualization Connector...");
         SessionUtil.setUser(SessionUtil.getUsername(headers));
-        this.addVirtualizationConnectorService.setForceAddSSLCertificates(vcRequest.isForceAddSSLCertificates());
         return this.apiUtil.getResponseForBaseRequest(this.addVirtualizationConnectorService,
                 new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
@@ -215,7 +220,6 @@ public class VirtualizationConnectorApis {
         logger.info("Updating Virtualization Connector " + vcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         this.apiUtil.setIdOrThrow(vcRequest, vcId, "Virtualization Connector");
-        this.updateVirtualizationConnectorService.setForceAddSSLCertificates(vcRequest.isForceAddSSLCertificates());
         return this.apiUtil.getResponseForBaseRequest(this.updateVirtualizationConnectorService,
                 new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
@@ -239,7 +243,7 @@ public class VirtualizationConnectorApis {
         logger.info("Deleting Virtualization Connector " + vcId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
 
-        return this.apiUtil.getResponseForBaseRequest(new DeleteVirtualizationConnectorService(), new BaseIdRequest(vcId));
+        return this.apiUtil.getResponseForBaseRequest(this.deleteVirtualizationConnectorService, new BaseIdRequest(vcId));
     }
 
     // Security Group APIs

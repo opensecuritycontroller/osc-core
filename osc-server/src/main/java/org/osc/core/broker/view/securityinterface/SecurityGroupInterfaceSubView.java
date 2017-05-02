@@ -56,11 +56,11 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
 
     private static final Logger log = Logger.getLogger(SecurityGroupInterfaceSubView.class);
 
-    private AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService;
-    private DeleteSecurityGroupInterfaceServiceApi deleteSecurityGroupInterfaceService;
-    private ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem;
-    private ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
-    private UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
+    private final AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService;
+    private final DeleteSecurityGroupInterfaceServiceApi deleteSecurityGroupInterfaceService;
+    private final ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem;
+    private final ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
+    private final UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
 
     public SecurityGroupInterfaceSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
             VirtualSystemDto vs, AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService,
@@ -69,6 +69,11 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
             ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService,
             UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService) throws Exception {
         super(currentView, title, buttons, vs);
+        this.addSecurityGroupInterfaceService = addSecurityGroupInterfaceService;
+        this.deleteSecurityGroupInterfaceService = deleteSecurityGroupInterfaceService;
+        this.listVirtualSystemPolicyService = listVirtualSystemPolicyService;
+        this.listSecurityGroupInterfaceServiceByVirtualSystem = listSecurityGroupInterfaceServiceByVirtualSystem;
+        this.updateSecurityGroupInterfaceService = updateSecurityGroupInterfaceService;
         if (!vs.isMarkForDeletion()) {
             ViewUtil.enableToolBarButtons(
                     ((VirtualSystemDto) this.parent).getVirtualizationType() != VirtualizationType.VMWARE && isPolicyMappingSupported(),

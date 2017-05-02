@@ -47,9 +47,9 @@ public class SetEmailSettingsWindow extends CRUDBaseValidateWindow {
     private PasswordField password = null;
     private EmailLayout emailLayout = null;
 
-    private GetEmailSettingsServiceApi getEmailSettingsService;
+    private final GetEmailSettingsServiceApi getEmailSettingsService;
 
-    private SetEmailSettingsServiceApi setEmailSettingsService;
+    private final SetEmailSettingsServiceApi setEmailSettingsService;
 
     public SetEmailSettingsWindow(EmailLayout emailLayout, GetEmailSettingsServiceApi getEmailSettingsService,
             SetEmailSettingsServiceApi setEmailSettingsService) throws Exception {

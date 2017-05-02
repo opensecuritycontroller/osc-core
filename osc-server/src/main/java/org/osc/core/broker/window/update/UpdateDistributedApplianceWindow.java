@@ -23,6 +23,7 @@ import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
@@ -59,16 +60,17 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
 
     private final DistributedApplianceView daView;
 
-    private UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
+    private final UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
 
     public UpdateDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
             UpdateDistributedApplianceServiceApi updateDistributedApplianceService,
             ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
             ListDomainsByMcIdServiceApi listDomainsByMcIdService,
             ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
-            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService) throws Exception {
+            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService,
+            ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService) throws Exception {
         super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel,
-                listApplianceManagerConnectorService);
+                listApplianceManagerConnectorService, listVirtualizationConnectorBySwVersionService);
         this.daView = distributedApplianceView;
         this.updateDistributedApplianceService = updateDistributedApplianceService;
         this.currentDAObject = this.daView.getParentContainer().getItem(this.daView.getParentItemId()).getBean();

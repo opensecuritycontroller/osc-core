@@ -39,7 +39,7 @@ public class UpdateSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfa
 
     final String CAPTION = "Update Policy Mapping";
 
-    private UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
+    private final UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
 
     public UpdateSecurityGroupInterfaceWindow(SecurityGroupInterfaceDto dto,
             ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService,

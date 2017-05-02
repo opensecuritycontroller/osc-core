@@ -16,23 +16,24 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.SyncVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseJobRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-import javax.persistence.EntityManager;
-
-public class SyncVirtualizationConnectorService extends ServiceDispatcher<BaseJobRequest, BaseJobResponse> {
-
-    private final ConformService conformService;
-
-    public SyncVirtualizationConnectorService(ConformService conformService) {
-        this.conformService = conformService;
-    }
+@Component
+public class SyncVirtualizationConnectorService extends ServiceDispatcher<BaseJobRequest, BaseJobResponse>
+        implements SyncVirtualizationConnectorServiceApi {
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {

@@ -41,7 +41,7 @@ import com.vaadin.ui.themes.ValoTheme;
 
 public class AgentStatusWindow extends Window {
     private static final Logger log = Logger.getLogger(AgentStatusWindow.class);
-    private List<DistributedApplianceInstanceDto> daiList = null;
+    private final List<DistributedApplianceInstanceDto> daiList;
 
     /**
      *

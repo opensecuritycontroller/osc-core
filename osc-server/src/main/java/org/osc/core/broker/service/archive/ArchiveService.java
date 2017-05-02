@@ -40,12 +40,14 @@ import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
+import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.util.ArchiveUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -58,8 +60,8 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
 
     private static final Logger log = Logger.getLogger(ArchiveService.class);
 
-    public ArchiveService() {
-    }
+    @Reference
+    private GetJobsArchiveServiceApi jobsArchiveService;
 
     @Override
     @SuppressFBWarnings(value="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
