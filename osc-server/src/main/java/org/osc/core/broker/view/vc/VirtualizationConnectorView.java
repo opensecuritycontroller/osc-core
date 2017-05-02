@@ -30,7 +30,9 @@ import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupByVcServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
 import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
@@ -121,9 +123,13 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Reference
     private ListVirtualizationConnectorServiceApi listVirtualizationConnectorService;
+    private ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService;
+
+    @Reference
+    private ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService;
 
     @Activate
-    private void activate() {
+    void activate() {
         createView("Virtualization Connector",
                 Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE, ToolbarButtons.CONFORM_VC),
                 "Security Group",
@@ -262,7 +268,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
             } else {
                 ViewUtil.addWindow(new AddSecurityGroupWindow(getParentItem().getBean(),
                         this.listOpenstackMembersService, this.listRegionByVcIdService, this.listTenantByVcIdServiceApi,
-                        this.addSecurityGroupService));
+                        this.addSecurityGroupService, this.listSecurityGroupMembersBySgService));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT_CHILD.getId())) {
@@ -274,7 +280,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
             } else {
                 ViewUtil.addWindow(new UpdateSecurityGroupWindow(securityGroup,
                         this.listOpenstackMembersService, this.listRegionByVcIdService, this.listTenantByVcIdServiceApi,
-                        this.updateSecurityGroupService));
+                        this.updateSecurityGroupService, this.listSecurityGroupMembersBySgService));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE_CHILD.getId())) {
@@ -290,7 +296,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
             } else {
                 BindSecurityGroupWindow bindWindow = null;
                 try {
-                    bindWindow = new BindSecurityGroupWindow(securityGroup, this.bindSecurityGroupService);
+                    bindWindow = new BindSecurityGroupWindow(securityGroup, this.bindSecurityGroupService,
+                            this.listSecurityGroupBindingsBySgService);
                     ViewUtil.addWindow(bindWindow);
                 } catch (ActionNotSupportedException actionNotSupportedException) {
                     ViewUtil.iscNotification(actionNotSupportedException.getMessage(), Notification.Type.ERROR_MESSAGE);

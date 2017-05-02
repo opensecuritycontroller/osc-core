@@ -320,6 +320,39 @@
 				</plugins>
 			</build>
 		</profile>
+
+		<profile>
+			<id>java-jre-get</id>
+			<activation>
+				<file>
+					<missing>${basedir}/../osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz</missing>
+				</file>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>1.7</version>
+						<executions>
+							<execution>
+								<id>download-files</id>
+								<phase>prepare-package</phase>
+								<configuration>
+									<tasks>
+										<exec executable="wget">
+										<arg line="--no-check-certificate --no-cookies --header &quot;Cookie: oraclelicense=accept-securebackup-cookie&quot; http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jre-8u112-linux-x64.tar.gz -P &quot;${basedir}/../osc-server-bom/Sources&quot; -nv"/>
+										</exec>
+									</tasks>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 	<build>
 		<plugins>
@@ -464,7 +497,7 @@
 									<zipfileset dir="${basedir}/../osc-control/target"
 										includes="osc-control-upgrade.jar" fullpath="opt/vmidc/bin/osc-server.jar" />
 									<fileset dir="${basedir}/../osc-server-bom/Sources">
-										<include name="server-jre-8u112-linux-x64.tar.gz" />
+										<include name="jre-8u112-linux-x64.tar.gz" />
 									</fileset>
 								</zip>
 

@@ -25,12 +25,12 @@ import java.util.Date;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BackupServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.server.Server;
 import org.osc.core.util.ArchiveUtil;
 import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
@@ -62,14 +62,14 @@ public class SummaryLayout extends FormLayout {
     private CheckBox checkbox = null;
     private Button download = null;
 
-    private Server server;
+    private ServerApi server;
 
     private BackupServiceApi backupService;
 
     private static final Logger log = Logger.getLogger(SummaryLayout.class);
 
 
-    public SummaryLayout(Server server, BackupServiceApi backupService) {
+    public SummaryLayout(ServerApi server, BackupServiceApi backupService) {
         super();
         this.server = server;
         this.backupService = backupService;

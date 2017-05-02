@@ -19,11 +19,10 @@ package org.osc.core.server;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -41,6 +40,8 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
+import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
 import org.osc.core.broker.util.PasswordUtil;
@@ -62,6 +63,8 @@ import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferenceScope;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -76,11 +79,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.vaadin.server.VaadinServlet;
-import com.vaadin.server.VaadinSession;
-
-@Component(immediate = true, service = Server.class)
-public class Server {
+/**
+ * This component exposes both the API and the implementation so that
+ * numerous types can access {@link #getActiveRabbitMQRunner()}. Making
+ * this part of the {@link ServerApi} would expose a lot of the server
+ * internals through the API.
+ */
+@Component(immediate = true, service = {ServerApi.class, Server.class})
+public class Server implements ServerApi {
     // Need to change the package name of Server class to org.osc.core.server
 
     private static final int SERVER_FATAL_ERROR_REBOOT_TIMEOUT = 15 * 1000;
@@ -130,6 +136,9 @@ public class Server {
     @Reference(service=RabbitMQRunner.class,
             scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private ComponentServiceObjects<RabbitMQRunner> rabbitRunnerFactory;
+
+    @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC)
+    private List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
 
     private Thread thread;
 
@@ -368,6 +377,7 @@ public class Server {
         }
     }
 
+    @Override
     public String loadServerProp(String propName, String defaultValue) {
         Properties properties = new Properties();
         try {
@@ -379,6 +389,7 @@ public class Server {
         return properties.getProperty(propName, defaultValue);
     }
 
+    @Override
     public void saveServerProp(String propName, String value) {
         Properties prop;
 
@@ -408,6 +419,7 @@ public class Server {
         });
     }
 
+    @Override
     public void stopServer() {
         System.out.print(Server.PRODUCT_NAME + ": Server shutdown...");
         log.warn(Server.PRODUCT_NAME + ": Shutdown server...(pid:" + ServerUtil.getCurrentPid() + ")");
@@ -424,16 +436,11 @@ public class Server {
         // Ensure to close database
         HibernateUtil.shutdown();
 
-        // Terminate Vaadin UI Application
-        if (VaadinServlet.getCurrent() != null) {
-            VaadinServlet.getCurrent().destroy();
-        }
-
         // Gracefully closing all web socket clients before shutting down server
         shutdownWebsocket();
 
         // invalidate all Vaadin sessions
-        closeUserVaadinSessions(null);
+        this.terminationListeners.forEach(ServerTerminationListener::serverStopping);
 
         ServerUtil.deletePidFileIfOwned(SERVER_PID_FILE);
 
@@ -450,30 +457,6 @@ public class Server {
         Runtime.getRuntime().halt(0);
     }
 
-    // allow UiListenerDelegate to update session info
-    private List<HttpSession> sessions = new ArrayList<>();
-
-    public synchronized void addSession(HttpSession session) {
-        this.sessions.add(session);
-    }
-
-    public synchronized void removeSession(HttpSession session) {
-        this.sessions.remove(session);
-    }
-
-    // Close vaadin sessions associated to the given loginName,
-    // or all sessions if loginName is null.
-    public synchronized void closeUserVaadinSessions(String loginName) {
-        for (HttpSession session : this.sessions) {
-            for (VaadinSession vaadinSession : VaadinSession.getAllSessions(session)) {
-                Object userName = vaadinSession.getAttribute("user");
-                if (loginName == null || loginName.equals(userName)) {
-                    vaadinSession.close();
-                }
-            }
-        }
-    }
-
     public static Integer getApiPort() {
         return Server.apiPort;
     }
@@ -482,10 +465,12 @@ public class Server {
         Server.apiPort = port;
     }
 
+    @Override
     public boolean getDevMode() {
         return this.devMode;
     }
 
+    @Override
     public void setDevMode(boolean devMode) {
         this.devMode = devMode;
     }
@@ -498,6 +483,7 @@ public class Server {
         this.scheduledSyncInterval = ssInterval;
     }
 
+    @Override
     public void restart() {
         Thread restartThread = new Thread("Restart-Server-Thread") {
             @Override
@@ -550,6 +536,11 @@ public class Server {
         return this.rabbitMQRunner;
     }
 
+    @Override
+    public boolean isUnderMaintenance() {
+        return Server.inMaintenance;
+    }
+
     public static boolean isInMaintenance() {
         return Server.inMaintenance;
     }
@@ -579,5 +570,10 @@ public class Server {
                 ServerUtil.execWithLog("/sbin/reboot");
             }
         }
+    }
+
+    @Override
+    public String getProductName() {
+        return Server.PRODUCT_NAME;
     }
 }

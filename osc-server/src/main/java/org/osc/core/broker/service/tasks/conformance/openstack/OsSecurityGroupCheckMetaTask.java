@@ -81,11 +81,12 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
             }
 
             // The only SDN controller that currently returns true for supportsPortGroup is Nuage.
-            boolean isNuageController = SdnControllerApiFactory.supportsPortGroup(vs);
+            boolean skipSecurityGroupCreation = vs.getVirtualizationConnector().isControllerDefined()
+                    ? SdnControllerApiFactory.supportsPortGroup(vs) : false;
             // If DS or DDS both have no os security group reference, create OS SG
             if (sgReference == null) {
                 //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
-                if (!isNuageController) {
+                if (!skipSecurityGroupCreation) {
                     this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
                 }
             } else {
@@ -103,7 +104,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                             iterator.remove();
                             OSCEntityManager.delete(em, sgReference);
                             //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
-                            if (!isNuageController) {
+                            if (!skipSecurityGroupCreation) {
                                 this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
                             }
                         } else {

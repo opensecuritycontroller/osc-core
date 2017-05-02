@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.RestoreServiceApi;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -53,7 +54,7 @@ public class ManageLayout extends FormLayout {
     private BackupServiceApi backupService;
 
     public ManageLayout(BackupServiceApi backupService, UpgradeServiceApi upgradeService,
-            RestoreServiceApi restoreService) {
+            RestoreServiceApi restoreService, ServerApi server) {
         super();
         this.backupService = backupService;
 
@@ -65,7 +66,7 @@ public class ManageLayout extends FormLayout {
         Upgrader upgrader = new Upgrader(upgradeService);
         upgrader.setSizeFull();
 
-        DbRestorer restorer = new DbRestorer(restoreService);
+        DbRestorer restorer = new DbRestorer(restoreService, server);
         restorer.setSizeFull();
 
         // Component to Backup Database

@@ -23,6 +23,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.LoginServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.broadcast.BroadcastListener;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.request.LoginRequest;
@@ -30,7 +31,6 @@ import org.osc.core.broker.service.response.LoginResponse;
 import org.osc.core.broker.view.alarm.AlarmView;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.view.vc.VirtualizationConnectorView;
-import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.VersionUtil;
 import org.osgi.framework.BundleContext;
@@ -129,6 +129,9 @@ public class MainUI extends UI implements BroadcastListener {
     CssLayout content = new CssLayout();
 
     @Reference
+    ServerApi server;
+
+    @Reference
     LoginServiceApi loginService;
 
     @Reference
@@ -212,7 +215,7 @@ public class MainUI extends UI implements BroadcastListener {
     @Override
     protected void init(VaadinRequest request) {
 
-        Page.getCurrent().setTitle(Server.PRODUCT_NAME);
+        Page.getCurrent().setTitle(this.server.getProductName());
         setLocale(Locale.US);
         setContent(this.root);
         this.root.addStyleName("root");
@@ -255,7 +258,7 @@ public class MainUI extends UI implements BroadcastListener {
                 messages.setCommunicationErrorMessage(null);
                 messages.setCommunicationErrorNotificationEnabled(false);
                 messages.setSessionExpiredCaption(null);
-                messages.setSessionExpiredMessage(Server.PRODUCT_NAME
+                messages.setSessionExpiredMessage(MainUI.this.server.getProductName()
                         + " session timeout. Please <u>click here</u> to Login again.");
                 messages.setSessionExpiredNotificationEnabled(true);
                 messages.setSessionExpiredURL(getLogoutUrl());
@@ -294,7 +297,7 @@ public class MainUI extends UI implements BroadcastListener {
         labels.addStyleName("labels");
         loginPanel.addComponent(labels);
 
-        Label product = new Label(Server.PRODUCT_NAME);
+        Label product = new Label(this.server.getProductName());
         product.addStyleName("product-label-login");
         labels.addComponent(new Image(null, new ThemeResource("img/logo.png")));
 
@@ -413,7 +416,7 @@ public class MainUI extends UI implements BroadcastListener {
         this.header.addStyleName("header");
 
         // product name and information
-        Label product = new Label(Server.PRODUCT_NAME + "<br> <span class='product-version'> Version: "
+        Label product = new Label(this.server.getProductName() + "<br> <span class='product-version'> Version: "
                 + VersionUtil.getVersion().getVersionStr() + "</span>", ContentMode.HTML);
         product.addStyleName("product-label");
         product.setSizeUndefined();

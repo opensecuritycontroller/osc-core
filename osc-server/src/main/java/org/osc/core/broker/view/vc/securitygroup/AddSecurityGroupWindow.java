@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
 import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -47,8 +48,10 @@ public class AddSecurityGroupWindow extends BaseSecurityGroupWindow {
             ListOpenstackMembersServiceApi listOpenstackMembersService,
             ListRegionByVcIdServiceApi listRegionByVcIdService,
             ListTenantByVcIdServiceApi listTenantByVcIdServiceApi,
-            AddSecurityGroupServiceApi addSecurityGroupService) throws Exception {
-        super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi);
+            AddSecurityGroupServiceApi addSecurityGroupService,
+            ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService) throws Exception {
+        super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi,
+                listSecurityGroupMembersBySgService);
         this.addSecurityGroupService = addSecurityGroupService;
         this.currentSecurityGroup = new SecurityGroupDto();
         this.currentSecurityGroup.setParentId(vcDto.getId());

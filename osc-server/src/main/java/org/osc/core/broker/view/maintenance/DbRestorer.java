@@ -22,6 +22,7 @@ import java.io.OutputStream;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.RestoreServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -29,7 +30,6 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
 import org.osc.core.broker.window.add.PasswordWindow;
-import org.osc.core.server.Server;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -53,9 +53,11 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
     private final Panel panel = new Panel();
     private final VerticalLayout verLayout = new VerticalLayout();
     private RestoreServiceApi restoreService;
+    private ServerApi server;
 
-    public DbRestorer(RestoreServiceApi restoreService) {
+    public DbRestorer(RestoreServiceApi restoreService, ServerApi server) {
         this.restoreService = restoreService;
+        this.server = server;
         this.upload = new Upload();
         this.upload.setButtonCaption(VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE));
         this.upload.setReceiver(this);
@@ -91,7 +93,7 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
         // validate uploaded file is a zip file or encrypted backup file
         if (!this.restoreService.isValidBackupFilename(filename)) {
             ViewUtil.iscNotification(
-                    VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE_INVALID_BACKUP, Server.PRODUCT_NAME),
+                    VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE_INVALID_BACKUP, this.server.getProductName()),
                     Notification.Type.WARNING_MESSAGE);
             return null;
         }
@@ -123,7 +125,7 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
 	            try {
 	            	this.restoreService.dispatch(req);
 	                ViewUtil.iscNotification("Upload",
-	                        VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE_UPLOAD_STARTED, Server.PRODUCT_NAME),
+	                        VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE_UPLOAD_STARTED, this.server.getProductName()),
 	                        Notification.Type.WARNING_MESSAGE);
 	            } catch (Exception e) {
 	                log.error("Restore Service Failed.", e);

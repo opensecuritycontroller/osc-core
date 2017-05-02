@@ -35,6 +35,7 @@ import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -46,7 +47,6 @@ import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
 import org.osc.core.broker.view.maintenance.SummaryLayout;
 import org.osc.core.broker.view.maintenance.SupportLayout;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -81,7 +81,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     TabSheet tabs = new TabSheet();
 
     @Reference
-    Server server;
+    ServerApi server;
 
     @Reference
     BackupServiceApi backupService;
@@ -129,7 +129,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     SetEmailSettingsServiceApi setEmailSettingsService;
 
     @Activate
-    private void activate() throws Exception {
+    void activate() throws Exception {
         setSizeFull();
         addStyleName(StyleConstants.BASE_CONTAINER);
 
@@ -199,7 +199,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildUpgradeForm() {
-        return new ManageLayout(this.backupService, this.upgradeService, this.restoreService);
+        return new ManageLayout(this.backupService, this.upgradeService, this.restoreService, this.server);
     }
 
     private FormLayout buildSummary() {
