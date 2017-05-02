@@ -19,6 +19,7 @@ package org.osc.core.broker.view.vc.securitygroup;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
 import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
@@ -44,8 +45,10 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
     private UpdateSecurityGroupServiceApi updateSecurityGroupService;
 
     public UpdateSecurityGroupWindow(SecurityGroupDto dto, ListOpenstackMembersServiceApi listOpenstackMembersService, ListRegionByVcIdServiceApi listRegionByVcIdService,
-            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi, UpdateSecurityGroupServiceApi updateSecurityGroupService) throws Exception {
-        super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi);
+            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi, UpdateSecurityGroupServiceApi updateSecurityGroupService,
+            ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService) throws Exception {
+        super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi,
+                listSecurityGroupMembersBySgService);
         this.currentSecurityGroup = dto;
         this.updateSecurityGroupService = updateSecurityGroupService;
         createWindow(this.CAPTION);

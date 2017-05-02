@@ -24,7 +24,6 @@ import org.osc.core.broker.model.plugin.Plugin;
 import org.osc.core.broker.model.plugin.Plugin.State;
 import org.osc.core.broker.model.plugin.PluginEvent;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
-import org.osc.core.broker.service.ImportSdnControllerPluginService;
 import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.ImportFileRequest;
@@ -211,8 +210,7 @@ public class SdnControllerPluginsLayout extends FormLayout {
                 try {
                     ImportFileRequest importRequest = new ImportFileRequest(uploadPath);
 
-                    ImportSdnControllerPluginService service = new ImportSdnControllerPluginService();
-                    service.dispatch(importRequest);
+                    SdnControllerPluginsLayout.this.importSdnControllerPluginService.dispatch(importRequest);
 
                     ViewUtil.iscNotification(
                             VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_SDNCONTROLLER_SUCCESSFUL), null,

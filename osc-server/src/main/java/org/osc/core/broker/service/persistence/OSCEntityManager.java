@@ -29,13 +29,17 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Root;
 
+import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.IscEntity;
+import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 /**
  * EntityManager: a generic entity manager that handles all common CRUD
@@ -44,7 +48,7 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class OSCEntityManager<T extends IscEntity> {
 
-    // private static final Logger log = Logger.getLogger(EntityManager.class);
+    private static final Logger log = Logger.getLogger(OSCEntityManager.class);
 
     protected EntityManager em;
     private Class<T> clazz;
@@ -173,9 +177,20 @@ public class OSCEntityManager<T extends IscEntity> {
     public static void delete(EntityManager em, IscEntity entity) {
         em.remove(entity);
 
+        BaseDto dto = null;
+        if (entity instanceof User) {
+            dto = new UserDto();
+            try {
+                UserEntityMgr.fromEntity((User) entity, (UserDto) dto);
+            } catch (EncryptionException e) {
+                log.error("Unable to populate the user dto");
+                throw new RuntimeException("Encountered an error when trying to delete a user", e);
+            }
+        }
+
         // Broadcasting changes to UI
         TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
-                EventType.DELETED);
+                EventType.DELETED, dto);
 
         if (entity instanceof VirtualSystem) {
             // TODO: Future. Needs to be generalized broadcasting changes to UI
