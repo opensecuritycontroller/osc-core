@@ -35,14 +35,12 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.job.lock.LockInformationDto;
-import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.rest.server.ServerRestConstants;
+import org.osc.core.broker.service.api.LockInfoServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.client.RestBaseClient;
-import org.osc.core.rest.client.util.LoggingUtil;
 import org.osc.core.server.Server;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osgi.service.component.annotations.Component;
@@ -62,6 +60,9 @@ public class ServerDebugApis {
     @Reference
     private DBConnectionManagerApi dbConnectionManager;
 
+    @Reference
+    private LockInfoServiceApi lockInfoServiceApi;
+
     @Path("/lock")
     @GET
     public Response getCurrentLockInfomation() {
@@ -70,10 +71,8 @@ public class ServerDebugApis {
         }
 
         try {
-            LockInformationDto lockInfo = new LockInformationDto(LockManager.getLockManager().getLockInformation());
-            return Response.ok(LoggingUtil.pojoToJsonPrettyString(lockInfo)).build();
+            return Response.ok(this.lockInfoServiceApi.getLockInfo()).build();
         } catch (Exception e) {
-
             logger.error("Failed to get Lock information.", e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
