@@ -32,7 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
@@ -74,7 +74,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = VirtualSystemApis.class)
 @Api(tags = "Operations for Virtual Systems", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(RestConstants.SERVER_API_PATH_PREFIX + "/virtualSystems")
+@Path(ServerRestConstants.SERVER_API_PATH_PREFIX + "/virtualSystems")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth

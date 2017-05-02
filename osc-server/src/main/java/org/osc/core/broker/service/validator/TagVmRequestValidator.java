@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest.server.model;
+package org.osc.core.broker.service.validator;
 
 import javax.persistence.EntityManager;
 
@@ -22,7 +22,6 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.TagVmRequest;
-import org.osc.core.broker.service.validator.RequestValidator;
 
 public class TagVmRequestValidator implements RequestValidator<TagVmRequest, DistributedApplianceInstance> {
 

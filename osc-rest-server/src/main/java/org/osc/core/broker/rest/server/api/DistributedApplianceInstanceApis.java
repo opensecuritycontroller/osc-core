@@ -29,8 +29,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
+import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
@@ -59,7 +58,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = DistributedApplianceInstanceApis.class)
 @Api(tags = "Operations for Distributed Appliance Instances", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(RestConstants.SERVER_API_PATH_PREFIX + "/distributedApplianceInstances")
+@Path(ServerRestConstants.SERVER_API_PATH_PREFIX + "/distributedApplianceInstances")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth

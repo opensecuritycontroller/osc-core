@@ -32,8 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
+import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
@@ -65,7 +64,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = AlarmApis.class)
 @Api(tags = "Operations for Alarms", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(RestConstants.SERVER_API_PATH_PREFIX + "/alarms")
+@Path(ServerRestConstants.SERVER_API_PATH_PREFIX + "/alarms")
 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @OscAuth

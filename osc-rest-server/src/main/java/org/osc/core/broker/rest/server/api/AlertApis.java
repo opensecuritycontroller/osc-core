@@ -33,8 +33,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
-import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
+import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.api.DeleteAlertServiceApi;
@@ -63,7 +62,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = AlertApis.class)
 @Api(tags = "Operations for Alerts", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(RestConstants.SERVER_API_PATH_PREFIX + "/alerts")
+@Path(ServerRestConstants.SERVER_API_PATH_PREFIX + "/alerts")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth

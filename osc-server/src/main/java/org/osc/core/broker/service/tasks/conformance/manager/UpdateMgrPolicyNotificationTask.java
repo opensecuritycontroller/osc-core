@@ -25,7 +25,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.PasswordUtil;

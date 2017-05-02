@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
@@ -68,7 +68,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = ApplianceApis.class)
 @Api(tags = "Operations for Security Functions Catalog", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(RestConstants.SERVER_API_PATH_PREFIX + "/catalog")
+@Path(ServerRestConstants.SERVER_API_PATH_PREFIX + "/catalog")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth

@@ -35,8 +35,8 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.ManagerApi;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.exception.ClientResponseNotOkException;
 import org.osc.core.rest.client.exception.RestClientException;
@@ -67,7 +67,7 @@ public class WebSocketClient {
     }
 
     private final static Logger log = Logger.getLogger(WebSocketClient.class);
-    private final ManagerApis managerApis;
+    private final ManagerApi managerApis;
     private final ApiFactoryService apiFactoryService;
 
     /**
@@ -85,7 +85,7 @@ public class WebSocketClient {
      *             Throws exception like {@link DeploymentException}, {@link IOException}
      *             etc..
      */
-    public WebSocketClient(final ApplianceManagerConnector mc, ManagerApis managerApis, ApiFactoryService apiFactoryService) throws Exception {
+    public WebSocketClient(final ApplianceManagerConnector mc, ManagerApi managerApis, ApiFactoryService apiFactoryService) throws Exception {
 
         this.mc = mc;
         this.managerApis = managerApis;

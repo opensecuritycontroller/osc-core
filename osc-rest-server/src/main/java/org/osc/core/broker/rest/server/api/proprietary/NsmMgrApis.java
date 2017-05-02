@@ -27,7 +27,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = NsmMgrApis.class)
-@Path(RestConstants.MGR_NSM_API_PATH_PREFIX)
+@Path(ServerRestConstants.MGR_NSM_API_PATH_PREFIX)
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth

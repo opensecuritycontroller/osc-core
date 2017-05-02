@@ -40,8 +40,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.rest.server.model.ServerStatusResponse;
+import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
 import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
@@ -55,6 +54,7 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.response.ServerStatusResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
@@ -73,7 +73,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = ServerMgmtApis.class)
 @Api(tags = "Operations for OSC server", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(RestConstants.SERVER_API_PATH_PREFIX + "/serverManagement")
+@Path(ServerRestConstants.SERVER_API_PATH_PREFIX + "/serverManagement")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 public class ServerMgmtApis {

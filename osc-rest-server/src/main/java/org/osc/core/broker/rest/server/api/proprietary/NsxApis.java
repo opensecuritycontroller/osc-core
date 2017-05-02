@@ -37,8 +37,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
-import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.client.nsx.model.ServiceInstance;
+import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.NsxDeleteAgentsServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateAgentsServiceApi;
@@ -62,7 +62,7 @@ import org.osgi.service.component.annotations.Reference;
 
 
 @Component(service = NsxApis.class)
-@Path(RestConstants.NSX_API_PATH_PREFIX)
+@Path(ServerRestConstants.NSX_API_PATH_PREFIX)
 @NsxAuth
 public class NsxApis {
 

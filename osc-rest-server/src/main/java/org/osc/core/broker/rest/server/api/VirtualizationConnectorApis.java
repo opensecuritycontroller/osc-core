@@ -33,8 +33,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
+import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
@@ -83,7 +82,7 @@ import io.swagger.annotations.Authorization;
 
 @Component(service = VirtualizationConnectorApis.class)
 @Api(tags = "Operations for Virtualization Connectors", authorizations = { @Authorization(value = "Basic Auth") })
-@Path(RestConstants.SERVER_API_PATH_PREFIX + "/virtualizationConnectors")
+@Path(ServerRestConstants.SERVER_API_PATH_PREFIX + "/virtualizationConnectors")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @OscAuth

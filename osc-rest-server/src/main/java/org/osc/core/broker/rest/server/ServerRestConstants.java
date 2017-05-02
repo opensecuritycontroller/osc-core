@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest;
+package org.osc.core.broker.rest.server;
 
-public interface RestConstants {
+public interface ServerRestConstants {
     // Because we started with versions in the URL, we will continue to have v1 in the URL
     String SERVER_API_PATH_PREFIX = "/api/server/v1";
     String MANAGER_API_PATH_PREFIX = "/api/manager/v1";
@@ -25,7 +25,4 @@ public interface RestConstants {
     String NSX_API_PATH_PREFIX = "/api/nsx/vmware/2.0";
     String MGR_NSM_API_PATH_PREFIX = "/api/nsm/v1";
 
-    // login names
-    String VMIDC_NSX_LOGIN = "nsx";
-    String OSC_DEFAULT_LOGIN = "admin";
 }

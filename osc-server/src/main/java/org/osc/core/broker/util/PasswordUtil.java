@@ -19,8 +19,7 @@ package org.osc.core.broker.util;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.service.api.PasswordUtilApi;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
