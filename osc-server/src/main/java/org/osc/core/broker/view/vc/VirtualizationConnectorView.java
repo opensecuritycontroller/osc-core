@@ -123,6 +123,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Reference
     private ListVirtualizationConnectorServiceApi listVirtualizationConnectorService;
+    
+    @Reference
     private ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService;
 
     @Reference
