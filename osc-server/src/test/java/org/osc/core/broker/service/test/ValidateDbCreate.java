@@ -251,7 +251,7 @@ public class ValidateDbCreate {
         user.setLastName("Lee");
         user.setLoginName("tlee");
         user.setRole(RoleType.ADMIN);
-        user.setEmail("trinh_lee@mcafee.com");
+        user.setEmail("trinh_lee@dummy.com");
 
         OSCEntityManager.create(em, user);
 
