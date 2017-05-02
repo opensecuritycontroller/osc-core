@@ -279,7 +279,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                <!-- This configuration is necessary to ensure that the manifest generated 
+				<!-- this configuration is necessary to ensure that the manifest generated 
                     by the bnd-maven-plugin is used -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
