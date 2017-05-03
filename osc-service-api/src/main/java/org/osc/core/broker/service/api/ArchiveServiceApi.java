@@ -22,4 +22,11 @@ import org.osc.core.broker.service.response.Response;
 
 public interface ArchiveServiceApi
         extends ServiceDispatcherApi<BaseRequest<JobsArchiveDto>, Response> {
+
+    /**
+     * Schedule the archiving job based on the interval defined in the DB.
+     *
+     * If archiving is disabled, deletes the archiving job.
+     */
+    public void maybeScheduleArchiveJob();
 }

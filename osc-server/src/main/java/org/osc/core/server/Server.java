@@ -49,7 +49,6 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.server.scheduler.ArchiveScheduledJob;
 import org.osc.core.server.scheduler.MonitorDistributedApplianceInstanceJob;
 import org.osc.core.server.scheduler.SyncDistributedApplianceJob;
 import org.osc.core.server.scheduler.SyncSecurityGroupJob;
@@ -337,7 +336,7 @@ public class Server implements ServerApi {
 
         MonitorDistributedApplianceInstanceJob.scheduleMonitorDaiJob();
 
-        ArchiveScheduledJob.maybeScheduleArchiveJob(this.archiveService, this.jobsArchiveService);
+        this.archiveService.maybeScheduleArchiveJob();
     }
 
     private void stopScheduler() {
