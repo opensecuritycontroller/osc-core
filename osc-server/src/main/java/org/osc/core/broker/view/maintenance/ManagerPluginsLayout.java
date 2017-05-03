@@ -22,8 +22,9 @@ import java.nio.file.Files;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
-import org.osc.core.broker.service.api.plugin.Plugin;
-import org.osc.core.broker.service.api.plugin.Plugin.State;
+import org.osc.core.broker.service.api.plugin.PluginApi;
+import org.osc.core.broker.service.api.plugin.PluginApi.State;
+import org.osc.core.broker.service.api.plugin.PluginEvent;
 import org.osc.core.broker.service.api.plugin.PluginListener;
 import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.request.ImportFileRequest;
@@ -121,8 +122,12 @@ public class ManagerPluginsLayout extends FormLayout {
         addComponent(sdkContainer);
 
         // Subscribe to Plugin Notifications
-        this.registration = ctx.registerService(PluginListener.class, ev -> {
-            Plugin plugin = ev.getPlugin();
+        this.registration = ctx.registerService(PluginListener.class,
+            this::updateTable, null);
+    }
+
+    private void updateTable(PluginEvent ev) {
+            PluginApi plugin = ev.getPlugin();
             if(plugin.getType() != PluginType.MANAGER) {
                 return;
             }
@@ -150,11 +155,10 @@ public class ManagerPluginsLayout extends FormLayout {
             	this.log.error("Unknown plugin event type: " + ev.getType());
             	break;
             }
-        }, null);
     }
 
     @SuppressWarnings("unchecked")
-    private void updateItem(Item item, Plugin plugin) {
+    private void updateItem(Item item, PluginApi plugin) {
 
         item.getItemProperty(PROP_PLUGIN_STATE).setValue(plugin.getState().toString());
         item.getItemProperty(PROP_PLUGIN_NAME).setValue(plugin.getSymbolicName());
@@ -174,7 +178,7 @@ public class ManagerPluginsLayout extends FormLayout {
         item.getItemProperty(PROP_PLUGIN_DELETE).setValue(deleteButton);
     }
 
-    private void deletePlugin(Plugin plugin) {
+    private void deletePlugin(PluginApi plugin) {
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow("Delete Plugin", "Delete Plugin - " + plugin.getSymbolicName());
         deleteWindow.getComponentModel().setOkClickedListener(event -> {
             if (this.importApplianceManagerPluginService.isManagerTypeUsed(plugin.getName())) {

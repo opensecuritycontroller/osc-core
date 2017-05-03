@@ -21,9 +21,9 @@ public final class PluginEvent {
 	public static enum Type { ADDING, MODIFIED, REMOVED }
 
 	private final Type type;
-	private final Plugin plugin;
+	private final PluginApi plugin;
 
-	public PluginEvent(Type type, Plugin plugin) {
+	public PluginEvent(Type type, PluginApi plugin) {
 		this.type = type;
 		this.plugin = plugin;
 	}
@@ -32,7 +32,7 @@ public final class PluginEvent {
 		return this.type;
 	}
 
-	public Plugin getPlugin() {
+	public PluginApi getPlugin() {
 		return this.plugin;
 	}
 

@@ -131,10 +131,14 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
         earlyArrivers.stream()
             .forEach(pl -> {
+                    // Always create trackers without holding any monitors or locks
+                    // to avoid potential deadlock
                     List<PluginTracker<?>> trackers = createTrackers(pl);
 
                     synchronized (this.pluginListeners) {
                         if(this.listenersActive) {
+                            // We should only add the trackers if the plugin is still
+                            // in the map with an empty collection
                             List<PluginTracker<?>> old = this.pluginListeners.get(pl);
                             if(old != null && old.isEmpty()) {
                                 this.pluginListeners.put(pl, trackers);
@@ -142,6 +146,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
                             }
                         }
                     }
+
+                    // If our trackers weren't added then close them
                     trackers.forEach(PluginTracker::close);
                 });
 
@@ -270,8 +276,14 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         }
 
         // Started already - time to join!
+
+        // Always create trackers without holding any monitors or locks
+        // to avoid potential deadlock
         List<PluginTracker<?>> trackers = createTrackers(listener);
 
+        // Dynamic references may be set at any time, even while the
+        // component is deactivating, therefore we only add the listener
+        // if it should be active
         synchronized (this.pluginListeners) {
             if(this.listenersActive) {
                 this.pluginListeners.put(listener, trackers);
@@ -279,6 +291,9 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
             }
         }
 
+        // If the component was stopped then we may have dangling
+        // trackers in this list which should be closed. Otherwise
+        // the list will be empty (see above).
         trackers.forEach(PluginTracker::close);
     }
 

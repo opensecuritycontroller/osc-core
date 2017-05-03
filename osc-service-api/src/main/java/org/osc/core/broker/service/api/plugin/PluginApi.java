@@ -18,7 +18,7 @@ package org.osc.core.broker.service.api.plugin;
 
 import java.io.File;
 
-public interface Plugin {
+public interface PluginApi {
 
     enum State {
     	/**

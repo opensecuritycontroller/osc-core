@@ -21,8 +21,8 @@ import java.nio.file.Files;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
-import org.osc.core.broker.service.api.plugin.Plugin;
-import org.osc.core.broker.service.api.plugin.Plugin.State;
+import org.osc.core.broker.service.api.plugin.PluginApi;
+import org.osc.core.broker.service.api.plugin.PluginApi.State;
 import org.osc.core.broker.service.api.plugin.PluginEvent;
 import org.osc.core.broker.service.api.plugin.PluginListener;
 import org.osc.core.broker.service.api.plugin.PluginType;
@@ -125,7 +125,7 @@ public class SdnControllerPluginsLayout extends FormLayout {
     }
 
     private void updateTable(PluginEvent event) {
-        Plugin plugin = event.getPlugin();
+        PluginApi plugin = event.getPlugin();
 
         PluginType pluginType = plugin.getType();
         if(pluginType != PluginType.SDN && pluginType != PluginType.NSX) {
@@ -158,7 +158,7 @@ public class SdnControllerPluginsLayout extends FormLayout {
     }
 
     @SuppressWarnings("unchecked")
-    private void updateItem(Item item, Plugin plugin) {
+    private void updateItem(Item item, PluginApi plugin) {
 
         item.getItemProperty(PROP_PLUGIN_STATE).setValue(plugin.getState().toString());
         item.getItemProperty(PROP_PLUGIN_NAME).setValue(plugin.getSymbolicName());
@@ -178,7 +178,7 @@ public class SdnControllerPluginsLayout extends FormLayout {
         item.getItemProperty(PROP_PLUGIN_DELETE).setValue(deleteButton);
     }
 
-    private void deletePlugin(Plugin plugin) {
+    private void deletePlugin(PluginApi plugin) {
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow("Delete Plugin", "Delete Plugin - " + plugin.getSymbolicName());
         deleteWindow.getComponentModel().setOkClickedListener(event -> {
             if (this.importSdnControllerPluginService.isControllerTypeUsed(plugin.getName())) {

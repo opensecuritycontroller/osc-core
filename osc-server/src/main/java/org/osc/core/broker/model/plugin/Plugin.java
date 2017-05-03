@@ -21,13 +21,14 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.osc.core.broker.service.api.plugin.PluginApi;
 import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.server.installer.InstallableUnit;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 
-public final class Plugin<T> implements org.osc.core.broker.service.api.plugin.Plugin {
+public final class Plugin<T> implements PluginApi {
 
 	private final Class<T> pluginClass;
 	private final List<T> services = new LinkedList<>();
@@ -112,14 +113,14 @@ public final class Plugin<T> implements org.osc.core.broker.service.api.plugin.P
 	}
 
 	private synchronized boolean updateState() {
-		org.osc.core.broker.service.api.plugin.Plugin.State oldState = this.state;
+		org.osc.core.broker.service.api.plugin.PluginApi.State oldState = this.state;
 
 		if (this.error != null) {
-            this.state = org.osc.core.broker.service.api.plugin.Plugin.State.ERROR;
+            this.state = org.osc.core.broker.service.api.plugin.PluginApi.State.ERROR;
         } else if (this.installUnit != null && !this.services.isEmpty()) {
-            this.state = org.osc.core.broker.service.api.plugin.Plugin.State.READY;
+            this.state = org.osc.core.broker.service.api.plugin.PluginApi.State.READY;
         } else {
-            this.state = org.osc.core.broker.service.api.plugin.Plugin.State.INSTALL_WAIT;
+            this.state = org.osc.core.broker.service.api.plugin.PluginApi.State.INSTALL_WAIT;
         }
 
 		return !this.state.equals(oldState);
