@@ -39,6 +39,7 @@ import org.osc.core.broker.service.api.SyncVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
@@ -132,6 +133,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Reference
     private PluginService pluginService;
+
+    @Reference
+    private ValidationApi validator;
 
     @Activate
     void activate() {
@@ -256,10 +260,10 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     @Override
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
-            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService, this.pluginService));
+            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService, this.pluginService, this.validator));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
-            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService, this.pluginService));
+            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService, this.pluginService, this.validator));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             DeleteWindowUtil.deleteVirtualizationConnector(this.deleteVirtualizationConnectorService,

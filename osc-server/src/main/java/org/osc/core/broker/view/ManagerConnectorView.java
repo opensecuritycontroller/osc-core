@@ -29,6 +29,7 @@ import org.osc.core.broker.service.api.ListManagerConnectoryPolicyServiceApi;
 import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.PolicyDto;
@@ -85,6 +86,9 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     @Reference
     private ListManagerConnectoryPolicyServiceApi listManagerConnectoryPolicyService;
 
+    @Reference
+    private ValidationApi validator;
+
     @Activate
     private void activate() {
 
@@ -96,11 +100,11 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Manager Connector Window");
-            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService, this.pluginService));
+            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService, this.pluginService, this.validator));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Manager Connector Window");
-            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService, this.pluginService));
+            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService, this.pluginService, this.validator));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Manager Connector Window");

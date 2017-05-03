@@ -36,6 +36,7 @@ import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -128,6 +129,9 @@ public class MaintenanceView extends VerticalLayout implements View {
     @Reference
     SetEmailSettingsServiceApi setEmailSettingsService;
 
+    @Reference
+    ValidationApi validator;
+
     @Activate
     void activate() throws Exception {
         setSizeFull();
@@ -187,7 +191,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     private FormLayout buildNetworkForm() {
         return new NetworkLayout(this.getNetworkSettingsService, this.checkNetworkSettingsService,
                 this.setNetworkSettingsService, this.getNATSettingsService,
-                this.setNATSettingsService);
+                this.setNATSettingsService, this.validator);
     }
 
     private FormLayout buildSslConfigurationForm() {
@@ -199,7 +203,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildUpgradeForm() {
-        return new ManageLayout(this.backupService, this.upgradeService, this.restoreService, this.server);
+        return new ManageLayout(this.backupService, this.upgradeService, this.restoreService, this.server, this.validator);
     }
 
     private FormLayout buildSummary() {
