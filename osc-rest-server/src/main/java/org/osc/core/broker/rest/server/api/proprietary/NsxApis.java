@@ -36,9 +36,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.rest.server.ServerRestConstants;
-import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.AlertGeneratorApi;
 import org.osc.core.broker.service.api.NsxDeleteAgentsServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateAgentsServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateProfileContainerServiceApi;
@@ -83,6 +82,9 @@ public class NsxApis {
     @Reference
     ServerApi server;
 
+    @Reference
+    private AlertGeneratorApi alertGenerator;
+
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
     static class ServiceInstanceResponse {
@@ -126,8 +128,7 @@ public class NsxApis {
             response = this.nsxUpdateAgentsService.dispatch(serviceRequest);
         } catch (Exception ex) {
             log.error("Fail to update agents.", ex);
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION,
-                    "Fail to update NSX Agents (" + ex.getMessage() + ")");
+            this.alertGenerator.processNsxFailureEvent("Fail to update NSX Agents (" + ex.getMessage() + ")");
         }
 
         return Response.status(Status.OK).entity(response.updatedAgents).build();
@@ -151,8 +152,7 @@ public class NsxApis {
             this.nsxDeleteAgentsService.dispatch(serviceRequest);
         } catch (Exception ex) {
             log.error("Fail to delete agent " + agentIds, ex);
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION,
-                    "Fail to delete NSX Agents (" + ex.getMessage() + ")");
+            this.alertGenerator.processNsxFailureEvent("Fail to delete NSX Agents (" + ex.getMessage() + ")");
         }
 
         return Response.status(Status.OK).build();
@@ -221,7 +221,7 @@ public class NsxApis {
             log.error("Error while updating service profile", ex);
             response.message = productName + ": Fail to trigger Synchronization Job for NSX Service Profile '"
                     + serviceProfile.getName() + "' (" + ex.getMessage() + ")";
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION, response.message);
+            this.alertGenerator.processNsxFailureEvent(response.message);
         }
 
         return Response.status(Status.OK).entity(response).build();
@@ -255,7 +255,7 @@ public class NsxApis {
             response.message = productName
                     + ": Fail to trigger Synchronization Job for NSX Service Profile Container Set ID '"
                     + serviceProfileId + "' (" + ex.getMessage() + ")";
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION, response.message);
+            this.alertGenerator.processNsxFailureEvent(response.message);
         }
 
         return Response.status(Status.OK).build();
