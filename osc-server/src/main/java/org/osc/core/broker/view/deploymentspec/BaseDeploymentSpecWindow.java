@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.client.openstack.jcloud.exception.ExtensionNotPresentException;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
@@ -455,9 +454,6 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                     this.floatingIpPool.addItems(floatingIpPoolList);
                 }
             }
-        } catch (ExtensionNotPresentException notPresentException) {
-            ViewUtil.iscNotification(notPresentException.getMessage(), Notification.Type.WARNING_MESSAGE);
-            log.warn("Failed to get IP Pool", notPresentException);
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
             log.error("Failed to get IP Pool", e);
