@@ -37,7 +37,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
-import org.osc.core.broker.rest.client.nsx.model.ServiceInstance;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.NsxDeleteAgentsServiceApi;
@@ -52,6 +51,7 @@ import org.osc.core.broker.service.request.NsxDeleteAgentsRequest;
 import org.osc.core.broker.service.request.NsxUpdateAgentsRequest;
 import org.osc.core.broker.service.request.NsxUpdateProfileContainerRequest;
 import org.osc.core.broker.service.request.NsxUpdateProfileRequest;
+import org.osc.core.broker.service.request.ServiceInstance;
 import org.osc.core.broker.service.request.ServiceProfile;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;

@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.osc.core.broker.service.request.Service;
+import org.osc.core.broker.service.request.ServiceInstance;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest.client.nsx.model;
+package org.osc.core.broker.service.request;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -25,7 +25,7 @@ import org.osc.core.broker.service.request.ServiceProfileReference.ServiceRefere
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServiceInstance {
-    
+
     private String objectId;
     protected String vsmUuid;
     private String name;
@@ -33,7 +33,7 @@ public class ServiceInstance {
     private ServiceReference service;
     private RuntimeInfos runtimeInfos;
     private byte serviceProfileCount;
-    
+
     public ServiceInstance() {
     }
 
@@ -42,7 +42,7 @@ public class ServiceInstance {
     }
 
     public String getServiceInstanceId() {
-        return objectId;
+        return this.objectId;
     }
 
     public void setServiceInstanceId(String serviceInstanceId) {
@@ -50,7 +50,7 @@ public class ServiceInstance {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void setName(String name) {
@@ -58,7 +58,7 @@ public class ServiceInstance {
     }
 
     public ServiceReference getService() {
-        return service;
+        return this.service;
     }
 
     public void setService(ServiceReference service) {
@@ -66,7 +66,7 @@ public class ServiceInstance {
     }
 
     public RuntimeInfos getRuntimeInfos() {
-        return runtimeInfos;
+        return this.runtimeInfos;
     }
 
     public void setRuntimeInfos(RuntimeInfos runtimeInfos) {
@@ -74,7 +74,7 @@ public class ServiceInstance {
     }
 
     public byte getServiceProfileCount() {
-        return serviceProfileCount;
+        return this.serviceProfileCount;
     }
 
     public void setServiceProfileCount(byte serviceProfileCount) {
@@ -82,7 +82,7 @@ public class ServiceInstance {
     }
 
     public String getObjectId() {
-        return objectId;
+        return this.objectId;
     }
 
     public void setObjectId(String objectId) {
@@ -90,7 +90,7 @@ public class ServiceInstance {
     }
 
     public String getVsmUuid() {
-        return vsmUuid;
+        return this.vsmUuid;
     }
 
     public void setVsmUuid(String vsmUuid) {
@@ -99,7 +99,7 @@ public class ServiceInstance {
 
     @Override
     public String toString() {
-        return "ServiceInstance [objectId=" + objectId + ", name=" + name + "]";
+        return "ServiceInstance [objectId=" + this.objectId + ", name=" + this.name + "]";
     }
 
     public String getDescription() {

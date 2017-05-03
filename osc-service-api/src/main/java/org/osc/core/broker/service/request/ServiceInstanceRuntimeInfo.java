@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest.client.nsx.model;
+package org.osc.core.broker.service.request;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,7 +30,7 @@ public class ServiceInstanceRuntimeInfo {
     protected DeploymentScope deploymentScope;
 
     public Long getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(Long value) {
@@ -38,7 +38,7 @@ public class ServiceInstanceRuntimeInfo {
     }
 
     public Long getRevision() {
-        return revision;
+        return this.revision;
     }
 
     public void setRevision(Long value) {
@@ -46,7 +46,7 @@ public class ServiceInstanceRuntimeInfo {
     }
 
     public String getStatus() {
-        return status;
+        return this.status;
     }
 
     public void setStatus(String value) {
@@ -54,7 +54,7 @@ public class ServiceInstanceRuntimeInfo {
     }
 
     public String getInstallState() {
-        return installState;
+        return this.installState;
     }
 
     public void setInstallState(String value) {
@@ -62,7 +62,7 @@ public class ServiceInstanceRuntimeInfo {
     }
 
     public DeploymentScope getDeloymentScope() {
-        return deploymentScope;
+        return this.deploymentScope;
     }
 
     public void setDeloymentScope(DeploymentScope value) {
