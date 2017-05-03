@@ -19,9 +19,7 @@ package org.osc.core.broker.rest.server.api;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -33,16 +31,13 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
-import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.service.api.MCChangeNotificationServiceApi;
-import org.osc.core.broker.service.api.PropagateVSMgrFileServiceApi;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.api.TagVmServiceApi;
 import org.osc.core.broker.service.api.UnTagVmServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.MCChangeNotificationRequest;
-import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.service.request.QueryVmInfoRequest;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -77,9 +72,6 @@ public class ManagerApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private PropagateVSMgrFileServiceApi propagateVSMgrFileService;
-
-    @Reference
     private QueryVmInfoServiceApi queryVmInfoService;
 
     @Reference
@@ -103,35 +95,6 @@ public class ManagerApis {
                                      @ApiParam(required = true) Notification notification) {
         log.info("postNotification(): " + notification);
         return triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
-    }
-
-    @ApiOperation(value = "Propagate a Manager File to Appliance Instances",
-            notes = "Provided virtualSystemName must be of an existing Virtual Security System (VSS). <br/> MgrFile request contains "
-                    + "Manager File information and list of Appliance Instances to propagate file to. If Appliance "
-                    + "Instances is ommited, all instances is assumed.<br/>"
-                    + "If successful, returns the File Propagation Job Id. Each Appliance Instance file will be "
-                    + "propagated and persisted in the CPA directoy and the process-mgr-file.py will be called to "
-                    + "notify the appliance to process the file.",
-                    response = BaseJobResponse.class)
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "Corresponding File Propagation Job started. Id in response is expected to be empty"),
-            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
-    @Path("/propagateMgrFile/vs/{virtualSystemName}")
-    @PUT
-    public Response propagateMgrFile(@Context HttpHeaders headers,
-                                     @ApiParam(value = "Virtual System name to which file propagation is requested",
-                                             required = true) @PathParam("virtualSystemName") String virtualSystemName,
-                                     @ApiParam(value = "The File to propogate", required = true) MgrFile mgrFile) {
-
-        log.info("Propagate MgrFile for vsName: " + virtualSystemName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-
-        PropagateVSMgrFileRequest request = new PropagateVSMgrFileRequest();
-        request.setVsName(virtualSystemName);
-        request.setDaiList(mgrFile.getApplianceInstances());
-        request.setMgrFile(mgrFile.getMgrFile());
-        request.setMgrFileName(mgrFile.getMgrFileName());
-
-        return this.apiUtil.getResponse(this.propagateVSMgrFileService, request);
     }
 
     @ApiOperation(value = "Query Virtual Machine information",

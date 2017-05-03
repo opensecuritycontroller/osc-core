@@ -19,9 +19,7 @@ package org.osc.core.broker.rest.server.api.proprietary;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -31,13 +29,10 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.api.ManagerApis;
-import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
-import org.osc.core.broker.service.api.PropagateVSMgrFileServiceApi;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.api.TagVmServiceApi;
 import org.osc.core.broker.service.api.UnTagVmServiceApi;
-import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
 import org.osc.core.broker.service.request.QueryVmInfoRequest;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.util.SessionUtil;
@@ -62,9 +57,6 @@ public class NsmMgrApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private PropagateVSMgrFileServiceApi propagateVSMgrFileService;
-
-    @Reference
     private QueryVmInfoServiceApi queryVmInfoService;
 
     @Reference
@@ -79,24 +71,6 @@ public class NsmMgrApis {
             Notification notification) {
         log.info("postNotification(): " + notification);
         return this.managerApis.triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
-    }
-
-    @Path("/propagateMgrFile/vs/{vsName}")
-    @PUT
-    public Response propagateMgrFile(@Context HttpHeaders headers, @PathParam("vsName") String vsName,
-            MgrFile mgrFile) {
-
-        log.info("Propagate MgrFile for vsName: " + vsName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-
-        PropagateVSMgrFileRequest request = new PropagateVSMgrFileRequest();
-        request.setVsName(vsName);
-        request.setDaiList(mgrFile.getApplianceInstances());
-        request.setMgrFile(mgrFile.getMgrFile());
-        request.setMgrFileName(mgrFile.getMgrFileName());
-
-        return this.apiUtil.getResponse(this.propagateVSMgrFileService, request);
-
     }
 
     @Path("/queryVmInfo")

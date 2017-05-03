@@ -28,13 +28,8 @@ import org.osgi.service.transaction.control.ScopedWorkException;
 
 @Component(service = PasswordUtil.class)
 public class PasswordUtil {
-    private String vmidcAgentPass = "";
     private String vmidcNsxPass = "";
     private String oscDefaultPass = "";
-
-    public void setVmidcAgentPass(String vmidcAgentPass) {
-        this.vmidcAgentPass = vmidcAgentPass;
-    }
 
     public void setVmidcNsxPass(String vmidcNsxPass) {
         this.vmidcNsxPass = vmidcNsxPass;
@@ -42,10 +37,6 @@ public class PasswordUtil {
 
     public void setOscDefaultPass(String oscDefaultPass) {
         this.oscDefaultPass = oscDefaultPass;
-    }
-
-    public String getVmidcAgentPass() {
-        return this.vmidcAgentPass;
     }
 
     public String getVmidcNsxPass() {
@@ -66,9 +57,7 @@ public class PasswordUtil {
                 OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
                 return  emgr.findByFieldName("loginName", loginName);
             });
-            if (user.getLoginName().equals(RestConstants.VMIDC_AGENT_LOGIN)) {
-                setVmidcAgentPass(user.getPassword());
-            } else if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {
+            if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {
                 setVmidcNsxPass(user.getPassword());
             } else if (user.getLoginName().equals(RestConstants.OSC_DEFAULT_LOGIN)) {
                 setOscDefaultPass(user.getPassword());

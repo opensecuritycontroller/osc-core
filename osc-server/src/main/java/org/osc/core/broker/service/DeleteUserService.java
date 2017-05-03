@@ -62,10 +62,6 @@ public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, Empt
 
             throw new VmidcBrokerValidationException("Cannot delete pre-configured 'admin' user.");
         }
-        if (user.getLoginName().equals(RestConstants.VMIDC_AGENT_LOGIN)) {
-
-            throw new VmidcBrokerValidationException("Cannot delete pre-configured 'agent' user.");
-        }
         if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {
 
             throw new VmidcBrokerValidationException("Cannot delete pre-configured 'nsx' user.");

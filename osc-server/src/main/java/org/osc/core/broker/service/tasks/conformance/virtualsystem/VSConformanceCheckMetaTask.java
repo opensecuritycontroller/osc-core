@@ -319,7 +319,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         }
 
         // Check password
-        if (!service.getOscPassword().equals(EncryptionUtil.encryptAESCTR(this.passwordUtil.getVmidcAgentPass()))) {
+        if (!service.getOscPassword().equals(EncryptionUtil.encryptAESCTR(this.passwordUtil.getOscDefaultPass()))) {
             LOG.info("NSX service out of sync: OSC password.");
             return true;
         }
