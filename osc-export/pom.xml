@@ -263,7 +263,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- OSGi enabled Hibernate dependencies for use at runtime -->
+		<!-- OSGi enabled Hibernate dependencies for use at runtime. -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-osgi</artifactId>
@@ -340,7 +340,8 @@
 								<configuration>
 									<tasks>
 										<exec executable="wget">
-										<arg line="--no-check-certificate --no-cookies --header &quot;Cookie: oraclelicense=accept-securebackup-cookie&quot; http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jre-8u112-linux-x64.tar.gz -P &quot;${basedir}/../osc-server-bom/Sources&quot; -nv"/>
+											<arg
+												line="--no-check-certificate --no-cookies --header &quot;Cookie: oraclelicense=accept-securebackup-cookie&quot; http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jre-8u112-linux-x64.tar.gz -P &quot;${basedir}/../osc-server-bom/Sources&quot; -nv" />
 										</exec>
 									</tasks>
 								</configuration>
@@ -449,11 +450,11 @@
 
 								<copy todir="${basedir}/webapp/SDK">
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.0/">
+										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.0.0-SNAPSHOT">
 										<include name="**/*-sources.jar" />
 									</fileset>
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/1.0/">
+										dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/1.0.0-SNAPSHOT">
 										<include name="**/*-sources.jar" />
 									</fileset>
 								</copy>
