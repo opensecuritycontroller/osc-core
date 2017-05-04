@@ -29,6 +29,7 @@ import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
@@ -51,7 +52,7 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
 
     private static final Logger LOG = Logger.getLogger(ApplianceInstanceView.class);
 
-    private GetAgentStatusService getAgentStatusService;
+    private GetAgentStatusService getAgentStatusService = StaticRegistry.getAgentStatusService();;
 
     public ApplianceInstanceView() {
         super();

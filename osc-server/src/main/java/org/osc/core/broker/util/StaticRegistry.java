@@ -20,6 +20,7 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.DeleteDistributedApplianceService;
 import org.osc.core.broker.service.DeleteUserService;
+import org.osc.core.broker.service.GetAgentStatusService;
 import org.osc.core.broker.service.SetNATSettingsService;
 import org.osc.core.broker.service.SetNetworkSettingsService;
 import org.osc.core.broker.service.UpdateUserService;
@@ -87,6 +88,9 @@ public class StaticRegistry {
     @Reference
     private DeleteDistributedApplianceService deleteDistributedApplianceService;
 
+    @Reference
+    private GetAgentStatusService getAgentStatusService;
+
     private static StaticRegistry instance = null;
 
     @Activate
@@ -150,4 +154,8 @@ public class StaticRegistry {
         return instance.updateUserService;
     }
 
+
+    public static GetAgentStatusService getAgentStatusService() {
+        return instance.getAgentStatusService;
+    }
 }
