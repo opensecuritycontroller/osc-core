@@ -30,6 +30,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -105,6 +106,11 @@ public class ImportApplianceManagerPluginService extends ServiceDispatcher<Impor
 			this.deploymentName = symbolicName + ".bar";
         }
 
+    }
+
+    @Override
+    public boolean isManagerTypeUsed(String managerType) {
+        return ApplianceManagerConnectorEntityMgr.isManagerTypeUsed(managerType);
     }
 
 }

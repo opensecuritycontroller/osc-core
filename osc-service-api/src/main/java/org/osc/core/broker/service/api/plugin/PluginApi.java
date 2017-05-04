@@ -14,13 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.service.api.plugin;
 
-import org.osc.core.broker.service.request.ImportFileRequest;
-import org.osc.core.broker.service.response.BaseResponse;
+import java.io.File;
 
-public interface ImportApplianceManagerPluginServiceApi
-        extends ServiceDispatcherApi<ImportFileRequest, BaseResponse> {
+public interface PluginApi {
 
-    public boolean isManagerTypeUsed(String managerType);
+    enum State {
+    	/**
+    	 * Plugin installed but no service published yet.
+    	 */
+    	INSTALL_WAIT,
+
+    	/**
+    	 * Plugin installed and service published.
+    	 */
+    	READY,
+
+    	/**
+    	 * Plugin not installed or ready due to an error.
+    	 */
+    	ERROR;
+    }
+
+    State getState();
+
+    String getError();
+
+    int getServiceCount();
+
+    PluginType getType();
+
+    String getSymbolicName();
+
+    String getVersion();
+
+    String getName();
+
+    File getOrigin();
+
 }

@@ -22,10 +22,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.SslCertificatesExtendedException;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
@@ -79,10 +78,14 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
     private final UpdateApplianceManagerConnectorServiceApi updateMCService;
 
+    private PluginService pluginService;
+
     public UpdateManagerConnectorWindow(ManagerConnectorView mcView,
-            UpdateApplianceManagerConnectorServiceApi updateMCService) throws Exception {
+            UpdateApplianceManagerConnectorServiceApi updateMCService,
+            PluginService pluginService) throws Exception {
         this.mcView = mcView;
         this.updateMCService = updateMCService;
+        this.pluginService = pluginService;
         this.currentMCObject = mcView.getParentContainer().getItem(mcView.getParentItemId());
         createWindow(this.CAPTION);
     }
@@ -112,8 +115,8 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         this.name.setValue(this.currentMCObject.getItemProperty("name").getValue().toString());
         this.type.setValue(this.currentMCObject.getItemProperty("managerType").getValue().toString());
         this.ip.setValue(this.currentMCObject.getItemProperty("ipAddress").getValue().toString());
-        if (ManagerApiFactory.isKeyAuth(ManagerType.fromText(this.currentMCObject.getItemProperty("managerType")
-                .getValue().toString()))) {
+        if (this.pluginService.isKeyAuth(this.currentMCObject.getItemProperty("managerType")
+                .getValue().toString())) {
             this.apiKey.setVisible(true);
             this.apiKey.setValue(this.currentMCObject.getItemProperty("apiKey").getValue().toString());
 
@@ -164,7 +167,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
             this.type.validate();
             this.ip.validate();
             ValidateUtil.checkForValidIpAddressFormat(this.ip.getValue());
-            if (ManagerApiFactory.isKeyAuth(ManagerType.fromText(this.type.getValue().toString()))) {
+            if (this.pluginService.isKeyAuth(this.type.getValue().toString())) {
                 this.apiKey.validate();
             } else {
                 this.user.validate();
@@ -217,7 +220,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "name")
                 .setValue(this.name.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "managerType")
-                .setValue(ManagerType.fromText(this.type.getValue().trim()));
+                .setValue(this.type.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "ipAddress")
                 .setValue(this.ip.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "username")

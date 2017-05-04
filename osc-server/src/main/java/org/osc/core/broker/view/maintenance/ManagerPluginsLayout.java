@@ -21,22 +21,22 @@ import java.net.URI;
 import java.nio.file.Files;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.Plugin;
-import org.osc.core.broker.model.plugin.Plugin.State;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
-import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
+import org.osc.core.broker.service.api.plugin.PluginApi;
+import org.osc.core.broker.service.api.plugin.PluginApi.State;
+import org.osc.core.broker.service.api.plugin.PluginEvent;
+import org.osc.core.broker.service.api.plugin.PluginListener;
+import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
-import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.broker.view.maintenance.PluginUploader.UploadSucceededListener;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.server.installer.InstallableUnit;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import com.vaadin.data.Item;
 import com.vaadin.server.ExternalResource;
@@ -69,8 +69,10 @@ public class ManagerPluginsLayout extends FormLayout {
     PluginUploader uploader = new PluginUploader(PluginType.MANAGER);
 
     private ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService;
+    private ServiceRegistration<PluginListener> registration;
 
-    public ManagerPluginsLayout(ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService) throws Exception {
+    public ManagerPluginsLayout(BundleContext ctx,
+            ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService) throws Exception {
         super();
         this.importApplianceManagerPluginService = importApplianceManagerPluginService;
 
@@ -120,8 +122,16 @@ public class ManagerPluginsLayout extends FormLayout {
         addComponent(sdkContainer);
 
         // Subscribe to Plugin Notifications
-        ManagerApiFactory.newPluginTracker(ev -> {
-            Plugin<ApplianceManagerApi> plugin = ev.getPlugin();
+        this.registration = ctx.registerService(PluginListener.class,
+            this::updateTable, null);
+    }
+
+    private void updateTable(PluginEvent ev) {
+            PluginApi plugin = ev.getPlugin();
+            if(plugin.getType() != PluginType.MANAGER) {
+                return;
+            }
+
             switch (ev.getType()) {
             case ADDING:
                 Item addingItem = this.plugins.addItem(plugin);
@@ -145,17 +155,15 @@ public class ManagerPluginsLayout extends FormLayout {
             	this.log.error("Unknown plugin event type: " + ev.getType());
             	break;
             }
-        }, PluginType.MANAGER);
     }
 
     @SuppressWarnings("unchecked")
-    private void updateItem(Item item, Plugin<ApplianceManagerApi> plugin) {
-        InstallableUnit installUnit = plugin.getInstallUnit();
+    private void updateItem(Item item, PluginApi plugin) {
 
         item.getItemProperty(PROP_PLUGIN_STATE).setValue(plugin.getState().toString());
-        item.getItemProperty(PROP_PLUGIN_NAME).setValue(installUnit.getSymbolicName());
-        item.getItemProperty(PROP_PLUGIN_VERSION).setValue(installUnit.getVersion());
-        item.getItemProperty(PROP_PLUGIN_SERVICES).setValue(plugin.getServices() != null ? plugin.getServices().size() : 0);
+        item.getItemProperty(PROP_PLUGIN_NAME).setValue(plugin.getSymbolicName());
+        item.getItemProperty(PROP_PLUGIN_VERSION).setValue(plugin.getVersion());
+        item.getItemProperty(PROP_PLUGIN_SERVICES).setValue(plugin.getServiceCount());
 
         String info;
         if (plugin.getState() == State.ERROR) {
@@ -166,26 +174,26 @@ public class ManagerPluginsLayout extends FormLayout {
         item.getItemProperty(PROP_PLUGIN_INFO).setValue(info);
 
         Button deleteButton = new Button("Delete");
-        deleteButton.addClickListener(event -> deletePlugin(installUnit));
+        deleteButton.addClickListener(event -> deletePlugin(plugin));
         item.getItemProperty(PROP_PLUGIN_DELETE).setValue(deleteButton);
     }
 
-    private void deletePlugin(InstallableUnit installUnit) {
-        final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow("Delete Plugin", "Delete Plugin - " + installUnit.getSymbolicName());
+    private void deletePlugin(PluginApi plugin) {
+        final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow("Delete Plugin", "Delete Plugin - " + plugin.getSymbolicName());
         deleteWindow.getComponentModel().setOkClickedListener(event -> {
-            if (ApplianceManagerConnectorEntityMgr.isManagerTypeUsed(installUnit.getName())) {
-                ViewUtil.iscNotification("Manager Plugin '" + installUnit.getName() + "' is used.", Notification.Type.ERROR_MESSAGE);
+            if (this.importApplianceManagerPluginService.isManagerTypeUsed(plugin.getName())) {
+                ViewUtil.iscNotification("Manager Plugin '" + plugin.getName() + "' is used.", Notification.Type.ERROR_MESSAGE);
             } else {
                 try {
-                    File origin = installUnit.getOrigin();
+                    File origin = plugin.getOrigin();
                     if (origin == null) {
-                        throw new IllegalStateException(String.format("Install unit %s has no origin file.", installUnit.getSymbolicName()));
+                        throw new IllegalStateException(String.format("Install unit %s has no origin file.", plugin.getSymbolicName()));
                     }
 
                     // Use Java 7 Files.delete(), as it throws an informative exception when deletion fails
                     Files.delete(origin.toPath());
                 } catch (Exception e) {
-                    ViewUtil.showError("Fail to remove Manager Plugin '" + installUnit.getSymbolicName() + "'", e);
+                    ViewUtil.showError("Fail to remove Manager Plugin '" + plugin.getSymbolicName() + "'", e);
                 }
             }
             deleteWindow.close();
@@ -215,4 +223,9 @@ public class ManagerPluginsLayout extends FormLayout {
         };
     }
 
+    @Override
+    public void detach() {
+        this.registration.unregister();
+        super.detach();
+    }
 }

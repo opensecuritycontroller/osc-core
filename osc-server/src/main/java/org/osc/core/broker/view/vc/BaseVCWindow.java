@@ -29,11 +29,10 @@ import org.apache.log4j.Logger;
 import org.jclouds.http.HttpResponseException;
 import org.jclouds.rest.AuthorizationException;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.SslCertificatesExtendedException;
+import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
@@ -69,6 +68,8 @@ import com.vaadin.ui.TextField;
 import com.vmware.vim25.InvalidLogin;
 
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
+
+    public static final String NO_CONTROLLER = "NONE";
 
     /**
      *
@@ -123,8 +124,11 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     protected Panel providerPanel = null;
     protected Button advancedSettings = null;
 
-    public BaseVCWindow() {
+    private PluginService pluginService;
+
+    public BaseVCWindow(PluginService pluginService) {
         super();
+        this.pluginService = pluginService;
     }
 
     @Override
@@ -132,10 +136,10 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         try {
             this.name.validate();
             this.virtualizationType.validate();
-            ControllerType controllerTypeValue = ControllerType.fromText(BaseVCWindow.this.controllerType.getValue().toString());
+            String controllerType = BaseVCWindow.this.controllerType.getValue().toString();
 
-            if (this.virtualizationType.getValue().toString().equals(VirtualizationType.OPENSTACK.toString()) && !controllerTypeValue.equals(ControllerType.NONE)) {
-                if (!SdnControllerApiFactory.usesProviderCreds(controllerTypeValue)) {
+            if (this.virtualizationType.getValue().toString().equals(VirtualizationType.OPENSTACK.toString()) && !NO_CONTROLLER.equals(controllerType)) {
+                if (!this.pluginService.usesProviderCreds(controllerType)) {
                     this.controllerIP.validate();
                     ValidateUtil.checkForValidIpAddressFormat(this.controllerIP.getValue());
                     this.controllerUser.validate();
@@ -247,7 +251,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.controllerType.setTextInputAllowed(false);
         this.controllerType.setNullSelectionAllowed(false);
 
-        for (String ct : ControllerType.values()) {
+        for (String ct : this.pluginService.getControllerTypes()) {
             this.controllerType.addItem(ct);
         }
 
@@ -280,10 +284,10 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
             @Override
             public void valueChange(ValueChangeEvent event) {
-                updateControllerFields(ControllerType.fromText(BaseVCWindow.this.controllerType.getValue().toString()));
+                updateControllerFields(BaseVCWindow.this.controllerType.getValue().toString());
             }
         });
-        this.controllerType.select(ControllerType.NONE.toString());
+        this.controllerType.select(NO_CONTROLLER);
 
         return this.controllerPanel;
     }
@@ -492,8 +496,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.controllerPanel.setCaption(SDN_CONTROLLER_CAPTION);
             this.providerPanel.setCaption(OPENSTACK_CAPTION);
             this.controllerType.setVisible(true);
-            this.controllerType.setValue(ControllerType.NONE.toString());
-            updateControllerFields(ControllerType.NONE);
+            this.controllerType.setValue(NO_CONTROLLER);
+            updateControllerFields(NO_CONTROLLER);
             this.adminTenantName.setVisible(true);
             this.advancedSettings.setVisible(true);
             this.advancedSettings.setCaption(SHOW_ADVANCED_SETTINGS_CAPTION);
@@ -502,7 +506,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         } else {
             this.controllerPanel.setCaption(NSX_CAPTION);
             this.providerPanel.setCaption(VCENTER_CAPTION);
-            updateControllerFields(ControllerType.NONE);
+            updateControllerFields(NO_CONTROLLER);
             this.controllerType.setVisible(false);
             this.adminTenantName.setVisible(false);
             this.advancedSettings.setVisible(false);
@@ -518,14 +522,14 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.adminTenantName.setRequiredError(this.providerPanel.getCaption() + " Admin Tenant Name cannot be empty");
     }
 
-    private void updateControllerFields(ControllerType type) {
+    private void updateControllerFields(String type) {
         boolean enableFields = false;
 
         if (BaseVCWindow.this.virtualizationType.getValue().equals(VirtualizationType.VMWARE.toString())) {
             enableFields = true;
-        } else if (!type.equals(ControllerType.NONE)) {
+        } else if (!NO_CONTROLLER.equals(type)) {
             try {
-                enableFields = !SdnControllerApiFactory.usesProviderCreds(type);
+                enableFields = !this.pluginService.usesProviderCreds(type);
             } catch (Exception e) {
                 log.error("Fail to get controller plugin instance", e);
             }

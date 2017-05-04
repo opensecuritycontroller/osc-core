@@ -14,13 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.service.api.plugin;
 
-import org.osc.core.broker.service.request.ImportFileRequest;
-import org.osc.core.broker.service.response.BaseResponse;
+@FunctionalInterface
+public interface PluginListener {
 
-public interface ImportApplianceManagerPluginServiceApi
-        extends ServiceDispatcherApi<ImportFileRequest, BaseResponse> {
-
-    public boolean isManagerTypeUsed(String managerType);
+    void pluginEvent(PluginEvent event);
 }

@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
+import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.server.installer.InstallableListener;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.server.installer.InstallableUnit;
