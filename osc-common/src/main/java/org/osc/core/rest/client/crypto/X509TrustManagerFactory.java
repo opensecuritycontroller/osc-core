@@ -19,7 +19,7 @@ package org.osc.core.rest.client.crypto;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.KeyStoreProvider;
 

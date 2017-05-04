@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.rest.client.crypto.model;
+package org.osc.core.broker.service.ssl;
 
 import java.security.cert.X509Certificate;
 

@@ -31,6 +31,7 @@ import org.osc.core.broker.service.exceptions.VmidcDbConstraintViolationExceptio
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.server.Server;
