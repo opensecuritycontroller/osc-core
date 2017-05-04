@@ -58,7 +58,6 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.securityinterface.UpdateSecurityGroupInterfaceService;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
@@ -120,7 +119,7 @@ public class VirtualSystemApis {
 
     @Reference
     private UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
-    
+
     // DAI APIs
     @ApiOperation(value = "Lists Appliance Instances",
             notes = "Lists the Appliance Instances owned by the Virtual System",
@@ -345,7 +344,7 @@ public class VirtualSystemApis {
         logger.info("Updating Security Group Interface " + sgiId);
         SessionUtil.setUser(SessionUtil.getUsername(headers));
         this.apiUtil.setIdAndParentIdOrThrow(sgiDto, sgiId, vsId, "Traffic Policy Mapping");
-        return this.apiUtil.getResponseForBaseRequest(updateSecurityGroupInterfaceService,
+        return this.apiUtil.getResponseForBaseRequest(this.updateSecurityGroupInterfaceService,
                 new BaseRequest<SecurityGroupInterfaceDto>(sgiDto));
     }
 
