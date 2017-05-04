@@ -35,11 +35,12 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupByVcServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
@@ -130,6 +131,9 @@ public class VirtualizationConnectorApis {
     @Reference
     private ListVirtualizationConnectorServiceApi listVirtualizationConnectorService;
 
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
     @ApiOperation(value = "Lists All Virtualization Connectors",
             notes = "Password information is not returned as it is sensitive information",
             response = VirtualizationConnectorDto.class,
@@ -167,7 +171,7 @@ public class VirtualizationConnectorApis {
         getDtoRequest.setEntityName("VirtualizationConnector");
 
         return this.apiUtil
-                .submitBaseRequestToService(new GetDtoFromEntityService<VirtualizationConnectorDto>(), getDtoRequest)
+                .submitBaseRequestToService(this.getDtoFromEntityServiceFactory.getService(VirtualizationConnectorDto.class), getDtoRequest)
                 .getDto();
     }
 
@@ -280,7 +284,7 @@ public class VirtualizationConnectorApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(sgId);
         getDtoRequest.setEntityName("SecurityGroup");
-        GetDtoFromEntityService<SecurityGroupDto> getDtoService = new GetDtoFromEntityService<>();
+        GetDtoFromEntityServiceApi<SecurityGroupDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(SecurityGroupDto.class);
         SecurityGroupDto dto = this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
         this.apiUtil.validateParentIdMatches(dto, vcId, "SecurityGroup");
@@ -390,7 +394,7 @@ public class VirtualizationConnectorApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(sgId);
         getDtoRequest.setEntityName("SecurityGroup");
-        GetDtoFromEntityService<SecurityGroupDto> getDtoService = new GetDtoFromEntityService<>();
+        GetDtoFromEntityServiceApi<SecurityGroupDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(SecurityGroupDto.class);
         SecurityGroupDto dto = this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
         this.apiUtil.validateParentIdMatches(dto, vcId, "SecurityGroup");
@@ -450,7 +454,7 @@ public class VirtualizationConnectorApis {
         getDtoRequest.setEntityId(sgId);
         getDtoRequest.setEntityName("SecurityGroup");
         SecurityGroupDto dto = this.apiUtil
-                .submitBaseRequestToService(new GetDtoFromEntityService<SecurityGroupDto>(), getDtoRequest).getDto();
+                .submitBaseRequestToService(this.getDtoFromEntityServiceFactory.getService(SecurityGroupDto.class), getDtoRequest).getDto();
 
         this.apiUtil.validateParentIdMatches(dto, vcId, "SecurityGroup");
 

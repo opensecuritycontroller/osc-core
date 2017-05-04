@@ -40,6 +40,7 @@ import org.osc.core.broker.model.entities.events.Severity;
 import org.osc.core.broker.rest.server.api.test.BaseJerseyTest;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListAlarmServiceApi;
 import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
@@ -71,6 +72,9 @@ public class AlarmApisTest extends BaseJerseyTest {
         this.context.registerService(DeleteAlarmServiceApi.class, deleteAlarm);
         ListAlarmServiceApi listAlarm = Mockito.mock(ListAlarmServiceApi.class);
         this.context.registerService(ListAlarmServiceApi.class, listAlarm);
+        GetDtoFromEntityServiceFactoryApi getDtoFactory = Mockito.mock(GetDtoFromEntityServiceFactoryApi.class);
+        this.context.registerService(GetDtoFromEntityServiceFactoryApi.class, getDtoFactory);
+
         AlarmApis service = new AlarmApis();
         this.context.registerInjectActivateService(service);
 

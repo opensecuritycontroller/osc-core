@@ -30,7 +30,8 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
-import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListJobServiceApi;
 import org.osc.core.broker.service.api.ListTaskServiceApi;
 import org.osc.core.broker.service.dto.JobRecordDto;
@@ -61,8 +62,12 @@ public class JobApis {
 
     @Reference
     private ListJobServiceApi listJobService;
+
     @Reference
     private ListTaskServiceApi listTaskService;
+
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
     @ApiOperation(value = "Retrieves all jobs",
             notes = "Retrieves all jobs",
@@ -96,7 +101,7 @@ public class JobApis {
             GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
             getDtoRequest.setEntityId(jobId);
             getDtoRequest.setEntityName("JobRecord");
-            GetDtoFromEntityService<JobRecordDto> getDtoService = new GetDtoFromEntityService<JobRecordDto>();
+            GetDtoFromEntityServiceApi<JobRecordDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(JobRecordDto.class);
             BaseDtoResponse<JobRecordDto> res = getDtoService.dispatch(getDtoRequest);
             JobRecordDto jrd = res.getDto();
 
