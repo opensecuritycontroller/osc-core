@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.util;
+package org.osc.core.broker.rest.server;
 
 import org.glassfish.jersey.server.ContainerRequest;
-import org.osc.core.rest.annotations.LocalHostAuth;
+import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
+import org.osc.core.util.AuthUtil;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;

@@ -41,6 +41,8 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.ServerRestConstants;
+import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
+import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
 import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
@@ -58,8 +60,6 @@ import org.osc.core.broker.service.response.ServerStatusResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
-import org.osc.core.rest.annotations.LocalHostAuth;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.util.PKIUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

@@ -16,18 +16,17 @@
  *******************************************************************************/
 package org.osc.core.rest.client;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.log4j.Logger;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.glassfish.jersey.logging.LoggingFeature;
-import org.osc.core.rest.client.crypto.SslContextProvider;
-import org.osc.core.rest.client.exception.ClientResponseNotOkException;
-import org.osc.core.rest.client.exception.RestClientException;
-import org.osc.core.rest.client.messages.VmidcCommonMessages;
-import org.osc.core.rest.client.messages.VmidcCommonMessages_;
-import org.osc.core.rest.client.util.LoggingUtil;
-import org.osc.core.util.NetworkUtil;
+import java.io.StringWriter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -44,17 +43,19 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
-import java.io.StringWriter;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.net.ConnectException;
-import java.net.NoRouteToHostException;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.log4j.Logger;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.logging.LoggingFeature;
+import org.osc.core.rest.client.crypto.SslContextProvider;
+import org.osc.core.rest.client.exception.ClientResponseNotOkException;
+import org.osc.core.rest.client.exception.RestClientException;
+import org.osc.core.rest.client.messages.VmidcCommonMessages;
+import org.osc.core.rest.client.messages.VmidcCommonMessages_;
+import org.osc.core.rest.client.util.LoggingUtil;
+import org.osc.core.util.NetworkUtil;
 
 public abstract class RestBaseClient {
 
@@ -91,6 +92,10 @@ public abstract class RestBaseClient {
         this.urlBase = urlBase;
     }
 
+    public static void setDebugLogging(boolean on) {
+        enableDebugLogging = on;
+    }
+
     public void enableDebug() {
         this.client.property(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT, Level.FINE);
     }
@@ -115,7 +120,7 @@ public abstract class RestBaseClient {
      *            The timeout to use wait for REST calls reply
      */
     public void setConnectTimeout(Integer connectTimeout) {
-        client.property(ClientProperties.CONNECT_TIMEOUT, connectTimeout);
+        this.client.property(ClientProperties.CONNECT_TIMEOUT, connectTimeout);
     }
 
     /**
@@ -125,7 +130,7 @@ public abstract class RestBaseClient {
      *            The timeout to use wait for REST calls reply
      */
     public void setReadTimeout(Integer readTimeout) {
-        client.property(ClientProperties.READ_TIMEOUT, readTimeout);
+        this.client.property(ClientProperties.READ_TIMEOUT, readTimeout);
     }
 
     protected void initRestBaseClient(String host, String userName, String password, boolean isHttps) {
@@ -157,14 +162,14 @@ public abstract class RestBaseClient {
             this.client = configureDefaultClient();
         }
 
-        client.property(ClientProperties.CONNECT_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
-        client.property(ClientProperties.READ_TIMEOUT, DEFAULT_READ_TIMEOUT);
-        client.register(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class);
+        this.client.property(ClientProperties.CONNECT_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+        this.client.property(ClientProperties.READ_TIMEOUT, DEFAULT_READ_TIMEOUT);
+        this.client.register(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class);
 
-        this.webTarget = client.target(restBaseUrl);
+        this.webTarget = this.client.target(restBaseUrl);
 
         if (enableDebugLogging) {
-            client.property(LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT, LoggingFeature.Verbosity.PAYLOAD_ANY);
+            this.client.property(LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT, LoggingFeature.Verbosity.PAYLOAD_ANY);
         }
         if (userName != null && password != null) {
             this.client.register(HttpAuthenticationFeature.basic(userName, password));

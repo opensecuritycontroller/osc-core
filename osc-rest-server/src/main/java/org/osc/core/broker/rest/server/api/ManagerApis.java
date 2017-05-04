@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.ServerRestConstants;
+import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.service.api.MCChangeNotificationServiceApi;
@@ -46,7 +47,6 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
-import org.osc.core.rest.annotations.OscAuth;
 import org.osc.sdk.manager.element.MgrChangeNotification;
 import org.osc.sdk.manager.element.MgrChangeNotification.ChangeType;
 import org.osc.sdk.manager.element.MgrChangeNotification.MgrObjectType;

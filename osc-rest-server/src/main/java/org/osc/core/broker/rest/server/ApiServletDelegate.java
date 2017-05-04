@@ -49,7 +49,6 @@ import org.osc.core.broker.rest.server.exception.JsonProcessingExceptionMapper;
 import org.osc.core.broker.rest.server.exception.NotFoundExceptionMapper;
 import org.osc.core.broker.rest.server.exception.PathParamExceptionMapper;
 import org.osc.core.broker.rest.server.exception.XMLParseExceptionMapper;
-import org.osc.core.util.LocalHostAuthFilter;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

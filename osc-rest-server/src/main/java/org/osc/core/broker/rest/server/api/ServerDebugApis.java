@@ -37,10 +37,9 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.rest.server.ServerRestConstants;
+import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
 import org.osc.core.broker.service.api.LockInfoServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
-import org.osc.core.rest.annotations.LocalHostAuth;
-import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.server.Server;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osgi.service.component.annotations.Component;
@@ -135,7 +134,7 @@ public class ServerDebugApis {
         try {
 
             boolean enableLogging = Boolean.valueOf(enable);
-            RestBaseClient.enableDebugLogging = enableLogging;
+            this.server.setDebugLogging(enableLogging);
             return Response.ok(String.valueOf(enableLogging)).build();
 
         } catch (Exception e) {

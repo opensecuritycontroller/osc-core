@@ -37,6 +37,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.ServerRestConstants;
+import org.osc.core.broker.rest.server.annotations.NsxAuth;
 import org.osc.core.broker.service.api.AlertGeneratorApi;
 import org.osc.core.broker.service.api.NsxDeleteAgentsServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateAgentsServiceApi;
@@ -55,7 +56,6 @@ import org.osc.core.broker.service.request.ServiceProfile;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
 import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.rest.annotations.NsxAuth;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
