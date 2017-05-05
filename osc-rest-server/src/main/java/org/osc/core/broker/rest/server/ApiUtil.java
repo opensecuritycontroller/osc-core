@@ -26,6 +26,7 @@ import org.osc.core.broker.service.exceptions.ExceptionConstants;
 import org.osc.core.broker.service.exceptions.OscBadRequestException;
 import org.osc.core.broker.service.exceptions.OscInternalServerErrorException;
 import org.osc.core.broker.service.exceptions.OscNotFoundException;
+import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -34,7 +35,6 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
-import org.osc.core.rest.client.exception.RestClientException;
 import org.osgi.service.component.annotations.Component;
 
 @Component(service = ApiUtil.class)
