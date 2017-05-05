@@ -43,6 +43,7 @@ import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
@@ -53,7 +54,6 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -95,6 +95,9 @@ public class ManagerConnectorApis {
     @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
+    @Reference
+    private UserContextApi userContext;
+
     @ApiOperation(value = "Lists All Manager Connectors",
             notes = "Password/API Key information is not returned as it is sensitive information",
             response = ApplianceManagerConnectorDto.class,
@@ -105,7 +108,7 @@ public class ManagerConnectorApis {
     public List<ApplianceManagerConnectorDto> getApplianceManagerConnectors(@Context HttpHeaders headers) {
 
         logger.info("Listing Appliance Manager Connectors");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<ApplianceManagerConnectorDto> response = (ListResponse<ApplianceManagerConnectorDto>) this.apiUtil
@@ -126,7 +129,7 @@ public class ManagerConnectorApis {
                                                                              required = true) @PathParam("applianceManagerConnectorId") Long amcId) {
 
         logger.info("getting Appliance Manager Connector " + amcId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(amcId);
@@ -148,7 +151,7 @@ public class ManagerConnectorApis {
                                                     @ApiParam(required = true) ApplianceManagerConnectorRequest amcRequest) {
 
         logger.info("Creating Appliance Manager Connector...");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         Response responseForBaseRequest = this.apiUtil.getResponseForBaseRequest(this.addService,
                     new DryRunRequest<>(amcRequest, amcRequest.isSkipRemoteValidation()));
         return responseForBaseRequest;
@@ -171,7 +174,7 @@ public class ManagerConnectorApis {
                                                     @ApiParam(required = true) ApplianceManagerConnectorRequest amcRequest) {
 
         logger.info("Updating Appliance Manager Connector " + amcId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         this.apiUtil.setIdOrThrow(amcRequest, amcId, "Appliance Manager Connector");
 
@@ -194,7 +197,7 @@ public class ManagerConnectorApis {
                                                             required = true) @PathParam("applianceManagerConnectorId") Long amcId) {
 
         logger.info("Deleting Appliance Manager Connector " + amcId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.getResponseForBaseRequest(this.deleteApplianceManagerConnectorService,
                 new BaseIdRequest(amcId));
@@ -212,7 +215,7 @@ public class ManagerConnectorApis {
                                                                        required = true) @PathParam("applianceManagerConnectorId") Long amcId) {
 
         logger.info("Listing domains for Appliance Manager Connector " + amcId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<DomainDto> response = (ListResponse<DomainDto>) this.apiUtil

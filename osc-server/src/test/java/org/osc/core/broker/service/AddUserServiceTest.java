@@ -32,6 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.request.AddUserRequest;
 import org.osc.core.broker.service.response.AddUserResponse;
@@ -56,6 +57,9 @@ public class AddUserServiceTest {
 
     @Mock
     private UserDtoValidator validatorMock;
+
+    @Mock
+    private UserContextApi userContext;
 
     @InjectMocks
     private AddUserService service;

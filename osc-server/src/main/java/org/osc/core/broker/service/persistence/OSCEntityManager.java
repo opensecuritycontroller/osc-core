@@ -114,7 +114,7 @@ public class OSCEntityManager<T extends IscEntity> {
     }
 
     public static <T extends IscEntity> T create(EntityManager em, T entity) {
-        String contextUser = SessionUtil.getCurrentUser();
+        String contextUser = SessionUtil.getInstance().getCurrentUser();
         entity.setCreatedBy(contextUser);
         entity.setCreatedTimestamp(new Date());
 
@@ -133,7 +133,7 @@ public class OSCEntityManager<T extends IscEntity> {
     }
 
     public static void update(EntityManager em, IscEntity entity) {
-        String contextUser = SessionUtil.getCurrentUser();
+        String contextUser = SessionUtil.getInstance().getCurrentUser();
         entity.setUpdatedBy(contextUser);
         entity.setUpdatedTimestamp(new Date());
 
@@ -150,7 +150,7 @@ public class OSCEntityManager<T extends IscEntity> {
     }
 
     public static void markDeleted(EntityManager em, IscEntity entity) {
-        String contextUser = SessionUtil.getCurrentUser();
+        String contextUser = SessionUtil.getInstance().getCurrentUser();
         entity.setMarkedForDeletion(true);
         entity.setDeletedBy(contextUser);
         entity.setDeletedTimestamp(new Date());

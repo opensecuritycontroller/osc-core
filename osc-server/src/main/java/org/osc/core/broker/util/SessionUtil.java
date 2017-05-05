@@ -16,51 +16,28 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import java.util.Base64;
-import java.util.List;
-import java.util.StringTokenizer;
+import org.osc.core.broker.service.api.server.UserContextApi;
+import org.osgi.service.component.annotations.Component;
 
-import javax.ws.rs.core.HttpHeaders;
-
-import com.vaadin.ui.UI;
-
-public class SessionUtil {
+@Component
+public class SessionUtil implements UserContextApi {
     private static final ThreadLocal<String> local = new ThreadLocal<String>();
 
-    public static void setUser(String user) {
+    @Override
+    public void setUser(String user) {
         local.set(user);
     }
 
-    private static String getUser() {
+    @Override
+    public String getCurrentUser() {
         return local.get();
     }
 
-    public static String getCurrentUser() {
-        if (UI.getCurrent() != null && UI.getCurrent().getSession() != null
-                ) {
-            return (String) UI.getCurrent().getSession().getAttribute("user");
-        } else {
-            return getUser();
-        }
+    /**
+     * Used in places that don't support injection
+     * @return
+     */
+    public static final UserContextApi getInstance() {
+        return new SessionUtil();
     }
-
-    public static String getUsername(HttpHeaders headers) {
-        List<String> authorizationHeader = headers.getRequestHeader("Authorization");
-
-        if(authorizationHeader == null || authorizationHeader.size() == 0){
-            throw new IllegalArgumentException("Basic authorization is not set");
-        }
-
-        String authString = authorizationHeader.get(0);
-        // Get encoded username and password
-        final String encodedUserPassword = authString.replaceFirst("Basic ", "");
-
-        // Decode username and password
-        String usernameAndPassword = new String(Base64.getDecoder().decode(encodedUserPassword));
-
-        // Split username and password tokens
-        final StringTokenizer tokenizer = new StringTokenizer(usernameAndPassword, ":");
-        return tokenizer.nextToken();
-    }
-
 }

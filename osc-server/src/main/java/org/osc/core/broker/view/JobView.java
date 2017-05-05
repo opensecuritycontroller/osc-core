@@ -42,6 +42,7 @@ import org.osc.core.broker.model.entities.job.TaskStatus;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.ListJobServiceApi;
 import org.osc.core.broker.service.api.ListTaskServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
@@ -49,7 +50,6 @@ import org.osc.core.broker.service.persistence.TaskEntityMgr;
 import org.osc.core.broker.service.request.ListJobRequest;
 import org.osc.core.broker.service.request.ListTaskRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -117,6 +117,9 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
     @Reference
     private ListTaskServiceApi listTaskService;
 
+    @Reference
+    private UserContextApi userContext;
+
     @Activate
     private void activate() {
         createView("Jobs", Arrays.asList(ToolbarButtons.JOB_VIEW, ToolbarButtons.JOB_ABORT), "Tasks", null);
@@ -128,7 +131,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             buildGraph();
         } else if (event.getButton().getId().equals(ToolbarButtons.JOB_ABORT.getId())) {
             JobEngine.getEngine().abortJob(getParentItemId(),
-                    VmidcMessages.getString(VmidcMessages_.JOB_ABORT_USER, SessionUtil.getCurrentUser()));
+                    VmidcMessages.getString(VmidcMessages_.JOB_ABORT_USER, this.userContext.getCurrentUser()));
         }
     }
 

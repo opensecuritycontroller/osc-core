@@ -43,6 +43,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
@@ -72,6 +73,9 @@ public class AddDistributedApplianceServiceTest {
 
     @Mock
     private ConformService conformServiceMock;
+
+    @Mock
+    private UserContextApi userContext;
 
     @InjectMocks
     private AddDistributedApplianceService service;

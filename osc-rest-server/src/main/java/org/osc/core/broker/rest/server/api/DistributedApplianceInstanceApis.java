@@ -37,6 +37,7 @@ import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceInstanceServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
@@ -45,7 +46,6 @@ import org.osc.core.broker.service.request.DistributedApplianceInstancesRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.GetAgentStatusResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -78,6 +78,9 @@ public class DistributedApplianceInstanceApis {
     @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
+    @Reference
+    private UserContextApi userContext;
+
     @ApiOperation(value = "Lists All Distributed Appliance Instances",
             notes = "Lists all the Distributed Appliance Instances",
             response = DistributedApplianceInstanceDto.class,
@@ -89,7 +92,7 @@ public class DistributedApplianceInstanceApis {
             @Context HttpHeaders headers) {
 
         logger.info("Listing Distributed Appliance Instances");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) this.apiUtil
@@ -110,7 +113,7 @@ public class DistributedApplianceInstanceApis {
                                                                                    required = true) @PathParam("distributedApplianceInstanceId") Long distributedApplianceInstanceId) {
 
         logger.info("Getting Distributed Appliance Instance " + distributedApplianceInstanceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(distributedApplianceInstanceId);
@@ -132,7 +135,7 @@ public class DistributedApplianceInstanceApis {
                                                                                    required = true) DistributedApplianceInstancesRequest req) {
 
         logger.info("Getting Distributed Appliance Instance Status " + req);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.submitRequestToService(this.getAgentStatusService, req);
     }

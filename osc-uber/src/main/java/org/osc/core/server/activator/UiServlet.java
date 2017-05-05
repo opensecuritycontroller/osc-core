@@ -21,8 +21,10 @@ import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.*;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 
 import org.osc.core.broker.service.api.server.ServerTerminationListener;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.view.MainUIProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -30,7 +32,9 @@ import org.osgi.service.component.annotations.Reference;
 import com.vaadin.server.DeploymentConfiguration;
 import com.vaadin.server.ServiceException;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.server.VaadinServletRequest;
 import com.vaadin.server.VaadinServletService;
+import com.vaadin.server.VaadinSession;
 
 @Component(name = "ui.servlet", property = {
 
@@ -49,6 +53,9 @@ public class UiServlet extends VaadinServlet implements Servlet, ServerTerminati
 
     @Reference
     MainUIProvider uiProvider;
+
+    @Reference
+    UserContextApi userContext;
 
 
 	/*
@@ -81,5 +88,30 @@ public class UiServlet extends VaadinServlet implements Servlet, ServerTerminati
     public void serverStopping() {
         // Terminate Vaadin UI Application
         destroy();
+    }
+
+    /**
+     * Every incoming request should set the current user context
+     */
+    @Override
+    protected VaadinServletRequest createVaadinRequest(HttpServletRequest request) {
+        VaadinServletRequest vaadinRequest = super.createVaadinRequest(request);
+
+        VaadinSession vaadinSession;
+        try {
+            vaadinSession = getService().findVaadinSession(vaadinRequest);
+        } catch (Exception e) {
+            // This exception will be handled later when we try to service
+            // the request
+            vaadinSession = null;
+        }
+
+        if(vaadinSession != null) {
+            this.userContext.setUser((String) vaadinSession.getAttribute("user"));
+        } else {
+            this.userContext.setUser(null);
+        }
+
+        return vaadinRequest;
     }
 }

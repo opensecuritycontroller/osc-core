@@ -1,0 +1,3 @@
+# Added to support the ServiceDispatcher type
+
+-dsannotations-options: inherit

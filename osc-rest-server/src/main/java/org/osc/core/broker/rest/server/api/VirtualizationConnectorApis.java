@@ -51,6 +51,7 @@ import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupPropertiesServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
@@ -69,7 +70,6 @@ import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.SetResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -135,6 +135,9 @@ public class VirtualizationConnectorApis {
     @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
+    @Reference
+    private UserContextApi userContext;
+
     @ApiOperation(value = "Lists All Virtualization Connectors",
             notes = "Password information is not returned as it is sensitive information",
             response = VirtualizationConnectorDto.class,
@@ -145,7 +148,7 @@ public class VirtualizationConnectorApis {
     public List<VirtualizationConnectorDto> getVirtualizationConnectors(@Context HttpHeaders headers) {
 
         logger.info("Listing Virtualization Connectors");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<VirtualizationConnectorDto> response = (ListResponse<VirtualizationConnectorDto>) this.apiUtil
@@ -165,7 +168,7 @@ public class VirtualizationConnectorApis {
                                                                  @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
 
         logger.info("getting Virtualization Connector " + vcId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(vcId);
@@ -195,7 +198,7 @@ public class VirtualizationConnectorApis {
                                                   @ApiParam(required = true) VirtualizationConnectorRequest vcRequest) {
 
         logger.info("Creating Virtualization Connector...");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.addVirtualizationConnectorService,
                 new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
     }
@@ -223,7 +226,7 @@ public class VirtualizationConnectorApis {
                                                   @ApiParam(required = true) VirtualizationConnectorRequest vcRequest) {
 
         logger.info("Updating Virtualization Connector " + vcId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdOrThrow(vcRequest, vcId, "Virtualization Connector");
         return this.apiUtil.getResponseForBaseRequest(this.updateVirtualizationConnectorService,
                 new DryRunRequest<>(vcRequest, vcRequest.isSkipRemoteValidation()));
@@ -246,7 +249,7 @@ public class VirtualizationConnectorApis {
                                                   @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
 
         logger.info("Deleting Virtualization Connector " + vcId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.getResponseForBaseRequest(this.deleteVirtualizationConnectorService, new BaseIdRequest(vcId));
     }
@@ -263,7 +266,7 @@ public class VirtualizationConnectorApis {
     public List<SecurityGroupDto> getSecurityGroupByVirtualiazationConnector(@Context HttpHeaders headers,
                                                                              @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
         logger.info("Listing Security groups");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         @SuppressWarnings("unchecked")
         ListResponse<SecurityGroupDto> response = (ListResponse<SecurityGroupDto>) this.apiUtil
                 .getListResponse(this.listSecurityGroupByVcService, new BaseIdRequest(vcId));
@@ -281,7 +284,7 @@ public class VirtualizationConnectorApis {
                                              @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
                                              @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("getting Security Group " + sgId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(sgId);
         getDtoRequest.setEntityName("SecurityGroup");
@@ -304,7 +307,7 @@ public class VirtualizationConnectorApis {
                                         @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
                                         @ApiParam(required = true) SecurityGroupDto sgDto) {
         logger.info("Creating Security Group ...");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdAndParentIdOrThrow(sgDto, null, vcId, "Security Group");
         AddOrUpdateSecurityGroupRequest request = new AddOrUpdateSecurityGroupRequest();
         request.setDto(sgDto);
@@ -323,7 +326,7 @@ public class VirtualizationConnectorApis {
                                         @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
                                         @ApiParam(required = true) SecurityGroupDto sgDto) {
         logger.info("Updating Security Group " + sgId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdAndParentIdOrThrow(sgDto, sgId, vcId, "Security Group");
         AddOrUpdateSecurityGroupRequest request = new AddOrUpdateSecurityGroupRequest();
         request.setDto(sgDto);
@@ -341,7 +344,7 @@ public class VirtualizationConnectorApis {
                                         @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
                                         @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Deleting Security Group.. " + sgId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.deleteSecurityGroupService,
                 new BaseDeleteRequest(sgId, vcId, false)); // false as this is not force delete
     }
@@ -358,7 +361,7 @@ public class VirtualizationConnectorApis {
                                              @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
                                              @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Deleting Security Group.. " + sgId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.deleteSecurityGroupService,
                 new BaseDeleteRequest(sgId, vcId, true));
     }
@@ -374,7 +377,7 @@ public class VirtualizationConnectorApis {
                                       @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
                                       @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Sync Security Group" + sgId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.syncSecurityGroupService, new BaseIdRequest(sgId, vcId));
     }
 
@@ -391,7 +394,7 @@ public class VirtualizationConnectorApis {
                                                                    @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
                                                                    @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Listing Members for Security Group - " + sgId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(sgId);
         getDtoRequest.setEntityName("SecurityGroup");
@@ -419,7 +422,7 @@ public class VirtualizationConnectorApis {
                                                @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
                                                @ApiParam(required = true) UpdateSecurityGroupMemberRequest sgUpdateRequest) {
         logger.info("Updating Security Group " + sgId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         if (!sgId.equals(sgUpdateRequest.getId())) {
             throw this.apiUtil.createIdMismatchException(sgUpdateRequest.getId(), "Security Group");
@@ -449,7 +452,7 @@ public class VirtualizationConnectorApis {
                                                                                 @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
                                                                                 @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId) {
         logger.info("Listing Bindings for Security Group - " + sgId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(sgId);
@@ -480,7 +483,7 @@ public class VirtualizationConnectorApis {
                                                         @ApiParam(value = "The Security Group Id") @PathParam("sgId") Long sgId,
                                                         @ApiParam(value = "List of Bindings", required = true) Set<VirtualSystemPolicyBindingDto> bindings) {
         logger.info("Update Bindings for Security Group - " + sgId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         BindSecurityGroupRequest bindRequest = new BindSecurityGroupRequest();
         bindRequest.setVcId(vcId);
         bindRequest.setSecurityGroupId(sgId);

@@ -45,7 +45,7 @@ public class SyncDistributedApplianceJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
+        SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
         ConformService conformService = (ConformService) context.getMergedJobDataMap().get(ConformService.class.getName());
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
@@ -64,7 +64,7 @@ public class SyncDistributedApplianceJob implements Job {
                     public void run() {
                         try {
                             HibernateUtil.getTransactionControl().required(() -> {
-                                SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
+                                SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
                                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
                                     DistributedAppliance found = em.find(DistributedAppliance.class, da.getId());

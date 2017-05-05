@@ -65,7 +65,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
             String vmOpenstackId = OsNotificationUtil.isMessageRelevant(message, this.objectIdList,
                     OsNotificationKeyType.INSTANCE_ID.toString());
             if (vmOpenstackId != null) {
-                SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
+                SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
 
                 log.info(" [Instance] : message received - " + message);
                 try {
