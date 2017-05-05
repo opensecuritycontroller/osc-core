@@ -19,7 +19,7 @@ package org.osc.core.broker.rest.server.api.test;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.broker.rest.server.ApiUtil;
 
 import java.util.Arrays;
 

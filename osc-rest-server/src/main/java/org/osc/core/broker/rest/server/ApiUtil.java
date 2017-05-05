@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.util.api;
+package org.osc.core.broker.rest.server;
 
 import java.rmi.RemoteException;
 
@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response;
 
 import org.osc.core.broker.service.api.ServiceDispatcherApi;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.exceptions.ExceptionConstants;
 import org.osc.core.broker.service.exceptions.OscBadRequestException;
 import org.osc.core.broker.service.exceptions.OscInternalServerErrorException;
 import org.osc.core.broker.service.exceptions.OscNotFoundException;
@@ -37,10 +38,7 @@ import org.osc.core.rest.client.exception.RestClientException;
 import org.osgi.service.component.annotations.Component;
 
 @Component(service = ApiUtil.class)
-public class ApiUtil {
-    public static final Long REMOTE_EXCEPTION_ERROR_CODE = 6000L;
-    public static final Long VMIDC_VALIDATION_EXCEPTION_ERROR_CODE = 4000L;
-    public static final Long VMIDC_EXCEPTION_ERROR_CODE = 5000L;
+public class ApiUtil implements ExceptionConstants {
 
     /**
      * Submits a plain request to the service and return the response or throws a VmidcRestServerException in case of

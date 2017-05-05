@@ -40,11 +40,13 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.rest.server.ApiUtil;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
 import org.osc.core.broker.service.api.BackupServiceApi;
+import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
 import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
@@ -58,8 +60,6 @@ import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.ServerStatusResponse;
 import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.broker.util.api.ApiUtil;
-import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -111,7 +111,7 @@ public class ServerMgmtApis {
 
         ServerStatusResponse serverStatusResponse = new ServerStatusResponse();
         serverStatusResponse.setVersion(this.server.getVersionStr());
-        serverStatusResponse.setDbVersion(ReleaseUpgradeMgr.TARGET_DB_VERSION);
+        serverStatusResponse.setDbVersion(DBConnectionManagerApi.TARGET_DB_VERSION);
         serverStatusResponse.setCurrentServerTime(new Date());
         serverStatusResponse.setPid(this.server.getCurrentPid());
 

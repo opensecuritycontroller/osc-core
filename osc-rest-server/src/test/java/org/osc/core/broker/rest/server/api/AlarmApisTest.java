@@ -37,6 +37,7 @@ import org.mockito.Mockito;
 import org.osc.core.broker.model.entities.events.AlarmAction;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.Severity;
+import org.osc.core.broker.rest.server.ApiUtil;
 import org.osc.core.broker.rest.server.api.test.BaseJerseyTest;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
@@ -45,7 +46,6 @@ import org.osc.core.broker.service.api.ListAlarmServiceApi;
 import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.api.ApiUtil;
 
 public class AlarmApisTest extends BaseJerseyTest {
 

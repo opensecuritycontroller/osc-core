@@ -25,22 +25,23 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
+import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.exceptions.ExceptionConstants;
+import org.osc.core.broker.service.exceptions.OscBadRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
-import org.osc.core.broker.util.api.ApiUtil;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
         implements SyncSecurityGroupServiceApi {
 
-    @Reference
-    private ApiUtil apiUtil;
+//    @Reference
+//    private ApiUtil apiUtil;
 
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
@@ -75,13 +76,20 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
 
         // For service calls makes sure the VC's match
         if (!vc.equals(securityGroup.getVirtualizationConnector())) {
-            throw this.apiUtil.createParentChildMismatchException(request.getParentId(), "Security Group");
+            throw createParentChildMismatchException(request.getParentId(), "Security Group");
         }
 
         if(vc.getVirtualizationType() != VirtualizationType.OPENSTACK) {
             throw new VmidcBrokerValidationException("Syncing of security groups is only applicable for Openstack");
         }
         return securityGroup;
+    }
+
+    private <T extends BaseDto> OscBadRequestException createParentChildMismatchException(Long parentId,
+            String objName) {
+        return new OscBadRequestException(
+                String.format("The Parent ID %d specified in the '%s' data does not match the id specified in the URL",
+                        parentId, objName), ExceptionConstants.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
     }
 
 }
