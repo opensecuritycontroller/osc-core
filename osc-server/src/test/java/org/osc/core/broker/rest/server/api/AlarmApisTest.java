@@ -42,6 +42,7 @@ import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
 import org.osc.core.broker.service.api.ListAlarmServiceApi;
 import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.util.api.ApiUtil;
@@ -71,6 +72,8 @@ public class AlarmApisTest extends BaseJerseyTest {
         this.context.registerService(DeleteAlarmServiceApi.class, deleteAlarm);
         ListAlarmServiceApi listAlarm = Mockito.mock(ListAlarmServiceApi.class);
         this.context.registerService(ListAlarmServiceApi.class, listAlarm);
+        UserContextApi userContext = Mockito.mock(UserContextApi.class);
+        this.context.registerService(UserContextApi.class, userContext);
         AlarmApis service = new AlarmApis();
         this.context.registerInjectActivateService(service);
 

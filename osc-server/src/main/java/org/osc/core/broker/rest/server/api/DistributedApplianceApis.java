@@ -33,6 +33,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.GetDtoFromEntityService;
@@ -40,6 +41,7 @@ import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
@@ -49,7 +51,6 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
@@ -90,6 +91,9 @@ public class DistributedApplianceApis {
     @Reference
     private ListDistributedApplianceServiceApi listDistributedApplianceService;
 
+    @Reference
+    private UserContextApi userContext;
+
     @ApiOperation(value = "Lists All Distributed Appliances",
             notes = "Lists all the Distributed Appliances",
             response = DistributedApplianceDto.class,
@@ -100,7 +104,7 @@ public class DistributedApplianceApis {
     public List<DistributedApplianceDto> getDistributedAppliance(@Context HttpHeaders headers) {
 
         logger.info("Listing Distributed Appliances");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<DistributedApplianceDto> response = (ListResponse<DistributedApplianceDto>) this.apiUtil
@@ -120,7 +124,7 @@ public class DistributedApplianceApis {
                                                                    required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
 
         logger.info("Getting Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(distributedApplianceId);
@@ -138,7 +142,7 @@ public class DistributedApplianceApis {
     public Response createAppliance(@Context HttpHeaders headers,
                                     @ApiParam(required = true) DistributedApplianceDto daDto) {
         logger.info("Creating Distributed Appliance...");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.addDistributedApplianceService,
                 new BaseRequest<DistributedApplianceDto>(daDto));
     }
@@ -155,7 +159,7 @@ public class DistributedApplianceApis {
                                                        required = true) @PathParam("distributedApplianceId") Long distributedApplianceId,
                                                @ApiParam(required = true) DistributedApplianceDto daDto) {
         logger.info("Updating Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdOrThrow(daDto, distributedApplianceId, "DistributedAppliance");
         return this.apiUtil.getResponseForBaseRequest(this.updateDistributedApplianceService,
                 new BaseRequest<DistributedApplianceDto>(daDto));
@@ -172,7 +176,7 @@ public class DistributedApplianceApis {
                                                @ApiParam(value = "The Id of the Distributed Appliance Appliance",
                                                        required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Deleting Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.deleteDistributedApplianceService,
                 new BaseDeleteRequest(distributedApplianceId, false)); // false as this is not force delete
     }
@@ -187,7 +191,7 @@ public class DistributedApplianceApis {
                                                     @ApiParam(value = "The Id of the Distributed Appliance",
                                                             required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Deleting Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.deleteDistributedApplianceService,
                 new BaseDeleteRequest(distributedApplianceId, true));
     }
@@ -204,7 +208,7 @@ public class DistributedApplianceApis {
                                              @ApiParam(value = "The Id of the Distributed Appliance",
                                                      required = true) @PathParam("distributedApplianceId") Long distributedApplianceId) {
         logger.info("Sync Distributed Appliance " + distributedApplianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.conformService, new ConformRequest(distributedApplianceId));
     }
 

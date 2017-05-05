@@ -34,18 +34,19 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.api.DeleteAlertServiceApi;
 import org.osc.core.broker.service.api.ListAlertServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.request.AlertRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
@@ -80,6 +81,9 @@ public class AlertApis {
     @Reference
     private ListAlertServiceApi listAlertService;
 
+    @Reference
+    private UserContextApi userContext;
+
     @ApiOperation(value = "Lists all Alerts", response = AlertDto.class, responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
@@ -87,7 +91,7 @@ public class AlertApis {
     public List<AlertDto> getAlerts(@Context HttpHeaders headers) {
 
         logger.info("Listing Alerts");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<AlertDto> response = (ListResponse<AlertDto>) this.apiUtil.getListResponse(this.listAlertService,
@@ -104,7 +108,7 @@ public class AlertApis {
     public AlertDto getAlert(@Context HttpHeaders headers, @PathParam("alertId") Long alertId) {
 
         logger.info("getting Alert " + alertId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(alertId);
@@ -130,7 +134,7 @@ public class AlertApis {
                                 @ApiParam(required = true) AlertDto alertDto) {
 
         logger.info("Updating Alert " + alertId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdOrThrow(alertDto, alertId, "Alert");
 
         AlertRequest alertRequest = createAcknowledgeRequest(alertId, alertDto);
@@ -152,7 +156,7 @@ public class AlertApis {
     public Response deleteAlert(@Context HttpHeaders headers, @PathParam("alertId") Long alertId) {
 
         logger.info("Deleting the Alert " + alertId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         AlertRequest alertRequest = createDeleteRequest(alertId);
 

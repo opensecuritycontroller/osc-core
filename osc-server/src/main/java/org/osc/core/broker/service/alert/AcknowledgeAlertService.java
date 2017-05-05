@@ -32,7 +32,6 @@ import org.osc.core.broker.service.request.AlertRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.service.validator.AlertDtoValidator;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
-import org.osc.core.broker.util.SessionUtil;
 import org.osgi.service.component.annotations.Component;
 
 @Component
@@ -47,7 +46,7 @@ public class AcknowledgeAlertService extends ServiceDispatcher<AlertRequest, Emp
         if (request.isAcknowledge()) {
             for (AlertDto dto : request.getDtoList()) {
                 dto.setStatus(AcknowledgementStatus.ACKNOWLEDGED);
-                dto.setAcknowledgedUser(SessionUtil.getCurrentUser());
+                dto.setAcknowledgedUser(this.userContext.getCurrentUser());
                 dto.setTimeAcknowledgedTimestamp(new Date());
             }
         } else {

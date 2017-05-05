@@ -41,6 +41,7 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.model.ServerStatusResponse;
 import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
@@ -48,6 +49,7 @@ import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
 import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.SslCertificateDto;
 import org.osc.core.broker.service.request.AddSslEntryRequest;
 import org.osc.core.broker.service.request.BackupRequest;
@@ -55,7 +57,6 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.rest.annotations.LocalHostAuth;
@@ -99,6 +100,9 @@ public class ServerMgmtApis {
     @Reference
     private ListSslCertificatesServiceApi listSslCertificateService;
 
+    @Reference
+    private UserContextApi userContext;
+
     @ApiOperation(value = "Get server status",
             notes = "Returns server status information",
             response = ServerStatusResponse.class)
@@ -130,8 +134,8 @@ public class ServerMgmtApis {
     @POST
     public Response getDbBackupFile(@Context HttpHeaders headers, @ApiParam(required = true) BackupRequest request) {
 
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        logger.info(SessionUtil.getCurrentUser()+" is generating a backap of the database");
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        logger.info(this.userContext.getCurrentUser()+" is generating a backap of the database");
         StreamingOutput fileStream = new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {
@@ -199,7 +203,7 @@ public class ServerMgmtApis {
     public List<CertificateBasicInfoModel> getSslCertificatesList(@Context HttpHeaders headers) {
 
         logger.info("Listing ssl certificates from trust store");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) this.apiUtil
@@ -220,7 +224,7 @@ public class ServerMgmtApis {
     @POST
     public Response addSslCertificate(@Context HttpHeaders headers, @ApiParam(required = true) SslCertificateDto sslEntry) {
         logger.info("Adding new SSL certificate to truststore");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         AddSslEntryRequest addSslEntryRequest = new AddSslEntryRequest(sslEntry.getAlias(), sslEntry.getCertificate());
         return this.apiUtil.getResponse(this.addSSlCertificateService, addSslEntryRequest);
     }
@@ -239,7 +243,7 @@ public class ServerMgmtApis {
     @DELETE
     public Response deleteSslCertificate(@Context HttpHeaders headers, @ApiParam(value = "SSL certificate alias") @PathParam("alias") String alias) {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponse(this.deleteSslCertificateService, new DeleteSslEntryRequest(alias));
     }
 }

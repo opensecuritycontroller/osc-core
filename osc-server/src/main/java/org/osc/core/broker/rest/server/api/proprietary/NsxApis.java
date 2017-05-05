@@ -39,12 +39,14 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.client.nsx.model.ServiceInstance;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.NsxDeleteAgentsServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateAgentsServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateProfileContainerServiceApi;
 import org.osc.core.broker.service.api.NsxUpdateProfileServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.request.Attribute;
 import org.osc.core.broker.service.request.ContainerSet;
 import org.osc.core.broker.service.request.FabricAgents;
@@ -55,7 +57,6 @@ import org.osc.core.broker.service.request.NsxUpdateProfileRequest;
 import org.osc.core.broker.service.request.ServiceProfile;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.NsxUpdateAgentsResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.rest.annotations.NsxAuth;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -82,6 +83,9 @@ public class NsxApis {
 
     @Reference
     ServerApi server;
+
+    @Reference
+    UserContextApi userContext;
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
@@ -115,7 +119,7 @@ public class NsxApis {
 
         log.info("putAgents: " + fabricAgents.toString());
 
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         String nsxIpAddress = request.getRemoteAddr();
 
         NsxUpdateAgentsRequest serviceRequest = new NsxUpdateAgentsRequest();
@@ -142,7 +146,7 @@ public class NsxApis {
         log.info("deleteAgents(): " + agentIds);
 
         String nsxIpAddress = request.getRemoteAddr();
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         NsxDeleteAgentsRequest serviceRequest = new NsxDeleteAgentsRequest();
         serviceRequest.nsxIpAddress = nsxIpAddress;
@@ -207,7 +211,7 @@ public class NsxApis {
                                       @PathParam("serviceProfileId") String serviceProfileId, ServiceProfile serviceProfile) {
 
         log.info("putServiceProfile(): " + serviceProfileId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         NsxUpdateProfileRequest request = new NsxUpdateProfileRequest();
         request.serviceProfile = serviceProfile;
@@ -234,7 +238,7 @@ public class NsxApis {
                                                   @PathParam("serviceProfileId") String serviceProfileId, ContainerSet containerSet) {
 
         log.info("putServiceProfileContainerset(): " + serviceProfileId + ", ContainerSet " + containerSet);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         String nsxIpAddress = httpRequest.getRemoteAddr();
 
         NsxUpdateProfileContainerRequest request = new NsxUpdateProfileContainerRequest();

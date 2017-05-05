@@ -33,12 +33,14 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
 import org.osc.core.broker.service.api.DeleteAlarmServiceApi;
 import org.osc.core.broker.service.api.ListAlarmServiceApi;
 import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
@@ -46,7 +48,6 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
@@ -85,6 +86,9 @@ public class AlarmApis {
     @Reference
     private ListAlarmServiceApi listAlarmService;
 
+    @Reference
+    private UserContextApi userContext;
+
     @ApiOperation(value = "Lists all configured Alarms", response = AlarmDto.class, responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
@@ -92,7 +96,7 @@ public class AlarmApis {
     public List<AlarmDto> getAlarms(@Context HttpHeaders headers) {
 
         logger.info("Listing Alarms");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<AlarmDto> response = (ListResponse<AlarmDto>) this.apiUtil.getListResponse(this.listAlarmService,
@@ -109,7 +113,7 @@ public class AlarmApis {
     public AlarmDto getAlarm(@Context HttpHeaders headers, @PathParam("alarmId") Long alarmId) {
 
         logger.info("getting Alarm " + alarmId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(alarmId);
@@ -132,7 +136,7 @@ public class AlarmApis {
     public Response createAlarm(@Context HttpHeaders headers, @ApiParam(required = true) AlarmDto alarmDto) {
 
         logger.info("Creating Alarm...");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.addAlarmService, new BaseRequest<AlarmDto>(alarmDto));
     }
 
@@ -150,7 +154,7 @@ public class AlarmApis {
                                 @ApiParam(required = true) AlarmDto alarmDto) {
 
         logger.info("Updating Alarm " + alarmId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdOrThrow(alarmDto, alarmId, "Alarm");
         return this.apiUtil.getResponseForBaseRequest(this.updateAlarmService, new BaseRequest<AlarmDto>(alarmDto));
     }
@@ -169,7 +173,7 @@ public class AlarmApis {
     public Response deleteAlarm(@Context HttpHeaders headers, @PathParam("alarmId") Long alarmId) {
 
         logger.info("Deleting the Alarm " + alarmId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.getResponseForBaseRequest(this.deleteAlarmService, new BaseIdRequest(alarmId));
     }

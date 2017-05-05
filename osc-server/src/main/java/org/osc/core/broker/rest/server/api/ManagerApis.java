@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.rest.server.model.Notification;
@@ -36,13 +37,13 @@ import org.osc.core.broker.service.api.MCChangeNotificationServiceApi;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.api.TagVmServiceApi;
 import org.osc.core.broker.service.api.UnTagVmServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.MCChangeNotificationRequest;
 import org.osc.core.broker.service.request.QueryVmInfoRequest;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.sdk.manager.element.MgrChangeNotification;
@@ -83,6 +84,9 @@ public class ManagerApis {
     @Reference
     private MCChangeNotificationServiceApi mCChangeNotificationService;
 
+    @Reference
+    private UserContextApi userContext;
+
     @ApiOperation(value = "Notfies OSC about registered changes in Manager",
             notes = "The relevant manager connector is derived from the IP address of the HTTP client the notification "
                     + "request is reported by and responds to the notification accordingly",
@@ -94,7 +98,7 @@ public class ManagerApis {
     public Response postNotification(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
                                      @ApiParam(required = true) Notification notification) {
         log.info("postNotification(): " + notification);
-        return triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
+        return triggerMcSync(OscAuthFilter.getUsername(headers), httpRequest.getRemoteAddr(), notification);
     }
 
     @ApiOperation(value = "Query Virtual Machine information",
@@ -111,7 +115,7 @@ public class ManagerApis {
                                 @ApiParam(required = true) QueryVmInfoRequest queryVmInfo) {
 
         log.info("Query VM info request: " + queryVmInfo);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.getResponse(this.queryVmInfoService, queryVmInfo);
     }
@@ -121,7 +125,7 @@ public class ManagerApis {
     public Response tagVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
 
         log.info("Tag VM info request: " + tagVmRequest);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.getResponse(this.tagVmService, tagVmRequest);
     }
@@ -131,7 +135,7 @@ public class ManagerApis {
     public Response unquarantineVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
 
         log.info("UnTag VM info request: " + tagVmRequest);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.getResponse(this.untagVmService, tagVmRequest);
     }
@@ -172,7 +176,7 @@ public class ManagerApis {
 
     public BaseJobResponse triggerMcSyncService(String username, String ipAddress,
             MgrChangeNotification notification) throws Exception {
-        SessionUtil.setUser(username);
+        this.userContext.setUser(username);
 
         MCChangeNotificationRequest request = new MCChangeNotificationRequest();
         request.mgrIpAddress = ipAddress;
