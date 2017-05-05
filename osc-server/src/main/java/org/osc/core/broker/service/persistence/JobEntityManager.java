@@ -31,14 +31,17 @@ import javax.persistence.criteria.Root;
 
 import org.osc.core.broker.model.entities.job.JobObject;
 import org.osc.core.broker.model.entities.job.JobRecord;
+import org.osc.core.broker.service.api.JobEntityManagerApi;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.component.annotations.Component;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
-public class JobEntityManager {
+@Component
+public class JobEntityManager implements JobEntityManagerApi {
 
     public static void fromEntity(JobRecord job, JobRecordDto dto) {
         // transform from entity to dto
@@ -145,6 +148,16 @@ public class JobEntityManager {
         query = query.select(from)
                 .where(cb.notEqual(from.get("state"), COMPLETED));
         return em.createQuery(query).getResultList();
+    }
+
+    @Override
+    public Long taskCount(Long jobId) throws InterruptedException, VmidcException {
+        return getTaskCount(jobId);
+    }
+
+    @Override
+    public Long completedTaskCount(Long jobId) throws InterruptedException, VmidcException {
+        return getCompletedTaskCount(jobId);
     }
 
 }

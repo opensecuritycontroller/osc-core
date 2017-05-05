@@ -32,12 +32,12 @@ import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
+import org.osc.core.broker.service.api.JobEntityManagerApi;
 import org.osc.core.broker.service.api.ListJobServiceApi;
 import org.osc.core.broker.service.api.ListTaskServiceApi;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
-import org.osc.core.broker.service.persistence.JobEntityManager;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.request.ListTaskRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
@@ -68,6 +68,9 @@ public class JobApis {
 
     @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
+    @Reference
+    private JobEntityManagerApi jobEntityManager;
 
     @ApiOperation(value = "Retrieves all jobs",
             notes = "Retrieves all jobs",
@@ -105,8 +108,8 @@ public class JobApis {
             BaseDtoResponse<JobRecordDto> res = getDtoService.dispatch(getDtoRequest);
             JobRecordDto jrd = res.getDto();
 
-            jrd.setTaskCount(JobEntityManager.getTaskCount(jobId));
-            jrd.setTaskCompleted(JobEntityManager.getCompletedTaskCount(jobId));
+            jrd.setTaskCount(this.jobEntityManager.taskCount(jobId));
+            jrd.setTaskCompleted(this.jobEntityManager.completedTaskCount(jobId));
 
             return Response.status(Status.OK).entity(jrd).build();
 
