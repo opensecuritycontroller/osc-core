@@ -33,4 +33,8 @@ public interface ServerApi {
     boolean isUnderMaintenance();
 
     String getProductName();
+
+    String getCurrentPid();
+
+    String getVersionStr();
 }
