@@ -16,10 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
+import org.osc.core.broker.service.appliance.UploadConfig;
 import org.osc.core.broker.service.broadcast.Broadcaster;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -29,7 +31,9 @@ import org.osgi.service.component.annotations.Reference;
  * The methods in this class should <b>not</b> be called from static initialisers, as this class is not initialised at
  * static initialisation time; instead they should be called from static methods.
  */
-@Component(service = StaticRegistry.class, immediate = true)
+@Component(service = StaticRegistry.class, immediate = true,
+    configurationPid="org.osc.core.broker.upload",
+    configurationPolicy=ConfigurationPolicy.REQUIRE)
 @Deprecated
 public class StaticRegistry {
 
@@ -39,10 +43,13 @@ public class StaticRegistry {
     @Reference
     private Broadcaster broadcaster;
 
+    private String uploadPath;
+
     private static StaticRegistry instance = null;
 
     @Activate
-    void activate() {
+    void activate(UploadConfig config) {
+        this.uploadPath = config.upload_path();
         instance = this;
     }
 
@@ -54,4 +61,7 @@ public class StaticRegistry {
         return instance.broadcaster;
     }
 
+    public static String uploadPath() {
+        return instance.uploadPath;
+    }
 }
