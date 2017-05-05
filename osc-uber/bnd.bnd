@@ -133,7 +133,6 @@ exclude-test:\
   !junit.framework
 
 exclude-osc:\
-  !com.mcafee.vmidc.server,\
   !org.osc.sdk.controller,\
   !org.osc.sdk.controller.api,\
   !org.osc.sdk.controller.element,\
