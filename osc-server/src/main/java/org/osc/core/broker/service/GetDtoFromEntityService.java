@@ -79,6 +79,9 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 public class GetDtoFromEntityService<R extends BaseDto> extends
         ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDtoFromEntityServiceApi<R> {
 
+    GetDtoFromEntityService() {
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public BaseDtoResponse<R> exec(GetDtoFromEntityRequest request, EntityManager em) throws Exception {
@@ -192,4 +195,5 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
         }
         return entity;
     }
+
 }

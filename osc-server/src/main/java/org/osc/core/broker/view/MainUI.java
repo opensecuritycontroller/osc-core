@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.LoginServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.broadcast.BroadcastListener;
@@ -111,7 +112,7 @@ public class MainUI extends UI implements BroadcastListener {
 
     private static final Logger log = Logger.getLogger(MainUI.class);
 
-    public CRUDBaseView<?, ?> currentView;
+    private CRUDBaseView<?, ?> currentView;
 
     // accordion used as side navigation
     private final Accordion accordion = new Accordion();
@@ -167,6 +168,8 @@ public class MainUI extends UI implements BroadcastListener {
     @Reference
     ComponentServiceObjects<MaintenanceView> maintenanceViewFactory;
 
+    @Reference
+    GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
     Set<OSCViewProvider<?>> statusViews = new LinkedHashSet<>();
 
@@ -180,6 +183,10 @@ public class MainUI extends UI implements BroadcastListener {
 
     private BundleContext ctx;
     private AlertView alertView;
+
+    public void setCurrentView(CRUDBaseView<?, ?> view) {
+        this.currentView = view;
+    }
 
     @Activate
     private void start(BundleContext ctx) {
@@ -559,13 +566,13 @@ public class MainUI extends UI implements BroadcastListener {
                     }
                     String dto = msg.getReceiver() + "Dto";
                     if (MainUI.this.currentView.isDtoChangeRelevantToParentView(dto)) {
-                        MainUI.this.currentView.syncTables(msg, false);
+                        MainUI.this.currentView.syncTables(msg, false, MainUI.this.getDtoFromEntityServiceFactory);
                     } else if (MainUI.this.currentView.isDtoChangeRelevantToChildView(dto)) {
-                        MainUI.this.currentView.syncTables(msg, true);
+                        MainUI.this.currentView.syncTables(msg, true, MainUI.this.getDtoFromEntityServiceFactory);
                     } else if (MainUI.this.currentView.isDtoRelevantToParentSubView(dto)) {
-                        MainUI.this.currentView.delegateBroadcastMessagetoSubView(msg, false);
+                        MainUI.this.currentView.delegateBroadcastMessagetoSubView(msg, false, MainUI.this.getDtoFromEntityServiceFactory);
                     } else if (MainUI.this.currentView.isDtoRelevantToChildSubView(dto)) {
-                        MainUI.this.currentView.delegateBroadcastMessagetoSubView(msg, true);
+                        MainUI.this.currentView.delegateBroadcastMessagetoSubView(msg, true, MainUI.this.getDtoFromEntityServiceFactory);
                     }
                 } catch (Exception e) {
                     log.error("Fail to receive DTO broadcast", e);

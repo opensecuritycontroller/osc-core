@@ -14,27 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api.server;
+package org.osc.core.broker.service.api;
 
-public interface ServerApi {
+public interface PasswordUtilApi {
+    String getVmidcNsxPass();
 
-    boolean getDevMode();
-
-    void stopServer();
-
-    void restart();
-
-    String loadServerProp(String devModePropertyKey, String string);
-
-    void saveServerProp(String propName, String value);
-
-    void setDevMode(boolean on);
-
-    boolean isUnderMaintenance();
-
-    String getProductName();
-
-    String getCurrentPid();
-
-    String getVersionStr();
+    String getOscDefaultPass();
 }

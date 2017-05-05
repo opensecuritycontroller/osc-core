@@ -14,27 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api.server;
+package org.osc.core.broker.service.api;
 
-public interface ServerApi {
+import org.osc.core.broker.service.dto.BaseDto;
 
-    boolean getDevMode();
-
-    void stopServer();
-
-    void restart();
-
-    String loadServerProp(String devModePropertyKey, String string);
-
-    void saveServerProp(String propName, String value);
-
-    void setDevMode(boolean on);
-
-    boolean isUnderMaintenance();
-
-    String getProductName();
-
-    String getCurrentPid();
-
-    String getVersionStr();
+public interface GetDtoFromEntityServiceFactoryApi {
+    <T extends BaseDto> GetDtoFromEntityServiceApi<T> getService(Class<T> type);
 }

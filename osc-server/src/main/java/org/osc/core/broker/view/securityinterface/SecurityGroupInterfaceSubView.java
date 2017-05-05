@@ -19,9 +19,10 @@ package org.osc.core.broker.view.securityinterface;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
@@ -61,19 +62,23 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
     private final ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem;
     private final ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
     private final UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
+    private final GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
     public SecurityGroupInterfaceSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
             VirtualSystemDto vs, AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService,
             DeleteSecurityGroupInterfaceServiceApi deleteSecurityGroupInterfaceService,
             ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem,
             ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService,
-            UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService) throws Exception {
+            UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService,
+            GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory) throws Exception {
         super(currentView, title, buttons, vs);
         this.addSecurityGroupInterfaceService = addSecurityGroupInterfaceService;
         this.deleteSecurityGroupInterfaceService = deleteSecurityGroupInterfaceService;
         this.listVirtualSystemPolicyService = listVirtualSystemPolicyService;
         this.listSecurityGroupInterfaceServiceByVirtualSystem = listSecurityGroupInterfaceServiceByVirtualSystem;
         this.updateSecurityGroupInterfaceService = updateSecurityGroupInterfaceService;
+        this.getDtoFromEntityServiceFactory = getDtoFromEntityServiceFactory;
+
         if (!vs.isMarkForDeletion()) {
             ViewUtil.enableToolBarButtons(
                     ((VirtualSystemDto) this.parent).getVirtualizationType() != VirtualizationType.VMWARE && isPolicyMappingSupported(),
@@ -91,7 +96,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
         GetDtoFromEntityRequest getMcRequest = new GetDtoFromEntityRequest();
         getMcRequest.setEntityId(daDto.getMcId());
         getMcRequest.setEntityName(MC_ENTITY_NAME);
-        GetDtoFromEntityService<ApplianceManagerConnectorDto> getMcService = new GetDtoFromEntityService<ApplianceManagerConnectorDto>();
+        GetDtoFromEntityServiceApi<ApplianceManagerConnectorDto> getMcService = this.getDtoFromEntityServiceFactory.getService(ApplianceManagerConnectorDto.class);
         ApplianceManagerConnectorDto mcDto = (getMcService.dispatch(getMcRequest).getDto());
         return mcDto.isPolicyMappingSupported();
     }
