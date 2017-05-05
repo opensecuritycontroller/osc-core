@@ -16,14 +16,15 @@
  *******************************************************************************/
 package org.osc.core.util;
 
+import javax.crypto.SecretKey;
+
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.AESGCMEncryption;
 import org.osc.core.util.encryption.DESDecryption;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osc.core.util.encryption.PBKDF2Derivation;
 
-import javax.crypto.SecretKey;
-
+@SuppressWarnings("deprecation") // DESDecryption is used only to support legacy upgrade purposes
 public class EncryptionUtil {
     public static final String SECURITY_PROPS_RESOURCE_PATH = "/org/osc/core/util/security.properties";
     /**

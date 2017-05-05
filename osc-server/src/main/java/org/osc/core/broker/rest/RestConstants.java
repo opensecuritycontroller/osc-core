@@ -19,7 +19,6 @@ package org.osc.core.broker.rest;
 public interface RestConstants {
     // Because we started with versions in the URL, we will continue to have v1 in the URL
     String SERVER_API_PATH_PREFIX = "/api/server/v1";
-    String AGENT_API_PATH_PREFIX = "/api/agent/v1";
     String MANAGER_API_PATH_PREFIX = "/api/manager/v1";
 
     // Legacy/Proprietary API
@@ -27,7 +26,6 @@ public interface RestConstants {
     String MGR_NSM_API_PATH_PREFIX = "/api/nsm/v1";
 
     // login names
-    String VMIDC_AGENT_LOGIN = "agent";
     String VMIDC_NSX_LOGIN = "nsx";
     String OSC_DEFAULT_LOGIN = "admin";
 }

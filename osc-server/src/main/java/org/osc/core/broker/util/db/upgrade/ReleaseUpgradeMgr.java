@@ -16,17 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.util.db.upgrade;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.h2.util.StringUtils;
-import org.osc.core.broker.model.entities.ReleaseInfo;
-import org.osc.core.broker.model.entities.archive.FreqType;
-import org.osc.core.broker.model.entities.archive.ThresholdType;
-import org.osc.core.broker.util.db.DBConnectionParameters;
-import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -38,6 +27,17 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.h2.util.StringUtils;
+import org.osc.core.broker.model.entities.ReleaseInfo;
+import org.osc.core.broker.model.entities.archive.FreqType;
+import org.osc.core.broker.model.entities.archive.ThresholdType;
+import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
+
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
  * create a single record in ReleaseInfo database table to manage this.
@@ -47,7 +47,7 @@ public class ReleaseUpgradeMgr {
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
-    public static final int TARGET_DB_VERSION = 78;
+    public static final int TARGET_DB_VERSION = 79;
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
@@ -204,7 +204,7 @@ public class ReleaseUpgradeMgr {
             case 63:
                 upgrade63to64(stmt);
             case 64:
-                upgrade64to65(stmt);
+                upgrade64to65(stmt); // V2.0 -> V2.5
             case 65:
                 upgrade65to66(stmt);
             case 66:
@@ -231,6 +231,8 @@ public class ReleaseUpgradeMgr {
                 upgrade76to77(stmt);
             case 77:
                 upgrade77to78(stmt);
+            case 78:
+                upgrade78to79(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -242,7 +244,11 @@ public class ReleaseUpgradeMgr {
         }
     }
 
-    private static void upgrade77to78(Statement stmt) throws SQLException, EncryptionException {
+    private static void upgrade78to79(Statement stmt) throws SQLException {
+        execSql(stmt, "DROP table VIRTUAL_SYSTEM_MGR_FILE;");
+    }
+
+    private static void upgrade77to78(Statement stmt) throws SQLException {
         execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR ADD COLUMN last_job_id_fk bigint;");
         execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR " +
                 "add constraint FK_VC_LAST_JOB " +
@@ -253,15 +259,15 @@ public class ReleaseUpgradeMgr {
 
     }
 
-    private static void upgrade76to77(Statement stmt) throws SQLException, EncryptionException {
+    private static void upgrade76to77(Statement stmt) throws SQLException {
          execSql(stmt, "alter table SECURITY_GROUP_INTERFACE ADD COLUMN network_elem_id varchar(255);");
      }
 
-    private static void upgrade75to76(Statement stmt) throws SQLException, EncryptionException {
+    private static void upgrade75to76(Statement stmt) throws SQLException {
         execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_AGENT';");
     }
 
-    private static void upgrade74to75(Statement stmt) throws SQLException, EncryptionException {
+    private static void upgrade74to75(Statement stmt) throws SQLException {
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN password;");
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN agent_version_str;");
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN agent_version_major;");
@@ -270,7 +276,7 @@ public class ReleaseUpgradeMgr {
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN is_policy_map_out_of_sync;");
     }
 
-    private static void upgrade73to74(Statement stmt) throws SQLException, EncryptionException {
+    private static void upgrade73to74(Statement stmt) throws SQLException {
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN mgmt_os_port_id varchar(255);");
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN mgmt_mac_address varchar(255);");
     }
