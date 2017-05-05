@@ -575,4 +575,14 @@ public class Server implements ServerApi {
     public String getProductName() {
         return Server.PRODUCT_NAME;
     }
+
+    @Override
+    public String getCurrentPid() {
+        return ServerUtil.getCurrentPid();
+    }
+
+    @Override
+    public String getVersionStr() {
+        return VersionUtil.getVersion().getVersionStr();
+    }
 }

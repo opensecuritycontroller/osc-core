@@ -36,9 +36,10 @@ import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.api.DeleteAlertServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListAlertServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.AlertDto;
@@ -84,6 +85,9 @@ public class AlertApis {
     @Reference
     private UserContextApi userContext;
 
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
     @ApiOperation(value = "Lists all Alerts", response = AlertDto.class, responseContainer = "Set")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
@@ -114,7 +118,7 @@ public class AlertApis {
         getDtoRequest.setEntityId(alertId);
         getDtoRequest.setEntityName("Alert");
 
-        GetDtoFromEntityService<AlertDto> getDtoService = new GetDtoFromEntityService<AlertDto>();
+        GetDtoFromEntityServiceApi<AlertDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(AlertDto.class);
         return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 

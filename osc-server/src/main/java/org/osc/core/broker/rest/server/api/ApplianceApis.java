@@ -37,9 +37,10 @@ import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
-import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListApplianceServiceApi;
 import org.osc.core.broker.service.api.ListApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.UploadApplianceVersionFileServiceApi;
@@ -97,6 +98,9 @@ public class ApplianceApis {
     @Reference
     UserContextApi userContext;
 
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
     @ApiOperation(value = "Lists All Software Function Models",
             notes = "Lists all the Software Function Models",
             response = ApplianceDto.class,
@@ -133,7 +137,7 @@ public class ApplianceApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(applianceId);
         getDtoRequest.setEntityName("Appliance");
-        GetDtoFromEntityService<ApplianceDto> getDtoService = new GetDtoFromEntityService<ApplianceDto>();
+        GetDtoFromEntityServiceApi<ApplianceDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(ApplianceDto.class);
         return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
@@ -196,7 +200,7 @@ public class ApplianceApis {
         getDtoRequest.setEntityId(applianceSoftwareVersionId);
         getDtoRequest.setParentId(applianceId);
 
-        GetDtoFromEntityService<ApplianceSoftwareVersionDto> getDtoService = new GetDtoFromEntityService<ApplianceSoftwareVersionDto>();
+        GetDtoFromEntityServiceApi<ApplianceSoftwareVersionDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(ApplianceSoftwareVersionDto.class);
         return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 

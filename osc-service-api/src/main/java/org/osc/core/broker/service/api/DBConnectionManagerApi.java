@@ -14,27 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api.server;
+package org.osc.core.broker.service.api;
 
-public interface ServerApi {
+import java.sql.Connection;
+import java.sql.SQLException;
 
-    boolean getDevMode();
+public interface DBConnectionManagerApi {
+    /*
+     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
+     */
+    int TARGET_DB_VERSION = 79;
 
-    void stopServer();
-
-    void restart();
-
-    String loadServerProp(String devModePropertyKey, String string);
-
-    void saveServerProp(String propName, String value);
-
-    void setDevMode(boolean on);
-
-    boolean isUnderMaintenance();
-
-    String getProductName();
-
-    String getCurrentPid();
-
-    String getVersionStr();
+    Connection getSQLConnection() throws SQLException;
 }

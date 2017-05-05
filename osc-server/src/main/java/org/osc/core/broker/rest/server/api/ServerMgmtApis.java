@@ -62,8 +62,6 @@ import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.util.PKIUtil;
-import org.osc.core.util.ServerUtil;
-import org.osc.core.util.VersionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -115,10 +113,10 @@ public class ServerMgmtApis {
         logger.info("getStatus()");
 
         ServerStatusResponse serverStatusResponse = new ServerStatusResponse();
-        serverStatusResponse.setVersion(VersionUtil.getVersion().getVersionStr());
+        serverStatusResponse.setVersion(this.server.getVersionStr());
         serverStatusResponse.setDbVersion(ReleaseUpgradeMgr.TARGET_DB_VERSION);
         serverStatusResponse.setCurrentServerTime(new Date());
-        serverStatusResponse.setPid(ServerUtil.getCurrentPid());
+        serverStatusResponse.setPid(this.server.getCurrentPid());
 
         return Response.status(Status.OK).entity(serverStatusResponse).build();
     }
@@ -160,13 +158,13 @@ public class ServerMgmtApis {
     @PUT
     public Response upgradeServerReady() {
 
-        logger.info("upgradedServerReady (pid:" + ServerUtil.getCurrentPid() + "): Check pending upgrade server.");
+        logger.info("upgradedServerReady (pid:" + this.server.getCurrentPid() + "): Check pending upgrade server.");
         if (!this.server.isUnderMaintenance()) {
-            logger.info("upgradedServerReady (pid:" + ServerUtil.getCurrentPid() + "): No pending upgrade.");
+            logger.info("upgradedServerReady (pid:" + this.server.getCurrentPid() + "): No pending upgrade.");
             return Response.status(Status.BAD_REQUEST).build();
         }
 
-        logger.info("upgradedServerReady (pid:" + ServerUtil.getCurrentPid()
+        logger.info("upgradedServerReady (pid:" + this.server.getCurrentPid()
                 + "): Upgraded server is up. Start shutdown...");
         Thread shutdownThread = new Thread("Shutdown-Thread") {
             @Override
@@ -184,7 +182,7 @@ public class ServerMgmtApis {
                     }
                     ServerMgmtApis.this.server.stopServer();
                 } catch (Exception e) {
-                    logger.error("upgradedServerReady (pid:" + ServerUtil.getCurrentPid()
+                    logger.error("upgradedServerReady (pid:" + ServerMgmtApis.this.server.getCurrentPid()
                             + "): Shutting down Tomcat after upgrade experienced failures", e);
                 }
             }

@@ -32,8 +32,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceInstanceServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -77,6 +78,9 @@ public class DistributedApplianceInstanceApis {
     @Reference
     private UserContextApi userContext;
 
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
     @ApiOperation(value = "Lists All Distributed Appliance Instances",
             notes = "Lists all the Distributed Appliance Instances",
             response = DistributedApplianceInstanceDto.class,
@@ -114,7 +118,7 @@ public class DistributedApplianceInstanceApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(distributedApplianceInstanceId);
         getDtoRequest.setEntityName("DistributedApplianceInstance");
-        GetDtoFromEntityService<DistributedApplianceInstanceDto> getDtoService = new GetDtoFromEntityService<DistributedApplianceInstanceDto>();
+        GetDtoFromEntityServiceApi<DistributedApplianceInstanceDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(DistributedApplianceInstanceDto.class);
 
         return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }

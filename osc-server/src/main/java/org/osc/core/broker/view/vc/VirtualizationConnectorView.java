@@ -22,11 +22,12 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
@@ -136,6 +137,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Reference
     private ValidationApi validator;
+
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
     @Activate
     void activate() {
@@ -381,7 +385,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                     GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
                     getDtoRequest.setEntityId(sgId);
                     getDtoRequest.setEntityName("SecurityGroup");
-                    GetDtoFromEntityService<SecurityGroupDto> getSg = new GetDtoFromEntityService<SecurityGroupDto>();
+                    GetDtoFromEntityServiceApi<SecurityGroupDto> getSg = this.getDtoFromEntityServiceFactory.getService(SecurityGroupDto.class);
 
                     try {
                         BaseDtoResponse<SecurityGroupDto> getSgDto = getSg.dispatch(getDtoRequest);

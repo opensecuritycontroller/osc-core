@@ -24,7 +24,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
@@ -33,6 +32,8 @@ import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
@@ -184,6 +185,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     @Reference
     private ValidationApi validator;
 
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
     @Activate
     private void activate() {
 
@@ -279,7 +283,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         this, this.childContainer.getItem(getChildItemId()).getBean(),
                         this.addSecurityGroupInterfaceService, this.deleteSecurityGroupInterfaceService,
                         this.listSecurityGroupInterfaceServiceByVirtualSystem, this.listVirtualSystemPolicyService,
-                        this.updateSecurityGroupInterfaceService);
+                        this.updateSecurityGroupInterfaceService,
+                        this.getDtoFromEntityServiceFactory);
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages
         this.childSubViewMap.put(getKeyforChildSubView(2), this.sgiSubView);
@@ -467,7 +472,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                     GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
                     getDtoRequest.setEntityId(dsId);
                     getDtoRequest.setEntityName("DeploymentSpec");
-                    GetDtoFromEntityService<DeploymentSpecDto> getService = new GetDtoFromEntityService<DeploymentSpecDto>();
+                    GetDtoFromEntityServiceApi<DeploymentSpecDto> getService = this.getDtoFromEntityServiceFactory.getService(DeploymentSpecDto.class);
                     BaseDtoResponse<DeploymentSpecDto> dsDto;
                     try {
                         dsDto = getService.dispatch(getDtoRequest);
@@ -481,7 +486,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                     GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
                     getDtoRequest.setEntityId(sgiId);
                     getDtoRequest.setEntityName("SecurityGroupInterface");
-                    GetDtoFromEntityService<SecurityGroupInterfaceDto> getService = new GetDtoFromEntityService<SecurityGroupInterfaceDto>();
+                    GetDtoFromEntityServiceApi<SecurityGroupInterfaceDto> getService = this.getDtoFromEntityServiceFactory.getService(SecurityGroupInterfaceDto.class);
                     BaseDtoResponse<SecurityGroupInterfaceDto> sgiDto;
                     try {
                         sgiDto = getService.dispatch(getDtoRequest);
@@ -495,7 +500,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                     GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
                     getDtoRequest.setEntityId(vsId);
                     getDtoRequest.setEntityName("VirtualSystem");
-                    GetDtoFromEntityService<VirtualSystemDto> getVsSvc = new GetDtoFromEntityService<VirtualSystemDto>();
+                    GetDtoFromEntityServiceApi<VirtualSystemDto> getVsSvc = this.getDtoFromEntityServiceFactory.getService(VirtualSystemDto.class);
 
                     BaseDtoResponse<VirtualSystemDto> vsDto;
                     try {

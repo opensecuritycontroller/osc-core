@@ -39,6 +39,7 @@ import org.osc.core.broker.model.entities.job.TaskGuard;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.model.entities.job.TaskState;
 import org.osc.core.broker.model.entities.job.TaskStatus;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.ListJobServiceApi;
 import org.osc.core.broker.service.api.ListTaskServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
@@ -218,8 +219,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
     // This is also needed since Abort button should change to disabled if job state
     // changes before user clicks on the table
     @Override
-    protected void syncParentTable(BroadcastMessage msg) throws Exception {
-        super.syncParentTable(msg);
+    protected void syncParentTable(BroadcastMessage msg, GetDtoFromEntityServiceApi<JobRecordDto> getDtoService) throws Exception {
+        super.syncParentTable(msg, getDtoService);
         BeanItem<JobRecordDto> item = this.parentContainer.getItem(msg.getEntityId());
         JobRecordDto jobRecordDto = null;
         if (item != null) {

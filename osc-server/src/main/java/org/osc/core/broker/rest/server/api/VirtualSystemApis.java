@@ -36,12 +36,13 @@ import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.GetDtoFromEntityService;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceInstanceByVSServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
@@ -124,6 +125,9 @@ public class VirtualSystemApis {
     @Reference
     private UserContextApi userContext;
 
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
     // DAI APIs
     @ApiOperation(value = "Lists Appliance Instances",
             notes = "Lists the Appliance Instances owned by the Virtual System",
@@ -200,7 +204,7 @@ public class VirtualSystemApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(dsId);
         getDtoRequest.setEntityName("DeploymentSpec");
-        GetDtoFromEntityService<DeploymentSpecDto> getDtoService = new GetDtoFromEntityService<DeploymentSpecDto>();
+        GetDtoFromEntityServiceApi<DeploymentSpecDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(DeploymentSpecDto.class);
         DeploymentSpecDto dto = this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
         this.apiUtil.validateParentIdMatches(dto, vsId, "SecurityGroup");
@@ -309,7 +313,7 @@ public class VirtualSystemApis {
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(sgiId);
         getDtoRequest.setEntityName("SecurityGroupInterface");
-        GetDtoFromEntityService<SecurityGroupInterfaceDto> getDtoService = new GetDtoFromEntityService<SecurityGroupInterfaceDto>();
+        GetDtoFromEntityServiceApi<SecurityGroupInterfaceDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(SecurityGroupInterfaceDto.class);
         SecurityGroupInterfaceDto dto = this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
         this.apiUtil.validateParentIdMatches(dto, vsId, "SecurityGroupInterface");
