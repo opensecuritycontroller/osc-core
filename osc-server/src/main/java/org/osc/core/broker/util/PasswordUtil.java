@@ -20,14 +20,15 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.service.api.PasswordUtilApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
-@Component(service = PasswordUtil.class)
-public class PasswordUtil {
+@Component(service = {PasswordUtil.class, PasswordUtilApi.class})
+public class PasswordUtil implements PasswordUtilApi {
     private String vmidcNsxPass = "";
     private String oscDefaultPass = "";
 
@@ -39,10 +40,12 @@ public class PasswordUtil {
         this.oscDefaultPass = oscDefaultPass;
     }
 
+    @Override
     public String getVmidcNsxPass() {
         return this.vmidcNsxPass;
     }
 
+    @Override
     public String getOscDefaultPass() {
         return this.oscDefaultPass;
     }

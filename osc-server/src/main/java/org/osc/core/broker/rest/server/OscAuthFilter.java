@@ -23,7 +23,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
 
 import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.util.PasswordUtil;
+import org.osc.core.broker.service.api.PasswordUtilApi;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.util.AuthUtil;
 import org.osgi.service.component.annotations.Component;
@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
 @OscAuth
 public class OscAuthFilter implements ContainerRequestFilter {
     @Reference
-    private PasswordUtil passwordUtil;
+    private PasswordUtilApi passwordUtil;
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
