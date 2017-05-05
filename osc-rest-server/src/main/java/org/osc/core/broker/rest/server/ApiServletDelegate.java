@@ -16,7 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server;
 
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.*;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
 
 import java.io.IOException;
 
@@ -97,8 +101,12 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
 
     @Reference
     private NsxAuthFilter nsxAuthFilter;
+
     @Reference
     private OscAuthFilter oscAuthFilter;
+
+    @Reference
+    private LocalHostAuthFilter localHostAuthFilter;
 
     /** The Jersey REST container */
     private ServletContainer container;
@@ -109,8 +117,7 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
         super.register(JacksonJaxbJsonProvider.class);
 
         //Auth Filters
-        super.register(LocalHostAuthFilter.class);
-        super.registerInstances(this.nsxAuthFilter, this.oscAuthFilter);
+        super.registerInstances(this.nsxAuthFilter, this.oscAuthFilter, this.localHostAuthFilter);
 
         //Exception mappers
         super.register(BadRequestExceptionMapper.class);

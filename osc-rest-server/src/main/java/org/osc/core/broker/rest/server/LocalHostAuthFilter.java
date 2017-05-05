@@ -16,24 +16,30 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server;
 
-import org.glassfish.jersey.server.ContainerRequest;
-import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
-import org.osc.core.util.AuthUtil;
+import java.io.IOException;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
-import java.io.IOException;
+
+import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
+import org.osc.core.broker.service.api.PasswordUtilApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Auth filter which makes sure the request is coming from the same machine where the request is being processed
  * (localhost or 127.0.0.1)
  */
+@Component(service = LocalHostAuthFilter.class)
 @Provider
 @LocalHostAuth
 public class LocalHostAuthFilter implements ContainerRequestFilter {
+    @Reference
+    private PasswordUtilApi passwordUtil;
+
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
-        AuthUtil.authenticateLocalRequest((ContainerRequest) containerRequestContext);
+        this.passwordUtil.authenticateLocalRequest(containerRequestContext);
     }
 }

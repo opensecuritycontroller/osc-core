@@ -34,8 +34,8 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
@@ -77,7 +77,7 @@ public class DistributedApplianceApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private ConformService conformService;
+    private ConformServiceApi conformService;
 
     @Reference
     private AddDistributedApplianceServiceApi addDistributedApplianceService;

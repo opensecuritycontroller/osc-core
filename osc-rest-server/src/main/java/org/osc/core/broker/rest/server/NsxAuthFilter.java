@@ -22,10 +22,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
 
-import org.osc.core.broker.service.api.PasswordUtilApi;
-import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.rest.server.annotations.NsxAuth;
-import org.osc.core.util.AuthUtil;
+import org.osc.core.broker.service.api.PasswordUtilApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -38,7 +36,7 @@ public class NsxAuthFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
-        AuthUtil.authenticate(containerRequestContext, RestConstants.VMIDC_NSX_LOGIN, this.passwordUtil.getVmidcNsxPass());
+        this.passwordUtil.authenticateNsxRequest(containerRequestContext);
     }
 
 }

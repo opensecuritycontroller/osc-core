@@ -34,9 +34,9 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
-import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
@@ -83,7 +83,7 @@ public class VirtualSystemApis {
     private static final Logger logger = Logger.getLogger(VirtualSystemApis.class);
 
     @Reference
-    private ConformService conformService;
+    private ConformServiceApi conformService;
 
     @Reference
     private ApiUtil apiUtil;

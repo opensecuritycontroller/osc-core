@@ -35,13 +35,12 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
+import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.service.api.LockInfoServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.server.Server;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -144,7 +143,7 @@ public class ServerDebugApis {
         }
     }
 
-    private StringBuilder query(String sql) throws IOException, KeyStoreProviderException {
+    private StringBuilder query(String sql) throws IOException {
         StringBuilder output = new StringBuilder();
         output.append("Query: ").append(sql).append("\n");
 
@@ -183,7 +182,7 @@ public class ServerDebugApis {
         output.append("\n");
     }
 
-    private StringBuilder exec(String sql) throws IOException, KeyStoreProviderException {
+    private StringBuilder exec(String sql) throws IOException {
         StringBuilder output = new StringBuilder();
         output.append("Exec: ").append(sql).append("\n");
 

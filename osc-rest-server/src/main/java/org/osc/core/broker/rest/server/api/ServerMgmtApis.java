@@ -60,9 +60,10 @@ import org.osc.core.broker.service.response.ServerStatusResponse;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
-import org.osc.core.util.PKIUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import com.google.common.io.Files;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -135,8 +136,8 @@ public class ServerMgmtApis {
             public void write(OutputStream output) throws IOException, WebApplicationException {
                 try {
                     ServerMgmtApis.this.backupService.dispatch(request);
-                    byte[] data = PKIUtil.readBytesFromFile(ServerMgmtApis.this.backupService.getEncryptedBackupFile(request.getBackupFileName()));
-                    output.write(data);
+                    File encryptedBackupFile = ServerMgmtApis.this.backupService.getEncryptedBackupFile(request.getBackupFileName());
+                    output.write(Files.toByteArray(encryptedBackupFile));
                     output.flush();
                 } catch (Exception e) {
                     throw new InternalServerErrorException("Backup could not be generated",e);
