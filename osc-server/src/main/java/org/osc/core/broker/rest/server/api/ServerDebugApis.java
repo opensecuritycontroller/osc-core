@@ -38,8 +38,8 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockInformationDto;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.service.api.server.ServerApi;
-import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.annotations.LocalHostAuth;
 import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.rest.client.util.LoggingUtil;
@@ -58,6 +58,9 @@ public class ServerDebugApis {
 
     @Reference
     ServerApi server;
+
+    @Reference
+    private DBConnectionManagerApi dbConnectionManager;
 
     @Path("/lock")
     @GET
@@ -143,11 +146,11 @@ public class ServerDebugApis {
         }
     }
 
-    public static StringBuilder query(String sql) throws IOException, KeyStoreProviderException {
+    private StringBuilder query(String sql) throws IOException, KeyStoreProviderException {
         StringBuilder output = new StringBuilder();
         output.append("Query: ").append(sql).append("\n");
 
-        try (Connection conn = HibernateUtil.getSQLConnection();
+        try (Connection conn = this.dbConnectionManager.getSQLConnection();
              Statement statement = conn.createStatement()) {
             try (ResultSet result = statement.executeQuery(sql)){
                 processResultSetForQuery(output, result);
@@ -182,11 +185,11 @@ public class ServerDebugApis {
         output.append("\n");
     }
 
-    public static StringBuilder exec(String sql) throws IOException, KeyStoreProviderException {
+    private StringBuilder exec(String sql) throws IOException, KeyStoreProviderException {
         StringBuilder output = new StringBuilder();
         output.append("Exec: ").append(sql).append("\n");
 
-        try (Connection conn = HibernateUtil.getSQLConnection();
+        try (Connection conn = this.dbConnectionManager.getSQLConnection();
              Statement statement = conn.createStatement()) {
             boolean isResultSet = statement.execute(sql);
             if (!isResultSet) {
