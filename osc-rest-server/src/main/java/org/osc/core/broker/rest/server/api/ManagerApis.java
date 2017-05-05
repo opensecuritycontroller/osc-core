@@ -34,7 +34,6 @@ import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.service.api.MCChangeNotificationServiceApi;
 import org.osc.core.broker.service.api.ManagerApi;
-import org.osc.core.broker.service.api.PropagateVSMgrFileServiceApi;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
 import org.osc.core.broker.service.api.TagVmServiceApi;
 import org.osc.core.broker.service.api.UnTagVmServiceApi;
@@ -101,37 +100,6 @@ public class ManagerApis implements ManagerApi {
             @ApiParam(required = true) Notification notification) {
         log.info("postNotification(): " + notification);
         return triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
-    }
-
-    @ApiOperation(value = "Propagate a Manager File to Appliance Instances",
-            notes = "Provided virtualSystemName must be of an existing Virtual Security System (VSS). <br/> MgrFile request contains "
-                    + "Manager File information and list of Appliance Instances to propagate file to. If Appliance "
-                    + "Instances is ommited, all instances is assumed.<br/>"
-                    + "If successful, returns the File Propagation Job Id. Each Appliance Instance file will be "
-                    + "propagated and persisted in the CPA directoy and the process-mgr-file.py will be called to "
-                    + "notify the appliance to process the file.",
-            response = BaseJobResponse.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 200,
-                    message = "Corresponding File Propagation Job started. Id in response is expected to be empty"),
-            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
-    @Path("/propagateMgrFile/vs/{virtualSystemName}")
-    @PUT
-    public Response propagateMgrFile(@Context HttpHeaders headers,
-            @ApiParam(value = "Virtual System name to which file propagation is requested",
-                    required = true) @PathParam("virtualSystemName") String virtualSystemName,
-            @ApiParam(value = "The File to propogate", required = true) MgrFile mgrFile) {
-
-        log.info("Propagate MgrFile for vsName: " + virtualSystemName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-
-        PropagateVSMgrFileRequest request = new PropagateVSMgrFileRequest();
-        request.setVsName(virtualSystemName);
-        request.setDaiList(mgrFile.getApplianceInstances());
-        request.setMgrFile(mgrFile.getMgrFile());
-        request.setMgrFileName(mgrFile.getMgrFileName());
-
-        return this.apiUtil.getResponse(this.propagateVSMgrFileService, request);
     }
 
     @ApiOperation(value = "Query Virtual Machine information",
