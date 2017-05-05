@@ -125,7 +125,8 @@ public class SummaryLayout extends FormLayout {
                 ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.SUMMARY_RESTART_STARTED), null,
                         Notification.Type.TRAY_NOTIFICATION);
                 ViewUtil.showServerRestartProgress();
-                SummaryLayout.this.server.restart();
+                SummaryLayout.this.server.restart().then(null,
+                        p -> ViewUtil.showError("Restart server failed", p.getFailure()));
             }
         });
 

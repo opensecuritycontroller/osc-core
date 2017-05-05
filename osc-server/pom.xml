@@ -145,6 +145,11 @@
 		    <scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi.promise</artifactId>
+			<version>6.0.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.aries.tx-control</groupId>
 			<artifactId>tx-control-api</artifactId>
 			<version>0.0.2</version>

@@ -16,13 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api.server;
 
+import org.osgi.util.promise.Promise;
+
 public interface ServerApi {
 
     boolean getDevMode();
 
     void stopServer();
 
-    void restart();
+    Promise<Void> restart();
 
     String loadServerProp(String devModePropertyKey, String string);
 

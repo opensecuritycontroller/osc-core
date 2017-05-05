@@ -667,7 +667,7 @@ public class ViewUtil {
         }
     }
 
-    public static void showError(String error, Exception e) {
+    public static void showError(String error, Throwable e) {
         log.error(error, e);
         ViewUtil.iscNotification("Error!", error + " (" + e.getMessage() + ")", Notification.Type.ERROR_MESSAGE);
 
