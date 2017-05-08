@@ -16,19 +16,22 @@
  *******************************************************************************/
 package org.osc.core.broker.window.add;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
-
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
@@ -46,15 +49,12 @@ import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.rest.client.exception.RestClientException;
 
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("serial")
 public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonModel> {
@@ -95,7 +95,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
 
     @Override
     public void populateForm() throws Exception {
-        Set<String> managerTypes = StaticRegistry.apiFactoryService().getManagerTypes();
+        Set<String> managerTypes = this.pluginStatusService.getManagerTypes();
         if (managerTypes.size() == 0) {
             throw new VmidcException("No manager plugins found. Please add Manager plugin to perform action");
         }
@@ -173,8 +173,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         this.form.addComponent(this.apiKey);
 
         // select the first entry as default Manager Connector...
-        this.type.select(this.pluginStatusService.getManagerTypes().toArray()[0].toString());
-
+        this.type.select(managerTypes.toArray()[0].toString());
     }
 
     @Override
