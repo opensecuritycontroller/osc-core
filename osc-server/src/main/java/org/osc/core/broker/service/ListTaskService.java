@@ -27,7 +27,9 @@ import org.osc.core.broker.service.dto.TaskRecordDto;
 import org.osc.core.broker.service.persistence.TaskEntityMgr;
 import org.osc.core.broker.service.request.ListTaskRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListTaskService extends ServiceDispatcher<ListTaskRequest, ListResponse<TaskRecordDto>>
         implements ListTaskServiceApi {
 

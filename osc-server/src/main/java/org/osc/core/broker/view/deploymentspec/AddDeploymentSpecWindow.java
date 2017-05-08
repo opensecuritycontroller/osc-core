@@ -21,6 +21,13 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
+import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
+import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
+import org.osc.core.broker.service.api.ListHostServiceApi;
+import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.api.ListRegionServiceApi;
+import org.osc.core.broker.service.api.ListTenantServiceApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -43,11 +50,18 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
     final String CAPTION = "Add Deployment Specification";
 
-private AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
+    private AddDeploymentSpecServiceApi addDeploymentSpecService;
 
-    public AddDeploymentSpecWindow(Long vsId, AddDeploymentSpecServiceApi addDeploymentSpecServiceApi) throws Exception {
-        super(new DeploymentSpecDto().withParentId(vsId));
-        this.addDeploymentSpecServiceApi = addDeploymentSpecServiceApi;
+    public AddDeploymentSpecWindow(Long vsId,
+            AddDeploymentSpecServiceApi addDeploymentSpecService, ListAvailabilityZonesServiceApi listAvailabilityZonesService,
+            ListFloatingIpPoolsServiceApi listFloatingIpPoolsService, ListHostServiceApi listHostService,
+            ListHostAggregateServiceApi listHostAggregateService,
+            ListNetworkServiceApi listNetworkService,
+            ListRegionServiceApi listRegionService, ListTenantServiceApi listTenantService) throws Exception {
+        super(new DeploymentSpecDto().withParentId(vsId), listAvailabilityZonesService,
+                listFloatingIpPoolsService, listHostService, listHostAggregateService, listNetworkService,
+                listRegionService, listTenantService);
+        this.addDeploymentSpecService = addDeploymentSpecService;
         createWindow(this.CAPTION);
     }
 
@@ -100,7 +114,7 @@ private AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
                 BaseRequest<DeploymentSpecDto> req = new BaseRequest<DeploymentSpecDto>();
                 req.setDto(dto);
 
-                BaseJobResponse response = this.addDeploymentSpecServiceApi.dispatch(req);
+                BaseJobResponse response = this.addDeploymentSpecService.dispatch(req);
                 close();
 
                 ViewUtil.showJobNotification(response.getJobId());

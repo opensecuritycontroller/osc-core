@@ -16,10 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.view;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Set;
 
-import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -242,7 +244,7 @@ public abstract class CRUDBaseSubView<P extends BaseDto, C extends BaseDto> exte
     }
 
     @SuppressWarnings("unchecked")
-    public void syncTable(BroadcastMessage msg) throws Exception {
+    public void syncTable(BroadcastMessage msg, GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory) throws Exception {
 
         if (msg.getEventType().equals(EventType.DELETED)) {
             // delete item from child container
@@ -261,7 +263,10 @@ public abstract class CRUDBaseSubView<P extends BaseDto, C extends BaseDto> exte
                 GetDtoFromEntityRequest req = new GetDtoFromEntityRequest();
                 req.setEntityId(msg.getEntityId());
                 req.setEntityName(msg.getReceiver());
-                GetDtoFromEntityService<C> getDtoService = new GetDtoFromEntityService<C>();
+
+                ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
+                Class<C> childClass = (Class<C>) parameterizedType.getActualTypeArguments()[1];
+                GetDtoFromEntityServiceApi<C> getDtoService = getDtoFromEntityServiceFactory.getService(childClass);
                 BaseDtoResponse<C> res = getDtoService.dispatch(req);
                 dto = res.getDto();
             } else {

@@ -53,7 +53,9 @@ import org.osc.core.broker.service.validator.BindSecurityGroupRequestValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.sdk.controller.FailurePolicyType;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGroupRequest, BaseJobResponse>
         implements BindSecurityGroupServiceApi {
 

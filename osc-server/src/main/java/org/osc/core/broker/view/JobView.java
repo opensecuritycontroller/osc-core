@@ -39,8 +39,10 @@ import org.osc.core.broker.model.entities.job.TaskGuard;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.model.entities.job.TaskState;
 import org.osc.core.broker.model.entities.job.TaskStatus;
-import org.osc.core.broker.service.ListJobService;
-import org.osc.core.broker.service.ListTaskService;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.ListJobServiceApi;
+import org.osc.core.broker.service.api.ListTaskServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
@@ -48,13 +50,15 @@ import org.osc.core.broker.service.persistence.TaskEntityMgr;
 import org.osc.core.broker.service.request.ListJobRequest;
 import org.osc.core.broker.service.request.ListTaskRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.rest.client.util.LoggingUtil;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -80,6 +84,8 @@ import com.vaadin.ui.Window;
 
 import elemental.events.KeyboardEvent.KeyCode;
 
+@org.osgi.service.component.annotations.Component(service={JobView.class},
+scope=ServiceScope.PROTOTYPE)
 public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
     private static final String TASK_PREDECESSORS_COLUMN_ID = "predecessors";
@@ -105,7 +111,17 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
     private File dotFile;
     private Embedded embeddedImage;
 
-    public JobView() {
+    @Reference
+    private ListJobServiceApi listJobService;
+
+    @Reference
+    private ListTaskServiceApi listTaskService;
+
+    @Reference
+    private UserContextApi userContext;
+
+    @Activate
+    private void activate() {
         createView("Jobs", Arrays.asList(ToolbarButtons.JOB_VIEW, ToolbarButtons.JOB_ABORT), "Tasks", null);
     }
 
@@ -115,7 +131,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             buildGraph();
         } else if (event.getButton().getId().equals(ToolbarButtons.JOB_ABORT.getId())) {
             JobEngine.getEngine().abortJob(getParentItemId(),
-                    VmidcMessages.getString(VmidcMessages_.JOB_ABORT_USER, SessionUtil.getCurrentUser()));
+                    VmidcMessages.getString(VmidcMessages_.JOB_ABORT_USER, this.userContext.getCurrentUser()));
         }
     }
 
@@ -172,9 +188,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
         ListJobRequest listRequest = null;
         ListResponse<JobRecordDto> res;
-        ListJobService listService = new ListJobService();
         try {
-            res = listService.dispatch(listRequest);
+            res = this.listJobService.dispatch(listRequest);
             List<JobRecordDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // creating table with list of jobs
@@ -204,8 +219,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
     // This is also needed since Abort button should change to disabled if job state
     // changes before user clicks on the table
     @Override
-    protected void syncParentTable(BroadcastMessage msg) throws Exception {
-        super.syncParentTable(msg);
+    protected void syncParentTable(BroadcastMessage msg, GetDtoFromEntityServiceApi<JobRecordDto> getDtoService) throws Exception {
+        super.syncParentTable(msg, getDtoService);
         BeanItem<JobRecordDto> item = this.parentContainer.getItem(msg.getEntityId());
         JobRecordDto jobRecordDto = null;
         if (item != null) {
@@ -274,8 +289,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             try {
                 ListTaskRequest listRequest = new ListTaskRequest();
                 listRequest.setJobId(getParentItemId());
-                ListTaskService listService = new ListTaskService();
-                ListResponse<TaskRecordDto> res = listService.dispatch(listRequest);
+                ListResponse<TaskRecordDto> res = this.listTaskService.dispatch(listRequest);
 
                 this.childContainer.removeAllItems();
                 for (TaskRecordDto task : res.getList()) {

@@ -45,7 +45,7 @@ upgrade_rebrand() {
 }
 
 upgrade_java() {
-    jre_tgz=$tmp_root/server-jre-8u112-linux-x64.tar.gz
+    jre_tgz=$tmp_root/jre-8u112-linux-x64.tar.gz
     jre_dir=$my_root/opt/vmidc/jre
     if [ -f "$jre_tgz" ]; then
 	tar -xz --directory=$jre_dir -f $jre_tgz --strip 1

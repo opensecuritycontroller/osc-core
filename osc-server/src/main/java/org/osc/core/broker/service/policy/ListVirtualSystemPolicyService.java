@@ -31,7 +31,9 @@ import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListVirtualSystemPolicyService extends ServiceDispatcher<BaseIdRequest, ListResponse<PolicyDto>>
         implements ListVirtualSystemPolicyServiceApi {
 

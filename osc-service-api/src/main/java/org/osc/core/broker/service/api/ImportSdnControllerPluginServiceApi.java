@@ -21,4 +21,6 @@ import org.osc.core.broker.service.response.BaseResponse;
 
 public interface ImportSdnControllerPluginServiceApi
         extends ServiceDispatcherApi<ImportFileRequest, BaseResponse> {
+
+    boolean isControllerTypeUsed(String name);
 }

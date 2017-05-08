@@ -30,7 +30,9 @@ import org.osc.core.broker.service.request.LoginRequest;
 import org.osc.core.broker.service.response.LoginResponse;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class LoginService extends ServiceDispatcher<LoginRequest, LoginResponse> implements LoginServiceApi {
     private static final Logger LOG = Logger.getLogger(LoginService.class);
 

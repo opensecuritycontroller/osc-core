@@ -27,7 +27,9 @@ import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr
 import org.osc.core.broker.service.request.ListEncapsulationTypeByVersionTypeAndModelRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.sdk.controller.TagEncapsulationType;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListEncapsulationTypeByVersionTypeAndModel
         extends ServiceDispatcher<ListEncapsulationTypeByVersionTypeAndModelRequest, ListResponse<TagEncapsulationType>>
         implements ListEncapsulationTypeByVersionTypeAndModelApi {

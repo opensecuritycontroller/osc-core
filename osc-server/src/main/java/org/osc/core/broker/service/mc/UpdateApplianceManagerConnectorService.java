@@ -34,8 +34,6 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.SslCertificatesExtendedException;
-import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
@@ -47,10 +45,13 @@ import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
+import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
@@ -59,31 +60,24 @@ import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = UpdateApplianceManagerConnectorService.class)
+@Component
 public class UpdateApplianceManagerConnectorService
-        extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse>
+        extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorRequest>, BaseJobResponse>
         implements UpdateApplianceManagerConnectorServiceApi {
 
     static final Logger log = Logger.getLogger(UpdateApplianceManagerConnectorService.class);
-
-    private boolean forceAddSSLCertificates = false;
 
     @Reference
     private ConformService conformService;
 
     @Reference
-    private AddApplianceManagerConnectorServiceApi addApplianceManagerConnectorService;
-
-    public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
-        this.forceAddSSLCertificates = forceAddSSLCertificates;
-    }
+    private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
 
     @Override
-    public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em) throws Exception {
+    public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorRequest> request, EntityManager em) throws Exception {
 
         BaseDtoValidator.checkForNullId(request.getDto());
 
@@ -97,15 +91,13 @@ public class UpdateApplianceManagerConnectorService
         try {
             validate(em, request, mc, emgr);
         } catch (Exception e) {
-            if (e instanceof SslCertificatesExtendedException && this.forceAddSSLCertificates) {
+            if (e instanceof SslCertificatesExtendedException && request.getDto().isForceAddSSLCertificates()) {
                 request = internalSSLCertificatesFetch(request, (SslCertificatesExtendedException) e);
                 validate(em, request, mc, emgr);
             } else {
                 throw e;
             }
         }
-        setForceAddSSLCertificates(false); // set default ssl state for future calls
-
         String mcName = mc.getName();
 
         UnlockObjectTask mcUnlock = null;
@@ -159,8 +151,8 @@ public class UpdateApplianceManagerConnectorService
         return null;
     }
 
-    private DryRunRequest<ApplianceManagerConnectorDto> internalSSLCertificatesFetch(
-            DryRunRequest<ApplianceManagerConnectorDto> request, SslCertificatesExtendedException sslCertificatesException)
+    private DryRunRequest<ApplianceManagerConnectorRequest> internalSSLCertificatesFetch(
+            DryRunRequest<ApplianceManagerConnectorRequest> request, SslCertificatesExtendedException sslCertificatesException)
             throws Exception {
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
 
@@ -175,7 +167,7 @@ public class UpdateApplianceManagerConnectorService
         return request;
     }
 
-    private void validate(EntityManager em, DryRunRequest<ApplianceManagerConnectorDto> request,
+    private void validate(EntityManager em, DryRunRequest<ApplianceManagerConnectorRequest> request,
                           ApplianceManagerConnector existingMc, OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
         // check for null/empty values
@@ -236,7 +228,7 @@ public class UpdateApplianceManagerConnectorService
      * @throws Exception
      *
      */
-    private void updateApplianceManagerConnector(DryRunRequest<ApplianceManagerConnectorDto> request,
+    private void updateApplianceManagerConnector(DryRunRequest<ApplianceManagerConnectorRequest> request,
             ApplianceManagerConnector existingMc) throws Exception {
 
         String mcDbPassword = existingMc.getPassword();

@@ -23,17 +23,21 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
-import org.osc.core.broker.service.alert.ListAlertService;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
+import org.osc.core.broker.service.api.DeleteAlertServiceApi;
+import org.osc.core.broker.service.api.ListAlertServiceApi;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.AlertRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -43,6 +47,7 @@ import com.vaadin.ui.CustomTable;
 import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
+@Component(service={AlertView.class}, scope=ServiceScope.PROTOTYPE)
 public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
 
     private static final String ALERT_ID_COLUMN = "id";
@@ -60,10 +65,17 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
     private static final long serialVersionUID = 1L;
     private static final String ALERT_HELP_GUID = "GUID-977FE812-0813-41D0-A6A4-28A9E18CD8F6.html";
 
-    private AcknowledgeAlertServiceApi acknowledgeAlertServiceApi = StaticRegistry.acknowledgeAlertServiceApi();
+    @Reference
+    DeleteAlertServiceApi deleteAlertService;
 
-    public AlertView() {
-        super();
+    @Reference
+    ListAlertServiceApi listAlertService;
+
+    @Reference
+    AcknowledgeAlertServiceApi acknowledgeAlertService;
+
+    @Activate
+    private void activate() {
         createView("Alerts", Arrays.asList(ToolbarButtons.ACKNOWLEDGE_ALERT, ToolbarButtons.UNACKNOWLEDGE_ALERT,
                 ToolbarButtons.DELETE, ToolbarButtons.SHOW_PENDING_ACKNOWLEDGE_ALERTS, ToolbarButtons.SHOW_ALL_ALERTS),
                 true);
@@ -105,10 +117,9 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
     public void populateParentTable() {
 
         this.parentContainer.removeAllItems();
-        ListAlertService listService = new ListAlertService();
 
         try {
-            ListResponse<AlertDto> res = listService.dispatch(new BaseRequest<>());
+            ListResponse<AlertDto> res = this.listAlertService.dispatch(new BaseRequest<>());
             List<AlertDto> listResponse = res.getList();
             for (AlertDto dto : listResponse) {
                 this.parentContainer.addItem(dto.getId(), dto);
@@ -153,7 +164,7 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
             AlertRequest req = new AlertRequest();
             req.setDtoList(this.itemList);
             req.setAcknowledge(acknowledge);
-            this.acknowledgeAlertServiceApi.dispatch(req);
+            this.acknowledgeAlertService.dispatch(req);
             log.info("Acknowledge/Unacknowledge Alert(s) Successful!");
         } catch (Exception e) {
             log.error("Failed to acknowledge/unacknowledge alert(s)", e);
@@ -162,7 +173,7 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
     }
 
     private void deleteAlert() {
-        DeleteWindowUtil.deleteAlert(this.itemList);
+        DeleteWindowUtil.deleteAlert(this.deleteAlertService, this.itemList);
     }
 
     private void showPendingAcknowledgeAlerts() {

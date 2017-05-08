@@ -579,13 +579,14 @@ public class Job implements Runnable, JobElement {
                 JobRecord jobRecord = getJobRecord();
 
                 if (jobRecord == null) {
+                    String contextUser = SessionUtil.getInstance().getCurrentUser();
+
                     jobRecord = new JobRecord();
-                    jobRecord.setSubmittedBy(SessionUtil.getCurrentUser());
+                    jobRecord.setSubmittedBy(contextUser);
                     jobRecord.setName(getName());
                     jobRecord.setState(getEntityState());
                     jobRecord.setStatus(getEntityStatus());
 
-                    String contextUser = SessionUtil.getCurrentUser();
                     jobRecord.setCreatedBy(contextUser);
                     jobRecord.setCreatedTimestamp(new Date());
 

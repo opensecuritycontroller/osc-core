@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -48,10 +49,6 @@ import com.vaadin.ui.VerticalLayout;
 
 @SuppressWarnings("serial")
 public class PluginUploader extends CustomComponent implements Receiver, FailedListener, SucceededListener {
-
-    public enum PluginType {
-        MANAGER, SDN, NSX;
-    }
 
     private static final Logger log = Logger.getLogger(PluginUploader.class);
 

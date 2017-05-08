@@ -19,8 +19,13 @@ package org.osc.core.broker.view.securityinterface;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
+import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
+import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
+import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
@@ -31,8 +36,6 @@ import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.securityinterface.ListSecurityGroupInterfaceServiceByVirtualSystem;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.CRUDBaseSubView;
 import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -54,11 +57,28 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
 
     private static final Logger log = Logger.getLogger(SecurityGroupInterfaceSubView.class);
 
-    private ConformService conformService = StaticRegistry.conformService();
+    private final AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService;
+    private final DeleteSecurityGroupInterfaceServiceApi deleteSecurityGroupInterfaceService;
+    private final ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem;
+    private final ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
+    private final UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
+    private final GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
     public SecurityGroupInterfaceSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
-            VirtualSystemDto vs) throws Exception {
+            VirtualSystemDto vs, AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService,
+            DeleteSecurityGroupInterfaceServiceApi deleteSecurityGroupInterfaceService,
+            ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem,
+            ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService,
+            UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService,
+            GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory) throws Exception {
         super(currentView, title, buttons, vs);
+        this.addSecurityGroupInterfaceService = addSecurityGroupInterfaceService;
+        this.deleteSecurityGroupInterfaceService = deleteSecurityGroupInterfaceService;
+        this.listVirtualSystemPolicyService = listVirtualSystemPolicyService;
+        this.listSecurityGroupInterfaceServiceByVirtualSystem = listSecurityGroupInterfaceServiceByVirtualSystem;
+        this.updateSecurityGroupInterfaceService = updateSecurityGroupInterfaceService;
+        this.getDtoFromEntityServiceFactory = getDtoFromEntityServiceFactory;
+
         if (!vs.isMarkForDeletion()) {
             ViewUtil.enableToolBarButtons(
                     ((VirtualSystemDto) this.parent).getVirtualizationType() != VirtualizationType.VMWARE && isPolicyMappingSupported(),
@@ -76,7 +96,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
         GetDtoFromEntityRequest getMcRequest = new GetDtoFromEntityRequest();
         getMcRequest.setEntityId(daDto.getMcId());
         getMcRequest.setEntityName(MC_ENTITY_NAME);
-        GetDtoFromEntityService<ApplianceManagerConnectorDto> getMcService = new GetDtoFromEntityService<ApplianceManagerConnectorDto>();
+        GetDtoFromEntityServiceApi<ApplianceManagerConnectorDto> getMcService = this.getDtoFromEntityServiceFactory.getService(ApplianceManagerConnectorDto.class);
         ApplianceManagerConnectorDto mcDto = (getMcService.dispatch(getMcRequest).getDto());
         return mcDto.isPolicyMappingSupported();
     }
@@ -85,15 +105,16 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Security Group interface Window");
-            ViewUtil.addWindow(new AddSecurityGroupInterfaceWindow(getDtoInContext().getId(), this.conformService));
+            ViewUtil.addWindow(new AddSecurityGroupInterfaceWindow(getDtoInContext().getId(), this.addSecurityGroupInterfaceService, this.listVirtualSystemPolicyService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Security Group interface Window");
-            ViewUtil.addWindow(new UpdateSecurityGroupInterfaceWindow(getSelectedItem().getBean()));
+            ViewUtil.addWindow(new UpdateSecurityGroupInterfaceWindow(getSelectedItem().getBean(),
+                    this.listVirtualSystemPolicyService, this.updateSecurityGroupInterfaceService));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Security Group interface Window");
-            DeleteWindowUtil.deleteSecurityGroupInterface(getSelectedItem().getBean(), this.conformService);
+            DeleteWindowUtil.deleteSecurityGroupInterface(getSelectedItem().getBean(), this.deleteSecurityGroupInterfaceService);
         }
         if (event.getButton().getId().equals(ToolbarButtons.BACK.getId())) {
             // removing object from the sub view map so it can be garbage collected
@@ -164,8 +185,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
 
             BaseIdRequest request = new BaseIdRequest();
             request.setId(getDtoInContext().getId());
-            ListSecurityGroupInterfaceServiceByVirtualSystem service = new ListSecurityGroupInterfaceServiceByVirtualSystem();
-            ListResponse<SecurityGroupInterfaceDto> res = service.dispatch(request);
+            ListResponse<SecurityGroupInterfaceDto> res = this.listSecurityGroupInterfaceServiceByVirtualSystem.dispatch(request);
 
             this.tableContainer.removeAllItems();
             for (SecurityGroupInterfaceDto sgi : res.getList()) {

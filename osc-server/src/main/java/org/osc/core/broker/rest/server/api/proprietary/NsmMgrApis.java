@@ -19,9 +19,7 @@ package org.osc.core.broker.rest.server.api.proprietary;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -30,17 +28,15 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.api.ManagerApis;
-import org.osc.core.broker.rest.server.model.MgrFile;
 import org.osc.core.broker.rest.server.model.Notification;
-import org.osc.core.broker.service.PropagateVSMgrFileService;
-import org.osc.core.broker.service.TagVmService;
-import org.osc.core.broker.service.UnTagVmService;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
-import org.osc.core.broker.service.request.PropagateVSMgrFileRequest;
+import org.osc.core.broker.service.api.TagVmServiceApi;
+import org.osc.core.broker.service.api.UnTagVmServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.request.QueryVmInfoRequest;
 import org.osc.core.broker.service.request.TagVmRequest;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
@@ -62,35 +58,23 @@ public class NsmMgrApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private PropagateVSMgrFileService propagateVSMgrFileService;
+    private QueryVmInfoServiceApi queryVmInfoService;
 
     @Reference
-    private QueryVmInfoServiceApi queryVmInfoService;
+    private TagVmServiceApi tagVmService;
+
+    @Reference
+    private UnTagVmServiceApi untagVmService;
+
+    @Reference
+    private UserContextApi userContext;
 
     @Path("/notification")
     @POST
     public Response postNotification(@Context HttpHeaders headers, @Context HttpServletRequest httpRequest,
             Notification notification) {
         log.info("postNotification(): " + notification);
-        return this.managerApis.triggerMcSync(SessionUtil.getUsername(headers), httpRequest.getRemoteAddr(), notification);
-    }
-
-    @Path("/propagateMgrFile/vs/{vsName}")
-    @PUT
-    public Response propagateMgrFile(@Context HttpHeaders headers, @PathParam("vsName") String vsName,
-            MgrFile mgrFile) {
-
-        log.info("Propagate MgrFile for vsName: " + vsName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-
-        PropagateVSMgrFileRequest request = new PropagateVSMgrFileRequest();
-        request.setVsName(vsName);
-        request.setDaiList(mgrFile.getApplianceInstances());
-        request.setMgrFile(mgrFile.getMgrFile());
-        request.setMgrFileName(mgrFile.getMgrFileName());
-
-        return this.apiUtil.getResponse(this.propagateVSMgrFileService, request);
-
+        return this.managerApis.triggerMcSync(OscAuthFilter.getUsername(headers), httpRequest.getRemoteAddr(), notification);
     }
 
     @Path("/queryVmInfo")
@@ -98,7 +82,7 @@ public class NsmMgrApis {
     public Response queryVMInfo(@Context HttpHeaders headers, QueryVmInfoRequest queryVmInfo) {
 
         log.info("Query VM info request: " + queryVmInfo);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.getResponse(this.queryVmInfoService, queryVmInfo);
     }
@@ -108,9 +92,9 @@ public class NsmMgrApis {
     public Response tagVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
 
         log.info("Tag VM info request: " + tagVmRequest);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
-        return this.apiUtil.getResponse(new TagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(this.tagVmService, tagVmRequest);
     }
 
     @Path("/untagVm")
@@ -118,9 +102,9 @@ public class NsmMgrApis {
     public Response unquarantineVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
 
         log.info("UnTag VM info request: " + tagVmRequest);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
-        return this.apiUtil.getResponse(new UnTagVmService(), tagVmRequest);
+        return this.apiUtil.getResponse(this.untagVmService, tagVmRequest);
     }
 
 }

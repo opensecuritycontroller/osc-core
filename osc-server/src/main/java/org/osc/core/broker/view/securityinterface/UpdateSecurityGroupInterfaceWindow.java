@@ -17,12 +17,11 @@
 package org.osc.core.broker.view.securityinterface;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
+import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.securityinterface.UpdateSecurityGroupInterfaceService;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.sdk.controller.FailurePolicyType;
 
@@ -40,11 +39,14 @@ public class UpdateSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfa
 
     final String CAPTION = "Update Policy Mapping";
 
-    private ConformService conformService = StaticRegistry.conformService();
+    private final UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
 
-    public UpdateSecurityGroupInterfaceWindow(SecurityGroupInterfaceDto dto) throws Exception {
-        super(dto.getParentId());
+    public UpdateSecurityGroupInterfaceWindow(SecurityGroupInterfaceDto dto,
+            ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService,
+            UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService) throws Exception {
+        super(dto.getParentId(), listVirtualSystemPolicyService);
         this.dto = dto;
+        this.updateSecurityGroupInterfaceService = updateSecurityGroupInterfaceService;
         createWindow(this.CAPTION);
     }
 
@@ -89,8 +91,7 @@ public class UpdateSecurityGroupInterfaceWindow extends BaseSecurityGroupInterfa
                 BaseRequest<SecurityGroupInterfaceDto> req = new BaseRequest<SecurityGroupInterfaceDto>();
                 req.setDto(newDto);
 
-                UpdateSecurityGroupInterfaceService updateService = new UpdateSecurityGroupInterfaceService(this.conformService);
-                updateService.dispatch(req);
+                this.updateSecurityGroupInterfaceService.dispatch(req);
 
                 close();
             }

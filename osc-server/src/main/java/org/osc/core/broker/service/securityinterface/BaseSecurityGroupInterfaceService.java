@@ -34,36 +34,34 @@ import org.osc.core.broker.service.validator.SecurityGroupInterfaceDtoValidator;
 public abstract class BaseSecurityGroupInterfaceService<I extends Request, O extends Response> extends
 ServiceDispatcher<I, O> {
 
-    protected VirtualSystem vs;
-    protected Policy policy;
-
-    protected void validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
+    protected VirtualSystem validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
         SecurityGroupInterfaceDtoValidator.checkForNullFields(dto);
         SecurityGroupInterfaceDtoValidator.checkFieldLength(dto);
 
-        this.vs = VirtualSystemEntityMgr.findById(em, dto.getParentId());
+        VirtualSystem vs = VirtualSystemEntityMgr.findById(em, dto.getParentId());
 
-        if (this.vs == null || this.vs.getMarkedForDeletion()) {
+        if (vs == null || vs.getMarkedForDeletion()) {
             throw new VmidcBrokerValidationException("Virtual System with Id: " + dto.getParentId()
             + "  is either not found or is been deleted by the user.");
         }
 
-        if (!ManagerApiFactory.syncsPolicyMapping(this.vs)) {
+        if (!ManagerApiFactory.syncsPolicyMapping(vs)) {
             throw new VmidcBrokerValidationException("Security group interfaces cannot be created or updated for appliance manager that does not support policy mapping.");
         }
 
-        this.policy = PolicyEntityMgr.findById(em, dto.getPolicyId());
+        Policy policy = PolicyEntityMgr.findById(em, dto.getPolicyId());
 
-        if (this.policy == null) {
+        if (policy == null) {
             throw new VmidcBrokerValidationException("Policy with Id: " + dto.getPolicyId() + "  is not found.");
         }
 
-        ApplianceManagerConnector mc = this.vs.getDistributedAppliance().getApplianceManagerConnector();
+        ApplianceManagerConnector mc = vs.getDistributedAppliance().getApplianceManagerConnector();
 
-        if (!mc.getPolicies().contains(this.policy)) {
-            throw new VmidcBrokerValidationException("Policy with Name: " + this.policy.getName()
+        if (!mc.getPolicies().contains(policy)) {
+            throw new VmidcBrokerValidationException("Policy with Name: " + policy.getName()
             + " is not defined in the manager: " + mc.getName());
         }
+        return vs;
     }
 
 }

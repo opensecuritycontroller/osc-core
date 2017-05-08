@@ -17,8 +17,9 @@
 package org.osc.core.broker.view.maintenance;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
+import org.osc.core.broker.service.api.SetEmailSettingsServiceApi;
 import org.osc.core.broker.service.dto.EmailSettingsDto;
-import org.osc.core.broker.service.email.GetEmailSettingsService;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.view.common.StyleConstants;
@@ -42,8 +43,13 @@ public class EmailLayout extends FormLayout {
     private VerticalLayout container = null;
     private Button edit = null;
 
-    public EmailLayout() {
+    private GetEmailSettingsServiceApi getEmailSettingsService;
+    private SetEmailSettingsServiceApi setEmailSettingsService;
+
+    public EmailLayout(GetEmailSettingsServiceApi getEmailSettingsService, SetEmailSettingsServiceApi setEmailSettingsService) {
         super();
+        this.getEmailSettingsService = getEmailSettingsService;
+        this.setEmailSettingsService = setEmailSettingsService;
         try {
 
             this.emailTable = createTable();
@@ -89,7 +95,7 @@ public class EmailLayout extends FormLayout {
 
     private void editClicked() throws Exception {
         try {
-            ViewUtil.addWindow(new SetEmailSettingsWindow(this));
+            ViewUtil.addWindow(new SetEmailSettingsWindow(this, this.getEmailSettingsService, this.setEmailSettingsService));
         } catch (Exception ex) {
             log.error("Error: " + ex);
         }
@@ -119,9 +125,7 @@ public class EmailLayout extends FormLayout {
     @SuppressWarnings("unchecked")
     public void populateEmailtable() {
         try {
-            GetEmailSettingsService emailService = new GetEmailSettingsService();
-
-            BaseDtoResponse<EmailSettingsDto> emailSettingsResponse = emailService.dispatch(new Request() {
+            BaseDtoResponse<EmailSettingsDto> emailSettingsResponse = this.getEmailSettingsService.dispatch(new Request() {
             });
 
             if (emailSettingsResponse.getDto() != null) {

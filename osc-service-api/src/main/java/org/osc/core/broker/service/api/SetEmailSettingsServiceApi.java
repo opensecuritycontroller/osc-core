@@ -22,4 +22,8 @@ import org.osc.core.broker.service.response.EmptySuccessResponse;
 
 public interface SetEmailSettingsServiceApi
         extends ServiceDispatcherApi<BaseRequest<EmailSettingsDto>, EmptySuccessResponse> {
+
+    void validateEmailSettings(BaseRequest<EmailSettingsDto> dto) throws Exception;
+
+    void sentTestEmail(String mailServer, String port, String from, String password, String to) throws Exception;
 }

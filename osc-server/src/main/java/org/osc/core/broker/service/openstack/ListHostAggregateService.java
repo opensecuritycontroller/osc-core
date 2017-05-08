@@ -32,7 +32,9 @@ import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListHostAggregateService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<HostAggregateDto>>
         implements ListHostAggregateServiceApi {
 

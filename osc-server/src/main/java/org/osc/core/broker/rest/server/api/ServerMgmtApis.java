@@ -16,38 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
-import org.osc.core.broker.rest.server.model.ServerStatusResponse;
-import org.osc.core.broker.service.AddSslCertificateService;
-import org.osc.core.broker.service.BackupService;
-import org.osc.core.broker.service.DeleteSslCertificateService;
-import org.osc.core.broker.service.ListSslCertificatesService;
-import org.osc.core.broker.service.dto.SslCertificateDto;
-import org.osc.core.broker.service.request.AddSslEntryRequest;
-import org.osc.core.broker.service.request.BackupRequest;
-import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.request.DeleteSslEntryRequest;
-import org.osc.core.broker.service.response.CertificateBasicInfoModel;
-import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.broker.util.api.ApiUtil;
-import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
-import org.osc.core.rest.annotations.LocalHostAuth;
-import org.osc.core.rest.annotations.OscAuth;
-import org.osc.core.server.Server;
-import org.osc.core.util.PKIUtil;
-import org.osc.core.util.ServerUtil;
-import org.osc.core.util.VersionUtil;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -65,11 +38,39 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Date;
-import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.OscAuthFilter;
+import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
+import org.osc.core.broker.rest.server.model.ServerStatusResponse;
+import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
+import org.osc.core.broker.service.api.BackupServiceApi;
+import org.osc.core.broker.service.api.DeleteSslCertificateServiceApi;
+import org.osc.core.broker.service.api.ListSslCertificatesServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
+import org.osc.core.broker.service.dto.SslCertificateDto;
+import org.osc.core.broker.service.request.AddSslEntryRequest;
+import org.osc.core.broker.service.request.BackupRequest;
+import org.osc.core.broker.service.request.BaseRequest;
+import org.osc.core.broker.service.request.DeleteSslEntryRequest;
+import org.osc.core.broker.service.response.CertificateBasicInfoModel;
+import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.util.api.ApiUtil;
+import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
+import org.osc.core.rest.annotations.LocalHostAuth;
+import org.osc.core.rest.annotations.OscAuth;
+import org.osc.core.util.PKIUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 @Component(service = ServerMgmtApis.class)
 @Api(tags = "Operations for OSC server", authorizations = { @Authorization(value = "Basic Auth") })
@@ -80,10 +81,25 @@ public class ServerMgmtApis {
     private static final Logger logger = Logger.getLogger(ServerMgmtApis.class);
 
     @Reference
-    Server server;
+    ServerApi server;
+
+    @Reference
+    AddSslCertificateServiceApi addSSlCertificateService;
 
     @Reference
     private ApiUtil apiUtil;
+
+    @Reference
+    private BackupServiceApi backupService;
+
+    @Reference
+    private DeleteSslCertificateServiceApi deleteSslCertificateService;
+
+    @Reference
+    private ListSslCertificatesServiceApi listSslCertificateService;
+
+    @Reference
+    private UserContextApi userContext;
 
     @ApiOperation(value = "Get server status",
             notes = "Returns server status information",
@@ -97,10 +113,10 @@ public class ServerMgmtApis {
         logger.info("getStatus()");
 
         ServerStatusResponse serverStatusResponse = new ServerStatusResponse();
-        serverStatusResponse.setVersion(VersionUtil.getVersion().getVersionStr());
+        serverStatusResponse.setVersion(this.server.getVersionStr());
         serverStatusResponse.setDbVersion(ReleaseUpgradeMgr.TARGET_DB_VERSION);
         serverStatusResponse.setCurrentServerTime(new Date());
-        serverStatusResponse.setPid(ServerUtil.getCurrentPid());
+        serverStatusResponse.setPid(this.server.getCurrentPid());
 
         return Response.status(Status.OK).entity(serverStatusResponse).build();
     }
@@ -116,15 +132,14 @@ public class ServerMgmtApis {
     @POST
     public Response getDbBackupFile(@Context HttpHeaders headers, @ApiParam(required = true) BackupRequest request) {
 
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        logger.info(SessionUtil.getCurrentUser()+" is generating a backap of the database");
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        logger.info(this.userContext.getCurrentUser()+" is generating a backap of the database");
         StreamingOutput fileStream = new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {
                 try {
-                    BackupService bkpservice = new BackupService();
-                    bkpservice.dispatch(request);
-                    byte[] data = PKIUtil.readBytesFromFile(bkpservice.getEncryptedBackupFile(request.getBackupFileName()));
+                    ServerMgmtApis.this.backupService.dispatch(request);
+                    byte[] data = PKIUtil.readBytesFromFile(ServerMgmtApis.this.backupService.getEncryptedBackupFile(request.getBackupFileName()));
                     output.write(data);
                     output.flush();
                 } catch (Exception e) {
@@ -143,13 +158,13 @@ public class ServerMgmtApis {
     @PUT
     public Response upgradeServerReady() {
 
-        logger.info("upgradedServerReady (pid:" + ServerUtil.getCurrentPid() + "): Check pending upgrade server.");
-        if (!this.server.isInMaintenance()) {
-            logger.info("upgradedServerReady (pid:" + ServerUtil.getCurrentPid() + "): No pending upgrade.");
+        logger.info("upgradedServerReady (pid:" + this.server.getCurrentPid() + "): Check pending upgrade server.");
+        if (!this.server.isUnderMaintenance()) {
+            logger.info("upgradedServerReady (pid:" + this.server.getCurrentPid() + "): No pending upgrade.");
             return Response.status(Status.BAD_REQUEST).build();
         }
 
-        logger.info("upgradedServerReady (pid:" + ServerUtil.getCurrentPid()
+        logger.info("upgradedServerReady (pid:" + this.server.getCurrentPid()
                 + "): Upgraded server is up. Start shutdown...");
         Thread shutdownThread = new Thread("Shutdown-Thread") {
             @Override
@@ -167,7 +182,7 @@ public class ServerMgmtApis {
                     }
                     ServerMgmtApis.this.server.stopServer();
                 } catch (Exception e) {
-                    logger.error("upgradedServerReady (pid:" + ServerUtil.getCurrentPid()
+                    logger.error("upgradedServerReady (pid:" + ServerMgmtApis.this.server.getCurrentPid()
                             + "): Shutting down Tomcat after upgrade experienced failures", e);
                 }
             }
@@ -186,11 +201,11 @@ public class ServerMgmtApis {
     public List<CertificateBasicInfoModel> getSslCertificatesList(@Context HttpHeaders headers) {
 
         logger.info("Listing ssl certificates from trust store");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<CertificateBasicInfoModel> response = (ListResponse<CertificateBasicInfoModel>) this.apiUtil
-                .getListResponse(new ListSslCertificatesService(), new BaseRequest<>(true));
+                .getListResponse(this.listSslCertificateService, new BaseRequest<>(true));
 
         return response.getList();
     }
@@ -207,9 +222,9 @@ public class ServerMgmtApis {
     @POST
     public Response addSslCertificate(@Context HttpHeaders headers, @ApiParam(required = true) SslCertificateDto sslEntry) {
         logger.info("Adding new SSL certificate to truststore");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         AddSslEntryRequest addSslEntryRequest = new AddSslEntryRequest(sslEntry.getAlias(), sslEntry.getCertificate());
-        return this.apiUtil.getResponse(new AddSslCertificateService(), addSslEntryRequest);
+        return this.apiUtil.getResponse(this.addSSlCertificateService, addSslEntryRequest);
     }
 
     /**
@@ -226,7 +241,7 @@ public class ServerMgmtApis {
     @DELETE
     public Response deleteSslCertificate(@Context HttpHeaders headers, @ApiParam(value = "SSL certificate alias") @PathParam("alias") String alias) {
         logger.info("Deleting SSL certificate from trust store with alias: " + alias);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponse(new DeleteSslCertificateService(), new DeleteSslEntryRequest(alias));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponse(this.deleteSslCertificateService, new DeleteSslEntryRequest(alias));
     }
 }

@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
+import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -23,6 +24,7 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -30,9 +32,6 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
-import org.osc.core.util.encryption.EncryptionException;
-
-import org.apache.log4j.Logger;
 
 public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
@@ -50,7 +49,7 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
     private TextField rabbitMQUserName = null;
     private PasswordField rabbitMQUserPassword = null;
     private TextField rabbitMQPort = null;
-    private BaseVCWindow baseVCWindow;
+    private final BaseVCWindow baseVCWindow;
 
     public AdvancedSettingsWindow(BaseVCWindow baseVCWindow) throws Exception {
         this.baseVCWindow = baseVCWindow;

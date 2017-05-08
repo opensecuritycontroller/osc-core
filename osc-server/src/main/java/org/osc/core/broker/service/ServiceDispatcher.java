@@ -26,15 +26,17 @@ import org.apache.log4j.Logger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.osc.core.broker.service.api.ServiceDispatcherApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcDbConcurrencyException;
 import org.osc.core.broker.service.exceptions.VmidcDbConstraintViolationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
-import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
@@ -45,13 +47,25 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
     private static final Logger log = Logger.getLogger(ServiceDispatcher.class);
     private EntityManager em = null;
 
+    /**
+     * This field is why we have: <p><code>
+     *
+     *     -dsannotations-options: inherit
+     *
+     * </code><p> in the bnd file. This is a non-default
+     * option, but it is much neater than forcing every service
+     * to implement a getUserConext() method.
+     */
+    @Reference
+    protected UserContextApi userContext;
+
     private final Queue<ChainedDispatch<O>> chainedDispatches = new LinkedList<>();
 
     // generalized method to dispatch incoming requests to the appropriate
     // service handler
     @Override
     public O dispatch(I request) throws Exception {
-        log.info("Service dispatch " + this.getClass().getSimpleName() + ". User: " + SessionUtil.getCurrentUser()
+        log.info("Service dispatch " + this.getClass().getSimpleName() + ". User: " + this.userContext.getCurrentUser()
         + ", Request: " + request);
 
         if (Server.isInMaintenance()) {

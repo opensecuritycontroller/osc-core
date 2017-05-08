@@ -17,12 +17,13 @@
 package org.osc.core.broker.view.vc;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
+import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
+import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.vc.UpdateVirtualizationConnectorService;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ViewUtil;
 
 public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
@@ -33,11 +34,14 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
 
     final String CAPTION = "Edit Virtualization Connector";
 
-    private UpdateVirtualizationConnectorService updateVirtualizationConnectorService =
-            StaticRegistry.updateVirtualizationConnectorService();
+    private final UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService;
 
-    public UpdateVirtualizationConnectorWindow(VirtualizationConnectorView vcView) throws Exception {
+    public UpdateVirtualizationConnectorWindow(VirtualizationConnectorView vcView,
+            UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService,
+            PluginService pluginService, ValidationApi validator) throws Exception {
+        super(pluginService, validator);
         this.currentVCObject = vcView.getParentContainer().getItem(vcView.getParentItemId());
+        this.updateVirtualizationConnectorService = updateVirtualizationConnectorService;
         createWindow(this.CAPTION);
     }
 
@@ -61,7 +65,7 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
             this.controllerPW.setValue(vcObject.getControllerPassword());
             this.controllerType.setValue(vcObject.getControllerType().toString());
         } else {
-            this.controllerType.setValue(ControllerType.NONE.toString());
+            this.controllerType.setValue(NO_CONTROLLER);
             this.controllerType.setEnabled(true);
         }
 
@@ -78,7 +82,7 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
         try {
             if (validateForm()) {
                 // creating add request with user entered data
-                DryRunRequest<VirtualizationConnectorDto> updateRequest = createRequest();
+                DryRunRequest<VirtualizationConnectorRequest> updateRequest = createRequest();
                 updateRequest.getDto().setId(this.currentVCObject.getBean().getId());
                 log.debug("Updating virtualization connector - " + this.name.getValue().trim());
                 // no response needed for update request

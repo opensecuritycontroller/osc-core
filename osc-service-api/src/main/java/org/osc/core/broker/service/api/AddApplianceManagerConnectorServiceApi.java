@@ -16,17 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
-import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
+import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
-import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.response.BaseJobResponse;
 
 public interface AddApplianceManagerConnectorServiceApi
-        extends ServiceDispatcherApi<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
-
-    void checkManagerConnection(DryRunRequest<ApplianceManagerConnectorDto> request,
-            ApplianceManagerConnector mc) throws ErrorTypeException;
-
-    void setForceAddSSLCertificates(boolean forceAddSSLCertificates);
+        extends ServiceDispatcherApi<DryRunRequest<ApplianceManagerConnectorRequest>, BaseJobResponse> {
 }

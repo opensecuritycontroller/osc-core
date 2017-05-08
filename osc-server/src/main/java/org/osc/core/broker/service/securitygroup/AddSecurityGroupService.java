@@ -16,12 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securitygroup;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
@@ -30,10 +33,13 @@ import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
+import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
         implements AddSecurityGroupServiceApi {
 
@@ -44,10 +50,10 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
     VmidcBrokerValidationException {
 
         SecurityGroupDto dto = request.getDto();
-        validateAndLoad(em, dto);
+        List<String> regions = validateAndLoad(em, dto);
         if (dto.isProtectAll()
                 && SecurityGroupEntityMgr.isSecurityGroupExistWithProtectAll(em, dto.getTenantId(),
-                        this.vc.getId())) {
+                        dto.getParentId())) {
             throw new VmidcBrokerValidationException(
                     "Security Group exists with the same Tenant and Selection for this Virtualization Connector.");
         }
@@ -59,10 +65,10 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
         UnlockObjectMetaTask unlockTask = null;
 
         try {
+            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
+            unlockTask = LockUtil.tryLockVC(vc, LockType.READ_LOCK);
 
-            unlockTask = LockUtil.tryLockVC(this.vc, LockType.READ_LOCK);
-
-            SecurityGroup securityGroup = new SecurityGroup(this.vc, dto.getTenantId(), dto.getTenantName());
+            SecurityGroup securityGroup = new SecurityGroup(vc, dto.getTenantId(), dto.getTenantName());
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
             LOG.info("Creating security group: " + securityGroup.toString());
@@ -70,7 +76,7 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
 
             if (!securityGroup.isProtectAll()) {
                 for (SecurityGroupMemberItemDto securityGroupMemberDto : request.getMembers()) {
-                    validate(securityGroupMemberDto);
+                    validate(securityGroupMemberDto, regions);
                     addSecurityGroupMember(em, securityGroup, securityGroupMemberDto);
                 }
             }

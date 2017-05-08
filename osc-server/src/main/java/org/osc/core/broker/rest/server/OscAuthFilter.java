@@ -17,13 +17,17 @@
 package org.osc.core.broker.rest.server;
 
 import java.io.IOException;
+import java.util.Base64;
+import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
 
 import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.util.PasswordUtil;
+import org.osc.core.broker.service.api.PasswordUtilApi;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osc.core.util.AuthUtil;
 import org.osgi.service.component.annotations.Component;
@@ -34,11 +38,29 @@ import org.osgi.service.component.annotations.Reference;
 @OscAuth
 public class OscAuthFilter implements ContainerRequestFilter {
     @Reference
-    private PasswordUtil passwordUtil;
+    private PasswordUtilApi passwordUtil;
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
         AuthUtil.authenticate(containerRequestContext, RestConstants.OSC_DEFAULT_LOGIN, this.passwordUtil.getOscDefaultPass());
     }
 
+    public static String getUsername(HttpHeaders headers) {
+        List<String> authorizationHeader = headers.getRequestHeader("Authorization");
+
+        if (authorizationHeader == null || authorizationHeader.size() == 0) {
+            throw new IllegalArgumentException("Basic authorization is not set");
+        }
+
+        String authString = authorizationHeader.get(0);
+        // Get encoded username and password
+        final String encodedUserPassword = authString.replaceFirst("Basic ", "");
+
+        // Decode username and password
+        String usernameAndPassword = new String(Base64.getDecoder().decode(encodedUserPassword));
+
+        // Split username and password tokens
+        final StringTokenizer tokenizer = new StringTokenizer(usernameAndPassword, ":");
+        return tokenizer.nextToken();
+    }
 }

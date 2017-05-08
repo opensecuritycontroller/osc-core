@@ -16,11 +16,7 @@
  *******************************************************************************/
 package org.osc.core.server.activator;
 
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.*;
 
 import java.io.IOException;
 
@@ -33,7 +29,6 @@ import javax.servlet.ServletResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.osc.core.broker.rest.server.AgentAuthFilter;
 import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.api.AlarmApis;
@@ -104,8 +99,6 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
     private VirtualizationConnectorApis virtualizationConnectorApis;
 
     @Reference
-    private AgentAuthFilter agentAuthFilter;
-    @Reference
     private NsxAuthFilter nsxAuthFilter;
     @Reference
     private OscAuthFilter oscAuthFilter;
@@ -120,7 +113,7 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
 
         //Auth Filters
         super.register(LocalHostAuthFilter.class);
-        super.registerInstances(this.agentAuthFilter, this.nsxAuthFilter, this.oscAuthFilter);
+        super.registerInstances(this.nsxAuthFilter, this.oscAuthFilter);
 
         //Exception mappers
         super.register(BadRequestExceptionMapper.class);

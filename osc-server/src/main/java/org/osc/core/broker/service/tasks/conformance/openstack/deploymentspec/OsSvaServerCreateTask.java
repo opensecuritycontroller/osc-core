@@ -121,7 +121,9 @@ class OsSvaServerCreateTask extends TransactionalTask {
             CreatedServerDetails createdServer = null;
 
             // TODO: sjallapx - Hack to workaround issue SimpleDateFormat parse errors due to JCloud on some partner environments.
-            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
+            boolean createServerWithNoOSTSecurityGroup = this.dai.getVirtualSystem().getVirtualizationConnector().isControllerDefined()
+                    ? SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem()) : false;
+            if (createServerWithNoOSTSecurityGroup) {
                 createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
                         imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
                         ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),

@@ -33,32 +33,34 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.DeleteDeploymentSpecService;
-import org.osc.core.broker.service.ForceDeleteVirtualSystemService;
-import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.ListDeploymentSpecServiceByVirtualSystem;
-import org.osc.core.broker.service.ListDistributedApplianceInstanceByVSService;
-import org.osc.core.broker.service.UpdateDeploymentSpecService;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
+import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemApi;
+import org.osc.core.broker.service.api.ListDistributedApplianceInstanceByVSServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
+import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
+import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
-import org.osc.core.broker.service.policy.ListVirtualSystemPolicyService;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.securityinterface.AddSecurityGroupInterfaceService;
-import org.osc.core.broker.service.securityinterface.DeleteSecurityGroupInterfaceService;
-import org.osc.core.broker.service.securityinterface.ListSecurityGroupInterfaceServiceByVirtualSystem;
-import org.osc.core.broker.service.securityinterface.UpdateSecurityGroupInterfaceService;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
@@ -88,7 +90,43 @@ public class VirtualSystemApis {
     private ApiUtil apiUtil;
 
     @Reference
-    private AddDeploymentSpecServiceApi addDeploymentSpecServiceApi;
+    private AddDeploymentSpecServiceApi addDeploymentSpecService;
+
+    @Reference
+    private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
+
+    @Reference
+    private DeleteDeploymentSpecServiceApi deleteDeploymentSpecService;
+
+    @Reference
+    private ListDeploymentSpecServiceByVirtualSystemApi listDeploymentSpecServiceByVirtualSystem;
+
+    @Reference
+    private ListDistributedApplianceInstanceByVSServiceApi listDistributedApplianceInstanceByVSService;
+
+    @Reference
+    private ForceDeleteVirtualSystemServiceApi forceDeleteVirtualSystemService;
+
+    @Reference
+    private DeleteSecurityGroupInterfaceServiceApi deleteSecurityGroupInterfaceService;
+
+    @Reference
+    private ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
+
+    @Reference
+    private AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService;
+
+    @Reference
+    private ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem;
+
+    @Reference
+    private UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
+
+    @Reference
+    private UserContextApi userContext;
+
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
     // DAI APIs
     @ApiOperation(value = "Lists Appliance Instances",
@@ -103,11 +141,11 @@ public class VirtualSystemApis {
             @Context HttpHeaders headers, @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
 
         logger.info("Listing Distributed Appliance Instances based on given VS id");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) this.apiUtil
-                .getListResponse(new ListDistributedApplianceInstanceByVSService(), new BaseIdRequest(vsId));
+                .getListResponse(this.listDistributedApplianceInstanceByVSService, new BaseIdRequest(vsId));
         return response.getList();
     }
 
@@ -123,10 +161,10 @@ public class VirtualSystemApis {
                                        @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
 
         logger.info("Listing Policies based on given VS id");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
-        ListResponse<PolicyDto> response = (ListResponse<PolicyDto>) this.apiUtil.getListResponse(new ListVirtualSystemPolicyService(),
+        ListResponse<PolicyDto> response = (ListResponse<PolicyDto>) this.apiUtil.getListResponse(this.listVirtualSystemPolicyService,
                 new BaseIdRequest(vsId));
         return response.getList();
     }
@@ -143,11 +181,11 @@ public class VirtualSystemApis {
     public List<DeploymentSpecDto> getDeploymentSpecsByVirtualSystem(@Context HttpHeaders headers,
                                                                      @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Listing Deployment Spces");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<DeploymentSpecDto> response = (ListResponse<DeploymentSpecDto>) this.apiUtil
-                .getListResponse(new ListDeploymentSpecServiceByVirtualSystem(), new BaseIdRequest(vsId));
+                .getListResponse(this.listDeploymentSpecServiceByVirtualSystem, new BaseIdRequest(vsId));
         return response.getList();
     }
 
@@ -162,11 +200,11 @@ public class VirtualSystemApis {
                                                @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
                                                @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("getting Deployment Spec " + dsId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(dsId);
         getDtoRequest.setEntityName("DeploymentSpec");
-        GetDtoFromEntityService<DeploymentSpecDto> getDtoService = new GetDtoFromEntityService<DeploymentSpecDto>();
+        GetDtoFromEntityServiceApi<DeploymentSpecDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(DeploymentSpecDto.class);
         DeploymentSpecDto dto = this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
         this.apiUtil.validateParentIdMatches(dto, vsId, "SecurityGroup");
@@ -185,9 +223,9 @@ public class VirtualSystemApis {
                                          @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
                                          @ApiParam(required = true) DeploymentSpecDto dsDto) {
         logger.info("Creating Deployment Spec ...");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setParentIdOrThrow(dsDto, vsId, "Deployment Specification");
-        return this.apiUtil.getResponseForBaseRequest(this.addDeploymentSpecServiceApi,
+        return this.apiUtil.getResponseForBaseRequest(this.addDeploymentSpecService,
                 new BaseRequest<DeploymentSpecDto>(dsDto));
     }
 
@@ -203,9 +241,9 @@ public class VirtualSystemApis {
                                          @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId,
                                          @ApiParam(required = true) DeploymentSpecDto dsDto) {
         logger.info("Updating Deployment Spec " + dsId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdAndParentIdOrThrow(dsDto, dsId, vsId, "Deployment Spec");
-        return this.apiUtil.getResponseForBaseRequest(new UpdateDeploymentSpecService(),
+        return this.apiUtil.getResponseForBaseRequest(this.updateDeploymentSpecService,
                 new BaseRequest<DeploymentSpecDto>(dsDto));
     }
 
@@ -220,8 +258,8 @@ public class VirtualSystemApis {
                                          @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
                                          @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponseForBaseRequest(this.deleteDeploymentSpecService,
                 new BaseDeleteRequest(dsId, vsId, false));// false as this is not force delete
     }
 
@@ -236,8 +274,8 @@ public class VirtualSystemApis {
                                               @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
                                               @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new DeleteDeploymentSpecService(),
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponseForBaseRequest(this.deleteDeploymentSpecService,
                 new BaseDeleteRequest(dsId, vsId, true));
     }
 
@@ -253,10 +291,10 @@ public class VirtualSystemApis {
     public List<SecurityGroupInterfaceDto> getSecurityGroupInterfacesByVirtualSystem(
             @Context HttpHeaders headers, @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Listing Traffic Policy Mappings");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         @SuppressWarnings("unchecked")
         ListResponse<SecurityGroupInterfaceDto> response = (ListResponse<SecurityGroupInterfaceDto>) this.apiUtil
-                .getListResponse(new ListSecurityGroupInterfaceServiceByVirtualSystem(), new BaseIdRequest(vsId));
+                .getListResponse(this.listSecurityGroupInterfaceServiceByVirtualSystem, new BaseIdRequest(vsId));
         return response.getList();
     }
 
@@ -271,11 +309,11 @@ public class VirtualSystemApis {
                                                                @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
                                                                @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
         logger.info("Getting Security Group Interface " + sgiId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(sgiId);
         getDtoRequest.setEntityName("SecurityGroupInterface");
-        GetDtoFromEntityService<SecurityGroupInterfaceDto> getDtoService = new GetDtoFromEntityService<SecurityGroupInterfaceDto>();
+        GetDtoFromEntityServiceApi<SecurityGroupInterfaceDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(SecurityGroupInterfaceDto.class);
         SecurityGroupInterfaceDto dto = this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
 
         this.apiUtil.validateParentIdMatches(dto, vsId, "SecurityGroupInterface");
@@ -294,9 +332,9 @@ public class VirtualSystemApis {
                                                  @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
                                                  @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
         logger.info("Creating Security Group Interface ...");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setParentIdOrThrow(sgiDto, vsId, "Traffic Policy Mapping");
-        return this.apiUtil.getResponseForBaseRequest(new AddSecurityGroupInterfaceService(this.conformService),
+        return this.apiUtil.getResponseForBaseRequest(this.addSecurityGroupInterfaceService,
                 new BaseRequest<SecurityGroupInterfaceDto>(sgiDto));
     }
 
@@ -312,9 +350,9 @@ public class VirtualSystemApis {
                                                  @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId,
                                                  @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
         logger.info("Updating Security Group Interface " + sgiId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdAndParentIdOrThrow(sgiDto, sgiId, vsId, "Traffic Policy Mapping");
-        return this.apiUtil.getResponseForBaseRequest(new UpdateSecurityGroupInterfaceService(this.conformService),
+        return this.apiUtil.getResponseForBaseRequest(this.updateSecurityGroupInterfaceService,
                 new BaseRequest<SecurityGroupInterfaceDto>(sgiDto));
     }
 
@@ -329,8 +367,8 @@ public class VirtualSystemApis {
                                                  @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
                                                  @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
         logger.info("Deleting Security Group Interface.. " + sgiId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new DeleteSecurityGroupInterfaceService(this.conformService),
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponseForBaseRequest(this.deleteSecurityGroupInterfaceService,
                 new BaseIdRequest(sgiId, vsId));
     }
 
@@ -345,8 +383,8 @@ public class VirtualSystemApis {
     public Response forceDeleteVirtualSystem(@Context HttpHeaders headers,
                                              @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Deleting Virtual System " + vsId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new ForceDeleteVirtualSystemService(),
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponseForBaseRequest(this.forceDeleteVirtualSystemService,
                 new BaseDeleteRequest(vsId, true));
     }
 }

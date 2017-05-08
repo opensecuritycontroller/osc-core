@@ -19,8 +19,8 @@ package org.osc.core.broker.view.securityinterface;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
-import org.osc.core.broker.service.policy.ListVirtualSystemPolicyService;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
@@ -46,9 +46,12 @@ public abstract class BaseSecurityGroupInterfaceWindow extends CRUDBaseWindow<Ok
     protected TextField tag;
     protected Long vsId;
 
-    public BaseSecurityGroupInterfaceWindow(Long vsId) {
+    private final ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
+
+    public BaseSecurityGroupInterfaceWindow(Long vsId, ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService) {
         super();
         this.vsId = vsId;
+        this.listVirtualSystemPolicyService = listVirtualSystemPolicyService;
     }
 
     protected TextField getName() {
@@ -90,9 +93,8 @@ public abstract class BaseSecurityGroupInterfaceWindow extends CRUDBaseWindow<Ok
             // Calling List Service
             BaseIdRequest req = new BaseIdRequest();
             req.setId(this.vsId);
-            ListVirtualSystemPolicyService service = new ListVirtualSystemPolicyService();
 
-            List<PolicyDto> vsPolicyDto = service.dispatch(req).getList();
+            List<PolicyDto> vsPolicyDto = this.listVirtualSystemPolicyService.dispatch(req).getList();
 
             BeanItemContainer<PolicyDto> vsPolicyListContainer = new BeanItemContainer<PolicyDto>(PolicyDto.class,
                     vsPolicyDto);

@@ -19,7 +19,7 @@ package org.osc.core.broker.window.update;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.rest.RestConstants;
-import org.osc.core.broker.service.UpdateUserService;
+import org.osc.core.broker.service.api.UpdateUserServiceApi;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.request.UpdateUserRequest;
 import org.osc.core.broker.service.response.UpdateUserResponse;
@@ -52,10 +52,10 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private TextField email = null;
     private ComboBox role = null;
 
-    private BeanItem<UserDto> currentUser = null;
-    private final UpdateUserService updateUserService;
+    private final BeanItem<UserDto> currentUser;
+    private final UpdateUserServiceApi updateUserService;
 
-    public UpdateUserWindow(UserView userView, UpdateUserService updateUserService) throws Exception {
+    public UpdateUserWindow(UserView userView, UpdateUserServiceApi updateUserService) throws Exception {
         this.currentUser = userView.getParentItem();
         this.updateUserService = updateUserService;
         createWindow(this.CAPTION);

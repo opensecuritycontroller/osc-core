@@ -46,10 +46,12 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.maintenance.ApplianceUploader;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Component;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+@Component
 public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
         implements ImportApplianceSoftwareVersionServiceApi {
 

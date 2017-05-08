@@ -18,7 +18,7 @@ package org.osc.core.broker.window.add;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.RoleType;
-import org.osc.core.broker.service.AddUserService;
+import org.osc.core.broker.service.api.AddUserServiceApi;
 import org.osc.core.broker.service.request.AddUserRequest;
 import org.osc.core.broker.service.response.AddUserResponse;
 import org.osc.core.broker.view.UserView;
@@ -51,7 +51,10 @@ public class AddUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private TextField email = null;
     private ComboBox role = null;
 
-    public AddUserWindow(UserView userView) throws Exception {
+    private final AddUserServiceApi addUserService;
+
+    public AddUserWindow(UserView userView, AddUserServiceApi addUserService) throws Exception {
+        this.addUserService = addUserService;
         createWindow(this.CAPTION);
     }
 
@@ -118,10 +121,9 @@ public class AddUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 addRequest.setRole(this.role.getValue().toString());
 
                 // calling add service
-                AddUserService addService = new AddUserService();
                 AddUserResponse addResponse;
                 log.info("adding new user - " + this.loginName.getValue());
-                addResponse = addService.dispatch(addRequest);
+                addResponse = this.addUserService.dispatch(addRequest);
                 // adding returned ID to the request DTO object
                 addRequest.setId(addResponse.getId());
                 close();

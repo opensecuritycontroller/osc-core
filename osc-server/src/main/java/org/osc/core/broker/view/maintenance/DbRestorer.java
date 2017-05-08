@@ -21,7 +21,9 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.RestoreService;
+import org.osc.core.broker.service.api.RestoreServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -29,7 +31,6 @@ import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
 import org.osc.core.broker.window.add.PasswordWindow;
-import org.osc.core.server.Server;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -52,8 +53,14 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
     private File file;
     private final Panel panel = new Panel();
     private final VerticalLayout verLayout = new VerticalLayout();
+    private final RestoreServiceApi restoreService;
+    private final ServerApi server;
+    private final ValidationApi validator;
 
-    public DbRestorer() {
+    public DbRestorer(RestoreServiceApi restoreService, ServerApi server, ValidationApi validator) {
+        this.restoreService = restoreService;
+        this.server = server;
+        this.validator = validator;
         this.upload = new Upload();
         this.upload.setButtonCaption(VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE));
         this.upload.setReceiver(this);
@@ -87,9 +94,9 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
         }
 
         // validate uploaded file is a zip file or encrypted backup file
-        if (!new RestoreService().isValidBackupFilename(filename)) {
+        if (!this.restoreService.isValidBackupFilename(filename)) {
             ViewUtil.iscNotification(
-                    VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE_INVALID_BACKUP, Server.PRODUCT_NAME),
+                    VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE_INVALID_BACKUP, this.server.getProductName()),
                     Notification.Type.WARNING_MESSAGE);
             return null;
         }
@@ -112,19 +119,16 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
     @Override
     public void uploadSucceeded(SucceededEvent event) {
     	log.info("Upload Successful! Restoring Database ......");
-    	
+
     	try {
-    		RestoreService restoreService = new RestoreService();
-    		
     		PasswordWindow.SubmitFormListener restoreAction = password -> {
 	    		RestoreRequest req = new RestoreRequest();
 	            req.setBkpFile(this.file);
 	            req.setPassword(password);
-	            RestoreService restoreService1 = new RestoreService();
 	            try {
-	            	restoreService1.dispatch(req);
+	            	this.restoreService.dispatch(req);
 	                ViewUtil.iscNotification("Upload",
-	                        VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE_UPLOAD_STARTED, Server.PRODUCT_NAME),
+	                        VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE_UPLOAD_STARTED, this.server.getProductName()),
 	                        Notification.Type.WARNING_MESSAGE);
 	            } catch (Exception e) {
 	                log.error("Restore Service Failed.", e);
@@ -135,13 +139,13 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
 	            }
 	    	};
 
-    		if(restoreService.isValidEncryptedBackupFilename(event.getFilename())) {
+    		if(this.restoreService.isValidEncryptedBackupFilename(event.getFilename())) {
     			// ask user for decryption password first
-    			PasswordWindow passwordWindow = new PasswordWindow();
+    			PasswordWindow passwordWindow = new PasswordWindow(this.validator);
     	    	passwordWindow.setSubmitFormListener(restoreAction);
-    	    	
+
     	    	ViewUtil.addWindow(passwordWindow);
-    		} else if(restoreService.isValidZipBackupFilename(event.getFilename())) {
+    		} else if(this.restoreService.isValidZipBackupFilename(event.getFilename())) {
     			// perform restore without decryption
     			restoreAction.submit(null);
     		}
@@ -149,7 +153,7 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
     		log.error("Restore Service Failed.", e);
     		// ensure that uploaded file is deleted
     		this.file.delete();
-    		
+
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
     	}
     }

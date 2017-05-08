@@ -17,12 +17,11 @@
 package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.SetNATSettingsService;
+import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.util.StaticRegistry;
-import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.maintenance.NetworkLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
@@ -40,11 +39,18 @@ public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     private TextField ipAddress = null;
 
-    private NetworkLayout networkLayout = null;
+    private final NetworkLayout networkLayout;
 
-    public SetNATSettingsWindow(NetworkLayout networkLayout) throws Exception {
+    private final SetNATSettingsServiceApi setNATSettingsService;
+
+    private final ValidationApi validator;
+
+    public SetNATSettingsWindow(NetworkLayout networkLayout, SetNATSettingsServiceApi setNATSettingsService,
+            ValidationApi validator) throws Exception {
         super();
         this.networkLayout = networkLayout;
+        this.setNATSettingsService = setNATSettingsService;
+        this.validator = validator;
         createWindow(this.CAPTION);
 
     }
@@ -73,7 +79,7 @@ public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     public boolean validateForm() {
         try {
             this.ipAddress.validate();
-            ValidateUtil.checkForValidIpAddressFormat(this.ipAddress.getValue());
+            this.validator.checkValidIpAddress(this.ipAddress.getValue());
             return true;
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage() + ".", Notification.Type.ERROR_MESSAGE);
@@ -90,8 +96,7 @@ public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 DryRunRequest<NATSettingsDto> req = new DryRunRequest<NATSettingsDto>();
                 req.setDto(dto);
 
-                SetNATSettingsService service = StaticRegistry.setNATSettingsService();
-                BaseJobResponse response = service.dispatch(req);
+                BaseJobResponse response = this.setNATSettingsService.dispatch(req);
                 this.networkLayout.populateNATTable();
                 if (response.getJobId() != null) {
                     ViewUtil.showJobNotification(response.getJobId());

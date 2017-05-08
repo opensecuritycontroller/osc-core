@@ -34,14 +34,17 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.exception.ErrorCodeDto;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
-import org.osc.core.broker.service.DeleteApplianceService;
-import org.osc.core.broker.service.DeleteApplianceSoftwareVersionService;
-import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.ListApplianceService;
-import org.osc.core.broker.service.ListApplianceSoftwareVersionService;
-import org.osc.core.broker.service.appliance.UploadApplianceVersionFileService;
+import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
+import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
+import org.osc.core.broker.service.api.ListApplianceServiceApi;
+import org.osc.core.broker.service.api.ListApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.api.UploadApplianceVersionFileServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -52,7 +55,6 @@ import org.osc.core.broker.service.request.ListApplianceSoftwareVersionRequest;
 import org.osc.core.broker.service.request.UploadRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.api.ApiUtil;
 import org.osc.core.rest.annotations.OscAuth;
 import org.osgi.service.component.annotations.Component;
@@ -78,6 +80,27 @@ public class ApplianceApis {
     @Reference
     private ApiUtil apiUtil;
 
+    @Reference
+    ListApplianceServiceApi listApplianceService;
+
+    @Reference
+    ListApplianceSoftwareVersionServiceApi listApplianceSoftwareVersionService;
+
+    @Reference
+    DeleteApplianceServiceApi deleteApplianceService;
+
+    @Reference
+    DeleteApplianceSoftwareVersionServiceApi deleteApplianceSoftwareVersionService;
+
+    @Reference
+    UploadApplianceVersionFileServiceApi uploadApplianceVersionFileService;
+
+    @Reference
+    UserContextApi userContext;
+
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
     @ApiOperation(value = "Lists All Software Function Models",
             notes = "Lists all the Software Function Models",
             response = ApplianceDto.class,
@@ -88,11 +111,11 @@ public class ApplianceApis {
     public List<ApplianceDto> getAppliance(@Context HttpHeaders headers) {
 
         logger.info("Listing Appliances");
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<ApplianceDto> response = (ListResponse<ApplianceDto>) this.apiUtil
-                .getListResponse(new ListApplianceService(), new BaseRequest<BaseDto>(true));
+                .getListResponse(this.listApplianceService, new BaseRequest<BaseDto>(true));
 
         return response.getList();
     }
@@ -109,12 +132,12 @@ public class ApplianceApis {
                                              required = true) @PathParam("applianceId") Long applianceId) {
 
         logger.info("Getting Appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityId(applianceId);
         getDtoRequest.setEntityName("Appliance");
-        GetDtoFromEntityService<ApplianceDto> getDtoService = new GetDtoFromEntityService<ApplianceDto>();
+        GetDtoFromEntityServiceApi<ApplianceDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(ApplianceDto.class);
         return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
@@ -127,8 +150,8 @@ public class ApplianceApis {
     public Response deleteAppliance(@Context HttpHeaders headers, @ApiParam(value = "Id of the Appliance Model",
             required = true) @PathParam("applianceId") Long applianceId) {
         logger.info("Deleting Appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new DeleteApplianceService(), new BaseIdRequest(applianceId));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponseForBaseRequest(this.deleteApplianceService, new BaseIdRequest(applianceId));
     }
 
     @ApiOperation(value = "Lists Software Function Software Versions",
@@ -144,12 +167,10 @@ public class ApplianceApis {
                                                                                   required = true) @PathParam("applianceId") Long applianceId) {
 
         logger.info("Listing Appliance Software Versions for appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         try {
-            ListApplianceSoftwareVersionService asvListService = new ListApplianceSoftwareVersionService();
-
-            ListResponse<ApplianceSoftwareVersionDto> response = asvListService
+            ListResponse<ApplianceSoftwareVersionDto> response = this.listApplianceSoftwareVersionService
                     .dispatch(new ListApplianceSoftwareVersionRequest(applianceId));
 
             return response.getList();
@@ -172,14 +193,14 @@ public class ApplianceApis {
 
         logger.info(
                 "getting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
         getDtoRequest.setEntityName("ApplianceSoftwareVersion");
         getDtoRequest.setEntityId(applianceSoftwareVersionId);
         getDtoRequest.setParentId(applianceId);
 
-        GetDtoFromEntityService<ApplianceSoftwareVersionDto> getDtoService = new GetDtoFromEntityService<ApplianceSoftwareVersionDto>();
+        GetDtoFromEntityServiceApi<ApplianceSoftwareVersionDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(ApplianceSoftwareVersionDto.class);
         return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
     }
 
@@ -195,8 +216,8 @@ public class ApplianceApis {
                                                            required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
         logger.info(
                 "Deleting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new DeleteApplianceSoftwareVersionService(),
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponseForBaseRequest(this.deleteApplianceSoftwareVersionService,
                 new BaseIdRequest(applianceSoftwareVersionId, applianceId));
     }
 
@@ -213,8 +234,8 @@ public class ApplianceApis {
                                           required = true) @PathParam("fileName") String fileName,
                                   @ApiParam(required = true) InputStream uploadedInputStream) {
         logger.info("Started uploading file " + fileName);
-        SessionUtil.setUser(SessionUtil.getUsername(headers));
-        return this.apiUtil.getResponseForBaseRequest(new UploadApplianceVersionFileService(),
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponseForBaseRequest(this.uploadApplianceVersionFileService,
                 new UploadRequest(fileName, uploadedInputStream));
     }
 

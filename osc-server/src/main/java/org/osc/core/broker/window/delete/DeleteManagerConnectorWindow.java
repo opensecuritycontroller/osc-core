@@ -17,7 +17,7 @@
 package org.osc.core.broker.window.delete;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.DeleteApplianceManagerConnectorService;
+import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.ManagerConnectorView;
@@ -39,10 +39,14 @@ public class DeleteManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
     final String CAPTION = "Delete Manager Connector";
 
-    private ManagerConnectorView mcView = null;
+    private final ManagerConnectorView mcView;
 
-    public DeleteManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
+    private final DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService;
+
+    public DeleteManagerConnectorWindow(ManagerConnectorView mcView,
+            DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService) throws Exception {
         this.mcView = mcView;
+        this.deleteApplianceManagerConnectorService = deleteApplianceManagerConnectorService;
         createWindow(this.CAPTION);
     }
 
@@ -61,13 +65,12 @@ public class DeleteManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         // Delete MC service has no response so not needed.
         try {
             delRequest.setId(this.mcView.getParentItemId());
-            DeleteApplianceManagerConnectorService dmc = new DeleteApplianceManagerConnectorService();
 
             log.info("deleting Manager Connector - "
                     + this.mcView.getParentContainer().getItem(this.mcView.getParentItemId()).getItemProperty("name")
                             .getValue().toString());
 
-            BaseJobResponse response = dmc.dispatch(delRequest);
+            BaseJobResponse response = this.deleteApplianceManagerConnectorService.dispatch(delRequest);
 
             ViewUtil.showJobNotification(response.getJobId());
 

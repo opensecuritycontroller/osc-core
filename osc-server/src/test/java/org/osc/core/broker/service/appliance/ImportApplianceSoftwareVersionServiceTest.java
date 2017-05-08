@@ -49,6 +49,7 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.ImportFileRequest;
@@ -104,6 +105,9 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
     @Mock
     private ApiFactoryService apiFactoryService;
+
+    @Mock
+    private UserContextApi userContext;
 
     @InjectMocks
     private ImportApplianceSoftwareVersionService service;

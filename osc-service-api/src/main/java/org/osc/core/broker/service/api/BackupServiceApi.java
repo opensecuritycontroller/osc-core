@@ -16,9 +16,19 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
+import java.io.File;
+
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 
 public interface BackupServiceApi
-        extends ServiceDispatcherApi<BackupRequest, BackupResponse> {
+        extends BackupFileServiceApi<BackupRequest, BackupResponse> {
+
+    File getEncryptedBackupFile();
+
+    File getEncryptedBackupFile(String backupFileName);
+
+    void deleteBackupFiles();
+
+    void deleteBackupFilesFrom(String directory);
 }

@@ -17,11 +17,15 @@
 package org.osc.core.broker.view.vc.securitygroup;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
+import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
+import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
+import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.securitygroup.UpdateSecurityGroupService;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
 
@@ -38,8 +42,15 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
 
     private static final Logger log = Logger.getLogger(UpdateSecurityGroupWindow.class);
 
-    public UpdateSecurityGroupWindow(SecurityGroupDto dto) throws Exception {
+    private final UpdateSecurityGroupServiceApi updateSecurityGroupService;
+
+    public UpdateSecurityGroupWindow(SecurityGroupDto dto, ListOpenstackMembersServiceApi listOpenstackMembersService, ListRegionByVcIdServiceApi listRegionByVcIdService,
+            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi, UpdateSecurityGroupServiceApi updateSecurityGroupService,
+            ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService) throws Exception {
+        super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi,
+                listSecurityGroupMembersBySgService);
         this.currentSecurityGroup = dto;
+        this.updateSecurityGroupService = updateSecurityGroupService;
         createWindow(this.CAPTION);
     }
 
@@ -94,8 +105,7 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
                 request.setDto(newDto);
                 request.setMembers(getSelectedMembers());
 
-                UpdateSecurityGroupService updateService = new UpdateSecurityGroupService();
-                BaseJobResponse response = updateService.dispatch(request);
+                BaseJobResponse response = this.updateSecurityGroupService.dispatch(request);
 
                 close();
                 ViewUtil.showJobNotification(response.getJobId());
