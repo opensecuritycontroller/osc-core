@@ -23,7 +23,6 @@ import org.osc.core.broker.service.dto.EmailSettingsDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
-import org.osc.core.broker.util.EmailUtil;
 import org.osc.core.broker.view.maintenance.EmailLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseValidateWindow;
@@ -154,10 +153,10 @@ public class SetEmailSettingsWindow extends CRUDBaseValidateWindow {
 
                 // Validate Email settings by sending an Email From and To the same email ID provided
                 EmailSettingsDto dto = getDto();
-                EmailUtil.validateEmailSettings(dto);
+                this.setEmailSettingsService.validateEmailSettings(new BaseRequest<>(dto));
 
                 // If every things is correct attempt to send an email..
-                EmailUtil.sentTestEmail(dto.getMailServer(), dto.getPort(), dto.getEmailId(), dto.getPassword(),
+                this.setEmailSettingsService.sentTestEmail(dto.getMailServer(), dto.getPort(), dto.getEmailId(), dto.getPassword(),
                         dto.getEmailId());
                 ViewUtil.iscNotification("Info: ",
                         "Email validation successful. You will be receiving an email shortly.", Type.HUMANIZED_MESSAGE);

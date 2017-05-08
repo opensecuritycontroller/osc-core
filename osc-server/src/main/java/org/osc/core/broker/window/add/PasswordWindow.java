@@ -19,8 +19,8 @@ package org.osc.core.broker.window.add;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
-import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -34,18 +34,21 @@ import com.vaadin.ui.PasswordField;
 public class PasswordWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 	private static final Logger LOG = Logger.getLogger(PasswordWindow.class);
 	private static final long serialVersionUID = -7979397047792926898L;
-	
+
 	private PasswordField passwordField;
 	private Optional<SubmitFormListener> submitFormListener;
-	
+
+	private final ValidationApi validator;
+
 	public interface SubmitFormListener {
 		void submit(String password);
 	}
-	
-	public PasswordWindow() throws Exception {
+
+	public PasswordWindow(ValidationApi validator) throws Exception {
+        this.validator = validator;
         createWindow("Create database backup password");
     }
-	
+
 	@Override
 	public void populateForm() throws Exception {
 		this.form.setMargin(true);
@@ -54,7 +57,7 @@ public class PasswordWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         HorizontalLayout layout = new HorizontalLayout();
         this.passwordField = new PasswordField();
         this.passwordField.setRequired(true);
-        
+
         layout.addComponent(this.passwordField);
         layout.setCaption(VmidcMessages.getString(VmidcMessages_.PASSWORD_CAPTION));
 
@@ -64,7 +67,7 @@ public class PasswordWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 	@Override
 	public boolean validateForm() {
 		try {
-			ValidateUtil.checkForValidPassword(this.passwordField.getValue());
+			this.validator.checkValidPassword(this.passwordField.getValue());
 		} catch (VmidcBrokerInvalidEntryException e) {
 			LOG.error("Invalid password defined by user.", e);
 			ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -77,14 +80,14 @@ public class PasswordWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 	@Override
 	public void submitForm() {
 		if (validateForm()) {
-			if (submitFormListener.isPresent()) {
-				submitFormListener.get().submit(this.passwordField.getValue());
+			if (this.submitFormListener.isPresent()) {
+				this.submitFormListener.get().submit(this.passwordField.getValue());
 			}
 			close();
-		}	
+		}
 	}
 
 	public void setSubmitFormListener(SubmitFormListener listener) {
-		submitFormListener = Optional.of(listener);
+		this.submitFormListener = Optional.of(listener);
 	}
 }

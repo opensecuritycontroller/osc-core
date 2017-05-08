@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.SslCertificatesExtendedException;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.exceptions.RestClientException;
@@ -33,7 +33,8 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.view.ManagerConnectorView;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -43,7 +44,6 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.vaadin.data.util.BeanItem;
@@ -78,14 +78,17 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
     private final UpdateApplianceManagerConnectorServiceApi updateMCService;
 
-    private PluginService pluginService;
+    private final PluginService pluginService;
+
+    private final ValidationApi validator;
 
     public UpdateManagerConnectorWindow(ManagerConnectorView mcView,
             UpdateApplianceManagerConnectorServiceApi updateMCService,
-            PluginService pluginService) throws Exception {
+            PluginService pluginService, ValidationApi validator) throws Exception {
         this.mcView = mcView;
         this.updateMCService = updateMCService;
         this.pluginService = pluginService;
+        this.validator = validator;
         this.currentMCObject = mcView.getParentContainer().getItem(mcView.getParentItemId());
         createWindow(this.CAPTION);
     }
@@ -166,7 +169,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
             this.name.validate();
             this.type.validate();
             this.ip.validate();
-            ValidateUtil.checkForValidIpAddressFormat(this.ip.getValue());
+            this.validator.checkValidIpAddress(this.ip.getValue());
             if (this.pluginService.isKeyAuth(this.type.getValue().toString())) {
                 this.apiKey.validate();
             } else {

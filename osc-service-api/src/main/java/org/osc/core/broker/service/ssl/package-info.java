@@ -14,24 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service;
 
-import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
-import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
-import org.osc.core.broker.service.api.server.UserContextApi;
-import org.osc.core.broker.service.dto.BaseDto;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
-@Component
-public class GetDtoFromEntityServiceFactory implements GetDtoFromEntityServiceFactoryApi {
-
-    @Reference
-    private UserContextApi userContext;
-
-    @Override
-    public <T extends BaseDto> GetDtoFromEntityServiceApi<T> getService(Class<T> type) {
-        return  new GetDtoFromEntityService<T>(this.userContext);
-    }
-
-}
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.osc.core.broker.service.ssl;

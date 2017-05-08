@@ -23,6 +23,7 @@ import org.osc.core.broker.service.api.BackupServiceApi;
 import org.osc.core.broker.service.api.RestoreServiceApi;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -51,12 +52,15 @@ public class ManageLayout extends FormLayout {
     private Link downloadBackup = null;
     private HorizontalLayout linkContainer = null;
 
-    private BackupServiceApi backupService;
+    private final BackupServiceApi backupService;
+
+    private final ValidationApi validator;
 
     public ManageLayout(BackupServiceApi backupService, UpgradeServiceApi upgradeService,
-            RestoreServiceApi restoreService, ServerApi server) {
+            RestoreServiceApi restoreService, ServerApi server, ValidationApi validator) {
         super();
         this.backupService = backupService;
+        this.validator = validator;
 
         VerticalLayout upgradeContainer = new VerticalLayout();
         VerticalLayout backupContainer = new VerticalLayout();
@@ -66,7 +70,7 @@ public class ManageLayout extends FormLayout {
         Upgrader upgrader = new Upgrader(upgradeService);
         upgrader.setSizeFull();
 
-        DbRestorer restorer = new DbRestorer(restoreService, server);
+        DbRestorer restorer = new DbRestorer(restoreService, server, validator);
         restorer.setSizeFull();
 
         // Component to Backup Database
@@ -97,7 +101,7 @@ public class ManageLayout extends FormLayout {
             @Override
             public void buttonClick(ClickEvent event) {
                 try {
-                	PasswordWindow passwordWindow = new PasswordWindow();
+                	PasswordWindow passwordWindow = new PasswordWindow(ManageLayout.this.validator);
                 	passwordWindow.setSubmitFormListener(password -> {
                 		try {
 							BackupRequest req = new BackupRequest();

@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.RestoreServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -52,12 +53,14 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
     private File file;
     private final Panel panel = new Panel();
     private final VerticalLayout verLayout = new VerticalLayout();
-    private RestoreServiceApi restoreService;
-    private ServerApi server;
+    private final RestoreServiceApi restoreService;
+    private final ServerApi server;
+    private final ValidationApi validator;
 
-    public DbRestorer(RestoreServiceApi restoreService, ServerApi server) {
+    public DbRestorer(RestoreServiceApi restoreService, ServerApi server, ValidationApi validator) {
         this.restoreService = restoreService;
         this.server = server;
+        this.validator = validator;
         this.upload = new Upload();
         this.upload.setButtonCaption(VmidcMessages.getString(VmidcMessages_.UPLOAD_RESTORE));
         this.upload.setReceiver(this);
@@ -138,7 +141,7 @@ public class DbRestorer extends CustomComponent implements Receiver, FailedListe
 
     		if(this.restoreService.isValidEncryptedBackupFilename(event.getFilename())) {
     			// ask user for decryption password first
-    			PasswordWindow passwordWindow = new PasswordWindow();
+    			PasswordWindow passwordWindow = new PasswordWindow(this.validator);
     	    	passwordWindow.setSubmitFormListener(restoreAction);
 
     	    	ViewUtil.addWindow(passwordWindow);

@@ -73,11 +73,13 @@ public class AlarmApisTest extends BaseJerseyTest {
         this.context.registerService(DeleteAlarmServiceApi.class, deleteAlarm);
         ListAlarmServiceApi listAlarm = Mockito.mock(ListAlarmServiceApi.class);
         this.context.registerService(ListAlarmServiceApi.class, listAlarm);
+
         GetDtoFromEntityServiceFactoryApi getDtoFactory = Mockito.mock(GetDtoFromEntityServiceFactoryApi.class);
         this.context.registerService(GetDtoFromEntityServiceFactoryApi.class, getDtoFactory);
 
         UserContextApi userContext = Mockito.mock(UserContextApi.class);
         this.context.registerService(UserContextApi.class, userContext);
+
         AlarmApis service = new AlarmApis();
         this.context.registerInjectActivateService(service);
 

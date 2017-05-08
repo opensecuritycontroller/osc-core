@@ -338,7 +338,7 @@ public class Server implements ServerApi {
 
         MonitorDistributedApplianceInstanceJob.scheduleMonitorDaiJob();
 
-        ArchiveScheduledJob.maybeScheduleArchiveJob(this.archiveService, this.jobsArchiveService);
+        this.archiveService.maybeScheduleArchiveJob();
     }
 
     private void stopScheduler() {
