@@ -37,7 +37,7 @@ public class SetEmailSettingsService extends ServiceDispatcher<BaseRequest<Email
     public EmptySuccessResponse exec(BaseRequest<EmailSettingsDto> request, EntityManager em) throws Exception {
         OSCEntityManager<EmailSettings> emgr = new OSCEntityManager<EmailSettings>(EmailSettings.class, em);
 
-        validateEmailSettings(request.getDto());
+        validateEmailSettings(request);
 
         EmailSettings emailSettings = new EmailSettings();
 
@@ -53,10 +53,12 @@ public class SetEmailSettingsService extends ServiceDispatcher<BaseRequest<Email
         return new EmptySuccessResponse();
     }
 
-    public void validateEmailSettings(EmailSettingsDto dto) throws Exception {
-        EmailUtil.validateEmailSettings(dto);
+    @Override
+    public void validateEmailSettings(BaseRequest<EmailSettingsDto> request) throws Exception {
+        EmailUtil.validateEmailSettings(request.getDto());
     }
 
+    @Override
     public void sentTestEmail(String smtpServer, String port, final String sendFrom, final String password,
             String sendTo) throws Exception {
         EmailUtil.sentTestEmail(smtpServer, port, sendFrom, password, sendTo);

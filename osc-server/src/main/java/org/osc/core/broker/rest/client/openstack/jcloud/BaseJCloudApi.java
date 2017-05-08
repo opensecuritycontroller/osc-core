@@ -16,13 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.jcloud;
 
-import com.google.common.base.Optional;
-import com.google.common.io.Closeables;
-import org.osc.core.broker.rest.client.openstack.jcloud.exception.ExtensionNotPresentException;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+
+import org.osc.core.broker.service.exceptions.ExtensionNotPresentException;
+import org.osc.core.broker.view.common.VmidcMessages;
+import org.osc.core.broker.view.common.VmidcMessages_;
+
+import com.google.common.base.Optional;
+import com.google.common.io.Closeables;
 
 /**
  * Desgined to be a base class for all jcloud API wrappers in the code.
@@ -51,7 +54,7 @@ public abstract class BaseJCloudApi implements Closeable, AutoCloseable {
             return optional.get();
         }
 
-        throw new ExtensionNotPresentException(extensionName);
+        throw new ExtensionNotPresentException(VmidcMessages.getString(VmidcMessages_.OS_EXTENSION_NOT_PRESENT, extensionName));
     }
 
     /**

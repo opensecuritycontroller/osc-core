@@ -14,16 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.service.exceptions;
 
-import org.osc.core.broker.service.dto.EmailSettingsDto;
-import org.osc.core.broker.service.request.BaseRequest;
-import org.osc.core.broker.service.response.EmptySuccessResponse;
+@SuppressWarnings("serial")
+public class ExtensionNotPresentException extends RuntimeException {
 
-public interface SetEmailSettingsServiceApi
-        extends ServiceDispatcherApi<BaseRequest<EmailSettingsDto>, EmptySuccessResponse> {
+    public ExtensionNotPresentException(String msg) {
+        super(msg);
+    }
 
-    void validateEmailSettings(BaseRequest<EmailSettingsDto> dto) throws Exception;
-
-    void sentTestEmail(String mailServer, String port, String from, String password, String to) throws Exception;
 }

@@ -33,6 +33,7 @@ import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
 import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.exceptions.ExtensionNotPresentException;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
@@ -454,6 +455,9 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
                     this.floatingIpPool.addItems(floatingIpPoolList);
                 }
             }
+        } catch (ExtensionNotPresentException notPresentException) {
+            ViewUtil.iscNotification(notPresentException.getMessage(), Notification.Type.WARNING_MESSAGE);
+            log.warn("Failed to get IP Pool", notPresentException);
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
             log.error("Failed to get IP Pool", e);

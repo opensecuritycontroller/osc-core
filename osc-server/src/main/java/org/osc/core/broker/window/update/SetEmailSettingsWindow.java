@@ -153,7 +153,7 @@ public class SetEmailSettingsWindow extends CRUDBaseValidateWindow {
 
                 // Validate Email settings by sending an Email From and To the same email ID provided
                 EmailSettingsDto dto = getDto();
-                this.setEmailSettingsService.validateEmailSettings(dto);
+                this.setEmailSettingsService.validateEmailSettings(new BaseRequest<>(dto));
 
                 // If every things is correct attempt to send an email..
                 this.setEmailSettingsService.sentTestEmail(dto.getMailServer(), dto.getPort(), dto.getEmailId(), dto.getPassword(),
