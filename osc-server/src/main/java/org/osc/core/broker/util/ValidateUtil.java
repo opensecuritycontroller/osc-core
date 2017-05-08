@@ -24,12 +24,15 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.IscEntity;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
+import org.osgi.service.component.annotations.Component;
 
 import com.google.common.net.InetAddresses;
 
-public class ValidateUtil {
+@Component
+public class ValidateUtil implements ValidationApi {
 
     public static final int DEFAULT_MAX_LEN = 155;
 
@@ -178,5 +181,20 @@ public class ValidateUtil {
 
     public static boolean isEmpty(Collection<?> collection) {
         return collection == null || collection.isEmpty();
+    }
+
+    @Override
+    public void checkValidIpAddress(String value) throws VmidcBrokerInvalidEntryException {
+        checkForValidIpAddressFormat(value);
+    }
+
+    @Override
+    public void checkValidPassword(String value) throws VmidcBrokerInvalidEntryException {
+        checkForValidPassword(value);
+    }
+
+    @Override
+    public boolean isValidDaName(String string) {
+        return validateDaName(string);
     }
 }

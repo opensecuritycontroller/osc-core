@@ -12,6 +12,7 @@
 
 -includeresource: \
     @${log4j.dep},\
+    @${osc-service-api.dep},\
     @${commons-cli.dep},\
     @${commons-io.dep},\
     @${guava.dep},\

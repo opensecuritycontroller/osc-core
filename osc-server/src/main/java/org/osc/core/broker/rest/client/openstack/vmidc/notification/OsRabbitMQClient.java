@@ -138,7 +138,7 @@ public class OsRabbitMQClient extends RabbitMQClient {
 
     @Override
     protected final void receiveMessage(String message) {
-        SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
+        SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
         log.debug(" [RabbitMQ Client Message Received ]  - " + message);
         String eventType = OsNotificationUtil.getEventTypeFromMessage(message);
 

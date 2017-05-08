@@ -25,6 +25,7 @@ import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -68,9 +69,10 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
             ListDomainsByMcIdServiceApi listDomainsByMcIdService,
             ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
             ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService,
-            ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService) throws Exception {
+            ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService,
+            ValidationApi validator) throws Exception {
         super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel,
-                listApplianceManagerConnectorService, listVirtualizationConnectorBySwVersionService);
+                listApplianceManagerConnectorService, listVirtualizationConnectorBySwVersionService, validator);
         this.daView = distributedApplianceView;
         this.updateDistributedApplianceService = updateDistributedApplianceService;
         this.currentDAObject = this.daView.getParentContainer().getItem(this.daView.getParentItemId()).getBean();

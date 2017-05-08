@@ -25,6 +25,7 @@ import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceAp
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -37,7 +38,6 @@ import org.osc.core.broker.service.request.ListApplianceModelSwVersionComboReque
 import org.osc.core.broker.service.request.ListEncapsulationTypeByVersionTypeAndModelRequest;
 import org.osc.core.broker.service.request.ListVirtualizationConnectorBySwVersionRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.sdk.controller.TagEncapsulationType;
@@ -76,18 +76,21 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private final ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
     private final ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
     private final ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService;
+    private final ValidationApi validator;
 
     public BaseDAWindow(ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
             ListDomainsByMcIdServiceApi listDomainsByMcIdService,
             ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
             ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService,
-            ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService) {
+            ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService,
+            ValidationApi validator) {
         super();
         this.listApplianceModelSwVersionComboService = listApplianceModelSwVersionComboService;
         this.listDomainsByMcIdService = listDomainsByMcIdService;
         this.listEncapsulationTypeByVersionTypeAndModel = listEncapsulationTypeByVersionTypeAndModel;
         this.listApplianceManagerConnectorService = listApplianceManagerConnectorService;
         this.listVirtualizationConnectorBySwVersionService = listVirtualizationConnectorBySwVersionService;
+        this.validator = validator;
     }
 
     protected Panel getAttributesPanel() {
@@ -380,7 +383,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     public boolean validateForm() {
         try {
             this.name.validate();
-            if (!ValidateUtil.validateDaName(this.name.getValue().toString())) {
+            if (!this.validator.isValidDaName(this.name.getValue().toString())) {
                 ViewUtil.iscNotification(
                         "DA name must not exceed 13 characters, must start with a letter,  and can only contain numbers, letters and dash(-).",
                         Notification.Type.ERROR_MESSAGE);

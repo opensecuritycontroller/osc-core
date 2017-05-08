@@ -23,13 +23,13 @@ import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseApproveWindow;
 import org.osc.core.broker.window.button.ApproveCancelButtonModel;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;

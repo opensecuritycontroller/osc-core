@@ -46,7 +46,7 @@ public class SyncSecurityGroupJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
+        SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             List<SecurityGroup> sgs = HibernateUtil.getTransactionControl().required(() -> {
@@ -63,7 +63,7 @@ public class SyncSecurityGroupJob implements Job {
                     public void run() {
                         try {
                             HibernateUtil.getTransactionControl().required(() -> {
-                                SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
+                                SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
                                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
                                     SecurityGroup found = em.find(SecurityGroup.class, sg.getId());

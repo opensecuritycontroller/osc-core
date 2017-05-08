@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.rest.client.openstack.jcloud.exception.ExtensionNotPresentException;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
@@ -34,6 +33,7 @@ import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
 import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.exceptions.ExtensionNotPresentException;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;

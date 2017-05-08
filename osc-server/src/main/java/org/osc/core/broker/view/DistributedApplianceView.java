@@ -54,6 +54,7 @@ import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -182,6 +183,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService;
 
     @Reference
+    private ValidationApi validator;
+
+    @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
     @Activate
@@ -209,7 +213,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                     this.addDistributedApplianceService, this.listApplianceModelSwVersionComboService,
                     this.listDomainsByMcIdService, this.listEncapsulationTypeByVersionTypeAndModel,
                     this.listApplianceManagerConnectorService,
-                    this.listVirtualizationConnectorBySwVersionService));
+                    this.listVirtualizationConnectorBySwVersionService,
+                    this.validator));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.info("Redirecting to Update Appliance Window");
@@ -223,7 +228,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                 ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this, this.updateDistributedApplianceService,
                         this.listApplianceModelSwVersionComboService, this.listDomainsByMcIdService,
                         this.listEncapsulationTypeByVersionTypeAndModel, this.listApplianceManagerConnectorService,
-                        this.listVirtualizationConnectorBySwVersionService));
+                        this.listVirtualizationConnectorBySwVersionService,
+                        this.validator));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {

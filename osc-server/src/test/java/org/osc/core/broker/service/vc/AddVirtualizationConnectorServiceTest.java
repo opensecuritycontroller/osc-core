@@ -17,12 +17,7 @@
 package org.osc.core.broker.service.vc;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST;
 import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.VMWARE_REQUEST;
 
@@ -47,18 +42,19 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
-import org.osc.core.broker.service.SslCertificatesExtendedException;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.BaseResponse;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.AddVirtualizationConnectorServiceRequestValidator;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osc.core.util.EncryptionUtil;
 import org.powermock.api.mockito.PowerMockito;
@@ -85,6 +81,9 @@ public class AddVirtualizationConnectorServiceTest {
 
     @Mock
     private ConformService conformService;
+
+    @Mock
+    private UserContextApi userContext;
 
     @InjectMocks()
     private AddVirtualizationConnectorService service;

@@ -14,24 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service;
+package org.osc.core.broker.service.api.server;
 
-import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
-import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
-import org.osc.core.broker.service.api.server.UserContextApi;
-import org.osc.core.broker.service.dto.BaseDto;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 
-@Component
-public class GetDtoFromEntityServiceFactory implements GetDtoFromEntityServiceFactoryApi {
+public interface ValidationApi {
 
-    @Reference
-    private UserContextApi userContext;
+    void checkValidIpAddress(String value) throws VmidcBrokerInvalidEntryException;
 
-    @Override
-    public <T extends BaseDto> GetDtoFromEntityServiceApi<T> getService(Class<T> type) {
-        return  new GetDtoFromEntityService<T>(this.userContext);
-    }
+    void checkValidPassword(String value) throws VmidcBrokerInvalidEntryException;
+
+    boolean isValidDaName(String string);
 
 }

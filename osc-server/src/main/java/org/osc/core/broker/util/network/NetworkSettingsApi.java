@@ -25,7 +25,6 @@ import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
-import org.osc.core.broker.view.maintenance.NetworkLayout;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
@@ -45,7 +44,7 @@ public class NetworkSettingsApi {
     final String NETWORK_RESOLV = "/etc/resolv.conf";
     final String BASH_SCRIPT = "./scripts/networkSettings.sh";
 
-    private static final Logger log = Logger.getLogger(NetworkLayout.class);
+    private static final Logger log = Logger.getLogger(NetworkSettingsApi.class);
 
     public void setNetworkSettings(NetworkSettingsDto networkSettingsDto) {
 

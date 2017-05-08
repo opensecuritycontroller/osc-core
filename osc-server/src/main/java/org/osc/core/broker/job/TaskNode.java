@@ -293,7 +293,7 @@ public class TaskNode implements Runnable, TaskElement {
 
             // Set persistence user in context
             if (this.taskRecord != null) {
-                SessionUtil.setUser(this.taskRecord.getCreatedBy());
+                SessionUtil.getInstance().setUser(this.taskRecord.getCreatedBy());
             }
 
             this.setStatus(TaskStatus.PASSED);

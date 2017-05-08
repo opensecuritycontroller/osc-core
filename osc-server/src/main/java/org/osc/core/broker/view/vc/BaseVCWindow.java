@@ -31,8 +31,8 @@ import org.jclouds.rest.AuthorizationException;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
-import org.osc.core.broker.service.SslCertificatesExtendedException;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
@@ -40,7 +40,8 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
-import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -48,7 +49,6 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.rest.client.exception.RestClientException;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
@@ -124,11 +124,13 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     protected Panel providerPanel = null;
     protected Button advancedSettings = null;
 
-    private PluginService pluginService;
+    private final PluginService pluginService;
+    private final ValidationApi validator;
 
-    public BaseVCWindow(PluginService pluginService) {
+    public BaseVCWindow(PluginService pluginService, ValidationApi validator) {
         super();
         this.pluginService = pluginService;
+        this.validator = validator;
     }
 
     @Override
@@ -141,14 +143,14 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             if (this.virtualizationType.getValue().toString().equals(VirtualizationType.OPENSTACK.toString()) && !NO_CONTROLLER.equals(controllerType)) {
                 if (!this.pluginService.usesProviderCreds(controllerType)) {
                     this.controllerIP.validate();
-                    ValidateUtil.checkForValidIpAddressFormat(this.controllerIP.getValue());
+                    this.validator.checkValidIpAddress(this.controllerIP.getValue());
                     this.controllerUser.validate();
                     this.controllerPW.validate();
                 }
             }
 
             this.providerIP.validate();
-            ValidateUtil.checkForValidIpAddressFormat(this.providerIP.getValue());
+            this.validator.checkValidIpAddress(this.providerIP.getValue());
             if (this.adminTenantName.isVisible()) {
                 this.adminTenantName.validate();
             }
