@@ -22,8 +22,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
 
-import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.api.PasswordUtilApi;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.rest.annotations.NsxAuth;
 import org.osc.core.util.AuthUtil;
 import org.osgi.service.component.annotations.Component;

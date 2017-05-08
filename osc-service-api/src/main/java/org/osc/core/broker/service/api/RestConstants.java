@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest;
+package org.osc.core.broker.service.api;
 
 public interface RestConstants {
     // Because we started with versions in the URL, we will continue to have v1 in the URL

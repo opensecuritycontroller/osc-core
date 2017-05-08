@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
-import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.ServerUtil;

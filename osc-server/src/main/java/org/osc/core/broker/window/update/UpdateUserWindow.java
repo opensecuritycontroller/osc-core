@@ -18,7 +18,7 @@ package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.RoleType;
-import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.UpdateUserServiceApi;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.request.UpdateUserRequest;

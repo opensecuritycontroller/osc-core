@@ -19,8 +19,8 @@ package org.osc.core.broker.service;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.api.DeleteUserServiceApi;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.DeleteUserRequest;
