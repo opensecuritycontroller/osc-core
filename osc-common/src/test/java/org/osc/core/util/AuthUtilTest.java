@@ -19,6 +19,10 @@ package org.osc.core.util;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.osc.core.util.AuthUtil;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.KeyStoreProvider;
+import org.osc.core.util.KeyStoreProvider.KeyStoreFactory;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.EncryptionException;
 
