@@ -48,6 +48,7 @@ import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
+import org.osc.core.rest.client.RestBaseClient;
 import org.osc.core.server.scheduler.MonitorDistributedApplianceInstanceJob;
 import org.osc.core.server.scheduler.SyncDistributedApplianceJob;
 import org.osc.core.server.scheduler.SyncSecurityGroupJob;
@@ -589,5 +590,10 @@ public class Server implements ServerApi {
     @Override
     public String getVersionStr() {
         return VersionUtil.getVersion().getVersionStr();
+    }
+
+    @Override
+    public void setDebugLogging(boolean on) {
+        RestBaseClient.setDebugLogging(on);
     }
 }

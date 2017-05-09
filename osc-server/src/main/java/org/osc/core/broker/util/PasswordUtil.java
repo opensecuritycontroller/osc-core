@@ -17,6 +17,7 @@
 package org.osc.core.broker.util;
 
 import javax.persistence.EntityManager;
+import javax.ws.rs.container.ContainerRequestContext;
 
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.api.PasswordUtilApi;
@@ -24,6 +25,7 @@ import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.util.AuthUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
@@ -69,6 +71,22 @@ public class PasswordUtil implements PasswordUtilApi {
         } catch (ScopedWorkException swe) {
             throw swe.asRuntimeException();
         }
+    }
+
+    @Override
+    public void authenticateLocalRequest(ContainerRequestContext request) {
+        AuthUtil.authenticateLocalRequest(request);
+    }
+
+    @Override
+    public void authenticateNsxRequest(ContainerRequestContext request) {
+        AuthUtil.authenticate(request, RestConstants.VMIDC_NSX_LOGIN, getVmidcNsxPass());
+
+    }
+
+    @Override
+    public void authenticateOscRequest(ContainerRequestContext request) {
+        AuthUtil.authenticate(request, RestConstants.OSC_DEFAULT_LOGIN, getOscDefaultPass());
     }
 
 }

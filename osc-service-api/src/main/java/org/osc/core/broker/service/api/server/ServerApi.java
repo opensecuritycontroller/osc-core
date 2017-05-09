@@ -39,4 +39,6 @@ public interface ServerApi {
     String getCurrentPid();
 
     String getVersionStr();
+
+    void setDebugLogging(boolean on);
 }

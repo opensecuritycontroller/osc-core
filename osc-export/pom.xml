@@ -283,6 +283,11 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.osc.core</groupId>
+			<artifactId>osc-rest-server</artifactId>
+			<version>1.0</version>
+		</dependency>
 	</dependencies>
 
 	<profiles>
@@ -439,11 +444,14 @@
 						<phase>package</phase>
 						<configuration>
 							<target>
-								<!-- webapp -->
+								<!-- webapp UI -->
 								<copy todir="${basedir}/webapp">
 									<fileset dir="${basedir}/../osc-server/src/main/webapp"
 										excludes="VAADIN/gwt-unitCache/**" />
-									<fileset dir="${basedir}/../osc-server/target/webapp"
+								</copy>
+								<!-- swagger doc -->
+								<copy todir="${basedir}/webapp">
+									<fileset dir="${basedir}/../osc-rest-server/target/webapp"
 										includes="api-doc/**" />
 								</copy>
 								<unzip dest="${basedir}/webapp/WebHelp" src="${basedir}/../osc-server/techdoc/WebHelp.zip" />
