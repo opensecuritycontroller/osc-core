@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -47,7 +48,6 @@ import org.tepi.filtertable.FilterDecorator;
 import org.tepi.filtertable.FilterTable;
 import org.tepi.filtertable.numberfilter.NumberFilterPopupConfig;
 
-import com.google.common.collect.Sets;
 import com.vaadin.data.Container.ItemSetChangeEvent;
 import com.vaadin.data.Container.ItemSetChangeListener;
 import com.vaadin.data.Property;
@@ -729,7 +729,9 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
             public void buttonClick(ClickEvent event) {
                 Set<String> itemIdsSelected = (Set<String>) table.getValue();
                 Collection<String> allItems = (Collection<String>) table.getItemIds();
-                table.setValue(Sets.difference(new HashSet<>(allItems), itemIdsSelected));
+                table.setValue(allItems.stream()
+                        .filter(s -> !itemIdsSelected.contains(s))
+                        .collect(Collectors.toSet()));
             }
         });
         HorizontalLayout buttonLayout = new HorizontalLayout(allButton, noneButton, invertButton);
