@@ -40,7 +40,6 @@ import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.service.api.LockInfoServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
-import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -114,7 +113,7 @@ public class ServerDebugApis {
     @PUT
     public Response reloadDevMode() {
         try {
-            this.server.setDevMode(Boolean.valueOf(this.server.loadServerProp(Server.DEV_MODE_PROPERTY_KEY, "false")));
+            this.server.setDevMode(Boolean.valueOf(this.server.loadServerProp(ServerApi.DEV_MODE_PROPERTY_KEY, "false")));
             return Response.ok(String.valueOf(this.server.getDevMode())).build();
 
         } catch (Exception e) {

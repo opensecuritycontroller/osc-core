@@ -19,6 +19,7 @@ package org.osc.core.broker.service.api.server;
 import org.osgi.util.promise.Promise;
 
 public interface ServerApi {
+    String DEV_MODE_PROPERTY_KEY = "devMode";
 
     boolean getDevMode();
 
