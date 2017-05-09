@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
+import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
