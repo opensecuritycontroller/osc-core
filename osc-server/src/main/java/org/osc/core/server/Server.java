@@ -50,7 +50,6 @@ import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.rest.client.RestBaseClient;
-import org.osc.core.server.scheduler.ArchiveScheduledJob;
 import org.osc.core.server.scheduler.MonitorDistributedApplianceInstanceJob;
 import org.osc.core.server.scheduler.SyncDistributedApplianceJob;
 import org.osc.core.server.scheduler.SyncSecurityGroupJob;
