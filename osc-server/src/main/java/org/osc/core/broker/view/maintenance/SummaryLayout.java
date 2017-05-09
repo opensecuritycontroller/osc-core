@@ -34,7 +34,6 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.util.ArchiveUtil;
 import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
-import org.osc.core.util.VersionUtil;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -253,7 +252,7 @@ public class SummaryLayout extends FormLayout {
     }
 
     private String getVersion() {
-        return VersionUtil.getVersion().getVersionStr();
+        return this.server.getVersionStr();
     }
 
 }
