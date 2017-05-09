@@ -25,8 +25,9 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.UpdateMCPublicKeyRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
+import org.osgi.service.component.annotations.Component;
 
-
+@Component
 public class UpdateMCPublicKeyService extends ServiceDispatcher<UpdateMCPublicKeyRequest, EmptySuccessResponse>
         implements UpdateMCPublicKeyServiceApi {
 

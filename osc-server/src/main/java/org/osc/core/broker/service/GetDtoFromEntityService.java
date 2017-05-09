@@ -38,6 +38,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.ApplianceDto;
@@ -78,6 +79,10 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 
 public class GetDtoFromEntityService<R extends BaseDto> extends
         ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDtoFromEntityServiceApi<R> {
+
+    GetDtoFromEntityService(UserContextApi userContext) {
+        this.userContext = userContext;
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -192,4 +197,5 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
         }
         return entity;
     }
+
 }

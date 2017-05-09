@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
@@ -27,8 +29,6 @@ import org.osc.core.broker.service.exceptions.ActionNotSupportedException;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BindSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.securitygroup.BindSecurityGroupService;
-import org.osc.core.broker.service.securitygroup.ListSecurityGroupBindingsBySgService;
 import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -68,11 +68,18 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 	private static final Logger log = Logger.getLogger(BindSecurityGroupWindow.class);
 
-	private SecurityGroupDto currentSecurityGroup = null;
+	private final SecurityGroupDto currentSecurityGroup;
 	private Table serviceTable = null;
 
-	public BindSecurityGroupWindow(SecurityGroupDto sgDto) throws Exception {
+	private final BindSecurityGroupServiceApi bindSecurityGroupService;
+        private final ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService;
+
+	public BindSecurityGroupWindow(SecurityGroupDto sgDto,
+	        BindSecurityGroupServiceApi bindSecurityGroupService,
+	        ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService) throws Exception {
 		this.currentSecurityGroup = sgDto;
+        this.bindSecurityGroupService = bindSecurityGroupService;
+        this.listSecurityGroupBindingsBySgService = listSecurityGroupBindingsBySgService;
 		createWindow(this.CAPTION + " - " + this.currentSecurityGroup.getName());
 	}
 
@@ -102,7 +109,6 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 		try {
 			if (validateForm()) {
 
-				BindSecurityGroupService bindService = new BindSecurityGroupService();
 				BindSecurityGroupRequest bindRequest = new BindSecurityGroupRequest();
 
 				bindRequest.setSecurityGroupId(this.currentSecurityGroup.getId());
@@ -130,7 +136,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 				}
 
-				BaseJobResponse response = bindService.dispatch(bindRequest);
+				BaseJobResponse response = this.bindSecurityGroupService.dispatch(bindRequest);
 
 				close();
 				ViewUtil.showJobNotification(response.getJobId());
@@ -253,8 +259,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 		this.serviceTable.removeAllItems();
 
-		ListSecurityGroupBindingsBySgService listBindingService = new ListSecurityGroupBindingsBySgService();
-		List<VirtualSystemPolicyBindingDto> allBindings = listBindingService
+		List<VirtualSystemPolicyBindingDto> allBindings = this.listSecurityGroupBindingsBySgService
 				.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getList();
 
 		for (VirtualSystemPolicyBindingDto binding : allBindings) {

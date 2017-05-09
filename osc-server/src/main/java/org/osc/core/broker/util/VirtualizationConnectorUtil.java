@@ -27,15 +27,14 @@ import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
-import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.SslCertificatesExtendedException;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 
@@ -56,7 +55,7 @@ public class VirtualizationConnectorUtil {
      * @throws ErrorTypeException in case of controller/provider connection issues
      * @throws Exception          in case of any other issues
      */
-    public void checkVmwareConnection(DryRunRequest<VirtualizationConnectorDto> request,
+    public <T extends VirtualizationConnectorDto> void checkVmwareConnection(DryRunRequest<T> request,
                                       VirtualizationConnector vc) throws Exception {
         if (!request.isSkipAllDryRun()) {
 
@@ -110,7 +109,7 @@ public class VirtualizationConnectorUtil {
      * @throws ErrorTypeException in case of keystone/controller/rabbitmq connection issues
      * @throws Exception          in case of any other issues
      */
-    public void checkOpenstackConnection(DryRunRequest<VirtualizationConnectorDto> request,
+    public <T extends VirtualizationConnectorDto> void checkOpenstackConnection(DryRunRequest<T> request,
                                          VirtualizationConnector vc) throws Exception {
         if (!request.isSkipAllDryRun()) {
 

@@ -29,7 +29,7 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = SyncManagerConnectorService.class)
+@Component
 public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobRequest, BaseJobResponse>
         implements SyncManagerConnectorServiceApi {
 

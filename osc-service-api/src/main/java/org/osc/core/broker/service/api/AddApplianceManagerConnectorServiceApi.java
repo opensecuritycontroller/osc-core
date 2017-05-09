@@ -16,10 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
-import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
+import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 
 public interface AddApplianceManagerConnectorServiceApi
-        extends ServiceDispatcherApi<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse> {
+        extends ServiceDispatcherApi<DryRunRequest<ApplianceManagerConnectorRequest>, BaseJobResponse> {
 }

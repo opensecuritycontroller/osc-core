@@ -22,9 +22,26 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
+import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
+import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupByVcServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
+import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.SyncVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ValidationApi;
+import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -37,11 +54,6 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.securitygroup.ListSecurityGroupByVcService;
-import org.osc.core.broker.service.securitygroup.SyncSecurityGroupService;
-import org.osc.core.broker.service.vc.ListVirtualizationConnectorService;
-import org.osc.core.broker.service.vc.SyncVirtualizationConnectorService;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -49,6 +61,10 @@ import org.osc.core.broker.view.vc.securitygroup.AddSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.BindSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.UpdateSecurityGroupWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -58,6 +74,7 @@ import com.vaadin.ui.CustomTable;
 import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
+@Component(service={VirtualizationConnectorView.class}, scope=ServiceScope.PROTOTYPE)
 public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConnectorDto, SecurityGroupDto> {
 
     private static final String VC_HELP_GUID = "GUID-334FD869-4AEE-4CA7-AF22-E0925C623C00.html";
@@ -67,9 +84,65 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     private static final Logger log = Logger.getLogger(VirtualizationConnectorView.class);
 
-    private final ConformService conformService = StaticRegistry.conformService();
+    @Reference
+    private DeleteVirtualizationConnectorServiceApi deleteVirtualizationConnectorService;
 
-    public VirtualizationConnectorView() {
+    @Reference
+    private ListSecurityGroupByVcServiceApi listSecurityGroupByVcService;
+
+    @Reference
+    private ListOpenstackMembersServiceApi listOpenstackMembersService;
+
+    @Reference
+    private ListRegionByVcIdServiceApi listRegionByVcIdService;
+
+    @Reference
+    private ListTenantByVcIdServiceApi listTenantByVcIdServiceApi;
+
+    @Reference
+    private AddSecurityGroupServiceApi addSecurityGroupService;
+
+    @Reference
+    private UpdateSecurityGroupServiceApi updateSecurityGroupService;
+
+    @Reference
+    private DeleteSecurityGroupServiceApi deleteSecurityGroupService;
+
+    @Reference
+    private BindSecurityGroupServiceApi bindSecurityGroupService;
+
+    @Reference
+    private SyncSecurityGroupServiceApi syncSecurityGroupService;
+
+    @Reference
+    private SyncVirtualizationConnectorServiceApi syncVirtualizationConnectorService;
+
+    @Reference
+    private AddVirtualizationConnectorServiceApi addVirtualizationConnectorService;
+
+    @Reference
+    private UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService;
+
+    @Reference
+    private ListVirtualizationConnectorServiceApi listVirtualizationConnectorService;
+
+    @Reference
+    private ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService;
+
+    @Reference
+    private ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService;
+
+    @Reference
+    private PluginService pluginService;
+
+    @Reference
+    private ValidationApi validator;
+
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
+    @Activate
+    void activate() {
         createView("Virtualization Connector",
                 Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE, ToolbarButtons.CONFORM_VC),
                 "Security Group",
@@ -108,10 +181,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
         BaseRequest<BaseDto> listRequest = new BaseRequest<>();
         ListResponse<VirtualizationConnectorDto> res;
-        ListVirtualizationConnectorService listService = new ListVirtualizationConnectorService();
 
         try {
-            res = listService.dispatch(listRequest);
+            res = this.listVirtualizationConnectorService.dispatch(listRequest);
             List<VirtualizationConnectorDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // Creating table with list of vendors
@@ -171,8 +243,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                 idRequest.setId(vc.getId());
 
                 ListResponse<SecurityGroupDto> res;
-                ListSecurityGroupByVcService listService = new ListSecurityGroupByVcService();
-                res = listService.dispatch(idRequest);
+                res = this.listSecurityGroupByVcService.dispatch(idRequest);
                 List<SecurityGroupDto> listResponse = res.getList();
 
                 for (SecurityGroupDto securityGroup : listResponse) {
@@ -193,21 +264,24 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     @Override
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
-            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this));
+            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService, this.pluginService, this.validator));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
-            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this));
+            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService, this.pluginService, this.validator));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
-            DeleteWindowUtil.deleteVirtualizationConnector(getParentItem().getBean());
+            DeleteWindowUtil.deleteVirtualizationConnector(this.deleteVirtualizationConnectorService,
+                    getParentItem().getBean());
         }
         if (event.getButton().getId().equals(ToolbarButtons.ADD_CHILD.getId())) {
             VirtualizationConnectorDto vc = getParentItem().getBean();
-            if (vc.getControllerType().equals(ControllerType.NONE.getValue())) {
+            if (vc.getControllerType().equals(BaseVCWindow.NO_CONTROLLER)) {
                 ViewUtil.iscNotification("Creation of Security Groups is not allowed in the absence of SDN Controller.",
                         Notification.Type.ERROR_MESSAGE);
             } else {
-                ViewUtil.addWindow(new AddSecurityGroupWindow(getParentItem().getBean()));
+                ViewUtil.addWindow(new AddSecurityGroupWindow(getParentItem().getBean(),
+                        this.listOpenstackMembersService, this.listRegionByVcIdService, this.listTenantByVcIdServiceApi,
+                        this.addSecurityGroupService, this.listSecurityGroupMembersBySgService));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT_CHILD.getId())) {
@@ -217,12 +291,14 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                 ViewUtil.iscNotification("Modification of deleted Security Group is not allowed.",
                         Notification.Type.WARNING_MESSAGE);
             } else {
-                ViewUtil.addWindow(new UpdateSecurityGroupWindow(securityGroup));
+                ViewUtil.addWindow(new UpdateSecurityGroupWindow(securityGroup,
+                        this.listOpenstackMembersService, this.listRegionByVcIdService, this.listTenantByVcIdServiceApi,
+                        this.updateSecurityGroupService, this.listSecurityGroupMembersBySgService));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE_CHILD.getId())) {
             SecurityGroupDto securityGroup = getChildContainer().getItem(getChildItemId()).getBean();
-            DeleteWindowUtil.deleteSecurityGroup(securityGroup);
+            DeleteWindowUtil.deleteSecurityGroup(this.deleteSecurityGroupService, securityGroup);
         }
         if (event.getButton().getId().equals(ToolbarButtons.BIND_SECURITY_GROUP.getId())) {
             SecurityGroupDto securityGroup = getChildContainer().getItem(getChildItemId()).getBean();
@@ -233,7 +309,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
             } else {
                 BindSecurityGroupWindow bindWindow = null;
                 try {
-                    bindWindow = new BindSecurityGroupWindow(securityGroup);
+                    bindWindow = new BindSecurityGroupWindow(securityGroup, this.bindSecurityGroupService,
+                            this.listSecurityGroupBindingsBySgService);
                     ViewUtil.addWindow(bindWindow);
                 } catch (ActionNotSupportedException actionNotSupportedException) {
                     ViewUtil.iscNotification(actionNotSupportedException.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -254,10 +331,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     private void conformVirtualConnector(Long vcId) {
         log.info("Syncing VC " + vcId.toString());
         BaseJobRequest request = new BaseJobRequest(vcId);
-        SyncVirtualizationConnectorService service = new SyncVirtualizationConnectorService(this.conformService);
 
         try {
-            BaseJobResponse response = service.dispatch(request);
+            BaseJobResponse response = this.syncVirtualizationConnectorService.dispatch(request);
             ViewUtil.showJobNotification(response.getJobId());
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -266,10 +342,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     private void conformSecurityGroup(Long sgId, Long vcId) {
         log.info("Syncing Security Group " + sgId.toString());
-        SyncSecurityGroupService service = new SyncSecurityGroupService();
 
         try {
-            BaseJobResponse response = service.dispatch(new BaseIdRequest(sgId, vcId));
+            BaseJobResponse response = this.syncSecurityGroupService.dispatch(new BaseIdRequest(sgId, vcId));
             ViewUtil.showJobNotification(response.getJobId());
 
         } catch (Exception e) {
@@ -310,7 +385,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                     GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
                     getDtoRequest.setEntityId(sgId);
                     getDtoRequest.setEntityName("SecurityGroup");
-                    GetDtoFromEntityService<SecurityGroupDto> getSg = new GetDtoFromEntityService<SecurityGroupDto>();
+                    GetDtoFromEntityServiceApi<SecurityGroupDto> getSg = this.getDtoFromEntityServiceFactory.getService(SecurityGroupDto.class);
 
                     try {
                         BaseDtoResponse<SecurityGroupDto> getSgDto = getSg.dispatch(getDtoRequest);

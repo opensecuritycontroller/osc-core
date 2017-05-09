@@ -22,52 +22,47 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.SslCertificatesExtendedException;
+import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
+import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.validator.AddVirtualizationConnectorServiceRequestValidator;
 import org.osc.core.broker.service.validator.RequestValidator;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = AddVirtualizationConnectorService.class)
-public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorDto>,
-        BaseJobResponse> {
+@Component
+public class AddVirtualizationConnectorService
+        extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseJobResponse>
+        implements AddVirtualizationConnectorServiceApi {
 
-    private RequestValidator<DryRunRequest<VirtualizationConnectorDto>, VirtualizationConnector> validator;
-
-    private boolean forceAddSSLCertificates = false;
+    private RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> validator;
 
     @Reference
     private ConformService conformService;
 
-    public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
-        this.forceAddSSLCertificates = forceAddSSLCertificates;
-    }
-
     @Override
-    public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorDto> request, EntityManager em) throws Exception {
+    public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
         if (this.validator == null) {
             this.validator = new AddVirtualizationConnectorServiceRequestValidator(em);
         }
         try {
             this.validator.validate(request);
         } catch (Exception e) {
-            if (e instanceof SslCertificatesExtendedException && this.forceAddSSLCertificates) {
+            if (e instanceof SslCertificatesExtendedException && request.getDto().isForceAddSSLCertificates()) {
                 request = internalSSLCertificatesFetch(request, (SslCertificatesExtendedException) e);
                 this.validator.validate(request);
             } else {
                 throw e;
             }
         }
-        setForceAddSSLCertificates(false); // set default ssl state for future calls
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
         OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
@@ -82,8 +77,8 @@ public class AddVirtualizationConnectorService extends ServiceDispatcher<DryRunR
         return new BaseJobResponse(vc.getId(), job.getId());
     }
 
-    private DryRunRequest<VirtualizationConnectorDto> internalSSLCertificatesFetch(
-            DryRunRequest<VirtualizationConnectorDto> request, SslCertificatesExtendedException sslCertificatesException) throws Exception {
+    private DryRunRequest<VirtualizationConnectorRequest> internalSSLCertificatesFetch(
+            DryRunRequest<VirtualizationConnectorRequest> request, SslCertificatesExtendedException sslCertificatesException) throws Exception {
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
 
         if (trustManagerFactory != null) {

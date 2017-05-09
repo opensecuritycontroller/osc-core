@@ -21,4 +21,6 @@ import org.osc.core.broker.service.response.BaseResponse;
 
 public interface ImportApplianceManagerPluginServiceApi
         extends ServiceDispatcherApi<ImportFileRequest, BaseResponse> {
+
+    public boolean isManagerTypeUsed(String managerType);
 }

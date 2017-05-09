@@ -46,7 +46,12 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = DeleteDistributedApplianceService.class)
+/**
+ * This component exposes both the API and the implementation so that the
+ * {@link ConformService} can call the {@link #startDeleteDAJob(DistributedAppliance, UnlockObjectMetaTask)}
+ * method.
+ */
+@Component(service = { DeleteDistributedApplianceServiceApi.class, DeleteDistributedApplianceService.class })
 public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
         implements DeleteDistributedApplianceServiceApi {
 

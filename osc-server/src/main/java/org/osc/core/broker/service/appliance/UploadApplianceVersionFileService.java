@@ -21,6 +21,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.persistence.EntityManager;
 
@@ -29,23 +32,38 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.UploadApplianceVersionFileServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.request.UploadRequest;
 import org.osc.core.broker.service.response.BaseResponse;
-import org.osc.core.broker.view.maintenance.ApplianceUploader;
 import org.osc.core.util.ArchiveUtil;
-
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+@Component(configurationPid="org.osc.core.broker.upload",
+    configurationPolicy=ConfigurationPolicy.REQUIRE)
 public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadRequest, BaseResponse>
         implements UploadApplianceVersionFileServiceApi {
 
     private static final Logger log = Logger.getLogger(UploadApplianceVersionFileService.class);
 
+    @Reference
+    private ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
+
+    String tmpFolderParent;
+
+    @Activate
+    void start(UploadConfig config) {
+        this.tmpFolderParent = config.tmp_upload_parent();
+    }
+
     @Override
     public BaseResponse exec(UploadRequest request, EntityManager em) throws Exception {
         String fileName = request.getFileName();
-        String uploadFolder = ApplianceUploader.getUploadPath(true);
+        Path uploadFolder = Files.createTempDirectory(Paths.get(this.tmpFolderParent), "uploadAppliance");
 
         try {
             validate(uploadFolder, fileName);
@@ -58,20 +76,18 @@ public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadR
 			boolean isZip = FilenameUtils.getExtension(fileName).equals("zip");
 			if (isZip) {
 				// If we are here we are handling a zip file
-				ArchiveUtil.unzip(uploadedFilePath, uploadFolder);
+				ArchiveUtil.unzip(uploadedFilePath, uploadFolder.toString());
 				// After extraction, we don't need the zip file. Delete the zip file
 				log.info("Delete temporary uploaded zip file after extraction " + uploadedFilePath);
 				new File(uploadedFilePath).delete();
 			}
 
-            ImportApplianceSoftwareVersionService importService = new ImportApplianceSoftwareVersionService();
+            ImportFileRequest importRequest = new ImportFileRequest(uploadFolder.toString());
 
-            ImportFileRequest importRequest = new ImportFileRequest(uploadFolder);
-
-            return importService.dispatch(importRequest);
+            return this.importApplianceSoftwareVersionService.dispatch(importRequest);
         } finally {
             try {
-                FileUtils.deleteDirectory(new File(uploadFolder));
+                FileUtils.deleteDirectory(uploadFolder.toFile());
             } catch (Exception e) {
                 log.error("Failed to cleaning temp folder: " + uploadFolder, e);
                 // Not throwing exception since only cleaning failed
@@ -79,7 +95,7 @@ public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadR
         }
     }
 
-    void validate(String extractdir, String fileName) throws VmidcBrokerValidationException {
+    void validate(Path extractdir, String fileName) throws VmidcBrokerValidationException {
         if (fileName == null || fileName.isEmpty()) {
             throw new VmidcBrokerValidationException("Invalid request, no file name");
         }
@@ -91,8 +107,8 @@ public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadR
             throw new VmidcBrokerValidationException("Invalid request, not a valid file - valid file types are '.bar' and '.zip'");
         }
 
-        String uploadedFilePath = extractdir + fileName;
-        if (new File(uploadedFilePath).exists()) {
+        Path uploadedFilePath = extractdir.resolve(fileName);
+        if (uploadedFilePath.toFile().exists()) {
 
             throw new VmidcBrokerValidationException("File " + uploadedFilePath + " already exist");
         } else {

@@ -145,6 +145,11 @@
 		    <scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi.promise</artifactId>
+			<version>6.0.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.aries.tx-control</groupId>
 			<artifactId>tx-control-api</artifactId>
 			<version>0.0.2</version>
@@ -417,49 +422,6 @@
 			</plugin>
 
 			<plugin>
-				<groupId>com.github.kongchen</groupId>
-				<artifactId>swagger-maven-plugin</artifactId>
-				<version>3.1.2</version>
-				<configuration>
-					<apiSources>
-						<apiSource>
-							<springmvc>false</springmvc>
-							<locations>org.osc.core.broker.rest.server.api</locations>
-							<basePath>/</basePath>
-							<info>
-								<title>OSC API Documentation</title>
-								<version>1.0</version>
-								<description>
-									Id's(Id and Parent Id) specified in the body of
-									entities needs to match
-									the id's in the path parameter.
-									Parent Id
-									field is only applicable for entities when stated.
-									All API's
-									require authentication and respond with 401 error
-									code for
-									requests which fail authorization.
-								</description>
-							</info>
-							<swaggerDirectory>${basedir}/target/webapp/api-doc</swaggerDirectory>
-							<templatePath>
-								${basedir}/target/webapp/api-doc/strapdown.html.hbs
-							</templatePath>
-							<outputPath>${basedir}/target/webapp/api-doc/api.html</outputPath>
-						</apiSource>
-					</apiSources>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>compile</phase>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.8</version>
 				<executions>
@@ -476,20 +438,6 @@
 									<arg
 										line="${basedir}/src/main/generated/ org.osc.core.broker.view.common.VmidcMessages" />
 								</exec>
-							</tasks>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>template-extract</id>
-						<phase>process-resources</phase>
-						<configuration>
-							<tasks>
-								<!-- Unzip API docs files -->
-								<unzip src="${basedir}/api-doc.zip" dest="${basedir}/target/webapp/api-doc"
-									overwrite="true" />
 							</tasks>
 						</configuration>
 						<goals>

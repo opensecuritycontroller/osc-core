@@ -31,7 +31,9 @@ import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteVirtualSystemTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ForceDeleteVirtualSystemService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
         implements ForceDeleteVirtualSystemServiceApi {
 

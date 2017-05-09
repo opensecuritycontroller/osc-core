@@ -30,12 +30,15 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ImportSdnControllerPluginService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
         implements ImportSdnControllerPluginServiceApi {
 
@@ -103,6 +106,11 @@ public class ImportSdnControllerPluginService extends ServiceDispatcher<ImportFi
 			this.deploymentName = symbolicName + ".bar";
         }
 
+    }
+
+    @Override
+    public boolean isControllerTypeUsed(String name) {
+        return VirtualizationConnectorEntityMgr.isControllerTypeUsed(name);
     }
 
 }

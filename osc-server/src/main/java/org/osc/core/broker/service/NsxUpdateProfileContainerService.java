@@ -34,7 +34,8 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxServiceProfileContainerCheckMetaTask;
 import org.osc.core.util.NetworkUtil;
-
+import org.osgi.service.component.annotations.Component;
+@Component
 public class NsxUpdateProfileContainerService
         extends ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse>
         implements NsxUpdateProfileContainerServiceApi {

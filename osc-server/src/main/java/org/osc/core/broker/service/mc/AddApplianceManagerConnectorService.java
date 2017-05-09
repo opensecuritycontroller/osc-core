@@ -28,34 +28,38 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.SslCertificatesExtendedException;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
-import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
+import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = AddApplianceManagerConnectorService.class)
+/**
+ * This component exposes both the API and the implementation so that the
+ * {@link AddApplianceManagerConnectorService} and {@link UpdateApplianceManagerConnectorService}
+ * can call the {@link #checkManagerConnection(DryRunRequest, ApplianceManagerConnector)}
+ * method.
+ */
+@Component(service={AddApplianceManagerConnectorService.class, AddApplianceManagerConnectorServiceApi.class})
 public class AddApplianceManagerConnectorService
-        extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorDto>, BaseJobResponse>
+        extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorRequest>, BaseJobResponse>
         implements AddApplianceManagerConnectorServiceApi {
 
     private static final Logger LOG = Logger.getLogger(AddApplianceManagerConnectorService.class);
-
-    private boolean forceAddSSLCertificates = false;
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -63,26 +67,21 @@ public class AddApplianceManagerConnectorService
     @Reference
     private ConformService conformService;
 
-    public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
-        this.forceAddSSLCertificates = forceAddSSLCertificates;
-    }
-
     @Override
-    public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorDto> request, EntityManager em)
+    public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorRequest> request, EntityManager em)
             throws Exception {
         OSCEntityManager<ApplianceManagerConnector> appMgrEntityMgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
 
         try {
             validate(request, appMgrEntityMgr);
         } catch (Exception e) {
-            if (e instanceof SslCertificatesExtendedException && this.forceAddSSLCertificates) {
+            if (e instanceof SslCertificatesExtendedException && request.getDto().isForceAddSSLCertificates()) {
                 request = internalSSLCertificatesFetch(request, (SslCertificatesExtendedException) e);
                 validate(request, appMgrEntityMgr);
             } else {
                 throw e;
             }
         }
-        setForceAddSSLCertificates(false); // set default ssl state for future calls
 
         ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto());
         appMgrEntityMgr.create(mc);
@@ -102,8 +101,8 @@ public class AddApplianceManagerConnectorService
         return null;
     }
 
-    private DryRunRequest<ApplianceManagerConnectorDto> internalSSLCertificatesFetch(
-            DryRunRequest<ApplianceManagerConnectorDto> request, SslCertificatesExtendedException sslCertificatesException) throws Exception {
+    private DryRunRequest<ApplianceManagerConnectorRequest> internalSSLCertificatesFetch(
+            DryRunRequest<ApplianceManagerConnectorRequest> request, SslCertificatesExtendedException sslCertificatesException) throws Exception {
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
         for (CertificateResolverModel certObj : sslCertificatesException.getCertificateResolverModels()) {
             trustManagerFactory.addEntry(certObj.getCertificate(), certObj.getAlias());
@@ -112,7 +111,7 @@ public class AddApplianceManagerConnectorService
         return request;
     }
 
-    private void validate(DryRunRequest<ApplianceManagerConnectorDto> request,
+    private void validate(DryRunRequest<ApplianceManagerConnectorRequest> request,
                           OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
         ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto());
@@ -131,10 +130,10 @@ public class AddApplianceManagerConnectorService
             throw new VmidcBrokerValidationException("Appliance Manager IP Address: " + request.getDto().getIpAddress() + " already exists.");
         }
 
-        checkManagerConnection(LOG, request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
+        checkManagerConnection(request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
     }
 
-    void checkManagerConnection(Logger log, DryRunRequest<ApplianceManagerConnectorDto> request,
+    void checkManagerConnection(DryRunRequest<ApplianceManagerConnectorRequest> request,
                                        ApplianceManagerConnector mc) throws ErrorTypeException {
         if (!request.isSkipAllDryRun() && !request.isIgnoreErrorsAndCommit(ErrorType.MANAGER_CONNECTOR_EXCEPTION)) {
 
@@ -151,7 +150,7 @@ public class AddApplianceManagerConnectorService
                 this.apiFactoryService.checkConnection(mc);
             } catch (Exception e) {
                 ErrorTypeException errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
-                log.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
+                LOG.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
                 if (!resolverModels.isEmpty()) {
                     throw new SslCertificatesExtendedException(errorTypeException, resolverModels);
                 }

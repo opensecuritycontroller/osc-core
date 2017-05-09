@@ -28,18 +28,30 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.appliance.UploadConfig;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
-import org.osc.core.broker.view.maintenance.ApplianceUploader;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 
+@Component(configurationPid="org.osc.core.broker.upload",
+configurationPolicy=ConfigurationPolicy.REQUIRE)
 public class DeleteApplianceSoftwareVersionService extends ServiceDispatcher<BaseIdRequest, EmptySuccessResponse>
         implements DeleteApplianceSoftwareVersionServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteApplianceSoftwareVersionService.class);
+
+    private String uploadPath;
+
+    @Activate
+    void start(UploadConfig config) {
+        this.uploadPath = config.upload_path();
+    }
 
     @Override
     public EmptySuccessResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
@@ -49,7 +61,7 @@ public class DeleteApplianceSoftwareVersionService extends ServiceDispatcher<Bas
         validate(em, request, av);
 
         try {
-            File imageFolder = new File(ApplianceUploader.getImageFolderPath());
+            File imageFolder = new File(this.uploadPath);
             FilenameFilter prefixFileFilter = FileFilterUtils.prefixFileFilter(FilenameUtils.getBaseName(av
                     .getImageUrl()));
 

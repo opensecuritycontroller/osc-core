@@ -16,14 +16,23 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
+import static java.util.Collections.emptyList;
+import static org.osc.sdk.controller.Constants.*;
 import static org.osc.sdk.manager.Constants.*;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import javax.annotation.concurrent.GuardedBy;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -34,12 +43,17 @@ import org.osc.core.broker.model.plugin.manager.ApplianceManagerConnectorElement
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.manager.VirtualSystemElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
+import org.osc.core.broker.service.api.plugin.PluginEvent;
+import org.osc.core.broker.service.api.plugin.PluginEvent.Type;
+import org.osc.core.broker.service.api.plugin.PluginListener;
+import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osc.sdk.controller.Constants;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.ManagerAuthenticationType;
 import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
@@ -57,11 +71,29 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 
+import com.google.common.collect.ImmutableMap;
+
 @Component(immediate = true)
-public class ApiFactoryServiceImpl implements ApiFactoryService {
+public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     private static final String OSC_PLUGIN_NAME = PluginTracker.PROP_PLUGIN_NAME;
     private final Logger log = Logger.getLogger(ApiFactoryServiceImpl.class);
+
+    private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES = ImmutableMap
+            .<String, Class<?>>builder().put(VENDOR_NAME, String.class).put(SERVICE_NAME, String.class)
+            .put(EXTERNAL_SERVICE_NAME, String.class).put(AUTHENTICATION_TYPE, String.class)
+            .put(NOTIFICATION_TYPE, String.class).put(SYNC_SECURITY_GROUP, Boolean.class)
+            .put(PROVIDE_DEVICE_STATUS, Boolean.class).put(SYNC_POLICY_MAPPING, Boolean.class).build();
+
+    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES =
+            ImmutableMap.<String, Class<?>>builder()
+            .put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class)
+            .put(SUPPORT_SFC, Boolean.class)
+            .put(SUPPORT_FAILURE_POLICY, Boolean.class)
+            .put(USE_PROVIDER_CREDS, Boolean.class)
+            .put(QUERY_PORT_INFO, Boolean.class)
+            .put(SUPPORT_PORT_GROUP, Boolean.class)
+            .build();
 
     private Map<String, ApplianceManagerApi> managerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<ApplianceManagerApi>> managerRefs = new ConcurrentHashMap<>();
@@ -72,29 +104,99 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
 
     private List<PluginTracker<?>> pluginTrackers = new LinkedList<>();
 
+    @GuardedBy("pluginListeners")
+    private Map<PluginListener, List<PluginTracker<?>>> pluginListeners = new IdentityHashMap<>();
+
+    @GuardedBy("pluginListeners")
+    private boolean listenersActive;
+
     @Reference
     private InstallableManager installableManager;
 
+    @GuardedBy("pluginListeners")
     private BundleContext context;
-
-    private static ApiFactoryServiceImpl instance = null;
-
-    /**
-     * don't use this, it's a necessary evil until we fix static callers
-     */
-    @Deprecated
-    public static ApiFactoryService instance() {
-        return instance;
-    }
 
     @Activate
     void activate(BundleContext context) {
-        this.context = context;
-        ApiFactoryServiceImpl.instance = this;
+        List<PluginListener> earlyArrivers;
+        synchronized(this.pluginListeners) {
+            this.context = context;
+            this.listenersActive = true;
+
+            earlyArrivers = this.pluginListeners.entrySet().stream()
+                .filter(e -> e.getValue().isEmpty())
+                .map(Entry::getKey)
+                .collect(Collectors.toList());
+        }
+
+        earlyArrivers.stream()
+            .forEach(pl -> {
+                    // Always create trackers without holding any monitors or locks
+                    // to avoid potential deadlock
+                    List<PluginTracker<?>> trackers = createTrackers(pl);
+
+                    synchronized (this.pluginListeners) {
+                        if(this.listenersActive) {
+                            // We should only add the trackers if the plugin is still
+                            // in the map with an empty collection
+                            List<PluginTracker<?>> old = this.pluginListeners.get(pl);
+                            if(old != null && old.isEmpty()) {
+                                this.pluginListeners.put(pl, trackers);
+                                trackers = Collections.emptyList();
+                            }
+                        }
+                    }
+
+                    // If our trackers weren't added then close them
+                    trackers.forEach(PluginTracker::close);
+                });
+
+    }
+
+    private List<PluginTracker<?>> createTrackers(PluginListener pl) {
+        @SuppressWarnings("rawtypes")
+        PluginTrackerCustomizer customizer = pe -> notifyListener(pe, pl);
+        @SuppressWarnings("unchecked")
+        List<PluginTracker<?>> trackers = Arrays.asList(
+                    newPluginTracker(customizer, ApplianceManagerApi.class,
+                            PluginType.MANAGER, REQUIRED_MANAGER_PLUGIN_PROPERTIES),
+                    newPluginTracker(customizer, SdnControllerApi.class, PluginType.SDN,
+                            REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES),
+                    newPluginTracker(customizer, VMwareSdnApi.class, PluginType.NSX,
+                            null));
+        return trackers;
+    }
+
+    private void notifyListener(org.osc.core.broker.model.plugin.PluginEvent<?> event, PluginListener pl) {
+        PluginEvent.Type eventType;
+        switch(event.getType()) {
+            case ADDING:
+                eventType = Type.ADDING;
+                break;
+            case MODIFIED:
+                eventType = Type.MODIFIED;
+                break;
+            case REMOVED:
+                eventType = Type.REMOVED;
+                break;
+            default:
+                this.log.error("Received an unknown plugin event type " + event.getType());
+                return;
+        }
+
+        PluginEvent toSend = new PluginEvent(eventType, event.getPlugin());
+        try {
+            pl.pluginEvent(toSend);
+        } catch (RuntimeException re) {
+            this.log.error("A Plugin listener threw an unexpected exception", re);
+        }
     }
 
     @Deactivate
     void deactivate() {
+        synchronized (this.pluginListeners) {
+            this.listenersActive = false;
+        }
         synchronized (this.pluginTrackers) {
             this.pluginTrackers.forEach(tracker -> {
                 try {
@@ -111,6 +213,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         if (name instanceof String) {
             this.log.info("add plugin: " + name);
             refs.put((String) name, serviceObjs);
+
+
         } else {
             this.log.warn(String.format("add plugin ignored as %s=%s", OSC_PLUGIN_NAME, name));
         }
@@ -161,6 +265,49 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         removeApi(serviceObjs, this.vmwareSdnRefs, this.vmwareSdnApis);
     }
 
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    void addPluginListener(PluginListener listener) {
+        synchronized (this.pluginListeners) {
+            if(!this.listenersActive) {
+                // Early joiner waits for startup
+                this.pluginListeners.put(listener, emptyList());
+                return;
+            }
+        }
+
+        // Started already - time to join!
+
+        // Always create trackers without holding any monitors or locks
+        // to avoid potential deadlock
+        List<PluginTracker<?>> trackers = createTrackers(listener);
+
+        // Dynamic references may be set at any time, even while the
+        // component is deactivating, therefore we only add the listener
+        // if it should be active
+        synchronized (this.pluginListeners) {
+            if(this.listenersActive) {
+                this.pluginListeners.put(listener, trackers);
+                trackers = emptyList();
+            }
+        }
+
+        // If the component was stopped then we may have dangling
+        // trackers in this list which should be closed. Otherwise
+        // the list will be empty (see above).
+        trackers.forEach(PluginTracker::close);
+    }
+
+    void removePluginListener(PluginListener listener) {
+        List<PluginTracker<?>> trackers;
+        synchronized (this.pluginListeners) {
+            trackers = this.pluginListeners.remove(listener);
+        }
+
+        if(trackers != null) {
+            trackers.forEach(PluginTracker::close);
+        }
+    }
+
     @Override
     public String generateServiceManagerName(VirtualSystem vs) throws Exception {
         return "OSC "
@@ -176,7 +323,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         return createApplianceManagerApi(managerType.getValue());
     }
 
-    private ApplianceManagerApi createApplianceManagerApi(String name) throws Exception {
+    @Override
+    public ApplianceManagerApi createApplianceManagerApi(String name) throws Exception {
         ApplianceManagerApi api = this.managerApis.get(name);
 
         if (api == null) {
@@ -374,6 +522,17 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
         }
         tracker.open();
         return tracker;
+    }
+
+
+    @Override
+    public boolean usesProviderCreds(String controllerType) throws Exception {
+        return (boolean) getPluginProperty(ControllerType.fromText(controllerType), Constants.USE_PROVIDER_CREDS);
+    }
+
+    @Override
+    public boolean isKeyAuth(String managerType) throws Exception {
+        return isKeyAuth(ManagerType.fromText(managerType));
     }
 
 }

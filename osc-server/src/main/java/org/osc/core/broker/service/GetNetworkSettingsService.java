@@ -23,7 +23,9 @@ import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.request.GetNetworkSettingsRequest;
 import org.osc.core.broker.service.response.GetNetworkSettingsResponse;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class GetNetworkSettingsService extends ServiceDispatcher<GetNetworkSettingsRequest, GetNetworkSettingsResponse>
         implements GetNetworkSettingsServiceApi {
 

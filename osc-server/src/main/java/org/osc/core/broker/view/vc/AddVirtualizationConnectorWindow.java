@@ -16,26 +16,31 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import com.vaadin.data.Property.ValueChangeListener;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
+import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.request.DryRunRequest;
+import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.service.vc.AddVirtualizationConnectorService;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.util.ViewUtil;
+
+import com.vaadin.data.Property.ValueChangeListener;
 
 @SuppressWarnings("serial")
 public class AddVirtualizationConnectorWindow extends BaseVCWindow {
 
     private final String CAPTION = "Add Virtualization Connector";
 
-    private AddVirtualizationConnectorService addVirtualizationConnectorService = StaticRegistry.addVirtualizationConnectorService();
+    private final AddVirtualizationConnectorServiceApi addVirtualizationConnectorService;
 
     private static final Logger log = Logger.getLogger(AddVirtualizationConnectorWindow.class);
 
-    public AddVirtualizationConnectorWindow(VirtualizationConnectorView vcView) throws Exception {
+    public AddVirtualizationConnectorWindow(VirtualizationConnectorView vcView, AddVirtualizationConnectorServiceApi addVirtualizationConnectorService,
+            PluginService pluginService, ValidationApi validator) throws Exception {
+        super(pluginService, validator);
         this.vcView = vcView;
+        this.addVirtualizationConnectorService = addVirtualizationConnectorService;
         createWindow(this.CAPTION);
     }
 
@@ -52,7 +57,7 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
             if (validateForm()) {
                 // creating add request with user entered data
 
-                DryRunRequest<VirtualizationConnectorDto> addRequest = createRequest();
+                DryRunRequest<VirtualizationConnectorRequest> addRequest = createRequest();
                 // calling add VC service
 
                 log.info("adding virtualization connector - " + this.name.getValue().trim());

@@ -30,6 +30,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -45,9 +46,10 @@ import org.osgi.service.transaction.control.jpa.JPAEntityManagerProviderFactory;
  * ready-configured database resources. Database access must not be set
  * up manually by other components.
  */
-@Component(service=DBConnectionManager.class, configurationPid="org.osc.core.broker.util.db",
+@Component(service={DBConnectionManager.class, DBConnectionManagerApi.class},
+configurationPid="org.osc.core.broker.util.db",
 configurationPolicy=ConfigurationPolicy.REQUIRE)
-public class DBConnectionManager {
+public class DBConnectionManager implements DBConnectionManagerApi {
 
     private static final Logger log = Logger.getLogger(DBConnectionManager.class);
 
@@ -114,6 +116,7 @@ public class DBConnectionManager {
         }
     }
 
+    @Override
     public Connection getSQLConnection() throws SQLException {
         return this.ds.getConnection();
     }

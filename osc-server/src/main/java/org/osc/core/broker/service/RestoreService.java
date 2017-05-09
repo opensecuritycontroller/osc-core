@@ -36,7 +36,9 @@ import org.osc.core.server.Server;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class RestoreService extends BackupFileService<RestoreRequest, EmptySuccessResponse>
         implements RestoreServiceApi {
 

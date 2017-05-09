@@ -24,14 +24,13 @@ import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.BackupService;
+import org.osc.core.broker.service.api.BackupServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.server.Server;
 import org.osc.core.util.ArchiveUtil;
 import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
@@ -63,12 +62,17 @@ public class SummaryLayout extends FormLayout {
     private CheckBox checkbox = null;
     private Button download = null;
 
-    private Server server = StaticRegistry.server();
+    private ServerApi server;
+
+    private BackupServiceApi backupService;
 
     private static final Logger log = Logger.getLogger(SummaryLayout.class);
 
-    public SummaryLayout() {
+
+    public SummaryLayout(ServerApi server, BackupServiceApi backupService) {
         super();
+        this.server = server;
+        this.backupService = backupService;
         this.summarytable = createTable();
         // creating Server table
         this.summarytable.addItem(new Object[] { "DNS Name: ", getHostName() }, new Integer(1));
@@ -121,7 +125,8 @@ public class SummaryLayout extends FormLayout {
                 ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.SUMMARY_RESTART_STARTED), null,
                         Notification.Type.TRAY_NOTIFICATION);
                 ViewUtil.showServerRestartProgress();
-                SummaryLayout.this.server.restart();
+                SummaryLayout.this.server.restart().then(null,
+                        p -> ViewUtil.showError("Restart server failed", p.getFailure()));
             }
         });
 
@@ -204,7 +209,7 @@ public class SummaryLayout extends FormLayout {
                 } catch (Exception exception) {
                     log.error("Failed! to receive zip file from Archieve Util", exception);
                 } finally {
-                	new BackupService().deleteBackupFilesFrom("log");
+                	SummaryLayout.this.backupService.deleteBackupFilesFrom("log");
                     SummaryLayout.this.download.setEnabled(true);
                 }
                 return fin;
@@ -216,12 +221,11 @@ public class SummaryLayout extends FormLayout {
 
     private void getDBBackup() {
         try {
-            BackupService bkpservice = new BackupService();
-            BackupResponse res = bkpservice.dispatch(new BackupRequest());
+            BackupResponse res = this.backupService.dispatch(new BackupRequest());
             if (res.isSuccess()) {
             	// move backup to log directory
-                FileUtils.copyFileToDirectory(bkpservice.getEncryptedBackupFile(), new File("log" + File.separator));
-                bkpservice.deleteBackupFiles();
+                FileUtils.copyFileToDirectory(this.backupService.getEncryptedBackupFile(), new File("log" + File.separator));
+                this.backupService.deleteBackupFiles();
                 log.info("Backup Successful! adding backup file to Support Bundle");
             }
         } catch (Exception e) {

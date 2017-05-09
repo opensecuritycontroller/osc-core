@@ -24,16 +24,18 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
-import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class DeleteSslCertificateService extends ServiceDispatcher<DeleteSslEntryRequest, EmptySuccessResponse>
         implements DeleteSslCertificateServiceApi {
 
+    private static final String INTERNAL_CERTIFICATE_MARKER = "internal";
     private static final Logger log = Logger.getLogger(DeleteSslCertificateService.class);
 
     @Override
     protected EmptySuccessResponse exec(DeleteSslEntryRequest request, EntityManager em) throws Exception {
-        if (request.getAlias().contains(SslConfigurationLayout.INTERNAL_CERTIFICATE_ALIAS)) {
+        if (request.getAlias().contains(INTERNAL_CERTIFICATE_MARKER)) {
             throw new VmidcBrokerValidationException("Cannot remove internal certificate");
         }
 

@@ -41,6 +41,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
@@ -92,6 +93,9 @@ public class DeleteDistributedApplianceServiceTest {
 
     @Mock
     private ApiFactoryService apiFactoryService;
+
+    @Mock
+    private UserContextApi userContext;
 
     @InjectMocks
     private VSConformanceCheckMetaTask vsConformanceCheckMetaTask;

@@ -23,18 +23,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.service.SslCertificatesExtendedException;
-import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
+import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.broker.service.mc.AddApplianceManagerConnectorService;
+import org.osc.core.broker.service.exceptions.RestClientException;
+import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.util.StaticRegistry;
-import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.view.ManagerConnectorView;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -44,8 +44,6 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.core.rest.client.exception.RestClientException;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -67,7 +65,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private static final Logger log = Logger.getLogger(AddManagerConnectorWindow.class);
 
     // current view reference
-    private ManagerConnectorView mcView = null;
+    private final ManagerConnectorView mcView;
 
     // form fields
     private TextField name = null;
@@ -78,10 +76,19 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private PasswordField apiKey = null;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private AddApplianceManagerConnectorService addMCService = StaticRegistry.addApplianceManagerConnectorService();
+    private final AddApplianceManagerConnectorServiceApi addMCService;
 
-    public AddManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
+    private final PluginService pluginStatusService;
+
+    private final ValidationApi validator;
+
+    public AddManagerConnectorWindow(ManagerConnectorView mcView,
+            AddApplianceManagerConnectorServiceApi addMCService,
+            PluginService pluginStatusService, ValidationApi validator) throws Exception {
         this.mcView = mcView;
+        this.addMCService = addMCService;
+        this.pluginStatusService = pluginStatusService;
+        this.validator = validator;
         createWindow(this.CAPTION);
     }
 
@@ -101,7 +108,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         this.type.setImmediate(true);
         this.type.setTextInputAllowed(false);
         this.type.setNullSelectionAllowed(false);
-        for (String mt : ManagerType.values()) {
+        for (String mt : this.pluginStatusService.getManagerTypes()) {
             this.type.addItem(mt);
         }
 
@@ -109,8 +116,8 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
             @Override
             public void valueChange(ValueChangeEvent event) {
                 try {
-                    if (ManagerApiFactory.isKeyAuth(ManagerType.fromText(AddManagerConnectorWindow.this.type.getValue()
-                            .toString()))) {
+                    if (AddManagerConnectorWindow.this.pluginStatusService.isKeyAuth(AddManagerConnectorWindow.this.type.getValue()
+                            .toString())) {
                         AddManagerConnectorWindow.this.apiKey.setVisible(true);
                         AddManagerConnectorWindow.this.user.setVisible(false);
                         AddManagerConnectorWindow.this.pw.setVisible(false);
@@ -160,7 +167,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         this.form.addComponent(this.apiKey);
 
         // select the first entry as default Manager Connector...
-        this.type.select(ManagerType.values().toArray()[0].toString());
+        this.type.select(this.pluginStatusService.getManagerTypes().toArray()[0].toString());
 
     }
 
@@ -170,8 +177,8 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
             this.name.validate();
             this.type.validate();
             this.ip.validate();
-            ValidateUtil.checkForValidIpAddressFormat(this.ip.getValue());
-            if (ManagerApiFactory.isKeyAuth(ManagerType.fromText(this.type.getValue().toString()))) {
+            this.validator.checkValidIpAddress(this.ip.getValue());
+            if (this.pluginStatusService.isKeyAuth(this.type.getValue().toString())) {
                 this.apiKey.validate();
             } else {
                 this.user.validate();
@@ -202,8 +209,8 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
      */
     private void createAndSubmitRequest(List<ErrorType> errorTypesToIgnore) throws Exception {
         // creating add request with user entered data
-        DryRunRequest<ApplianceManagerConnectorDto> addRequest = new DryRunRequest<>();
-        addRequest.setDto(new ApplianceManagerConnectorDto());
+        DryRunRequest<ApplianceManagerConnectorRequest> addRequest = new DryRunRequest<>();
+        addRequest.setDto(new ApplianceManagerConnectorRequest());
         addRequest.getDto().setName(this.name.getValue().trim());
         addRequest.getDto().setManagerType(((String) this.type.getValue()).trim());
         addRequest.getDto().setIpAddress(this.ip.getValue().trim());

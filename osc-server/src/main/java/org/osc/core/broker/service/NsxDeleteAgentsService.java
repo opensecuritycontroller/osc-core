@@ -27,7 +27,9 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.NsxDeleteAgentsRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteMemberDeviceTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class NsxDeleteAgentsService extends ServiceDispatcher<NsxDeleteAgentsRequest, EmptySuccessResponse>
         implements NsxDeleteAgentsServiceApi {
 

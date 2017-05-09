@@ -20,7 +20,8 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.events.AlarmAction;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.Severity;
-import org.osc.core.broker.service.alarm.UpdateAlarmService;
+import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
+import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
@@ -41,10 +42,14 @@ public class UpdateAlarmWindow extends BaseAlarmWindow {
 
     private BeanItem<AlarmDto> currentAlarm = null;
 
-    public UpdateAlarmWindow(AlarmView alarmView) throws Exception {
+    private UpdateAlarmServiceApi updateAlarmService;
 
-        super();
+    public UpdateAlarmWindow(AlarmView alarmView, UpdateAlarmServiceApi updateAlarmService,
+            GetEmailSettingsServiceApi getEmailSettingsService) throws Exception {
+
+        super(getEmailSettingsService);
         this.alarmView = alarmView;
+        this.updateAlarmService = updateAlarmService;
         this.currentAlarm = alarmView.getParentItem();
         createWindow(this.CAPTION);
     }
@@ -79,10 +84,9 @@ public class UpdateAlarmWindow extends BaseAlarmWindow {
                 BaseRequest<AlarmDto> request = createRequest();
                 request.getDto().setId(this.currentAlarm.getBean().getId());
 
-                UpdateAlarmService updateService = new UpdateAlarmService();
                 log.info("Updating alarm - " + this.alarmName.getValue());
 
-                BaseResponse res = updateService.dispatch(request);
+                BaseResponse res = this.updateAlarmService.dispatch(request);
                 if (res.getId() == null) {
                     ViewUtil.iscNotification("Error updating the alarm", null, Notification.Type.TRAY_NOTIFICATION);
                 }

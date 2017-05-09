@@ -35,7 +35,7 @@ import org.osc.core.broker.model.entities.job.JobStatus;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.model.entities.job.TaskState;
 import org.osc.core.broker.model.entities.job.TaskStatus;
-import org.osc.core.broker.rest.RestConstants;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;

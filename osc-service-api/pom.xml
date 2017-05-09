@@ -15,7 +15,16 @@
 	</parent>
 	<artifactId>osc-service-api</artifactId>
 	<name>org.osc.core:osc-service-api</name>
-
+	<repositories>
+		<repository>
+			<id>osc-nexus</id>
+			<name>OSC Nexus</name>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/osc-snapshot/</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.osgi</groupId>
@@ -28,7 +37,7 @@
 			<artifactId>swagger-annotations</artifactId>
 			<version>1.5.13</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.osc.api</groupId>
 			<artifactId>sdn-controller-api</artifactId>
@@ -53,6 +62,16 @@
 			<groupId>org.osc.api</groupId>
 			<artifactId>vmware-nsx-api</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi.promise</artifactId>
+			<version>6.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.ws.rs</groupId>
+			<artifactId>javax.ws.rs-api</artifactId>
+			<version>2.0.1</version>
 		</dependency>
 	</dependencies>
 

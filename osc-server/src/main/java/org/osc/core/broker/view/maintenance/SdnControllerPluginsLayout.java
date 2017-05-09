@@ -27,24 +27,22 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.Plugin;
-import org.osc.core.broker.model.plugin.Plugin.State;
-import org.osc.core.broker.model.plugin.PluginEvent;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
-import org.osc.core.broker.service.ImportSdnControllerPluginService;
-import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
+import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginApi;
+import org.osc.core.broker.service.api.plugin.PluginApi.State;
+import org.osc.core.broker.service.api.plugin.PluginEvent;
+import org.osc.core.broker.service.api.plugin.PluginListener;
+import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
-import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.broker.view.maintenance.PluginUploader.UploadSucceededListener;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.server.installer.InstallableUnit;
-import org.osc.sdk.controller.api.SdnControllerApi;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -71,8 +69,12 @@ public class SdnControllerPluginsLayout extends FormLayout {
     private Panel pluginsPanel;
     PluginUploader uploader = new PluginUploader(PluginType.SDN);
 
-    public SdnControllerPluginsLayout() throws Exception {
+    private ImportSdnControllerPluginServiceApi importSdnControllerPluginService;
+    private ServiceRegistration<PluginListener> registration;
+
+    public SdnControllerPluginsLayout(BundleContext ctx, ImportSdnControllerPluginServiceApi importSdnControllerPluginService) throws Exception {
         super();
+        this.importSdnControllerPluginService = importSdnControllerPluginService;
 
         VerticalLayout uploadContainer = new VerticalLayout();
         VerticalLayout pluginsContainer = new VerticalLayout();
@@ -113,17 +115,18 @@ public class SdnControllerPluginsLayout extends FormLayout {
 
 
         // Subscribe to Plugin Notifications
-        SdnControllerApiFactory.<SdnControllerApi>newPluginTracker(ev -> {
-            updateTable(ev);
-        }, SdnControllerApi.class, PluginType.SDN);
-
-        SdnControllerApiFactory.<VMwareSdnApi>newPluginTracker(ev -> {
-            updateTable(ev);
-        }, VMwareSdnApi.class, PluginType.NSX);
+        this.registration = ctx.registerService(PluginListener.class,
+                this::updateTable, null);
     }
 
-    private void updateTable(PluginEvent<?> event) {
-        Plugin<?> plugin = event.getPlugin();
+    private void updateTable(PluginEvent event) {
+        PluginApi plugin = event.getPlugin();
+
+        PluginType pluginType = plugin.getType();
+        if(pluginType != PluginType.SDN && pluginType != PluginType.NSX) {
+            return;
+        }
+
         switch (event.getType()) {
         case ADDING:
             Item addingItem = this.plugins.addItem(plugin);
@@ -160,13 +163,12 @@ public class SdnControllerPluginsLayout extends FormLayout {
     }
 
     @SuppressWarnings("unchecked")
-    private void updateItem(Item item, Plugin<?> plugin) {
-        InstallableUnit installUnit = plugin.getInstallUnit();
+    private void updateItem(Item item, PluginApi plugin) {
 
         item.getItemProperty(PROP_PLUGIN_STATE).setValue(plugin.getState().toString());
-        item.getItemProperty(PROP_PLUGIN_NAME).setValue(installUnit.getSymbolicName());
-        item.getItemProperty(PROP_PLUGIN_VERSION).setValue(installUnit.getVersion());
-        item.getItemProperty(PROP_PLUGIN_SERVICES).setValue(plugin.getServices() != null ? plugin.getServices().size() : 0);
+        item.getItemProperty(PROP_PLUGIN_NAME).setValue(plugin.getSymbolicName());
+        item.getItemProperty(PROP_PLUGIN_VERSION).setValue(plugin.getVersion());
+        item.getItemProperty(PROP_PLUGIN_SERVICES).setValue(plugin.getServiceCount());
 
         String info;
         if (plugin.getState() == State.ERROR) {
@@ -177,26 +179,26 @@ public class SdnControllerPluginsLayout extends FormLayout {
         item.getItemProperty(PROP_PLUGIN_INFO).setValue(info);
 
         Button deleteButton = new Button("Delete");
-        deleteButton.addClickListener(event -> deletePlugin(installUnit));
+        deleteButton.addClickListener(event -> deletePlugin(plugin));
         item.getItemProperty(PROP_PLUGIN_DELETE).setValue(deleteButton);
     }
 
-    private void deletePlugin(InstallableUnit installUnit) {
-        final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow("Delete Plugin", "Delete Plugin - " + installUnit.getSymbolicName());
+    private void deletePlugin(PluginApi plugin) {
+        final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow("Delete Plugin", "Delete Plugin - " + plugin.getSymbolicName());
         deleteWindow.getComponentModel().setOkClickedListener(event -> {
-            if (VirtualizationConnectorEntityMgr.isControllerTypeUsed(installUnit.getName())) {
-                ViewUtil.iscNotification("SDN Controller Plugin '" + installUnit.getName() + "' is used.", Notification.Type.ERROR_MESSAGE);
+            if (this.importSdnControllerPluginService.isControllerTypeUsed(plugin.getName())) {
+                ViewUtil.iscNotification("SDN Controller Plugin '" + plugin.getName() + "' is used.", Notification.Type.ERROR_MESSAGE);
             } else {
                 try {
-                    File origin = installUnit.getOrigin();
+                    File origin = plugin.getOrigin();
                     if (origin == null) {
-                        throw new IllegalStateException(String.format("Install unit %s has no origin file.", installUnit.getSymbolicName()));
+                        throw new IllegalStateException(String.format("Install unit %s has no origin file.", plugin.getSymbolicName()));
                     }
 
                     // Use Java 7 Files.delete(), as it throws an informative exception when deletion fails
                     Files.delete(origin.toPath());
                 } catch (Exception e) {
-                    ViewUtil.showError("Fail to unload Manager Plugin '" + installUnit.getSymbolicName() + "'", e);
+                    ViewUtil.showError("Fail to unload Manager Plugin '" + plugin.getSymbolicName() + "'", e);
                 }
             }
             deleteWindow.close();
@@ -212,8 +214,7 @@ public class SdnControllerPluginsLayout extends FormLayout {
                 try {
                     ImportFileRequest importRequest = new ImportFileRequest(uploadPath);
 
-                    ImportSdnControllerPluginService service = new ImportSdnControllerPluginService();
-                    service.dispatch(importRequest);
+                    SdnControllerPluginsLayout.this.importSdnControllerPluginService.dispatch(importRequest);
 
                     ViewUtil.iscNotification(
                             VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_SDNCONTROLLER_SUCCESSFUL), null,
@@ -227,4 +228,9 @@ public class SdnControllerPluginsLayout extends FormLayout {
         };
     }
 
+    @Override
+    public void detach() {
+        this.registration.unregister();
+        super.detach();
+    }
 }

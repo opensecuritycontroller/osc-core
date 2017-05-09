@@ -24,7 +24,9 @@ import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class GetJobsArchiveService extends ServiceDispatcher<Request, BaseDtoResponse<JobsArchiveDto>>
         implements GetJobsArchiveServiceApi {
 

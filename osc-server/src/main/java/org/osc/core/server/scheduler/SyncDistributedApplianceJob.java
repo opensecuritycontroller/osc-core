@@ -24,9 +24,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
-import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -45,7 +45,7 @@ public class SyncDistributedApplianceJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
+        SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
         ConformService conformService = (ConformService) context.getMergedJobDataMap().get(ConformService.class.getName());
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
@@ -64,7 +64,7 @@ public class SyncDistributedApplianceJob implements Job {
                     public void run() {
                         try {
                             HibernateUtil.getTransactionControl().required(() -> {
-                                SessionUtil.setUser(RestConstants.OSC_DEFAULT_LOGIN);
+                                SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
                                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
                                     DistributedAppliance found = em.find(DistributedAppliance.class, da.getId());

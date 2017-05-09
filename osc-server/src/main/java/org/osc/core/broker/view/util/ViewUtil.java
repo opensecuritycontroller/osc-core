@@ -431,6 +431,45 @@ public class ViewUtil {
         return JOB_SUCCESSFUL.equals(jobStatus);
     }
 
+    private static final String TASK_FINISHED = "COMPLETED";
+    private static final String TASK_QUEUED = "QUEUED";
+    private static final String TASK_PENDING = "PENDING";
+    private static final String TASK_NOT_RUNNING = "NOT_RUNNING";
+
+    public static boolean isTaskFinished(String taskState) {
+        return TASK_FINISHED.equals(taskState);
+    }
+
+    public static boolean isTaskQueued(String taskState) {
+        return TASK_QUEUED.equals(taskState);
+    }
+
+    public static boolean isTaskPending(String taskState) {
+        return TASK_PENDING.equals(taskState);
+    }
+
+    public static boolean isTaskNotRunning(String taskState) {
+        return TASK_NOT_RUNNING.equals(taskState);
+    }
+
+
+    private static final String TASK_SUCCESSFUL = "PASSED";
+    private static final String TASK_FAILED = "FAILED";
+    private static final String TASK_SKIPPED = "SKIPPED";
+
+
+    public static boolean isTaskSuccessful(String taskStatus) {
+        return TASK_SUCCESSFUL.equals(taskStatus);
+    }
+
+    public static boolean isTaskFailed(String taskStatus) {
+        return TASK_FAILED.equals(taskStatus);
+    }
+
+    public static boolean isTaskSkipped(String taskStatus) {
+        return TASK_SKIPPED.equals(taskStatus);
+    }
+
     private static Link createJobLink(String caption, Long lastJobId) {
         HashMap<String, Object> paramMap = new HashMap<>();
         paramMap.put(JOB_ID_PARAM_KEY, lastJobId);
@@ -628,7 +667,7 @@ public class ViewUtil {
         }
     }
 
-    public static void showError(String error, Exception e) {
+    public static void showError(String error, Throwable e) {
         log.error(error, e);
         ViewUtil.iscNotification("Error!", error + " (" + e.getMessage() + ")", Notification.Type.ERROR_MESSAGE);
 

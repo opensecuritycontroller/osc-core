@@ -19,8 +19,13 @@ package org.osc.core.broker.window.update;
 import java.util.HashSet;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.UpdateDistributedApplianceService;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
+import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
+import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
+import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -28,7 +33,6 @@ import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.DistributedApplianceView;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -57,11 +61,20 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
 
     private final DistributedApplianceView daView;
 
-    private ConformService conformService = StaticRegistry.conformService();
+    private final UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
 
-    public UpdateDistributedApplianceWindow(DistributedApplianceView distributedApplianceView) throws Exception {
-        super();
+    public UpdateDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
+            UpdateDistributedApplianceServiceApi updateDistributedApplianceService,
+            ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
+            ListDomainsByMcIdServiceApi listDomainsByMcIdService,
+            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
+            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService,
+            ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService,
+            ValidationApi validator) throws Exception {
+        super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel,
+                listApplianceManagerConnectorService, listVirtualizationConnectorBySwVersionService, validator);
         this.daView = distributedApplianceView;
+        this.updateDistributedApplianceService = updateDistributedApplianceService;
         this.currentDAObject = this.daView.getParentContainer().getItem(this.daView.getParentItemId()).getBean();
         createWindow(this.CAPTION);
     }
@@ -206,7 +219,6 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
 
             BaseRequest<DistributedApplianceDto> updateRequest = new BaseRequest<DistributedApplianceDto>();
             updateRequest.setDto(new DistributedApplianceDto());
-            UpdateDistributedApplianceService updateService = new UpdateDistributedApplianceService(this.conformService);
 
             updateRequest.getDto().setId(this.currentDAObject.getId());
             updateRequest.getDto().setName(this.name.getValue().trim());
@@ -218,7 +230,7 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
             updateRequest.getDto().setApplianceModel(applianceDefinitionValue.getApplianceModel());
             updateRequest.getDto().setVirtualizationSystems(vsSet);
 
-            BaseJobResponse response = updateService.dispatch(updateRequest);
+            BaseJobResponse response = this.updateDistributedApplianceService.dispatch(updateRequest);
 
             close();
 

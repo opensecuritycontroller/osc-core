@@ -111,9 +111,6 @@ public class VirtualSystem extends BaseEntity {
     private Set<VirtualSystemPolicy> virtualSystemPolicies = new HashSet<VirtualSystemPolicy>();
 
     @OneToMany(mappedBy = "virtualSystem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<VirtualSystemMgrFile> virtualSystemMgrFiles = new HashSet<VirtualSystemMgrFile>();
-
-    @OneToMany(mappedBy = "virtualSystem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<DeploymentSpec> deploymentSpecs = new HashSet<DeploymentSpec>();
 
     @OneToMany(mappedBy = "virtualSystem", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -220,19 +217,6 @@ public class VirtualSystem extends BaseEntity {
 
     public void removeDistributedApplianceInstance(DistributedApplianceInstance distributedApplianceInstance) {
         this.distributedApplianceInstances.remove(distributedApplianceInstance);
-    }
-
-    public Set<VirtualSystemMgrFile> getVirtualSystemMgrFiles() {
-        return this.virtualSystemMgrFiles;
-    }
-
-    public void addVirtualSystemMgrFile(VirtualSystemMgrFile virtualSystemMgrFile) {
-        this.virtualSystemMgrFiles.add(virtualSystemMgrFile);
-        virtualSystemMgrFile.setVirtualSystem(this);
-    }
-
-    public void removeVirtualSystemMgrFile(VirtualSystemMgrFile virtualSystemMgrFile) {
-        this.virtualSystemMgrFiles.remove(virtualSystemMgrFile);
     }
 
     public Set<VirtualSystemPolicy> getVirtualSystemPolicies() {

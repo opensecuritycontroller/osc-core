@@ -18,6 +18,7 @@ package org.osc.core.broker.service.securitygroup;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -34,46 +35,49 @@ import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
+import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
-
+import org.osgi.service.component.annotations.Component;
+@Component
 public class UpdateSecurityGroupService
         extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
         implements UpdateSecurityGroupServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateSecurityGroupService.class);
 
-    protected SecurityGroup securityGroup;
-
     @Override
     public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, EntityManager em) throws Exception {
 
         SecurityGroupDto dto = request.getDto();
-        validateAndLoad(em, request);
+        List<String> regions = validateAndLoad(em, request);
+
+        SecurityGroup securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
         UnlockObjectMetaTask unlockTask = null;
 
         try {
 
-            unlockTask = LockUtil.tryLockSecurityGroup(this.securityGroup, this.vc);
+            unlockTask = LockUtil.tryLockSecurityGroup(securityGroup,
+                    VirtualizationConnectorEntityMgr.findById(em, dto.getParentId()));
 
-            SecurityGroupEntityMgr.toEntity(this.securityGroup, dto);
+            SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
             Set<SecurityGroupMemberItemDto> selectedMembers = request.getMembers();
 
             Set<String> selectedMemberOsId = new HashSet<>();
             if (selectedMembers != null) {
                 for (SecurityGroupMemberItemDto securityGroupMemberDto : selectedMembers) {
-                    validate(securityGroupMemberDto);
+                    validate(securityGroupMemberDto, regions);
                     String openstackId = securityGroupMemberDto.getOpenstackId();
                     selectedMemberOsId.add(openstackId);
-                    addSecurityGroupMember(em, this.securityGroup, securityGroupMemberDto);
+                    addSecurityGroupMember(em, securityGroup, securityGroupMemberDto);
                 }
             }
 
-            Set<SecurityGroupMember> securityGroupMembers = this.securityGroup.getSecurityGroupMembers();
+            Set<SecurityGroupMember> securityGroupMembers = securityGroup.getSecurityGroupMembers();
             Iterator<SecurityGroupMember> sgMemberEntityIterator = securityGroupMembers.iterator();
             while (sgMemberEntityIterator.hasNext()) {
                 SecurityGroupMember sgMemberEntity = sgMemberEntityIterator.next();
@@ -85,15 +89,15 @@ public class UpdateSecurityGroupService
                 }
             }
 
-            log.info("Updating SecurityGroup: " + this.securityGroup.toString());
-            OSCEntityManager.update(em, this.securityGroup);
+            log.info("Updating SecurityGroup: " + securityGroup.toString());
+            OSCEntityManager.update(em, securityGroup);
 
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {
                 try {
-                    Job job = ConformService.startSecurityGroupConformanceJob(this.securityGroup, forLambda);
+                    Job job = ConformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
-                    return new BaseJobResponse(this.securityGroup.getId(), job.getId());
+                    return new BaseJobResponse(securityGroup.getId(), job.getId());
                 } catch (Exception e) {
                     LockUtil.releaseLocks(forLambda);
                     throw e;
@@ -107,37 +111,38 @@ public class UpdateSecurityGroupService
         return null;
     }
 
-    protected void validateAndLoad(EntityManager em, AddOrUpdateSecurityGroupRequest request) throws Exception {
+    protected List<String> validateAndLoad(EntityManager em, AddOrUpdateSecurityGroupRequest request) throws Exception {
         SecurityGroupDto dto = request.getDto();
+        SecurityGroup securityGroup = null;
         if(request.isApi() && dto.getName() == null) {
             // If update request is coming from API and name is not specified(its a required field),
             // assumes it a member update request. Load existing values from the DB and pass to service
             SecurityGroupDtoValidator.checkForNullIdFields(dto);
-            this.securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
+            securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
 
-            if (this.securityGroup == null) {
+            if (securityGroup == null) {
                 throw new VmidcBrokerValidationException("Security Group with Id: " + dto.getId() + "  is not found.");
             }
-            SecurityGroupEntityMgr.fromEntity(this.securityGroup, dto);
+            SecurityGroupEntityMgr.fromEntity(securityGroup, dto);
 
         }
-        super.validateAndLoad(em, dto);
+        List<String> regions = super.validateAndLoad(em, dto);
 
-        if (this.securityGroup == null) {
-            this.securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
+        if (securityGroup == null) {
+            securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
 
-            if (this.securityGroup == null) {
+            if (securityGroup == null) {
                 throw new VmidcBrokerValidationException("Security Group with Id: " + dto.getId() + "  is not found.");
             }
         }
 
-        ValidateUtil.checkMarkedForDeletion(this.securityGroup, this.securityGroup.getName());
+        ValidateUtil.checkMarkedForDeletion(securityGroup, securityGroup.getName());
 
-        if (!this.securityGroup.getVirtualizationConnector().getId().equals(dto.getParentId())) {
+        if (!securityGroup.getVirtualizationConnector().getId().equals(dto.getParentId())) {
             throw new VmidcBrokerValidationException(
                     "Invalid request. Cannot change the Virtualization Connector a Security Group is associated with.");
         }
-
+        return regions;
     }
 
     private String getMemberOpenstackId(SecurityGroupMember sgm) throws VmidcBrokerValidationException {

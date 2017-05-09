@@ -43,67 +43,73 @@ import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
-import org.osc.core.broker.view.maintenance.ApplianceUploader;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.ServerUtil;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+@Component(configurationPid="org.osc.core.broker.upload",
+  configurationPolicy=ConfigurationPolicy.REQUIRE)
 public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
         implements ImportApplianceSoftwareVersionServiceApi {
 
     private static final Logger log = Logger.getLogger(ImportApplianceSoftwareVersionService.class);
 
-    private File tmpUploadFolder;
-
-    private ImageMetadata imageMetadata;
     private ImageMetadataValidator imageMetadataValidator;
+
+    private String uploadPath;
+
+    @Activate
+    void start(UploadConfig config) {
+        this.uploadPath = config.upload_path();
+    }
 
     @Override
     public BaseResponse exec(ImportFileRequest request, EntityManager em) throws Exception {
         BaseResponse response = new BaseResponse();
 
-        if (this.tmpUploadFolder == null) {
-            this.tmpUploadFolder = new File(request.getUploadPath());
-        }
+        File tmpUploadFolder = new File(request.getUploadPath());
 
         try {
 
-            validateAndLoad();
+            ImageMetadata imageMetadata = validateAndLoad(tmpUploadFolder);
 
-            Appliance appliance = ApplianceEntityMgr.findByModel(em, this.imageMetadata.getModel());
+            Appliance appliance = ApplianceEntityMgr.findByModel(em, imageMetadata.getModel());
 
             if (appliance == null) {
                 appliance = new Appliance();
-                appliance.setManagerType(this.imageMetadata.getManagerType().getValue());
-                appliance.setModel(this.imageMetadata.getModel());
-                appliance.setManagerSoftwareVersion(this.imageMetadata.getManagerVersion());
+                appliance.setManagerType(imageMetadata.getManagerType().getValue());
+                appliance.setModel(imageMetadata.getModel());
+                appliance.setManagerSoftwareVersion(imageMetadata.getManagerVersion());
 
                 OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em);
 
                 appliance = applianceEntityManager.create(appliance);
             } else {
-                if (!appliance.getManagerType().equals(this.imageMetadata.getManagerType().getValue())) {
+                if (!appliance.getManagerType().equals(imageMetadata.getManagerType().getValue())) {
                     throw new VmidcBrokerValidationException("Invalid manager type for the appliance. Expected: "
                             + appliance.getManagerType().toString() + " Received:"
-                            + this.imageMetadata.getManagerType().toString());
+                            + imageMetadata.getManagerType().toString());
                 }
-                if (!appliance.getManagerSoftwareVersion().equals(this.imageMetadata.getManagerVersion())) {
+                if (!appliance.getManagerSoftwareVersion().equals(imageMetadata.getManagerVersion())) {
                     throw new VmidcBrokerValidationException("Invalid manager version for the appliance. Expected: "
                             + appliance.getManagerSoftwareVersion() + " Received:"
-                            + this.imageMetadata.getManagerVersion());
+                            + imageMetadata.getManagerVersion());
                 }
             }
-            VirtualizationType virtualizationType = this.imageMetadata.getVirtualizationType();
+            VirtualizationType virtualizationType = imageMetadata.getVirtualizationType();
             String virtualizationVersion = "";
             if (virtualizationType.isOpenstack()) {
-                virtualizationVersion = this.imageMetadata.getOpenstackVirtualizationVersion().toString();
+                virtualizationVersion = imageMetadata.getOpenstackVirtualizationVersion().toString();
             } else if (virtualizationType.isVmware()) {
-                virtualizationVersion = this.imageMetadata.getVmwareVirtualizationVersion().toString();
+                virtualizationVersion = imageMetadata.getVmwareVirtualizationVersion().toString();
             }
 
-            String softwareVersion = this.imageMetadata.getSoftwareVersion();
+            String softwareVersion = imageMetadata.getSoftwareVersion();
 
             /*
              * Query database to see if a record with the same composite key exists.
@@ -115,13 +121,13 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                     org.osc.core.broker.model.entities.appliance.VirtualizationType.valueOf(
                             virtualizationType.name()), virtualizationVersion);
 
-            boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(this.imageMetadata.getManagerType());
+            boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(imageMetadata.getManagerType());
             if (av == null) {
 
                 ApplianceSoftwareVersion asv = ApplianceSoftwareVersionEntityMgr.findByImageUrl(em,
-                        this.imageMetadata.getImageName());
+                        imageMetadata.getImageName());
                 if (asv != null) {
-                    throw new VmidcBrokerValidationException("Image file: " + this.imageMetadata.getImageName()
+                    throw new VmidcBrokerValidationException("Image file: " + imageMetadata.getImageName()
                     + " already exists. Cannot add an image with the same name.");
                 }
 
@@ -130,16 +136,16 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                 asvDto.setSwVersion(softwareVersion);
                 asvDto.setVirtualizationType(virtualizationType);
                 asvDto.setVirtualizationVersion(virtualizationVersion);
-                asvDto.setImageUrl(this.imageMetadata.getImageName());
+                asvDto.setImageUrl(imageMetadata.getImageName());
                 if (isPolicyMappingSupported){
-                    asvDto.setEncapsulationTypes(this.imageMetadata.getEncapsulationTypes());
+                    asvDto.setEncapsulationTypes(imageMetadata.getEncapsulationTypes());
                 }
-                asvDto.setMinCpus(this.imageMetadata.getMinCpus());
-                asvDto.setMemoryInMb(this.imageMetadata.getMemoryInMb());
-                asvDto.setDiskSizeInGb(this.imageMetadata.getDiskSizeInGb());
-                asvDto.getImageProperties().putAll(this.imageMetadata.getImageProperties());
-                asvDto.getConfigProperties().putAll(this.imageMetadata.getConfigProperties());
-                asvDto.setAdditionalNicForInspection(this.imageMetadata.hasAdditionalNicForInspection());
+                asvDto.setMinCpus(imageMetadata.getMinCpus());
+                asvDto.setMemoryInMb(imageMetadata.getMemoryInMb());
+                asvDto.setDiskSizeInGb(imageMetadata.getDiskSizeInGb());
+                asvDto.getImageProperties().putAll(imageMetadata.getImageProperties());
+                asvDto.getConfigProperties().putAll(imageMetadata.getConfigProperties());
+                asvDto.setAdditionalNicForInspection(imageMetadata.hasAdditionalNicForInspection());
 
                 OSCEntityManager<ApplianceSoftwareVersion> emgr = new OSCEntityManager<ApplianceSoftwareVersion>(
                         ApplianceSoftwareVersion.class, em);
@@ -153,21 +159,21 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                 if (isImageMissing(av.getImageUrl())) {
                     if (isPolicyMappingSupported){
                         av.setEncapsulationTypes(
-                                this.imageMetadata.getEncapsulationTypes()
+                                imageMetadata.getEncapsulationTypes()
                                 .stream()
                                 .map(t -> TagEncapsulationType.valueOf(t.name()))
                                 .collect(Collectors.toList()));
                     }
-                    av.setMinCpus(this.imageMetadata.getMinCpus());
-                    av.setMemoryInMb(this.imageMetadata.getMemoryInMb());
-                    av.setDiskSizeInGb(this.imageMetadata.getDiskSizeInGb());
+                    av.setMinCpus(imageMetadata.getMinCpus());
+                    av.setMemoryInMb(imageMetadata.getMemoryInMb());
+                    av.setDiskSizeInGb(imageMetadata.getDiskSizeInGb());
                     av.getImageProperties().clear();
                     av.getConfigProperties().clear();
                     OSCEntityManager.update(em, av);
                     em.flush();
 
-                    av.getImageProperties().putAll(this.imageMetadata.getImageProperties());
-                    av.getConfigProperties().putAll(this.imageMetadata.getConfigProperties());
+                    av.getImageProperties().putAll(imageMetadata.getImageProperties());
+                    av.getConfigProperties().putAll(imageMetadata.getConfigProperties());
 
                     OSCEntityManager.update(em, av);
                 } else {
@@ -178,9 +184,9 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
 
             response.setId(av.getId());
 
-            File imageFolder = new File(ApplianceUploader.getImageFolderPath());
+            File imageFolder = new File(this.uploadPath);
 
-            File[] tmpFolderList = FileUtil.getFileListFromDirectory(this.tmpUploadFolder.getPath());
+            File[] tmpFolderList = FileUtil.getFileListFromDirectory(tmpUploadFolder.getPath());
             for (File tmpFolderFile : tmpFolderList) {
                 if (tmpFolderFile.getName().equals(ImageMetadata.META_FILE_NAME)) {
                     continue;
@@ -190,11 +196,11 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
             }
 
         } finally {
-            log.info("Cleaning temp folder: " + this.tmpUploadFolder.getPath());
+            log.info("Cleaning temp folder: " + tmpUploadFolder.getPath());
             try {
-                FileUtils.deleteDirectory(this.tmpUploadFolder);
+                FileUtils.deleteDirectory(tmpUploadFolder);
             } catch (Exception e) {
-                log.error("Failed to cleaning temp folder: " + this.tmpUploadFolder.getPath(), e);
+                log.error("Failed to cleaning temp folder: " + tmpUploadFolder.getPath(), e);
                 // Not throwing exception since AddApplianceSoftwareVersionService succeeded
             }
         }
@@ -202,32 +208,30 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
         return response;
     }
 
-    void validateAndLoad() throws Exception {
+    ImageMetadata validateAndLoad(File tmpUploadFolder) throws Exception {
 
         if (!ServerUtil.isEnoughSpace()) {
             throw new VmidcException(VmidcMessages.getString(VmidcMessages_.UPLOAD_APPLIANCE_NOSPACE));
         }
 
-        File[] tmpFolderList = FileUtil.getFileListFromDirectory(this.tmpUploadFolder.getPath());
+        File[] tmpFolderList = FileUtil.getFileListFromDirectory(tmpUploadFolder.getPath());
 
         File metaDataFile = loadMetadataFile(tmpFolderList);
 
-        if (this.imageMetadata == null) {
-            this.imageMetadata = getFromJson(metaDataFile);
-        }
+        ImageMetadata imageMetadata = getFromJson(metaDataFile);
 
         if (this.imageMetadataValidator == null) {
             this.imageMetadataValidator = new ImageMetadataValidator();
         }
 
-        this.imageMetadataValidator.validate(this.imageMetadata);
+        this.imageMetadataValidator.validate(imageMetadata);
 
         boolean isImageFileMissing = true;
-        boolean checkOvfExists = this.imageMetadata.getVirtualizationType().isVmware();
+        boolean checkOvfExists = imageMetadata.getVirtualizationType().isVmware();
 
         for (File tmpFolderFile : tmpFolderList) {
             String fileName = FilenameUtils.getName(tmpFolderFile.getName());
-            if (fileName.equals(this.imageMetadata.getImageName())) {
+            if (fileName.equals(imageMetadata.getImageName())) {
                 if (checkOvfExists) {
                     String extension = FilenameUtils.getExtension(tmpFolderFile.getName());
                     if (extension.equals("ovf")) {
@@ -244,10 +248,11 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
         }
 
         if (isImageFileMissing) {
-            log.error("Image file: " + this.imageMetadata.getImageName() + " missing in archive");
-            throw new VmidcBrokerValidationException("Invalid file format. Image file: " + this.imageMetadata.getImageName() + " missing in archive.");
+            log.error("Image file: " + imageMetadata.getImageName() + " missing in archive");
+            throw new VmidcBrokerValidationException("Invalid file format. Image file: " + imageMetadata.getImageName() + " missing in archive.");
         }
 
+        return imageMetadata;
     }
 
     private File loadMetadataFile(File[] tmpFolderList) throws VmidcBrokerValidationException {
@@ -288,7 +293,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
     }
 
     private boolean isImageMissing(String imageUrl) {
-        return imageUrl == null || !new File(ApplianceUploader.getImageFolderPath() + imageUrl).exists();
+        return imageUrl == null || !new File(this.uploadPath, imageUrl).exists();
     }
 
 }

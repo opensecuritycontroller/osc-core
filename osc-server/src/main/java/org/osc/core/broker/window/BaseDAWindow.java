@@ -20,24 +20,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ListApplianceModelSwVersionComboService;
-import org.osc.core.broker.service.ListDomainsByMcIdService;
-import org.osc.core.broker.service.ListEncapsulationTypeByVersionTypeAndModel;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
+import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
+import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.DomainDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
-import org.osc.core.broker.service.mc.ListApplianceManagerConnectorService;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.ListApplianceModelSwVersionComboRequest;
 import org.osc.core.broker.service.request.ListEncapsulationTypeByVersionTypeAndModelRequest;
+import org.osc.core.broker.service.request.ListVirtualizationConnectorBySwVersionRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.service.vc.ListVirtualizationConnectorBySwVersionRequest;
-import org.osc.core.broker.service.vc.ListVirtualizationConnectorBySwVersionService;
-import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.sdk.controller.TagEncapsulationType;
@@ -71,9 +71,26 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     protected PasswordField sharedKey;
     protected Table vsTable = null;
     protected DistributedApplianceDto currentDAObject = null;
+    private final ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService;
+    private final ListDomainsByMcIdServiceApi listDomainsByMcIdService;
+    private final ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
+    private final ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
+    private final ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService;
+    private final ValidationApi validator;
 
-    public BaseDAWindow() {
+    public BaseDAWindow(ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
+            ListDomainsByMcIdServiceApi listDomainsByMcIdService,
+            ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
+            ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService,
+            ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService,
+            ValidationApi validator) {
         super();
+        this.listApplianceModelSwVersionComboService = listApplianceModelSwVersionComboService;
+        this.listDomainsByMcIdService = listDomainsByMcIdService;
+        this.listEncapsulationTypeByVersionTypeAndModel = listEncapsulationTypeByVersionTypeAndModel;
+        this.listApplianceManagerConnectorService = listApplianceManagerConnectorService;
+        this.listVirtualizationConnectorBySwVersionService = listVirtualizationConnectorBySwVersionService;
+        this.validator = validator;
     }
 
     protected Panel getAttributesPanel() {
@@ -148,8 +165,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             vcRequest.setSwVersion(currentAppliance.getSwVersion());
         }
 
-        ListVirtualizationConnectorBySwVersionService vcService = new ListVirtualizationConnectorBySwVersionService();
-        ListResponse<VirtualizationConnectorDto> vcResponse = vcService.dispatch(vcRequest);
+        ListResponse<VirtualizationConnectorDto> vcResponse = this.listVirtualizationConnectorBySwVersionService.dispatch(vcRequest);
 
         ApplianceManagerConnectorDto currentMC = (ApplianceManagerConnectorDto) this.managerConnector.getValue();
 
@@ -181,8 +197,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             VirtualizationType type) throws Exception {
         ListEncapsulationTypeByVersionTypeAndModelRequest req = new ListEncapsulationTypeByVersionTypeAndModelRequest(
                 currentAppliance.getSwVersion(), currentAppliance.getApplianceModel(), type);
-        ListEncapsulationTypeByVersionTypeAndModel listService = new ListEncapsulationTypeByVersionTypeAndModel();
-        return listService.dispatch(req).getList();
+        return this.listEncapsulationTypeByVersionTypeAndModel.dispatch(req).getList();
     }
 
     protected ComboBox getDomainComboBox(Object id) {
@@ -208,8 +223,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     @SuppressWarnings("serial")
     protected ComboBox getManagerConnector() {
         try {
-            ListApplianceManagerConnectorService listService = new ListApplianceManagerConnectorService();
-            ListResponse<ApplianceManagerConnectorDto> res = listService.dispatch(new BaseRequest<>());
+            ListResponse<ApplianceManagerConnectorDto> res = this.listApplianceManagerConnectorService.dispatch(new BaseRequest<>());
 
             BeanItemContainer<ApplianceManagerConnectorDto> mcList = new BeanItemContainer<ApplianceManagerConnectorDto>(
                     ApplianceManagerConnectorDto.class, res.getList());
@@ -252,10 +266,9 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         if (currentMC != null) {
             ListApplianceModelSwVersionComboRequest adRequest = new ListApplianceModelSwVersionComboRequest();
             adRequest.setType(currentMC.getManagerType());
-            ListApplianceModelSwVersionComboService adService = new ListApplianceModelSwVersionComboService();
             ListResponse<ApplianceModelSoftwareVersionDto> adResponse = null;
             try {
-                adResponse = adService.dispatch(adRequest);
+                adResponse = this.listApplianceModelSwVersionComboService.dispatch(adRequest);
                 BeanItemContainer<ApplianceModelSoftwareVersionDto> adList = new BeanItemContainer<ApplianceModelSoftwareVersionDto>(
                         ApplianceModelSoftwareVersionDto.class, adResponse.getList());
 
@@ -356,8 +369,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 // List Domains Service
                 BaseIdRequest agRequest = new BaseIdRequest();
                 agRequest.setId(mc.getId());
-                ListDomainsByMcIdService service = new ListDomainsByMcIdService();
-                response = service.dispatch(agRequest);
+                response = this.listDomainsByMcIdService.dispatch(agRequest);
             } catch (Exception e) {
                 log.error("Error populating domain combobox", e);
             }
@@ -371,7 +383,7 @@ public abstract class BaseDAWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     public boolean validateForm() {
         try {
             this.name.validate();
-            if (!ValidateUtil.validateDaName(this.name.getValue().toString())) {
+            if (!this.validator.isValidDaName(this.name.getValue().toString())) {
                 ViewUtil.iscNotification(
                         "DA name must not exceed 13 characters, must start with a letter,  and can only contain numbers, letters and dash(-).",
                         Notification.Type.ERROR_MESSAGE);

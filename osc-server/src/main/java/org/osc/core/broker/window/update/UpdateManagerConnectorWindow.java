@@ -22,18 +22,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.service.SslCertificatesExtendedException;
+import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.broker.service.mc.UpdateApplianceManagerConnectorService;
+import org.osc.core.broker.service.exceptions.RestClientException;
+import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
-import org.osc.core.broker.util.StaticRegistry;
-import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.view.ManagerConnectorView;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -43,8 +44,6 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
-import org.osc.core.rest.client.exception.RestClientException;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.vaadin.data.util.BeanItem;
@@ -64,7 +63,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     final String CAPTION = "Edit Manager Connector";
 
     // current view reference
-    private ManagerConnectorView mcView = null;
+    private final ManagerConnectorView mcView;
 
     // form fields
     private TextField name = null;
@@ -74,13 +73,22 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     private PasswordField pw = null;
     private PasswordField apiKey = null;
 
-    private BeanItem<ApplianceManagerConnectorDto> currentMCObject = null;
+    private final BeanItem<ApplianceManagerConnectorDto> currentMCObject;
     private ArrayList<CertificateResolverModel> certificateResolverModelsList = null;
 
-    private UpdateApplianceManagerConnectorService updateMCService = StaticRegistry.updateApplianceManagerConnectorService();
+    private final UpdateApplianceManagerConnectorServiceApi updateMCService;
 
-    public UpdateManagerConnectorWindow(ManagerConnectorView mcView) throws Exception {
+    private final PluginService pluginService;
+
+    private final ValidationApi validator;
+
+    public UpdateManagerConnectorWindow(ManagerConnectorView mcView,
+            UpdateApplianceManagerConnectorServiceApi updateMCService,
+            PluginService pluginService, ValidationApi validator) throws Exception {
         this.mcView = mcView;
+        this.updateMCService = updateMCService;
+        this.pluginService = pluginService;
+        this.validator = validator;
         this.currentMCObject = mcView.getParentContainer().getItem(mcView.getParentItemId());
         createWindow(this.CAPTION);
     }
@@ -110,8 +118,8 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         this.name.setValue(this.currentMCObject.getItemProperty("name").getValue().toString());
         this.type.setValue(this.currentMCObject.getItemProperty("managerType").getValue().toString());
         this.ip.setValue(this.currentMCObject.getItemProperty("ipAddress").getValue().toString());
-        if (ManagerApiFactory.isKeyAuth(ManagerType.fromText(this.currentMCObject.getItemProperty("managerType")
-                .getValue().toString()))) {
+        if (this.pluginService.isKeyAuth(this.currentMCObject.getItemProperty("managerType")
+                .getValue().toString())) {
             this.apiKey.setVisible(true);
             this.apiKey.setValue(this.currentMCObject.getItemProperty("apiKey").getValue().toString());
 
@@ -161,8 +169,8 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
             this.name.validate();
             this.type.validate();
             this.ip.validate();
-            ValidateUtil.checkForValidIpAddressFormat(this.ip.getValue());
-            if (ManagerApiFactory.isKeyAuth(ManagerType.fromText(this.type.getValue().toString()))) {
+            this.validator.checkValidIpAddress(this.ip.getValue());
+            if (this.pluginService.isKeyAuth(this.type.getValue().toString())) {
                 this.apiKey.validate();
             } else {
                 this.user.validate();
@@ -189,8 +197,8 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     @SuppressWarnings("unchecked")
     private void createAndSubmitRequest() throws Exception {
         // creating update request with user modified data
-        DryRunRequest<ApplianceManagerConnectorDto> updateRequest = new DryRunRequest<ApplianceManagerConnectorDto>();
-        updateRequest.setDto(new ApplianceManagerConnectorDto());
+        DryRunRequest<ApplianceManagerConnectorRequest> updateRequest = new DryRunRequest<>();
+        updateRequest.setDto(new ApplianceManagerConnectorRequest());
         updateRequest.getDto().setId(this.currentMCObject.getBean().getId());
         updateRequest.getDto().setName(this.name.getValue().trim());
         updateRequest.getDto().setManagerType(this.type.getValue().trim());
@@ -215,7 +223,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "name")
                 .setValue(this.name.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "managerType")
-                .setValue(ManagerType.fromText(this.type.getValue().trim()));
+                .setValue(this.type.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "ipAddress")
                 .setValue(this.ip.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "username")

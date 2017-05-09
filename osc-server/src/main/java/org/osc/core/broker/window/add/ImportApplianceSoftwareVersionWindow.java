@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.appliance.ImportApplianceSoftwareVersionService;
+import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -55,7 +55,10 @@ public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
 
     private ApplianceUploader uploader = null;
 
-    public ImportApplianceSoftwareVersionWindow() throws Exception {
+    private final ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
+
+    public ImportApplianceSoftwareVersionWindow(ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService) throws Exception {
+        this.importApplianceSoftwareVersionService = importApplianceSoftwareVersionService;
         createWindow("Auto Import Appliance Software Version");
     }
 
@@ -167,9 +170,7 @@ public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
         // creating add request with user entered data
         ImportFileRequest addRequest = new ImportFileRequest(this.uploader.getUploadPath());
 
-        ImportApplianceSoftwareVersionService addService = new ImportApplianceSoftwareVersionService();
-        addService.dispatch(addRequest);
-
+        this.importApplianceSoftwareVersionService.dispatch(addRequest);
     }
 
     @Override

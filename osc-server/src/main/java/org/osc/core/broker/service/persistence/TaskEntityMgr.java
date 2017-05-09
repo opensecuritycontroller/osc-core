@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -62,6 +63,16 @@ public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
         taskDto.setFailReason(tr.getFailReason());
         taskDto.setPredecessors(tr.getPredecessorsOrderIds());
         taskDto.setObjects(getJobObjects(tr));
+
+        // Set the child tasks in the Dto
+        taskDto.setChildren(tr.getChildren().stream()
+                    .map(TaskEntityMgr::fromEntity)
+                    .collect(Collectors.toList()));
+
+        // Set the Task Guard in the Dto
+        taskDto.setTaskGuard(tr.getTaskGaurd().name());
+        // Set the predecessor ids
+        taskDto.setPredecessorIds(tr.getPredecessorsIds());
     }
 
     private static Set<LockObjectDto> getJobObjects(TaskRecord task) {

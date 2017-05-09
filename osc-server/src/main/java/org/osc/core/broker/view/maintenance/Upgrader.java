@@ -25,10 +25,9 @@ import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.UpgradeService;
+import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.request.UpgradeRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -63,7 +62,10 @@ public class Upgrader extends CustomComponent implements Receiver, FailedListene
     private final Panel panel = new Panel();
     private final VerticalLayout verLayout = new VerticalLayout();
 
-    public Upgrader() {
+    private UpgradeServiceApi upgradeService;
+
+    public Upgrader(UpgradeServiceApi upgradeService) {
+        this.upgradeService = upgradeService;
         // Create vmidc upload folder
         File uploadFolder = new File(Upgrader.UPLOAD_DIR);
         if (!uploadFolder.exists() && !uploadFolder.mkdir()) {
@@ -99,9 +101,8 @@ public class Upgrader extends CustomComponent implements Receiver, FailedListene
     private EmptySuccessResponse invokeUpgradeService(File file) throws Exception {
         UpgradeRequest req = new UpgradeRequest();
         EmptySuccessResponse res;
-        UpgradeService upgradeService = StaticRegistry.upgradeService();
         req.setUploadedFile(file);
-        res = upgradeService.dispatch(req);
+        res = this.upgradeService.dispatch(req);
         return res;
     }
 

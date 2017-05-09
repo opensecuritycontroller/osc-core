@@ -30,8 +30,9 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.util.encryption.EncryptionException;
+import org.osgi.service.component.annotations.Component;
 
-
+@Component
 public class ListDistributedApplianceService
         extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<DistributedApplianceDto>>
         implements ListDistributedApplianceServiceApi {

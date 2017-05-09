@@ -28,9 +28,10 @@ import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.ListApplianceSoftwareVersionRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
 
-
+@Component
 public class ListApplianceSoftwareVersionService
         extends ServiceDispatcher<ListApplianceSoftwareVersionRequest, ListResponse<ApplianceSoftwareVersionDto>>
         implements ListApplianceSoftwareVersionServiceApi {

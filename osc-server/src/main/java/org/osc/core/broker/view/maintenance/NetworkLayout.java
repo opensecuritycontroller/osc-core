@@ -17,9 +17,12 @@
 package org.osc.core.broker.view.maintenance;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.CheckNetworkSettingsService;
-import org.osc.core.broker.service.GetNATSettingsService;
-import org.osc.core.broker.service.GetNetworkSettingsService;
+import org.osc.core.broker.service.api.CheckNetworkSettingsServiceApi;
+import org.osc.core.broker.service.api.GetNATSettingsServiceApi;
+import org.osc.core.broker.service.api.GetNetworkSettingsServiceApi;
+import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
+import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.GetNetworkSettingsRequest;
 import org.osc.core.broker.service.request.Request;
@@ -59,8 +62,30 @@ public class NetworkLayout extends FormLayout {
     private Button editNATSettings = null;
     public Table natTable;
 
-    public NetworkLayout() {
+    private GetNetworkSettingsServiceApi getNetworkSettingsService;
+
+    private CheckNetworkSettingsServiceApi checkNetworkSettingsService;
+
+    private SetNetworkSettingsServiceApi setNetworkSettingsService;
+
+    private GetNATSettingsServiceApi getNATSettingsService;
+
+    private SetNATSettingsServiceApi setNATSettingsService;
+
+    private ValidationApi validator;
+
+    public NetworkLayout(GetNetworkSettingsServiceApi getNetworkSettingsService,
+            CheckNetworkSettingsServiceApi checkNetworkSettingsService,
+            SetNetworkSettingsServiceApi setNetworkSettingsService,
+            GetNATSettingsServiceApi getNATSettingsService,
+            SetNATSettingsServiceApi setNATSettingsService,
+            ValidationApi validator) {
         super();
+        this.getNetworkSettingsService = getNetworkSettingsService;
+        this.checkNetworkSettingsService = checkNetworkSettingsService;
+        this.setNetworkSettingsService = setNetworkSettingsService;
+        this.getNATSettingsService = getNATSettingsService;
+        this.setNATSettingsService = setNATSettingsService;
         try {
 
             // creating layout to hold option group and edit button
@@ -91,7 +116,7 @@ public class NetworkLayout extends FormLayout {
             // populating Network Information in the Table
             populateNetworkTable();
 
-            // populating NAT information in the Table 
+            // populating NAT information in the Table
             populateNATTable();
 
             addComponent(networkPanel);
@@ -144,7 +169,7 @@ public class NetworkLayout extends FormLayout {
     private void editIPSettingsClicked() throws Exception {
         try {
             if (!hasDeployedInstances()) {
-                ViewUtil.addWindow(new SetNetworkSettingsWindow(this));
+                ViewUtil.addWindow(new SetNetworkSettingsWindow(this, this.setNetworkSettingsService));
             } else {
                 final VmidcWindow<OkCancelButtonModel> alertWindow = WindowUtil.createAlertWindow(
                         VmidcMessages.getString(VmidcMessages_.NW_CHANGE_WARNING_TITLE),
@@ -155,7 +180,8 @@ public class NetworkLayout extends FormLayout {
                     public void buttonClick(ClickEvent event) {
                         alertWindow.close();
                         try {
-                            ViewUtil.addWindow(new SetNetworkSettingsWindow(NetworkLayout.this));
+                            ViewUtil.addWindow(new SetNetworkSettingsWindow(NetworkLayout.this,
+                                    NetworkLayout.this.setNetworkSettingsService));
                         } catch (Exception e) {
                             ViewUtil.showError("Error displaying IP setting window", e);
                         }
@@ -165,7 +191,7 @@ public class NetworkLayout extends FormLayout {
             }
         } catch (Exception e) {
             log.error("Failed to check if IP settings can be changed. Launching edit settings window", e);
-            ViewUtil.addWindow(new SetNetworkSettingsWindow(this));
+            ViewUtil.addWindow(new SetNetworkSettingsWindow(this, this.setNetworkSettingsService));
         }
     }
 
@@ -173,7 +199,7 @@ public class NetworkLayout extends FormLayout {
     private void editNATSettingsClicked() throws Exception {
         try {
             if (!hasDeployedInstances()) {
-                ViewUtil.addWindow(new SetNATSettingsWindow(this));
+                ViewUtil.addWindow(new SetNATSettingsWindow(this, this.setNATSettingsService, this.validator));
             } else {
                 final VmidcWindow<OkCancelButtonModel> alertWindow = WindowUtil.createAlertWindow(
                         VmidcMessages.getString(VmidcMessages_.NW_CHANGE_WARNING_TITLE),
@@ -184,7 +210,8 @@ public class NetworkLayout extends FormLayout {
                     public void buttonClick(ClickEvent event) {
                         alertWindow.close();
                         try {
-                            ViewUtil.addWindow(new SetNATSettingsWindow(NetworkLayout.this));
+                            ViewUtil.addWindow(new SetNATSettingsWindow(NetworkLayout.this,
+                                    NetworkLayout.this.setNATSettingsService, NetworkLayout.this.validator));
                         } catch (Exception e) {
                             ViewUtil.showError("Error displaying NAT setting window", e);
                         }
@@ -194,13 +221,12 @@ public class NetworkLayout extends FormLayout {
             }
         } catch (Exception e) {
             log.error("Failed to check if NAT settings can be changed. Launching edit settings window", e);
-            ViewUtil.addWindow(new SetNATSettingsWindow(this));
+            ViewUtil.addWindow(new SetNATSettingsWindow(this, this.setNATSettingsService, this.validator));
         }
     }
 
     private boolean hasDeployedInstances() throws Exception {
-        CheckNetworkSettingsService checkService = new CheckNetworkSettingsService();
-        CheckNetworkSettingResponse response = checkService.dispatch(new Request() {
+        CheckNetworkSettingResponse response = this.checkNetworkSettingsService.dispatch(new Request() {
         });
         return response.hasDeployedInstances();
     }
@@ -274,9 +300,8 @@ public class NetworkLayout extends FormLayout {
     public void populateNetworkTable() {
         try {
             GetNetworkSettingsRequest getNetworkSettingsRequest = new GetNetworkSettingsRequest();
-            GetNetworkSettingsService getNetworkSettingsService = new GetNetworkSettingsService();
 
-            GetNetworkSettingsResponse getNetworkSettingsResponse = getNetworkSettingsService
+            GetNetworkSettingsResponse getNetworkSettingsResponse = this.getNetworkSettingsService
                     .dispatch(getNetworkSettingsRequest);
 
             this.networkTable.getItem(1).getItemProperty("Value")
@@ -303,8 +328,7 @@ public class NetworkLayout extends FormLayout {
     @SuppressWarnings("unchecked")
     public void populateNATTable() {
         try {
-            GetNATSettingsService service = new GetNATSettingsService();
-            BaseDtoResponse<NATSettingsDto> response = service.dispatch(new Request() {
+            BaseDtoResponse<NATSettingsDto> response = this.getNATSettingsService.dispatch(new Request() {
             });
             this.natTable.getItem(1).getItemProperty("Value").setValue(response.getDto().getPublicIPAddress());
         } catch (Exception ex) {

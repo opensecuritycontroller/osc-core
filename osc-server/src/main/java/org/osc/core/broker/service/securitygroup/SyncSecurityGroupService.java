@@ -25,63 +25,71 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
+import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.service.exceptions.ExceptionConstants;
+import org.osc.core.broker.service.exceptions.OscBadRequestException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
-import org.osc.core.broker.util.api.ApiUtil;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
         implements SyncSecurityGroupServiceApi {
 
-    private SecurityGroup securityGroup;
-    private VirtualizationConnector vc;
-
-    @Reference
-    private ApiUtil apiUtil;
+//    @Reference
+//    private ApiUtil apiUtil;
 
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
-        validateAndLoad(request, em);
+        SecurityGroup securityGroup = validateAndLoad(request, em);
 
-        Job job = ConformService.startSecurityGroupConformanceJob(em, this.securityGroup, null, false);
+        Job job = ConformService.startSecurityGroupConformanceJob(em, securityGroup, null, false);
 
         return new BaseJobResponse(job.getId());
     }
 
-    private void validateAndLoad(BaseIdRequest request, EntityManager em) throws Exception,
+    private SecurityGroup validateAndLoad(BaseIdRequest request, EntityManager em) throws Exception,
             VmidcBrokerValidationException {
         BaseIdRequestValidator.checkForNullIdAndParentNullId(request);
 
-        this.securityGroup = SecurityGroupEntityMgr.findById(em, request.getId());
+        SecurityGroup securityGroup = SecurityGroupEntityMgr.findById(em, request.getId());
 
-        if (this.securityGroup == null) {
+        if (securityGroup == null) {
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");
         }
 
-        if (this.securityGroup.getMarkedForDeletion()) {
+        if (securityGroup.getMarkedForDeletion()) {
             throw new VmidcBrokerValidationException(
                     "Syncing Security Group which is marked for deletion is not allowed.");
         }
 
-        this.vc = VirtualizationConnectorEntityMgr.findById(em, request.getParentId());
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, request.getParentId());
 
-        if (this.vc == null) {
+        if (vc == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector with Id: " + request.getParentId()
                     + "  is not found.");
         }
 
         // For service calls makes sure the VC's match
-        if (this.securityGroup.getVirtualizationConnector() != this.vc) {
-            throw this.apiUtil.createParentChildMismatchException(request.getParentId(), "Security Group");
+        if (!vc.equals(securityGroup.getVirtualizationConnector())) {
+            throw createParentChildMismatchException(request.getParentId(), "Security Group");
         }
 
-        if(this.vc.getVirtualizationType() != VirtualizationType.OPENSTACK) {
+        if(vc.getVirtualizationType() != VirtualizationType.OPENSTACK) {
             throw new VmidcBrokerValidationException("Syncing of security groups is only applicable for Openstack");
         }
+        return securityGroup;
+    }
+
+    private <T extends BaseDto> OscBadRequestException createParentChildMismatchException(Long parentId,
+            String objName) {
+        return new OscBadRequestException(
+                String.format("The Parent ID %d specified in the '%s' data does not match the id specified in the URL",
+                        parentId, objName), ExceptionConstants.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
     }
 
 }

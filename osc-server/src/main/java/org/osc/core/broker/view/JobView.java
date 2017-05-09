@@ -28,34 +28,28 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.NullInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.job.JobEngine;
-import org.osc.core.broker.model.entities.job.TaskGuard;
-import org.osc.core.broker.model.entities.job.TaskRecord;
-import org.osc.core.broker.model.entities.job.TaskState;
-import org.osc.core.broker.model.entities.job.TaskStatus;
-import org.osc.core.broker.service.ListJobService;
-import org.osc.core.broker.service.ListTaskService;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.ListJobServiceApi;
+import org.osc.core.broker.service.api.ListTaskServiceApi;
+import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
-import org.osc.core.broker.service.persistence.TaskEntityMgr;
 import org.osc.core.broker.service.request.ListJobRequest;
 import org.osc.core.broker.service.request.ListTaskRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.rest.client.util.LoggingUtil;
-import org.osgi.service.transaction.control.ScopedWorkException;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.vaadin.data.util.BeanContainer;
@@ -80,6 +74,8 @@ import com.vaadin.ui.Window;
 
 import elemental.events.KeyboardEvent.KeyCode;
 
+@org.osgi.service.component.annotations.Component(service={JobView.class},
+scope=ServiceScope.PROTOTYPE)
 public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
     private static final String TASK_PREDECESSORS_COLUMN_ID = "predecessors";
@@ -105,7 +101,17 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
     private File dotFile;
     private Embedded embeddedImage;
 
-    public JobView() {
+    @Reference
+    private ListJobServiceApi listJobService;
+
+    @Reference
+    private ListTaskServiceApi listTaskService;
+
+    @Reference
+    private UserContextApi userContext;
+
+    @Activate
+    private void activate() {
         createView("Jobs", Arrays.asList(ToolbarButtons.JOB_VIEW, ToolbarButtons.JOB_ABORT), "Tasks", null);
     }
 
@@ -114,8 +120,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
         if (event.getButton().getId().equals(ToolbarButtons.JOB_VIEW.getId())) {
             buildGraph();
         } else if (event.getButton().getId().equals(ToolbarButtons.JOB_ABORT.getId())) {
-            JobEngine.getEngine().abortJob(getParentItemId(),
-                    VmidcMessages.getString(VmidcMessages_.JOB_ABORT_USER, SessionUtil.getCurrentUser()));
+            this.listJobService.abortJob(getParentItemId(),
+                    VmidcMessages.getString(VmidcMessages_.JOB_ABORT_USER, this.userContext.getCurrentUser()));
         }
     }
 
@@ -172,9 +178,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
         ListJobRequest listRequest = null;
         ListResponse<JobRecordDto> res;
-        ListJobService listService = new ListJobService();
         try {
-            res = listService.dispatch(listRequest);
+            res = this.listJobService.dispatch(listRequest);
             List<JobRecordDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // creating table with list of jobs
@@ -204,8 +209,8 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
     // This is also needed since Abort button should change to disabled if job state
     // changes before user clicks on the table
     @Override
-    protected void syncParentTable(BroadcastMessage msg) throws Exception {
-        super.syncParentTable(msg);
+    protected void syncParentTable(BroadcastMessage msg, GetDtoFromEntityServiceApi<JobRecordDto> getDtoService) throws Exception {
+        super.syncParentTable(msg, getDtoService);
         BeanItem<JobRecordDto> item = this.parentContainer.getItem(msg.getEntityId());
         JobRecordDto jobRecordDto = null;
         if (item != null) {
@@ -274,8 +279,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             try {
                 ListTaskRequest listRequest = new ListTaskRequest();
                 listRequest.setJobId(getParentItemId());
-                ListTaskService listService = new ListTaskService();
-                ListResponse<TaskRecordDto> res = listService.dispatch(listRequest);
+                ListResponse<TaskRecordDto> res = this.listTaskService.dispatch(listRequest);
 
                 this.childContainer.removeAllItems();
                 for (TaskRecordDto task : res.getList()) {
@@ -356,106 +360,101 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
     @SuppressWarnings("resource")
     private StreamResource buildImageResource() throws Exception {
-        try {
-            this.dotFile = new File("job-" + getParentItemId() + System.currentTimeMillis() + ".dot");
+        this.dotFile = new File("job-" + getParentItemId() + System.currentTimeMillis() + ".dot");
 
-            PrintWriter out = new PrintWriter(new FileWriter(this.dotFile));
-            out.println("digraph G {");
-            out.println();
+        PrintWriter out = new PrintWriter(new FileWriter(this.dotFile));
+        out.println("digraph G {");
+        out.println();
 
-            out.println("compound=true");
-            out.println("rankdir=TB");
-            out.println("bgcolor=white; fontcolor=black; fontname=Helvetica; fontsize=9.0");
-            out.println();
+        out.println("compound=true");
+        out.println("rankdir=TB");
+        out.println("bgcolor=white; fontcolor=black; fontname=Helvetica; fontsize=9.0");
+        out.println();
 
-            out.println("edge [color=black, fontcolor=black, fontname=Helvetica, fontsize=9.0]");
-            out.println();
+        out.println("edge [color=black, fontcolor=black, fontname=Helvetica, fontsize=9.0]");
+        out.println();
 
-            out.println("node [color=black, fontcolor=black, fontname=\"Helvetica\", fontsize=11.0, shape=record, style=\"solid,filled\"]");
-            out.println();
+        out.println("node [color=black, fontcolor=black, fontname=\"Helvetica\", fontsize=11.0, shape=record, style=\"solid,filled\"]");
+        out.println();
 
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            HibernateUtil.getTransactionControl().required(() -> {
-                TaskEntityMgr emgr = new TaskEntityMgr(em);
-                for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
-                    out.printf("node_%d [%n", tr.getId());
-                    out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
-                    if(org.osc.core.broker.job.TaskState.valueOf(tr.getState().name()).isTerminalState()) {
-                        if (tr.getStatus().equals(TaskStatus.PASSED)) {
-                            if (tr.getChildren().isEmpty()) {
-                                out.printf("  fillcolor=%s fontcolor=white%n", "green4");
-                            } else {
-                                out.printf("  fillcolor=%s%n fontname=\"Helvetica-Bold\"", "green");
-                            }
-                        } else if (tr.getStatus().equals(TaskStatus.FAILED)) {
-                            out.printf("  fillcolor=%s%n", "red");
-                        } else if (tr.getStatus().equals(TaskStatus.SKIPPED)) {
-                            out.printf("  fillcolor=%s%n", "gray");
-                        } else {
-                            out.printf("  fillcolor=%s%n", "white");
-                        }
+        ListTaskRequest request = new ListTaskRequest();
+        request.setJobId(getParentItemId());
+
+        List<TaskRecordDto> tasks = this.listTaskService.dispatch(request).getList();
+        for (TaskRecordDto tr : tasks) {
+            out.printf("node_%d [%n", tr.getId());
+            out.printf("  label=\"{%d) %s}\"%n", tr.getDependencyOrder(), tr.getName());
+            if(ViewUtil.isTaskFinished(tr.getState())) {
+                if (ViewUtil.isTaskSuccessful(tr.getStatus())) {
+                    if (tr.getChildren().isEmpty()) {
+                        out.printf("  fillcolor=%s fontcolor=white%n", "green4");
                     } else {
-                        if (tr.getState().equals(TaskState.QUEUED)) {
-                            out.printf("  fillcolor=%s%n", "orange");
-                        } else if (tr.getState().equals(TaskState.PENDING)) {
-                            out.printf("  fillcolor=%s%n", "lightblue");
-                        } else if (tr.getState().equals(TaskState.NOT_RUNNING)) {
-                            out.printf("  fillcolor=%s%n", "white");
-                        } else {
-                            out.printf("  fillcolor=%s%n", "yellow");
-                        }
+                        out.printf("  fillcolor=%s%n fontname=\"Helvetica-Bold\"", "green");
                     }
-                    if (!tr.getChildren().isEmpty()) {
-                        out.printf("  style=\"rounded,filled\"%n");
-                    }
-                    out.println("]");
-                    out.println();
+                } else if (ViewUtil.isTaskFailed(tr.getStatus())) {
+                    out.printf("  fillcolor=%s%n", "red");
+                } else if (ViewUtil.isTaskSkipped(tr.getStatus())) {
+                    out.printf("  fillcolor=%s%n", "gray");
+                } else {
+                    out.printf("  fillcolor=%s%n", "white");
                 }
-
-                for (TaskRecord tr : emgr.getTasksByJobId(getParentItemId())) {
-                    String executionDependencyAttr = "[color=black arrowhead=empty]";
-                    if (tr.getTaskGaurd().equals(TaskGuard.ALL_ANCESTORS_SUCCEEDED)) {
-                        executionDependencyAttr = "[color=magenta arrowhead=normal]";
-                    } else if (tr.getTaskGaurd().equals(TaskGuard.ALL_PREDECESSORS_SUCCEEDED)) {
-                        executionDependencyAttr = "[color=black arrowhead=normal]";
-                    }
-                    for (TaskRecord tr1 : tr.getPredecessors()) {
-                        out.printf("node_%s -> node_%s %s", tr1.getId(), tr.getId(), executionDependencyAttr);
-                    }
-
-                    for (TaskRecord tr1 : tr.getChildren()) {
-                        out.printf("node_%s -> node_%s %s", tr1.getId(), tr.getId(), "[color=gray arrowhead=none style=dashed]");
-                    }
+            } else {
+                if (ViewUtil.isTaskQueued(tr.getState())) {
+                    out.printf("  fillcolor=%s%n", "orange");
+                } else if (ViewUtil.isTaskPending(tr.getState())) {
+                    out.printf("  fillcolor=%s%n", "lightblue");
+                } else if (ViewUtil.isTaskNotRunning(tr.getState())) {
+                    out.printf("  fillcolor=%s%n", "white");
+                } else {
+                    out.printf("  fillcolor=%s%n", "yellow");
                 }
-                return null;
-            });
-
-            out.println("}");
-
-            out.flush();
-            out.close();
-
-            @SuppressWarnings("serial")
-            StreamSource streamSource = new StreamResource.StreamSource() {
-                @Override
-                public InputStream getStream() {
-                    byte[] imageStream = getImageStream(JobView.this.dotFile, "png");
-                    if (imageStream != null) {
-                        ByteArrayInputStream bytes = new ByteArrayInputStream(imageStream);
-                        JobView.this.dotFile.delete();
-                        return bytes;
-                    }
-                    JobView.this.dotFile.delete();
-                    return new NullInputStream(0);
-                }
-            };
-            StreamResource imageResource = new StreamResource(streamSource, "job" + System.currentTimeMillis() + ".png");
-            imageResource.setCacheTime(0);
-            return imageResource;
-
-        } catch (ScopedWorkException swe) {
-            throw swe.as(Exception.class);
+            }
+            if (!tr.getChildren().isEmpty()) {
+                out.printf("  style=\"rounded,filled\"%n");
+            }
+            out.println("]");
+            out.println();
         }
+
+        for (TaskRecordDto tr : tasks) {
+            String executionDependencyAttr = "[color=black arrowhead=empty]";
+            if (tr.getTaskGuard().equals("ALL_ANCESTORS_SUCCEEDED")) {
+                executionDependencyAttr = "[color=magenta arrowhead=normal]";
+            } else if (tr.getTaskGuard().equals("ALL_PREDECESSORS_SUCCEEDED")) {
+                executionDependencyAttr = "[color=black arrowhead=normal]";
+            }
+
+            for (Long predId : tr.getPredecessorIds()) {
+                out.printf("node_%s -> node_%s %s", predId, tr.getId(), executionDependencyAttr);
+            }
+
+            for (TaskRecordDto tr1 : tr.getChildren()) {
+                out.printf("node_%s -> node_%s %s", tr1.getId(), tr.getId(), "[color=gray arrowhead=none style=dashed]");
+            }
+        }
+
+        out.println("}");
+
+        out.flush();
+        out.close();
+
+        @SuppressWarnings("serial")
+        StreamSource streamSource = new StreamResource.StreamSource() {
+            @Override
+            public InputStream getStream() {
+                byte[] imageStream = getImageStream(JobView.this.dotFile, "png");
+                if (imageStream != null) {
+                    ByteArrayInputStream bytes = new ByteArrayInputStream(imageStream);
+                    JobView.this.dotFile.delete();
+                    return bytes;
+                }
+                JobView.this.dotFile.delete();
+                return new NullInputStream(0);
+            }
+        };
+        StreamResource imageResource = new StreamResource(streamSource, "job" + System.currentTimeMillis() + ".png");
+        imageResource.setCacheTime(0);
+        return imageResource;
     }
 
     private byte[] getImageStream(File dot, String type) {

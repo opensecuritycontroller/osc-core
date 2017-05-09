@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.view;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -24,7 +25,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.osc.core.broker.service.GetDtoFromEntityService;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -451,7 +453,7 @@ public abstract class CRUDBaseView<P extends BaseDto, C extends BaseDto> extends
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
         MainUI main = (MainUI) UI.getCurrent();
-        main.currentView = this;
+        main.setCurrentView(this);
     }
 
     private void setParentItem(BeanItem<P> parentItem) {
@@ -533,16 +535,22 @@ public abstract class CRUDBaseView<P extends BaseDto, C extends BaseDto> extends
         }
     }
 
-    public void syncTables(BroadcastMessage msg, boolean child) throws Exception {
+    public void syncTables(BroadcastMessage msg, boolean child, GetDtoFromEntityServiceFactoryApi getDtoFactory)
+            throws Exception {
+        ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
         if (child) {
-            syncChildTable(msg);
+            @SuppressWarnings("unchecked")
+            Class<C> childClass = (Class<C>) parameterizedType.getActualTypeArguments()[1];
+            syncChildTable(msg, getDtoFactory.getService(childClass));
         } else {
-            syncParentTable(msg);
+            @SuppressWarnings("unchecked")
+            Class<P> parentClass = (Class<P>) parameterizedType.getActualTypeArguments()[0];
+            syncParentTable(msg, getDtoFactory.getService(parentClass));
         }
     }
 
     @SuppressWarnings("unchecked")
-    protected void syncParentTable(BroadcastMessage msg) throws Exception {
+    protected void syncParentTable(BroadcastMessage msg, GetDtoFromEntityServiceApi<P> getDtoService) throws Exception {
         if (msg.getEventType().equals(EventType.DELETED)) {
             // delete item from parent container
             getParentContainer().removeItem(msg.getEntityId());
@@ -567,7 +575,6 @@ public abstract class CRUDBaseView<P extends BaseDto, C extends BaseDto> extends
                 GetDtoFromEntityRequest req = new GetDtoFromEntityRequest();
                 req.setEntityId(msg.getEntityId());
                 req.setEntityName(msg.getReceiver());
-                GetDtoFromEntityService<P> getDtoService = new GetDtoFromEntityService<P>();
                 BaseDtoResponse<P> res = getDtoService.dispatch(req);
                 dto = res.getDto();
             } else {
@@ -585,7 +592,7 @@ public abstract class CRUDBaseView<P extends BaseDto, C extends BaseDto> extends
     }
 
     @SuppressWarnings("unchecked")
-    private void syncChildTable(BroadcastMessage msg) throws Exception {
+    private void syncChildTable(BroadcastMessage msg, GetDtoFromEntityServiceApi<C> getDtoService) throws Exception {
         if (msg.getEventType().equals(EventType.DELETED)) {
             // delete item from child container
             getChildContainer().removeItem(msg.getEntityId());
@@ -602,7 +609,6 @@ public abstract class CRUDBaseView<P extends BaseDto, C extends BaseDto> extends
                 GetDtoFromEntityRequest req = new GetDtoFromEntityRequest();
                 req.setEntityId(msg.getEntityId());
                 req.setEntityName(msg.getReceiver());
-                GetDtoFromEntityService<C> getDtoService = new GetDtoFromEntityService<C>();
                 BaseDtoResponse<C> res = getDtoService.dispatch(req);
                 dto = res.getDto();
             } else {
@@ -620,19 +626,20 @@ public abstract class CRUDBaseView<P extends BaseDto, C extends BaseDto> extends
         }
     }
 
-    public void delegateBroadcastMessagetoSubView(BroadcastMessage msg, boolean child) throws Exception {
+    public void delegateBroadcastMessagetoSubView(BroadcastMessage msg, boolean child,
+            GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory) throws Exception {
         if (!child) {
             for (Entry<String, CRUDBaseSubView<?, ?>> parentSubView : this.parentSubViewMap.entrySet()) {
                 if (parentSubView.getValue().getTableContainer().getBeanType().getSimpleName()
                         .equals(msg.getReceiver() + "Dto")) {
-                    parentSubView.getValue().syncTable(msg);
+                    parentSubView.getValue().syncTable(msg, getDtoFromEntityServiceFactory);
                 }
             }
         } else {
             for (Entry<String, CRUDBaseSubView<?, ?>> childSubView : this.childSubViewMap.entrySet()) {
                 if (childSubView.getValue() != null && childSubView.getValue().getTableContainer().getBeanType()
                         .getSimpleName().equals(msg.getReceiver() + "Dto")) {
-                    childSubView.getValue().syncTable(msg);
+                    childSubView.getValue().syncTable(msg, getDtoFromEntityServiceFactory);
                 }
             }
         }

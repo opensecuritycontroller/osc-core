@@ -28,7 +28,9 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
 import org.osc.core.broker.service.request.ListUserRequest;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListUserService extends ServiceDispatcher<ListUserRequest, ListResponse<UserDto>>
         implements ListUserServiceApi {
 

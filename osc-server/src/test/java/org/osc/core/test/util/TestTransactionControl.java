@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import org.junit.Assert;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionContext;
 import org.osgi.service.transaction.control.TransactionControl;
@@ -65,27 +66,44 @@ public abstract class TestTransactionControl implements TransactionControl, Tran
                 throw new ScopedWorkException("The work failed", e, getCurrentContext());
             }
         } else {
-            EntityTransaction tx = this.em.getTransaction();
-            try {
-                tx.begin();
-                T o = arg0.call();
-                tx.commit();
+            return runInTran(arg0);
+        }
+    }
 
-                callListeners(TransactionStatus.COMMITTED);
+    private <T> T runInTran(Callable<T> arg0) {
+        EntityTransaction tx = this.em.getTransaction();
+        try {
+            tx.begin();
+            T o = arg0.call();
+            tx.commit();
 
-                return o;
-            } catch (Exception e) {
-                tx.rollback();
-                callListeners(TransactionStatus.ROLLED_BACK);
-                if(e instanceof ScopedWorkException) {
-                    throw (ScopedWorkException) e;
-                }
-                throw new ScopedWorkException("The work failed", e, getCurrentContext());
-            } finally {
-                this.txActive.compareAndSet(true, false);
-                this.context.clear();
-                this.em.clear();
+            callListeners(TransactionStatus.COMMITTED);
+
+            return o;
+        } catch (Exception e) {
+            tx.rollback();
+            callListeners(TransactionStatus.ROLLED_BACK);
+            if(e instanceof ScopedWorkException) {
+                throw (ScopedWorkException) e;
             }
+            throw new ScopedWorkException("The work failed", e, getCurrentContext());
+        } finally {
+            this.txActive.compareAndSet(true, false);
+            this.context.clear();
+            this.em.clear();
+        }
+    }
+
+    @Override
+    public <T> T requiresNew(Callable<T> arg0)
+            throws TransactionException, TransactionRolledBackException, ScopedWorkException {
+        if(this.txActive.getAndSet(true)) {
+            Assert.fail("The test transaction control does not support nested transactions");
+
+            // This line is never actually reached but is needed by the compiler
+            return null;
+        } else {
+            return runInTran(arg0);
         }
     }
 

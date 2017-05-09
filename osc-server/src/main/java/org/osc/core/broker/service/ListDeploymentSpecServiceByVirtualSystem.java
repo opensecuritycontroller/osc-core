@@ -31,7 +31,9 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class ListDeploymentSpecServiceByVirtualSystem
         extends ServiceDispatcher<BaseIdRequest, ListResponse<DeploymentSpecDto>>
         implements ListDeploymentSpecServiceByVirtualSystemApi {

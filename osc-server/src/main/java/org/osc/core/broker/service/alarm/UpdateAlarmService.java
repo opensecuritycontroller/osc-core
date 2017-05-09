@@ -31,7 +31,9 @@ import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.validator.AlarmDtoValidator;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>, BaseResponse>
         implements UpdateAlarmServiceApi {
 

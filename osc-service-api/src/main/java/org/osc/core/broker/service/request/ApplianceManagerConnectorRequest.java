@@ -30,7 +30,7 @@ public class ApplianceManagerConnectorRequest extends ApplianceManagerConnectorD
     private boolean skipRemoteValidation;
     private boolean forceAddSSLCertificates;
 
-    ApplianceManagerConnectorRequest() {
+    public ApplianceManagerConnectorRequest() {
     }
 
     public boolean isSkipRemoteValidation() {
@@ -42,7 +42,7 @@ public class ApplianceManagerConnectorRequest extends ApplianceManagerConnectorD
     }
 
     public boolean isForceAddSSLCertificates() {
-        return forceAddSSLCertificates;
+        return this.forceAddSSLCertificates;
     }
 
     public void setForceAddSSLCertificates(boolean forceAddSSLCertificates) {
@@ -52,8 +52,8 @@ public class ApplianceManagerConnectorRequest extends ApplianceManagerConnectorD
     @Override
     public String toString() {
         return "ApplianceManagerConnectorRequest{" +
-                "skipRemoteValidation=" + skipRemoteValidation +
-                ", forceAddSSLCertificates=" + forceAddSSLCertificates +
+                "skipRemoteValidation=" + this.skipRemoteValidation +
+                ", forceAddSSLCertificates=" + this.forceAddSSLCertificates +
                 '}';
     }
 }

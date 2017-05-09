@@ -19,8 +19,8 @@ package org.osc.core.broker.service;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
-import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.service.api.DeleteUserServiceApi;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.DeleteUserRequest;
@@ -29,14 +29,9 @@ import org.osc.core.broker.util.PasswordUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import org.osc.core.server.Server;
-
 @Component
 public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, EmptySuccessResponse>
         implements DeleteUserServiceApi {
-
-    @Reference
-    private Server server;
 
     @Reference
     private PasswordUtil passwordUtil;
@@ -48,10 +43,10 @@ public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, Empt
 
         validate(em, request, user);
 
+        // If a user is deleted then all the sessions associated with
+        // that user should be ended. The broadcast of the entity deletion
+        // takes care of this
         OSCEntityManager.delete(em, user);
-
-        // If a user is deleted itself, all the sessions associated with that user should be ended
-        this.server.closeUserVaadinSessions(user.getLoginName());
 
         return new EmptySuccessResponse();
     }
@@ -66,10 +61,6 @@ public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, Empt
         if (user.getLoginName().equals(RestConstants.OSC_DEFAULT_LOGIN)) {
 
             throw new VmidcBrokerValidationException("Cannot delete pre-configured 'admin' user.");
-        }
-        if (user.getLoginName().equals(RestConstants.VMIDC_AGENT_LOGIN)) {
-
-            throw new VmidcBrokerValidationException("Cannot delete pre-configured 'agent' user.");
         }
         if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {
 

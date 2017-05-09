@@ -17,7 +17,14 @@
 package org.osc.core.broker.util;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -44,6 +51,7 @@ import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
+import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
@@ -119,10 +127,10 @@ public class VirtualizationConnectorUtilTest {
 	public void testOpenstackConnection_WithSkipDryRunRequest_ReturnsSuccessful() throws Exception {
 
 		// Arrange.
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST;
+		DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST;
 		request.setSkipAllDryRun(true);
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
+		DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
 		//Act
 		this.util.checkOpenstackConnection(spyRequest, vc);

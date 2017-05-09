@@ -19,6 +19,7 @@ package org.osc.core.broker.service.securityinterface;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.ConformService;
@@ -26,34 +27,37 @@ import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.persistence.PolicyEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component
 public class AddSecurityGroupInterfaceService
         extends BaseSecurityGroupInterfaceService<BaseRequest<SecurityGroupInterfaceDto>, BaseJobResponse>
         implements AddSecurityGroupInterfaceServiceApi {
 
     private static final Logger log = Logger.getLogger(AddSecurityGroupInterfaceService.class);
-    private ConformService conformService;
 
-    public AddSecurityGroupInterfaceService(ConformService conformService) {
-        this.conformService = conformService;
-    }
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(BaseRequest<SecurityGroupInterfaceDto> request, EntityManager em) throws Exception {
         SecurityGroupInterfaceDto dto = request.getDto();
-        validateAndLoad(em, dto);
+        VirtualSystem vs = validateAndLoad(em, dto);
 
         SecurityGroupInterface sgi = new SecurityGroupInterface(
-                this.vs,
+                vs,
                 null,
                 null,
                 FailurePolicyType.valueOf(dto.getFailurePolicyType().name()),
                 0L);
 
-        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, this.policy, SecurityGroupInterface.ISC_TAG_PREFIX);
+        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, PolicyEntityMgr.findById(em, dto.getPolicyId()),
+                SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Creating SecurityGroupInterface: " + sgi.toString());
         OSCEntityManager.create(em, sgi);
@@ -70,8 +74,8 @@ public class AddSecurityGroupInterfaceService
     }
 
     @Override
-    protected void validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
-        super.validateAndLoad(em, dto);
+    protected VirtualSystem validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
+        VirtualSystem vs = super.validateAndLoad(em, dto);
 
         if (!dto.isUserConfigurable()) {
             throw new VmidcBrokerValidationException(
@@ -79,12 +83,13 @@ public class AddSecurityGroupInterfaceService
         }
 
         SecurityGroupInterface existingSGI = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(
-                em, this.vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString());
+                em, vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString());
 
         if (existingSGI != null) {
             throw new VmidcBrokerValidationException("A Traffic Policy Mapping: " + existingSGI.getName()
             + " exists for the specified virtual system and tag combination.");
         }
+        return vs;
 
     }
 

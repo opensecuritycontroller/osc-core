@@ -24,10 +24,37 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.DeleteDistributedApplianceService;
-import org.osc.core.broker.service.GetDtoFromEntityService;
-import org.osc.core.broker.service.ListDistributedApplianceService;
+import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.ConformServiceApi;
+import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
+import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceApi;
+import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
+import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemApi;
+import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
+import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
+import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
+import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
+import org.osc.core.broker.service.api.ListHostServiceApi;
+import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.api.ListRegionServiceApi;
+import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
+import org.osc.core.broker.service.api.ListTenantServiceApi;
+import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
+import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
+import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -40,7 +67,6 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.view.deploymentspec.DeploymentSpecSubView;
 import org.osc.core.broker.view.securityinterface.SecurityGroupInterfaceSubView;
 import org.osc.core.broker.view.util.ToolbarButtons;
@@ -48,6 +74,10 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddDistributedApplianceWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 import org.osc.core.broker.window.update.UpdateDistributedApplianceWindow;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ServiceScope;
 
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
@@ -58,6 +88,7 @@ import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
 @SuppressWarnings("serial")
+@Component(service={DistributedApplianceView.class}, scope=ServiceScope.PROTOTYPE)
 public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceDto, VirtualSystemDto> {
 
     private static final String DA_HELP_GUID = "GUID-3FB92C5B-7F20-4B6A-B368-CA37C3E67007.html";
@@ -67,9 +98,98 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private DeploymentSpecSubView dsSubView = null;
     private SecurityGroupInterfaceSubView sgiSubView = null;
 
-    private DeleteDistributedApplianceService deleteDistributedApplianceService = StaticRegistry.deleteDistributedApplianceService();
+    @Reference
+    private AddDistributedApplianceServiceApi addDistributedApplianceService;
 
-    public DistributedApplianceView() {
+    @Reference
+    private UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
+
+    @Reference
+    private DeleteDistributedApplianceServiceApi deleteDistributedApplianceService;
+
+    @Reference
+    private ListDistributedApplianceServiceApi listDistributedApplianceService;
+
+    @Reference
+    private AddDeploymentSpecServiceApi addDeploymentSpecService;
+
+    @Reference
+    private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
+
+    @Reference
+    private DeleteDeploymentSpecServiceApi deleteDeploymentSpecService;
+
+    @Reference
+    private ListDeploymentSpecServiceByVirtualSystemApi listDeploymentSpecServiceByVirtualSystem;
+
+    @Reference
+    private SyncDeploymentSpecServiceApi syncDeploymentSpecService;
+
+    @Reference
+    private ForceDeleteVirtualSystemServiceApi forceDeleteVirtualSystemService;
+
+    @Reference
+    private ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService;
+
+    @Reference
+    private ListDomainsByMcIdServiceApi listDomainsByMcIdService;
+
+    @Reference
+    private ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel;
+
+    @Reference
+    private ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService;
+
+    @Reference
+    private ListAvailabilityZonesServiceApi listAvailabilityZonesService;
+
+    @Reference
+    private ListFloatingIpPoolsServiceApi listFloatingIpPoolsService;
+
+    @Reference
+    private ListHostServiceApi listHostService;
+
+    @Reference
+    private ListHostAggregateServiceApi listHostAggregateService;
+
+    @Reference
+    private ListNetworkServiceApi listNetworkService;
+
+    @Reference
+    private ListRegionServiceApi listRegionService;
+
+    @Reference
+    private ListTenantServiceApi listTenantService;
+
+    @Reference
+    private ConformServiceApi conformService;
+
+    @Reference
+    private AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService;
+
+    @Reference
+    private DeleteSecurityGroupInterfaceServiceApi deleteSecurityGroupInterfaceService;
+
+    @Reference
+    private ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem;
+
+    @Reference
+    private ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
+
+    @Reference
+    private UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
+
+    @Reference
+    private ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService;
+
+    @Reference
+    private ValidationApi validator;
+
+    @Reference
+    private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
+    @Activate
+    private void activate() {
 
         Map<String, CRUDBaseSubView<?, ?>> childSubViewMap = new HashMap<String, CRUDBaseSubView<?, ?>>();
         childSubViewMap.put("Deployment Specification View", this.dsSubView);
@@ -89,7 +209,12 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.info("Redirecting to Add Distributed Appliance Window");
-            ViewUtil.addWindow(new AddDistributedApplianceWindow(this));
+            ViewUtil.addWindow(new AddDistributedApplianceWindow(this,
+                    this.addDistributedApplianceService, this.listApplianceModelSwVersionComboService,
+                    this.listDomainsByMcIdService, this.listEncapsulationTypeByVersionTypeAndModel,
+                    this.listApplianceManagerConnectorService,
+                    this.listVirtualizationConnectorBySwVersionService,
+                    this.validator));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.info("Redirecting to Update Appliance Window");
@@ -100,7 +225,11 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         Notification.Type.WARNING_MESSAGE);
 
             } else {
-                ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this));
+                ViewUtil.addWindow(new UpdateDistributedApplianceWindow(this, this.updateDistributedApplianceService,
+                        this.listApplianceModelSwVersionComboService, this.listDomainsByMcIdService,
+                        this.listEncapsulationTypeByVersionTypeAndModel, this.listApplianceManagerConnectorService,
+                        this.listVirtualizationConnectorBySwVersionService,
+                        this.validator));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
@@ -119,7 +248,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
         }
 
         if (event.getButton().getId().equals(ToolbarButtons.DELETE_CHILD.getId())) {
-            DeleteWindowUtil.deleteVirtualSystem(getChildItem().getBean());
+            DeleteWindowUtil.deleteVirtualSystem(this.forceDeleteVirtualSystemService, getChildItem().getBean());
         }
     }
 
@@ -130,7 +259,13 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         + dto.getVirtualizationConnectorName() + "')",
                         new ToolbarButtons[] { ToolbarButtons.BACK, ToolbarButtons.ADD, ToolbarButtons.EDIT,
                                 ToolbarButtons.DELETE, ToolbarButtons.CONFORM },
-                        this, this.childContainer.getItem(getChildItemId()).getBean());
+                        this, this.childContainer.getItem(getChildItemId()).getBean(),
+                        this.addDeploymentSpecService, this.updateDeploymentSpecService,
+                        this.deleteDeploymentSpecService, this.listDeploymentSpecServiceByVirtualSystem,
+                        this.syncDeploymentSpecService, this.listAvailabilityZonesService,
+                        this.listFloatingIpPoolsService, this.listHostService,
+                        this.listHostAggregateService, this.listNetworkService,
+                        this.listRegionService, this.listTenantService);
 
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages
@@ -145,7 +280,11 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         + this.childContainer.getItem(getChildItemId()).getBean().getName(),
                         new ToolbarButtons[] { ToolbarButtons.BACK, ToolbarButtons.ADD, ToolbarButtons.EDIT,
                                 ToolbarButtons.DELETE },
-                        this, this.childContainer.getItem(getChildItemId()).getBean());
+                        this, this.childContainer.getItem(getChildItemId()).getBean(),
+                        this.addSecurityGroupInterfaceService, this.deleteSecurityGroupInterfaceService,
+                        this.listSecurityGroupInterfaceServiceByVirtualSystem, this.listVirtualSystemPolicyService,
+                        this.updateSecurityGroupInterfaceService,
+                        this.getDtoFromEntityServiceFactory);
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages
         this.childSubViewMap.put(getKeyforChildSubView(2), this.sgiSubView);
@@ -158,10 +297,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
         ConformRequest request = new ConformRequest();
         request.setDaId(daId);
         BaseJobResponse response = new BaseJobResponse();
-        ConformService service = StaticRegistry.conformService();
 
         try {
-            response = service.dispatch(request);
+            response = this.conformService.dispatch(request);
             ViewUtil.showJobNotification(response.getJobId());
         } catch (Exception e) {
             log.error("Error!", e);
@@ -210,9 +348,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     public void populateParentTable() {
 
         ListResponse<DistributedApplianceDto> res;
-        ListDistributedApplianceService listService = new ListDistributedApplianceService();
         try {
-            res = listService.dispatch(new BaseRequest<>());
+            res = this.listDistributedApplianceService.dispatch(new BaseRequest<>());
             List<DistributedApplianceDto> listResponse = res.getList();
             this.parentContainer.removeAllItems();
             // creating table with list of vendors
@@ -335,7 +472,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                     GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
                     getDtoRequest.setEntityId(dsId);
                     getDtoRequest.setEntityName("DeploymentSpec");
-                    GetDtoFromEntityService<DeploymentSpecDto> getService = new GetDtoFromEntityService<DeploymentSpecDto>();
+                    GetDtoFromEntityServiceApi<DeploymentSpecDto> getService = this.getDtoFromEntityServiceFactory.getService(DeploymentSpecDto.class);
                     BaseDtoResponse<DeploymentSpecDto> dsDto;
                     try {
                         dsDto = getService.dispatch(getDtoRequest);
@@ -349,7 +486,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                     GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
                     getDtoRequest.setEntityId(sgiId);
                     getDtoRequest.setEntityName("SecurityGroupInterface");
-                    GetDtoFromEntityService<SecurityGroupInterfaceDto> getService = new GetDtoFromEntityService<SecurityGroupInterfaceDto>();
+                    GetDtoFromEntityServiceApi<SecurityGroupInterfaceDto> getService = this.getDtoFromEntityServiceFactory.getService(SecurityGroupInterfaceDto.class);
                     BaseDtoResponse<SecurityGroupInterfaceDto> sgiDto;
                     try {
                         sgiDto = getService.dispatch(getDtoRequest);
@@ -363,7 +500,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                     GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
                     getDtoRequest.setEntityId(vsId);
                     getDtoRequest.setEntityName("VirtualSystem");
-                    GetDtoFromEntityService<VirtualSystemDto> getVsSvc = new GetDtoFromEntityService<VirtualSystemDto>();
+                    GetDtoFromEntityServiceApi<VirtualSystemDto> getVsSvc = this.getDtoFromEntityServiceFactory.getService(VirtualSystemDto.class);
 
                     BaseDtoResponse<VirtualSystemDto> vsDto;
                     try {
