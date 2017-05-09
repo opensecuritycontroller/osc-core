@@ -36,7 +36,6 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.test.InMemDB;
-import org.osc.core.broker.service.validator.TagVmRequestValidator;
 
 public class TagVmRequestValidatorTest {
 
