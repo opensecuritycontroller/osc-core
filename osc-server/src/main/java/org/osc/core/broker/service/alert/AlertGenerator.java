@@ -34,6 +34,7 @@ import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.events.EmailSettings;
 import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
+import org.osc.core.broker.service.api.AlertGeneratorApi;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.EmailSettingsDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
@@ -45,10 +46,12 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.validator.AlertDtoValidator;
 import org.osc.core.broker.util.EmailUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.component.annotations.Component;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
-public class AlertGenerator implements JobCompletionListener {
+@Component(service  = AlertGeneratorApi.class)
+public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi {
 
     private static final Logger log = Logger.getLogger(AlertGenerator.class);
 
@@ -59,6 +62,11 @@ public class AlertGenerator implements JobCompletionListener {
         if (job.getStatus().equals(JobStatus.FAILED)) {
             processJobFailureEvent(job);
         }
+    }
+
+    @Override
+    public void processNsxFailureEvent(String message) {
+        processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION, message);
     }
 
     public static void processJobFailureEvent(Job job) {
@@ -208,4 +216,5 @@ public class AlertGenerator implements JobCompletionListener {
                     SystemFailureType.EMAIL_FAILURE, "Fail to send alert email.");
         }
     }
+
 }

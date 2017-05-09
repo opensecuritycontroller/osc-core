@@ -16,8 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
+import javax.ws.rs.container.ContainerRequestContext;
+
 public interface PasswordUtilApi {
     String getVmidcNsxPass();
 
     String getOscDefaultPass();
+
+    void authenticateLocalRequest(ContainerRequestContext request);
+
+    void authenticateNsxRequest(ContainerRequestContext request);
+
+    void authenticateOscRequest(ContainerRequestContext request);
 }

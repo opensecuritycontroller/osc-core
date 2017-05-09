@@ -34,12 +34,12 @@ import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
-import org.osc.core.broker.rest.RestConstants;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
+import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
@@ -49,6 +49,8 @@ import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.rest.client.RestBaseClient;
+import org.osc.core.server.scheduler.ArchiveScheduledJob;
 import org.osc.core.server.scheduler.MonitorDistributedApplianceInstanceJob;
 import org.osc.core.server.scheduler.SyncDistributedApplianceJob;
 import org.osc.core.server.scheduler.SyncSecurityGroupJob;
@@ -584,5 +586,10 @@ public class Server implements ServerApi {
     @Override
     public String getVersionStr() {
         return VersionUtil.getVersion().getVersionStr();
+    }
+
+    @Override
+    public void setDebugLogging(boolean on) {
+        RestBaseClient.setDebugLogging(on);
     }
 }

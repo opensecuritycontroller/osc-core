@@ -30,6 +30,7 @@ import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
+import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
@@ -47,7 +48,6 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.rest.client.exception.RestClientException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
