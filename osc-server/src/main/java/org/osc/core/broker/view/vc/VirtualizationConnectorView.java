@@ -54,6 +54,7 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.CRUDBaseView;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -140,6 +141,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
+    @Reference
+    private X509TrustManagerApi trustManager;
 
     @Activate
     void activate() {
@@ -264,10 +268,10 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     @Override
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
-            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService, this.pluginService, this.validator));
+            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService, this.pluginService, this.validator, this.trustManager));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
-            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService, this.pluginService, this.validator));
+            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService, this.pluginService, this.validator, this.trustManager));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             DeleteWindowUtil.deleteVirtualizationConnector(this.deleteVirtualizationConnectorService,

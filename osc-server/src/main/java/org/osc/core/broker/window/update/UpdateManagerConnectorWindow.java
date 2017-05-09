@@ -35,6 +35,7 @@ import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.ManagerConnectorView;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -82,13 +83,17 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
     private final ValidationApi validator;
 
+    private final X509TrustManagerApi trustManager;
+
     public UpdateManagerConnectorWindow(ManagerConnectorView mcView,
             UpdateApplianceManagerConnectorServiceApi updateMCService,
-            PluginService pluginService, ValidationApi validator) throws Exception {
+            PluginService pluginService, ValidationApi validator,
+            X509TrustManagerApi trustManager) throws Exception {
         this.mcView = mcView;
         this.updateMCService = updateMCService;
         this.pluginService = pluginService;
         this.validator = validator;
+        this.trustManager = trustManager;
         this.currentMCObject = mcView.getParentContainer().getItem(mcView.getParentItemId());
         createWindow(this.CAPTION);
     }
@@ -253,7 +258,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
                     public void cancelFormAction() {
                         handleException(originalException);
                     }
-                }));
+                }, this.trustManager));
             } catch (Exception e) {
                 handleException(originalException);
             }

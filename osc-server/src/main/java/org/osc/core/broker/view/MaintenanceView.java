@@ -37,6 +37,7 @@ import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -48,6 +49,7 @@ import org.osc.core.broker.view.maintenance.SslConfigurationLayout;
 import org.osc.core.broker.view.maintenance.SummaryLayout;
 import org.osc.core.broker.view.maintenance.SupportLayout;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -132,8 +134,14 @@ public class MaintenanceView extends VerticalLayout implements View {
     @Reference
     ValidationApi validator;
 
+    @Reference
+    X509TrustManagerApi trustManager;
+
+    private BundleContext ctx;
+
     @Activate
-    void activate() throws Exception {
+    void activate(BundleContext ctx) throws Exception {
+        this.ctx = ctx;
         setSizeFull();
         addStyleName(StyleConstants.BASE_CONTAINER);
 
@@ -195,7 +203,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildSslConfigurationForm() {
-        return new SslConfigurationLayout(this.deleteSslCertificateService, this.listSslCertificatesService);
+        return new SslConfigurationLayout(this.deleteSslCertificateService, this.listSslCertificatesService, this.trustManager, this.ctx);
     }
 
     private FormLayout buildEmailForm() {

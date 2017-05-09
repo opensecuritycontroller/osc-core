@@ -24,6 +24,7 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.util.ViewUtil;
 
 public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
@@ -38,8 +39,9 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
 
     public UpdateVirtualizationConnectorWindow(VirtualizationConnectorView vcView,
             UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService,
-            PluginService pluginService, ValidationApi validator) throws Exception {
-        super(pluginService, validator);
+            PluginService pluginService, ValidationApi validator,
+            X509TrustManagerApi trustManager) throws Exception {
+        super(pluginService, validator, trustManager);
         this.currentVCObject = vcView.getParentContainer().getItem(vcView.getParentItemId());
         this.updateVirtualizationConnectorService = updateVirtualizationConnectorService;
         createWindow(this.CAPTION);

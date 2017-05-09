@@ -38,6 +38,7 @@ import org.osc.core.broker.service.request.BaseJobRequest;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.AddManagerConnectorWindow;
@@ -89,6 +90,9 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     @Reference
     private ValidationApi validator;
 
+    @Reference
+    private X509TrustManagerApi trustManager;
+
     @Activate
     private void activate() {
 
@@ -100,11 +104,11 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Manager Connector Window");
-            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService, this.pluginService, this.validator));
+            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService, this.pluginService, this.validator, this.trustManager));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Manager Connector Window");
-            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService, this.pluginService, this.validator));
+            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService, this.pluginService, this.validator, this.trustManager));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Manager Connector Window");

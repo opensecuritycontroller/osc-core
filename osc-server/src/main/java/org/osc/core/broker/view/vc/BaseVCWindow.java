@@ -47,6 +47,7 @@ import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -126,10 +127,14 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private final PluginService pluginService;
     private final ValidationApi validator;
 
-    public BaseVCWindow(PluginService pluginService, ValidationApi validator) {
+    private final X509TrustManagerApi trustManager;
+
+    public BaseVCWindow(PluginService pluginService, ValidationApi validator,
+            X509TrustManagerApi trustManager) {
         super();
         this.pluginService = pluginService;
         this.validator = validator;
+        this.trustManager = trustManager;
     }
 
     @Override
@@ -427,7 +432,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 public void cancelFormAction() {
                     handleException(originalException);
                 }
-            }));
+            }, this.trustManager));
         } catch (Exception e) {
             handleException(originalException);
         }

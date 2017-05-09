@@ -23,6 +23,7 @@ import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.util.ViewUtil;
 
 import com.vaadin.data.Property.ValueChangeListener;
@@ -37,8 +38,8 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
     private static final Logger log = Logger.getLogger(AddVirtualizationConnectorWindow.class);
 
     public AddVirtualizationConnectorWindow(VirtualizationConnectorView vcView, AddVirtualizationConnectorServiceApi addVirtualizationConnectorService,
-            PluginService pluginService, ValidationApi validator) throws Exception {
-        super(pluginService, validator);
+            PluginService pluginService, ValidationApi validator, X509TrustManagerApi trustManager) throws Exception {
+        super(pluginService, validator, trustManager);
         this.vcView = vcView;
         this.addVirtualizationConnectorService = addVirtualizationConnectorService;
         createWindow(this.CAPTION);
