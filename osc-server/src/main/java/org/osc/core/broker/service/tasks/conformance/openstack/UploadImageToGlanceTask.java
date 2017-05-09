@@ -41,7 +41,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.view.maintenance.ApplianceUploader;
+import org.osc.core.broker.util.StaticRegistry;
 
 class UploadImageToGlanceTask extends TransactionalTask {
 
@@ -73,7 +73,7 @@ class UploadImageToGlanceTask extends TransactionalTask {
         JCloudGlance glance = new JCloudGlance(this.osEndPoint);
         try {
             this.log.info("Uploading image " + this.glanceImageName + " to region + " + this.region);
-            File imageFile = new File(ApplianceUploader.getImageFolderPath()
+            File imageFile = new File(StaticRegistry.uploadPath()
                     + this.applianceSoftwareVersion.getImageUrl());
             String fileExtension = FilenameUtils.getExtension(this.applianceSoftwareVersion.getImageUrl())
                     .toUpperCase();

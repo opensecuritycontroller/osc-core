@@ -22,4 +22,6 @@ import org.osc.core.broker.service.response.ListResponse;
 
 public interface ListJobServiceApi
         extends ServiceDispatcherApi<ListJobRequest, ListResponse<JobRecordDto>> {
+
+    void abortJob(Long jobId, String reason);
 }

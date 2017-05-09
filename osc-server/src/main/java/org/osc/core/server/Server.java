@@ -48,9 +48,7 @@ import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
-import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.rest.client.RestBaseClient;
-import org.osc.core.server.scheduler.ArchiveScheduledJob;
 import org.osc.core.server.scheduler.MonitorDistributedApplianceInstanceJob;
 import org.osc.core.server.scheduler.SyncDistributedApplianceJob;
 import org.osc.core.server.scheduler.SyncSecurityGroupJob;
@@ -67,6 +65,8 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferenceScope;
+import org.osgi.util.promise.Deferred;
+import org.osgi.util.promise.Promise;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -485,7 +485,9 @@ public class Server implements ServerApi {
     }
 
     @Override
-    public void restart() {
+    public Promise<Void> restart() {
+
+        Deferred<Void> future = new Deferred<>();
         Thread restartThread = new Thread("Restart-Server-Thread") {
             @Override
             public void run() {
@@ -498,12 +500,14 @@ public class Server implements ServerApi {
                     }
                     log.info("Restart server (pid:" + ServerUtil.getCurrentPid() + ")");
 
+                    future.resolve(null);
                 } catch (Exception ex) {
-                    ViewUtil.showError("Restart server failed", ex);
+                    future.fail(ex);
                 }
             }
         };
         restartThread.start();
+        return future.getPromise();
     }
 
     public void shutdownRabbitMq() {
