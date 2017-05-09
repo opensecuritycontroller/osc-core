@@ -16,15 +16,19 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import java.net.ConnectException;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.util.BeanItem;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
+import com.vmware.vim25.InvalidLogin;
 import org.apache.log4j.Logger;
 import org.jclouds.http.HttpResponseException;
 import org.jclouds.rest.AuthorizationException;
@@ -53,19 +57,14 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.encryption.EncryptionException;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
-import com.vmware.vim25.InvalidLogin;
+import java.net.ConnectException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
@@ -138,10 +137,10 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         try {
             this.name.validate();
             this.virtualizationType.validate();
-            String controllerType = BaseVCWindow.this.controllerType.getValue().toString();
 
-            if (this.virtualizationType.getValue().toString().equals(VirtualizationType.OPENSTACK.toString()) && !NO_CONTROLLER.equals(controllerType)) {
-                if (!this.pluginService.usesProviderCreds(controllerType)) {
+            if (this.virtualizationType.getValue().toString().equals(VirtualizationType.OPENSTACK.toString())) {
+                String controllerType = BaseVCWindow.this.controllerType.getValue().toString();
+                if (!NO_CONTROLLER.equals(controllerType) && !this.pluginService.usesProviderCreds(controllerType)) {
                     this.controllerIP.validate();
                     this.validator.checkValidIpAddress(this.controllerIP.getValue());
                     this.controllerUser.validate();
