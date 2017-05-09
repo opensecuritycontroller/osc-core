@@ -16,31 +16,34 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
-import org.osc.core.broker.service.tasks.BaseTask;
+import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.util.EncryptionUtil;
 
-public class CheckSSLConnectivityVcTask extends BaseTask {
+import javax.persistence.EntityManager;
+import java.util.Set;
+
+import static java.util.stream.Collectors.toSet;
+
+public class CheckSSLConnectivityVcTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(CheckSSLConnectivityVcTask.class);
 
     private VirtualizationConnector vc;
 
     public CheckSSLConnectivityVcTask(VirtualizationConnector vc) {
-        super(null);
         this.vc = vc;
         this.name = getName();
     }
 
     @Override
-    public void execute() throws Exception {
+    public void executeTransaction(EntityManager em) throws Exception {
+        this.vc = em.find(VirtualizationConnector.class, this.vc.getId());
         log.debug("Start executing CheckSSLConnectivityVcTask Task. VC: '" + this.vc.getName() + "'");
         VirtualizationConnectorUtil virtualizationConnectorUtil = new VirtualizationConnectorUtil();
         DryRunRequest<VirtualizationConnectorDto> request = createRequest(this.vc);
@@ -75,7 +78,7 @@ public class CheckSSLConnectivityVcTask extends BaseTask {
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
         dto.setProviderPassword(EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
-        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet());
+        dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream().collect(toSet()));
         dto.setAdminTenantName(vc.getProviderAdminTenantName());
         return request;
     }
