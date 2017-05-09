@@ -18,7 +18,7 @@ package org.osc.core.broker.view.deploymentspec;
 
 import java.util.Arrays;
 
-import org.jboss.logging.Logger;
+import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.DeleteDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;

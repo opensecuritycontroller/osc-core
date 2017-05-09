@@ -14,31 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api.server;
+package org.osc.core.broker.service.appliance;
 
-import org.osgi.util.promise.Promise;
+public @interface UploadConfig {
+    String upload_path();
 
-public interface ServerApi {
-
-    boolean getDevMode();
-
-    void stopServer();
-
-    Promise<Void> restart();
-
-    String loadServerProp(String devModePropertyKey, String string);
-
-    void saveServerProp(String propName, String value);
-
-    void setDevMode(boolean on);
-
-    boolean isUnderMaintenance();
-
-    String getProductName();
-
-    String getCurrentPid();
-
-    String getVersionStr();
-
-    void setDebugLogging(boolean on);
+    String tmp_upload_parent();
 }

@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.service.api.ListJobServiceApi;
 import org.osc.core.broker.service.dto.JobRecordDto;
@@ -34,10 +35,11 @@ import org.osgi.service.component.annotations.Component;
 public class ListJobService extends ServiceDispatcher<ListJobRequest, ListResponse<JobRecordDto>>
         implements ListJobServiceApi {
 
-    ListResponse<JobRecordDto> response = new ListResponse<JobRecordDto>();
 
     @Override
     public ListResponse<JobRecordDto> exec(ListJobRequest request, EntityManager em) throws Exception {
+        ListResponse<JobRecordDto> response = new ListResponse<JobRecordDto>();
+
         // Initializing Entity Manager
         OSCEntityManager<JobRecord> emgr = new OSCEntityManager<JobRecord>(JobRecord.class, em);
         // to do mapping
@@ -51,8 +53,13 @@ public class ListJobService extends ServiceDispatcher<ListJobRequest, ListRespon
             dtoList.add(dto);
         }
 
-        this.response.setList(dtoList);
-        return this.response;
+        response.setList(dtoList);
+        return response;
+    }
+
+    @Override
+    public void abortJob(Long jobId, String reason) {
+        JobEngine.getEngine().abortJob(jobId, reason);
     }
 
 }

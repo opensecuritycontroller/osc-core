@@ -17,11 +17,13 @@
 package org.osc.core.broker.service.dto;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 
@@ -48,6 +50,20 @@ public class TaskRecordDto extends BaseDto {
     @ApiModelProperty(value = "List of object references relevant to this job. For example, in a Distributed Appliance "
             + "Synchronization Job, the Distributed Appliance Object reference will be included ")
     private Set<LockObjectDto> objects;
+
+    /**
+     * These fields are being made transient so as not to affect external
+     * clients of the REST Services by adding more data. The data is
+     * needed, however, by clients of the OSC services.
+     */
+    @XmlTransient
+    private List<TaskRecordDto> children;
+
+    @XmlTransient
+    private String taskGuard;
+
+    @XmlTransient
+    private List<Long> predecessorIds;
 
     @Override
     public String toString() {
@@ -134,5 +150,29 @@ public class TaskRecordDto extends BaseDto {
 
     public void setObjects(Set<LockObjectDto> objects) {
         this.objects = objects;
+    }
+
+    public List<TaskRecordDto> getChildren() {
+        return this.children;
+    }
+
+    public void setChildren(List<TaskRecordDto> children) {
+        this.children = children;
+    }
+
+    public String getTaskGuard() {
+        return this.taskGuard;
+    }
+
+    public void setTaskGuard(String taskGuard) {
+        this.taskGuard = taskGuard;
+    }
+
+    public List<Long> getPredecessorIds() {
+        return this.predecessorIds;
+    }
+
+    public void setPredecessorIds(List<Long> predecessorIds) {
+        this.predecessorIds = predecessorIds;
     }
 }
