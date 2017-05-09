@@ -19,6 +19,8 @@ package org.osc.core.server;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -55,6 +57,7 @@ import org.osc.core.server.scheduler.SyncSecurityGroupJob;
 import org.osc.core.server.websocket.WebSocketRunner;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.LogUtil;
+import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.util.VersionUtil;
@@ -594,5 +597,9 @@ public class Server implements ServerApi {
     @Override
     public void setDebugLogging(boolean on) {
         RestBaseClient.setDebugLogging(on);
+    }
+
+    public String getHostIpAddress() throws SocketException, UnknownHostException {
+        return NetworkUtil.getHostIpAddress();
     }
 }

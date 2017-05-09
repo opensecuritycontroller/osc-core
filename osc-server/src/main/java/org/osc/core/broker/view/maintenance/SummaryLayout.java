@@ -32,7 +32,6 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.util.ArchiveUtil;
-import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
 
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -244,7 +243,7 @@ public class SummaryLayout extends FormLayout {
 
     public String getIpAddress() {
         try {
-            return NetworkUtil.getHostIpAddress();
+            return this.server.getHostIpAddress();
         } catch (Exception e) {
             log.error("Error while Host IP address ", e);
         }

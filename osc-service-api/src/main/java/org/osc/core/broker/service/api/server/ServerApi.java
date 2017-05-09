@@ -42,4 +42,6 @@ public interface ServerApi {
     String getVersionStr();
 
     void setDebugLogging(boolean on);
+
+    String getHostIpAddress();
 }
