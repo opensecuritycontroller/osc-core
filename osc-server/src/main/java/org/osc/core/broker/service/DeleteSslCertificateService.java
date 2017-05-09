@@ -30,11 +30,12 @@ import org.osgi.service.component.annotations.Component;
 public class DeleteSslCertificateService extends ServiceDispatcher<DeleteSslEntryRequest, EmptySuccessResponse>
         implements DeleteSslCertificateServiceApi {
 
+    private static final String INTERNAL_CERTIFICATE_MARKER = "internal";
     private static final Logger log = Logger.getLogger(DeleteSslCertificateService.class);
 
     @Override
     protected EmptySuccessResponse exec(DeleteSslEntryRequest request, EntityManager em) throws Exception {
-        if (request.getAlias().contains("internal")) {
+        if (request.getAlias().contains(INTERNAL_CERTIFICATE_MARKER)) {
             throw new VmidcBrokerValidationException("Cannot remove internal certificate");
         }
 
