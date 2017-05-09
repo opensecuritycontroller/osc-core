@@ -33,8 +33,8 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.WebSocketClient;
-import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.ManagerApi;
 import org.osc.core.broker.service.broadcast.BroadcastListener;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.broadcast.EventType;
@@ -65,7 +65,7 @@ public class WebSocketRunner implements BroadcastListener {
     private int count = MAX_TRIES;
 
     @Reference
-    private ManagerApis managerApis;
+    private ManagerApi managerApis;
 
     @Reference
     private ApiFactoryService apiFactoryService;

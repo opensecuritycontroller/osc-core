@@ -23,6 +23,19 @@ import org.osc.core.broker.service.dto.BaseDto;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * DS services cannot be registered with or looked up by generic information, only by type.
+ *
+ * This factory provides a {@link #getService(Class)} method to get an appropriately typed instance.
+ *
+ * To avoid using a factory like this, and to use DS directly, we would need refactor GetDtoFromEntity not to be generic:
+ * <UL><LI>
+ * We could create multiple versions of the API representing specific types, and register each of those as a DS
+ * services.
+ * </LI><LI>
+ * We could add multiple versions of each method to a non-generic interface.
+ * </UL>
+ */
 @Component
 public class GetDtoFromEntityServiceFactory implements GetDtoFromEntityServiceFactoryApi {
 
@@ -31,7 +44,7 @@ public class GetDtoFromEntityServiceFactory implements GetDtoFromEntityServiceFa
 
     @Override
     public <T extends BaseDto> GetDtoFromEntityServiceApi<T> getService(Class<T> type) {
-        return  new GetDtoFromEntityService<T>(this.userContext);
+        return new GetDtoFromEntityService<T>(this.userContext);
     }
 
 }
