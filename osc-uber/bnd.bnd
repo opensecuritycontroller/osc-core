@@ -42,10 +42,6 @@ Require-Capability: \
     @${dom4j.dep},\
     @${filteringtable.dep},\
     @${flute.dep},\
-    @${jackson-annotations.dep},\
-    @${jackson-core.dep},\
-    @${jackson-databind.dep},\
-    @${jackson-dataformat-yaml.dep},\
     @${javax.mail.dep},\
     @${joda-time.dep},\
     @${jsoup.dep},\
@@ -57,9 +53,6 @@ Require-Capability: \
     @${slf4j-api.dep},\
     @${snakeyaml.dep},\
     @${stepper.dep},\
-    @${swagger-annotations.dep},\
-    @${swagger-core.dep},\
-    @${swagger-models.dep},\
     @${tyrus-client.dep},\
     @${tyrus-core.dep},\
     @${tyrus-spi.dep},\
@@ -124,10 +117,7 @@ import-extra:\
   javax.servlet.descriptor,\
   javax.servlet.http,\
   javax.transaction;version="[1.1,2)",\
-  javax.transaction.xa;version="[1.1,2)",\
-  com.fasterxml.jackson.annotation,\
-  com.fasterxml.jackson.databind.exc,\
-  com.fasterxml.jackson.core
+  javax.transaction.xa;version="[1.1,2)"
 
 exclude-test:\
   !org.junit,\
