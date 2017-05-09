@@ -28,5 +28,5 @@ public interface ArchiveServiceApi
      *
      * If archiving is disabled, deletes the archiving job.
      */
-    public void maybeScheduleArchiveJob();
+    void maybeScheduleArchiveJob();
 }
