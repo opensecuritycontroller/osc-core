@@ -37,6 +37,7 @@ import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.maintenance.PluginUploader.UploadSucceededListener;
+import org.osc.core.broker.view.util.SdkUtil;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
@@ -58,8 +59,6 @@ public class ManagerPluginsLayout extends FormLayout {
     private static final String PROP_PLUGIN_SERVICES = "Services";
     private static final String PROP_PLUGIN_VERSION = "Version";
     private static final String PROP_PLUGIN_DELETE = "";
-
-    private static final String OSC_SDN_MGR_SDK_JAR_PATH = "/SDK/security-mgr-api-1.0-sources.jar";
 
     private static final long serialVersionUID = 1L;
 
@@ -152,10 +151,12 @@ public class ManagerPluginsLayout extends FormLayout {
     }
 
     private Button getDownloadSdkButton() throws URISyntaxException, MalformedURLException {
+        SdkUtil sdkUtil = new SdkUtil();
         Button downloadSdk = new Button(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_DOWNLOAD_SDK));
         URI currentLocation = UI.getCurrent().getPage().getLocation();
+
         URI downloadLocation = new URI(currentLocation.getScheme(), null, currentLocation.getHost(),
-                currentLocation.getPort(), OSC_SDN_MGR_SDK_JAR_PATH, null, null);
+                currentLocation.getPort(), sdkUtil.getSdk(SdkUtil.sdkType.MANAGER), null, null);
         FileDownloader downloader = new FileDownloader(new ExternalResource(downloadLocation.toURL().toString()));
         downloader.extend(downloadSdk);
         return downloadSdk;
