@@ -18,21 +18,7 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.DAI_IP_PRESENT_VS;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.DEVICE_GROUP_NOT_SUPPORTED_VS;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.MANAGER_DEVICE_ID_AND_DAI_IP_NOT_PRESENT_VS;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.MANAGER_DEVICE_ID_PRESENT_VS;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.MANAGER_ID_AND_DAI_DEVICE_PRESENT_VS;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.MANAGER_ID_NOT_PRESENT_VS;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.MANAGER_ID_PRESENT_NO_DAI_DEVICE_VS;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.MGR_DEVICE_MEMBER_ELEMENT_NO_DAI;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.MGR_DEVICE_MEMBER_ELEMENT_WITH_DAI;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.createVSSDeviceGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.mgrCreateVSSDeviceAndCreateMemberGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.mgrCreateVSSDeviceAndUpdateMemberGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.updateDAISManagerDeviceIdGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.updateVSSDeviceAndDeleteMemberGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.updateVSSDeviceGraph;
+import static org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTaskTestData.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,19 +37,16 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-@PrepareForTest({ ManagerApiFactory.class })
 public class MgrCheckDevicesMetaTaskTest {
 
     public EntityManager em;
@@ -100,20 +83,20 @@ public class MgrCheckDevicesMetaTaskTest {
         Mockito.<List<? extends ManagerDeviceMemberElement>>when(mgrDeviceGroupSupportedApi.listDeviceMembers())
                 .thenReturn(Arrays.asList(MGR_DEVICE_MEMBER_ELEMENT_WITH_DAI));
 
-        PowerMockito.mockStatic(ManagerApiFactory.class);
-        when(ManagerApiFactory.createManagerDeviceApi(MANAGER_ID_PRESENT_NO_DAI_DEVICE_VS))
+        ApiFactoryService apiFactoryService = mock(ApiFactoryService.class);
+        when(apiFactoryService.createManagerDeviceApi(MANAGER_ID_PRESENT_NO_DAI_DEVICE_VS))
                 .thenReturn(mgrDeviceNoDaiApi);
-        when(ManagerApiFactory.createManagerDeviceApi(MANAGER_ID_NOT_PRESENT_VS))
+        when(apiFactoryService.createManagerDeviceApi(MANAGER_ID_NOT_PRESENT_VS))
                 .thenReturn(mgrDeviceGroupSupportedApi);
-        when(ManagerApiFactory.createManagerDeviceApi(MANAGER_DEVICE_ID_PRESENT_VS))
+        when(apiFactoryService.createManagerDeviceApi(MANAGER_DEVICE_ID_PRESENT_VS))
                 .thenReturn(mgrDeviceGroupSupportedApi);
-        when(ManagerApiFactory.createManagerDeviceApi(DAI_IP_PRESENT_VS))
+        when(apiFactoryService.createManagerDeviceApi(DAI_IP_PRESENT_VS))
         .thenReturn(mgrDeviceGroupSupportedApi);
-        when(ManagerApiFactory.createManagerDeviceApi(MANAGER_DEVICE_ID_AND_DAI_IP_NOT_PRESENT_VS))
+        when(apiFactoryService.createManagerDeviceApi(MANAGER_DEVICE_ID_AND_DAI_IP_NOT_PRESENT_VS))
                 .thenReturn(mgrDeviceGroupSupportedApi);
-        when(ManagerApiFactory.createManagerDeviceApi(DEVICE_GROUP_NOT_SUPPORTED_VS))
+        when(apiFactoryService.createManagerDeviceApi(DEVICE_GROUP_NOT_SUPPORTED_VS))
                 .thenReturn(mgrDeviceGroupNotSupportedApi);
-        when(ManagerApiFactory.createManagerDeviceApi(MANAGER_ID_AND_DAI_DEVICE_PRESENT_VS))
+        when(apiFactoryService.createManagerDeviceApi(MANAGER_ID_AND_DAI_DEVICE_PRESENT_VS))
                 .thenReturn(mgrDeviceGroupSupportedApi);
 
     }
@@ -149,7 +132,7 @@ public class MgrCheckDevicesMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousVirtualSystem_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        MgrCheckDevicesMetaTask task = new MgrCheckDevicesMetaTask(this.vs);
+        MgrCheckDevicesMetaTask task = new MgrCheckDevicesMetaTask().create(this.vs);
 
         // Act.
         task.executeTransaction(this.em);

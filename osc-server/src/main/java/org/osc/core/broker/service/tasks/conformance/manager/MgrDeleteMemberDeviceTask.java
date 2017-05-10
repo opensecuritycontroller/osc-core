@@ -21,22 +21,31 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = MgrDeleteMemberDeviceTask.class)
 public class MgrDeleteMemberDeviceTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(MgrDeleteMemberDeviceTask.class);
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private ManagerDeviceMemberElement device;
     private VirtualSystem vs;
     private String deviceName;
 
-    public MgrDeleteMemberDeviceTask(VirtualSystem vs, ManagerDeviceMemberElement device) {
-        this.vs = vs;
-        this.device = device;
-        this.deviceName = device.getName();
+    public MgrDeleteMemberDeviceTask create(VirtualSystem vs, ManagerDeviceMemberElement device) {
+        MgrDeleteMemberDeviceTask task = new MgrDeleteMemberDeviceTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.vs = vs;
+        task.device = device;
+        task.deviceName = device.getName();
+        return task;
     }
 
     @Override
@@ -44,8 +53,8 @@ public class MgrDeleteMemberDeviceTask extends TransactionalTask {
         deleteMemberDevice(this.vs, this.device);
     }
 
-    public static boolean deleteMemberDevice(DistributedApplianceInstance dai) throws Exception {
-        ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(dai.getVirtualSystem());
+    public boolean deleteMemberDevice(DistributedApplianceInstance dai) throws Exception {
+        ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(dai.getVirtualSystem());
         try {
             return deleteMemberDevice(mgrApi, dai);
         } finally {
@@ -62,8 +71,8 @@ public class MgrDeleteMemberDeviceTask extends TransactionalTask {
         return deleteMemberDevice(mgrApi, deviceId);
     }
 
-    private static boolean deleteMemberDevice(VirtualSystem vs, ManagerDeviceMemberElement device) throws Exception {
-        ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(vs);
+    private boolean deleteMemberDevice(VirtualSystem vs, ManagerDeviceMemberElement device) throws Exception {
+        ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(vs);
         try {
             return deleteMemberDevice(mgrApi, device.getId());
         } finally {

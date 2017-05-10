@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
@@ -36,10 +36,14 @@ public class MgrCreateVSSDeviceTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(MgrCreateVSSDeviceTask.class);
 
     private VirtualSystem vs;
+    private ApiFactoryService apiFactoryService;
 
-    public MgrCreateVSSDeviceTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public MgrCreateVSSDeviceTask create(VirtualSystem vs) {
+        MgrCreateVSSDeviceTask task = new MgrCreateVSSDeviceTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.vs = vs;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -47,7 +51,7 @@ public class MgrCreateVSSDeviceTask extends TransactionalTask {
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.vs);
+        ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(this.vs);
         String deviceId = null;
 
         try {

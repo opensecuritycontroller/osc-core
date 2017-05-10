@@ -25,20 +25,53 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component
 public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private MgrCreateVSSDeviceTask mgrCreateVSSDeviceTask;
+
+    @Reference
+    private MgrCreateMemberDeviceTask mgrCreateMemberDeviceTask;
+
+    @Reference
+    private MgrDeleteMemberDeviceTask mgrDeleteMemberDeviceTask;
+
+    @Reference
+    private MgrUpdateMemberDeviceTask mgrUpdateMemberDeviceTask;
+
+    @Reference
+    private MgrUpdateVSSDeviceTask mgrUpdateVSSDeviceTask;
+
+    @Reference
+    private UpdateDAISManagerDeviceId updateDAISManagerDeviceId;
 
     private VirtualSystem vs;
     private TaskGraph tg;
 
-    public MgrCheckDevicesMetaTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public MgrCheckDevicesMetaTask create(VirtualSystem vs) {
+        MgrCheckDevicesMetaTask task = new MgrCheckDevicesMetaTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.mgrCreateVSSDeviceTask = this.mgrCreateVSSDeviceTask;
+        task.mgrCreateMemberDeviceTask = this.mgrCreateMemberDeviceTask;
+        task.mgrDeleteMemberDeviceTask = this.mgrDeleteMemberDeviceTask;
+        task.mgrUpdateMemberDeviceTask = this.mgrUpdateMemberDeviceTask;
+        task.mgrUpdateMemberDeviceTask = this.mgrUpdateMemberDeviceTask;
+        task.updateDAISManagerDeviceId = this.updateDAISManagerDeviceId;
+        task.vs = vs;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -47,7 +80,7 @@ public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
         this.tg = new TaskGraph();
 
-        try (ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.vs)) {
+        try (ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(this.vs)) {
 
             // Check Container Appliance first
             if (mgrApi.isDeviceGroupSupported()) {
@@ -63,7 +96,7 @@ public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
                     DistributedApplianceInstance dai = DistributedApplianceInstanceEntityMgr.findByName(em,
                             device.getName());
                     if (dai == null) {
-                        this.tg.appendTask(new MgrDeleteMemberDeviceTask(this.vs, device));
+                        this.tg.appendTask(this.mgrDeleteMemberDeviceTask.create(this.vs, device));
                     }
                 }
             }
@@ -74,7 +107,7 @@ public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
                     checkMemberDevice(em, dai, mgrApi, this.tg);
                 }
             } else {
-                this.tg.appendTask(new UpdateDAISManagerDeviceId(this.vs));
+                this.tg.appendTask(this.updateDAISManagerDeviceId.create(this.vs));
             }
 
         }
@@ -84,26 +117,26 @@ public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
 
         // Check if already been created in Manager
         if (vs.getMgrId() != null) {
-            this.tg.appendTask(new MgrUpdateVSSDeviceTask(vs));
+            this.tg.appendTask(this.mgrUpdateVSSDeviceTask.create(vs));
         } else {
             // Add device to Manager if not yet added.
-            this.tg.appendTask(new MgrCreateVSSDeviceTask(vs));
+            this.tg.appendTask(this.mgrCreateVSSDeviceTask.create(vs));
         }
 
     }
 
-    private static void checkMemberDevice(EntityManager em, DistributedApplianceInstance dai, ManagerDeviceApi mgrApi,
+    private void checkMemberDevice(EntityManager em, DistributedApplianceInstance dai, ManagerDeviceApi mgrApi,
             TaskGraph tg) throws Exception {
 
         // Check if already been created in Manager
         if (dai.getMgrDeviceId() != null) {
 
             // Verify existence in Manager.
-            tg.appendTask(new MgrUpdateMemberDeviceTask(dai));
+            tg.appendTask(this.mgrUpdateMemberDeviceTask.create(dai));
         } else {
             // Add device to Manager if not yet added.
             if (!StringUtils.isEmpty(dai.getIpAddress())) {
-                tg.appendTask(new MgrCreateMemberDeviceTask(dai));
+                tg.appendTask(this.mgrCreateMemberDeviceTask.create(dai));
             }
         }
 

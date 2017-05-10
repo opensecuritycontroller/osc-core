@@ -44,22 +44,31 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.controller.exception.NetworkPortNotFoundException;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Makes sure the DAI has a corresponding SVA on the specified end point. If the SVA does not exist
  * this task recreates the SVA. If the openstack host does not exist anymore, it deletes the DAI.
  */
+@Component(service = OsDAIConformanceCheckMetaTask.class)
 class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(OsDAIConformanceCheckMetaTask.class);
+
+    private OsSvaCreateMetaTask osSvaCreateMetaTask;
+    private OsDAIUpgradeMetaTask osDAIUpgradeMetaTask;
 
     private DistributedApplianceInstance dai;
     private boolean doesOSHostExist;
     private TaskGraph tg;
 
-    public OsDAIConformanceCheckMetaTask(DistributedApplianceInstance dai, boolean doesOSHostExist) {
-        this.dai = dai;
-        this.doesOSHostExist = doesOSHostExist;
+    public OsDAIConformanceCheckMetaTask create(DistributedApplianceInstance dai, boolean doesOSHostExist) {
+        OsDAIConformanceCheckMetaTask task = new OsDAIConformanceCheckMetaTask();
+        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
+        task.osDAIUpgradeMetaTask = this.osDAIUpgradeMetaTask;
+        task.dai = dai;
+        task.doesOSHostExist = doesOSHostExist;
+        return task;
     }
 
     @Override
@@ -102,7 +111,7 @@ class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                 // Make sure host exists in openstack cluster
                 if (this.doesOSHostExist) {
                     log.info("Re-Creating missing SVA for Dai: " + this.dai.getName());
-                    this.tg.appendTask(new OsSvaCreateMetaTask(this.dai));
+                    this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
                 } else {
                     log.info("Host removed from openstack: " + this.dai.getOsHostName() + "Removing Dai: "
                             + this.dai.getName());
@@ -130,7 +139,7 @@ class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                     }
                     this.tg.addTask(new OsSvaStateCheckTask(this.dai));
                 } else {
-                    this.tg.appendTask(new OsDAIUpgradeMetaTask(this.dai, currentSoftwareVersion));
+                    this.tg.appendTask(this.osDAIUpgradeMetaTask.create(this.dai, currentSoftwareVersion));
                 }
 
                 if (vc.isControllerDefined()) {

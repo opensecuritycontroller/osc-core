@@ -40,10 +40,14 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
         implements AddDeploymentSpecServiceApi {
+
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(BaseRequest<DeploymentSpecDto> request, EntityManager em) throws Exception {
@@ -72,7 +76,7 @@ public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequ
 
                     forLambda.addUnlockTask(LockUtil.tryLockDSOnly(ds));
 
-                    Job job = ConformService.startDsConformanceJob(em, ds, forLambda);
+                    Job job = this.conformService.startDsConformanceJob(em, ds, forLambda);
 
                     response.setJobId(job.getId());
 

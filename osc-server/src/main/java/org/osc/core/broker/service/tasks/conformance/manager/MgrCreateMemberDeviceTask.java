@@ -23,7 +23,7 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
@@ -32,11 +32,15 @@ import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
 public class MgrCreateMemberDeviceTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(MgrCreateMemberDeviceTask.class);
 
+    private ApiFactoryService apiFactoryService;
     private DistributedApplianceInstance dai;
 
-    public MgrCreateMemberDeviceTask(DistributedApplianceInstance dai) {
-        this.dai = dai;
-        this.name = getName();
+    public MgrCreateMemberDeviceTask create(DistributedApplianceInstance dai) {
+        MgrCreateMemberDeviceTask task = new MgrCreateMemberDeviceTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dai = dai;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -47,8 +51,8 @@ public class MgrCreateMemberDeviceTask extends TransactionalTask {
         createMemberDevice(em, this.dai);
     }
 
-    public static void createMemberDevice(EntityManager em, DistributedApplianceInstance dai) throws Exception {
-        ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(dai.getVirtualSystem());
+    public void createMemberDevice(EntityManager em, DistributedApplianceInstance dai) throws Exception {
+        ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(dai.getVirtualSystem());
         try {
             createMemberDevice(em, dai, mgrApi);
         } finally {

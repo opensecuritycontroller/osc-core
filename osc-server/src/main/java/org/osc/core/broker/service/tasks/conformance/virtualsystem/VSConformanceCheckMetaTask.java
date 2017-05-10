@@ -101,6 +101,18 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     @Reference
     PasswordUtil passwordUtil;
 
+    @Reference
+    private MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
+
+    @Reference
+    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
+
+    @Reference
+    private ValidateNsxAgentsTask validateNsxAgentsTask;
+
+    @Reference
+    private MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
+
     private VirtualSystem vs;
     private TaskGraph tg;
 
@@ -114,6 +126,8 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
         task.nsxDeploymentSpecCheckMetaTask = this.nsxDeploymentSpecCheckMetaTask;
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
+        task.validateNsxAgentsTask = this.validateNsxAgentsTask;
+        task.mgrDeleteVSSDeviceTask = this.mgrDeleteVSSDeviceTask;
         task.passwordUtil = this.passwordUtil;
         task.name = task.getName();
         return task;
@@ -165,12 +179,12 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
                 tg.appendTask(new DeleteServiceManagerTask(this.vs));
             }
 
-            tg.appendTask(new ValidateNsxAgentsTask(this.vs));
+            tg.appendTask(this.validateNsxAgentsTask.create(this.vs));
 
         } else if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
             for (DeploymentSpec ds : this.vs.getDeploymentSpecs()) {
                 Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
-                tg.appendTask(new DSConformanceCheckMetaTask(ds, endPoint));
+                tg.appendTask(this.dsConformanceCheckMetaTask.create(ds, endPoint));
             }
             for (OsImageReference image : this.vs.getOsImageReference()) {
                 tg.appendTask(new DeleteImageFromGlanceTask(image.getRegion(), image, new Endpoint(vc)));
@@ -181,7 +195,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         }
 
         tg.appendTask(new SecurityGroupCleanupCheckMetaTask(this.vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
-        tg.appendTask(new MgrDeleteVSSDeviceTask(this.vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        tg.appendTask(this.mgrDeleteVSSDeviceTask.create(this.vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         tg.appendTask(new DeleteVsFromDbTask(this.vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
@@ -234,7 +248,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
                 tg.appendTask(new NsxSecurityGroupsCheckMetaTask(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
 
-            tg.appendTask(new ValidateNsxAgentsTask(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+            tg.appendTask(this.validateNsxAgentsTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         } else if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
 
@@ -246,7 +260,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
                     DistributedAppliance da = ds.getVirtualSystem().getDistributedAppliance();
                     dsUnlockTask = LockUtil.tryLockDS(ds, da, da.getApplianceManagerConnector(),
                             this.vs.getVirtualizationConnector());
-                    tg.appendTask(new DSConformanceCheckMetaTask(ds, endPoint));
+                    tg.appendTask(this.dsConformanceCheckMetaTask.create(ds, endPoint));
                     tg.appendTask(dsUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 } catch (Exception e) {
                     LOG.info("Acquiring Write lock for DS: '" + ds.getName() + "' failed in VS Conformance.");
@@ -263,7 +277,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         }
 
         // Sync Manager Devices
-        tg.appendTask(new MgrCheckDevicesMetaTask(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        tg.appendTask(this.mgrCheckDevicesMetaTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         if (this.vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(this.vs)) {
             // Sync Manager Security Groups

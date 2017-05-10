@@ -23,23 +23,32 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Updates the device member and subsequently updates the respective distributed appliance instance with the identifier of the updated device member.
  */
+@Component(service = MgrUpdateMemberDeviceTask.class)
 public class MgrUpdateMemberDeviceTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(MgrUpdateMemberDeviceTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private DistributedApplianceInstance dai;
 
-    public MgrUpdateMemberDeviceTask(DistributedApplianceInstance dai) {
-        this.dai = dai;
-        this.name = getName();
+    public MgrUpdateMemberDeviceTask create(DistributedApplianceInstance dai) {
+        MgrUpdateMemberDeviceTask task = new MgrUpdateMemberDeviceTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dai = dai;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -47,7 +56,7 @@ public class MgrUpdateMemberDeviceTask extends TransactionalTask {
 
         this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
 
-        ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.dai.getVirtualSystem());
+        ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(this.dai.getVirtualSystem());
 
         try {
             ManagerDeviceMemberElement deviceElement = mgrApi.getDeviceMemberById(this.dai.getMgrDeviceId());

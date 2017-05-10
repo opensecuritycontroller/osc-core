@@ -143,7 +143,7 @@ public class DSUpdateOrDeleteMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask(this.ds, this.novaApiMock);
+        DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask().create(this.ds, this.novaApiMock);
 
         // Act.
         task.execute();
