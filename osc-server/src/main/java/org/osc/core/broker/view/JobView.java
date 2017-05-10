@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.ListJobServiceApi;
 import org.osc.core.broker.service.api.ListTaskServiceApi;
+import org.osc.core.broker.service.api.server.LoggingApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
@@ -47,7 +48,6 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.rest.client.util.LoggingUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -113,6 +113,9 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
 
     @Reference
     private ServerApi server;
+
+    @Reference
+    private LoggingApi logging;
 
     @Activate
     private void activate() {
@@ -501,7 +504,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 BufferedReader kbdInput = new BufferedReader(inp)){
                 String line;
                 while ((line = kbdInput.readLine()) != null) {
-                    log.info(LoggingUtil.removeCRLF(line));
+                    log.info(this.logging.removeCRLF(line));
                 }
             }
 

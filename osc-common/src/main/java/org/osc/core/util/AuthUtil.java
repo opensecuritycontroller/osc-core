@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
-import org.osc.core.rest.client.util.LoggingUtil;
+import org.osc.core.broker.service.api.server.LoggingApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -37,6 +37,9 @@ public class AuthUtil {
 
     @Reference
     EncryptionApi encrypter;
+
+    @Reference
+    LoggingApi logging;
 
     private static final Logger log = Logger.getLogger(AuthUtil.class);
 
@@ -73,7 +76,7 @@ public class AuthUtil {
             String[] credentials = credString.split(":");
 
             if (credentials.length != 2) {
-                log.warn("Authentication of " + LoggingUtil.removeCRLF(requestUri) + " failed - invalid credentials format");
+                log.warn("Authentication of " + this.logging.removeCRLF(requestUri) + " failed - invalid credentials format");
                 throw wae;
             }
 
@@ -81,7 +84,7 @@ public class AuthUtil {
             String password = credentials[1];
 
             if (!validateUserAndPassword(loginName, password, usernamePasswordMap)) {
-                log.warn("Authentication of " + LoggingUtil.removeCRLF(requestUri) + " failed - user password mismatch");
+                log.warn("Authentication of " + this.logging.removeCRLF(requestUri) + " failed - user password mismatch");
                 throw wae;
             }
         }

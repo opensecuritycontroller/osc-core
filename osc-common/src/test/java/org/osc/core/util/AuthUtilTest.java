@@ -30,6 +30,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.LoggingApi;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AuthUtilTest {
@@ -42,7 +44,10 @@ public class AuthUtilTest {
 	private ContainerRequestContext mockRequest;
 
     @Mock
-    private EncryptionUtil encryption;
+    private EncryptionApi encryption;
+
+    @Mock
+    private LoggingApi logging;
 
     @Mock
     private UriInfo uriInfo;

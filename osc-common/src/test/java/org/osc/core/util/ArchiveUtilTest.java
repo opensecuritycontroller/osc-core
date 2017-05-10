@@ -32,8 +32,20 @@ import java.util.zip.ZipOutputStream;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.osc.core.broker.service.api.server.LoggingApi;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ArchiveUtilTest {
+
+    @Mock
+    LoggingApi logging;
+
+    @InjectMocks
+    ArchiveUtil archiveUtil;
 
 
     private static String PATH = System.getProperty("user.dir");
@@ -134,7 +146,7 @@ public class ArchiveUtilTest {
         //Arrange
         prepareValidZipFile();
         //Act.
-        new ArchiveUtil().unzip(FILE_ABSOLUTE,PATH);
+        this.archiveUtil.unzip(FILE_ABSOLUTE,PATH);
         //Assert.
         this.archiveMap.entrySet()
                 .stream()
