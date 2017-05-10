@@ -36,7 +36,7 @@ public class MgrDeleteVSSDeviceTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(MgrDeleteVSSDeviceTask.class);
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    public ApiFactoryService apiFactoryService;
 
     private VirtualSystem vs;
 

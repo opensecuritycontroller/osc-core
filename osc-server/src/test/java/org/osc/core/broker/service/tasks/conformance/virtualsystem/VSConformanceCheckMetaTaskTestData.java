@@ -366,7 +366,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         return expectedGraph;
     }
@@ -395,6 +395,10 @@ public class VSConformanceCheckMetaTaskTestData {
 
     private static UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
+    private static MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
+
+    private static MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
+
     static {
         createNsxServiceManagerTask = new CreateNsxServiceManagerTask();
         createNsxServiceManagerTask.apiFactoryService = apiFactoryService;
@@ -413,6 +417,12 @@ public class VSConformanceCheckMetaTaskTestData {
 
         updateNsxServiceInstanceAttributesTask = new UpdateNsxServiceInstanceAttributesTask();
         updateNsxServiceInstanceAttributesTask.passwordUtil = null;
+
+        mgrCheckDevicesMetaTask = new MgrCheckDevicesMetaTask();
+        mgrCheckDevicesMetaTask.apiFactoryService = apiFactoryService;
+
+        mgrDeleteVSSDeviceTask = new MgrDeleteVSSDeviceTask();
+        mgrDeleteVSSDeviceTask.apiFactoryService = apiFactoryService;
     }
 
     public static TaskGraph createServiceOutOfSyncGraph(VirtualSystem vs) {
@@ -425,7 +435,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new NsxSecurityGroupsCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         return expectedGraph;
     }
@@ -449,7 +459,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.addTask(updateNsxServiceInstanceAttributesTask.create(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         return expectedGraph;
     }
@@ -481,7 +491,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new RemoveVendorTemplateTask(vsp));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -514,7 +524,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new RegisterVendorTemplateTask(vsp));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -547,7 +557,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new RegisterVendorTemplateTask(vs, policy));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -579,7 +589,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new RegisterServiceInstanceTask(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -613,7 +623,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new NsxSecurityGroupsCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -633,7 +643,7 @@ public class VSConformanceCheckMetaTaskTestData {
 
     public static TaskGraph createOpenstackNoDeploymentSpecGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -667,7 +677,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new DSConformanceCheckMetaTask().create(ds, endPoint));
         expectedGraph.appendTask(UPDATE_OPENSTACK_NO_DEPLOYMENT_SPEC_TASK, TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -698,7 +708,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new FailedWithObjectInfoTask("Acquiring Write lock for Deployment Specification", "null",
                 LockObjectReference.getObjectReferences(ds)), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask(vs));
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         return expectedGraph;
     }
@@ -720,7 +730,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new DeleteServiceInstanceTask(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
-        expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        expectedGraph.appendTask(mgrDeleteVSSDeviceTask.create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new DeleteVsFromDbTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
@@ -745,7 +755,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new DeleteServiceManagerTask(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
-        expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        expectedGraph.appendTask(mgrDeleteVSSDeviceTask.create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new DeleteVsFromDbTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
@@ -777,7 +787,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new DeleteServiceTask(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
-        expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        expectedGraph.appendTask(mgrDeleteVSSDeviceTask.create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new DeleteVsFromDbTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         return expectedGraph;
@@ -801,7 +811,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(new DeleteServiceTask(vs));
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
-        expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        expectedGraph.appendTask(mgrDeleteVSSDeviceTask.create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new DeleteVsFromDbTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
@@ -835,7 +845,7 @@ public class VSConformanceCheckMetaTaskTestData {
         Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), ds.getTenantName());
         expectedGraph.appendTask(new DSConformanceCheckMetaTask().create(ds, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
-        expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        expectedGraph.appendTask(mgrDeleteVSSDeviceTask.create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new DeleteVsFromDbTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
@@ -863,7 +873,7 @@ public class VSConformanceCheckMetaTaskTestData {
         Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), vs.getVirtualizationConnector().getProviderAdminTenantName());
         expectedGraph.appendTask(new DeleteImageFromGlanceTask(image.getRegion(), image, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
-        expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        expectedGraph.appendTask(mgrDeleteVSSDeviceTask.create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new DeleteVsFromDbTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
@@ -891,7 +901,7 @@ public class VSConformanceCheckMetaTaskTestData {
         Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), vs.getVirtualizationConnector().getProviderAdminTenantName());
         expectedGraph.appendTask(new DeleteFlavorTask(flavor.getRegion(), flavor, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
-        expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        expectedGraph.appendTask(mgrDeleteVSSDeviceTask.create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new DeleteVsFromDbTask(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(vs.getVirtualizationConnector()), LockType.READ_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 

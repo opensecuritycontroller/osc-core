@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
 public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
 
     @Reference
-    ApiFactoryService apiFactoryService;
+    public ApiFactoryService apiFactoryService;
 
     @Reference
     MgrCreateVSSDeviceTask mgrCreateVSSDeviceTask;

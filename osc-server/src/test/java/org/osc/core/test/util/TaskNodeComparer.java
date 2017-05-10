@@ -73,7 +73,7 @@ public class TaskNodeComparer {
                 t2Field.setAccessible(true);
                 Object t2FieldValue = t2Field.get(t2);
 
-                if (t1FieldValue == null || t2FieldValue == null) {
+                if (t1FieldValue == null && t2FieldValue == null) {
                     continue;
                 }
 

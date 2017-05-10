@@ -68,7 +68,7 @@ public class VSConformanceCheckMetaTaskTest {
     public EntityManager em;
 
     // this is initialised from TestData; otherwise the TaskNodeComparer fails
-    private static final ApiFactoryService apiFactoryService = VSConformanceCheckMetaTaskTestData.apiFactoryService;
+    private final ApiFactoryService apiFactoryService = VSConformanceCheckMetaTaskTestData.apiFactoryService;
 
     @InjectMocks
     private CreateNsxServiceManagerTask createNsxServiceManagerTask;
