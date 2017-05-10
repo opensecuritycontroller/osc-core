@@ -64,7 +64,7 @@ public class AlarmApisTest extends BaseJerseyTest {
         //configure services
         this.context = new OsgiContext();
         ApiUtil apiUtil = Mockito.mock(ApiUtil.class);
-        this.context.registerInjectActivateService(apiUtil);
+        this.context.registerService(apiUtil);
         AddAlarmServiceApi addAlarm = Mockito.mock(AddAlarmServiceApi.class);
         this.context.registerService(AddAlarmServiceApi.class, addAlarm);
         UpdateAlarmServiceApi updateAlarm = Mockito.mock(UpdateAlarmServiceApi.class);
