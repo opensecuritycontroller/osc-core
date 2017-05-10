@@ -51,7 +51,7 @@ import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityG
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component
+@Component(service = DSUpdateOrDeleteMetaTask.class)
 class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(DSUpdateOrDeleteMetaTask.class);

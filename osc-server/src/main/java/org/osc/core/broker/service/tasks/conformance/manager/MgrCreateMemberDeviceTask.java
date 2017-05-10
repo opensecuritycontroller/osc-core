@@ -28,11 +28,16 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = MgrCreateMemberDeviceTask.class)
 public class MgrCreateMemberDeviceTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(MgrCreateMemberDeviceTask.class);
 
+    @Reference
     private ApiFactoryService apiFactoryService;
+
     private DistributedApplianceInstance dai;
 
     public MgrCreateMemberDeviceTask create(DistributedApplianceInstance dai) {

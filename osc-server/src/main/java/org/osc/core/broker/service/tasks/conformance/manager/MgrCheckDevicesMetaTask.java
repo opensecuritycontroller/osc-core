@@ -33,7 +33,7 @@ import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component
+@Component(service = MgrCheckDevicesMetaTask.class)
 public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
 
     @Reference
