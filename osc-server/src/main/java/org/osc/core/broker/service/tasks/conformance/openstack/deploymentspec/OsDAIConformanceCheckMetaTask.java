@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Component;
  * this task recreates the SVA. If the openstack host does not exist anymore, it deletes the DAI.
  */
 @Component(service = OsDAIConformanceCheckMetaTask.class)
-class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
+public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(OsDAIConformanceCheckMetaTask.class);
 

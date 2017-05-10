@@ -56,7 +56,7 @@ import com.google.common.collect.ImmutableMap;
  * Creates SVA for given dai
  */
 @Component(service = OsSvaServerCreateTask.class)
-class OsSvaServerCreateTask extends TransactionalTask {
+public class OsSvaServerCreateTask extends TransactionalTask {
 
     private static class ApplianceBootStrap implements BootStrapInfoProviderElement {
 

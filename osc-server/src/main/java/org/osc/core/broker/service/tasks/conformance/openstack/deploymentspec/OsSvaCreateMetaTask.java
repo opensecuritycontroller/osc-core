@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  * Creates an SVA on openstack
  */
 @Component(service = OsSvaCreateMetaTask.class)
-class OsSvaCreateMetaTask extends TransactionalMetaTask {
+public class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
     final Logger log = Logger.getLogger(OsSvaCreateMetaTask.class);
 
