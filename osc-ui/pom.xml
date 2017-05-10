@@ -140,6 +140,26 @@
 			<artifactId>biz.aQute.bndlib</artifactId>
 			<version>3.3.0</version>
 		</dependency>
+		
+		<!--TODO: The following dependencies are only needed for exception handling 
+		    due to a leaky API and should be removed if possible -->
+		<dependency>
+			<groupId>org.apache.jclouds</groupId>
+			<artifactId>jclouds-core</artifactId>
+			<version>${jclouds.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>javax.ws.rs</groupId>
+					<artifactId>jsr311-api</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.toastcoders</groupId>
+			<artifactId>yavijava</artifactId>
+			<version>6.0.04</version>
+		</dependency>
 
 		<!-- Vaadin Dependencies -->
 		<dependency>
