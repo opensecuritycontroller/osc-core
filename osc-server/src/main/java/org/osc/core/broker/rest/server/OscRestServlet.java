@@ -24,6 +24,5 @@ public class OscRestServlet {
     public static final String MANAGER_API_PATH_PREFIX = "/api/manager/v1";
 
     // Legacy/Proprietary API
-    public static final String NSX_API_PATH_PREFIX = "/api/nsx/vmware/2.0";
     public static final String MGR_NSM_API_PATH_PREFIX = "/api/nsm/v1";
 }

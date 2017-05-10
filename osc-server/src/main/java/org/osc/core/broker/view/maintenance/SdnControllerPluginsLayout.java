@@ -37,7 +37,6 @@ import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.server.installer.InstallableUnit;
 import org.osc.sdk.controller.api.SdnControllerApi;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
 
 import com.vaadin.data.Item;
 import com.vaadin.server.ExternalResource;
@@ -122,9 +121,6 @@ public class SdnControllerPluginsLayout extends FormLayout {
             updateTable(ev);
         }, SdnControllerApi.class, PluginType.SDN);
 
-        SdnControllerApiFactory.<VMwareSdnApi>newPluginTracker(ev -> {
-            updateTable(ev);
-        }, VMwareSdnApi.class, PluginType.NSX);
     }
 
     private void updateTable(PluginEvent<?> event) {

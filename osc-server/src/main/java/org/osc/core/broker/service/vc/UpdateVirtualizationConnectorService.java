@@ -16,6 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -43,20 +48,14 @@ import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
-import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.EventType;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
-import java.util.List;
-import java.util.Set;
 
 @Component(service = UpdateVirtualizationConnectorService.class)
 public class UpdateVirtualizationConnectorService
@@ -172,21 +171,9 @@ public class UpdateVirtualizationConnectorService
                     "Virtualization Connector Name: " + dto.getName() + " already exists.");
         }
 
-        if (!dto.getType().isOpenstack()) {
-
-            // check for valid IP address format
-            ValidateUtil.checkForValidIpAddressFormat(dto.getControllerIP());
-
-            // check for uniqueness of vc nsx IP
-            if (emgr.isDuplicate("controllerIpAddress", dto.getControllerIP(), dto.getId())) {
-                throw new VmidcBrokerValidationException(
-                        "Controller IP Address: " + dto.getControllerIP() + " already exists.");
-            }
-        }
-
         VirtualizationConnectorDto.checkFieldFormat(dto);
 
-        // check for uniqueness of vc vCenter IP
+        // check for uniqueness of vc IP
         if (emgr.isDuplicate("providerIpAddress", dto.getProviderIP(), dto.getId())) {
             throw new VmidcBrokerValidationException(
                     "Provider IP Address: " + dto.getProviderIP() + " already exists.");
@@ -221,11 +208,9 @@ public class UpdateVirtualizationConnectorService
         // Transforms the existing vc based on the update request
         updateVirtualizationConnector(request, existingVc);
 
-		if (dto.getType().isVmware()) {
-            this.util.checkVmwareConnection(request, existingVc);
-		} else {
-            this.util.checkOpenstackConnection(request, existingVc);
+		if (dto.getType().isOpenstack()) {
 		}
+		this.util.checkOpenstackConnection(request, existingVc);
     }
 
     /**

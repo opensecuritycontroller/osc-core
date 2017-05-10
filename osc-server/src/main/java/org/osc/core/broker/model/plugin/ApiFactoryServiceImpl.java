@@ -16,7 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
-import static org.osc.sdk.manager.Constants.*;
+import static org.osc.sdk.manager.Constants.AUTHENTICATION_TYPE;
+import static org.osc.sdk.manager.Constants.EXTERNAL_SERVICE_NAME;
+import static org.osc.sdk.manager.Constants.NOTIFICATION_TYPE;
+import static org.osc.sdk.manager.Constants.PROVIDE_DEVICE_STATUS;
+import static org.osc.sdk.manager.Constants.SERVICE_NAME;
+import static org.osc.sdk.manager.Constants.SYNC_POLICY_MAPPING;
+import static org.osc.sdk.manager.Constants.SYNC_SECURITY_GROUP;
+import static org.osc.sdk.manager.Constants.VENDOR_NAME;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -29,7 +36,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ApplianceManagerConnectorElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.manager.VirtualSystemElementImpl;
@@ -47,7 +53,6 @@ import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
@@ -65,8 +70,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
 
     private Map<String, ApplianceManagerApi> managerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<ApplianceManagerApi>> managerRefs = new ConcurrentHashMap<>();
-    private Map<String, VMwareSdnApi> vmwareSdnApis = new ConcurrentHashMap<>();
-    private Map<String, ComponentServiceObjects<VMwareSdnApi>> vmwareSdnRefs = new ConcurrentHashMap<>();
     private Map<String, SdnControllerApi> sdnControllerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<SdnControllerApi>> sdnControllerRefs = new ConcurrentHashMap<>();
 
@@ -150,15 +153,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
 
     void removeSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
         removeApi(serviceObjs, this.sdnControllerRefs, null);
-    }
-
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    void addVMwareSdnApi(ComponentServiceObjects<VMwareSdnApi> serviceObjs) {
-        addApi(serviceObjs, this.vmwareSdnRefs);
-    }
-
-    void removeVMwareSdnApi(ComponentServiceObjects<VMwareSdnApi> serviceObjs) {
-        removeApi(serviceObjs, this.vmwareSdnRefs, this.vmwareSdnApis);
     }
 
     @Override
@@ -303,25 +297,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
                 getApplianceManagerConnectorElement(mc), new VirtualSystemElementImpl(vs));
     }
 
-    // Controller Types ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public VMwareSdnApi createVMwareSdnApi(VirtualizationConnector vc) throws VmidcException {
-        final String name = vc.getControllerType();
-        VMwareSdnApi api = this.vmwareSdnApis.get(name);
-
-        if (api == null) {
-            ComponentServiceObjects<VMwareSdnApi> serviceObjs = this.vmwareSdnRefs.get(name);
-            if (serviceObjs == null) {
-                throw new VmidcException(String.format("NSX plugin not found for controller type: %s", name));
-            }
-            api = serviceObjs.getService();
-            this.vmwareSdnApis.put(name, api);
-        }
-
-        return api;
-    }
-
     @Override
     public SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception {
         final String name = controllerType.getValue();
@@ -356,7 +331,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService {
     public Set<String> getControllerTypes() {
         Set<String> controllerTypes = new TreeSet<>();
         controllerTypes.addAll(this.sdnControllerRefs.keySet());
-        controllerTypes.addAll(this.vmwareSdnRefs.keySet());
         return controllerTypes;
     }
 

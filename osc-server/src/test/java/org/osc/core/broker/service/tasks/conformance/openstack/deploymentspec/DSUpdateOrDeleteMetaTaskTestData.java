@@ -27,7 +27,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -38,7 +37,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
-
+// TODO Hailee: This file has deleted and commented code.
 public class DSUpdateOrDeleteMetaTaskTestData {
     public static List<DeploymentSpec> TEST_DEPLOYMENT_SPECS = new ArrayList<>();
     public static String AZ_1 = "AZ_1";
@@ -274,7 +273,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
     private static DeploymentSpec createDeploymentSpec(String baseName, String region) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(baseName + "_vc");
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        //vc.setVirtualizationType(VirtualizationType.VMWARE);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setProviderIpAddress(baseName + "_providerIp");
         vc.setProviderUsername("Natasha");

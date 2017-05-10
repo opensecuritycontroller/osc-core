@@ -22,20 +22,11 @@ import java.util.List;
 
 import org.mockito.Mockito;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.TaskGuard;
-import org.osc.core.broker.model.entities.appliance.Appliance;
-import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
-import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.tasks.conformance.virtualsystem.RemoveVendorTemplateTask;
 import org.osc.sdk.manager.element.ManagerPolicyElement;
-
+ // TODO Hailee: This file has deleted and commented code.
 public class SyncPolicyMetaTaskTestData {
 
     public static List<ApplianceManagerConnector> TEST_MCS = new ArrayList<ApplianceManagerConnector>();
@@ -104,8 +95,8 @@ public class SyncPolicyMetaTaskTestData {
     public static ApplianceManagerConnector DOMAIN_WITH_MULTIPLE_POLICIES_MC =
             createMCWithSets("DOMAIN_WITH_MULTIPLE_POLICIES_MC", Arrays.asList(DOMAIN_WITH_POLICIES), ALL_POLICIES_FOR_SINGLE_DOMAIN);
 
-    public static VirtualSystemPolicy VS_POLICY = createVSPolicy("vc_name", POLICY_WITH_VS_POLICY, POLICY_WITH_VS_POLICY_MC);
-    public static VirtualSystemPolicy VS_POLICY_1 = createVSPolicy("vc_name_1", POLICY_WITH_VS_POLICY_1, DOMAIN_WITH_MULTIPLE_POLICIES_MC);
+    //public static VirtualSystemPolicy VS_POLICY = createVSPolicy("vc_name", POLICY_WITH_VS_POLICY, POLICY_WITH_VS_POLICY_MC);
+    //public static VirtualSystemPolicy VS_POLICY_1 = createVSPolicy("vc_name_1", POLICY_WITH_VS_POLICY_1, DOMAIN_WITH_MULTIPLE_POLICIES_MC);
 
     public static TaskGraph emptyGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
@@ -140,7 +131,7 @@ public class SyncPolicyMetaTaskTestData {
 
     public static TaskGraph removeVendorTemplateAndDeletePolicyGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        //expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_VS_POLICY));
 
         return expectedGraph;
@@ -150,7 +141,7 @@ public class SyncPolicyMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.appendTask(new UpdatePolicyTask(POLICY_WITH_MGR_POLICY, "MGR_POLICY"));
         expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITHOUT_MGR_POLICY));
-        expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        //expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_VS_POLICY));
 
         return expectedGraph;
@@ -159,7 +150,7 @@ public class SyncPolicyMetaTaskTestData {
     public static TaskGraph deletePoliciesWithoutMgrPoliciesGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITHOUT_MGR_POLICY));
-        expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        //expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_VS_POLICY));
 
         return expectedGraph;
@@ -168,7 +159,7 @@ public class SyncPolicyMetaTaskTestData {
     public static TaskGraph deletePoliciesFromDomainGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITHOUT_MGR_POLICY_1));
-        expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY_1), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        //expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY_1), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_VS_POLICY_1));
         expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_MGR_POLICY_1));
 
@@ -250,40 +241,40 @@ public class SyncPolicyMetaTaskTestData {
         return domain;
     }
 
-    private static VirtualSystemPolicy createVSPolicy(String policyName, Policy policy, ApplianceManagerConnector mc) {
-        VirtualizationConnector vc = new VirtualizationConnector();
-        vc.setName(policyName);
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
-        vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
-        vc.setProviderIpAddress("127.0.0.1");
-        vc.setProviderUsername("Natasha");
-        vc.setProviderPassword("********");
-
-        Appliance app = new Appliance();
-        app.setManagerSoftwareVersion("fizz");
-        app.setManagerType("buzz");
-        app.setModel(policyName + "_model");
-
-        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
-        asv.setApplianceSoftwareVersion("softwareVersion");
-        asv.setImageUrl(policyName + "_image");
-        asv.setVirtualizarionSoftwareVersion(vc.getVirtualizationSoftwareVersion());
-        asv.setVirtualizationType(vc.getVirtualizationType());
-
-        DistributedAppliance da = new DistributedAppliance(mc);
-        da.setName(policyName + "_da");
-        da.setApplianceVersion("foo");
-        da.setAppliance(app);
-
-        VirtualSystem vs = new VirtualSystem(da);
-        vs.setApplianceSoftwareVersion(asv);
-        vs.setVirtualizationConnector(vc);
-
-        VirtualSystemPolicy vsPolicy = new VirtualSystemPolicy();
-        vsPolicy.setPolicy(policy);
-
-        vs.addVirtualSystemPolicy(vsPolicy);
-
-        return vsPolicy;
-    }
+//    private static VirtualSystemPolicy createVSPolicy(String policyName, Policy policy, ApplianceManagerConnector mc) {
+//        VirtualizationConnector vc = new VirtualizationConnector();
+//        vc.setName(policyName);
+//        //vc.setVirtualizationType(VirtualizationType.VMWARE);
+//        vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
+//        vc.setProviderIpAddress("127.0.0.1");
+//        vc.setProviderUsername("Natasha");
+//        vc.setProviderPassword("********");
+//
+//        Appliance app = new Appliance();
+//        app.setManagerSoftwareVersion("fizz");
+//        app.setManagerType("buzz");
+//        app.setModel(policyName + "_model");
+//
+//        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
+//        asv.setApplianceSoftwareVersion("softwareVersion");
+//        asv.setImageUrl(policyName + "_image");
+//        asv.setVirtualizarionSoftwareVersion(vc.getVirtualizationSoftwareVersion());
+//        asv.setVirtualizationType(vc.getVirtualizationType());
+//
+//        DistributedAppliance da = new DistributedAppliance(mc);
+//        da.setName(policyName + "_da");
+//        da.setApplianceVersion("foo");
+//        da.setAppliance(app);
+//
+//        VirtualSystem vs = new VirtualSystem(da);
+//        vs.setApplianceSoftwareVersion(asv);
+//        vs.setVirtualizationConnector(vc);
+//
+//        VirtualSystemPolicy vsPolicy = new VirtualSystemPolicy();
+//        vsPolicy.setPolicy(policy);
+//
+//        vs.addVirtualSystemPolicy(vsPolicy);
+//
+//        return vsPolicy;
+//    }
 }

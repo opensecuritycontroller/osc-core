@@ -51,8 +51,6 @@ public class ImageMetadataValidator {
                 throw new IllegalArgumentException();
             } else if (virtualizationType.isOpenstack()) {
                 imageMetadata.getOpenstackVirtualizationVersion();
-            } else if (virtualizationType.isVmware()) {
-                imageMetadata.getVmwareVirtualizationVersion();
             }
         } catch (IllegalArgumentException iae) {
             log.error("Invalid manager type/virtualization type/virtualization version/encapsulation type", iae);
@@ -61,12 +59,8 @@ public class ImageMetadataValidator {
         }
         boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(imageMetadata.getManagerType());
 
-        if (!imageMetadata.getEncapsulationTypes().isEmpty() && imageMetadata.getVirtualizationType().isVmware()) {
-            throw new VmidcBrokerValidationException(
-                    "Invalid File Format. Encapsulation Types is not supported by VMware Virtualization Type.");
-        } else if (isPolicyMappingSupported && imageMetadata.getVirtualizationType().isOpenstack()
-                && imageMetadata.getEncapsulationTypes().isEmpty()
-                ) {
+        if (isPolicyMappingSupported && imageMetadata.getVirtualizationType().isOpenstack()
+                && imageMetadata.getEncapsulationTypes().isEmpty()) {
             throw new VmidcBrokerValidationException(
                     "Invalid File Format. Encapsulation Types cannot be empty for Openstack Virtualization Type.");
         }

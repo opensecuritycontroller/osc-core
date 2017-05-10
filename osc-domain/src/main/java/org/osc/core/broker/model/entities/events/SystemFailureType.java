@@ -23,8 +23,7 @@ public enum SystemFailureType {
     OS_NOTIFICATION_FAILURE("Openstack Notification Failure"),
     SCHEDULER_FAILURE("Scheduler Failure"),
     SYSTEM_CLOCK("System Clock Changed"),
-    MGR_PROPAGATION_JOB_NOTIFCATION("Manager File Propagation Notification Failure"),
-    NSX_NOTIFICATION("NSX Notification Failure");
+    MGR_PROPAGATION_JOB_NOTIFCATION("Manager File Propagation Notification Failure");
 
     private final String text;
 

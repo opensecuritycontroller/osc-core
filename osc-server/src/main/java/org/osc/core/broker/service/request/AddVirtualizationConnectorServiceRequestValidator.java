@@ -16,13 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
-
-import javax.persistence.EntityManager;
 
 public class AddVirtualizationConnectorServiceRequestValidator
 		implements RequestValidator<DryRunRequest<VirtualizationConnectorDto>, VirtualizationConnector> {
@@ -55,9 +55,7 @@ public class AddVirtualizationConnectorServiceRequestValidator
 		if (this.virtualizationConnectorUtil == null) {
 			this.virtualizationConnectorUtil = new VirtualizationConnectorUtil();
 		}
-		if (dto.getType().isVmware()) {
-			this.virtualizationConnectorUtil.checkVmwareConnection(request, vc);
-		} else {
+		if (dto.getType().isOpenstack()) {
 			this.virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
 		}
 	}

@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
-
+// TODO Hailee: This file has deleted and commented code.
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,13 +26,10 @@ import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
@@ -69,14 +66,14 @@ class SecurityGroupCheckMetaTaskTestData {
         policy.setName(baseName + "_policy");
         policy.setMgrPolicyId(baseName + "_mgrPolicy");
 
-        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
-        vsp.setPolicy(policy);
-
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
-        sgi.setName(baseName + "_sgi");
-
-        this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG);
+//        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
+//        vsp.setPolicy(policy);
+//
+//        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
+//        sgi.setName(baseName + "_sgi");
+//
+//        this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG.addSecurityGroupInterface(sgi);
+//        sgi.addSecurityGroup(this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG);
     }
 
     public TaskGraph createNoMcPolicyMappingGraph(SecurityGroup sg) {
@@ -112,27 +109,27 @@ class SecurityGroupCheckMetaTaskTestData {
         policy.setName(baseName + "_policy");
         policy.setMgrPolicyId(baseName + "_mgrPolicy");
 
-        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
-        vsp.setPolicy(policy);
-
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
-        sgi.setName(baseName + "_sgi");
-
-
-        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null);
-        sg.setName(baseName + "_sg");
-        sg.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(sg);
-
-        this.TEST_SECURITY_GROUPS.add(sg);
-        return sg;
+//        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
+//        vsp.setPolicy(policy);
+//
+//        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
+//        sgi.setName(baseName + "_sgi");
+//
+//
+//        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null);
+//        sg.setName(baseName + "_sg");
+//        sg.addSecurityGroupInterface(sgi);
+//        sgi.addSecurityGroup(sg);
+//
+//        this.TEST_SECURITY_GROUPS.add(sg);
+        return null;
     }
 
     private VirtualSystem createVirtualSystem(String baseName,
             ManagerType mgrType) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(baseName + "_vc");
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        //vc.setVirtualizationType(VirtualizationType.VMWARE);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setProviderIpAddress(baseName + "_providerIp");
         vc.setProviderUsername("Natasha");
