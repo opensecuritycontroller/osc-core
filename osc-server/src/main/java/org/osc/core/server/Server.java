@@ -599,7 +599,23 @@ public class Server implements ServerApi {
         RestBaseClient.setDebugLogging(on);
     }
 
+    @Override
     public String getHostIpAddress() throws SocketException, UnknownHostException {
         return NetworkUtil.getHostIpAddress();
+    }
+
+    @Override
+    public String getServerIpAddress() {
+        return ServerUtil.getServerIP();
+    }
+
+    @Override
+    public boolean isEnoughSpace() throws IOException {
+        return ServerUtil.isEnoughSpace();
+    }
+
+    @Override
+    public String uptimeToString() {
+        return ServerUtil.uptimeToString();
     }
 }

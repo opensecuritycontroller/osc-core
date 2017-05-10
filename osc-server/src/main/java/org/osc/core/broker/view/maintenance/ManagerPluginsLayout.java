@@ -27,6 +27,7 @@ import org.osc.core.broker.service.api.plugin.PluginApi.State;
 import org.osc.core.broker.service.api.plugin.PluginEvent;
 import org.osc.core.broker.service.api.plugin.PluginListener;
 import org.osc.core.broker.service.api.plugin.PluginType;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -66,15 +67,17 @@ public class ManagerPluginsLayout extends FormLayout {
 
     private Table plugins;
     private Panel pluginsPanel;
-    PluginUploader uploader = new PluginUploader(PluginType.MANAGER);
+    PluginUploader uploader;
 
     private ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService;
     private ServiceRegistration<PluginListener> registration;
 
     public ManagerPluginsLayout(BundleContext ctx,
-            ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService) throws Exception {
+            ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService,
+            ServerApi server) throws Exception {
         super();
         this.importApplianceManagerPluginService = importApplianceManagerPluginService;
+        this.uploader = new PluginUploader(PluginType.MANAGER, server);
 
         // Create Controls
         VerticalLayout uploadContainer = new VerticalLayout();

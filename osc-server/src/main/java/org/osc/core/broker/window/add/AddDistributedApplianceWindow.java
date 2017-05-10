@@ -25,6 +25,7 @@ import org.osc.core.broker.service.api.ListApplianceModelSwVersionComboServiceAp
 import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
@@ -54,6 +55,8 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
 
     private final AddDistributedApplianceServiceApi addDistributedApplianceService;
 
+    private final ServerApi server;
+
     public AddDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
             AddDistributedApplianceServiceApi addDistributedApplianceService,
             ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
@@ -61,11 +64,12 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
             ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
             ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService,
             ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionServiceApi,
-            ValidationApi validator) throws Exception {
+            ValidationApi validator, ServerApi server) throws Exception {
         super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel,
                 listApplianceManagerConnectorService, listVirtualizationConnectorBySwVersionServiceApi, validator);
         this.daView = distributedApplianceView;
         this.addDistributedApplianceService = addDistributedApplianceService;
+        this.server = server;
         createWindow(this.CAPTION);
     }
 
@@ -146,7 +150,7 @@ public class AddDistributedApplianceWindow extends BaseDAWindow {
 
                 close();
 
-                ViewUtil.showJobNotification(addResponse.getJobId());
+                ViewUtil.showJobNotification(addResponse.getJobId(), this.server);
 
             }
         } catch (Exception e) {

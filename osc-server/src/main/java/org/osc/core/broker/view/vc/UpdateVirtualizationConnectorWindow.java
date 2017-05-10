@@ -19,6 +19,7 @@ package org.osc.core.broker.view.vc;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
@@ -37,11 +38,14 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
 
     private final UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService;
 
+    private final ServerApi server;
+
     public UpdateVirtualizationConnectorWindow(VirtualizationConnectorView vcView,
             UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService,
             PluginService pluginService, ValidationApi validator,
-            X509TrustManagerApi trustManager) throws Exception {
+            X509TrustManagerApi trustManager, ServerApi server) throws Exception {
         super(pluginService, validator, trustManager);
+        this.server = server;
         this.currentVCObject = vcView.getParentContainer().getItem(vcView.getParentItemId());
         this.updateVirtualizationConnectorService = updateVirtualizationConnectorService;
         createWindow(this.CAPTION);
@@ -90,7 +94,7 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
                 // no response needed for update request
                 BaseJobResponse response = this.updateVirtualizationConnectorService.dispatch(updateRequest);
                 close();
-                ViewUtil.showJobNotification(response.getJobId());
+                ViewUtil.showJobNotification(response.getJobId(), this.server);
             }
         } catch (Exception exception) {
             sslAwareHandleException(exception);

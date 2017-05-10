@@ -22,6 +22,7 @@ import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
 import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.openstack.OsTenantDto;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
@@ -44,13 +45,16 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
 
     private final UpdateSecurityGroupServiceApi updateSecurityGroupService;
 
+    private final ServerApi server;
+
     public UpdateSecurityGroupWindow(SecurityGroupDto dto, ListOpenstackMembersServiceApi listOpenstackMembersService, ListRegionByVcIdServiceApi listRegionByVcIdService,
             ListTenantByVcIdServiceApi listTenantByVcIdServiceApi, UpdateSecurityGroupServiceApi updateSecurityGroupService,
-            ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService) throws Exception {
+            ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService, ServerApi server) throws Exception {
         super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi,
                 listSecurityGroupMembersBySgService);
         this.currentSecurityGroup = dto;
         this.updateSecurityGroupService = updateSecurityGroupService;
+        this.server = server;
         createWindow(this.CAPTION);
     }
 
@@ -108,7 +112,7 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
                 BaseJobResponse response = this.updateSecurityGroupService.dispatch(request);
 
                 close();
-                ViewUtil.showJobNotification(response.getJobId());
+                ViewUtil.showJobNotification(response.getJobId(), this.server);
             }
 
         } catch (Exception e) {

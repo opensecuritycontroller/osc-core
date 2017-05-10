@@ -25,6 +25,7 @@ import org.osc.core.broker.service.api.ListDomainsByMcIdServiceApi;
 import org.osc.core.broker.service.api.ListEncapsulationTypeByVersionTypeAndModelApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
@@ -63,6 +64,8 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
 
     private final UpdateDistributedApplianceServiceApi updateDistributedApplianceService;
 
+    private final ServerApi server;
+
     public UpdateDistributedApplianceWindow(DistributedApplianceView distributedApplianceView,
             UpdateDistributedApplianceServiceApi updateDistributedApplianceService,
             ListApplianceModelSwVersionComboServiceApi listApplianceModelSwVersionComboService,
@@ -70,11 +73,12 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
             ListEncapsulationTypeByVersionTypeAndModelApi listEncapsulationTypeByVersionTypeAndModel,
             ListApplianceManagerConnectorServiceApi listApplianceManagerConnectorService,
             ListVirtualizationConnectorBySwVersionServiceApi listVirtualizationConnectorBySwVersionService,
-            ValidationApi validator) throws Exception {
+            ValidationApi validator, ServerApi server) throws Exception {
         super(listApplianceModelSwVersionComboService, listDomainsByMcIdService, listEncapsulationTypeByVersionTypeAndModel,
                 listApplianceManagerConnectorService, listVirtualizationConnectorBySwVersionService, validator);
         this.daView = distributedApplianceView;
         this.updateDistributedApplianceService = updateDistributedApplianceService;
+        this.server = server;
         this.currentDAObject = this.daView.getParentContainer().getItem(this.daView.getParentItemId()).getBean();
         createWindow(this.CAPTION);
     }
@@ -234,7 +238,7 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
 
             close();
 
-            ViewUtil.showJobNotification(response.getJobId());
+            ViewUtil.showJobNotification(response.getJobId(), this.server);
 
         } catch (Exception e) {
             handleCatchAllException(e);

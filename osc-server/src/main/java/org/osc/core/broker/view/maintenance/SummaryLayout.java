@@ -32,7 +32,6 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.util.ArchiveUtil;
-import org.osc.core.util.ServerUtil;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -76,7 +75,7 @@ public class SummaryLayout extends FormLayout {
         this.summarytable.addItem(new Object[] { "DNS Name: ", getHostName() }, new Integer(1));
         this.summarytable.addItem(new Object[] { "IP Address: ", getIpAddress() }, new Integer(2));
         this.summarytable.addItem(new Object[] { "Version: ", getVersion() }, new Integer(3));
-        this.summarytable.addItem(new Object[] { "Uptime: ", ServerUtil.uptimeToString() }, new Integer(4));
+        this.summarytable.addItem(new Object[] { "Uptime: ", server.uptimeToString() }, new Integer(4));
         this.summarytable.addItem(new Object[] { "Current Server Time: ", new Date().toString() }, new Integer(5));
 
         VerticalLayout tableContainer = new VerticalLayout();

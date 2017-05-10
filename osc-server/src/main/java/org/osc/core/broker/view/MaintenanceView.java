@@ -199,7 +199,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     private FormLayout buildNetworkForm() {
         return new NetworkLayout(this.getNetworkSettingsService, this.checkNetworkSettingsService,
                 this.setNetworkSettingsService, this.getNATSettingsService,
-                this.setNATSettingsService, this.validator);
+                this.setNATSettingsService, this.validator, this.server);
     }
 
     private FormLayout buildSslConfigurationForm() {

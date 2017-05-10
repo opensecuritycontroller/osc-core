@@ -22,6 +22,7 @@ import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
 import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.openstack.OsTenantDto;
@@ -44,15 +45,19 @@ public class AddSecurityGroupWindow extends BaseSecurityGroupWindow {
 
     private final AddSecurityGroupServiceApi addSecurityGroupService;
 
+    private final ServerApi server;
+
     public AddSecurityGroupWindow(VirtualizationConnectorDto vcDto,
             ListOpenstackMembersServiceApi listOpenstackMembersService,
             ListRegionByVcIdServiceApi listRegionByVcIdService,
             ListTenantByVcIdServiceApi listTenantByVcIdServiceApi,
             AddSecurityGroupServiceApi addSecurityGroupService,
-            ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService) throws Exception {
+            ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService,
+            ServerApi server) throws Exception {
         super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi,
                 listSecurityGroupMembersBySgService);
         this.addSecurityGroupService = addSecurityGroupService;
+        this.server = server;
         this.currentSecurityGroup = new SecurityGroupDto();
         this.currentSecurityGroup.setParentId(vcDto.getId());
         createWindow(this.CAPTION);
@@ -79,7 +84,7 @@ public class AddSecurityGroupWindow extends BaseSecurityGroupWindow {
                 BaseJobResponse response = this.addSecurityGroupService.dispatch(request);
 
                 close();
-                ViewUtil.showJobNotification(response.getJobId());
+                ViewUtil.showJobNotification(response.getJobId(), this.server);
             }
 
         } catch (Exception e) {

@@ -16,6 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api.server;
 
+import java.io.IOException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+
 import org.osgi.util.promise.Promise;
 
 public interface ServerApi {
@@ -43,5 +47,11 @@ public interface ServerApi {
 
     void setDebugLogging(boolean on);
 
-    String getHostIpAddress();
+    String getHostIpAddress() throws SocketException, UnknownHostException;
+
+    String getServerIpAddress();
+
+    boolean isEnoughSpace() throws IOException;
+
+    String uptimeToString();
 }

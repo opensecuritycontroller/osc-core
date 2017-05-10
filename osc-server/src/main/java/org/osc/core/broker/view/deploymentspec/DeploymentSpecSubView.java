@@ -31,6 +31,7 @@ import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.api.ListTenantServiceApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
@@ -74,6 +75,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
     private final ListNetworkServiceApi listNetworkService;
     private final ListRegionServiceApi listRegionService;
     private final ListTenantServiceApi listTenantService;
+    private final ServerApi server;
 
     public DeploymentSpecSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
             VirtualSystemDto parent, AddDeploymentSpecServiceApi addDeploymentSpecService,
@@ -87,7 +89,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
             ListHostAggregateServiceApi listHostAggregateService,
             ListNetworkServiceApi listNetworkService,
             ListRegionServiceApi listRegionService,
-            ListTenantServiceApi listTenantService
+            ListTenantServiceApi listTenantService, ServerApi server
             ) {
         super(currentView, title, buttons, parent);
         this.addDeploymentSpecService = addDeploymentSpecService;
@@ -102,6 +104,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
         this.listRegionService = listRegionService;
         this.listTenantService = listTenantService;
         this.updateDeploymentSpecService = updateDeploymentSpecService;
+        this.server = server;
         if (parent.isMarkForDeletion()) {
             //Disable CRUD buttons
             ViewUtil.setButtonsEnabled(false, this.toolbar,
@@ -129,7 +132,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
             public Object generateCell(CustomTable source, Object itemId, Object columnId) {
                 DeploymentSpecDto dsDto = DeploymentSpecSubView.this.tableContainer.getItem(itemId).getBean();
                 return ViewUtil.generateJobLink(dsDto.getLastJobStatus(), dsDto.getLastJobState(),
-                        dsDto.getLastJobId());
+                        dsDto.getLastJobId(), DeploymentSpecSubView.this.server);
             }
 
         });
@@ -165,7 +168,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
             ViewUtil.addWindow(new AddDeploymentSpecWindow(getDtoInContext().getId(),
                     this.addDeploymentSpecService, this.listAvailabilityZonesService,
                     this.listFloatingIpPoolsService, this.listHostService, this.listHostAggregateService,
-                    this.listNetworkService, this.listRegionService, this.listTenantService));
+                    this.listNetworkService, this.listRegionService, this.listTenantService, this.server));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Deployment Spec Window");
@@ -179,12 +182,12 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
                                 getTableContainer().getItem(getSelectedItemId()).getBean(),
                                 this.updateDeploymentSpecService, this.listAvailabilityZonesService,
                                 this.listFloatingIpPoolsService, this.listHostService, this.listHostAggregateService,
-                                this.listNetworkService, this.listRegionService, this.listTenantService));
+                                this.listNetworkService, this.listRegionService, this.listTenantService, this.server));
             }
         }
         if (event.getButton().getId() == ToolbarButtons.DELETE.getId()) {
             log.debug("Redirecting to Delete Deployment Spec Window");
-            DeleteWindowUtil.deleteDeploymentSpec(this.deleteDeploymentSpecService, getTableContainer().getItem(getSelectedItemId()).getBean());
+            DeleteWindowUtil.deleteDeploymentSpec(this.deleteDeploymentSpecService, getTableContainer().getItem(getSelectedItemId()).getBean(), this.server);
         }
         if (event.getButton().getId() == ToolbarButtons.CONFORM.getId()) {
             conformDeploymentSpec(getSelectedItemId());
@@ -209,7 +212,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
         try {
             BaseJobResponse response = this.syncDeploymentSpecService.dispatch(req);
 
-            ViewUtil.showJobNotification(response.getJobId());
+            ViewUtil.showJobNotification(response.getJobId(), this.server);
         } catch (Exception e) {
             log.error("Error!", e);
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);

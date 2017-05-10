@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
@@ -85,15 +86,18 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
     private final X509TrustManagerApi trustManager;
 
+    private final ServerApi server;
+
     public UpdateManagerConnectorWindow(ManagerConnectorView mcView,
             UpdateApplianceManagerConnectorServiceApi updateMCService,
             PluginService pluginService, ValidationApi validator,
-            X509TrustManagerApi trustManager) throws Exception {
+            X509TrustManagerApi trustManager, ServerApi server) throws Exception {
         this.mcView = mcView;
         this.updateMCService = updateMCService;
         this.pluginService = pluginService;
         this.validator = validator;
         this.trustManager = trustManager;
+        this.server = server;
         this.currentMCObject = mcView.getParentContainer().getItem(mcView.getParentItemId());
         createWindow(this.CAPTION);
     }
@@ -240,7 +244,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
         close();
 
-        ViewUtil.showJobNotification(response.getJobId());
+        ViewUtil.showJobNotification(response.getJobId(), this.server);
     }
 
     protected void sslAwareHandleException(final Exception originalException){

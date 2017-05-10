@@ -19,6 +19,7 @@ package org.osc.core.broker.view.vc;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
@@ -35,13 +36,16 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
 
     private final AddVirtualizationConnectorServiceApi addVirtualizationConnectorService;
 
+    private final ServerApi server;
+
     private static final Logger log = Logger.getLogger(AddVirtualizationConnectorWindow.class);
 
     public AddVirtualizationConnectorWindow(VirtualizationConnectorView vcView, AddVirtualizationConnectorServiceApi addVirtualizationConnectorService,
-            PluginService pluginService, ValidationApi validator, X509TrustManagerApi trustManager) throws Exception {
+            PluginService pluginService, ValidationApi validator, X509TrustManagerApi trustManager, ServerApi server) throws Exception {
         super(pluginService, validator, trustManager);
         this.vcView = vcView;
         this.addVirtualizationConnectorService = addVirtualizationConnectorService;
+        this.server = server;
         createWindow(this.CAPTION);
     }
 
@@ -72,7 +76,7 @@ public class AddVirtualizationConnectorWindow extends BaseVCWindow {
                 this.vcView.parentTableClicked(addRequest.getDto().getId());
                 close();
 
-                ViewUtil.showJobNotification(addResponse.getJobId());
+                ViewUtil.showJobNotification(addResponse.getJobId(), this.server);
             }
         } catch (Exception exception) {
             sslAwareHandleException(exception);

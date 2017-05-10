@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.view.MainUI;
@@ -38,7 +39,6 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.window.LoadingIndicatorCRUDBaseWindow;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
-import org.osc.core.util.ServerUtil;
 import org.tepi.filtertable.FilterGenerator;
 import org.tepi.filtertable.FilterTable;
 import org.tepi.filtertable.datefilter.DateInterval;
@@ -263,14 +263,15 @@ public class ViewUtil {
      *
      * @return link to job page if both last Job status and the last Job id are not null
      */
-    public static Object generateJobLink(String lastJobStatus, String lastJobState, Long lastJobId) {
+    public static Object generateJobLink(String lastJobStatus, String lastJobState, Long lastJobId,
+            ServerApi server) {
         if (lastJobStatus != null && lastJobId != null) {
             return createJobLink(VmidcMessages.getString(VmidcMessages_.JOB_LINK_CAPTION_ID,
-                    resolveJobStateAndStatus(lastJobStatus, lastJobState), lastJobId), lastJobId);
+                    resolveJobStateAndStatus(lastJobStatus, lastJobState), lastJobId), lastJobId, server);
         } else if (lastJobId == null && lastJobStatus != null) {
             return new Label(resolveJobStateAndStatus(lastJobStatus, lastJobState));
         } else if (lastJobId != null && lastJobStatus == null) {
-            return createJobLink(lastJobId.toString(), lastJobId);
+            return createJobLink(lastJobId.toString(), lastJobId, server);
         }
         return null;
     }
@@ -288,7 +289,7 @@ public class ViewUtil {
         return mgrLink;
     }
 
-    public static Object generateObjectLink(LockObjectDto or) {
+    public static Object generateObjectLink(LockObjectDto or, ServerApi server) {
         String viewFragment;
         String paramObjectId;
         switch (or.getType().getName()) {
@@ -356,7 +357,7 @@ public class ViewUtil {
         paramMap.put(paramObjectId, or.getId());
 
         Link jobLink = createInternalLink(viewFragment, paramMap, or.getName(),
-                VmidcMessages.getString(VmidcMessages_.LINK_DESCRIPTION, or.getType(), or.getName()));
+                VmidcMessages.getString(VmidcMessages_.LINK_DESCRIPTION, or.getType(), or.getName()), server);
 
         if (jobLink == null) {
             return new Label(or.getName());
@@ -364,13 +365,13 @@ public class ViewUtil {
         return jobLink;
     }
 
-    public static Object generateObjectLink(Set<LockObjectDto> ors) {
+    public static Object generateObjectLink(Set<LockObjectDto> ors, ServerApi server) {
         if (ors == null || ors.isEmpty()) {
             return null;
         }
 
         LockObjectDto or = (LockObjectDto) ors.toArray()[0];
-        return generateObjectLink(or);
+        return generateObjectLink(or, server);
     }
 
     /**
@@ -470,18 +471,18 @@ public class ViewUtil {
         return TASK_SKIPPED.equals(taskStatus);
     }
 
-    private static Link createJobLink(String caption, Long lastJobId) {
+    private static Link createJobLink(String caption, Long lastJobId, ServerApi server) {
         HashMap<String, Object> paramMap = new HashMap<>();
         paramMap.put(JOB_ID_PARAM_KEY, lastJobId);
 
         return createInternalLink(MainUI.VIEW_FRAGMENT_JOBS, paramMap, caption,
-                VmidcMessages.getString(VmidcMessages_.JOB_LINK_TOOLTIP));
+                VmidcMessages.getString(VmidcMessages_.JOB_LINK_TOOLTIP), server);
     }
 
     private static Link createInternalLink(String fragment, HashMap<String, Object> paramMap, String linkCaption,
-            String linkDescription) {
+            String linkDescription, ServerApi server) {
 
-        String jobLinkUrl = createInternalUrl(fragment, paramMap);
+        String jobLinkUrl = createInternalUrl(fragment, paramMap, server);
         if (jobLinkUrl == null) {
             return null;
         }
@@ -493,14 +494,14 @@ public class ViewUtil {
         return jobLink;
     }
 
-    private static String getCurrentPageUrl() {
+    private static String getCurrentPageUrl(ServerApi server) {
         String url;
         if (Page.getCurrent() != null && Page.getCurrent().getLocation() != null) {
             url = Page.getCurrent().getLocation().toString();
         } else if (VaadinServletService.getCurrentRequest() != null) {
             url = VaadinServletService.getCurrentRequest().getContextPath();
         } else {
-            url = "https://" + ServerUtil.getServerIP() + "/";
+            url = "https://" + server.getServerIpAddress() + "/";
         }
         // Workaround bug in URL generation
         url = url.replace("#!", "/#!");
@@ -508,8 +509,9 @@ public class ViewUtil {
         return url;
     }
 
-    public static String createInternalUrl(String fragment, HashMap<String, Object> paramMap) {
-        String url = getCurrentPageUrl();
+    public static String createInternalUrl(String fragment, HashMap<String, Object> paramMap,
+            ServerApi server) {
+        String url = getCurrentPageUrl(server);
         try {
             URL currentUrl = new URL(url);
 
@@ -646,14 +648,14 @@ public class ViewUtil {
         window.focus();
     }
 
-    public static void showJobNotification(Long jobId) {
+    public static void showJobNotification(Long jobId, ServerApi server) {
         HashMap<String, Object> paramMap = null;
         if (jobId != null) {
             paramMap = new HashMap<>();
             paramMap.put(JOB_ID_PARAM_KEY, jobId);
         }
 
-        String jobLinkUrl = createInternalUrl(MainUI.VIEW_FRAGMENT_JOBS, paramMap);
+        String jobLinkUrl = createInternalUrl(MainUI.VIEW_FRAGMENT_JOBS, paramMap, server);
         if (jobLinkUrl != null) {
             if (jobId == null) {
                 new Notification("Info", "<a href=\"" + jobLinkUrl + "\">" + " Go To Job View" + "</a>",

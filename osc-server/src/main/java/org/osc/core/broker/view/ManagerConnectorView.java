@@ -29,6 +29,7 @@ import org.osc.core.broker.service.api.ListManagerConnectoryPolicyServiceApi;
 import org.osc.core.broker.service.api.SyncManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -93,6 +94,9 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     @Reference
     private X509TrustManagerApi trustManager;
 
+    @Reference
+    private ServerApi server;
+
     @Activate
     private void activate() {
 
@@ -104,15 +108,15 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
             log.debug("Redirecting to Add Manager Connector Window");
-            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService, this.pluginService, this.validator, this.trustManager));
+            ViewUtil.addWindow(new AddManagerConnectorWindow(this, this.addManagerConnectorService, this.pluginService, this.validator, this.trustManager, this.server));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Manager Connector Window");
-            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService, this.pluginService, this.validator, this.trustManager));
+            ViewUtil.addWindow(new UpdateManagerConnectorWindow(this, this.updateManagerConnectorService, this.pluginService, this.validator, this.trustManager, this.server));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete Manager Connector Window");
-            ViewUtil.addWindow(new DeleteManagerConnectorWindow(this, this.deleteManagerConnectorService));
+            ViewUtil.addWindow(new DeleteManagerConnectorWindow(this, this.deleteManagerConnectorService, this.server));
         }
         if (event.getButton().getId().equals(ToolbarButtons.CONFORM.getId())) {
             conformManagerConnector(getParentItemId());
@@ -124,7 +128,7 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
         try {
             BaseJobRequest request = new BaseJobRequest(mcId);
             BaseJobResponse response = this.syncManagerConnectorService.dispatch(request);
-            ViewUtil.showJobNotification(response.getJobId());
+            ViewUtil.showJobNotification(response.getJobId(), this.server);
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
         }
@@ -143,7 +147,7 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
                 ApplianceManagerConnectorDto managerConnectorDto = ManagerConnectorView.this.parentContainer.getItem(
                         itemId).getBean();
                 return ViewUtil.generateJobLink(managerConnectorDto.getLastJobStatus(),
-                        managerConnectorDto.getLastJobState(), managerConnectorDto.getLastJobId());
+                        managerConnectorDto.getLastJobState(), managerConnectorDto.getLastJobId(), ManagerConnectorView.this.server);
             }
         });
 
