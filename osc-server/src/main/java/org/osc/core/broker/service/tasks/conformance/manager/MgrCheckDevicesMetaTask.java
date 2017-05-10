@@ -37,25 +37,25 @@ import org.osgi.service.component.annotations.Reference;
 public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    ApiFactoryService apiFactoryService;
 
     @Reference
-    private MgrCreateVSSDeviceTask mgrCreateVSSDeviceTask;
+    MgrCreateVSSDeviceTask mgrCreateVSSDeviceTask;
 
     @Reference
-    private MgrCreateMemberDeviceTask mgrCreateMemberDeviceTask;
+    MgrCreateMemberDeviceTask mgrCreateMemberDeviceTask;
 
     @Reference
-    private MgrDeleteMemberDeviceTask mgrDeleteMemberDeviceTask;
+    MgrDeleteMemberDeviceTask mgrDeleteMemberDeviceTask;
 
     @Reference
-    private MgrUpdateMemberDeviceTask mgrUpdateMemberDeviceTask;
+    MgrUpdateMemberDeviceTask mgrUpdateMemberDeviceTask;
 
     @Reference
-    private MgrUpdateVSSDeviceTask mgrUpdateVSSDeviceTask;
+    MgrUpdateVSSDeviceTask mgrUpdateVSSDeviceTask;
 
     @Reference
-    private UpdateDAISManagerDeviceId updateDAISManagerDeviceId;
+    UpdateDAISManagerDeviceId updateDAISManagerDeviceId;
 
     private VirtualSystem vs;
     private TaskGraph tg;
@@ -67,7 +67,7 @@ public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
         task.mgrCreateMemberDeviceTask = this.mgrCreateMemberDeviceTask;
         task.mgrDeleteMemberDeviceTask = this.mgrDeleteMemberDeviceTask;
         task.mgrUpdateMemberDeviceTask = this.mgrUpdateMemberDeviceTask;
-        task.mgrUpdateMemberDeviceTask = this.mgrUpdateMemberDeviceTask;
+        task.mgrUpdateVSSDeviceTask = this.mgrUpdateVSSDeviceTask;
         task.updateDAISManagerDeviceId = this.updateDAISManagerDeviceId;
         task.vs = vs;
         task.name = task.getName();

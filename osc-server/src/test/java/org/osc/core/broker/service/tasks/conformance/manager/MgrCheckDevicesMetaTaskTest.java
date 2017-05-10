@@ -55,6 +55,8 @@ public class MgrCheckDevicesMetaTaskTest {
 
     private TaskGraph expectedGraph;
 
+    private ApiFactoryService apiFactoryService;
+
     public MgrCheckDevicesMetaTaskTest(VirtualSystem vs, TaskGraph tg) {
         this.vs = vs;
         this.expectedGraph = tg;
@@ -83,20 +85,20 @@ public class MgrCheckDevicesMetaTaskTest {
         Mockito.<List<? extends ManagerDeviceMemberElement>>when(mgrDeviceGroupSupportedApi.listDeviceMembers())
                 .thenReturn(Arrays.asList(MGR_DEVICE_MEMBER_ELEMENT_WITH_DAI));
 
-        ApiFactoryService apiFactoryService = mock(ApiFactoryService.class);
-        when(apiFactoryService.createManagerDeviceApi(MANAGER_ID_PRESENT_NO_DAI_DEVICE_VS))
+        this.apiFactoryService = mock(ApiFactoryService.class);
+        when(this.apiFactoryService.createManagerDeviceApi(MANAGER_ID_PRESENT_NO_DAI_DEVICE_VS))
                 .thenReturn(mgrDeviceNoDaiApi);
-        when(apiFactoryService.createManagerDeviceApi(MANAGER_ID_NOT_PRESENT_VS))
+        when(this.apiFactoryService.createManagerDeviceApi(MANAGER_ID_NOT_PRESENT_VS))
                 .thenReturn(mgrDeviceGroupSupportedApi);
-        when(apiFactoryService.createManagerDeviceApi(MANAGER_DEVICE_ID_PRESENT_VS))
+        when(this.apiFactoryService.createManagerDeviceApi(MANAGER_DEVICE_ID_PRESENT_VS))
                 .thenReturn(mgrDeviceGroupSupportedApi);
-        when(apiFactoryService.createManagerDeviceApi(DAI_IP_PRESENT_VS))
+        when(this.apiFactoryService.createManagerDeviceApi(DAI_IP_PRESENT_VS))
         .thenReturn(mgrDeviceGroupSupportedApi);
-        when(apiFactoryService.createManagerDeviceApi(MANAGER_DEVICE_ID_AND_DAI_IP_NOT_PRESENT_VS))
+        when(this.apiFactoryService.createManagerDeviceApi(MANAGER_DEVICE_ID_AND_DAI_IP_NOT_PRESENT_VS))
                 .thenReturn(mgrDeviceGroupSupportedApi);
-        when(apiFactoryService.createManagerDeviceApi(DEVICE_GROUP_NOT_SUPPORTED_VS))
+        when(this.apiFactoryService.createManagerDeviceApi(DEVICE_GROUP_NOT_SUPPORTED_VS))
                 .thenReturn(mgrDeviceGroupNotSupportedApi);
-        when(apiFactoryService.createManagerDeviceApi(MANAGER_ID_AND_DAI_DEVICE_PRESENT_VS))
+        when(this.apiFactoryService.createManagerDeviceApi(MANAGER_ID_AND_DAI_DEVICE_PRESENT_VS))
                 .thenReturn(mgrDeviceGroupSupportedApi);
 
     }
@@ -132,7 +134,16 @@ public class MgrCheckDevicesMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousVirtualSystem_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        MgrCheckDevicesMetaTask task = new MgrCheckDevicesMetaTask().create(this.vs);
+        MgrCheckDevicesMetaTask factoryTask = new MgrCheckDevicesMetaTask();
+        factoryTask.apiFactoryService = this.apiFactoryService;
+        factoryTask.mgrUpdateVSSDeviceTask = new MgrUpdateVSSDeviceTask();
+        factoryTask.mgrDeleteMemberDeviceTask = new MgrDeleteMemberDeviceTask();
+        factoryTask.mgrCreateVSSDeviceTask = new MgrCreateVSSDeviceTask();
+        factoryTask.mgrUpdateMemberDeviceTask = new MgrUpdateMemberDeviceTask();
+        factoryTask.mgrCreateMemberDeviceTask = new MgrCreateMemberDeviceTask();
+        factoryTask.updateDAISManagerDeviceId = new UpdateDAISManagerDeviceId();
+
+        MgrCheckDevicesMetaTask task = factoryTask.create(this.vs);
 
         // Act.
         task.executeTransaction(this.em);

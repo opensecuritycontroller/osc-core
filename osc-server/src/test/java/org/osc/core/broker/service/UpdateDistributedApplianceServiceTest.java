@@ -85,6 +85,9 @@ public class UpdateDistributedApplianceServiceTest {
     @Mock
     private UserContextApi userContext;
 
+    @Mock
+    private ApiFactoryService apiFactoryService;
+
     @InjectMocks
     private UpdateDistributedApplianceService service;
 
@@ -117,6 +120,8 @@ public class UpdateDistributedApplianceServiceTest {
         PowerMockito.mockStatic(HibernateUtil.class);
         Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
         Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+
+        Mockito.when(this.apiFactoryService.createManagerDeviceApi(Mockito.any())).thenReturn(Mockito.mock(ManagerDeviceApi.class));
 
         populateDatabase();
 

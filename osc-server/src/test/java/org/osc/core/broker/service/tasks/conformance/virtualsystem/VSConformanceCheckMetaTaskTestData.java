@@ -381,7 +381,7 @@ public class VSConformanceCheckMetaTaskTestData {
         return vs;
     }
 
-    static ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
+    static final ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
 
     private static CreateNsxServiceManagerTask createNsxServiceManagerTask;
 

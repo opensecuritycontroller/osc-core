@@ -69,7 +69,7 @@ public class UpdateDistributedApplianceService
     private ConformService conformService;
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    ApiFactoryService apiFactoryService;
 
     @Override
     public BaseJobResponse exec(BaseRequest<DistributedApplianceDto> request, EntityManager em)

@@ -57,13 +57,13 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private static final Logger log = Logger.getLogger(DSUpdateOrDeleteMetaTask.class);
 
     @Reference
-    private MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
+    MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
     @Reference
-    private OsSvaCreateMetaTask osSvaCreateMetaTask;
+    OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference
-    private OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
+    OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
 
     private DeploymentSpec ds;
     private Endpoint endPoint;
@@ -72,6 +72,9 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     public DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, Endpoint endPoint) {
         DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask();
+        task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
+        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
+        task.osDAIConformanceCheckMetaTask = this.osDAIConformanceCheckMetaTask;
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
@@ -79,11 +82,8 @@ class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     }
 
     DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, JCloudNova novaApi) {
-        DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask();
-        task.ds = ds;
+        DSUpdateOrDeleteMetaTask task = create(ds, (Endpoint)null);
         task.novaApi = novaApi;
-        task.endPoint = null;
-        task.name = task.getName();
         return task;
     }
 

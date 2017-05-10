@@ -78,7 +78,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     private static final Logger LOG = Logger.getLogger(VSConformanceCheckMetaTask.class);
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    public ApiFactoryService apiFactoryService;
 
     @Reference
     CreateNsxServiceManagerTask createNsxServiceManagerTask;
@@ -102,16 +102,16 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     PasswordUtil passwordUtil;
 
     @Reference
-    private MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
+    MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
     @Reference
-    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
+    DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
 
     @Reference
-    private ValidateNsxAgentsTask validateNsxAgentsTask;
+    ValidateNsxAgentsTask validateNsxAgentsTask;
 
     @Reference
-    private MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
+    MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
 
     private VirtualSystem vs;
     private TaskGraph tg;
@@ -128,6 +128,8 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
         task.validateNsxAgentsTask = this.validateNsxAgentsTask;
         task.mgrDeleteVSSDeviceTask = this.mgrDeleteVSSDeviceTask;
+        task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
+        task.dsConformanceCheckMetaTask = this.dsConformanceCheckMetaTask;
         task.passwordUtil = this.passwordUtil;
         task.name = task.getName();
         return task;

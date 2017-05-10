@@ -73,11 +73,11 @@ public class TaskNodeComparer {
                 t2Field.setAccessible(true);
                 Object t2FieldValue = t2Field.get(t2);
 
-                if (t1FieldValue == null && t2FieldValue == null) {
+                if (t1FieldValue == null || t2FieldValue == null) {
                     continue;
                 }
 
-                if (!t1FieldValue.equals(t2FieldValue)) {
+                if (t1FieldValue == null || !t1FieldValue.equals(t2FieldValue)) {
                     throw new IllegalStateException(MessageFormat.format("The task {0} has the field {1} with value {2}, but the expected value was {3}",
                             t1.getName(), t1Field.getName(), t1FieldValue, t2FieldValue));
                 }
