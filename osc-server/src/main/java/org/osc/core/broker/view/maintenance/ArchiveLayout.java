@@ -17,7 +17,6 @@
 package org.osc.core.broker.view.maintenance;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
@@ -28,7 +27,6 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.util.FileUtil;
 
 import com.vaadin.server.FileResource;
 import com.vaadin.ui.Button;
@@ -89,11 +87,10 @@ public class ArchiveLayout extends FormLayout {
     public void buildArchivesTable() {
         this.archiveTable.removeAllItems();
 
-        File[] fileList = new File[0];
-        try {
-            fileList = FileUtil.getFileListFromDirectory("archive");
-        } catch (FileNotFoundException e) {
-            this.log.error(e);
+        File[] fileList = new File("archive").listFiles();
+
+        if(fileList == null) {
+            fileList = new File[0];
         }
 
         for (File archiveFile : fileList) {
