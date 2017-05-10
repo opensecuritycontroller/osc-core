@@ -34,11 +34,11 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.UploadApplianceVersionFileServiceApi;
+import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.request.UploadRequest;
 import org.osc.core.broker.service.response.BaseResponse;
-import org.osc.core.util.ArchiveUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -52,6 +52,9 @@ public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadR
 
     @Reference
     private ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
+
+    @Reference
+    private ArchiveApi archiver;
 
     String tmpFolderParent;
 
@@ -76,7 +79,7 @@ public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadR
 			boolean isZip = FilenameUtils.getExtension(fileName).equals("zip");
 			if (isZip) {
 				// If we are here we are handling a zip file
-				ArchiveUtil.unzip(uploadedFilePath, uploadFolder.toString());
+			    this.archiver.unzip(uploadedFilePath, uploadFolder.toString());
 				// After extraction, we don't need the zip file. Delete the zip file
 				log.info("Delete temporary uploaded zip file after extraction " + uploadedFilePath);
 				new File(uploadedFilePath).delete();

@@ -35,6 +35,7 @@ import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.UpgradeServiceApi;
+import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
@@ -137,6 +138,9 @@ public class MaintenanceView extends VerticalLayout implements View {
     @Reference
     X509TrustManagerApi trustManager;
 
+    @Reference
+    ArchiveApi archiver;
+
     private BundleContext ctx;
 
     @Activate
@@ -215,7 +219,7 @@ public class MaintenanceView extends VerticalLayout implements View {
     }
 
     private FormLayout buildSummary() {
-        return new SummaryLayout(this.server, this.backupService);
+        return new SummaryLayout(this.server, this.backupService, this.archiver);
     }
 
     @Override

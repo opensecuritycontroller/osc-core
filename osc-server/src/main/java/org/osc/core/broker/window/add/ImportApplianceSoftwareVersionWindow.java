@@ -26,6 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.ImportFileRequest;
@@ -36,7 +37,6 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.util.ArchiveUtil;
 
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
@@ -59,10 +59,13 @@ public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
 
     private final ServerApi server;
 
+    private final ArchiveApi archiver;
+
     public ImportApplianceSoftwareVersionWindow(ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService,
-            ServerApi server) throws Exception {
+            ServerApi server, ArchiveApi archiver) throws Exception {
         this.importApplianceSoftwareVersionService = importApplianceSoftwareVersionService;
         this.server = server;
+        this.archiver = archiver;
         createWindow("Auto Import Appliance Software Version");
     }
 
@@ -132,7 +135,7 @@ public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
                                         .getString(VmidcMessages_.UPLOAD_APPLIANCE_FAILED));
                             }
 
-                            ArchiveUtil.unzip(zipfile,
+                            ImportApplianceSoftwareVersionWindow.this.archiver.unzip(zipfile,
                                     ImportApplianceSoftwareVersionWindow.this.uploader.getUploadPath());
                             // After extraction, we don't need the zip file. Delete the zip file
                             log.info("Delete temporary uploaded zip file after extraction " + zipfile);

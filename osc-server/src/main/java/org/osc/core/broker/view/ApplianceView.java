@@ -26,6 +26,7 @@ import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.ListApplianceServiceApi;
 import org.osc.core.broker.service.api.ListApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
@@ -75,6 +76,9 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
     @Reference
     ServerApi server;
 
+    @Reference
+    ArchiveApi archiver;
+
     @Activate
     private void activate() {
         createView("Model", Arrays.asList(ToolbarButtons.DELETE, ToolbarButtons.AUTO_IMPORT_APPLIANCE),
@@ -98,7 +102,8 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
                 }
 
                 log.info("Redirecting to Add Appliance Version Window");
-                ViewUtil.addWindow(new ImportApplianceSoftwareVersionWindow(this.importApplianceSoftwareVersionService, this.server));
+                ViewUtil.addWindow(new ImportApplianceSoftwareVersionWindow(this.importApplianceSoftwareVersionService,
+                        this.server, this.archiver));
 
             } catch (Exception e) {
                 log.error("Failed to initiate adding a new Appliance Software Version", e);

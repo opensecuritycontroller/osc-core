@@ -25,13 +25,13 @@ import java.util.Date;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BackupServiceApi;
+import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.util.ArchiveUtil;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -63,13 +63,17 @@ public class SummaryLayout extends FormLayout {
 
     private BackupServiceApi backupService;
 
+    private ArchiveApi archiver;
+
     private static final Logger log = Logger.getLogger(SummaryLayout.class);
 
 
-    public SummaryLayout(ServerApi server, BackupServiceApi backupService) {
+    public SummaryLayout(ServerApi server, BackupServiceApi backupService,
+            ArchiveApi archiver) {
         super();
         this.server = server;
         this.backupService = backupService;
+        this.archiver = archiver;
         this.summarytable = createTable();
         // creating Server table
         this.summarytable.addItem(new Object[] { "DNS Name: ", getHostName() }, new Integer(1));
@@ -202,7 +206,7 @@ public class SummaryLayout extends FormLayout {
                         getDBBackup();
                     }
                     // creating a zip file resource to download
-                    fin = new FileInputStream(ArchiveUtil.archive("log", "ServerSupportBundle.zip"));
+                    fin = new FileInputStream(SummaryLayout.this.archiver.archive("log", "ServerSupportBundle.zip"));
                 } catch (Exception exception) {
                     log.error("Failed! to receive zip file from Archieve Util", exception);
                 } finally {
