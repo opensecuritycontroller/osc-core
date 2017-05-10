@@ -23,18 +23,22 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.api.LoginServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.LoginRequest;
 import org.osc.core.broker.service.response.LoginResponse;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class LoginService extends ServiceDispatcher<LoginRequest, LoginResponse> implements LoginServiceApi {
     private static final Logger LOG = Logger.getLogger(LoginService.class);
+
+    @Reference
+    EncryptionApi encryption;
 
     @Override
     public LoginResponse exec(LoginRequest request, EntityManager em) throws Exception {
@@ -51,7 +55,7 @@ public class LoginService extends ServiceDispatcher<LoginRequest, LoginResponse>
         } else {
             VmidcException invalidUserPasswordException = new VmidcException("Wrong username and/or password! Please try again.");
             try {
-                if (!EncryptionUtil.validateAESCTR(request.getPassword(), user.getPassword())) {
+                if (!this.encryption.validateAESCTR(request.getPassword(), user.getPassword())) {
                     // Wrong password
                     throw invalidUserPasswordException;
                 }

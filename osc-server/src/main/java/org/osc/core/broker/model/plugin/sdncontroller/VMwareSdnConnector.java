@@ -20,9 +20,9 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.api.server.EncryptionException;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.rest.client.crypto.SslContextProvider;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.sdn.element.ConnectorElement;
 
 public class VMwareSdnConnector implements ConnectorElement {
@@ -44,7 +44,7 @@ public class VMwareSdnConnector implements ConnectorElement {
 
         this.ipAddress = vc.getControllerIpAddress();
         this.userName = vc.getControllerUsername();
-        this.password = EncryptionUtil.decryptAESCTR(vc.getControllerPassword());
+        this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getControllerPassword());
         this.sslContext = SslContextProvider.getInstance().getSSLContext();
     }
 

@@ -36,11 +36,11 @@ import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.model.entities.job.TaskState;
 import org.osc.core.broker.model.entities.job.TaskStatus;
 import org.osc.core.broker.service.api.RestConstants;
+import org.osc.core.broker.service.api.server.EncryptionException;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class DatabaseUtils {
@@ -73,7 +73,7 @@ public class DatabaseUtils {
         if (adminUser == null) {
             User user = new User();
             user.setLoginName(RestConstants.OSC_DEFAULT_LOGIN);
-            user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
+            user.setPassword(StaticRegistry.encryptionApi().encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.ADMIN);
             OSCEntityManager.create(em, user);
         }
@@ -81,7 +81,7 @@ public class DatabaseUtils {
         if (nsxUser == null) {
             User user = new User();
             user.setLoginName(RestConstants.VMIDC_NSX_LOGIN);
-            user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
+            user.setPassword(StaticRegistry.encryptionApi().encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.SYSTEM_NSX);
             OSCEntityManager.create(em, user);
         }

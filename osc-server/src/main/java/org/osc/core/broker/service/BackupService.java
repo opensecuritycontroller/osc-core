@@ -26,18 +26,22 @@ import javax.persistence.EntityManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.service.api.BackupServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.util.encryption.AESCTREncryption;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class BackupService extends BackupFileService<BackupRequest, BackupResponse> implements BackupServiceApi {
 
+    @Reference
+    EncryptionApi encrpter;
 
     @Override
     public BackupResponse exec(BackupRequest request, EntityManager em) throws Exception {
@@ -78,10 +82,16 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
         return res;
     }
 
+    byte[] encryptBackupFileBytes(byte[] backupFileBytes, String password) throws Exception {
+        EncryptionParameters params = getEncryptionParameters();
+        return this.encrpter.encryptAESGCM(backupFileBytes, params.getKey(), params.getIV(), password.getBytes("UTF-8"));
+    }
+
     void ensureBackupFolderExists() throws IOException {
     	FileUtils.forceMkdir(new File(BACKUPS_FOLDER));
     }
 
+    @Override
     public void deleteBackupFilesFrom(String directory) {
     	deleteBackupFilesFrom(directory, DEFAULT_BACKUP_FILE_NAME);
     }
@@ -93,6 +103,7 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
 					    			  .append(EXT_ENCRYPTED_BACKUP).toString());
     }
 
+    @Override
     public void deleteBackupFiles() {
     	deleteBackupFiles(DEFAULT_BACKUP_FILE_NAME);
     }
@@ -124,10 +135,12 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
     	return FileUtils.readFileToByteArray(new File(resolveBackupZipPath(backupFileName)));
     }
 
+    @Override
     public File getEncryptedBackupFile() {
     	return getEncryptedBackupFile(DEFAULT_BACKUP_FILE_NAME);
     }
 
+    @Override
     public File getEncryptedBackupFile(String backupFileName) {
     	return new File(new StringBuilder().append(BACKUPS_FOLDER)
 										   .append(File.separator)

@@ -24,14 +24,14 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.request.Agent;
-import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 import org.osc.core.broker.service.request.Agent.AllocatedIpAddress;
 import org.osc.core.broker.service.request.Agent.HostInfo;
+import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 import org.osc.core.broker.service.response.AgentDpaInfo;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.VersionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 class AgentRegisterServiceTestData {
     static String DAI_TEMPORARY_NAME = "Temporary";
@@ -365,7 +365,7 @@ class AgentRegisterServiceTestData {
         dai.setNsxAgentId(nsxAgentId);
         dai.setDiscovered(isDiscovered);
         dai.setInspectionReady(isInspectionReady);
-        dai.setNewConsolePassword(EncryptionUtil.encryptAESCTR(consolePassword));
+        dai.setNewConsolePassword(new EncryptionUtil().encryptAESCTR(consolePassword));
         if (includeDeploymentSpec) {
             DeploymentSpec ds = new DeploymentSpec();
             dai.setDeploymentSpec(ds);

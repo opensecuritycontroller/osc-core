@@ -38,6 +38,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.AlertDto;
@@ -80,8 +81,11 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 public class GetDtoFromEntityService<R extends BaseDto> extends
         ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDtoFromEntityServiceApi<R> {
 
-    GetDtoFromEntityService(UserContextApi userContext) {
+    private EncryptionApi encryption;
+
+    GetDtoFromEntityService(UserContextApi userContext, EncryptionApi encryption) {
         this.userContext = userContext;
+        this.encryption = encryption;
     }
 
     @SuppressWarnings("unchecked")
@@ -104,7 +108,7 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
         } else if (entityName.equals("VirtualizationConnector")) {
             VirtualizationConnector entity = getEntity(entityId, entityName, VirtualizationConnector.class, em);
             VirtualizationConnectorDto dto = new VirtualizationConnectorDto();
-            VirtualizationConnectorEntityMgr.fromEntity(entity, dto);
+            VirtualizationConnectorEntityMgr.fromEntity(entity, dto, this.encryption);
             if (request.isApi()) {
                 VirtualizationConnectorDto.sanitizeVirtualizationConnector(dto);
             }
@@ -112,7 +116,7 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
         } else if (entityName.equals("ApplianceManagerConnector")) {
             ApplianceManagerConnector entity = getEntity(entityId, entityName, ApplianceManagerConnector.class, em);
             ApplianceManagerConnectorDto dto = new ApplianceManagerConnectorDto();
-            ApplianceManagerConnectorEntityMgr.fromEntity(entity, dto);
+            ApplianceManagerConnectorEntityMgr.fromEntity(entity, dto, this.encryption);
             if (request.isApi()) {
                 ApplianceManagerConnectorDto.sanitizeManagerConnector(dto);
             }
@@ -133,7 +137,7 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
         } else if (entityName.equals("DistributedAppliance")) {
             DistributedAppliance entity = getEntity(entityId, entityName, DistributedAppliance.class, em);
             DistributedApplianceDto dto = new DistributedApplianceDto();
-            DistributedApplianceEntityMgr.fromEntity(entity, dto);
+            DistributedApplianceEntityMgr.fromEntity(entity, dto, this.encryption);
             if (request.isApi()) {
                 DistributedApplianceDto.sanitizeDistributedAppliance(dto);
             }
@@ -141,7 +145,7 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
         } else if (entityName.equals("User")) {
             User entity = getEntity(entityId, entityName, User.class, em);
             UserDto dto = new UserDto();
-            UserEntityMgr.fromEntity(entity, dto);
+            UserEntityMgr.fromEntity(entity, dto, this.encryption);
             res.setDto((R) dto);
         } else if (entityName.equals("DistributedApplianceInstance")) {
             DistributedApplianceInstance entity = getEntity(entityId, entityName, DistributedApplianceInstance.class,

@@ -28,7 +28,6 @@ import org.osc.core.broker.service.api.BackupFileServiceApi;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.server.Server;
-import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
@@ -66,18 +65,12 @@ abstract class BackupFileService<I extends Request, O extends Response> extends 
     	return FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
     }
 
-    protected byte[] encryptBackupFileBytes(byte[] backupFileBytes, String password) throws Exception {
-    	EncryptionParameters params = new EncryptionParameters();
-        return EncryptionUtil.encryptAESGCM(backupFileBytes, params.getKey(), params.getIV(), password.getBytes("UTF-8"));
+    protected EncryptionParameters getEncryptionParameters() throws Exception {
+        return new EncryptionParameters();
     }
 
-    protected byte[] decryptBackupFileBytes(byte[] backupFileBytes, String password) throws Exception {
-    	EncryptionParameters params = new EncryptionParameters();
-        return EncryptionUtil.decryptAESGCM(backupFileBytes, params.getKey(), params.getIV(), password.getBytes("UTF-8"));
-    }
-
-    private class EncryptionParameters {
-        EncryptionParameters() throws KeyStoreProviderException, IOException {
+    protected class EncryptionParameters {
+        private EncryptionParameters() throws KeyStoreProviderException, IOException {
     		// get aliases/passwords to keystore from properties
     		Properties properties = getProperties();
             String keyAlias = properties.getProperty("db.backup.key.alias");

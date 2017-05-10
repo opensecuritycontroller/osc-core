@@ -36,6 +36,8 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -55,8 +57,6 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 import java.net.ConnectException;
 import java.rmi.RemoteException;
@@ -129,12 +129,15 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     private final X509TrustManagerApi trustManager;
 
+    private final EncryptionApi encrypter;
+
     public BaseVCWindow(PluginService pluginService, ValidationApi validator,
-            X509TrustManagerApi trustManager) {
+            X509TrustManagerApi trustManager, EncryptionApi encrypter) {
         super();
         this.pluginService = pluginService;
         this.validator = validator;
         this.trustManager = trustManager;
+        this.encrypter = encrypter;
     }
 
     @Override
@@ -486,7 +489,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     protected void advancedSettingsClicked() {
         try {
-            ViewUtil.addWindow(new AdvancedSettingsWindow(this));
+            ViewUtil.addWindow(new AdvancedSettingsWindow(this, this.encrypter));
         } catch (Exception e) {
             ViewUtil.iscNotification(e.toString() + ".", Notification.Type.ERROR_MESSAGE);
         }
@@ -562,7 +565,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
             try {
                 this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                        EncryptionUtil.encryptAESCTR(DEFAULT_RABBITMQ_USER_PASSWORD));
+                        this.encrypter.encryptAESCTR(DEFAULT_RABBITMQ_USER_PASSWORD));
             } catch (EncryptionException encryptionException) {
                 handleException(encryptionException);
             }

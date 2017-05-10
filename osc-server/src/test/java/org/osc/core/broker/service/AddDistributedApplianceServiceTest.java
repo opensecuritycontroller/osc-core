@@ -43,6 +43,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -60,6 +61,10 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(HibernateUtil.class)
 public class AddDistributedApplianceServiceTest {
+
+    private static final String SECRET_KEY = "secret";
+    private static final String ENCRYPTED_KEY = "encrypted";
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -76,6 +81,9 @@ public class AddDistributedApplianceServiceTest {
 
     @Mock
     private UserContextApi userContext;
+
+    @Mock
+    private EncryptionApi encryption;
 
     @InjectMocks
     private AddDistributedApplianceService service;
@@ -99,6 +107,11 @@ public class AddDistributedApplianceServiceTest {
 
         this.txControl.setEntityManager(this.em);
 
+        Mockito.when(this.encryption.encryptAESCTR(SECRET_KEY)).
+            thenReturn(ENCRYPTED_KEY);
+        Mockito.when(this.encryption.decryptAESCTR(ENCRYPTED_KEY)).
+            thenReturn(SECRET_KEY);
+
         PowerMockito.mockStatic(HibernateUtil.class);
         Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
         Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
@@ -109,6 +122,7 @@ public class AddDistributedApplianceServiceTest {
         this.request = new BaseRequest<DistributedApplianceDto>();
         this.daDto = new DistributedApplianceDto();
         this.daDto.setName("daName");
+        this.daDto.setSecretKey(SECRET_KEY);
         this.request.setDto(this.daDto);
 
         this.daDto.setApplianceId(this.app.getId());

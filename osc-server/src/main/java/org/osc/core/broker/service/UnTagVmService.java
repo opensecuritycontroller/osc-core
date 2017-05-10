@@ -17,17 +17,23 @@
 package org.osc.core.broker.service;
 
 import org.osc.core.broker.service.api.UnTagVmServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.TagVmResponse;
 import org.osc.core.broker.util.VimUtils;
 import org.osc.sdk.sdn.api.SecurityTagApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.vmware.vim25.mo.VirtualMachine;
 
 @Component
 public class UnTagVmService extends BaseTagVmService implements UnTagVmServiceApi {
+
+    @Reference
+    EncryptionApi encrypter;
+
     @Override
     protected void customValidate(TagVmRequest request) throws VmidcBrokerValidationException {
         if (request.getVmUuid() == null || request.getVmUuid().isEmpty()) {
@@ -53,5 +59,10 @@ public class UnTagVmService extends BaseTagVmService implements UnTagVmServiceAp
     @Override
     protected void modifyNsxSecurityTagApi(SecurityTagApi secTagApi, VirtualMachine vm, TagVmResponse response) throws Exception {
         secTagApi.removeSecurityTagFromVM(vm.getMOR().getVal(), DEFAULT_OSC_SECURITY_TAG);
+    }
+
+    @Override
+    protected EncryptionApi getEncyrptionApi() {
+        return this.encrypter;
     }
 }

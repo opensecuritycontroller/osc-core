@@ -42,6 +42,7 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.RestConstants;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
@@ -143,6 +144,9 @@ public class Server implements ServerApi {
     @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC)
     private List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
 
+    @Reference
+    private EncryptionApi encryption;
+
     private Thread thread;
 
     @Activate
@@ -198,7 +202,7 @@ public class Server implements ServerApi {
 
             ManagerApiFactory.init();
             SdnControllerApiFactory.init();
-            ReleaseUpgradeMgr.initDb();
+            ReleaseUpgradeMgr.initDb(this.encryption);
             DatabaseUtils.createDefaultDB();
             DatabaseUtils.markRunningJobAborted();
 

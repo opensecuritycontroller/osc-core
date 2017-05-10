@@ -16,22 +16,31 @@
  *******************************************************************************/
 package org.osc.core.util;
 
-import com.google.common.collect.ImmutableMap;
-import org.apache.log4j.Logger;
-import org.osc.core.rest.client.util.LoggingUtil;
-import org.osc.core.util.encryption.EncryptionException;
+import java.util.Base64;
+import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Response;
-import java.util.Base64;
-import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
+import org.osc.core.rest.client.util.LoggingUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+import com.google.common.collect.ImmutableMap;
+
+@Component(service=AuthUtil.class)
 public class AuthUtil {
+
+    @Reference
+    EncryptionApi encrypter;
 
     private static final Logger log = Logger.getLogger(AuthUtil.class);
 
-    public static void authenticate(ContainerRequestContext request, String validUserName, String validPass) {
+    public void authenticate(ContainerRequestContext request, String validUserName, String validPass) {
         authenticate(request, ImmutableMap.of(validUserName, validPass));
     }
 
@@ -39,7 +48,7 @@ public class AuthUtil {
      * Checks if the request contains the username password combination from the given map of username and password.
      *
      */
-    public static void authenticate(ContainerRequestContext request, Map<String, String> usernamePasswordMap) {
+    public void authenticate(ContainerRequestContext request, Map<String, String> usernamePasswordMap) {
 
         String authHeader = request.getHeaderString("Authorization");
         WebApplicationException wae = new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
@@ -78,10 +87,10 @@ public class AuthUtil {
         }
     }
 
-    private static boolean validateUserAndPassword(String loginName, String password, Map<String, String> usernamePasswordMap) {
+    private boolean validateUserAndPassword(String loginName, String password, Map<String, String> usernamePasswordMap) {
         return usernamePasswordMap.entrySet().stream().anyMatch(entry -> {
             try {
-                return entry.getKey().equalsIgnoreCase(loginName) && EncryptionUtil.validateAESCTR(password, entry.getValue());
+                return entry.getKey().equalsIgnoreCase(loginName) && this.encrypter.validateAESCTR(password, entry.getValue());
             } catch (EncryptionException encryptionException) {
                 log.error("Failed to validate AESCTR password", encryptionException);
                 return false;
@@ -89,7 +98,7 @@ public class AuthUtil {
         });
     }
 
-    public static void authenticateLocalRequest(ContainerRequestContext request) {
+    public void authenticateLocalRequest(ContainerRequestContext request) {
         WebApplicationException wae = new WebApplicationException(
                 Response.status(Response.Status.UNAUTHORIZED).entity("not authorized").build());
         if(request.getUriInfo()!=null && request.getUriInfo().getRequestUri()!=null) {

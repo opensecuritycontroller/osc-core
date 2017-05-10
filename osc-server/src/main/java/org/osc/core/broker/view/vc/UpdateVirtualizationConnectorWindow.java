@@ -19,6 +19,7 @@ package org.osc.core.broker.view.vc;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -43,8 +44,9 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
     public UpdateVirtualizationConnectorWindow(VirtualizationConnectorView vcView,
             UpdateVirtualizationConnectorServiceApi updateVirtualizationConnectorService,
             PluginService pluginService, ValidationApi validator,
-            X509TrustManagerApi trustManager, ServerApi server) throws Exception {
-        super(pluginService, validator, trustManager);
+            X509TrustManagerApi trustManager, ServerApi server,
+            EncryptionApi encryption) throws Exception {
+        super(pluginService, validator, trustManager, encryption);
         this.server = server;
         this.currentVCObject = vcView.getParentContainer().getItem(vcView.getParentItemId());
         this.updateVirtualizationConnectorService = updateVirtualizationConnectorService;

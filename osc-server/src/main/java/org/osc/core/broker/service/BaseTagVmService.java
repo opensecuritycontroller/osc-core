@@ -21,6 +21,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.TagVmResponse;
@@ -28,7 +29,6 @@ import org.osc.core.broker.service.validator.RequestValidator;
 import org.osc.core.broker.service.validator.TagVmRequestValidator;
 import org.osc.core.broker.util.VimUtils;
 import org.osc.core.server.Server;
-import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.sdn.api.SecurityTagApi;
 
 import com.vmware.vim25.mo.VirtualMachine;
@@ -67,7 +67,7 @@ abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmRes
         VirtualizationConnector vc = dai.getVirtualSystem().getVirtualizationConnector();
 
         if (this.vimUtils == null) {
-            this.vimUtils =  new VimUtils(vc.getProviderIpAddress(), vc.getProviderUsername(), EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
+            this.vimUtils =  new VimUtils(vc.getProviderIpAddress(), vc.getProviderUsername(), getEncyrptionApi().decryptAESCTR(vc.getProviderPassword()));
         }
 
         return customFindVm(this.vimUtils, request);
@@ -80,4 +80,6 @@ abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmRes
     protected abstract void customValidate(TagVmRequest request) throws VmidcBrokerValidationException;
 
     protected abstract VirtualMachine customFindVm(VimUtils vmi, TagVmRequest request) throws VmidcBrokerValidationException;
+
+    protected abstract EncryptionApi getEncyrptionApi();
 }

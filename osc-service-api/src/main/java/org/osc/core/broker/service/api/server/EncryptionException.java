@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.util.encryption;
+package org.osc.core.broker.service.api.server;
 
 public class EncryptionException extends Exception {
     private static final long serialVersionUID = -52733376278542276L;
 
-    EncryptionException(String message, Throwable cause) {
+    public EncryptionException(String message, Throwable cause) {
         super(message, cause);
     }
 

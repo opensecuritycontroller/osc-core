@@ -40,6 +40,7 @@ import org.osc.core.broker.service.api.SyncVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
@@ -148,6 +149,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Reference
     private ServerApi server;
+
+    @Reference
+    private EncryptionApi encryption;
 
     @Activate
     void activate() {
@@ -272,10 +276,10 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     @Override
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
-            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService, this.pluginService, this.validator, this.trustManager, this.server));
+            ViewUtil.addWindow(new AddVirtualizationConnectorWindow(this, this.addVirtualizationConnectorService, this.pluginService, this.validator, this.trustManager, this.server, this.encryption));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
-            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService, this.pluginService, this.validator, this.trustManager, this.server));
+            ViewUtil.addWindow(new UpdateVirtualizationConnectorWindow(this, this.updateVirtualizationConnectorService, this.pluginService, this.validator, this.trustManager, this.server, this.encryption));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             DeleteWindowUtil.deleteVirtualizationConnector(this.deleteVirtualizationConnectorService,
