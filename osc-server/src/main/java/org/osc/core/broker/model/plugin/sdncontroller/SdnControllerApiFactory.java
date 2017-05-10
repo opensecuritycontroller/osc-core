@@ -16,7 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.sdncontroller;
 
-import static org.osc.sdk.controller.Constants.*;
+import static org.osc.sdk.controller.Constants.QUERY_PORT_INFO;
+import static org.osc.sdk.controller.Constants.SUPPORT_FAILURE_POLICY;
+import static org.osc.sdk.controller.Constants.SUPPORT_OFFBOX_REDIRECTION;
+import static org.osc.sdk.controller.Constants.SUPPORT_PORT_GROUP;
+import static org.osc.sdk.controller.Constants.SUPPORT_SFC;
+import static org.osc.sdk.controller.Constants.USE_PROVIDER_CREDS;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +49,6 @@ import org.osc.sdk.controller.Status;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.VirtualizationConnectorElement;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
@@ -117,10 +121,6 @@ public class SdnControllerApiFactory {
             shallowClone.setControllerPassword(EncryptionUtil.decryptAESCTR(shallowClone.getControllerPassword()));
         }
         return new VirtualizationConnectorElementImpl(shallowClone);
-    }
-
-    public static VMwareSdnApi createVMwareSdnApi(VirtualizationConnector vc) throws VmidcException {
-        return apiFactoryService.createVMwareSdnApi(vc);
     }
 
     private static SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception {

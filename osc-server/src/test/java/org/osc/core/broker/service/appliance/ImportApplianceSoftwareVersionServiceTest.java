@@ -15,13 +15,17 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.appliance;
-
+// TODO Hailee: This file has deleted and commented code.
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.*;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.spy;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,12 +47,10 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.response.BaseResponse;
@@ -133,13 +135,13 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         // Image meta data setup
         when(this.imageMetaData.getImageName()).thenReturn(OVF_IMAGE_NAME);
-        when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.model.virtualization.VirtualizationType.VMWARE);
+        //when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.model.virtualization.VirtualizationType.VMWARE);
         when(this.imageMetaData.getModel()).thenReturn(SOFTWARE_MODEL);
         when(this.imageMetaData.getManagerType()).thenReturn(ManagerType.NSM);
         when(this.imageMetaData.getManagerVersion()).thenReturn(MANAGER_VERSION);
-        when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.model.virtualization.VirtualizationType.VMWARE);
-        when(this.imageMetaData.getVmwareVirtualizationVersion()).thenReturn(org.osc.core.broker.model.virtualization.VmwareSoftwareVersion.VMWARE_V5_5);
-        when(this.imageMetaData.getVirtualizationVersionString()).thenReturn(VmwareSoftwareVersion.VMWARE_V5_5.toString());
+        //when(this.imageMetaData.getVirtualizationType()).thenReturn(org.osc.core.broker.model.virtualization.VirtualizationType.VMWARE);
+        //when(this.imageMetaData.getVmwareVirtualizationVersion()).thenReturn(org.osc.core.broker.model.virtualization.VmwareSoftwareVersion.VMWARE_V5_5);
+        //when(this.imageMetaData.getVirtualizationVersionString()).thenReturn(VmwareSoftwareVersion.VMWARE_V5_5.toString());
         when(this.imageMetaData.getSoftwareVersion()).thenReturn(SOFTWARE_VERSION);
         when(this.imageMetaData.getImageName()).thenReturn(OVF_IMAGE_NAME);
         when(this.imageMetaData.getMinIscVersion()).thenReturn(new Version(9L, 9L, "9-abc"));
@@ -268,8 +270,8 @@ public class ImportApplianceSoftwareVersionServiceTest {
            ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
            asv.setApplianceSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
            asv.setImageUrl(OVF_IMAGE_NAME);
-           asv.setVirtualizarionSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
-           asv.setVirtualizationType(VirtualizationType.VMWARE);
+           //asv.setVirtualizarionSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
+           //asv.setVirtualizationType(VirtualizationType.VMWARE);
 
            this.em.persist(asv);
     //

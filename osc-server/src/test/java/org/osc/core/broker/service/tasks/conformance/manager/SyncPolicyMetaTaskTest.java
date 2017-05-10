@@ -32,8 +32,6 @@ import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMe
 import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.NO_MGR_POLICY_MC;
 import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.POLICY_WITHOUT_MGR_POLICY_MC;
 import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.POLICY_WITH_VS_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.VS_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.VS_POLICY_1;
 import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.createPolicyGraph;
 import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.deletePoliciesFromDomainGraph;
 import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.deletePolicyGraph;
@@ -56,7 +54,6 @@ import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.test.InMemDB;
@@ -116,22 +113,22 @@ public class SyncPolicyMetaTaskTest {
        // a proper database setup phase at the start of each.
 
 
-       VirtualSystemPolicy policy = null;
-       if("POLICY_WITH_VS_POLICY_MC_mc".equals(this.mc.getName())) {
-           policy = VS_POLICY;
-       } else if ("DOMAIN_WITH_MULTIPLE_POLICIES_MC_mc".equals(this.mc.getName())) {
-           policy = VS_POLICY_1;
-       }
-
-       if(policy != null) {
-           this.em.persist(policy.getVirtualSystem().getVirtualizationConnector());
-           this.em.persist(policy.getVirtualSystem().getApplianceSoftwareVersion()
-                   .getAppliance());
-           this.em.persist(policy.getVirtualSystem().getApplianceSoftwareVersion());
-           this.em.persist(policy.getVirtualSystem().getDistributedAppliance());
-           this.em.persist(policy.getVirtualSystem());
-           this.em.persist(policy);
-       }
+//       VirtualSystemPolicy policy = null;
+//       if("POLICY_WITH_VS_POLICY_MC_mc".equals(this.mc.getName())) {
+//           policy = VS_POLICY;
+//       } else if ("DOMAIN_WITH_MULTIPLE_POLICIES_MC_mc".equals(this.mc.getName())) {
+//           policy = VS_POLICY_1;
+//       }
+//
+//       if(policy != null) {
+//           this.em.persist(policy.getVirtualSystem().getVirtualizationConnector());
+//           this.em.persist(policy.getVirtualSystem().getApplianceSoftwareVersion()
+//                   .getAppliance());
+//           this.em.persist(policy.getVirtualSystem().getApplianceSoftwareVersion());
+//           this.em.persist(policy.getVirtualSystem().getDistributedAppliance());
+//           this.em.persist(policy.getVirtualSystem());
+//           this.em.persist(policy);
+//       }
 
 
        this.em.getTransaction().commit();

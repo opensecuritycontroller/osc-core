@@ -35,7 +35,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.JobStatus;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
@@ -48,7 +47,7 @@ import org.osc.core.test.util.TestTransactionControl;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
+// TODO: Hailee - Fixed code commented
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HibernateUtil.class })
 public class ValidateDbCreate {
@@ -109,9 +108,9 @@ public class ValidateDbCreate {
         VirtualSystem virtualSystem = new VirtualSystem(distributedAppliance);
         virtualSystem.setDomain(domain);
         virtualSystem.setApplianceSoftwareVersion(applianceSwVer);
-        virtualSystem.setNsxServiceId("nsx-service-4");
-        virtualSystem.setNsxServiceInstanceId("nsx-service-inst-5");
-        virtualSystem.setNsxServiceManagerId("nsx-servicemgr-4");
+        //virtualSystem.setNsxServiceId("nsx-service-4");
+        //virtualSystem.setNsxServiceInstanceId("nsx-service-inst-5");
+        //virtualSystem.setNsxServiceManagerId("nsx-servicemgr-4");
         virtualSystem.setVirtualizationConnector(virtualizationCon);
 
         OSCEntityManager.create(em, virtualSystem);
@@ -174,7 +173,7 @@ public class ValidateDbCreate {
         virtualizationCon.setProviderUsername("nsmuser");
         virtualizationCon.setProviderPassword("abc2");
         virtualizationCon.setVirtualizationSoftwareVersion("12.3");
-        virtualizationCon.setVirtualizationType(VirtualizationType.VMWARE);
+        //virtualizationCon.setVirtualizationType(VirtualizationType.VMWARE);
 
         OSCEntityManager.create(em, virtualizationCon);
 
@@ -208,7 +207,7 @@ public class ValidateDbCreate {
         applianceSwVer.setApplianceSoftwareVersion("sw_1.0");
         applianceSwVer.setImageUrl("http://imageUrl");
         applianceSwVer.setVirtualizarionSoftwareVersion("vir_1.0");
-        applianceSwVer.setVirtualizationType(VirtualizationType.VMWARE);
+        //applianceSwVer.setVirtualizationType(VirtualizationType.VMWARE);
 
         OSCEntityManager.create(em, applianceSwVer);
 

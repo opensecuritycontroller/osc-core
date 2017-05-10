@@ -22,7 +22,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
-import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -65,48 +64,6 @@ public class VirtualSystemEntityMgr {
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
 
         return emgr.findByPrimaryKey(id);
-    }
-
-    public static VirtualSystem findByNsxServiceInstanceIdAndVsmUuid(EntityManager em, String serviceVsmUuid,
-            String serviceInstanceId) {
-
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-
-        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
-
-        Root<VirtualSystem> root = query.from(VirtualSystem.class);
-
-        query = query.select(root)
-            .where(cb.equal(root.get("nsxVsmUuid"), serviceVsmUuid),
-                   cb.equal(root.get("nsxServiceInstanceId"), serviceInstanceId));
-
-        List<VirtualSystem> list = em.createQuery(query).setMaxResults(1).getResultList();
-
-        if (list == null || list.size() == 0) {
-            return null;
-        }
-
-        return list.get(0);
-    }
-
-    public static VirtualSystem findByNsxServiceId(EntityManager em, String nsxServiceId) {
-
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-
-        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
-
-        Root<VirtualSystem> root = query.from(VirtualSystem.class);
-
-        query = query.select(root)
-            .where(cb.equal(root.get("nsxServiceId"), nsxServiceId));
-
-        List<VirtualSystem> list = em.createQuery(query).setMaxResults(1).getResultList();
-
-        if (list == null || list.size() == 0) {
-            return null;
-        }
-
-        return list.get(0);
     }
 
     public static VirtualSystem findByDAAndVC(EntityManager em, Long daId, Long vcId) {
@@ -196,25 +153,6 @@ public class VirtualSystemEntityMgr {
         }
 
         return list;
-    }
-
-    public static VirtualSystem findByNsxServiceProfileIdAndNsxIp(EntityManager em, String serviceProfileId,
-            String nsxIpAddress) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-
-        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
-
-        Root<VirtualSystem> root = query.from(VirtualSystem.class);
-
-        query = query.select(root)
-            .where(cb.equal(root.join("securityGroupInterfaces").get("tag"), serviceProfileId),
-                   cb.equal(root.join("virtualizationConnector").get("controllerIpAddress"), nsxIpAddress));
-
-        try {
-            return em.createQuery(query).getSingleResult();
-        } catch (NoResultException nre) {
-            return null;
-        }
     }
 
     /**

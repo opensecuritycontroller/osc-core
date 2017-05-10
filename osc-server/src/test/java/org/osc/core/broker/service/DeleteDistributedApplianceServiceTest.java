@@ -49,7 +49,6 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteDATask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTask;
-import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.TaskGraphMatcher;
 import org.osc.core.test.util.TestTransactionControl;
@@ -97,9 +96,6 @@ public class DeleteDistributedApplianceServiceTest {
     private VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
 
     @InjectMocks
-    private ValidateNsxTask validateNsxTask;
-
-    @InjectMocks
     private DeleteDistributedApplianceService deleteDistributedApplianceService;
 
     private JobEngine jobEngine;
@@ -113,7 +109,6 @@ public class DeleteDistributedApplianceServiceTest {
 
         // @InjectMocks does not inject these fields
         this.deleteDistributedApplianceService.vsConformanceCheckMetaTask = this.vsConformanceCheckMetaTask;
-        this.deleteDistributedApplianceService.validateNsxTask = this.validateNsxTask;
 
         Mockito.when(this.em.getTransaction()).thenReturn(this.tx);
 
@@ -130,13 +125,7 @@ public class DeleteDistributedApplianceServiceTest {
         VirtualSystem openStackVirtualSystem = new VirtualSystem();
         openStackVirtualSystem.setVirtualizationConnector(openStackVirtualizationConnector);
         openStackVirtualSystem.setId(101L);
-        VirtualizationConnector vmWareVirtualizationConnector = new VirtualizationConnector();
-        vmWareVirtualizationConnector.setVirtualizationType(VirtualizationType.VMWARE);
-        VirtualSystem vmWareVirtualSystem = new VirtualSystem();
-        vmWareVirtualSystem.setVirtualizationConnector(vmWareVirtualizationConnector);
-        vmWareVirtualSystem.setId(102L);
         VALID_DA_WITH_SYSTEMS.addVirtualSystem(openStackVirtualSystem);
-        VALID_DA_WITH_SYSTEMS.addVirtualSystem(vmWareVirtualSystem);
 
         Mockito.when(this.validatorMock.validateAndLoad(INVALID_REQUEST)).thenThrow(new VmidcBrokerValidationException(""));
         Mockito.when(this.validatorMock.validateAndLoad(VALID_REQUEST_FORCE_DELETE)).thenReturn(VALID_DA);
@@ -165,11 +154,6 @@ public class DeleteDistributedApplianceServiceTest {
         taskGraphWithDeleteTask.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         TaskGraph taskGraphWithDeleteTaskAndVsTasks = new TaskGraph();
-        TaskGraph vmWareVsDeleteTaskGraph = new TaskGraph();
-        vmWareVsDeleteTaskGraph.addTask(this.validateNsxTask.create(vmWareVirtualSystem));
-
-        vmWareVsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(vmWareVirtualSystem));
-        taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(vmWareVsDeleteTaskGraph);
         TaskGraph openStackVsDeleteTaskGraph = new TaskGraph();
         openStackVsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(openStackVirtualSystem));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(openStackVsDeleteTaskGraph);

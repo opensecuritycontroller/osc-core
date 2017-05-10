@@ -77,7 +77,7 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
         }
 
         // Other available Bindings
-        if (this.sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
+        if (this.sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK) {
             FailurePolicyType failurePolicyType =
                     SdnControllerApiFactory.supportsFailurePolicy(this.sg) ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA;
 
@@ -125,7 +125,7 @@ ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>> {
         }
 
         if (this.sg.getVirtualizationConnector().getControllerType().equals(ControllerType.NONE.getValue())
-                && this.sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
+                && this.sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK) {
             throw new ActionNotSupportedException(
                     "Invalid Action. Controller is not defined for this Virtualization Connector.");
         }

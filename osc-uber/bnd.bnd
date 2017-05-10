@@ -71,13 +71,10 @@ Require-Capability: \
     @${vaadin-shared.dep},\
     @${vaadin-slf4j-jdk14.dep},\
     @${vaadin-themes.dep},\
-    @${httpclient.dep},\
     @${commons-codec.dep},\
     @${commons-logging.dep},\
-    @${yavijava.dep},\
     @${security-mgr-api.dep},\
     @${sdn-controller-api.dep},\
-    @${vmware-nsx-api.dep},\
     @${esapi.dep},\
     @${antisamy.dep},\
     @${osc-common.dep},\

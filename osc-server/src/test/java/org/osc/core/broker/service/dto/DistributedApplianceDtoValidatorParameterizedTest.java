@@ -49,7 +49,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mockito;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -58,7 +57,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
-
+// TODO Hailee: This file has deleted and commented code.
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
 @PrepareForTest({ManagerApiFactory.class})
@@ -107,7 +106,7 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
         this.em.getTransaction().begin();
 
         this.vmWareVc = new VirtualizationConnector();
-        this.vmWareVc.setVirtualizationType(VirtualizationType.VMWARE);
+        //this.vmWareVc.setVirtualizationType(VirtualizationType.VMWARE);
         this.vmWareVc.setVirtualizationSoftwareVersion("softwareVersion");
 
         this.vmWareVc.setName(VC_NAME_VMWARE);

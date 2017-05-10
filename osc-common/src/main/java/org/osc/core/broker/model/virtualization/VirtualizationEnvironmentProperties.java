@@ -30,6 +30,5 @@ public class VirtualizationEnvironmentProperties {
     public static final String APPLIANCE_NAME = "applianceName";
     public static final String APPLIANCE_MODEL = "applianceModel";
     public static final String APPLIANCE_SOFTWARE_VERSION = "applianceSoftwareVersion";
-    public static final String NSX_AGENT_NAME = "agentName";
 
 }

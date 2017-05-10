@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
-
+// TODO Hailee: This file has deleted and commented code.
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -99,8 +99,8 @@ public class SecurityGroupCheckMetaTaskTest {
                this.em.persist(sgi.getVirtualSystem().getApplianceSoftwareVersion());
                this.em.persist(sgi.getVirtualSystem().getDomain());
                this.em.persist(sgi.getVirtualSystem());
-               this.em.persist(sgi.getVirtualSystemPolicy().getPolicy());
-               this.em.persist(sgi.getVirtualSystemPolicy());
+               //this.em.persist(sgi.getVirtualSystemPolicy().getPolicy());
+               //this.em.persist(sgi.getVirtualSystemPolicy());
                this.em.persist(sgi);
            }
            this.em.persist(sg);

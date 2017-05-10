@@ -17,7 +17,6 @@
 package org.osc.core.broker.view.vc;
 
 import java.net.ConnectException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,7 +33,6 @@ import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.model.virtualization.VirtualizationType;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
@@ -65,7 +63,6 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
-import com.vmware.vim25.InvalidLogin;
 
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
@@ -81,8 +78,6 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     public static final String DEFAULT_RABBITMQ_USER_PASSWORD = "guest";
     public static final String DEFAULT_RABBITMQ_PORT = "5672";
 
-    protected static final String VCENTER_CAPTION = VmidcMessages.getString(VmidcMessages_.VCENTER);
-    protected static final String NSX_CAPTION = VmidcMessages.getString(VmidcMessages_.NSX);
     protected static final String SHOW_ADVANCED_SETTINGS_CAPTION = VmidcMessages
             .getString(VmidcMessages_.SHOW_ADVANCED);
     protected static final String KEYSTONE_CAPTION = VmidcMessages.getString(VmidcMessages_.KEYSTONE);
@@ -103,12 +98,12 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     protected TextField name = null;
     protected ComboBox virtualizationType = null;
 
-    // NSX input fields
+    // Controller input fields
     protected TextField controllerIP = null;
     protected TextField controllerUser = null;
     protected PasswordField controllerPW = null;
 
-    // vCenter input fields
+    // Provider input fields
     protected TextField providerIP = null;
     protected TextField adminTenantName = null;
     protected TextField providerUser = null;
@@ -163,9 +158,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.virtualizationType = new ComboBox("Type");
         this.virtualizationType.setTextInputAllowed(false);
         this.virtualizationType.setNullSelectionAllowed(false);
-        this.virtualizationType.addItem(VirtualizationType.VMWARE.toString());
         this.virtualizationType.addItem(VirtualizationType.OPENSTACK.toString());
-        this.virtualizationType.select(VirtualizationType.VMWARE.toString());
+        this.virtualizationType.select(VirtualizationType.OPENSTACK.toString());
 
         // adding not null constraint
         this.name.setRequired(true);
@@ -201,11 +195,11 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.form.addComponent(this.advancedSettings);
     }
 
-    // Returns vCenter form
+    // Returns OpenStack form
     protected Panel providerPanel() {
         this.providerPanel = new Panel();
         this.providerPanel.setImmediate(true);
-        this.providerPanel.setCaption(VCENTER_CAPTION);
+        this.providerPanel.setCaption(OPENSTACK_CAPTION);
 
         this.providerIP = new TextField("IP");
         this.providerIP.setImmediate(true);
@@ -240,7 +234,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     protected Panel controllerPanel() {
         this.controllerPanel = new Panel();
         this.controllerPanel.setImmediate(true);
-        this.controllerPanel.setCaption(NSX_CAPTION);
+        this.controllerPanel.setCaption(SDN_CONTROLLER_CAPTION);
 
         this.controllerType = new ComboBox("Type");
         this.controllerType.setTextInputAllowed(false);
@@ -250,7 +244,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.controllerType.addItem(ct);
         }
 
-        this.controllerType.setVisible(false);
+        this.controllerType.setVisible(true);
 
         this.controllerIP = new TextField("IP");
         this.controllerIP.setImmediate(true);
@@ -267,13 +261,13 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.controllerPW.setRequired(true);
         this.controllerPW.setRequiredError(this.controllerPanel.getCaption() + " Password cannot be empty");
 
-        FormLayout nsx = new FormLayout();
-        nsx.addComponent(this.controllerType);
-        nsx.addComponent(this.controllerIP);
-        nsx.addComponent(this.controllerUser);
-        nsx.addComponent(this.controllerPW);
+        FormLayout sdn = new FormLayout();
+        sdn.addComponent(this.controllerType);
+        sdn.addComponent(this.controllerIP);
+        sdn.addComponent(this.controllerUser);
+        sdn.addComponent(this.controllerPW);
 
-        this.controllerPanel.setContent(nsx);
+        this.controllerPanel.setContent(sdn);
 
         this.controllerType.addValueChangeListener(new ValueChangeListener() {
 
@@ -296,16 +290,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             ErrorType errorType = ((ErrorTypeException) originalException).getType();
             exception = originalException.getCause();
             if (errorType == ErrorType.PROVIDER_EXCEPTION) {
-                if (exception instanceof InvalidLogin) {
-                    // VCenter Invalid Credential Exception
-                    contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CREDS, VCENTER_CAPTION);
-
-                } else if (exception instanceof RemoteException
-                        || (RestClientException.isConnectException(exception) && isVMware())) {
-                    // VCenter Connect Exception
-                    contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP, VCENTER_CAPTION);
-
-                } else if (exception instanceof AuthorizationException) {
+                if (exception instanceof AuthorizationException) {
                     // keystone Invalid Credential Exception
                     contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CREDS, KEYSTONE_CAPTION);
 
@@ -318,10 +303,6 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
             } else if (errorType == ErrorType.CONTROLLER_EXCEPTION) {
                 if (RestClientException.isCredentialError(exception)) {
-                    if (isVMware()) {
-                        // NSX Invalid Credential Exception
-                        contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_CREDS, NSX_CAPTION);
-                    }
 
                     if (isOpenstack()) {
                         // SDN Invalid Credential Exception
@@ -329,20 +310,13 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                                 this.controllerType.getValue().toString());
                     }
                 } else if (RestClientException.isConnectException(exception)) {
-                    if (isVMware()) {
-                        // NSX Connect Exception
-                        contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP, NSX_CAPTION);
-                    } else if (isOpenstack()) {
+                    if (isOpenstack()) {
                         // SDN Controller Connect Exception
                         contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_IP,
                                 this.controllerType.getValue().toString());
                     }
                 } else {
-                    if (isVMware()) {
-                        // NSX Connect Exception
-                        contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_GENERAL, NSX_CAPTION,
-                                exception.getMessage());
-                    } else if (isOpenstack()) {
+                    if (isOpenstack()) {
                         // SDN Controller Connect Exception
                         contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_GENERAL,
                                 this.controllerType.getValue().toString(), exception.getMessage());
@@ -387,10 +361,6 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         } else {
             handleCatchAllException(exception);
         }
-    }
-
-    private boolean isVMware() {
-        return VirtualizationType.fromText(this.virtualizationType.getValue().toString()) == VirtualizationType.VMWARE;
     }
 
     private boolean isOpenstack() {
@@ -466,9 +436,6 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             request.getDto().setSoftwareVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
             request.getDto()
             .setControllerType(ControllerType.fromText(BaseVCWindow.this.controllerType.getValue().toString()));
-        } else {
-            request.getDto().setSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
-            request.getDto().setControllerType(ControllerType.fromText(NSX_CAPTION));
         }
         return request;
     }
@@ -498,13 +465,6 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.advancedSettings.setCaption(SHOW_ADVANCED_SETTINGS_CAPTION);
             updateProviderFields();
 
-        } else {
-            this.controllerPanel.setCaption(NSX_CAPTION);
-            this.providerPanel.setCaption(VCENTER_CAPTION);
-            updateControllerFields(ControllerType.NONE);
-            this.controllerType.setVisible(false);
-            this.adminTenantName.setVisible(false);
-            this.advancedSettings.setVisible(false);
         }
 
         this.controllerIP.setRequiredError(this.controllerPanel.getCaption() + " IP cannot be empty");
@@ -520,13 +480,13 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private void updateControllerFields(ControllerType type) {
         boolean enableFields = false;
 
-        if (BaseVCWindow.this.virtualizationType.getValue().equals(VirtualizationType.VMWARE.toString())) {
-            enableFields = true;
-        } else if (!type.equals(ControllerType.NONE)) {
-            try {
-                enableFields = !SdnControllerApiFactory.usesProviderCreds(type);
-            } catch (Exception e) {
-                log.error("Fail to get controller plugin instance", e);
+        if (BaseVCWindow.this.virtualizationType.getValue().equals(VirtualizationType.OPENSTACK.toString())) {
+            if (!type.equals(ControllerType.NONE)) {
+                try {
+                    enableFields = !SdnControllerApiFactory.usesProviderCreds(type);
+                } catch (Exception e) {
+                    log.error("Fail to get controller plugin instance", e);
+                }
             }
         }
         BaseVCWindow.this.controllerIP.setEnabled(enableFields);
@@ -543,7 +503,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     }
 
     private void updateProviderFields() {
-        if (!BaseVCWindow.this.virtualizationType.getValue().equals(VirtualizationType.VMWARE.toString())) {
+        if (BaseVCWindow.this.virtualizationType.getValue().equals(VirtualizationType.OPENSTACK.toString())) {
             // If user does not click advanced Settings we need to populate attributes with default values..
             this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, DEFAULT_HTTPS);
             this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, DEFAULT_RABBITMQ_USER);

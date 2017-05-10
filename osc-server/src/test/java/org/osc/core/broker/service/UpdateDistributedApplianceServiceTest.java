@@ -39,7 +39,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -60,7 +59,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.common.collect.Sets;
-
+// TODO Hailee: This file has deleted and commented code.
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HibernateUtil.class, LockUtil.class, ManagerApiFactory.class})
 public class UpdateDistributedApplianceServiceTest {
@@ -192,7 +191,7 @@ public class UpdateDistributedApplianceServiceTest {
         this.em.persist(this.domain);
 
         this.vc = new VirtualizationConnector();
-        this.vc.setVirtualizationType(VirtualizationType.VMWARE);
+        //this.vc.setVirtualizationType(VirtualizationType.VMWARE);
         this.vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         this.vc.setName("vcName");
         this.vc.setProviderIpAddress("127.0.0.1");
@@ -202,7 +201,7 @@ public class UpdateDistributedApplianceServiceTest {
         this.em.persist(this.vc);
 
         this.vcToBeDeleted = new VirtualizationConnector();
-        this.vcToBeDeleted.setVirtualizationType(VirtualizationType.VMWARE);
+        //this.vcToBeDeleted.setVirtualizationType(VirtualizationType.VMWARE);
         this.vcToBeDeleted.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         this.vcToBeDeleted.setName("vcToDeleteName");
         this.vcToBeDeleted.setProviderIpAddress("192.168.1.1");
