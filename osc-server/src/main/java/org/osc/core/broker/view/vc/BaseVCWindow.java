@@ -33,8 +33,6 @@ import org.apache.log4j.Logger;
 import org.jclouds.http.HttpResponseException;
 import org.jclouds.rest.AuthorizationException;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
@@ -70,6 +68,10 @@ import java.util.stream.Collectors;
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     public static final String NO_CONTROLLER = "NONE";
+
+    public static final String VMWARE_5_5 = "5.5";
+
+    public static final String OPENSTACK_ICEHOUSE = "Icehouse";
 
     /**
      *
@@ -309,6 +311,10 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         if (originalException instanceof ErrorTypeException) {
             ErrorType errorType = ((ErrorTypeException) originalException).getType();
             exception = originalException.getCause();
+
+            // TODO this exception leaks large amounts of implementation detail out of
+            // the API (e.g. JClouds internal exceptions. Surely there is a better way
+            // of handling problems?
             if (errorType == ErrorType.PROVIDER_EXCEPTION) {
                 if (exception instanceof InvalidLogin) {
                     // VCenter Invalid Credential Exception
@@ -477,11 +483,11 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
         // TODO: Future. Get virtualization version this from user.
         if (this.virtualizationType.getValue().equals(VirtualizationType.OPENSTACK.toString())) {
-            request.getDto().setSoftwareVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
+            request.getDto().setSoftwareVersion(OPENSTACK_ICEHOUSE);
             request.getDto()
             .setControllerType(BaseVCWindow.this.controllerType.getValue().toString());
         } else {
-            request.getDto().setSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
+            request.getDto().setSoftwareVersion(VMWARE_5_5);
             request.getDto().setControllerType(NSX_CAPTION);
         }
         return request;
