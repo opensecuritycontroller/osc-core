@@ -80,6 +80,7 @@
 			<version>2.8.5</version>
 		</dependency>
 		
+    <!--TODO(Paremus): investigate why these exclusions are needed, and whether this dependency can be scope=test -->
     <dependency>
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-json-jackson</artifactId>
