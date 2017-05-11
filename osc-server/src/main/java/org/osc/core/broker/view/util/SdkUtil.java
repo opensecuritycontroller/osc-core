@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.jar.JarFile;
 
 public class SdkUtil {
 
@@ -34,7 +35,11 @@ public class SdkUtil {
 
     public enum sdkType {MANAGER, SDN_CONTROLLER}
 
-    private final String managerPrefix = "-mgr-";
+    /**
+     * Regex patterns detecting proper file name for SDK - number and last part is more elastic
+     */
+    private final String sdnControllerPattern = "^sdn-controller-api-([0-9.]+)-[a-zA-Z]+-sources\\.jar$";
+    private final String managerApiPattern = "^security-mgr-api-([0-9.]+)-[a-zA-Z]+-sources\\.jar$";
 
     /**
      * Returns newest version of SDK
@@ -47,15 +52,20 @@ public class SdkUtil {
         ArrayList<String> sdkList = new ArrayList<>();
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(sdkPath)) {
             for (Path path : directoryStream) {
+
+                if(!validateIsJar(path)) {
+                    continue;
+                }
+
                 String fileName = path.toString().replace("webapp", "");
                 switch (sdkType) {
                     case MANAGER:
-                        if (fileName.contains(this.managerPrefix)) {
+                        if (path.getFileName().toString().matches(this.managerApiPattern)) {
                             sdkList.add(fileName);
                         }
                         break;
                     case SDN_CONTROLLER:
-                        if (!fileName.contains(this.managerPrefix)) {
+                        if (path.getFileName().toString().matches(this.sdnControllerPattern)) {
                             sdkList.add(fileName);
                         }
                         break;
@@ -70,6 +80,16 @@ public class SdkUtil {
             return sdkList.get(sdkList.size() - 1);
         } else {
             return "";
+        }
+    }
+
+    private boolean validateIsJar(Path pathToFile){
+        try {
+            JarFile jarFile = new JarFile(pathToFile.toFile());
+            return jarFile.size() > 0;
+        } catch (IOException e) {
+            this.LOG.warn("Available file: " + pathToFile.toString() + " is not valid jar package", e);
+            return false;
         }
     }
 }
