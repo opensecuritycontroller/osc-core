@@ -32,7 +32,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
@@ -47,13 +47,16 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.google.common.collect.ImmutableMap;
 
 /**
  * Creates SVA for given dai
  */
-class OsSvaServerCreateTask extends TransactionalTask {
+@Component(service = OsSvaServerCreateTask.class)
+public class OsSvaServerCreateTask extends TransactionalTask {
 
     private static class ApplianceBootStrap implements BootStrapInfoProviderElement {
 
@@ -79,14 +82,20 @@ class OsSvaServerCreateTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(OsSvaServerCreateTask.class);
 
-    private DistributedApplianceInstance dai;
-    private final String availabilityZone;
-    private final String hypervisorHostName;
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
-    public OsSvaServerCreateTask(DistributedApplianceInstance dai, String hypervisorName, String availabilityZone) {
-        this.dai = dai;
-        this.availabilityZone = availabilityZone;
-        this.hypervisorHostName = hypervisorName;
+    private DistributedApplianceInstance dai;
+    private String availabilityZone;
+    private String hypervisorHostName;
+
+    public OsSvaServerCreateTask create(DistributedApplianceInstance dai, String hypervisorName, String availabilityZone) {
+        OsSvaServerCreateTask task = new OsSvaServerCreateTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dai = dai;
+        task.availabilityZone = availabilityZone;
+        task.hypervisorHostName = hypervisorName;
+        return task;
     }
 
     @Override
@@ -198,7 +207,7 @@ class OsSvaServerCreateTask extends TransactionalTask {
     private ApplianceBootstrapInformationElement generateBootstrapInfo(final VirtualSystem vs,
             final String applianceName) throws Exception {
 
-        ManagerDeviceApi deviceApi = ManagerApiFactory.createManagerDeviceApi(vs);
+        ManagerDeviceApi deviceApi = this.apiFactoryService.createManagerDeviceApi(vs);
         Map<String, String> bootstrapProperties = vs.getApplianceSoftwareVersion().getConfigProperties();
 
         return deviceApi

@@ -33,15 +33,24 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteMemberDeviceTask;
 import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.element.AgentElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = ValidateNsxAgentsTask.class)
 public class ValidateNsxAgentsTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(ValidateNsxAgentsTask.class);
 
+    @Reference
+    private MgrDeleteMemberDeviceTask mgrDeleteMemberDeviceTask;
+
     private VirtualSystem vs;
 
-    public ValidateNsxAgentsTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public ValidateNsxAgentsTask create(VirtualSystem vs) {
+        ValidateNsxAgentsTask task = new ValidateNsxAgentsTask();
+        task.mgrDeleteMemberDeviceTask = this.mgrDeleteMemberDeviceTask;
+        task.vs = vs;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -65,7 +74,7 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
                 if (dai.getNsxAgentId() != null) {
                     LOG.info("DAI '" + dai.getName()
                     + "' was not found in deployed agent list and thus should be removed.");
-                    if (MgrDeleteMemberDeviceTask.deleteMemberDevice(dai)) {
+                    if (this.mgrDeleteMemberDeviceTask.deleteMemberDevice(dai)) {
                         daiToBeDeleted.add(dai);
                     }
                 }

@@ -59,40 +59,40 @@ public class MgrCheckDevicesMetaTaskTestData {
 
     public static TaskGraph updateVSSDeviceAndDeleteMemberGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new MgrUpdateVSSDeviceTask(vs));
-        expectedGraph.appendTask(new MgrDeleteMemberDeviceTask(vs, MGR_DEVICE_MEMBER_ELEMENT_NO_DAI));
+        expectedGraph.appendTask(new MgrUpdateVSSDeviceTask().create(vs));
+        expectedGraph.appendTask(new MgrDeleteMemberDeviceTask().create(vs, MGR_DEVICE_MEMBER_ELEMENT_NO_DAI));
         return expectedGraph;
     }
 
     public static TaskGraph createVSSDeviceGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new MgrCreateVSSDeviceTask(vs));
+        expectedGraph.appendTask(new MgrCreateVSSDeviceTask().create(vs));
         return expectedGraph;
     }
 
     public static TaskGraph updateVSSDeviceGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new MgrUpdateVSSDeviceTask(vs));
+        expectedGraph.appendTask(new MgrUpdateVSSDeviceTask().create(vs));
         return expectedGraph;
     }
 
     public static TaskGraph mgrCreateVSSDeviceAndUpdateMemberGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new MgrCreateVSSDeviceTask(vs));
-        expectedGraph.appendTask(new MgrUpdateMemberDeviceTask(DISTRIBUTED_APPLIANCE_INSTANCE_WITH_MANAGER_ID));
+        expectedGraph.appendTask(new MgrCreateVSSDeviceTask().create(vs));
+        expectedGraph.appendTask(new MgrUpdateMemberDeviceTask().create(DISTRIBUTED_APPLIANCE_INSTANCE_WITH_MANAGER_ID));
         return expectedGraph;
     }
 
     public static TaskGraph mgrCreateVSSDeviceAndCreateMemberGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new MgrCreateVSSDeviceTask(vs));
-        expectedGraph.appendTask(new MgrCreateMemberDeviceTask(DISTRIBUTED_APPLIANCE_INSTANCE_WITH_IP_ADDRESS));
+        expectedGraph.appendTask(new MgrCreateVSSDeviceTask().create(vs));
+        expectedGraph.appendTask(new MgrCreateMemberDeviceTask().create(DISTRIBUTED_APPLIANCE_INSTANCE_WITH_IP_ADDRESS));
         return expectedGraph;
     }
 
     public static TaskGraph updateDAISManagerDeviceIdGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new UpdateDAISManagerDeviceId(vs));
+        expectedGraph.appendTask(new UpdateDAISManagerDeviceId().create(vs));
         return expectedGraph;
     }
 

@@ -45,6 +45,7 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.TaskGraphHelper;
@@ -143,7 +144,13 @@ public class DSUpdateOrDeleteMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask(this.ds, this.novaApiMock);
+        DSUpdateOrDeleteMetaTask factoryTask = new DSUpdateOrDeleteMetaTask();
+
+        factoryTask.osSvaCreateMetaTask = new OsSvaCreateMetaTask();
+        factoryTask.osDAIConformanceCheckMetaTask = new OsDAIConformanceCheckMetaTask();
+        factoryTask.mgrCheckDevicesMetaTask = new MgrCheckDevicesMetaTask();
+
+        DSUpdateOrDeleteMetaTask task = factoryTask.create(this.ds, this.novaApiMock);
 
         // Act.
         task.execute();

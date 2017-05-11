@@ -36,10 +36,13 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
 
     private static final Logger log = Logger.getLogger(OsNetworkNotificationListener.class);
 
+    private final ConformService conformService;
+
     public OsNetworkNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity) {
+            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
 
         super(vc, OsNotificationObjectType.NETWORK, objectIdList, entity);
+        this.conformService = conformService;
         register(vc, objectType);
     }
 
@@ -60,7 +63,7 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
                         }
 
                         if (this.entity instanceof DeploymentSpec) {
-                            ConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+                            this.conformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
                         }
                         return null;
                     });

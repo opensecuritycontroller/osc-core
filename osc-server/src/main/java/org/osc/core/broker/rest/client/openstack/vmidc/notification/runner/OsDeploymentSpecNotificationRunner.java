@@ -46,6 +46,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
@@ -60,6 +61,9 @@ import com.google.common.collect.Multimap;
 @Component(scope=ServiceScope.PROTOTYPE,
  service=OsDeploymentSpecNotificationRunner.class)
 public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
+    @Reference
+    private NotificationListenerFactory notificationListenerFactory;
+
     private final Multimap<Long, OsNotificationListener> dsToListenerMap = ArrayListMultimap.create();
     private final HashMap<Long, VirtualizationConnector> dsToVCMap = new HashMap<Long, VirtualizationConnector>();
     private ServiceRegistration<BroadcastListener> registration;
@@ -120,7 +124,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                         if (msg.getEventType() == EventType.ADDED) {
                             addListener(ds);
                         } else if (msg.getEventType() == EventType.UPDATED) {
-                            for (OsNotificationListener listener : dsToListenerMap.get(ds.getId())) {
+                            for (OsNotificationListener listener : this.dsToListenerMap.get(ds.getId())) {
                                 // Only Updating DS Member listener here.. DAI/SVA listener will be updated through SVA tasks
                                 if (listener.getObjectType() != OsNotificationObjectType.VM) {
                                     OsNotificationUtil.updateListener(listener, ds, getMemberIdsFromDS(ds));
@@ -210,7 +214,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         OsNotificationObjectType memberObjectType = getMemberObjectType(ds);
 
         // Creating member change Notification Listener
-        OsNotificationListener memberListener = (OsNotificationListener) NotificationListenerFactory
+        OsNotificationListener memberListener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(ds.getVirtualSystem().getVirtualizationConnector(),
                         memberObjectType, getMemberIdsFromDS(ds), ds);
 
@@ -223,7 +227,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         List<String> tenenatIdList = new ArrayList<String>();
         tenenatIdList.add(ds.getTenantId());
         // Creating member change Notification Listener
-        OsNotificationListener tenantListener = (OsNotificationListener) NotificationListenerFactory
+        OsNotificationListener tenantListener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(ds.getVirtualSystem().getVirtualizationConnector(),
                         OsNotificationObjectType.TENANT, tenenatIdList, ds);
 
@@ -242,7 +246,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         }
 
         // Creating member change Notification Listener
-        OsNotificationListener networkListener = (OsNotificationListener) NotificationListenerFactory
+        OsNotificationListener networkListener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(ds.getVirtualSystem().getVirtualizationConnector(),
                         OsNotificationObjectType.NETWORK, networkIdList, ds);
 
@@ -252,7 +256,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
 
     private void addDAIListener(DeploymentSpec ds) throws VmidcBrokerInvalidEntryException {
         // Creating DAI change notification listener
-        OsNotificationListener daiChangeListener = (OsNotificationListener) NotificationListenerFactory
+        OsNotificationListener daiChangeListener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(ds.getVirtualSystem().getVirtualizationConnector(),
                         OsNotificationObjectType.VM, getDAIIdsFromDS(ds), ds);
         // Register DAI change listener

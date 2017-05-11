@@ -31,21 +31,30 @@ import org.osc.core.broker.service.tasks.conformance.openstack.FlavorCheckMetaTa
 import org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.OsSecurityGroupCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.ValidateDSNetworkTask.NetworkType;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Conforms the DS according to its settings. This task assumes a Lock has been placed on the DS by the job
  * containing this task
  */
+@Component(service = DSConformanceCheckMetaTask.class)
 public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
 
+    @Reference
+    private DSUpdateOrDeleteMetaTask dsUpdateOrDeleteMetaTask;
+
     private DeploymentSpec ds;
-    private final Endpoint endPoint;
+    private Endpoint endPoint;
     private TaskGraph tg;
 
-    public DSConformanceCheckMetaTask(DeploymentSpec ds, Endpoint endPoint) {
-        this.ds = ds;
-        this.endPoint = endPoint;
-        this.name = getName();
+    public DSConformanceCheckMetaTask create(DeploymentSpec ds, Endpoint endPoint) {
+        DSConformanceCheckMetaTask task = new DSConformanceCheckMetaTask();
+        task.dsUpdateOrDeleteMetaTask = this.dsUpdateOrDeleteMetaTask;
+        task.ds = ds;
+        task.endPoint = endPoint;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -72,7 +81,7 @@ public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
             this.tg.appendTask(imageCheckTask);
             this.tg.appendTask(osSecurityGroupCheckMetaTask);
         }
-        this.tg.appendTask(new DSUpdateOrDeleteMetaTask(this.ds, this.endPoint));
+        this.tg.appendTask(this.dsUpdateOrDeleteMetaTask.create(this.ds, this.endPoint));
     }
 
     @Override

@@ -29,7 +29,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.AgentStatusElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
@@ -51,12 +51,16 @@ import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.element.AgentElement;
 import org.osc.sdk.sdn.element.AgentStatusElement;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsRequest, NsxUpdateAgentsResponse>
         implements NsxUpdateAgentsServiceApi {
 
     private static final Logger LOG = Logger.getLogger(NsxUpdateAgentsService.class);
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public NsxUpdateAgentsResponse exec(NsxUpdateAgentsRequest request, EntityManager em) throws Exception {
@@ -260,8 +264,8 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         checkMemberDevice(dai, em);
     }
 
-    private static void checkMemberDevice(DistributedApplianceInstance dai, EntityManager em) throws Exception {
-        try (ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(dai.getVirtualSystem())) {
+    private void checkMemberDevice(DistributedApplianceInstance dai, EntityManager em) throws Exception {
+        try (ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(dai.getVirtualSystem())) {
             if (mgrApi.isDeviceGroupSupported()) {
                 MgrCreateMemberDeviceTask.createMemberDevice(em, dai, mgrApi);
             } else {

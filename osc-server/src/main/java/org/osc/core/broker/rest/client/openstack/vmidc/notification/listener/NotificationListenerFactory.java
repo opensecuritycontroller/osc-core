@@ -21,14 +21,21 @@ import java.util.List;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This factory spawns new listener object and registers it based given object type to the VC specific Rabit MQ client
  */
+@Component(service = NotificationListenerFactory.class)
 public class NotificationListenerFactory {
 
-    public static NotificationListener createAndRegisterNotificationListener(VirtualizationConnector vc,
+    @Reference
+    private ConformService conformService;
+
+    public OsNotificationListener createAndRegisterNotificationListener(VirtualizationConnector vc,
             OsNotificationObjectType objectType, List<String> objectIdList, BaseEntity entity)
             throws VmidcBrokerInvalidEntryException {
 
@@ -36,13 +43,13 @@ public class NotificationListenerFactory {
         case PORT:
             return new OsPortNotificationListener(vc, objectType, objectIdList, entity);
         case VM:
-            return new OsVMNotificationListener(vc, objectType, objectIdList, entity);
+            return new OsVMNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
         case HOST_AGGREGRATE:
-            return new OsHostAggregrateNotificationListener(vc, objectType, objectIdList, entity);
+            return new OsHostAggregrateNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
         case TENANT:
-            return new OsTenantNotificationListener(vc, objectType, objectIdList, entity);
+            return new OsTenantNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
         case NETWORK:
-            return new OsNetworkNotificationListener(vc, objectType, objectIdList, entity);
+            return new OsNetworkNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
         default:
             break;
         }

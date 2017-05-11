@@ -30,11 +30,15 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class SyncDeploymentSpecService
         extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
         implements SyncDeploymentSpecServiceApi {
+
+    @Reference
+    private ConformService conformService;
 
     private DeploymentSpec ds;
 
@@ -55,7 +59,7 @@ public class SyncDeploymentSpecService
 
             // Lock the DS with a write lock and allow it to be unlocked at the end of the job
             unlockTask.addUnlockTask(LockUtil.tryLockDSOnly(this.ds));
-            Job job = ConformService.startDsConformanceJob(em, this.ds, unlockTask);
+            Job job = this.conformService.startDsConformanceJob(em, this.ds, unlockTask);
 
             response.setJobId(job.getId());
 

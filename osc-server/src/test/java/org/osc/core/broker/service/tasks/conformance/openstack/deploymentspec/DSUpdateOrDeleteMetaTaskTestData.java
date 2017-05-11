@@ -209,14 +209,14 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static TaskGraph createAllHostsInRegionGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new OsSvaCreateMetaTask(ds, HS_1_1, AZ_1));
+        expectedGraph.addTask(new OsSvaCreateMetaTask().create(ds, HS_1_1, AZ_1));
         return expectedGraph;
     }
 
     public static TaskGraph createDAIHostSelectedGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(
-                new OsDAIConformanceCheckMetaTask(
+                new OsDAIConformanceCheckMetaTask().create(
                         (DistributedApplianceInstance) ds.getDistributedApplianceInstances().toArray()[0],
                         true));
         return expectedGraph;
@@ -227,7 +227,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         expectedGraph.addTask(new DeleteSvaServerAndDAIMetaTask(ds.getRegion(),
                 (DistributedApplianceInstance) ds.getDistributedApplianceInstances().toArray()[0]));
 
-        expectedGraph.addTask(new OsSvaCreateMetaTask(ds, HS_1_1, AZ_1));
+        expectedGraph.addTask(new OsSvaCreateMetaTask().create(ds, HS_1_1, AZ_1));
 
         return expectedGraph;
     }
@@ -242,20 +242,20 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static TaskGraph createAZSelectedGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new OsDAIConformanceCheckMetaTask((DistributedApplianceInstance) UPDATE_AZ_SELECTED_DAIS.toArray()[0], true));
+        expectedGraph.addTask(new OsDAIConformanceCheckMetaTask().create((DistributedApplianceInstance) UPDATE_AZ_SELECTED_DAIS.toArray()[0], true));
         return expectedGraph;
     }
 
     public static TaskGraph createDaiHostNotInAZSelectedGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new OsDAIConformanceCheckMetaTask((DistributedApplianceInstance) UPDATE_DAI_HOST_NOT_IN_AZ_DAIS.toArray()[0], false));
-        expectedGraph.addTask(new OsSvaCreateMetaTask(ds, HS_1_1, ((AvailabilityZone)ds.getAvailabilityZones().toArray()[0]).getZone()));
+        expectedGraph.addTask(new OsDAIConformanceCheckMetaTask().create((DistributedApplianceInstance) UPDATE_DAI_HOST_NOT_IN_AZ_DAIS.toArray()[0], false));
+        expectedGraph.addTask(new OsSvaCreateMetaTask().create(ds, HS_1_1, ((AvailabilityZone)ds.getAvailabilityZones().toArray()[0]).getZone()));
         return expectedGraph;
     }
 
     public static TaskGraph createOpenStackAZNotSelectedGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new OsDAIConformanceCheckMetaTask((DistributedApplianceInstance) UPDATE_OPENSTACK_AZ_NOT_SELECTED_DAIS.toArray()[0], false));
+        expectedGraph.addTask(new OsDAIConformanceCheckMetaTask().create((DistributedApplianceInstance) UPDATE_OPENSTACK_AZ_NOT_SELECTED_DAIS.toArray()[0], false));
         expectedGraph.addTask(new DeleteSvaServerAndDAIMetaTask(ds.getRegion(), (DistributedApplianceInstance) UPDATE_OPENSTACK_AZ_NOT_SELECTED_DAIS.toArray()[0]));
         return expectedGraph;
     }
@@ -266,7 +266,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         if (ds.getOsSecurityGroupReference() != null) {
             expectedGraph.appendTask(new DeleteOsSecurityGroupTask(ds, ds.getOsSecurityGroupReference()));
         }
-        expectedGraph.appendTask(new MgrCheckDevicesMetaTask(ds.getVirtualSystem()));
+        expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(ds.getVirtualSystem()));
         expectedGraph.appendTask(new DeleteDSFromDbTask(ds));
         return expectedGraph;
     }
