@@ -21,7 +21,7 @@ import java.io.IOException;
 
 public interface ArchiveApi {
 
-    public File archive(String inputDir, String outputFile) throws IOException;
+    File archive(String inputDir, String outputFile) throws IOException;
 
-    public void unzip(String inputFile, String destination) throws IOException;
+    void unzip(String inputFile, String destination) throws IOException;
 }

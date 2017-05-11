@@ -69,7 +69,7 @@ abstract class BackupFileService<I extends Request, O extends Response> extends 
         return new EncryptionParameters();
     }
 
-    protected class EncryptionParameters {
+    protected final class EncryptionParameters {
         private EncryptionParameters() throws KeyStoreProviderException, IOException {
     		// get aliases/passwords to keystore from properties
     		Properties properties = getProperties();

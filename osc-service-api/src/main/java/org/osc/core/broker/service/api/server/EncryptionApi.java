@@ -28,7 +28,7 @@ public interface EncryptionApi {
      * @param aad additional authentication data
      * @return encrypted AES-GCM data
      */
-    public byte[] encryptAESGCM(byte[] plainText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException;
+    byte[] encryptAESGCM(byte[] plainText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException;
 
     /**
      * Decrypts cipher text with AES-GCM authenticated encryption (details in RFC5084)
@@ -38,7 +38,7 @@ public interface EncryptionApi {
      * @param aad additional authentication data
      * @return decrypted AES-GCM data
      */
-    public byte[] decryptAESGCM(byte[] cipherText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException;
+    byte[] decryptAESGCM(byte[] cipherText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException;
 
     /**
      * Encrypt plain text with AES-CTR (counter mode) (details in RFC3686)
@@ -46,7 +46,7 @@ public interface EncryptionApi {
      * @param plainText text to be encrypted
      * @return IV and cypher text concatenated with ':' character
      */
-    public String encryptAESCTR(String plainText) throws EncryptionException;
+    String encryptAESCTR(String plainText) throws EncryptionException;
 
 
     /**
@@ -55,7 +55,7 @@ public interface EncryptionApi {
      * @param cipherText concatenation of IV and cipher text to be decrypted
      * @return decrypted plain text
      */
-    public String decryptAESCTR(String cipherText) throws EncryptionException;
+    String decryptAESCTR(String cipherText) throws EncryptionException;
 
     /**
      * Checks if given cipher text is AES-CTR-encrypted version of given plain text
@@ -63,7 +63,7 @@ public interface EncryptionApi {
      * @param validCipherText IV and cypher text concatenated with ':' character
      * @return true if given cipher text is encrypted version of given plain text, false otherwise
      */
-    public boolean validateAESCTR(String plainText, String validCipherText) throws EncryptionException;
+    boolean validateAESCTR(String plainText, String validCipherText) throws EncryptionException;
 
     /**
      * Decrypt DES message
@@ -72,5 +72,5 @@ public interface EncryptionApi {
      * @return decoded string
      */
     @Deprecated
-    public String decryptDES(String cipherText) throws EncryptionException;
+    String decryptDES(String cipherText) throws EncryptionException;
 }

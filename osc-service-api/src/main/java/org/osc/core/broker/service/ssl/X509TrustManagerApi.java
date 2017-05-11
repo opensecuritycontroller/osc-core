@@ -26,15 +26,15 @@ import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 
 public interface X509TrustManagerApi {
 
-    public void addEntry(File file) throws Exception;
+    void addEntry(File file) throws Exception;
 
-    public void addEntry(X509Certificate certificate, String newAlias) throws Exception;
+    void addEntry(X509Certificate certificate, String newAlias) throws Exception;
 
-    public List<CertificateBasicInfoModel> getCertificateInfoList() throws Exception;
+    List<CertificateBasicInfoModel> getCertificateInfoList() throws Exception;
 
-    public String getSha1Fingerprint(X509Certificate cert) throws NoSuchAlgorithmException, CertificateEncodingException, IllegalArgumentException;
+    String getSha1Fingerprint(X509Certificate cert) throws NoSuchAlgorithmException, CertificateEncodingException, IllegalArgumentException;
 
-    public String certificateToString(X509Certificate certificate);
+    String certificateToString(X509Certificate certificate);
 
 
 }

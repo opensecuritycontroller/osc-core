@@ -23,7 +23,6 @@ import javax.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -38,9 +37,6 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.test.InMemDB;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import junitparams.JUnitParamsRunner;
 
 /**
  * The base class for the {@link DistributedApplianceDtoValidator} unit tests.
