@@ -117,13 +117,13 @@ public class TaskGraphHelper {
 
             @Override
             public int compareTo(TestTaskNode other) {
-                int result = this.getTaskNode().getTask().getName().compareTo(other.getTaskNode().getTask().getName());
+                int result = getTaskNode().getTask().getName().compareTo(other.getTaskNode().getTask().getName());
 
                 if (result != 0) {
                     return result;
                 }
 
-                result = this.getTaskNode().getTaskGaurd().compareTo(other.getTaskNode().getTaskGaurd());
+                result = getTaskNode().getTaskGaurd().compareTo(other.getTaskNode().getTaskGaurd());
                 return result;
             }
 

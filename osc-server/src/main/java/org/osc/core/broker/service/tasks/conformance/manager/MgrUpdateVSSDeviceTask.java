@@ -23,23 +23,32 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Updates the VSS device for the provided VS.
  */
+@Component(service = MgrUpdateVSSDeviceTask.class)
 public class MgrUpdateVSSDeviceTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(MgrUpdateVSSDeviceTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
 
-    public MgrUpdateVSSDeviceTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public MgrUpdateVSSDeviceTask create(VirtualSystem vs) {
+        MgrUpdateVSSDeviceTask task = new MgrUpdateVSSDeviceTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.vs = vs;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -47,7 +56,7 @@ public class MgrUpdateVSSDeviceTask extends TransactionalTask {
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.vs);
+        ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(this.vs);
 
         try {
             ManagerDeviceElement device = mgrApi.getDeviceById(this.vs.getMgrId());

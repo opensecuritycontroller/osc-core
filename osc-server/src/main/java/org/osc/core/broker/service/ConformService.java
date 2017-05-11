@@ -88,6 +88,9 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     @Reference
     MCConformanceCheckMetaTask mcConformanceCheckMetaTask;
 
+    @Reference
+    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
+
     public Long startDAConformJob(EntityManager em, DistributedAppliance da) throws Exception {
         return startDAConformJob(em, da, null, true);
     }
@@ -295,11 +298,11 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         return startMCConformJob(mc, null, em);
     }
 
-    public static Job startDsConformanceJob(DeploymentSpec ds, UnlockObjectMetaTask dsUnlockTask) throws Exception {
+    public Job startDsConformanceJob(DeploymentSpec ds, UnlockObjectMetaTask dsUnlockTask) throws Exception {
         return startDsConformanceJob(null, ds, dsUnlockTask, false);
     }
 
-    public static Job startDsConformanceJob(EntityManager em, DeploymentSpec ds, UnlockObjectMetaTask dsUnlockTask)
+    public Job startDsConformanceJob(EntityManager em, DeploymentSpec ds, UnlockObjectMetaTask dsUnlockTask)
             throws Exception {
         return startDsConformanceJob(em, ds, dsUnlockTask, false);
     }
@@ -319,7 +322,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
      * @throws Exception
      *
      */
-    private static Job startDsConformanceJob(EntityManager em, final DeploymentSpec ds,
+    private Job startDsConformanceJob(EntityManager em, final DeploymentSpec ds,
             UnlockObjectMetaTask dsUnlockTask, boolean queueThisJob) throws Exception {
         TaskGraph tg = new TaskGraph();
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
@@ -329,7 +332,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 dsUnlockTask = LockUtil.tryLockDS(ds, da, da.getApplianceManagerConnector(),
                         ds.getVirtualSystem().getVirtualizationConnector());
             }
-            tg.addTask(new DSConformanceCheckMetaTask(ds, new Endpoint(vc, ds.getTenantName())));
+            tg.addTask(this.dsConformanceCheckMetaTask.create(ds, new Endpoint(vc, ds.getTenantName())));
             tg.appendTask(dsUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             String jobName = "Syncing Deployment Specification";

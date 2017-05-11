@@ -19,6 +19,7 @@ package org.osc.core.broker.rest.server.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Date;
 import java.util.List;
 
@@ -63,8 +64,6 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.response.ServerStatusResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.google.common.io.Files;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -141,7 +140,7 @@ public class ServerMgmtApis {
                 try {
                     ServerMgmtApis.this.backupService.dispatch(request);
                     File encryptedBackupFile = ServerMgmtApis.this.backupService.getEncryptedBackupFile(request.getBackupFileName());
-                    output.write(Files.toByteArray(encryptedBackupFile));
+                    output.write(Files.readAllBytes(encryptedBackupFile.toPath()));
                     output.flush();
                 } catch (Exception e) {
                     throw new InternalServerErrorException("Backup could not be generated",e);

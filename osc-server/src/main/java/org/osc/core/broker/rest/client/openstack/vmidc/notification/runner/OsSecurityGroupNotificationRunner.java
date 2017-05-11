@@ -46,6 +46,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
@@ -61,6 +62,9 @@ import com.google.common.collect.Multimap;
 @Component(scope=ServiceScope.PROTOTYPE,
  service=OsSecurityGroupNotificationRunner.class)
 public class OsSecurityGroupNotificationRunner implements BroadcastListener {
+
+    @Reference
+    private NotificationListenerFactory notificationListenerFactory;
 
     private final Multimap<Long, OsNotificationListener> sgToListenerMap = ArrayListMultimap.create();
     private final HashMap<Long, VirtualizationConnector> sgToVCMap = new HashMap<Long, VirtualizationConnector>();
@@ -252,7 +256,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
     private void addPortToTenantListener(SecurityGroup sg, OsNotificationObjectType type)
             throws VmidcBrokerInvalidEntryException {
         // Creating member change Notification Listener
-        OsNotificationListener listener = (OsNotificationListener) NotificationListenerFactory
+        OsNotificationListener listener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(sg.getVirtualizationConnector(), type,
                         Arrays.asList(sg.getTenantId()), sg);
 
@@ -263,7 +267,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
     private void addTenantDeletionListener(SecurityGroup sg, OsNotificationObjectType type)
             throws VmidcBrokerInvalidEntryException {
 
-        OsNotificationListener listener = (OsNotificationListener) NotificationListenerFactory
+        OsNotificationListener listener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(sg.getVirtualizationConnector(), type,
                         Arrays.asList(sg.getTenantId()), sg);
 
@@ -278,10 +282,10 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
         if (type == OsNotificationObjectType.PORT && !sg.isProtectAll()) {
             // Create Notification Listener
-            listener = (OsNotificationListener) NotificationListenerFactory.createAndRegisterNotificationListener(
+            listener = this.notificationListenerFactory.createAndRegisterNotificationListener(
                     sg.getVirtualizationConnector(), type, getMemberIdsFromSG(sg, null), sg);
         } else {
-            listener = (OsNotificationListener) NotificationListenerFactory.createAndRegisterNotificationListener(
+            listener = this.notificationListenerFactory.createAndRegisterNotificationListener(
                     sg.getVirtualizationConnector(), type, getMemberIdsFromSG(sg, memberType), sg);
         }
 

@@ -35,9 +35,12 @@ public class OsHostAggregrateNotificationListener extends OsNotificationListener
 
     private static final Logger log = Logger.getLogger(OsHostAggregrateNotificationListener.class);
 
+    private final ConformService conformService;
+
     public OsHostAggregrateNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity) {
+            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
         super(vc, OsNotificationObjectType.HOST_AGGREGRATE, objectIdList, entity);
+        this.conformService = conformService;
         register(vc, objectType);
     }
 
@@ -55,7 +58,7 @@ public class OsHostAggregrateNotificationListener extends OsNotificationListener
                 try {
                     HibernateUtil.getTransactionControl().required(() -> {
                         // Trigger Sync for the related Deployment Spec
-                        ConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+                        this.conformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
                         return null;
                     });
                 } catch (Exception e) {

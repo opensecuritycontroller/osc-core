@@ -34,13 +34,18 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
  */
 class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
+    private OsSvaCreateMetaTask osSvaCreateMetaTask;
+
     private DistributedApplianceInstance dai;
     private ApplianceSoftwareVersion upgradedSoftwareVersion;
     private TaskGraph tg;
 
-    public OsDAIUpgradeMetaTask(DistributedApplianceInstance dai, ApplianceSoftwareVersion upgradedSoftwareVersion) {
-        this.dai = dai;
-        this.upgradedSoftwareVersion = upgradedSoftwareVersion;
+    public OsDAIUpgradeMetaTask create(DistributedApplianceInstance dai, ApplianceSoftwareVersion upgradedSoftwareVersion) {
+        OsDAIUpgradeMetaTask task = new OsDAIUpgradeMetaTask();
+        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
+        task.dai = dai;
+        task.upgradedSoftwareVersion = upgradedSoftwareVersion;
+        return task;
     }
 
     @Override
@@ -54,7 +59,7 @@ class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         this.tg.appendTask(new DeleteSvaServerTask(ds.getRegion(), this.dai));
-        this.tg.appendTask(new OsSvaCreateMetaTask(this.dai));
+        this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
 
         OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this);
     }

@@ -43,6 +43,7 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class UpdateDeploymentSpecService
@@ -50,6 +51,10 @@ public class UpdateDeploymentSpecService
         implements UpdateDeploymentSpecServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateDeploymentSpecService.class);
+
+    @Reference
+    private ConformService conformService;
+
     private DeploymentSpec ds;
 
     @Override
@@ -83,7 +88,7 @@ public class UpdateDeploymentSpecService
             UnlockObjectMetaTask forLambda = dsUnlock;
             chain(() -> {
                 try {
-                    Job job = ConformService.startDsConformanceJob(em, this.ds, forLambda);
+                    Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
                     return new BaseJobResponse(this.ds.getId(), job.getId());
                 } catch (Exception e) {
                     LockUtil.releaseLocks(forLambda);

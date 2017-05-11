@@ -62,12 +62,16 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
     @Reference
     private UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
+    @Reference
+    private MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
+
     public IpChangePropagateMetaTask create() {
         IpChangePropagateMetaTask task = new IpChangePropagateMetaTask();
         task.updateNsxServiceManagerTask = this.updateNsxServiceManagerTask;
         task.mcConformanceCheckMetaTask = this.mcConformanceCheckMetaTask;
         task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
+        task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
         task.name = task.getName();
         return task;
     }
@@ -110,7 +114,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
                 }
 
                 // Updating Mgr VSS with the updated iSC server IP
-                propagateTaskGraph.addTask(new MgrCheckDevicesMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED,
+                propagateTaskGraph.addTask(this.mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED,
                         lockTask);
             }
 

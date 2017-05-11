@@ -24,26 +24,35 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = MgrDeleteVSSDeviceTask.class)
 public class MgrDeleteVSSDeviceTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(MgrDeleteVSSDeviceTask.class);
 
+    @Reference
+    public ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
 
-    public MgrDeleteVSSDeviceTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public MgrDeleteVSSDeviceTask create(VirtualSystem vs) {
+        MgrDeleteVSSDeviceTask task = new MgrDeleteVSSDeviceTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.vs = vs;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.vs);
+        ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(this.vs);
         try {
             for (DistributedApplianceInstance dai : this.vs.getDistributedApplianceInstances()) {
                 // Delete individual device

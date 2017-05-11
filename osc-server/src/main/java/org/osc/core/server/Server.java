@@ -103,7 +103,6 @@ public class Server implements ServerApi {
     public static final String PRODUCT_NAME = "Open Security Controller";
     public static final String SHORT_PRODUCT_NAME = "OSC";
     public static final String ISC_PUBLIC_IP = "publicIP";
-    public static final String DEV_MODE_PROPERTY_KEY = "devMode";
 
     private WebSocketRunner wsRunner = null;
     private RabbitMQRunner rabbitMQRunner = null;

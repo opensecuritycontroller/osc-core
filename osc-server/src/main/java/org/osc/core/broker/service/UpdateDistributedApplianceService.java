@@ -31,7 +31,7 @@ import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -67,6 +67,9 @@ public class UpdateDistributedApplianceService
 
     @Reference
     private ConformService conformService;
+
+    @Reference
+    ApiFactoryService apiFactoryService;
 
     @Override
     public BaseJobResponse exec(BaseRequest<DistributedApplianceDto> request, EntityManager em)
@@ -217,7 +220,7 @@ public class UpdateDistributedApplianceService
         if (!da.getApplianceVersion().equals(daDto.getApplianceSoftwareVersionName())) {
             log.info("Upgrade/Downgrade of DA requested. Checking with Manager.");
 
-            ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(oneVs);
+            ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(oneVs);
             try {
                 mgrApi.isUpgradeSupported(da.getAppliance().getModel(), da.getApplianceVersion(), daDto.getApplianceSoftwareVersionName());
             } finally {

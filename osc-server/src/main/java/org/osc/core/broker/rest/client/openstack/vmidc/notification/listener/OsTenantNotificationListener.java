@@ -41,9 +41,12 @@ public class OsTenantNotificationListener extends OsNotificationListener {
 
     private static final Logger log = Logger.getLogger(OsTenantNotificationListener.class);
 
+    private final ConformService conformService;
+
     public OsTenantNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity) {
+            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
         super(vc, OsNotificationObjectType.TENANT, objectIdList, entity);
+        this.conformService = conformService;
         register(vc, objectType);
     }
 
@@ -102,7 +105,7 @@ public class OsTenantNotificationListener extends OsNotificationListener {
         for (DeploymentSpec ds : DeploymentSpecEntityMgr.listDeploymentSpecByTenentId(em, keyValue)) {
             // trigger sync job for that DS
             if (ds.getId().equals(((DeploymentSpec) this.entity).getId())) {
-                ConformService.startDsConformanceJob(ds, null);
+                this.conformService.startDsConformanceJob(ds, null);
             }
         }
     }
