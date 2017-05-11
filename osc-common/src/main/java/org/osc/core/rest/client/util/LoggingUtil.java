@@ -49,10 +49,6 @@ public final class LoggingUtil implements LoggingApi {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting()
             .registerTypeAdapter(byte[].class, new ByteArrayTypeAdapter()).create();
 
-    private LoggingUtil() {
-
-    }
-
     /**
      * Logs the pojo by converting it into Json and printing it out at info Level.
      *
