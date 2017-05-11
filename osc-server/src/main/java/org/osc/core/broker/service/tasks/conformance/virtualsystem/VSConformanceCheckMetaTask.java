@@ -78,7 +78,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     private static final Logger LOG = Logger.getLogger(VSConformanceCheckMetaTask.class);
 
     @Reference
-    public ApiFactoryService apiFactoryService;
+    ApiFactoryService apiFactoryService;
 
     @Reference
     CreateNsxServiceManagerTask createNsxServiceManagerTask;
