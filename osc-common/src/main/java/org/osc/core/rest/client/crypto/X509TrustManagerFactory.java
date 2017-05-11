@@ -54,6 +54,8 @@ import org.osc.core.util.KeyStoreProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 @Component(service = X509TrustManagerApi.class, immediate=true)
 public final class X509TrustManagerFactory implements X509TrustManager, X509TrustManagerApi {
@@ -358,7 +360,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         toCall.stream().forEach(listener -> listener.truststoreChanged());
     }
 
-    @Reference
+    @Reference(policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.MULTIPLE)
     synchronized void addTruststoreChangedListener(TruststoreChangedListener listener) {
         this.truststoreChangedListeners.add(listener);
     }
