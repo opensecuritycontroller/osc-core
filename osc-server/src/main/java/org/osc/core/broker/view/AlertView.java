@@ -178,7 +178,7 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
 
     private void showPendingAcknowledgeAlerts() {
         this.parentTable.resetFilters();
-        this.parentTable.setFilterFieldValue(ALERT_STATUS_COLUMN_ID, AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT);
+        this.parentTable.setFilterFieldValue(ALERT_STATUS_COLUMN_ID, AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT.toString());
     }
 
     private void showAllAlerts() {
