@@ -41,10 +41,10 @@ import org.powermock.api.mockito.PowerMockito;
 /**
  * The base class for the {@link DistributedApplianceDtoValidator} unit tests.
  * The unit tests for {@link DistributedApplianceDtoValidator} have been split in two test classes.
- * The reason is because the runner {@link Parameterized} only supports data driven tests to be within the test class,
+ * The reason is because the runner 'Parameterized' only supports data driven tests to be within the test class,
  * other non data driven tests need to go on a different test class.
- * We could optionally use the {@link JUnitParamsRunner}, which supports mixing data driven and non data driven
- * tests on the same class (as it was before) but this runner is not compatible with {@link PowerMockRunner} now needed for these tests.
+ * We could optionally use the 'JUnitParamsRunner', which supports mixing data driven and non data driven
+ * tests on the same class (as it was before) but this runner is not compatible with  'PowerMockRunner' now needed for these tests.
  */
 public class DistributedApplianceDtoValidatorBaseTest {
     @Mock

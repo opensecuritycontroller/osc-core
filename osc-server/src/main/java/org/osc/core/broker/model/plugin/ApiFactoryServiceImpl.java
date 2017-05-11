@@ -58,6 +58,7 @@ import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.ManagerAuthenticationType;
 import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
@@ -536,6 +537,17 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     @Override
     public boolean isKeyAuth(String managerType) throws Exception {
         return isKeyAuth(ManagerType.fromText(managerType));
+    }
+
+    @Override
+    public ManagerDeviceApi createManagerDeviceApi(VirtualSystem vs) throws Exception {
+        return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
+                .createManagerDeviceApi(getApplianceManagerConnectorElement(vs), new VirtualSystemElementImpl(vs));
+    }
+
+    @Override
+    public ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs) throws EncryptionException {
+        return getApplianceManagerConnectorElement(vs.getDistributedAppliance().getApplianceManagerConnector());
     }
 
 }

@@ -26,7 +26,6 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.IscJobNotificationApi;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
-import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.api.ManagerDomainApi;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
@@ -70,11 +69,6 @@ public class ManagerApiFactory {
 
     private static ApplianceManagerApi createApplianceManagerApi(String managerName) throws Exception {
         return apiFactoryService.createApplianceManagerApi(ManagerType.fromText(managerName));
-    }
-
-    public static ManagerDeviceApi createManagerDeviceApi(VirtualSystem vs) throws Exception {
-        return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                .createManagerDeviceApi(getApplianceManagerConnectorElement(vs), new VirtualSystemElementImpl(vs));
     }
 
     public static ManagerSecurityGroupInterfaceApi createManagerSecurityGroupInterfaceApi(VirtualSystem vs)
@@ -162,7 +156,7 @@ public class ManagerApiFactory {
 
     private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs)
             throws EncryptionException {
-        return getApplianceManagerConnectorElement(vs.getDistributedAppliance().getApplianceManagerConnector());
+        return apiFactoryService.getApplianceManagerConnectorElement(vs);
     }
 
 }

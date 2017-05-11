@@ -29,6 +29,7 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
@@ -73,6 +74,8 @@ public interface ApiFactoryService {
     ApplianceManagerConnectorElement getApplianceManagerConnectorElement(ApplianceManagerConnector mc)
             throws EncryptionException;
 
+    ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs) throws EncryptionException;
+
     ManagerWebSocketNotificationApi createManagerWebSocketNotificationApi(ApplianceManagerConnector mc)
             throws Exception;
 
@@ -82,6 +85,8 @@ public interface ApiFactoryService {
             throws Exception;
 
     String generateServiceManagerName(VirtualSystem vs) throws Exception;
+
+    ManagerDeviceApi createManagerDeviceApi(VirtualSystem vs) throws Exception;
 
     /**
      * Creates a {@code SdnControllerApi} instance for the specified controller type.

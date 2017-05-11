@@ -36,10 +36,14 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.ForceDeleteDSTask;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
         implements DeleteDeploymentSpecServiceApi {
+
+    @Reference
+    private ConformService conformService;
 
     private DeploymentSpec ds;
 
@@ -69,7 +73,7 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
                 chain(() -> {
                     try {
                         BaseJobResponse result = new BaseJobResponse();
-                        Job job = ConformService.startDsConformanceJob(em, this.ds, forLambda);
+                        Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
                         result.setJobId(job.getId());
                         return response;
                     } catch (Exception e) {

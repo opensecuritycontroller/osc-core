@@ -47,9 +47,12 @@ public class OsVMNotificationListener extends OsNotificationListener {
     private static final Logger log = Logger.getLogger(OsVMNotificationListener.class);
     private static final String REGION_NOTIFICATION_KEY = "region";
 
+    private final ConformService conformService;
+
     public OsVMNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity) {
+            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
         super(vc, OsNotificationObjectType.VM, objectIdList, entity);
+        this.conformService = conformService;
         register(vc, objectType);
     }
 
@@ -143,11 +146,11 @@ public class OsVMNotificationListener extends OsNotificationListener {
         if (eventType.contains(OsNotificationEventState.RESIZE_CONFIRM_END.toString())) {
             if (isVmMigrated(vmOpenstackId, message)) {
                 // When some one migrate DAI then we trigger sync Job to fix this issue
-                ConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+                this.conformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
             }
         } else {
             // DAI is either powered off or deleted. We must  trigger sync for this
-            ConformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
+            this.conformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
         }
     }
 

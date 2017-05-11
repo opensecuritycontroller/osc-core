@@ -27,28 +27,37 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCreateMemberDeviceTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Creates an SVA on openstack
  */
-class OsSvaCreateMetaTask extends TransactionalMetaTask {
+@Component(service = OsSvaCreateMetaTask.class)
+public class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
     final Logger log = Logger.getLogger(OsSvaCreateMetaTask.class);
 
-    private TaskGraph tg;
+    @Reference
+    private ApiFactoryService apiFactoryService;
+    @Reference
+    private MgrCreateMemberDeviceTask mgrCreateMemberDeviceTask;
+    @Reference
+    private OsSvaServerCreateTask osSvaServerCreateTask;
 
+    private TaskGraph tg;
     private DeploymentSpec ds;
     private DistributedApplianceInstance dai;
     private String availabilityZone;
-    private final String hypervisorHostName;
+    private String hypervisorHostName;
 
     /**
-     * Constructor. All arguments are required(unless specified)
+     * All arguments are required(unless specified)
      *
      * @param ds
      *            deployment spec
@@ -57,18 +66,22 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
      * @param availabilityZone
      *            the availability zone to deploy to
      */
-    public OsSvaCreateMetaTask(DeploymentSpec ds, String hypervisorHostName, String availabilityZone) {
-        this.availabilityZone = availabilityZone;
-        this.ds = ds;
-        this.hypervisorHostName = hypervisorHostName;
-        this.dai = null;
+    public OsSvaCreateMetaTask create(DeploymentSpec ds, String hypervisorHostName, String availabilityZone) {
+        OsSvaCreateMetaTask task = new OsSvaCreateMetaTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.mgrCreateMemberDeviceTask = this.mgrCreateMemberDeviceTask;
+        task.osSvaServerCreateTask = this.osSvaServerCreateTask;
+        task.availabilityZone = availabilityZone;
+        task.ds = ds;
+        task.hypervisorHostName = hypervisorHostName;
+        task.dai = null;
+        return task;
     }
 
-    public OsSvaCreateMetaTask(DistributedApplianceInstance dai) {
-        this.dai = dai;
-        this.ds = dai.getDeploymentSpec();
-        this.availabilityZone = dai.getOsAvailabilityZone();
-        this.hypervisorHostName = this.dai.getOsHostName();
+    public OsSvaCreateMetaTask create(DistributedApplianceInstance dai) {
+        OsSvaCreateMetaTask task = create(dai.getDeploymentSpec(), dai.getOsHostName(), dai.getOsAvailabilityZone());
+        task.dai = dai;
+        return task;
     }
 
     @Override
@@ -88,7 +101,7 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
         OSCEntityManager.update(em, this.dai);
 
-        this.tg.addTask(new OsSvaServerCreateTask(this.dai, this.hypervisorHostName, this.availabilityZone));
+        this.tg.addTask(this.osSvaServerCreateTask.create(this.dai, this.hypervisorHostName, this.availabilityZone));
         this.tg.appendTask(new OsSvaEnsureActiveTask(this.dai));
         if (!StringUtils.isBlank(this.ds.getFloatingIpPoolName())) {
             this.tg.appendTask(new OsSvaCheckFloatingIpTask(this.dai));
@@ -96,9 +109,9 @@ class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
         this.tg.appendTask(new OsSvaCheckNetworkInfoTask(this.dai));
 
-        try (ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.dai.getVirtualSystem())) {
+        try (ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(this.dai.getVirtualSystem())) {
             if (mgrApi.isDeviceGroupSupported()) {
-                this.tg.appendTask(new MgrCreateMemberDeviceTask(this.dai));
+                this.tg.appendTask(this.mgrCreateMemberDeviceTask.create(this.dai));
             }
         }
 

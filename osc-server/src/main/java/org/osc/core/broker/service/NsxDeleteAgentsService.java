@@ -28,12 +28,16 @@ import org.osc.core.broker.service.request.NsxDeleteAgentsRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteMemberDeviceTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class NsxDeleteAgentsService extends ServiceDispatcher<NsxDeleteAgentsRequest, EmptySuccessResponse>
         implements NsxDeleteAgentsServiceApi {
 
     private static final Logger log = Logger.getLogger(NsxDeleteAgentsService.class);
+
+    @Reference
+    private MgrDeleteMemberDeviceTask mgrDeleteMemberDeviceTask;
 
     @Override
     public EmptySuccessResponse exec(NsxDeleteAgentsRequest request, EntityManager em) throws Exception {
@@ -44,7 +48,7 @@ public class NsxDeleteAgentsService extends ServiceDispatcher<NsxDeleteAgentsReq
         DistributedApplianceInstance dai = validate(em, request, emgr);
 
         if (dai != null) {
-            if (MgrDeleteMemberDeviceTask.deleteMemberDevice(dai)) {
+            if (this.mgrDeleteMemberDeviceTask.deleteMemberDevice(dai)) {
                 OSCEntityManager.delete(em, dai);
             }
         } else {

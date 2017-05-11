@@ -39,6 +39,9 @@ import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
+import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
+import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteVSSDeviceTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
@@ -97,6 +100,18 @@ public class VSConformanceCheckMetaTaskTest {
     @InjectMocks
     private UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
+    @InjectMocks
+    private MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
+
+    @InjectMocks
+    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
+
+    @InjectMocks
+    private ValidateNsxAgentsTask validateNsxAgentsTask;
+
+    @InjectMocks
+    private MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
+
     private ServiceManagerApi serviceManagerApiMock;
     private ServiceApi serviceApiMock;
 
@@ -129,6 +144,10 @@ public class VSConformanceCheckMetaTaskTest {
         this.vsConformanceCheckMetaTask.encryption = this.encryption;
         this.vsConformanceCheckMetaTask.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
         this.vsConformanceCheckMetaTask.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
+        this.vsConformanceCheckMetaTask.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
+        this.vsConformanceCheckMetaTask.dsConformanceCheckMetaTask = this.dsConformanceCheckMetaTask;
+        this.vsConformanceCheckMetaTask.validateNsxAgentsTask = this.validateNsxAgentsTask;
+        this.vsConformanceCheckMetaTask.mgrDeleteVSSDeviceTask = this.mgrDeleteVSSDeviceTask;
 
         this.serviceManagerApiMock = Mockito.mock(ServiceManagerApi.class);
         this.serviceApiMock = Mockito.mock(ServiceApi.class);
@@ -198,6 +217,7 @@ public class VSConformanceCheckMetaTaskTest {
         Mockito.when(encryption.encryptAESCTR("")).thenReturn(ENCRYPTED_PASSWORD);
 
         apiFactoryService = VSConformanceCheckMetaTaskTestData.apiFactoryService;
+
         return Arrays.asList(new Object[][] {
             {UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS, createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS), false},
             {UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS,  createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS), false},

@@ -23,24 +23,33 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = UpdateDAISManagerDeviceId.class)
 public class UpdateDAISManagerDeviceId extends TransactionalTask {
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private VirtualSystem vs;
 
-    public UpdateDAISManagerDeviceId(VirtualSystem vs) {
-        this.vs = vs;
+    public UpdateDAISManagerDeviceId create(VirtualSystem vs) {
+        UpdateDAISManagerDeviceId task = new UpdateDAISManagerDeviceId();
+        task.apiFactoryService = this.apiFactoryService;
+        task.vs = vs;
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
 
-        try (ManagerDeviceApi mgrApi = ManagerApiFactory.createManagerDeviceApi(this.vs)) {
+        try (ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(this.vs)) {
             for (ManagerDeviceMemberElement mgrDeviceMember : mgrApi.listDeviceMembers()) {
                 for (DistributedApplianceInstance dai : this.vs.getDistributedApplianceInstances()) {
                     if (dai.getName().equals(mgrDeviceMember.getName())

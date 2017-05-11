@@ -43,7 +43,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
@@ -64,7 +64,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.google.common.collect.Sets;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({HibernateUtil.class, LockUtil.class, ManagerApiFactory.class})
+@PrepareForTest({HibernateUtil.class, LockUtil.class})
 public class UpdateDistributedApplianceServiceTest {
     private static long JOB_ID = 12345L;
     private static String NEW_APPLIANCE_SW_VERSION = "NEWVERSION";
@@ -88,6 +88,9 @@ public class UpdateDistributedApplianceServiceTest {
 
     @Mock
     private EncryptionApi encryption;
+
+    @Mock
+    private ApiFactoryService apiFactoryService;
 
     @InjectMocks
     private UpdateDistributedApplianceService service;
@@ -121,6 +124,8 @@ public class UpdateDistributedApplianceServiceTest {
         PowerMockito.mockStatic(HibernateUtil.class);
         Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
         Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+
+        Mockito.when(this.apiFactoryService.createManagerDeviceApi(Mockito.any())).thenReturn(Mockito.mock(ManagerDeviceApi.class));
 
         populateDatabase();
 
@@ -166,9 +171,9 @@ public class UpdateDistributedApplianceServiceTest {
         PowerMockito.mockStatic(LockUtil.class);
         Mockito.when(LockUtil.tryLockDA(this.da, this.da.getApplianceManagerConnector())).thenReturn(this.ult);
 
-        PowerMockito.mockStatic(ManagerApiFactory.class);
-        Mockito.when(ManagerApiFactory.createManagerDeviceApi(this.vs)).thenReturn(Mockito.mock(ManagerDeviceApi.class));
-        Mockito.when(ManagerApiFactory.createManagerDeviceApi(this.vsToBeDeleted)).thenReturn(Mockito.mock(ManagerDeviceApi.class));
+        ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
+        Mockito.when(apiFactoryService.createManagerDeviceApi(this.vs)).thenReturn(Mockito.mock(ManagerDeviceApi.class));
+        Mockito.when(apiFactoryService.createManagerDeviceApi(this.vsToBeDeleted)).thenReturn(Mockito.mock(ManagerDeviceApi.class));
     }
 
     @After

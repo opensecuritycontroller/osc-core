@@ -106,7 +106,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         return instance;
     }
 
-    X509TrustManagerFactory() {
+    public X509TrustManagerFactory() {
         try {
             reloadTrustManager();
         } catch (Exception e) {
