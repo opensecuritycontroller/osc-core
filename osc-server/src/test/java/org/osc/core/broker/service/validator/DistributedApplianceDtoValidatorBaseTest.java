@@ -23,7 +23,6 @@ import javax.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -38,17 +37,14 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.test.InMemDB;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import junitparams.JUnitParamsRunner;
 
 /**
  * The base class for the {@link DistributedApplianceDtoValidator} unit tests.
  * The unit tests for {@link DistributedApplianceDtoValidator} have been split in two test classes.
- * The reason is because the runner {@link Parameterized} only supports data driven tests to be within the test class,
+ * The reason is because the runner 'Parameterized' only supports data driven tests to be within the test class,
  * other non data driven tests need to go on a different test class.
- * We could optionally use the {@link JUnitParamsRunner}, which supports mixing data driven and non data driven
- * tests on the same class (as it was before) but this runner is not compatible with {@link PowerMockRunner} now needed for these tests.
+ * We could optionally use the 'JUnitParamsRunner', which supports mixing data driven and non data driven
+ * tests on the same class (as it was before) but this runner is not compatible with  'PowerMockRunner' now needed for these tests.
  */
 public class DistributedApplianceDtoValidatorBaseTest {
     @Mock
