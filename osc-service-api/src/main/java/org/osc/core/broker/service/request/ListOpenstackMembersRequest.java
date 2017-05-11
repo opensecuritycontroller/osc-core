@@ -18,19 +18,18 @@ package org.osc.core.broker.service.request;
 
 import java.util.Set;
 
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 
 public class ListOpenstackMembersRequest extends BaseOpenStackRequest {
 
-    private SecurityGroupMemberType type;
+    private String type;
     private Set<SecurityGroupMemberItemDto> currentSelectedMembers;
 
-    public SecurityGroupMemberType getType() {
+    public String getType() {
         return this.type;
     }
 
-    public void setType(SecurityGroupMemberType type) {
+    public void setType(String type) {
         this.type = type;
     }
 

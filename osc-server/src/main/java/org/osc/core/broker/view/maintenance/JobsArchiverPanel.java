@@ -263,8 +263,8 @@ public class JobsArchiverPanel extends CustomComponent {
                     request.setDto(new JobsArchiveDto());
                     request.getDto().setId(JobsArchiverPanel.this.dto.getId());
                     request.getDto().setAutoSchedule(JobsArchiverPanel.this.autoSchedChkBox.getValue());
-                    request.getDto().setFrequency((FreqType) JobsArchiverPanel.this.freqOpt.getValue());
-                    request.getDto().setThresholdUnit((ThresholdType) JobsArchiverPanel.this.thresOpt.getValue());
+                    request.getDto().setFrequency(JobsArchiverPanel.this.freqOpt.getValue().toString());
+                    request.getDto().setThresholdUnit(JobsArchiverPanel.this.thresOpt.getValue().toString());
                     request.getDto().setThresholdValue(JobsArchiverPanel.this.archiveThreshold.getValue());
 
                     JobsArchiverPanel.this.updateJobsArchiveService.dispatch(request);
@@ -306,8 +306,8 @@ public class JobsArchiverPanel extends CustomComponent {
                     public void run() {
                         BaseRequest<JobsArchiveDto> request = new BaseRequest<JobsArchiveDto>();
                         request.setDto(new JobsArchiveDto());
-                        request.getDto().setFrequency((FreqType) JobsArchiverPanel.this.freqOpt.getValue());
-                        request.getDto().setThresholdUnit((ThresholdType) JobsArchiverPanel.this.thresOpt.getValue());
+                        request.getDto().setFrequency(JobsArchiverPanel.this.freqOpt.getValue().toString());
+                        request.getDto().setThresholdUnit(JobsArchiverPanel.this.thresOpt.getValue().toString());
                         request.getDto().setThresholdValue(JobsArchiverPanel.this.archiveThreshold.getValue());
 
                         try {

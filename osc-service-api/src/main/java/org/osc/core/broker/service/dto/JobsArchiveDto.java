@@ -23,9 +23,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.entities.archive.FreqType;
-import org.osc.core.broker.model.entities.archive.ThresholdType;
-
 @XmlRootElement(name ="jobArchive")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class JobsArchiveDto extends BaseDto implements Serializable {
@@ -33,8 +30,8 @@ public class JobsArchiveDto extends BaseDto implements Serializable {
     private static final long serialVersionUID = -8266202924666973157L;
 
     private Boolean autoSchedule;
-    private FreqType frequency;
-    private ThresholdType thresholdUnit;
+    private String frequency;
+    private String thresholdUnit;
     private Integer thresholdValue;
     private Date lastTriggerTimestamp;
 
@@ -46,19 +43,19 @@ public class JobsArchiveDto extends BaseDto implements Serializable {
 		this.autoSchedule = autoSchedule;
 	}
 
-	public FreqType getFrequency() {
+	public String getFrequency() {
 		return this.frequency;
 	}
 
-	public void setFrequency(FreqType frequency) {
+	public void setFrequency(String frequency) {
 		this.frequency = frequency;
 	}
 
-	public ThresholdType getThresholdUnit() {
+	public String getThresholdUnit() {
 		return this.thresholdUnit;
 	}
 
-	public void setThresholdUnit(ThresholdType thresholdUnit) {
+	public void setThresholdUnit(String thresholdUnit) {
 		this.thresholdUnit = thresholdUnit;
 	}
 

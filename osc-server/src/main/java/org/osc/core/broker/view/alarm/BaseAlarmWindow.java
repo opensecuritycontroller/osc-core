@@ -175,10 +175,10 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
 
         request.getDto().setEnabledAlarm(this.enabled.getValue());
         request.getDto().setName(this.alarmName.getValue().trim());
-        request.getDto().setEventType(EventType.fromText(this.eventType.getValue().toString()));
+        request.getDto().setEventType(this.eventType.getValue().toString());
         request.getDto().setRegexMatch(this.regexMatch.getValue().trim());
-        request.getDto().setSeverity(Severity.fromText(this.severity.getValue().toString()));
-        request.getDto().setAlarmAction(AlarmAction.fromText(this.alarmAction.getValue().toString()));
+        request.getDto().setSeverity(this.severity.getValue().toString());
+        request.getDto().setAlarmAction(this.alarmAction.getValue().toString());
         request.getDto().setReceipientEmail(this.email.getValue().trim());
 
         return request;

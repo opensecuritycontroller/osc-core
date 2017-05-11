@@ -22,8 +22,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.core.broker.service.request.ServiceProfileInput.ProfileAttributes;
 import org.osc.core.broker.service.request.ServiceProfileReference.ServiceInstanceReference;
 import org.osc.sdk.sdn.element.ServiceProfileElement;
@@ -109,37 +107,65 @@ public class ServiceProfile implements ServiceProfileElement {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (object == null) {
-            return false;
-        }
-        if (getClass() != object.getClass()) {
-            return false;
-        }
-        if (this == object) {
-            return true;
-        }
-
-        ServiceProfile other = (ServiceProfile) object;
-
-        return new EqualsBuilder()
-                .append(getName(), other.getName())
-                .append(getObjectId(), other.getObjectId())
-                .append(getVsmUuid(), other.getVsmUuid())
-                .append(this.description, other.description)
-                .append(this.status, other.status)
-                .isEquals();
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((this.description == null) ? 0 : this.description.hashCode());
+        result = prime * result + ((this.name == null) ? 0 : this.name.hashCode());
+        result = prime * result + ((this.objectId == null) ? 0 : this.objectId.hashCode());
+        result = prime * result + ((this.status == null) ? 0 : this.status.hashCode());
+        result = prime * result + ((this.vsmUuid == null) ? 0 : this.vsmUuid.hashCode());
+        return result;
     }
 
     @Override
-    public int hashCode() {
-        return new HashCodeBuilder()
-                .append(getName())
-                .append(getObjectId())
-                .append(getVsmUuid())
-                .append(this.description)
-                .append(this.status)
-                .toHashCode();
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ServiceProfile other = (ServiceProfile) obj;
+        if (this.description == null) {
+            if (other.description != null) {
+                return false;
+            }
+        } else if (!this.description.equals(other.description)) {
+            return false;
+        }
+        if (this.name == null) {
+            if (other.name != null) {
+                return false;
+            }
+        } else if (!this.name.equals(other.name)) {
+            return false;
+        }
+        if (this.objectId == null) {
+            if (other.objectId != null) {
+                return false;
+            }
+        } else if (!this.objectId.equals(other.objectId)) {
+            return false;
+        }
+        if (this.status == null) {
+            if (other.status != null) {
+                return false;
+            }
+        } else if (!this.status.equals(other.status)) {
+            return false;
+        }
+        if (this.vsmUuid == null) {
+            if (other.vsmUuid != null) {
+                return false;
+            }
+        } else if (!this.vsmUuid.equals(other.vsmUuid)) {
+            return false;
+        }
+        return true;
     }
 
     @Override

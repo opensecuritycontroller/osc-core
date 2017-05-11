@@ -119,8 +119,8 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                     memberItem.getRegion(), memberItem.getName()));
         }
         if (memberItem.isProtectExternal()){
-            if (memberItem.getType().equals(SecurityGroupMemberType.VM) ||
-                    memberItem.getType().equals(SecurityGroupMemberType.NETWORK)){
+            if (memberItem.getType().equals(SecurityGroupMemberType.VM.toString()) ||
+                    memberItem.getType().equals(SecurityGroupMemberType.NETWORK.toString())){
                 throw new VmidcBrokerValidationException(String.format("Protect External: Not allowed for type '%s' member '%s'",
                         memberItem.getType(), memberItem.getName()));
             }
@@ -130,7 +130,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
     public static void addSecurityGroupMember(EntityManager em, SecurityGroup securityGroup,
             SecurityGroupMemberItemDto securityGroupMemberDto) throws VmidcBrokerValidationException {
         String openstackId = securityGroupMemberDto.getOpenstackId();
-        SecurityGroupMemberType type = securityGroupMemberDto.getType();
+        SecurityGroupMemberType type = SecurityGroupMemberType.fromText(securityGroupMemberDto.getType());
         OsProtectionEntity entity = null;
 
         if (type == SecurityGroupMemberType.VM) {

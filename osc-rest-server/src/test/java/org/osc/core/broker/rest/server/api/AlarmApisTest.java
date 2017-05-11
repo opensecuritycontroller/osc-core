@@ -34,9 +34,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.osc.core.broker.model.entities.events.AlarmAction;
-import org.osc.core.broker.model.entities.events.EventType;
-import org.osc.core.broker.model.entities.events.Severity;
 import org.osc.core.broker.rest.server.ApiUtil;
 import org.osc.core.broker.rest.server.api.test.BaseJerseyTest;
 import org.osc.core.broker.service.api.AddAlarmServiceApi;
@@ -226,14 +223,17 @@ public class AlarmApisTest extends BaseJerseyTest {
      * Returns alarmDto instance fulfilled with proper data
      */
     private AlarmDto getAlarmDto() {
-        AlarmDto alarm = new AlarmDto();
+        final String AlarmAction_NONE = "None";
+        final String EventType_JOB_FAILURE = "Job Failure";
+        final String Severity_LOW = "Low";
 
+        AlarmDto alarm = new AlarmDto();
         alarm.setName("testAlarm");
-        alarm.setAlarmAction(AlarmAction.NONE);
+        alarm.setAlarmAction(AlarmAction_NONE);
         alarm.setEnabledAlarm(false);
-        alarm.setEventType(EventType.JOB_FAILURE);
+        alarm.setEventType(EventType_JOB_FAILURE);
         alarm.setRegexMatch("\\d");
-        alarm.setSeverity(Severity.LOW);
+        alarm.setSeverity(Severity_LOW);
         alarm.setId(1L);
 
         return alarm;

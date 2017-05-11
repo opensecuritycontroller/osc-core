@@ -42,6 +42,6 @@ public enum AcknowledgementStatus {
 
     @Override
     public String toString() {
-        return text;
+        return this.text;
     }
 }

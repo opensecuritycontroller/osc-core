@@ -38,8 +38,8 @@ public class GetJobsArchiveService extends ServiceDispatcher<Request, BaseDtoRes
         jobArchiveResponse.setDto(new JobsArchiveDto());
         jobArchiveResponse.getDto().setId(jobsArchive.getId());
         jobArchiveResponse.getDto().setAutoSchedule(jobsArchive.getAutoSchedule());
-        jobArchiveResponse.getDto().setFrequency(jobsArchive.getFrequency());
-        jobArchiveResponse.getDto().setThresholdUnit(jobsArchive.getThresholdUnit());
+        jobArchiveResponse.getDto().setFrequency(jobsArchive.getFrequency().toString());
+        jobArchiveResponse.getDto().setThresholdUnit(jobsArchive.getThresholdUnit().toString());
         jobArchiveResponse.getDto().setThresholdValue(jobsArchive.getThresholdValue());
         jobArchiveResponse.getDto().setLastTriggerTimestamp(jobsArchive.getLastTriggerTimestamp());
 

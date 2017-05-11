@@ -37,7 +37,7 @@ public class SecurityGroupMemberEntityMgr {
         SecurityGroupMemberType type = entity.getType();
 
         dto.setId(entity.getId());
-        dto.setType(type);
+        dto.setType(type.toString());
         if (type == SecurityGroupMemberType.VM) {
 
             VM vm = entity.getVm();

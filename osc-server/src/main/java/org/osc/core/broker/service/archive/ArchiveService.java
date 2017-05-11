@@ -90,7 +90,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
                 jobsArchive = em.find(JobsArchive.class, 1L);
 
                 // If on schedule job archiving, load parameters from db
-                request.getDto().setThresholdUnit(jobsArchive.getThresholdUnit());
+                request.getDto().setThresholdUnit(jobsArchive.getThresholdUnit().toString());
                 request.getDto().setThresholdValue(jobsArchive.getThresholdValue());
             }
 
@@ -317,7 +317,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
 
     private Period getPeriod(BaseRequest<JobsArchiveDto> request) {
         Period period;
-        if (request.getDto().getThresholdUnit().equals(ThresholdType.MONTHS)) {
+        if (request.getDto().getThresholdUnit().equals(ThresholdType.MONTHS.toString())) {
             period = Period.months(request.getDto().getThresholdValue());
         } else {
             period = Period.years(request.getDto().getThresholdValue());
