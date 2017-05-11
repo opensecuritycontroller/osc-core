@@ -252,6 +252,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.controllerType.setTextInputAllowed(false);
         this.controllerType.setNullSelectionAllowed(false);
 
+        this.controllerType.addItem(NO_CONTROLLER);
         for (String ct : this.pluginService.getControllerTypes()) {
             this.controllerType.addItem(ct);
         }
