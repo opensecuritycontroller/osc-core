@@ -16,10 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Map;
-
+import com.rabbitmq.client.ShutdownSignalException;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -39,7 +36,9 @@ import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class VirtualizationConnectorUtil {
 
@@ -47,9 +46,6 @@ public class VirtualizationConnectorUtil {
 
     private VimUtils vimUtils = null;
     private X509TrustManagerFactory managerFactory = null;
-    private OsRabbitMQClient rabbitClient = null;
-    private Endpoint endPoint = null;
-    private JCloudKeyStone keystoneAPi = null;
 
     public void setVimUtils(VimUtils vimUtils) {
         this.vimUtils = vimUtils;
@@ -142,36 +138,31 @@ public class VirtualizationConnectorUtil {
             // Check Connectivity with Key stone if https response exception is not to be ignored
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstackkeystone");
+                JCloudKeyStone keystoneAPi = null;
                 try {
                     VirtualizationConnectorDto vcDto = request.getDto();
                     boolean isHttps = isHttps(vcDto.getProviderAttributes());
 
-                    if (this.endPoint == null) {
-                        this.endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
+                    Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
                                 vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, SslContextProvider.getInstance().getSSLContext());
-                    }
-                    if (this.keystoneAPi == null) {
-                        this.keystoneAPi = new JCloudKeyStone(this.endPoint);
-                    }
-                    this.keystoneAPi.listTenants();
+                    keystoneAPi = new JCloudKeyStone(endPoint);
+                    keystoneAPi.listTenants();
 
                 } catch (Exception exception) {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
                     LOG.warn("Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
                 } finally {
-                    if (this.keystoneAPi != null) {
-                        this.keystoneAPi.close();
+                    if (keystoneAPi != null) {
+                        keystoneAPi.close();
                     }
                 }
             }
 
             if (!request.isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION)) {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "rabbitmq");
-                if (this.rabbitClient == null) {
-                    this.rabbitClient = new OsRabbitMQClient(vc);
-                }
                 try {
-                    this.rabbitClient.testConnection();
+                    OsRabbitMQClient rabbitClient = new OsRabbitMQClient(vc);
+                    rabbitClient.testConnection();
                 } catch (ShutdownSignalException shutdownException) {
                     // If its an existing VC which we are connected to, then this exception is expected
                     if (vc.getId() != null) {
