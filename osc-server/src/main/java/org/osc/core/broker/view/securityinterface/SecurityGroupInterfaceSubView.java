@@ -81,16 +81,25 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
         this.updateSecurityGroupInterfaceService = updateSecurityGroupInterfaceService;
         this.getDtoFromEntityServiceFactory = getDtoFromEntityServiceFactory;
         this.server = server;
+    }
 
-        if (!vs.isMarkForDeletion()) {
-            ViewUtil.enableToolBarButtons(
-                    ((VirtualSystemDto) this.parent).getVirtualizationType() != VirtualizationType.VMWARE && isPolicyMappingSupported(),
-                    this.toolbar, Arrays.asList(ToolbarButtons.ADD.getId()));
-        } else {
-            //Disable CRUD buttons
-            ViewUtil.setButtonsEnabled(false, this.toolbar, Arrays.asList(ToolbarButtons.BACK.getId()));
+    @Override
+    public void attach() {
+        super.attach();
+        try {
+            if (!this.parent.isMarkForDeletion()) {
+                ViewUtil.enableToolBarButtons(
+                        this.parent.getVirtualizationType() != VirtualizationType.VMWARE && isPolicyMappingSupported(),
+                        this.toolbar, Arrays.asList(ToolbarButtons.ADD.getId()));
+            } else {
+                //Disable CRUD buttons
+                ViewUtil.setButtonsEnabled(false, this.toolbar, Arrays.asList(ToolbarButtons.BACK.getId()));
 
-            this.table.setEnabled(false);
+                this.table.setEnabled(false);
+            }
+        } catch (Exception e) {
+            log.error("An unknown error occurred", e);
+            throw new RuntimeException(e);
         }
     }
 

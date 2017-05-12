@@ -105,7 +105,13 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
         this.listTenantService = listTenantService;
         this.updateDeploymentSpecService = updateDeploymentSpecService;
         this.server = server;
-        if (parent.isMarkForDeletion()) {
+
+    }
+
+    @Override
+    public void attach() {
+        super.attach();
+        if (this.parent.isMarkForDeletion()) {
             //Disable CRUD buttons
             ViewUtil.setButtonsEnabled(false, this.toolbar,
                     Arrays.asList(ToolbarButtons.BACK.getId(), ToolbarButtons.DELETE.getId()));
