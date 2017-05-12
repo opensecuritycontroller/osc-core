@@ -119,7 +119,7 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
         setInstance(this);
     }
 
-    static void setInstance(X509TrustManagerFactory mgr) {
+    private static void setInstance(X509TrustManagerFactory mgr) {
         instance = mgr;
     }
 

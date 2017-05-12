@@ -41,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
 public class BackupService extends BackupFileService<BackupRequest, BackupResponse> implements BackupServiceApi {
 
     @Reference
-    EncryptionApi encrpter;
+    EncryptionApi encrypter;
 
     @Override
     public BackupResponse exec(BackupRequest request, EntityManager em) throws Exception {
@@ -84,7 +84,7 @@ public class BackupService extends BackupFileService<BackupRequest, BackupRespon
 
     byte[] encryptBackupFileBytes(byte[] backupFileBytes, String password) throws Exception {
         EncryptionParameters params = getEncryptionParameters();
-        return this.encrpter.encryptAESGCM(backupFileBytes, params.getKey(), params.getIV(), password.getBytes("UTF-8"));
+        return this.encrypter.encryptAESGCM(backupFileBytes, params.getKey(), params.getIV(), password.getBytes("UTF-8"));
     }
 
     void ensureBackupFolderExists() throws IOException {

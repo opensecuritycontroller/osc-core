@@ -62,7 +62,7 @@ public class UnTagVmService extends BaseTagVmService implements UnTagVmServiceAp
     }
 
     @Override
-    protected EncryptionApi getEncyrptionApi() {
+    protected EncryptionApi getEncryptionApi() {
         return this.encrypter;
     }
 }

@@ -118,9 +118,6 @@ public class VSConformanceCheckMetaTaskTest {
     private static String DEFAULT_SERVICE_IP = getDefaultServerIp();
     private static String DEFAULT_SERVICEMANAGER_NAME = "DEFAULT_MANAGER_NAME";
     private static String DEFAULT_SERVICEMANAGER_URL = CreateNsxServiceManagerTask.buildRestCallbackUrl();
-//    private static String DEFAULT_SERVICEMANAGER_PASSWORD;
-
-//    private static String DEFAULT_SERVICE_PASSWORD;
 
     private VirtualSystem vs;
 

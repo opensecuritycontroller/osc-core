@@ -85,7 +85,7 @@ public class TagVmService extends BaseTagVmService implements TagVmServiceApi {
     }
 
     @Override
-    protected EncryptionApi getEncyrptionApi() {
+    protected EncryptionApi getEncryptionApi() {
         return this.encrypter;
     }
 }

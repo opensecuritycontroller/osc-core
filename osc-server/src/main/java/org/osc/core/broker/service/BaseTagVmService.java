@@ -67,7 +67,7 @@ abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmRes
         VirtualizationConnector vc = dai.getVirtualSystem().getVirtualizationConnector();
 
         if (this.vimUtils == null) {
-            this.vimUtils =  new VimUtils(vc.getProviderIpAddress(), vc.getProviderUsername(), getEncyrptionApi().decryptAESCTR(vc.getProviderPassword()));
+            this.vimUtils =  new VimUtils(vc.getProviderIpAddress(), vc.getProviderUsername(), getEncryptionApi().decryptAESCTR(vc.getProviderPassword()));
         }
 
         return customFindVm(this.vimUtils, request);
@@ -81,5 +81,5 @@ abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmRes
 
     protected abstract VirtualMachine customFindVm(VimUtils vmi, TagVmRequest request) throws VmidcBrokerValidationException;
 
-    protected abstract EncryptionApi getEncyrptionApi();
+    protected abstract EncryptionApi getEncryptionApi();
 }
