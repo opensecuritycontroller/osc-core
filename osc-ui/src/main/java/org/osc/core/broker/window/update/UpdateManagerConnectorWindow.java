@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
@@ -47,7 +48,6 @@ import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -283,10 +283,10 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
                     RestClientException restClientException = (RestClientException) exception;
                     if (restClientException.isConnectException()) {
                         contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_IP,
-                                SafeHtmlUtils.fromString(this.name.getValue()).asString());
+                                StringEscapeUtils.escapeHtml(this.name.getValue()));
                     } else if (restClientException.isCredentialError()) {
-                        contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_CREDS, SafeHtmlUtils
-                                .fromString(this.name.getValue()).asString());
+                        contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_CREDS, StringEscapeUtils
+                                .escapeHtml(this.name.getValue()));
                     } else {
                         handleCatchAllException(new Exception(VmidcMessages.getString(
                                 VmidcMessages_.GENERAL_REST_ERROR, this.ip.getValue(), exception.getMessage()),

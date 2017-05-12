@@ -23,13 +23,20 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.http.context.ServletContextHelper;
+import org.osgi.util.tracker.BundleTracker;
+import org.osgi.util.tracker.BundleTrackerCustomizer;
 
 @Component(name = "ui.servlet.context", service = ServletContextHelper.class, property = {
 
@@ -44,14 +51,42 @@ public class UiServletContext extends ServletContextHelper {
     static final String FELIX_HTTP_NAME = "org.apache.felix.http.name";
     static final String OSC_UI_NAME = "OSC-UI";
     static final String OSC_RESOURCE_PREFIX = "/webapp";
+    static final String OSC_VAADIN_PREFIX = "/VAADIN/";
 
     private static final String[] resources = { "", "/WebHelp", "/SDK" };
 
     private URI base;
 
+    private BundleTracker<Bundle> vaadinResourceBundles;
+
     @Activate
-    void activate() {
+    void activate(BundleContext ctx) {
         this.base = new File("").toURI();
+        // Find the resolved vaadin bundle
+        this.vaadinResourceBundles = new BundleTracker<Bundle>(ctx, Bundle.RESOLVED |
+                Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING,
+                    new BundleTrackerCustomizer<Bundle>() {
+                        @Override
+                        public Bundle addingBundle(Bundle bundle, BundleEvent event) {
+                            return "com.vaadin.server".equals(bundle.getSymbolicName()) ?
+                                    bundle : null;
+                        }
+
+                        @Override
+                        public void modifiedBundle(Bundle bundle, BundleEvent event, Bundle object) {
+
+                        }
+
+                        @Override
+                        public void removedBundle(Bundle bundle, BundleEvent event, Bundle object) {
+                        }
+                });
+        this.vaadinResourceBundles.open();
+    }
+
+    @Deactivate
+    void deactivate() {
+        this.vaadinResourceBundles.close();
     }
 
     @Override
@@ -87,6 +122,22 @@ public class UiServletContext extends ServletContextHelper {
                 }
             }
         } catch (MalformedURLException e) {
+        }
+
+        if(name.startsWith(OSC_VAADIN_PREFIX)) {
+            String bundleResourceLocation = name.substring(OSC_VAADIN_PREFIX.length() -1);
+
+            Bundle[] bundlesToCheck = this.vaadinResourceBundles.getBundles();
+            if(bundlesToCheck != null) {
+                // Sort the list to ensure a consistent check order
+                Arrays.sort(bundlesToCheck);
+                for (Bundle b : bundlesToCheck) {
+                    URL resource = b.getResource(name);
+                    if(resource != null) {
+                        return resource;
+                    }
+                }
+            }
         }
 
         return null;

@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.NullInputStream;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
@@ -52,9 +53,9 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
+import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
@@ -72,8 +73,6 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-
-import elemental.events.KeyboardEvent.KeyCode;
 
 @org.osgi.service.component.annotations.Component(service={JobView.class},
 scope=ServiceScope.PROTOTYPE)
@@ -160,7 +159,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 Object errorMessage = getParentContainer().getContainerProperty(itemId, JOB_FAIL_REASON_COLUMN_ID)
                         .getValue();
                 if (errorMessage != null && errorMessage instanceof String) {
-                    return SafeHtmlUtils.fromString(errorMessage.toString()).asString();
+                    return StringEscapeUtils.escapeHtml(errorMessage.toString());
                 } else {
                     return null;
                 }
@@ -271,7 +270,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 Object errorMessage = getChildContainer().getContainerProperty(itemId, TASK_FAIL_REASON_COLUMN_ID)
                         .getValue();
                 if (errorMessage != null && errorMessage instanceof String) {
-                    return SafeHtmlUtils.fromString(errorMessage.toString()).asString();
+                    return StringEscapeUtils.escapeHtml(errorMessage.toString());
                 } else {
                     return null;
                 }
@@ -354,7 +353,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             window.setCaption("Task Graph for Job " + getParentItemId());
             window.center();
             window.setWindowMode(WindowMode.MAXIMIZED);
-            window.setCloseShortcut(KeyCode.ESC, null);
+            window.addCloseShortcut(ShortcutAction.KeyCode.ESCAPE, null);
 
             ViewUtil.addWindow(window);
 

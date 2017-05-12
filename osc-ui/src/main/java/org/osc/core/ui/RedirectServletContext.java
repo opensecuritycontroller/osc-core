@@ -16,14 +16,10 @@
  *******************************************************************************/
 package org.osc.core.ui;
 
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PATTERN;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX;
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.*;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,8 +30,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.http.context.ServletContextHelper;
 import org.osgi.service.http.runtime.HttpServiceRuntime;
 import org.osgi.service.http.runtime.HttpServiceRuntimeConstants;
-
-import aQute.lib.converter.Converter;
 
 @Component(name = "redirect.servlet.context", service = ServletContextHelper.class, property = {
 
@@ -58,8 +52,10 @@ public class RedirectServletContext extends ServletContextHelper {
     void setHttpRuntime(HttpServiceRuntime runtime, Map<String, Object> config) {
         Object endpoints = config.get(HttpServiceRuntimeConstants.HTTP_SERVICE_ENDPOINT);
 
+        String[] endpointStrings = getEndpointArray(endpoints);
+
         try {
-            for (String endpoint : Converter.cnv(String[].class, endpoints)) {
+            for (String endpoint : endpointStrings) {
                 if (endpoint.startsWith("https:")) {
                     this.redirect = endpoint;
                     trace("redirect endpoint=%s", this.redirect);
@@ -67,6 +63,23 @@ public class RedirectServletContext extends ServletContextHelper {
             }
         } catch (Exception e) {
         }
+    }
+
+    private String[] getEndpointArray(Object endpoints) {
+        String[] endpointStrings;
+
+        if(endpoints instanceof String) {
+            endpointStrings = new String[] {endpoints.toString()};
+        } else if (endpoints instanceof String[]) {
+            endpointStrings = (String[]) endpoints;
+        } else if (endpoints instanceof Collection) {
+            endpointStrings = ((Collection<?>) endpoints).stream()
+                    .map(String::valueOf)
+                    .toArray(String[]::new);
+        } else {
+            endpointStrings = new String[0];
+        }
+        return endpointStrings;
     }
 
     private String getRedirect(String hostPort) {

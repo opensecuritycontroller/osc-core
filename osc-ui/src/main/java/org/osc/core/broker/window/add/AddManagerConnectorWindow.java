@@ -16,15 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.window.add;
 
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
@@ -51,12 +50,14 @@ import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
 
 @SuppressWarnings("serial")
 public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonModel> {
@@ -286,10 +287,10 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
                 RestClientException restClientException = (RestClientException) exception;
                 if (restClientException.isConnectException()) {
                     contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_IP,
-                            SafeHtmlUtils.fromString(this.name.getValue()).asString());
+                            StringEscapeUtils.escapeHtml(this.name.getValue()));
                 } else if (restClientException.isCredentialError()) {
                     contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_CREDS,
-                            SafeHtmlUtils.fromString(this.name.getValue()).asString());
+                            StringEscapeUtils.escapeHtml(this.name.getValue()));
                 } else {
                     handleCatchAllException(new Exception(VmidcMessages.getString(VmidcMessages_.GENERAL_REST_ERROR,
                             this.ip.getValue(), exception.getMessage()), exception));

@@ -8,8 +8,10 @@
 Require-Capability: \
     osgi.implementation;filter:="(&(osgi.implementation=osgi.http)(version>=1)(!(version>=2)))"
 
-# Automatically export packages annotated with @Version in package-info.java
--exportcontents: ${packages;VERSIONED}
+# Automatically export packages annotated with @Version in package-info.java,
+# Also, provide the vmware exception needed by the Vaadin UI due to the leaky API
+-exportcontents: ${packages;VERSIONED},\
+  com.vmware.vim25
   
 # Generate an OSGi Contract Requirement for bundles that depend on Servlet API
 # (see https://www.osgi.org/portable-java-contract-definitions/)

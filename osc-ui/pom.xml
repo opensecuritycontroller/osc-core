@@ -135,12 +135,6 @@
 			<version>2.5</version>
 		</dependency>
 		
-		<dependency>
-			<groupId>biz.aQute.bnd</groupId>
-			<artifactId>biz.aQute.bndlib</artifactId>
-			<version>3.3.0</version>
-		</dependency>
-		
 		<!--TODO: The following dependencies are only needed for exception handling 
 		    due to a leaky API and should be removed if possible -->
 		<dependency>
@@ -194,36 +188,20 @@
 			<version>${vaadin.version}</version>
 		</dependency>
 
-		<!-- Vaading Addons -->
+		<!-- Vaadin Widgets -->
 		<dependency>
-			<groupId>org.vaadin.addons</groupId>
-			<artifactId>filteringtable</artifactId>
-			<version>0.9.15.v7</version>
+			<groupId>org.osc.core</groupId>
+			<artifactId>osc-ui-widgetset</artifactId>
+			<version>1.0</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.vaadin.addons</groupId>
-			<artifactId>stepper</artifactId>
-			<version>2.3.0</version>
-		</dependency>
+
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.1.0</version>
 		</dependency>
 
-
-		<!-- WebSocket Dependencies -->
-		<dependency>
-			<groupId>org.glassfish.tyrus.bundles</groupId>
-			<artifactId>tyrus-standalone-client</artifactId>
-			<version>1.7</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.tyrus</groupId>
-			<artifactId>tyrus-container-grizzly-client</artifactId>
-			<version>1.7</version>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
