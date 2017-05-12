@@ -24,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
 import org.osc.core.broker.service.api.ListDistributedApplianceInstanceServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
@@ -63,6 +64,9 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
     @Reference
     private ListDistributedApplianceInstanceServiceApi listDAIService;
 
+    @Reference
+    private ServerApi server;
+
     @Activate
     private void activate() {
         createView(VmidcMessages.getString(VmidcMessages_.DAI_TITLE), Arrays.asList(ToolbarButtons.APPLIANCE_STATUS), true);
@@ -88,7 +92,7 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
                         .getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(new LockObjectDto(daiDto.getMcId(),
                         daiDto.getApplianceManagerConnectorName(),
-                        ObjectTypeDto.APPLIANCE_MANAGER_CONNECTOR));
+                        ObjectTypeDto.APPLIANCE_MANAGER_CONNECTOR), ApplianceInstanceView.this.server);
             }
         });
 
@@ -99,7 +103,7 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
                         .getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(new LockObjectDto(daiDto.getVcId(),
                         daiDto.getVirtualConnectorName(),
-                        ObjectTypeDto.VIRTUALIZATION_CONNECTOR));
+                        ObjectTypeDto.VIRTUALIZATION_CONNECTOR), ApplianceInstanceView.this.server);
             }
         });
 
@@ -110,7 +114,7 @@ public class ApplianceInstanceView extends CRUDBaseView<DistributedApplianceInst
                         .getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(new LockObjectDto(daiDto.getVirtualsystemId(),
                         daiDto.getDistributedApplianceName(),
-                        ObjectTypeDto.VIRTUAL_SYSTEM));
+                        ObjectTypeDto.VIRTUAL_SYSTEM), ApplianceInstanceView.this.server);
             }
         });
 

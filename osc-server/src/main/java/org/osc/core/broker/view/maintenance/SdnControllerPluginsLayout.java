@@ -33,6 +33,7 @@ import org.osc.core.broker.service.api.plugin.PluginApi.State;
 import org.osc.core.broker.service.api.plugin.PluginEvent;
 import org.osc.core.broker.service.api.plugin.PluginListener;
 import org.osc.core.broker.service.api.plugin.PluginType;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -66,15 +67,17 @@ public class SdnControllerPluginsLayout extends FormLayout {
 
     private Table plugins;
     private Panel pluginsPanel;
-    PluginUploader uploader = new PluginUploader(PluginType.SDN);
+    PluginUploader uploader;
 
     private ImportSdnControllerPluginServiceApi importSdnControllerPluginService;
     private ServiceRegistration<PluginListener> registration;
 
-    public SdnControllerPluginsLayout(BundleContext ctx, ImportSdnControllerPluginServiceApi importSdnControllerPluginService) throws Exception {
+    public SdnControllerPluginsLayout(BundleContext ctx, ImportSdnControllerPluginServiceApi importSdnControllerPluginService,
+            ServerApi server) throws Exception {
         super();
         this.importSdnControllerPluginService = importSdnControllerPluginService;
 
+        this.uploader = new PluginUploader(PluginType.SDN, server);
         VerticalLayout uploadContainer = new VerticalLayout();
         VerticalLayout pluginsContainer = new VerticalLayout();
         VerticalLayout sdkContainer = new VerticalLayout();

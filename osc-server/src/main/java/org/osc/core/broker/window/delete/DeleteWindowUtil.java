@@ -26,6 +26,7 @@ import org.osc.core.broker.service.api.DeleteDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ForceDeleteVirtualSystemServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.AlertDto;
@@ -54,7 +55,7 @@ public class DeleteWindowUtil {
     private static final Logger log = Logger.getLogger(DeleteWindowUtil.class);
 
     public static void deleteDeploymentSpec(final DeleteDeploymentSpecServiceApi deleteDeploymentSpecService,
-            final DeploymentSpecDto dto) {
+            final DeploymentSpecDto dto, ServerApi server) {
         final VmidcWindow<? extends OkCancelButtonModel> deleteWindow;
         if (dto.isMarkForDeletion()) {
             deleteWindow = WindowUtil.createForceDeleteWindow("Delete Deployment Specification ",
@@ -89,7 +90,7 @@ public class DeleteWindowUtil {
                     deleteWindow.close();
 
                     if (response.getJobId() != null) {
-                        ViewUtil.showJobNotification(response.getJobId());
+                        ViewUtil.showJobNotification(response.getJobId(), server);
                     }
 
                 } catch (Exception e) {
@@ -101,7 +102,8 @@ public class DeleteWindowUtil {
 
     }
 
-    public static void deleteDistributedAppliance(final DistributedApplianceDto dto, DeleteDistributedApplianceServiceApi deleteDistributedApplianceService) {
+    public static void deleteDistributedAppliance(final DistributedApplianceDto dto, DeleteDistributedApplianceServiceApi deleteDistributedApplianceService,
+            ServerApi server) {
         final VmidcWindow<? extends OkCancelButtonModel> deleteWindow;
         if (dto.isMarkForDeletion()) {
             deleteWindow = WindowUtil.createForceDeleteWindow("Delete Distributed Appliance ",
@@ -136,7 +138,7 @@ public class DeleteWindowUtil {
 
                     if (response.getJobId() != null) {
                         // don't show this for force deletion
-                        ViewUtil.showJobNotification(response.getJobId());
+                        ViewUtil.showJobNotification(response.getJobId(), server);
                     }
 
                 } catch (Exception e) {
@@ -149,7 +151,7 @@ public class DeleteWindowUtil {
 
     @SuppressWarnings("serial")
     public static void deleteVirtualSystem(final ForceDeleteVirtualSystemServiceApi forceDeleteVsService,
-            final VirtualSystemDto dto) {
+            final VirtualSystemDto dto, ServerApi server) {
 
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil
                 .createAlertWindow("Force Delete Virtual System", "Force Delete Virtual System - " + dto.getName());
@@ -162,7 +164,7 @@ public class DeleteWindowUtil {
                     BaseJobResponse response = forceDeleteVsService.dispatch(new BaseDeleteRequest(dto.getId(), true));
                     deleteWindow.close();
                     if (response.getJobId() != null) {
-                        ViewUtil.showJobNotification(response.getJobId());
+                        ViewUtil.showJobNotification(response.getJobId(), server);
                     }
                 } catch (Exception e) {
                     ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -208,7 +210,7 @@ public class DeleteWindowUtil {
     }
 
     public static void deleteVirtualizationConnector(DeleteVirtualizationConnectorServiceApi deleteVcService,
-            final VirtualizationConnectorDto dto) {
+            final VirtualizationConnectorDto dto, ServerApi server) {
 
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow(
                 "Delete Virtualization Connector", "Delete Virtualization Connector  - " + dto.getName());
@@ -228,7 +230,7 @@ public class DeleteWindowUtil {
                     delRequest.setId(dto.getId());
                     log.info("deleting Virtualization Connector - " + dto.getName());
                     BaseJobResponse response = deleteVcService.dispatch(delRequest);
-                    ViewUtil.showJobNotification(response.getJobId());
+                    ViewUtil.showJobNotification(response.getJobId(), server);
                     deleteWindow.close();
                 } catch (Exception e) {
                     ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -239,7 +241,8 @@ public class DeleteWindowUtil {
         ViewUtil.addWindow(deleteWindow);
     }
 
-    public static void deleteSecurityGroup(DeleteSecurityGroupServiceApi deleteService, final SecurityGroupDto dto) {
+    public static void deleteSecurityGroup(DeleteSecurityGroupServiceApi deleteService, final SecurityGroupDto dto,
+            ServerApi server) {
 
         final VmidcWindow<? extends OkCancelButtonModel> deleteWindow;
         if (dto.isMarkForDeletion()) {
@@ -276,7 +279,7 @@ public class DeleteWindowUtil {
 
                     if (response.getJobId() != null) {
                         // don't show this for force deletion
-                        ViewUtil.showJobNotification(response.getJobId());
+                        ViewUtil.showJobNotification(response.getJobId(), server);
                     }
 
                 } catch (Exception e) {

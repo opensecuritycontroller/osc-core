@@ -25,13 +25,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.plugin.PluginType;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
-import org.osc.core.util.ServerUtil;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -60,14 +60,17 @@ public class PluginUploader extends CustomComponent implements Receiver, FailedL
     private String uploadPath;
     private final PluginType type;
 
+    private final ServerApi server;
+
     public interface UploadSucceededListener {
         void uploadComplete(String uploadPath);
     }
 
     private UploadSucceededListener uploadSucceededListener;
 
-    public PluginUploader(PluginType type) {
+    public PluginUploader(PluginType type, ServerApi server) {
         this.type = type;
+        this.server = server;
 
         this.upload = new Upload();
         this.upload.setButtonCaption("Upload");
@@ -142,7 +145,7 @@ public class PluginUploader extends CustomComponent implements Receiver, FailedL
 
         try {
             // Do the unzip only if there is enough disc space
-            if (!ServerUtil.isEnoughSpace()) {
+            if (!this.server.isEnoughSpace()) {
                 String message = "";
                 if (this.type == PluginType.SDN) {
                     message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_SDNCONTROLLER_NOSPACE);

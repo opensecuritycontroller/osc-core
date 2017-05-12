@@ -45,6 +45,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.validator.AlertDtoValidator;
 import org.osc.core.broker.util.EmailUtil;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.transaction.control.ScopedWorkException;
@@ -161,11 +162,11 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
 
         request.setDto(new AlertDto());
         request.getDto().setName(alarm.getName());
-        request.getDto().setEventType(alarm.getEventType());
+        request.getDto().setEventType(alarm.getEventType().toString());
         request.getDto().setObject(new LockObjectDto(object.getId(), object.getName(),
                 new ObjectTypeDto(object.getType().name(), object.getType().toString())));
-        request.getDto().setSeverity(alarm.getSeverity());
-        request.getDto().setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT);
+        request.getDto().setSeverity(alarm.getSeverity().toString());
+        request.getDto().setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT.toString());
         request.getDto().setMessage(message);
 
         AlertDtoValidator.checkForNullFields(request.getDto());
@@ -205,7 +206,7 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
         try {
             if (emailSettings != null) {
                 EmailSettingsDto dto = new EmailSettingsDto();
-                EmailSettingsEntityMgr.fromEntity(emailSettings, dto);
+                EmailSettingsEntityMgr.fromEntity(emailSettings, dto, StaticRegistry.encryptionApi());
 
                 EmailUtil.sendEmail(dto.getMailServer(), dto.getPort(), dto.getEmailId(), dto.getPassword(),
                         alarm.getReceipientEmail(), alert);

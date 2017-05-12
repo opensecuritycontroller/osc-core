@@ -42,6 +42,7 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.ErrorTypeException;
@@ -56,13 +57,12 @@ import org.osc.core.broker.service.validator.AddVirtualizationConnectorServiceRe
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.test.util.TestTransactionControl;
-import org.osc.core.util.EncryptionUtil;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({X509TrustManagerFactory.class, EncryptionUtil.class, HibernateUtil.class, LockUtil.class })
+@PrepareForTest({X509TrustManagerFactory.class, HibernateUtil.class, LockUtil.class })
 public class AddVirtualizationConnectorServiceTest {
 
     @Rule
@@ -84,6 +84,9 @@ public class AddVirtualizationConnectorServiceTest {
 
     @Mock
     private UserContextApi userContext;
+
+    @Mock
+    private EncryptionApi encryption;
 
     @InjectMocks()
     private AddVirtualizationConnectorService service;
@@ -111,8 +114,7 @@ public class AddVirtualizationConnectorServiceTest {
         PowerMockito.mockStatic(X509TrustManagerFactory.class);
         when(X509TrustManagerFactory.getInstance()).thenReturn(mock(X509TrustManagerFactory.class));
 
-        PowerMockito.mockStatic(EncryptionUtil.class);
-        when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
+        when(this.encryption.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
 
         when(this.job.getId()).thenReturn(5L);
         //PowerMockito.mockStatic(ConformService.class);

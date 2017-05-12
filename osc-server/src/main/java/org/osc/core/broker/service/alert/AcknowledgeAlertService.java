@@ -45,14 +45,14 @@ public class AcknowledgeAlertService extends ServiceDispatcher<AlertRequest, Emp
 
         if (request.isAcknowledge()) {
             for (AlertDto dto : request.getDtoList()) {
-                dto.setStatus(AcknowledgementStatus.ACKNOWLEDGED);
+                dto.setStatus(AcknowledgementStatus.ACKNOWLEDGED.toString());
                 dto.setAcknowledgedUser(this.userContext.getCurrentUser());
                 dto.setTimeAcknowledgedTimestamp(new Date());
             }
         } else {
             //This is unacknowledge request
             for (AlertDto dto : request.getDtoList()) {
-                dto.setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT);
+                dto.setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT.toString());
                 dto.setAcknowledgedUser(null);
                 dto.setTimeAcknowledgedTimestamp(null);
             }

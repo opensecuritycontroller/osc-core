@@ -26,9 +26,9 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.NotificationListener;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.RestConstants;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
+import org.osc.core.broker.util.StaticRegistry;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -72,7 +72,7 @@ public class OsRabbitMQClient extends RabbitMQClient {
                 Integer.parseInt(
                         this.vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT)),
                 vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER),
-                EncryptionUtil.decryptAESCTR(
+                StaticRegistry.encryptionApi().decryptAESCTR(
                         vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)),
                 NOVA_EXCHANGE, QUEUE_NAME, ROUTING_KEY);
     }

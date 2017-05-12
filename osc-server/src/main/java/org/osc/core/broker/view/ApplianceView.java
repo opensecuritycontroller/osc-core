@@ -26,6 +26,8 @@ import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.ListApplianceServiceApi;
 import org.osc.core.broker.service.api.ListApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.api.server.ArchiveApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.dto.BaseDto;
@@ -39,7 +41,6 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.add.ImportApplianceSoftwareVersionWindow;
 import org.osc.core.broker.window.delete.DeleteApplianceSoftwareVersionWindow;
 import org.osc.core.broker.window.delete.DeleteApplianceWindow;
-import org.osc.core.util.ServerUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -72,6 +73,12 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
     @Reference
     ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
 
+    @Reference
+    ServerApi server;
+
+    @Reference
+    ArchiveApi archiver;
+
     @Activate
     private void activate() {
         createView("Model", Arrays.asList(ToolbarButtons.DELETE, ToolbarButtons.AUTO_IMPORT_APPLIANCE),
@@ -90,12 +97,13 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
 
         if (event.getButton().getId().equals(ToolbarButtons.AUTO_IMPORT_APPLIANCE.getId())) {
             try {
-                if (!ServerUtil.isEnoughSpace()) {
+                if (!this.server.isEnoughSpace()) {
                     throw new VmidcException(VmidcMessages.getString("upload.appliance.nospace"));
                 }
 
                 log.info("Redirecting to Add Appliance Version Window");
-                ViewUtil.addWindow(new ImportApplianceSoftwareVersionWindow(this.importApplianceSoftwareVersionService));
+                ViewUtil.addWindow(new ImportApplianceSoftwareVersionWindow(this.importApplianceSoftwareVersionService,
+                        this.server, this.archiver));
 
             } catch (Exception e) {
                 log.error("Failed to initiate adding a new Appliance Software Version", e);

@@ -24,10 +24,13 @@ import java.util.Collection;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.annotations.VmidcLogHidden;
+import org.osc.core.broker.service.api.server.LoggingApi;
+import org.osgi.service.component.annotations.Component;
+import org.owasp.esapi.ESAPI;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -37,18 +40,14 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import org.owasp.esapi.ESAPI;
 
-public final class LoggingUtil {
+@Component
+public final class LoggingUtil implements LoggingApi {
 
     private static Logger log = Logger.getLogger(LoggingUtil.class);
 
     private static final Gson gson = new GsonBuilder().setPrettyPrinting()
             .registerTypeAdapter(byte[].class, new ByteArrayTypeAdapter()).create();
-
-    private LoggingUtil() {
-
-    }
 
     /**
      * Logs the pojo by converting it into Json and printing it out at info Level.
@@ -177,7 +176,8 @@ public final class LoggingUtil {
         return null;
     }
 
-    public static String removeCRLF(String message){
+    @Override
+    public String removeCRLF(String message){
         String clean = message.replace('\n', '_').replace('\r', '_');
         if (ESAPI.securityConfiguration().getLogEncodingRequired()) {
             clean = ESAPI.encoder().encodeForHTML(message);

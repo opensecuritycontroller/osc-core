@@ -44,6 +44,7 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -84,6 +85,9 @@ public class UpdateDistributedApplianceServiceTest {
 
     @Mock
     private UserContextApi userContext;
+
+    @Mock
+    private EncryptionApi encryption;
 
     @Mock
     private ApiFactoryService apiFactoryService;

@@ -35,6 +35,8 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.ListJobServiceApi;
 import org.osc.core.broker.service.api.ListTaskServiceApi;
+import org.osc.core.broker.service.api.server.LoggingApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.dto.JobRecordDto;
@@ -46,7 +48,6 @@ import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
-import org.osc.core.rest.client.util.LoggingUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -110,6 +111,12 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
     @Reference
     private UserContextApi userContext;
 
+    @Reference
+    private ServerApi server;
+
+    @Reference
+    private LoggingApi logging;
+
     @Activate
     private void activate() {
         createView("Jobs", Arrays.asList(ToolbarButtons.JOB_VIEW, ToolbarButtons.JOB_ABORT), "Tasks", null);
@@ -140,7 +147,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             @Override
             public Object generateCell(CustomTable source, Object itemId, Object columnId) {
                 JobRecordDto jobDto = JobView.this.parentContainer.getItem(itemId).getBean();
-                return ViewUtil.generateObjectLink(jobDto.getObjects());
+                return ViewUtil.generateObjectLink(jobDto.getObjects(), JobView.this.server);
             }
         });
 
@@ -240,7 +247,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
             @Override
             public Object generateCell(CustomTable source, Object itemId, Object columnId) {
                 TaskRecordDto taskDto = JobView.this.childContainer.getItem(itemId).getBean();
-                return ViewUtil.generateObjectLink(taskDto.getObjects());
+                return ViewUtil.generateObjectLink(taskDto.getObjects(), JobView.this.server);
             }
         });
 
@@ -497,7 +504,7 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
                 BufferedReader kbdInput = new BufferedReader(inp)){
                 String line;
                 while ((line = kbdInput.readLine()) != null) {
-                    log.info(LoggingUtil.removeCRLF(line));
+                    log.info(this.logging.removeCRLF(line));
                 }
             }
 

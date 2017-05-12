@@ -33,7 +33,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ServiceUnavailableException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.util.EncryptionUtil;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osc.sdk.controller.Status;
@@ -97,9 +97,9 @@ public class SdnControllerApiFactory {
     private static VirtualizationConnectorElement getVirtualizationConnectorElement(VirtualizationConnector vc)
             throws Exception {
         VirtualizationConnector shallowClone = new VirtualizationConnector(vc);
-        shallowClone.setProviderPassword(EncryptionUtil.decryptAESCTR(shallowClone.getProviderPassword()));
+        shallowClone.setProviderPassword(StaticRegistry.encryptionApi().decryptAESCTR(shallowClone.getProviderPassword()));
         if (!StringUtils.isEmpty(shallowClone.getControllerPassword())) {
-            shallowClone.setControllerPassword(EncryptionUtil.decryptAESCTR(shallowClone.getControllerPassword()));
+            shallowClone.setControllerPassword(StaticRegistry.encryptionApi().decryptAESCTR(shallowClone.getControllerPassword()));
         }
         return new VirtualizationConnectorElementImpl(shallowClone);
     }

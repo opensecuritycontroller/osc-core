@@ -20,6 +20,7 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.api.AddUserServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
@@ -28,10 +29,14 @@ import org.osc.core.broker.service.response.AddUserResponse;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.service.validator.UserDtoValidator;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class AddUserService extends ServiceDispatcher<AddUserRequest, AddUserResponse> implements AddUserServiceApi {
     private DtoValidator<UserDto, User> validator;
+
+    @Reference
+    private EncryptionApi encrypter;
 
     @Override
     protected AddUserResponse exec(AddUserRequest request, EntityManager em) throws Exception {
@@ -44,7 +49,7 @@ public class AddUserService extends ServiceDispatcher<AddUserRequest, AddUserRes
 
         this.validator.validateForCreate(request);
 
-        User user = UserEntityMgr.createEntity(request);
+        User user = UserEntityMgr.createEntity(request, this.encrypter);
 
         // creating new entry in the db using entity manager object
         user = emgr.create(user);

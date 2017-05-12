@@ -33,9 +33,9 @@ import org.apache.log4j.Logger;
 import org.jclouds.http.HttpResponseException;
 import org.jclouds.rest.AuthorizationException;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -47,6 +47,7 @@ import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -54,8 +55,6 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 import java.net.ConnectException;
 import java.rmi.RemoteException;
@@ -69,6 +68,10 @@ import java.util.stream.Collectors;
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     public static final String NO_CONTROLLER = "NONE";
+
+    public static final String VMWARE_5_5 = "5.5";
+
+    public static final String OPENSTACK_ICEHOUSE = "Icehouse";
 
     /**
      *
@@ -126,10 +129,17 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private final PluginService pluginService;
     private final ValidationApi validator;
 
-    public BaseVCWindow(PluginService pluginService, ValidationApi validator) {
+    private final X509TrustManagerApi trustManager;
+
+    private final EncryptionApi encrypter;
+
+    public BaseVCWindow(PluginService pluginService, ValidationApi validator,
+            X509TrustManagerApi trustManager, EncryptionApi encrypter) {
         super();
         this.pluginService = pluginService;
         this.validator = validator;
+        this.trustManager = trustManager;
+        this.encrypter = encrypter;
     }
 
     @Override
@@ -252,6 +262,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.controllerType.setTextInputAllowed(false);
         this.controllerType.setNullSelectionAllowed(false);
 
+        this.controllerType.addItem(NO_CONTROLLER);
         for (String ct : this.pluginService.getControllerTypes()) {
             this.controllerType.addItem(ct);
         }
@@ -301,6 +312,10 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         if (originalException instanceof ErrorTypeException) {
             ErrorType errorType = ((ErrorTypeException) originalException).getType();
             exception = originalException.getCause();
+
+            // TODO this exception leaks large amounts of implementation detail out of
+            // the API (e.g. JClouds internal exceptions. Surely there is a better way
+            // of handling problems?
             if (errorType == ErrorType.PROVIDER_EXCEPTION) {
                 if (exception instanceof InvalidLogin) {
                     // VCenter Invalid Credential Exception
@@ -427,7 +442,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 public void cancelFormAction() {
                     handleException(originalException);
                 }
-            }));
+            }, this.trustManager));
         } catch (Exception e) {
             handleException(originalException);
         }
@@ -469,11 +484,11 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
         // TODO: Future. Get virtualization version this from user.
         if (this.virtualizationType.getValue().equals(VirtualizationType.OPENSTACK.toString())) {
-            request.getDto().setSoftwareVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
+            request.getDto().setSoftwareVersion(OPENSTACK_ICEHOUSE);
             request.getDto()
             .setControllerType(BaseVCWindow.this.controllerType.getValue().toString());
         } else {
-            request.getDto().setSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
+            request.getDto().setSoftwareVersion(VMWARE_5_5);
             request.getDto().setControllerType(NSX_CAPTION);
         }
         return request;
@@ -481,7 +496,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     protected void advancedSettingsClicked() {
         try {
-            ViewUtil.addWindow(new AdvancedSettingsWindow(this));
+            ViewUtil.addWindow(new AdvancedSettingsWindow(this, this.encrypter));
         } catch (Exception e) {
             ViewUtil.iscNotification(e.toString() + ".", Notification.Type.ERROR_MESSAGE);
         }
@@ -557,7 +572,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
             try {
                 this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                        EncryptionUtil.encryptAESCTR(DEFAULT_RABBITMQ_USER_PASSWORD));
+                        this.encrypter.encryptAESCTR(DEFAULT_RABBITMQ_USER_PASSWORD));
             } catch (EncryptionException encryptionException) {
                 handleException(encryptionException);
             }

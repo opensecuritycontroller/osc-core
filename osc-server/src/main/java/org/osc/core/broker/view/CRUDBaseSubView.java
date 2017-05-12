@@ -70,7 +70,9 @@ public abstract class CRUDBaseSubView<P extends BaseDto, C extends BaseDto> exte
     public FilterTable table;
     protected BeanContainer<Long, C> tableContainer;
     protected HorizontalLayout toolbar;
-    protected BaseDto parent;
+    protected P parent;
+
+    protected ToolbarButtons[] buttons;
 
     @SuppressWarnings("serial")
     private final ClickListener buttonClickListener = new ClickListener() {
@@ -85,12 +87,20 @@ public abstract class CRUDBaseSubView<P extends BaseDto, C extends BaseDto> exte
         }
     };
 
-    public CRUDBaseSubView(CRUDBaseView<?, ?> currentView, String title, ToolbarButtons[] buttons, BaseDto parent) {
+    public CRUDBaseSubView(CRUDBaseView<?, ?> currentView, String title, ToolbarButtons[] buttons, P parent) {
         super();
         this.title = title;
         this.currentView = currentView;
+        this.buttons = buttons;
         this.parent = parent;
-        createSubView(title, buttons);
+    }
+
+    @Override
+    public void attach() {
+        // Note this must not be run in the constructor as the concrete
+        // sub-type will not be fully initialized (its constructor will not
+        // yet have run!).
+        createSubView(this.title, this.buttons);
     }
 
     private void createSubView(String title, ToolbarButtons[] buttons) {

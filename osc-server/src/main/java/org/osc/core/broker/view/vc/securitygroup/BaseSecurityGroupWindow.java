@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -47,7 +48,6 @@ import org.tepi.filtertable.FilterDecorator;
 import org.tepi.filtertable.FilterTable;
 import org.tepi.filtertable.numberfilter.NumberFilterPopupConfig;
 
-import com.google.common.collect.Sets;
 import com.vaadin.data.Container.ItemSetChangeEvent;
 import com.vaadin.data.Container.ItemSetChangeListener;
 import com.vaadin.data.Property;
@@ -518,7 +518,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
                 req.setTenantName(tenantDto.getName());
                 req.setTenantId(tenantDto.getId());
                 req.setRegion(region);
-                req.setType(memberType);
+                req.setType(memberType.toString());
                 if (this.isInitialFromListLoad) {
                     req.setCurrentSelectedMembers(null);
                 } else {
@@ -667,7 +667,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
                 if (isMovingToSelectedItemList) {
                     toContainer.addBean(memberItem);
                     handleProtectExternal(toTable, itemId, memberItem);
-                } else if (memberItem.getType() == memberType) {
+                } else if (SecurityGroupMemberType.fromText(memberItem.getType()) == memberType) {
                     // If the 'to' container is not the selected list, we need to check the current selected type
                     // from the UI and add the member only if it matches the selected type
                     toContainer.addBean(memberItem);
@@ -685,7 +685,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
     }
 
     private void handleProtectExternal(CustomTable toTable, String itemId, SecurityGroupMemberItemDto memberItem) {
-        boolean enableProtectExternalFlag = !SecurityGroupMemberType.SUBNET.equals(memberItem.getType());
+        boolean enableProtectExternalFlag = !SecurityGroupMemberType.SUBNET.toString().equals(memberItem.getType());
         toTable.getContainerProperty(itemId, PROTECT_EXTERNAL).setReadOnly(enableProtectExternalFlag);
     }
 
@@ -729,7 +729,9 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
             public void buttonClick(ClickEvent event) {
                 Set<String> itemIdsSelected = (Set<String>) table.getValue();
                 Collection<String> allItems = (Collection<String>) table.getItemIds();
-                table.setValue(Sets.difference(new HashSet<>(allItems), itemIdsSelected));
+                table.setValue(allItems.stream()
+                        .filter(s -> !itemIdsSelected.contains(s))
+                        .collect(Collectors.toSet()));
             }
         });
         HorizontalLayout buttonLayout = new HorizontalLayout(allButton, noneButton, invertButton);

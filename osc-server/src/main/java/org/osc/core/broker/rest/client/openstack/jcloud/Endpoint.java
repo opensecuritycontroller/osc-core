@@ -22,9 +22,9 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.service.api.server.EncryptionException;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.rest.client.crypto.SslContextProvider;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 public class Endpoint {
 
@@ -48,7 +48,7 @@ public class Endpoint {
         this.endPointIP = vc.getProviderIpAddress();
         this.tenant = vc.getProviderAdminTenantName();
         this.user = vc.getProviderUsername();
-        this.password = EncryptionUtil.decryptAESCTR(vc.getProviderPassword());
+        this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
         this.sslContext = SslContextProvider.getInstance().getSSLContext();
     }
@@ -61,7 +61,7 @@ public class Endpoint {
         this.endPointIP = vc.getProviderIpAddress();
         this.tenant = tenant;
         this.user = vc.getProviderUsername();
-        this.password = EncryptionUtil.decryptAESCTR(vc.getProviderPassword());
+        this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
     }
 

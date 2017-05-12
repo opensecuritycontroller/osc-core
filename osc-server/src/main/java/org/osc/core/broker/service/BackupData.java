@@ -18,8 +18,8 @@ package org.osc.core.broker.service;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.util.encryption.AESCTREncryption;
-import org.osc.core.util.encryption.EncryptionException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

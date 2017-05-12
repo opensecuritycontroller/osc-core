@@ -19,6 +19,8 @@ package org.osc.core.server;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -40,6 +42,7 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.RestConstants;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
@@ -55,6 +58,7 @@ import org.osc.core.server.scheduler.SyncSecurityGroupJob;
 import org.osc.core.server.websocket.WebSocketRunner;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.LogUtil;
+import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.util.VersionUtil;
@@ -140,6 +144,9 @@ public class Server implements ServerApi {
     @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC)
     private List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
 
+    @Reference
+    private EncryptionApi encryption;
+
     private Thread thread;
 
     @Activate
@@ -195,7 +202,7 @@ public class Server implements ServerApi {
 
             ManagerApiFactory.init();
             SdnControllerApiFactory.init();
-            ReleaseUpgradeMgr.initDb();
+            ReleaseUpgradeMgr.initDb(this.encryption);
             DatabaseUtils.createDefaultDB();
             DatabaseUtils.markRunningJobAborted();
 
@@ -594,5 +601,25 @@ public class Server implements ServerApi {
     @Override
     public void setDebugLogging(boolean on) {
         RestBaseClient.setDebugLogging(on);
+    }
+
+    @Override
+    public String getHostIpAddress() throws SocketException, UnknownHostException {
+        return NetworkUtil.getHostIpAddress();
+    }
+
+    @Override
+    public String getServerIpAddress() {
+        return ServerUtil.getServerIP();
+    }
+
+    @Override
+    public boolean isEnoughSpace() throws IOException {
+        return ServerUtil.isEnoughSpace();
+    }
+
+    @Override
+    public String uptimeToString() {
+        return ServerUtil.uptimeToString();
     }
 }

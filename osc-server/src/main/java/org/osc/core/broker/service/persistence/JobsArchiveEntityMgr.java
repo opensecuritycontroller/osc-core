@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.archive.JobsArchive;
+import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.service.dto.JobsArchiveDto;
 
 public class JobsArchiveEntityMgr {
@@ -32,8 +34,8 @@ public class JobsArchiveEntityMgr {
         // transform from dto to entity
         jobsArchive.setId(dto.getId());
         jobsArchive.setAutoSchedule(dto.getAutoSchedule());
-        jobsArchive.setFrequency(dto.getFrequency());
-        jobsArchive.setThresholdUnit(dto.getThresholdUnit());
+        jobsArchive.setFrequency(FreqType.valueOf(dto.getFrequency()));
+        jobsArchive.setThresholdUnit(ThresholdType.valueOf(dto.getThresholdUnit()));
         jobsArchive.setThresholdValue(dto.getThresholdValue());
         jobsArchive.setLastTriggerTimestamp(dto.getLastTriggerTimestamp());
     }
@@ -41,8 +43,8 @@ public class JobsArchiveEntityMgr {
     public static void fromEntity(JobsArchive jobsArchive, JobsArchiveDto dto) {
         dto.setId(jobsArchive.getId());
         dto.setAutoSchedule(jobsArchive.getAutoSchedule());
-        dto.setFrequency(jobsArchive.getFrequency());
-        dto.setThresholdUnit(jobsArchive.getThresholdUnit());
+        dto.setFrequency(jobsArchive.getFrequency().toString());
+        dto.setThresholdUnit(jobsArchive.getThresholdUnit().toString());
         dto.setThresholdValue(jobsArchive.getThresholdValue());
         dto.setLastTriggerTimestamp(jobsArchive.getLastTriggerTimestamp());
     }

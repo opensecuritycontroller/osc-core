@@ -24,12 +24,12 @@ import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.UploadInfoWindow;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 
 import com.vaadin.server.communication.FileUploadHandler.UploadInterruptedException;
 import com.vaadin.ui.CustomComponent;
@@ -55,10 +55,10 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
     private File file;
     private final VerticalLayout verLayout = new VerticalLayout();
     private UploadNotifier uploadNotifier = null;
-    private X509TrustManagerFactory x509TrustManagerFactory;
+    private X509TrustManagerApi x509TrustManager;
 
-    public SslCertificateUploader(X509TrustManagerFactory x509TrustManagerFactory) {
-        this.x509TrustManagerFactory = x509TrustManagerFactory;
+    public SslCertificateUploader(X509TrustManagerApi x509TrustManager) {
+        this.x509TrustManager = x509TrustManager;
         // Create vmidc upload folder
         File uploadFolder = new File(SslCertificateUploader.UPLOAD_DIR);
         if (!uploadFolder.exists() && !uploadFolder.mkdir()) {
@@ -146,7 +146,7 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
     }
 
     private void addNewCertificate(File file) throws Exception {
-        this.x509TrustManagerFactory.addEntry(file);
+        this.x509TrustManager.addEntry(file);
         removeUploadedFile();
     }
 

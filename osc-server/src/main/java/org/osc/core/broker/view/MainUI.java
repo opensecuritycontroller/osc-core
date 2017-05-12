@@ -32,8 +32,6 @@ import org.osc.core.broker.service.response.LoginResponse;
 import org.osc.core.broker.view.alarm.AlarmView;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.view.vc.VirtualizationConnectorView;
-import org.osc.core.util.ServerUtil;
-import org.osc.core.util.VersionUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentServiceObjects;
@@ -424,7 +422,7 @@ public class MainUI extends UI implements BroadcastListener {
 
         // product name and information
         Label product = new Label(this.server.getProductName() + "<br> <span class='product-version'> Version: "
-                + VersionUtil.getVersion().getVersionStr() + "</span>", ContentMode.HTML);
+                + this.server.getVersionStr() + "</span>", ContentMode.HTML);
         product.addStyleName("product-label");
         product.setSizeUndefined();
 
@@ -604,7 +602,7 @@ public class MainUI extends UI implements BroadcastListener {
         if (VaadinServletService.getCurrentRequest() != null) {
             return VaadinServletService.getCurrentRequest().getContextPath();
         } else {
-            return "https://" + ServerUtil.getServerIP() + "/";
+            return "https://" + this.server.getServerIpAddress() + "/";
         }
     }
 

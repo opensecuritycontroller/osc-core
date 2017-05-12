@@ -18,6 +18,7 @@ package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.DryRunRequest;
@@ -45,12 +46,15 @@ public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     private final ValidationApi validator;
 
+    private final ServerApi server;
+
     public SetNATSettingsWindow(NetworkLayout networkLayout, SetNATSettingsServiceApi setNATSettingsService,
-            ValidationApi validator) throws Exception {
+            ValidationApi validator, ServerApi server) throws Exception {
         super();
         this.networkLayout = networkLayout;
         this.setNATSettingsService = setNATSettingsService;
         this.validator = validator;
+        this.server = server;
         createWindow(this.CAPTION);
 
     }
@@ -99,7 +103,7 @@ public class SetNATSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                 BaseJobResponse response = this.setNATSettingsService.dispatch(req);
                 this.networkLayout.populateNATTable();
                 if (response.getJobId() != null) {
-                    ViewUtil.showJobNotification(response.getJobId());
+                    ViewUtil.showJobNotification(response.getJobId(), this.server);
                 }
                 close();
             }

@@ -33,6 +33,7 @@ import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -69,6 +70,9 @@ public class UpdateDistributedApplianceService
     private ConformService conformService;
 
     @Reference
+    private EncryptionApi encrypter;
+
+    @Reference
     ApiFactoryService apiFactoryService;
 
     @Override
@@ -101,7 +105,7 @@ public class UpdateDistributedApplianceService
                 }
             }
 
-            DistributedApplianceEntityMgr.toEntity(a, da, daDto);
+            DistributedApplianceEntityMgr.toEntity(a, da, daDto, this.encrypter);
             OSCEntityManager.update(em, da);
 
             UnlockObjectMetaTask forLambda = this.ult;

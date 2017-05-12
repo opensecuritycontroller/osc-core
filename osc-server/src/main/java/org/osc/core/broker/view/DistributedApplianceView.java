@@ -54,6 +54,7 @@ import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDistributedApplianceServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
@@ -188,6 +189,9 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
+    @Reference
+    private ServerApi server;
+
     @Activate
     private void activate() {
 
@@ -214,7 +218,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                     this.listDomainsByMcIdService, this.listEncapsulationTypeByVersionTypeAndModel,
                     this.listApplianceManagerConnectorService,
                     this.listVirtualizationConnectorBySwVersionService,
-                    this.validator));
+                    this.validator, this.server));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.info("Redirecting to Update Appliance Window");
@@ -229,12 +233,12 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         this.listApplianceModelSwVersionComboService, this.listDomainsByMcIdService,
                         this.listEncapsulationTypeByVersionTypeAndModel, this.listApplianceManagerConnectorService,
                         this.listVirtualizationConnectorBySwVersionService,
-                        this.validator));
+                        this.validator, this.server));
             }
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.info("Redirecting to Delete Distributed Appliance Window");
-            DeleteWindowUtil.deleteDistributedAppliance(getParentItem().getBean(), this.deleteDistributedApplianceService);
+            DeleteWindowUtil.deleteDistributedAppliance(getParentItem().getBean(), this.deleteDistributedApplianceService, this.server);
         }
         if (event.getButton().getId().equals(ToolbarButtons.CONFORM.getId())) {
             conformDistributedAppliace(getParentItemId());
@@ -248,7 +252,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
         }
 
         if (event.getButton().getId().equals(ToolbarButtons.DELETE_CHILD.getId())) {
-            DeleteWindowUtil.deleteVirtualSystem(this.forceDeleteVirtualSystemService, getChildItem().getBean());
+            DeleteWindowUtil.deleteVirtualSystem(this.forceDeleteVirtualSystemService, getChildItem().getBean(), this.server);
         }
     }
 
@@ -265,7 +269,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         this.syncDeploymentSpecService, this.listAvailabilityZonesService,
                         this.listFloatingIpPoolsService, this.listHostService,
                         this.listHostAggregateService, this.listNetworkService,
-                        this.listRegionService, this.listTenantService);
+                        this.listRegionService, this.listTenantService, this.server);
 
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages
@@ -284,7 +288,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         this.addSecurityGroupInterfaceService, this.deleteSecurityGroupInterfaceService,
                         this.listSecurityGroupInterfaceServiceByVirtualSystem, this.listVirtualSystemPolicyService,
                         this.updateSecurityGroupInterfaceService,
-                        this.getDtoFromEntityServiceFactory);
+                        this.getDtoFromEntityServiceFactory, this.server);
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages
         this.childSubViewMap.put(getKeyforChildSubView(2), this.sgiSubView);
@@ -300,7 +304,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
 
         try {
             response = this.conformService.dispatch(request);
-            ViewUtil.showJobNotification(response.getJobId());
+            ViewUtil.showJobNotification(response.getJobId(), this.server);
         } catch (Exception e) {
             log.error("Error!", e);
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
@@ -320,7 +324,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                 DistributedApplianceDto distributedApplianceDto = DistributedApplianceView.this.parentContainer
                         .getItem(itemId).getBean();
                 return ViewUtil.generateJobLink(distributedApplianceDto.getLastJobStatus(),
-                        distributedApplianceDto.getLastJobState(), distributedApplianceDto.getLastJobId());
+                        distributedApplianceDto.getLastJobState(), distributedApplianceDto.getLastJobId(), DistributedApplianceView.this.server);
             }
         });
 
@@ -331,7 +335,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         .getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(new LockObjectDto(distributedApplianceDto.getMcId(),
                         distributedApplianceDto.getApplianceManagerConnectorName(),
-                        ObjectTypeDto.APPLIANCE_MANAGER_CONNECTOR));
+                        ObjectTypeDto.APPLIANCE_MANAGER_CONNECTOR), DistributedApplianceView.this.server);
             }
         });
 
@@ -379,7 +383,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                 VirtualSystemDto vsDto = DistributedApplianceView.this.childContainer.getItem(itemId).getBean();
                 return ViewUtil.generateObjectLink(
                         new LockObjectDto(vsDto.getVcId(), vsDto.getVirtualizationConnectorName(),
-                                ObjectTypeDto.VIRTUALIZATION_CONNECTOR));
+                                ObjectTypeDto.VIRTUALIZATION_CONNECTOR), DistributedApplianceView.this.server);
             }
         });
 

@@ -18,17 +18,22 @@ package org.osc.core.broker.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.service.api.TagVmServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.TagVmResponse;
 import org.osc.core.broker.util.VimUtils;
 import org.osc.sdk.sdn.api.SecurityTagApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.vmware.vim25.mo.VirtualMachine;
 
 @Component
 public class TagVmService extends BaseTagVmService implements TagVmServiceApi {
+
+    @Reference
+    EncryptionApi encrypter;
 
     @Override
     protected void customValidate(TagVmRequest request) throws VmidcBrokerValidationException {
@@ -77,5 +82,10 @@ public class TagVmService extends BaseTagVmService implements TagVmServiceApi {
     @Override
     protected void modifyNsxSecurityTagApi(SecurityTagApi sta, VirtualMachine vm, TagVmResponse response) throws Exception {
         sta.addSecurityTagToVM(vm.getMOR().getVal(), response.getVmTag());
+    }
+
+    @Override
+    protected EncryptionApi getEncryptionApi() {
+        return this.encrypter;
     }
 }

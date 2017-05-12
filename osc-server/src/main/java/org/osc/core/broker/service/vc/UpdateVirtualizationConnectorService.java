@@ -35,6 +35,8 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -61,7 +63,6 @@ import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -75,6 +76,9 @@ public class UpdateVirtualizationConnectorService
 
     @Reference
     private ConformService conformService;
+
+    @Reference
+    private EncryptionApi encryption;
 
     @Override
     public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
@@ -243,7 +247,7 @@ public class UpdateVirtualizationConnectorService
 
         VirtualizationConnectorDto dto = request.getDto();
         // Vanilla Transform the request to entity
-        VirtualizationConnectorEntityMgr.toEntity(existingVc, dto);
+        VirtualizationConnectorEntityMgr.toEntity(existingVc, dto, this.encryption);
 
         if (request.isApi()) {
             // For API requests if password is not specified, use existing password unaltered

@@ -20,8 +20,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
-
 import io.swagger.annotations.ApiModelProperty;
 
 @XmlRootElement(name = "securityGroupMember")
@@ -38,7 +36,7 @@ public class SecurityGroupMemberItemDto extends BaseDto {
     private String openstackId;
 
     @ApiModelProperty(required = true)
-    private SecurityGroupMemberType type;
+    private String type;
 
     @ApiModelProperty(required = false,
             value = " Protect router port to inspect external traffic coming to this subnet")
@@ -51,7 +49,7 @@ public class SecurityGroupMemberItemDto extends BaseDto {
     public SecurityGroupMemberItemDto() {
     }
 
-    public SecurityGroupMemberItemDto(String region, String name, String openstackId, SecurityGroupMemberType type,
+    public SecurityGroupMemberItemDto(String region, String name, String openstackId, String type,
             boolean protectExternal) {
         super();
         this.name = name;
@@ -61,7 +59,7 @@ public class SecurityGroupMemberItemDto extends BaseDto {
         this.protectExternal = protectExternal;
     }
 
-    public SecurityGroupMemberItemDto(String region, String name, String openstackId, SecurityGroupMemberType type,
+    public SecurityGroupMemberItemDto(String region, String name, String openstackId, String type,
             boolean protectExternal, String parentOpenStackId) {
         super();
         this.name = name;
@@ -96,11 +94,11 @@ public class SecurityGroupMemberItemDto extends BaseDto {
         this.openstackId = openstackId;
     }
 
-    public SecurityGroupMemberType getType() {
+    public String getType() {
         return this.type;
     }
 
-    public void setType(SecurityGroupMemberType type) {
+    public void setType(String type) {
         this.type = type;
     }
 

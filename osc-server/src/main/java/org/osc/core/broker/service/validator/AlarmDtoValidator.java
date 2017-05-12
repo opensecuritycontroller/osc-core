@@ -41,7 +41,7 @@ public class AlarmDtoValidator {
         map.put("eventType", dto.getEventType());
         map.put("severity", dto.getSeverity());
         map.put("alarmAction", dto.getAlarmAction());
-        if (dto.getAlarmAction().equals(AlarmAction.EMAIL)) {
+        if (AlarmAction.fromText(dto.getAlarmAction()) == AlarmAction.EMAIL) {
             map.put("email", dto.getReceipientEmail());
         }
 
@@ -64,7 +64,7 @@ public class AlarmDtoValidator {
     public static void checkRegexSyntax(AlarmDto dto) throws Exception {
 
         try {
-            if (dto.getEventType().equals(EventType.JOB_FAILURE)) {
+            if (EventType.fromText(dto.getEventType()) == EventType.JOB_FAILURE) {
                 Pattern.compile(dto.getRegexMatch());
             }
         } catch (PatternSyntaxException ex) {

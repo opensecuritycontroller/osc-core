@@ -34,10 +34,10 @@ import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
@@ -54,7 +54,7 @@ public class ReleaseUpgradeMgr {
 
     private static final Logger log = Logger.getLogger(ReleaseUpgradeMgr.class);
 
-    public static void initDb() throws Exception {
+    public static void initDb(EncryptionApi encrypter) throws Exception {
 
         if (!isLastUpgradeSucceeded()) {
             // If last upgrade wasn't successful (upgrade marker file is still present), revert back to previous backed up DB.
@@ -97,7 +97,7 @@ public class ReleaseUpgradeMgr {
                     connection.setAutoCommit(false);
 
                     try {
-                        performUpdateChain(curDbVer, stmt);
+                        performUpdateChain(curDbVer, stmt, encrypter);
                         connection.commit();
                     } catch (Exception ex) {
                         log.error("Error while initializing database.", ex);
@@ -133,7 +133,7 @@ public class ReleaseUpgradeMgr {
      * version and update current db version in database with
      * TARGET_DB_VERSION value default: break; //do nothing }
      */
-    private static void performUpdateChain(int curDbVer, Statement stmt) throws Exception {
+    private static void performUpdateChain(int curDbVer, Statement stmt, EncryptionApi encrypter) throws Exception {
 
         switch (curDbVer) {
             case 12:
@@ -221,7 +221,7 @@ public class ReleaseUpgradeMgr {
             case 71:
                 upgrade71to72(stmt);
             case 72:
-                upgrade72to73(stmt);
+                upgrade72to73(stmt, encrypter);
             case 73:
                 upgrade73to74(stmt);
             case 74:
@@ -285,13 +285,13 @@ public class ReleaseUpgradeMgr {
     /**
      * 3DES encrypted passwords -> AES-CTR encrypted passwords
      */
-    private static void upgrade72to73(Statement stmt) throws SQLException, EncryptionException {
-        updatePasswordScheme(stmt, "user", "password");
-        updatePasswordScheme(stmt, "appliance_manager_connector", "password");
-        updatePasswordScheme(stmt, "virtualization_connector", "controller_password");
-        updatePasswordScheme(stmt, "virtualization_connector", "provider_password");
-        updatePasswordScheme(stmt, "distributed_appliance", "mgr_secret_key");
-        updatePasswordScheme(stmt, "distributed_appliance_instance", "password");
+    private static void upgrade72to73(Statement stmt, EncryptionApi encrypter) throws SQLException, EncryptionException {
+        updatePasswordScheme(stmt, "user", "password", encrypter);
+        updatePasswordScheme(stmt, "appliance_manager_connector", "password", encrypter);
+        updatePasswordScheme(stmt, "virtualization_connector", "controller_password", encrypter);
+        updatePasswordScheme(stmt, "virtualization_connector", "provider_password", encrypter);
+        updatePasswordScheme(stmt, "distributed_appliance", "mgr_secret_key", encrypter);
+        updatePasswordScheme(stmt, "distributed_appliance_instance", "password", encrypter);
 
         String sqlQuery = "SELECT vc_fk, value FROM virtualization_connector_provider_attr WHERE key = 'rabbitMQPassword';";
 
@@ -299,7 +299,7 @@ public class ReleaseUpgradeMgr {
         Map<Integer, String> attrs = new HashMap<>();
 
         while (result.next()) {
-            attrs.put(result.getInt("vc_fk"), EncryptionUtil.encryptAESCTR(EncryptionUtil.decryptDES(result.getString("value"))));
+            attrs.put(result.getInt("vc_fk"), encrypter.encryptAESCTR(encrypter.decryptDES(result.getString("value"))));
         }
 
         try (PreparedStatement preparedStatementUpdate = stmt.getConnection().prepareStatement("UPDATE virtualization_connector_provider_attr SET value = ? WHERE vc_fk = ? AND key = 'rabbitMQPassword'")) {
@@ -1767,13 +1767,13 @@ public class ReleaseUpgradeMgr {
         return !StringUtils.isNullOrEmpty(val) && Integer.parseInt(val) == 0;
     }
 
-    private static void updatePasswordScheme(Statement statement, String tableName, String columnName) throws SQLException, EncryptionException {
+    private static void updatePasswordScheme(Statement statement, String tableName, String columnName, EncryptionApi encrypter) throws SQLException, EncryptionException {
         String sqlQuery = "SELECT id, " + columnName + " FROM " + tableName + ";";
         ResultSet result = statement.executeQuery(sqlQuery);
         Map<Integer, String> idsAndPasswords = new HashMap<>();
 
         while (result.next()) {
-            idsAndPasswords.put(result.getInt("id"), EncryptionUtil.encryptAESCTR(EncryptionUtil.decryptDES(result.getString(columnName))));
+            idsAndPasswords.put(result.getInt("id"), encrypter.encryptAESCTR(encrypter.decryptDES(result.getString(columnName))));
         }
 
         try (PreparedStatement preparedStatementUpdate = statement.getConnection().prepareStatement("UPDATE " + tableName + " SET " + columnName + " = ? WHERE id = ?")) {

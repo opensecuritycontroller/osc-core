@@ -22,6 +22,7 @@ import org.osc.core.broker.service.api.GetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.GetNetworkSettingsServiceApi;
 import org.osc.core.broker.service.api.SetNATSettingsServiceApi;
 import org.osc.core.broker.service.api.SetNetworkSettingsServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.GetNetworkSettingsRequest;
@@ -74,18 +75,21 @@ public class NetworkLayout extends FormLayout {
 
     private ValidationApi validator;
 
+    private ServerApi server;
+
     public NetworkLayout(GetNetworkSettingsServiceApi getNetworkSettingsService,
             CheckNetworkSettingsServiceApi checkNetworkSettingsService,
             SetNetworkSettingsServiceApi setNetworkSettingsService,
             GetNATSettingsServiceApi getNATSettingsService,
             SetNATSettingsServiceApi setNATSettingsService,
-            ValidationApi validator) {
+            ValidationApi validator, ServerApi server) {
         super();
         this.getNetworkSettingsService = getNetworkSettingsService;
         this.checkNetworkSettingsService = checkNetworkSettingsService;
         this.setNetworkSettingsService = setNetworkSettingsService;
         this.getNATSettingsService = getNATSettingsService;
         this.setNATSettingsService = setNATSettingsService;
+        this.server = server;
         try {
 
             // creating layout to hold option group and edit button
@@ -199,7 +203,7 @@ public class NetworkLayout extends FormLayout {
     private void editNATSettingsClicked() throws Exception {
         try {
             if (!hasDeployedInstances()) {
-                ViewUtil.addWindow(new SetNATSettingsWindow(this, this.setNATSettingsService, this.validator));
+                ViewUtil.addWindow(new SetNATSettingsWindow(this, this.setNATSettingsService, this.validator, this.server));
             } else {
                 final VmidcWindow<OkCancelButtonModel> alertWindow = WindowUtil.createAlertWindow(
                         VmidcMessages.getString(VmidcMessages_.NW_CHANGE_WARNING_TITLE),
@@ -211,7 +215,7 @@ public class NetworkLayout extends FormLayout {
                         alertWindow.close();
                         try {
                             ViewUtil.addWindow(new SetNATSettingsWindow(NetworkLayout.this,
-                                    NetworkLayout.this.setNATSettingsService, NetworkLayout.this.validator));
+                                    NetworkLayout.this.setNATSettingsService, NetworkLayout.this.validator, NetworkLayout.this.server));
                         } catch (Exception e) {
                             ViewUtil.showError("Error displaying NAT setting window", e);
                         }
@@ -221,7 +225,7 @@ public class NetworkLayout extends FormLayout {
             }
         } catch (Exception e) {
             log.error("Failed to check if NAT settings can be changed. Launching edit settings window", e);
-            ViewUtil.addWindow(new SetNATSettingsWindow(this, this.setNATSettingsService, this.validator));
+            ViewUtil.addWindow(new SetNATSettingsWindow(this, this.setNATSettingsService, this.validator, this.server));
         }
     }
 

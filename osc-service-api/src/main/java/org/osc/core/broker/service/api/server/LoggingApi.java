@@ -16,42 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api.server;
 
-import java.io.IOException;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+public interface LoggingApi {
 
-import org.osgi.util.promise.Promise;
-
-public interface ServerApi {
-    String DEV_MODE_PROPERTY_KEY = "devMode";
-
-    boolean getDevMode();
-
-    void stopServer();
-
-    Promise<Void> restart();
-
-    String loadServerProp(String devModePropertyKey, String string);
-
-    void saveServerProp(String propName, String value);
-
-    void setDevMode(boolean on);
-
-    boolean isUnderMaintenance();
-
-    String getProductName();
-
-    String getCurrentPid();
-
-    String getVersionStr();
-
-    void setDebugLogging(boolean on);
-
-    String getHostIpAddress() throws SocketException, UnknownHostException;
-
-    String getServerIpAddress();
-
-    boolean isEnoughSpace() throws IOException;
-
-    String uptimeToString();
+    String removeCRLF(String message);
 }

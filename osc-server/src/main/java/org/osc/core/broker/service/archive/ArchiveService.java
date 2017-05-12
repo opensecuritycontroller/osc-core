@@ -44,6 +44,7 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
+import org.osc.core.broker.service.api.server.ArchiveApi;
 import org.osc.core.broker.service.dto.JobsArchiveDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -51,7 +52,6 @@ import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.server.scheduler.ArchiveScheduledJob;
-import org.osc.core.util.ArchiveUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.quartz.JobBuilder;
@@ -78,6 +78,9 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
     @Reference
     private GetJobsArchiveServiceApi jobsArchiveService;
 
+    @Reference
+    private ArchiveApi archiver;
+
     @Override
     @SuppressFBWarnings(value="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
     public Response exec(final BaseRequest<JobsArchiveDto> request, EntityManager em) throws Exception {
@@ -90,7 +93,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
                 jobsArchive = em.find(JobsArchive.class, 1L);
 
                 // If on schedule job archiving, load parameters from db
-                request.getDto().setThresholdUnit(jobsArchive.getThresholdUnit());
+                request.getDto().setThresholdUnit(jobsArchive.getThresholdUnit().toString());
                 request.getDto().setThresholdValue(jobsArchive.getThresholdValue());
             }
 
@@ -137,7 +140,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
                             delete(q);
                         }
 
-                        ArchiveUtil.archive(dir, "archive/osc-archive-" + archiveFileName + ".zip");
+                        this.archiver.archive(dir, "archive/osc-archive-" + archiveFileName + ".zip");
                         FileUtils.deleteDirectory(new File(dir));
 
                     } catch (Exception e) {
@@ -317,7 +320,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
 
     private Period getPeriod(BaseRequest<JobsArchiveDto> request) {
         Period period;
-        if (request.getDto().getThresholdUnit().equals(ThresholdType.MONTHS)) {
+        if (request.getDto().getThresholdUnit().equals(ThresholdType.MONTHS.toString())) {
             period = Period.months(request.getDto().getThresholdValue());
         } else {
             period = Period.years(request.getDto().getThresholdValue());

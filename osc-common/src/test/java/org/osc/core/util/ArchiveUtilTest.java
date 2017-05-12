@@ -16,10 +16,6 @@
  *******************************************************************************/
 package org.osc.core.util;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,7 +29,23 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.osc.core.broker.service.api.server.LoggingApi;
+
+@RunWith(MockitoJUnitRunner.class)
 public class ArchiveUtilTest {
+
+    @Mock
+    LoggingApi logging;
+
+    @InjectMocks
+    ArchiveUtil archiveUtil;
 
 
     private static String PATH = System.getProperty("user.dir");
@@ -64,7 +76,7 @@ public class ArchiveUtilTest {
     private void getZipContent(StringBuilder sb, File f) throws IOException {
         try(FileOutputStream fos = new FileOutputStream(f);
             ZipOutputStream out = new ZipOutputStream(fos)) {
-            archiveMap.entrySet().stream()
+            this.archiveMap.entrySet().stream()
                     .sorted(Map.Entry.<String, String>comparingByValue())
                     .forEachOrdered(k ->addEntryToZip(sb, out, k));
         }
@@ -98,7 +110,7 @@ public class ArchiveUtilTest {
     public void clearFiles() throws IOException {
         Files.deleteIfExists(Paths.get(FILE_ABSOLUTE));
         final List<String> dirsToRetry = new ArrayList<>();
-        archiveMap.entrySet()
+        this.archiveMap.entrySet()
                 .stream()
                 .sorted(Map.Entry.<String, String>comparingByKey())
                 .forEach(k -> removeFilesAndEmptyDirs(dirsToRetry, k));
@@ -134,9 +146,9 @@ public class ArchiveUtilTest {
         //Arrange
         prepareValidZipFile();
         //Act.
-        ArchiveUtil.unzip(FILE_ABSOLUTE,PATH);
+        this.archiveUtil.unzip(FILE_ABSOLUTE,PATH);
         //Assert.
-        archiveMap.entrySet()
+        this.archiveMap.entrySet()
                 .stream()
                 .forEach(k ->
                         Assert.assertTrue("File should exist: " + PATH + SEPARATOR + k.getKey(), Files.exists(Paths.get(PATH + SEPARATOR + k.getKey())))

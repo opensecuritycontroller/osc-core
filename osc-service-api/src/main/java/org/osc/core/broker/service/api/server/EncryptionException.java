@@ -16,42 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api.server;
 
-import java.io.IOException;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+public class EncryptionException extends Exception {
+    private static final long serialVersionUID = -52733376278542276L;
 
-import org.osgi.util.promise.Promise;
+    public EncryptionException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-public interface ServerApi {
-    String DEV_MODE_PROPERTY_KEY = "devMode";
-
-    boolean getDevMode();
-
-    void stopServer();
-
-    Promise<Void> restart();
-
-    String loadServerProp(String devModePropertyKey, String string);
-
-    void saveServerProp(String propName, String value);
-
-    void setDevMode(boolean on);
-
-    boolean isUnderMaintenance();
-
-    String getProductName();
-
-    String getCurrentPid();
-
-    String getVersionStr();
-
-    void setDebugLogging(boolean on);
-
-    String getHostIpAddress() throws SocketException, UnknownHostException;
-
-    String getServerIpAddress();
-
-    boolean isEnoughSpace() throws IOException;
-
-    String uptimeToString();
+    public EncryptionException(String message) {
+        super(message);
+    }
 }

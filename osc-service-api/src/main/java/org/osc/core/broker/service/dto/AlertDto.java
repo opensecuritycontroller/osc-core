@@ -23,9 +23,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
-import org.osc.core.broker.model.entities.events.EventType;
-import org.osc.core.broker.model.entities.events.Severity;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -33,6 +30,7 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "alert")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AlertDto extends BaseDto {
+    public static final String AcknowledgementStatus_ACKNOWLEDGED = "Acknowledged";
 
     @ApiModelProperty(required=true)
     private String name;
@@ -40,14 +38,14 @@ public class AlertDto extends BaseDto {
     private LockObjectDto object;
 
     @ApiModelProperty(required=true)
-    private Severity severity;
+    private String severity;
 
     @ApiModelProperty(required=true)
-    private EventType eventType;
+    private String eventType;
 
     @ApiModelProperty(required=true)
     @XmlElement(name = "status")
-    private AcknowledgementStatus status;
+    private String status;
 
     private String message;
     private String acknowledgedUser;
@@ -70,27 +68,27 @@ public class AlertDto extends BaseDto {
         this.object = object;
     }
 
-    public Severity getSeverity() {
+    public String getSeverity() {
         return this.severity;
     }
 
-    public void setSeverity(Severity severity) {
+    public void setSeverity(String severity) {
         this.severity = severity;
     }
 
-    public EventType getEventType() {
+    public String getEventType() {
         return this.eventType;
     }
 
-    public void setEventType(EventType eventType) {
+    public void setEventType(String eventType) {
         this.eventType = eventType;
     }
 
-    public AcknowledgementStatus getStatus() {
+    public String getStatus() {
         return this.status;
     }
 
-    public void setStatus(AcknowledgementStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 

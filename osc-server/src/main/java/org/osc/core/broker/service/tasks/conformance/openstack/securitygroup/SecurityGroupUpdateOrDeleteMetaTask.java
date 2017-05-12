@@ -119,7 +119,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                                 try {
                                     BaseSecurityGroupService.addSecurityGroupMember(em, this.sg,
                                             new SecurityGroupMemberItemDto(region, server.getName(), server.getId(),
-                                                    SecurityGroupMemberType.VM, false));
+                                                    SecurityGroupMemberType.VM.toString(), false));
                                     // Once the VM is part of the security group, dont try to add it again.
                                     excludedMembers.add(server.getId());
                                 } catch (SecurityGroupMemberPartOfAnotherSecurityGroupException e) {

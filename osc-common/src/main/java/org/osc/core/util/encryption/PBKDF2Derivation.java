@@ -18,6 +18,7 @@ package org.osc.core.util.encryption;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.server.EncryptionException;
 
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
