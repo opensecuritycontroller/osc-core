@@ -57,7 +57,7 @@ public class ArchiveScheduledJob implements Job {
             });
 
             Period period = new Period();
-            if (reponse.getDto().getFrequency().equals(FreqType.MONTHLY)) {
+            if (FreqType.valueOf(reponse.getDto().getFrequency()) == FreqType.MONTHLY) {
                 period = Period.months(1);
             } else {
                 period = Period.weeks(1);

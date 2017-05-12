@@ -37,7 +37,7 @@ public class SecurityGroupMemberItemDtoValidator {
         map.put("Openstack Id", dto.getOpenstackId());
         map.put("Type", dto.getType());
 
-        if (dto.getType().equals(SecurityGroupMemberType.SUBNET)) {
+        if (SecurityGroupMemberType.fromText(dto.getType()) == SecurityGroupMemberType.SUBNET) {
             map.put("Network  Id", dto.getParentOpenStackId());
         }
 

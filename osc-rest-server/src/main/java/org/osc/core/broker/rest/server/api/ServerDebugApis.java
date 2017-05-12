@@ -17,6 +17,8 @@
 package org.osc.core.broker.rest.server.api;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -33,7 +35,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.LocalHostAuth;
@@ -152,7 +153,7 @@ public class ServerDebugApis {
                 processResultSetForQuery(output, result);
             }
         } catch (Exception ex) {
-            output.append(ExceptionUtils.getStackTrace(ex));
+            output.append(getStackTrace(ex));
         }
 
         return output;
@@ -192,9 +193,16 @@ public class ServerDebugApis {
                 output.append(statement.getUpdateCount()).append(" rows affected.\n");
             }
         } catch (Exception ex) {
-            output.append(ExceptionUtils.getStackTrace(ex));
+            output.append(getStackTrace(ex));
         }
         return output;
+    }
+
+    private static String getStackTrace(Throwable throwable) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw, true);
+        throwable.printStackTrace(pw);
+        return sw.getBuffer().toString();
     }
 
 }

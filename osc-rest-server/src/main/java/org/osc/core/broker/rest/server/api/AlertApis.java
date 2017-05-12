@@ -32,7 +32,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.rest.server.ApiUtil;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
@@ -182,7 +181,7 @@ public class AlertApis {
         List<AlertDto> alertList = new ArrayList<AlertDto>();
         alertList.add(alertDto);
         alertRequest.setDtoList(alertList);
-        if (alertDto.getStatus().equals(AcknowledgementStatus.ACKNOWLEDGED)) {
+        if (alertDto.getStatus().equals(AlertDto.AcknowledgementStatus_ACKNOWLEDGED)) {
             alertRequest.setAcknowledge(true);
         } else {
             alertRequest.setAcknowledge(false);

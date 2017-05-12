@@ -162,11 +162,11 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
 
         request.setDto(new AlertDto());
         request.getDto().setName(alarm.getName());
-        request.getDto().setEventType(alarm.getEventType());
+        request.getDto().setEventType(alarm.getEventType().toString());
         request.getDto().setObject(new LockObjectDto(object.getId(), object.getName(),
                 new ObjectTypeDto(object.getType().name(), object.getType().toString())));
-        request.getDto().setSeverity(alarm.getSeverity());
-        request.getDto().setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT);
+        request.getDto().setSeverity(alarm.getSeverity().toString());
+        request.getDto().setStatus(AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT.toString());
         request.getDto().setMessage(message);
 
         AlertDtoValidator.checkForNullFields(request.getDto());

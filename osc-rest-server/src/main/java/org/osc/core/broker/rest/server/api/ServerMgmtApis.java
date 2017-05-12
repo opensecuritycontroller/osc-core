@@ -110,8 +110,6 @@ public class ServerMgmtApis {
     @GET
     public Response getStatus() {
 
-        logger.info("getStatus()");
-
         ServerStatusResponse serverStatusResponse = new ServerStatusResponse();
         serverStatusResponse.setVersion(this.server.getVersionStr());
         serverStatusResponse.setDbVersion(DBConnectionManagerApi.TARGET_DB_VERSION);

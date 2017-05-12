@@ -20,10 +20,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.broker.model.entities.events.AlarmAction;
-import org.osc.core.broker.model.entities.events.EventType;
-import org.osc.core.broker.model.entities.events.Severity;
-
 import io.swagger.annotations.ApiModelProperty;
 
 @XmlRootElement(name = "alarm")
@@ -37,16 +33,16 @@ public class AlarmDto extends BaseDto {
     private String name;
 
     @ApiModelProperty(required = true)
-    private EventType eventType;
+    private String eventType;
 
     @ApiModelProperty(required = true)
     private String regexMatch;
 
     @ApiModelProperty(required = true)
-    private Severity severity;
+    private String severity;
 
     @ApiModelProperty(required = true)
-    private AlarmAction alarmAction;
+    private String alarmAction;
 
     @ApiModelProperty(value = "If Alarm action is email, then this field is required.")
     private String receipientEmail;
@@ -67,11 +63,11 @@ public class AlarmDto extends BaseDto {
         this.name = name;
     }
 
-    public EventType getEventType() {
+    public String getEventType() {
         return this.eventType;
     }
 
-    public void setEventType(EventType eventType) {
+    public void setEventType(String eventType) {
         this.eventType = eventType;
     }
 
@@ -83,19 +79,19 @@ public class AlarmDto extends BaseDto {
         this.regexMatch = regexMatch;
     }
 
-    public Severity getSeverity() {
+    public String getSeverity() {
         return this.severity;
     }
 
-    public void setSeverity(Severity severity) {
+    public void setSeverity(String severity) {
         this.severity = severity;
     }
 
-    public AlarmAction getAlarmAction() {
+    public String getAlarmAction() {
         return this.alarmAction;
     }
 
-    public void setAlarmAction(AlarmAction alarmAction) {
+    public void setAlarmAction(String alarmAction) {
         this.alarmAction = alarmAction;
     }
 
