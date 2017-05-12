@@ -23,8 +23,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.jar.JarFile;
 
 public class SdkUtil {
@@ -38,8 +36,8 @@ public class SdkUtil {
     /**
      * Regex patterns detecting proper file name for SDK - number and last part is more elastic
      */
-    private final String sdnControllerPattern = "^sdn-controller-api-([0-9.]+)-[a-zA-Z]+-sources\\.jar$";
-    private final String managerApiPattern = "^security-mgr-api-([0-9.]+)-[a-zA-Z]+-sources\\.jar$";
+    private final String sdnControllerPattern = "^sdn-controller-api-(([0-9.]+)[a-zA-Z-]+|([0-9.]+))\\.jar$";
+    private final String managerApiPattern = "^security-mgr-api-(([0-9.]+)[a-zA-Z-]+|([0-9.]+))\\.jar$";
 
     /**
      * Returns newest version of SDK
@@ -49,7 +47,6 @@ public class SdkUtil {
     public String getSdk(SdkUtil.sdkType sdkType) {
         Path sdkPath = Paths.get(SDKPATH);
 
-        ArrayList<String> sdkList = new ArrayList<>();
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(sdkPath)) {
             for (Path path : directoryStream) {
 
@@ -61,12 +58,12 @@ public class SdkUtil {
                 switch (sdkType) {
                     case MANAGER:
                         if (path.getFileName().toString().matches(this.managerApiPattern)) {
-                            sdkList.add(fileName);
+                            return fileName;
                         }
                         break;
                     case SDN_CONTROLLER:
                         if (path.getFileName().toString().matches(this.sdnControllerPattern)) {
-                            sdkList.add(fileName);
+                            return fileName;
                         }
                         break;
                 }
@@ -75,12 +72,7 @@ public class SdkUtil {
             this.LOG.error("Cannot find SDK jar in specified folder: " + sdkPath, ex);
         }
 
-        if (sdkList.size() > 0) {
-            Collections.sort(sdkList);
-            return sdkList.get(sdkList.size() - 1);
-        } else {
-            return "";
-        }
+        return "";
     }
 
     private boolean validateIsJar(Path pathToFile){
