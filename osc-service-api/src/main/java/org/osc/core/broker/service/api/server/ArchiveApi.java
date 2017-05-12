@@ -14,16 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.util.encryption;
+package org.osc.core.broker.service.api.server;
 
-public class EncryptionException extends Exception {
-    private static final long serialVersionUID = -52733376278542276L;
+import java.io.File;
+import java.io.IOException;
 
-    EncryptionException(String message, Throwable cause) {
-        super(message, cause);
-    }
+public interface ArchiveApi {
 
-    public EncryptionException(String message) {
-        super(message);
-    }
+    File archive(String inputDir, String outputFile) throws IOException;
+
+    void unzip(String inputFile, String destination) throws IOException;
 }

@@ -27,14 +27,14 @@ import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
 import org.osc.core.broker.service.alert.AlertGenerator;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.broadcast.BroadcastListener;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -62,6 +62,9 @@ public class RabbitMQRunner implements BroadcastListener {
     private OsSecurityGroupNotificationRunner securityGroupRunner;
     @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private OsDeploymentSpecNotificationRunner deploymentSpecRunner;
+
+    @Reference
+    EncryptionApi encryption;
 
     private ServiceRegistration<BroadcastListener> registration;
 
@@ -168,7 +171,7 @@ public class RabbitMQRunner implements BroadcastListener {
                         || !client.getUser().equals(
                                 vc.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER))
                         || !client.getPassword().equals(
-                                EncryptionUtil.decryptAESCTR(vc.getProviderAttributes().get(
+                                this.encryption.decryptAESCTR(vc.getProviderAttributes().get(
                                         VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)))
                         || client.getPort() != Integer.parseInt(vc.getProviderAttributes().get(
                                 VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT))) {

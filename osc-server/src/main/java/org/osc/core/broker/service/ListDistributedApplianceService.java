@@ -23,24 +23,29 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.service.api.ListDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class ListDistributedApplianceService
         extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<DistributedApplianceDto>>
         implements ListDistributedApplianceServiceApi {
 
-    ListResponse<DistributedApplianceDto> response = new ListResponse<DistributedApplianceDto>();
+    @Reference
+    private EncryptionApi encrypter;
+
 
     @Override
     public ListResponse<DistributedApplianceDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws EncryptionException {
+        ListResponse<DistributedApplianceDto> response = new ListResponse<DistributedApplianceDto>();
         // Initializing Entity Manager
         OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
                 em);
@@ -52,15 +57,15 @@ public class ListDistributedApplianceService
 
             DistributedApplianceDto dto = new DistributedApplianceDto();
 
-            DistributedApplianceEntityMgr.fromEntity(da, dto);
+            DistributedApplianceEntityMgr.fromEntity(da, dto, this.encrypter);
             if(request.isApi()) {
                 DistributedApplianceDto.sanitizeDistributedAppliance(dto);
             }
             dtoList.add(dto);
         }
 
-        this.response.setList(dtoList);
-        return this.response;
+        response.setList(dtoList);
+        return response;
     }
 
 }

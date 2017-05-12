@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.appliance.UploadConfig;
 import org.osc.core.broker.service.broadcast.Broadcaster;
 import org.osc.core.server.Server;
@@ -43,6 +44,9 @@ public class StaticRegistry {
     @Reference
     private Broadcaster broadcaster;
 
+    @Reference
+    private EncryptionApi encryptionApi;
+
     private String uploadPath;
 
     private static StaticRegistry instance = null;
@@ -63,5 +67,9 @@ public class StaticRegistry {
 
     public static String uploadPath() {
         return instance.uploadPath;
+    }
+
+    public static EncryptionApi encryptionApi() {
+        return instance.encryptionApi;
     }
 }

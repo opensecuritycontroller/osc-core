@@ -16,17 +16,6 @@
  *******************************************************************************/
 package org.osc.core.rest.client.crypto;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.broker.service.response.CertificateBasicInfoModel;
-import org.osc.core.broker.service.ssl.CertificateResolverModel;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.KeyStoreProvider;
-
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -34,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -48,7 +38,27 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 
-public final class X509TrustManagerFactory implements X509TrustManager {
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.service.response.CertificateBasicInfoModel;
+import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.TruststoreChangedListener;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.KeyStoreProvider;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+
+@Component(service = X509TrustManagerApi.class, immediate=true)
+public final class X509TrustManagerFactory implements X509TrustManager, X509TrustManagerApi {
 
     private static final Logger LOG = Logger.getLogger(X509TrustManagerFactory.class);
     private static final String KEYSTORE_TYPE = "JKS";
@@ -63,7 +73,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     private static final String INTERNAL_KEYSTORE_FILE = "vmidcKeyStore.jks";
     private static final String INTERNAL_KEYSTORE_ALIAS = "vmidckeystore";
 
-    private static X509TrustManagerFactory instance = null;
+    private static volatile X509TrustManagerFactory instance = null;
     private final String ALNUM_FILTER_REGEX = "[^a-zA-Z0-9-_\\.]";
     private X509TrustManager trustManager = null;
     private KeyStore keyStore;
@@ -74,18 +84,43 @@ public final class X509TrustManagerFactory implements X509TrustManager {
 
     public static X509TrustManagerFactory getInstance() {
         if (instance == null) {
-            instance = new X509TrustManagerFactory();
+            // Do this reflectively to avoid pulling in the OSGi API when
+            // starting the server.
+            ClassLoader loader = X509TrustManagerFactory.class.getClassLoader();
+            if(loader != null) {
+                Method m = null;
+                try {
+                    m = loader.getClass().getMethod("getBundle");
+                } catch (Exception e) {
+                    // ClassLoader is not an OSGi classloader
+                }
+                if(m != null && "org.osgi.framework.Bundle".equals(m.getReturnType().getName())) {
+                    throw new IllegalStateException("X509TrustManager component is not yet started");
+                } else {
+                    instance = new X509TrustManagerFactory();
+                }
+            }
+
         }
 
         return instance;
     }
 
-    private X509TrustManagerFactory() {
+    public X509TrustManagerFactory() {
         try {
             reloadTrustManager();
         } catch (Exception e) {
             LOG.error("Error occurred during TrustManagerFactory initialization", e);
         }
+    }
+
+    @Activate
+    void start() {
+        setInstance(this);
+    }
+
+    private static void setInstance(X509TrustManagerFactory mgr) {
+        instance = mgr;
     }
 
     @Override
@@ -174,6 +209,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         return (X509Certificate) keystoreInternal.getCertificate(INTERNAL_KEYSTORE_ALIAS);
     }
 
+    @Override
     public List<CertificateBasicInfoModel> getCertificateInfoList() throws Exception {
         reloadTrustManager();
         ArrayList<CertificateBasicInfoModel> list = new ArrayList<>();
@@ -199,6 +235,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         return list;
     }
 
+    @Override
     public void addEntry(File file) throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         try (FileInputStream inputStream = new FileInputStream(file);
@@ -212,6 +249,7 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         notifyTruststoreChanged();
     }
 
+    @Override
     public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
         if (fingerprintNotExist(getSha1Fingerprint(certificate))) {
             this.keyStore.setCertificateEntry(newAlias, certificate);
@@ -264,7 +302,8 @@ public final class X509TrustManagerFactory implements X509TrustManager {
         return filename.replaceAll(this.ALNUM_FILTER_REGEX, "");
     }
 
-    public static String getSha1Fingerprint(X509Certificate cert) throws NoSuchAlgorithmException, CertificateEncodingException, IllegalArgumentException {
+    @Override
+    public String getSha1Fingerprint(X509Certificate cert) throws NoSuchAlgorithmException, CertificateEncodingException, IllegalArgumentException {
 
         if(cert == null) {
             throw new IllegalArgumentException("Provided certificate is empty");
@@ -314,25 +353,24 @@ public final class X509TrustManagerFactory implements X509TrustManager {
     }
 
     private void notifyTruststoreChanged() {
-        this.truststoreChangedListeners.stream().forEach(listener -> listener.truststoreChanged());
+        List<TruststoreChangedListener> toCall;
+        synchronized (this) {
+            toCall = new ArrayList<>(this.truststoreChangedListeners);
+        }
+        toCall.stream().forEach(listener -> listener.truststoreChanged());
     }
 
-    public void addTruststoreChangedListener(TruststoreChangedListener listener) {
+    @Reference(policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.MULTIPLE)
+    synchronized void addTruststoreChangedListener(TruststoreChangedListener listener) {
         this.truststoreChangedListeners.add(listener);
     }
 
-    public void removeTruststoreChangedListener(TruststoreChangedListener listener) {
+    synchronized void removeTruststoreChangedListener(TruststoreChangedListener listener) {
         this.truststoreChangedListeners.remove(listener);
     }
 
-    /**
-     * Listens to all trust store changes (adding/removing/modifying trust store)
-     */
-    public interface TruststoreChangedListener {
-        void truststoreChanged();
-    }
-
-    public static String certificateToString(X509Certificate certificate) {
+    @Override
+    public String certificateToString(X509Certificate certificate) {
         StringWriter sw = new StringWriter();
         try {
             sw.write("-----BEGIN CERTIFICATE-----\n");

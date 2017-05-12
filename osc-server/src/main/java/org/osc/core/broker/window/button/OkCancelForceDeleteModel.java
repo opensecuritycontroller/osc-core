@@ -16,12 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.window.button;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 
-import com.google.common.collect.ImmutableList;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
@@ -48,7 +48,7 @@ public class OkCancelForceDeleteModel extends OkCancelButtonModel implements Com
 
     @Override
     public List<Component> getComponents() {
-        return ImmutableList.<Component>of(this.forceDelete, this.cancelButton, this.okButton);
+        return Arrays.asList(this.forceDelete, this.cancelButton, this.okButton);
     }
 
     public boolean getForceDeleteCheckBoxValue() {

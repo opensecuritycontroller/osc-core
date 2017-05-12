@@ -29,7 +29,7 @@ import org.jclouds.openstack.nova.v2_0.domain.ServerExtendedAttributes;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
-import org.osc.core.util.encryption.EncryptionException;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.sdk.controller.element.NetworkElement;
 
 import com.google.common.collect.Maps;

@@ -26,6 +26,7 @@ import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
@@ -63,6 +64,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
     private final ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService;
     private final UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService;
     private final GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+    private final ServerApi server;
 
     public SecurityGroupInterfaceSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
             VirtualSystemDto vs, AddSecurityGroupInterfaceServiceApi addSecurityGroupInterfaceService,
@@ -70,7 +72,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
             ListSecurityGroupInterfaceServiceByVirtualSystemApi listSecurityGroupInterfaceServiceByVirtualSystem,
             ListVirtualSystemPolicyServiceApi listVirtualSystemPolicyService,
             UpdateSecurityGroupInterfaceServiceApi updateSecurityGroupInterfaceService,
-            GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory) throws Exception {
+            GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory, ServerApi server) throws Exception {
         super(currentView, title, buttons, vs);
         this.addSecurityGroupInterfaceService = addSecurityGroupInterfaceService;
         this.deleteSecurityGroupInterfaceService = deleteSecurityGroupInterfaceService;
@@ -78,6 +80,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
         this.listSecurityGroupInterfaceServiceByVirtualSystem = listSecurityGroupInterfaceServiceByVirtualSystem;
         this.updateSecurityGroupInterfaceService = updateSecurityGroupInterfaceService;
         this.getDtoFromEntityServiceFactory = getDtoFromEntityServiceFactory;
+        this.server = server;
     }
 
     @Override
@@ -147,7 +150,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
                         .getBean();
                 if (dto.getSecurityGroupId() != null) {
                     return ViewUtil.generateObjectLink(new LockObjectDto(dto.getSecurityGroupId(), dto
-                            .getSecurityGroupName(), ObjectTypeDto.SECURITY_GROUP));
+                            .getSecurityGroupName(), ObjectTypeDto.SECURITY_GROUP), SecurityGroupInterfaceSubView.this.server);
                 } else {
                     return null;
                 }

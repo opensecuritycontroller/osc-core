@@ -35,6 +35,7 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
@@ -75,6 +76,9 @@ public class UpdateApplianceManagerConnectorService
 
     @Reference
     private AddApplianceManagerConnectorService addApplianceManagerConnectorService;
+
+    @Reference
+    private EncryptionApi encryption;
 
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorRequest> request, EntityManager em) throws Exception {
@@ -235,7 +239,7 @@ public class UpdateApplianceManagerConnectorService
         String mcDbApiKey = existingMc.getApiKey();
 
         ApplianceManagerConnectorDto dto = request.getDto();
-        ApplianceManagerConnectorEntityMgr.toEntity(existingMc, dto);
+        ApplianceManagerConnectorEntityMgr.toEntity(existingMc, dto, this.encryption);
 
         if (request.isApi()) {
             // For API requests if password is not specified, use existing password unaltered

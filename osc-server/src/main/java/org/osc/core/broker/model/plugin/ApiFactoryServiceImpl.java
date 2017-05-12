@@ -48,11 +48,11 @@ import org.osc.core.broker.service.api.plugin.PluginEvent.Type;
 import org.osc.core.broker.service.api.plugin.PluginListener;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.plugin.PluginType;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.server.installer.InstallableManager;
-import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.controller.Constants;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.ManagerAuthenticationType;
@@ -113,6 +113,9 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     @Reference
     private InstallableManager installableManager;
+
+    @Reference
+    private EncryptionApi encrypter;
 
     @GuardedBy("pluginListeners")
     private BundleContext context;
@@ -417,7 +420,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
             throws EncryptionException {
         ApplianceManagerConnector shallowClone = new ApplianceManagerConnector(mc);
         if (!StringUtils.isEmpty(shallowClone.getPassword())) {
-            shallowClone.setPassword(EncryptionUtil.decryptAESCTR(shallowClone.getPassword()));
+            shallowClone.setPassword(this.encrypter.decryptAESCTR(shallowClone.getPassword()));
         }
         return shallowClone;
     }

@@ -42,7 +42,7 @@
 			<version>0.0.2</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-server</artifactId>
@@ -61,17 +61,10 @@
 			<version>2.25</version>
 		</dependency>
 
-		<!--TODO: below exclusions are necessery to pick a correct version of library by bnd/osgi . -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.jaxrs</groupId>
 			<artifactId>jackson-jaxrs-json-provider</artifactId>
 			<version>2.8.5</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-annotations</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -79,27 +72,12 @@
 			<artifactId>jackson-annotations</artifactId>
 			<version>2.8.5</version>
 		</dependency>
-		
-    <!--TODO(Paremus): investigate why these exclusions are needed, and whether this dependency can be scope=test -->
-    <dependency>
-      <groupId>org.glassfish.jersey.media</groupId>
-      <artifactId>jersey-media-json-jackson</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.jaxrs</groupId>
-          <artifactId>jackson-jaxrs-json-provider</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.jaxrs</groupId>
-          <artifactId>jackson-jaxrs-base</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-annotations</artifactId>
-        </exclusion>
-      </exclusions>
-      <version>2.25</version>
-    </dependency>
+
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+			<version>2.25</version>
+		</dependency>
 
 		<dependency>
 			<groupId>log4j</groupId>
@@ -181,69 +159,69 @@
 			</plugin>
 
 
-     <plugin>
-        <groupId>com.github.kongchen</groupId>
-        <artifactId>swagger-maven-plugin</artifactId>
-        <version>3.1.2</version>
-        <configuration>
-          <apiSources>
-            <apiSource>
-              <springmvc>false</springmvc>
-              <locations>org.osc.core.broker.rest.server.api</locations>
-              <basePath>/</basePath>
-              <info>
-                <title>OSC API Documentation</title>
-                <version>1.0</version>
-                <description>
-                  Id's(Id and Parent Id) specified in the body of
-                  entities needs to match
-                  the id's in the path parameter.
-                  Parent Id
-                  field is only applicable for entities when stated.
-                  All API's
-                  require authentication and respond with 401 error
-                  code for
-                  requests which fail authorization.
-                </description>
-              </info>
-              <swaggerDirectory>${basedir}/target/webapp/api-doc</swaggerDirectory>
-              <templatePath>
-                ${basedir}/target/webapp/api-doc/strapdown.html.hbs
-              </templatePath>
-              <outputPath>${basedir}/target/webapp/api-doc/api.html</outputPath>
-            </apiSource>
-          </apiSources>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>compile</phase>
-            <goals>
-              <goal>generate</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+			<plugin>
+				<groupId>com.github.kongchen</groupId>
+				<artifactId>swagger-maven-plugin</artifactId>
+				<version>3.1.2</version>
+				<configuration>
+					<apiSources>
+						<apiSource>
+							<springmvc>false</springmvc>
+							<locations>org.osc.core.broker.rest.server.api</locations>
+							<basePath>/</basePath>
+							<info>
+								<title>OSC API Documentation</title>
+								<version>1.0</version>
+								<description>
+									Id's(Id and Parent Id) specified in the body of
+									entities needs to match
+									the id's in the path parameter.
+									Parent Id
+									field is only applicable for entities when stated.
+									All API's
+									require authentication and respond with 401 error
+									code for
+									requests which fail authorization.
+								</description>
+							</info>
+							<swaggerDirectory>${basedir}/target/webapp/api-doc</swaggerDirectory>
+							<templatePath>
+								${basedir}/target/webapp/api-doc/strapdown.html.hbs
+							</templatePath>
+							<outputPath>${basedir}/target/webapp/api-doc/api.html</outputPath>
+						</apiSource>
+					</apiSources>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
-        <executions>
-          <execution>
-            <id>template-extract</id>
-            <phase>process-resources</phase>
-            <configuration>
-              <tasks>
-                <!-- Unzip API docs files -->
-                <unzip src="${basedir}/api-doc.zip" dest="${basedir}/target/webapp/api-doc"
-                  overwrite="true" />
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<id>template-extract</id>
+						<phase>process-resources</phase>
+						<configuration>
+							<tasks>
+								<!-- Unzip API docs files -->
+								<unzip src="${basedir}/api-doc.zip" dest="${basedir}/target/webapp/api-doc"
+									overwrite="true" />
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>biz.aQute.bnd</groupId>

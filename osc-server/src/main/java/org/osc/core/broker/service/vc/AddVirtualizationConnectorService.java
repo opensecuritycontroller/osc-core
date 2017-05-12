@@ -23,6 +23,7 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
@@ -48,6 +49,9 @@ public class AddVirtualizationConnectorService
     @Reference
     private ConformService conformService;
 
+    @Reference
+    EncryptionApi encryption;
+
     @Override
     public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
         if (this.validator == null) {
@@ -64,7 +68,7 @@ public class AddVirtualizationConnectorService
             }
         }
 
-        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encryption);
         OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
         vc = vcEntityMgr.create(vc);
 

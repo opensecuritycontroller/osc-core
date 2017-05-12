@@ -16,14 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.window.button;
 
-import com.google.common.collect.ImmutableList;
-import com.vaadin.event.ShortcutAction;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Component;
+import java.util.Arrays;
+import java.util.List;
+
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 
-import java.util.List;
+import com.vaadin.event.ShortcutAction;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 
 public class ApproveCancelButtonModel extends OkCancelButtonModel implements ComponentModel {
 
@@ -41,6 +42,7 @@ public class ApproveCancelButtonModel extends OkCancelButtonModel implements Com
         this.approveButton.setClickShortcut(ShortcutAction.KeyCode.ENTER, null);
     }
 
+    @Override
     public void setCancelClickedListener(Button.ClickListener listener) {
         this.rejectButton.removeClickListener(this.cancelClickListener);
         this.rejectButton.addClickListener(listener);
@@ -53,16 +55,18 @@ public class ApproveCancelButtonModel extends OkCancelButtonModel implements Com
         this.okClickListener = listener;
     }
 
+    @Override
     public void removeCancelClickShortcut() {
         this.rejectButton.removeClickShortcut();
     }
 
+    @Override
     public void addCancelClickShortcut() {
         this.rejectButton.setClickShortcut(ShortcutAction.KeyCode.ESCAPE, null);
     }
 
     @Override
     public List<Component> getComponents() {
-        return ImmutableList.of(this.rejectButton, this.approveButton);
+        return Arrays.asList(this.rejectButton, this.approveButton);
     }
 }

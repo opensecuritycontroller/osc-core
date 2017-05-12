@@ -16,6 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
+import static java.util.stream.Collectors.toSet;
+
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -24,13 +30,8 @@ import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
-import org.osc.core.util.EncryptionUtil;
-
-import javax.persistence.EntityManager;
-import java.util.Set;
-
-import static java.util.stream.Collectors.toSet;
 
 public class CheckSSLConnectivityVcTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(CheckSSLConnectivityVcTask.class);
@@ -75,11 +76,11 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
 
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
-        dto.setControllerPassword(EncryptionUtil.decryptAESCTR(vc.getControllerPassword()));
+        dto.setControllerPassword(StaticRegistry.encryptionApi().decryptAESCTR(vc.getControllerPassword()));
 
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
-        dto.setProviderPassword(EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
+        dto.setProviderPassword(StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword()));
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
                 .map(SslCertificateAttrEntityMgr::fromEntity)
                 .collect(toSet()));

@@ -31,6 +31,7 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.api.AddDistributedApplianceServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
@@ -56,6 +57,9 @@ public class AddDistributedApplianceService
     @Reference
     private ConformService conformService;
 
+    @Reference
+    private EncryptionApi encrypter;
+
     @Override
     public AddDistributedApplianceResponse exec(BaseRequest<DistributedApplianceDto> request, EntityManager em)
             throws Exception {
@@ -79,7 +83,7 @@ public class AddDistributedApplianceService
         List<VirtualSystem> vsList = getVirtualSystems(em, request.getDto(), da);
 
         // creating new entry in the db using entity manager object
-        DistributedApplianceEntityMgr.createEntity(em, request.getDto(), a, da);
+        DistributedApplianceEntityMgr.createEntity(em, request.getDto(), a, da, this.encrypter);
         OSCEntityManager.create(em, da);
 
         for (VirtualSystem vs : vsList) {
@@ -90,7 +94,7 @@ public class AddDistributedApplianceService
         }
 
         AddDistributedApplianceResponse response = new AddDistributedApplianceResponse();
-        DistributedApplianceEntityMgr.fromEntity(da, response);
+        DistributedApplianceEntityMgr.fromEntity(da, response, this.encrypter);
         if(request.isApi()) {
             response.setSecretKey(null);
         }

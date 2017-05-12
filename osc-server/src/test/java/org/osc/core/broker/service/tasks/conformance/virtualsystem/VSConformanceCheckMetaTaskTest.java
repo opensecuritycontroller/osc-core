@@ -24,7 +24,6 @@ import java.util.Collection;
 import javax.persistence.EntityManager;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -38,6 +37,8 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteVSSDeviceTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
@@ -45,10 +46,9 @@ import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttribu
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
 import org.osc.core.broker.util.PasswordUtil;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.test.util.TaskGraphHelper;
-import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.ServerUtil;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.sdn.api.ServiceApi;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceElement;
@@ -61,14 +61,20 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-@PrepareForTest({VMwareSdnApiFactory.class, LockUtil.class, CreateNsxServiceManagerTask.class})
+@PrepareForTest({VMwareSdnApiFactory.class, LockUtil.class, CreateNsxServiceManagerTask.class, StaticRegistry.class})
 @PowerMockIgnore("javax.net.ssl.*")
 public class VSConformanceCheckMetaTaskTest {
+
+    private static final String ENCRYPTED_PASSWORD = "encrypted";
+
     @Mock
     public EntityManager em;
 
-    // this is initialised from TestData; otherwise the TaskNodeComparer fails
-    private final ApiFactoryService apiFactoryService = VSConformanceCheckMetaTaskTestData.apiFactoryService;
+    // This is initialised to create the test data
+    private static EncryptionApi encryption;
+
+    // this is initialised from getTestData(); otherwise the TaskNodeComparer fails
+    private static ApiFactoryService apiFactoryService;
 
     @InjectMocks
     private CreateNsxServiceManagerTask createNsxServiceManagerTask;
@@ -112,9 +118,6 @@ public class VSConformanceCheckMetaTaskTest {
     private static String DEFAULT_SERVICE_IP = getDefaultServerIp();
     private static String DEFAULT_SERVICEMANAGER_NAME = "DEFAULT_MANAGER_NAME";
     private static String DEFAULT_SERVICEMANAGER_URL = CreateNsxServiceManagerTask.buildRestCallbackUrl();
-    private static String DEFAULT_SERVICEMANAGER_PASSWORD;
-
-    private static String DEFAULT_SERVICE_PASSWORD;
 
     private VirtualSystem vs;
 
@@ -123,12 +126,6 @@ public class VSConformanceCheckMetaTaskTest {
     public VSConformanceCheckMetaTaskTest(VirtualSystem vs, TaskGraph tg, boolean extraAutomation) {
         this.vs = vs;
         this.expectedGraph = tg;
-    }
-
-    @BeforeClass
-    public static void testSuiteInitialize() throws EncryptionException {
-        DEFAULT_SERVICEMANAGER_PASSWORD = EncryptionUtil.encryptAESCTR("");
-        DEFAULT_SERVICE_PASSWORD = EncryptionUtil.encryptAESCTR("");
     }
 
     @Before
@@ -141,6 +138,7 @@ public class VSConformanceCheckMetaTaskTest {
         this.vsConformanceCheckMetaTask.createNsxServiceTask = this.createNsxServiceTask;
         this.vsConformanceCheckMetaTask.nsxDeploymentSpecCheckMetaTask = this.nsxDeploymentSpecCheckMetaTask;
         this.vsConformanceCheckMetaTask.passwordUtil = this.passwordUtil;
+        this.vsConformanceCheckMetaTask.encryption = this.encryption;
         this.vsConformanceCheckMetaTask.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
         this.vsConformanceCheckMetaTask.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
         this.vsConformanceCheckMetaTask.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
@@ -155,14 +153,14 @@ public class VSConformanceCheckMetaTaskTest {
             Mockito.doReturn(vs).when(this.em).find(VirtualSystem.class, vs.getId());
         }
 
-        registerServiceManager(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS.getNsxServiceManagerId(), "nameOutOfSync", DEFAULT_SERVICEMANAGER_URL, DEFAULT_SERVICEMANAGER_PASSWORD);
-        registerServiceManager(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS.getNsxServiceManagerId(),DEFAULT_SERVICEMANAGER_NAME, "urlOutOfSync", DEFAULT_SERVICEMANAGER_PASSWORD);
+        registerServiceManager(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS.getNsxServiceManagerId(), "nameOutOfSync", DEFAULT_SERVICEMANAGER_URL, ENCRYPTED_PASSWORD);
+        registerServiceManager(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS.getNsxServiceManagerId(),DEFAULT_SERVICEMANAGER_NAME, "urlOutOfSync", ENCRYPTED_PASSWORD);
         registerServiceManager(UPDATE_VMWARE_SERVICEMANAGER_PASSWORD_OUT_OF_SYNC_VS.getNsxServiceManagerId(), DEFAULT_SERVICEMANAGER_NAME, DEFAULT_SERVICEMANAGER_URL, "passwordOutOfSync");
 
-        registerService(UPDATE_VMWARE_SERVICE_NAME_OUT_OF_SYNC_VS.getNsxServiceId(), "nameOutOfSync", DEFAULT_SERVICE_IP, DEFAULT_SERVICE_PASSWORD);
-        registerService(UPDATE_VMWARE_SERVICE_IP_OUT_OF_SYNC_VS.getNsxServiceId(), DEFAULT_SERVICE_NAME, "ipOutOfSync", DEFAULT_SERVICE_PASSWORD);
+        registerService(UPDATE_VMWARE_SERVICE_NAME_OUT_OF_SYNC_VS.getNsxServiceId(), "nameOutOfSync", DEFAULT_SERVICE_IP, ENCRYPTED_PASSWORD);
+        registerService(UPDATE_VMWARE_SERVICE_IP_OUT_OF_SYNC_VS.getNsxServiceId(), DEFAULT_SERVICE_NAME, "ipOutOfSync", ENCRYPTED_PASSWORD);
         registerService(UPDATE_VMWARE_SERVICE_PASSWORD_OUT_OF_SYNC_VS.getNsxServiceId(), DEFAULT_SERVICE_NAME, DEFAULT_SERVICE_IP, "passwordOutOfSync");
-        registerService(UPDATE_VMWARE_VSPOLICY_NAME_OUT_OF_SYNC_VS.getNsxServiceId(), DEFAULT_SERVICE_NAME, DEFAULT_SERVICE_IP, DEFAULT_SERVICE_PASSWORD);
+        registerService(UPDATE_VMWARE_VSPOLICY_NAME_OUT_OF_SYNC_VS.getNsxServiceId(), DEFAULT_SERVICE_NAME, DEFAULT_SERVICE_IP, ENCRYPTED_PASSWORD);
 
         Mockito.when(this.apiFactoryService.generateServiceManagerName(Mockito.any(VirtualSystem.class))).thenReturn(DEFAULT_SERVICEMANAGER_NAME);
 
@@ -188,6 +186,9 @@ public class VSConformanceCheckMetaTaskTest {
         Mockito.when(VMwareSdnApiFactory.createServiceApi(UPDATE_VMWARE_SERVICE_IP_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
         Mockito.when(VMwareSdnApiFactory.createServiceApi(UPDATE_VMWARE_SERVICE_PASSWORD_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
         Mockito.when(VMwareSdnApiFactory.createServiceApi(UPDATE_VMWARE_VSPOLICY_NAME_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
+
+        PowerMockito.mockStatic(StaticRegistry.class);
+        Mockito.when(StaticRegistry.encryptionApi()).thenReturn(encryption);
     }
 
 
@@ -205,6 +206,15 @@ public class VSConformanceCheckMetaTaskTest {
 
     @Parameters()
     public static Collection<Object[]> getTestData() throws EncryptionException {
+        encryption = Mockito.mock(EncryptionApi.class);
+
+        PowerMockito.mockStatic(StaticRegistry.class);
+        Mockito.when(StaticRegistry.encryptionApi()).thenReturn(encryption);
+
+        Mockito.when(encryption.encryptAESCTR("")).thenReturn(ENCRYPTED_PASSWORD);
+
+        apiFactoryService = VSConformanceCheckMetaTaskTestData.apiFactoryService;
+
         return Arrays.asList(new Object[][] {
             {UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS, createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS), false},
             {UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS,  createServiceManagerOutOfSyncGraph(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS), false},

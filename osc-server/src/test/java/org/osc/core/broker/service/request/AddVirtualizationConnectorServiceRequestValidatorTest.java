@@ -17,10 +17,7 @@
 package org.osc.core.broker.service.request;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import javax.persistence.EntityManager;
 
@@ -33,20 +30,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.validator.AddVirtualizationConnectorServiceRequestValidator;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ EncryptionUtil.class})
+@PrepareForTest({ StaticRegistry.class})
 public class AddVirtualizationConnectorServiceRequestValidatorTest {
 
     @Mock
@@ -61,6 +59,9 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     @Mock
     private VirtualizationConnectorUtil virtualizationConnectorUtil;
 
+    @Mock
+    private EncryptionApi encryption;
+
     @InjectMocks
     private AddVirtualizationConnectorServiceRequestValidator validator;
 
@@ -68,8 +69,9 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     public void testInitialize() throws EncryptionException {
         MockitoAnnotations.initMocks(this);
 
-        PowerMockito.mockStatic(EncryptionUtil.class);
-	    when(EncryptionUtil.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
+        when(this.encryption.encryptAESCTR(any(String.class))).thenReturn("Encrypted String");
+        PowerMockito.mockStatic(StaticRegistry.class);
+        when(StaticRegistry.encryptionApi()).thenReturn(this.encryption);
     }
 
     @Test

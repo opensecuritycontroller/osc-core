@@ -30,22 +30,24 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 public class VirtualizationConnectorEntityMgr {
 
-    public static VirtualizationConnector createEntity(VirtualizationConnectorDto dto) throws Exception {
+    public static VirtualizationConnector createEntity(VirtualizationConnectorDto dto,
+            EncryptionApi encryption) throws Exception {
         VirtualizationConnector vc = new VirtualizationConnector();
-        toEntity(vc, dto);
+        toEntity(vc, dto, encryption);
         return vc;
     }
 
-    public static void toEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) throws EncryptionException {
+    public static void toEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto,
+            EncryptionApi encryption) throws EncryptionException {
 
         // transform from dto to entity
         vc.setId(dto.getId());
@@ -61,7 +63,7 @@ public class VirtualizationConnectorEntityMgr {
         if (dto.isControllerDefined()) {
             vc.setControllerIpAddress(dto.getControllerIP());
             vc.setControllerUsername(dto.getControllerUser());
-            vc.setControllerPassword(EncryptionUtil.encryptAESCTR(dto.getControllerPassword()));
+            vc.setControllerPassword(encryption.encryptAESCTR(dto.getControllerPassword()));
         } else {
             vc.setControllerIpAddress(null);
             vc.setControllerUsername(null);
@@ -70,7 +72,7 @@ public class VirtualizationConnectorEntityMgr {
 
         vc.setProviderIpAddress(dto.getProviderIP());
         vc.setProviderUsername(dto.getProviderUser());
-        vc.setProviderPassword(EncryptionUtil.encryptAESCTR(dto.getProviderPassword()));
+        vc.setProviderPassword(encryption.encryptAESCTR(dto.getProviderPassword()));
         vc.setAdminTenantName(dto.getAdminTenantName());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
         vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
@@ -81,7 +83,8 @@ public class VirtualizationConnectorEntityMgr {
         vc.setVirtualizationSoftwareVersion(dto.getSoftwareVersion());
     }
 
-    public static void fromEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto) throws EncryptionException {
+    public static void fromEntity(VirtualizationConnector vc, VirtualizationConnectorDto dto,
+            EncryptionApi encryption) throws EncryptionException {
 
         // transform from entity to dto
         dto.setId(vc.getId());
@@ -91,11 +94,11 @@ public class VirtualizationConnectorEntityMgr {
         dto.setControllerType(vc.getControllerType());
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
-        dto.setControllerPassword(EncryptionUtil.decryptAESCTR(vc.getControllerPassword()));
+        dto.setControllerPassword(encryption.decryptAESCTR(vc.getControllerPassword()));
 
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
-        dto.setProviderPassword(EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
+        dto.setProviderPassword(encryption.decryptAESCTR(vc.getProviderPassword()));
         dto.setAdminTenantName(vc.getProviderAdminTenantName());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()

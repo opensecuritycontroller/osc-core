@@ -31,6 +31,7 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.util.EncryptionUtil;
 import org.osc.core.util.KeyStoreProvider;
 

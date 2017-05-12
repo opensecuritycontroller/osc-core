@@ -28,6 +28,7 @@ import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.api.ListTenantServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -52,13 +53,16 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
     private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
 
+    private ServerApi server;
+
     public UpdateDeploymentSpecWindow(DeploymentSpecDto dto, UpdateDeploymentSpecServiceApi updateDeploymentSpecService,
             ListAvailabilityZonesServiceApi listAvailabilityZonesService, ListFloatingIpPoolsServiceApi listFloatingIpPoolsService,
             ListHostServiceApi listHostService, ListHostAggregateServiceApi listHostAggregateService, ListNetworkServiceApi listNetworkService, ListRegionServiceApi listRegionService,
-            ListTenantServiceApi listTenantService) throws Exception {
+            ListTenantServiceApi listTenantService, ServerApi server) throws Exception {
         super(dto, listAvailabilityZonesService, listFloatingIpPoolsService, listHostService, listHostAggregateService,
                 listNetworkService, listRegionService, listTenantService);
         this.updateDeploymentSpecService = updateDeploymentSpecService;
+        this.server = server;
         createWindow(this.CAPTION);
     }
 
@@ -217,7 +221,7 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
                 close();
 
-                ViewUtil.showJobNotification(response.getJobId());
+                ViewUtil.showJobNotification(response.getJobId(), this.server);
             }
 
         } catch (Exception e) {

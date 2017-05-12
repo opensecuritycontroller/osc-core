@@ -23,16 +23,21 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Logger;
-import org.osc.core.rest.client.util.LoggingUtil;
+import org.osc.core.broker.service.api.server.ArchiveApi;
+import org.osc.core.broker.service.api.server.LoggingApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-public class ArchiveUtil {
+@Component
+public class ArchiveUtil implements ArchiveApi {
+
+    @Reference
+    private LoggingApi logging;
 
     private static final Logger log = Logger.getLogger(ArchiveUtil.class);
     static final int BUFFER_SIZE = 1024;
@@ -44,7 +49,8 @@ public class ArchiveUtil {
      * @return returns created zip file
      * @throws IOException
      */
-    public static File archive(String inputDir, String outputFile) throws IOException {
+    @Override
+    public File archive(String inputDir, String outputFile) throws IOException {
         try (FileOutputStream out = new FileOutputStream(outputFile);
                 ZipOutputStream zos = new ZipOutputStream(out)) {
             addToArchive(new File(inputDir), zos);
@@ -86,13 +92,14 @@ public class ArchiveUtil {
      * @param destination directory to extract
      * @throws IOException
      */
-    public static void unzip(String inputFile, String destination) throws IOException {
+    @Override
+    public void unzip(String inputFile, String destination) throws IOException {
         // TODO: barteks - use system unzip instead of java zip stream.
         FileInputStream fis = new FileInputStream(inputFile);
         ZipEntry entry;
         int entries = 0;
         long total = BUFFER_SIZE;
-        log.info("Extracting " + LoggingUtil.removeCRLF(inputFile) + " into " + destination);
+        log.info("Extracting " + this.logging.removeCRLF(inputFile) + " into " + destination);
 
         File zipParentDir = new File(inputFile).getParentFile();
 
@@ -113,7 +120,7 @@ public class ArchiveUtil {
                     new File(name).mkdir();
                     continue;
                 }
-                log.info("Extracting " + LoggingUtil.removeCRLF(name));
+                log.info("Extracting " + this.logging.removeCRLF(name));
                 FileOutputStream fos = new FileOutputStream(name);
                 BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER_SIZE);
                 count = zis.read(data, 0, BUFFER_SIZE);
@@ -134,27 +141,6 @@ public class ArchiveUtil {
                 }
             }
         }
-    }
-
-    /**
-     * Returns the files included within the zip file
-     *
-     * @param inputFile the zip file
-     * @return the list of files within the zip file
-     * @throws IOException
-     */
-    public static List<String> peekFileNames(String inputFile) throws IOException {
-        List<String> files = new ArrayList<>();
-        try (FileInputStream inputStream = new FileInputStream(inputFile);
-                ZipInputStream zis = new ZipInputStream(inputStream)) {
-            ZipEntry zipEntry = zis.getNextEntry();
-            while (zipEntry != null) {
-                files.add(zipEntry.getName());
-                zipEntry = zis.getNextEntry();
-            }
-            zis.closeEntry();
-        }
-        return files;
     }
 
     /**

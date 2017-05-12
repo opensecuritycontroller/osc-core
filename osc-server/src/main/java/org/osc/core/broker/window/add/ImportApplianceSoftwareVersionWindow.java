@@ -26,6 +26,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.api.server.ArchiveApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -35,8 +37,6 @@ import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.ProgressIndicatorWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.util.ArchiveUtil;
-import org.osc.core.util.ServerUtil;
 
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
@@ -57,8 +57,15 @@ public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
 
     private final ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService;
 
-    public ImportApplianceSoftwareVersionWindow(ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService) throws Exception {
+    private final ServerApi server;
+
+    private final ArchiveApi archiver;
+
+    public ImportApplianceSoftwareVersionWindow(ImportApplianceSoftwareVersionServiceApi importApplianceSoftwareVersionService,
+            ServerApi server, ArchiveApi archiver) throws Exception {
         this.importApplianceSoftwareVersionService = importApplianceSoftwareVersionService;
+        this.server = server;
+        this.archiver = archiver;
         createWindow("Auto Import Appliance Software Version");
     }
 
@@ -119,7 +126,7 @@ public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
                                 + event.getFilename();
                         try {
                             // Do the unzip only if there is enough disc space
-                            if (!ServerUtil.isEnoughSpace()) {
+                            if (!ImportApplianceSoftwareVersionWindow.this.server.isEnoughSpace()) {
                                 throw new VmidcException(VmidcMessages.getString("upload.appliance.nospace"));
                             }
 
@@ -128,7 +135,7 @@ public class ImportApplianceSoftwareVersionWindow extends CRUDBaseWindow<OkCance
                                         .getString(VmidcMessages_.UPLOAD_APPLIANCE_FAILED));
                             }
 
-                            ArchiveUtil.unzip(zipfile,
+                            ImportApplianceSoftwareVersionWindow.this.archiver.unzip(zipfile,
                                     ImportApplianceSoftwareVersionWindow.this.uploader.getUploadPath());
                             // After extraction, we don't need the zip file. Delete the zip file
                             log.info("Delete temporary uploaded zip file after extraction " + zipfile);
