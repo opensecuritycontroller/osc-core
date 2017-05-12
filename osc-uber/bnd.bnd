@@ -32,7 +32,6 @@ Require-Capability: \
     @${activation.dep},\
     @${amqp-client.dep},\
     @${annotations.dep},\
-    @${atmosphere-runtime.dep},\
     @${c3p0.dep},\
     @${commons-cli.dep},\
     @${commons-collections4.dep},\
@@ -40,31 +39,18 @@ Require-Capability: \
     @${commons-lang.dep},\
     @${commons-lang3.dep},\
     @${dom4j.dep},\
-    @${filteringtable.dep},\
-    @${flute.dep},\
     @${javax.mail.dep},\
     @${joda-time.dep},\
-    @${jsoup.dep},\
     @${log4j.dep},\
-    @${popupbutton.dep},\
     @${quartz.dep},\
     @${quartz-jobs.dep},\
     @${sac.dep},\
     @${slf4j-api.dep},\
     @${snakeyaml.dep},\
-    @${stepper.dep},\
     @${tyrus-client.dep},\
     @${tyrus-core.dep},\
     @${tyrus-spi.dep},\
     @${tyrus-standalone-client.dep},\
-    @${vaadin-client.dep},\
-    @${vaadin-client-compiled.dep},\
-    @${vaadin-push.dep},\
-    @${vaadin-sass-compiler.dep},\
-    @${vaadin-server.dep},\
-    @${vaadin-shared.dep},\
-    @${vaadin-slf4j-jdk14.dep},\
-    @${vaadin-themes.dep},\
     @${httpclient.dep},\
     @${commons-codec.dep},\
     @${commons-logging.dep},\
@@ -75,10 +61,7 @@ Require-Capability: \
     @${esapi.dep},\
     @${antisamy.dep},\
     @${osc-common.dep},\
-    @${osc-server.dep},\
-    @${gwt-elemental.dep},\
-    @${gwt-user.dep},\
-    @${vaadin-sass-compiler.dep}
+    @${osc-server.dep}
 
 Import-Package:\
     ${exclude-osc},\
