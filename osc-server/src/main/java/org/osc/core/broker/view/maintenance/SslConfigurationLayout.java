@@ -29,13 +29,16 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.DeleteSslEntryRequest;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.broker.service.ssl.TruststoreChangedListener;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import com.vaadin.data.Item;
 import com.vaadin.server.ThemeResource;
@@ -48,7 +51,7 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
-public class SslConfigurationLayout extends FormLayout implements X509TrustManagerFactory.TruststoreChangedListener {
+public class SslConfigurationLayout extends FormLayout implements TruststoreChangedListener {
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(SslConfigurationLayout.class);
@@ -60,15 +63,17 @@ public class SslConfigurationLayout extends FormLayout implements X509TrustManag
 
     private DeleteSslCertificateServiceApi deleteSslCertificateService;
     private ListSslCertificatesServiceApi listSslCertificateService;
+    private ServiceRegistration<TruststoreChangedListener> registration;
 
     public SslConfigurationLayout(DeleteSslCertificateServiceApi deleteSslCertificate,
-            ListSslCertificatesServiceApi listSslCertificateService) {
+            ListSslCertificatesServiceApi listSslCertificateService,
+            X509TrustManagerApi trustManager, BundleContext ctx) {
         super();
         this.deleteSslCertificateService = deleteSslCertificate;
         this.listSslCertificateService = listSslCertificateService;
         VerticalLayout sslUploadContainer = new VerticalLayout();
         try {
-            SslCertificateUploader certificateUploader = new SslCertificateUploader(X509TrustManagerFactory.getInstance());
+            SslCertificateUploader certificateUploader = new SslCertificateUploader(trustManager);
             certificateUploader.setSizeFull();
             certificateUploader.setUploadNotifier(uploadStatus -> {
                 if (uploadStatus) {
@@ -106,7 +111,7 @@ public class SslConfigurationLayout extends FormLayout implements X509TrustManag
         addComponent(sslUploadContainer);
         addComponent(sslListContainer);
 
-        X509TrustManagerFactory.getInstance().addTruststoreChangedListener(this);
+        this.registration = ctx.registerService(TruststoreChangedListener.class, this, null);
     }
 
     @SuppressWarnings("serial")
@@ -255,4 +260,18 @@ public class SslConfigurationLayout extends FormLayout implements X509TrustManag
     public void truststoreChanged() {
         buildSslConfigurationTable();
     }
+
+    @Override
+    public void detach() {
+        super.detach();
+        try {
+            this.registration.unregister();
+        } catch (IllegalStateException ise) {
+            // This is not a problem, it just means
+            // that the UI bundle stopped before this
+            // detach call occurred.
+        }
+    }
+
+
 }

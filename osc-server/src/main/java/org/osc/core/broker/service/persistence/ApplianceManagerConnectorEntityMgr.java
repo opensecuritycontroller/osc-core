@@ -29,22 +29,24 @@ import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 public class ApplianceManagerConnectorEntityMgr {
 
-    public static ApplianceManagerConnector createEntity(ApplianceManagerConnectorDto dto) throws Exception {
+    public static ApplianceManagerConnector createEntity(ApplianceManagerConnectorDto dto,
+            EncryptionApi encryption) throws Exception {
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
 
-        toEntity(mc, dto);
+        toEntity(mc, dto, encryption);
 
         return mc;
     }
 
-    public static void toEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) throws Exception {
+    public static void toEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto,
+            EncryptionApi encryption) throws Exception {
 
         // Transform from dto to entity
         mc.setId(dto.getId());
@@ -54,7 +56,7 @@ public class ApplianceManagerConnectorEntityMgr {
                 ManagerType.fromText(dto.getManagerType())));
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
-        mc.setPassword(EncryptionUtil.encryptAESCTR(dto.getPassword()));
+        mc.setPassword(encryption.encryptAESCTR(dto.getPassword()));
         mc.setApiKey(dto.getApiKey());
         mc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
                 .stream()
@@ -62,7 +64,8 @@ public class ApplianceManagerConnectorEntityMgr {
                 .collect(toSet()));
     }
 
-    public static void fromEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto) throws EncryptionException {
+    public static void fromEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto,
+            EncryptionApi encryption) throws EncryptionException {
 
         // transform from entity to dto
         dto.setId(mc.getId());
@@ -70,7 +73,7 @@ public class ApplianceManagerConnectorEntityMgr {
         dto.setManagerType(mc.getManagerType());
         dto.setIpAddress(mc.getIpAddress());
         dto.setUsername(mc.getUsername());
-        dto.setPassword(EncryptionUtil.decryptAESCTR(mc.getPassword()));
+        dto.setPassword(encryption.decryptAESCTR(mc.getPassword()));
         if (mc.getLastJob() != null) {
             dto.setLastJobStatus(mc.getLastJob().getStatus().name());
             dto.setLastJobState(mc.getLastJob().getState().name());

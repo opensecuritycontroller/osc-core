@@ -24,6 +24,7 @@ import org.osc.core.broker.service.api.AddUserServiceApi;
 import org.osc.core.broker.service.api.DeleteUserServiceApi;
 import org.osc.core.broker.service.api.ListUserServiceApi;
 import org.osc.core.broker.service.api.UpdateUserServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.request.ListUserRequest;
@@ -67,6 +68,9 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
     @Reference
     private UpdateUserServiceApi updateUserService;
 
+    @Reference
+    private ServerApi server;
+
     @Activate
     private void activate() {
         createView("Users", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE));
@@ -80,7 +84,7 @@ public class UserView extends CRUDBaseView<UserDto, BaseDto> {
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update User Window");
-            ViewUtil.addWindow(new UpdateUserWindow(this, this.updateUserService));
+            ViewUtil.addWindow(new UpdateUserWindow(this, this.updateUserService, this.server));
         }
         if (event.getButton().getId().equals(ToolbarButtons.DELETE.getId())) {
             log.debug("Redirecting to Delete User Window");

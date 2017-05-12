@@ -27,10 +27,15 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.util.AuthUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 @Component(service = {PasswordUtil.class, PasswordUtilApi.class})
 public class PasswordUtil implements PasswordUtilApi {
+
+    @Reference
+    AuthUtil authenticator;
+
     private String vmidcNsxPass = "";
     private String oscDefaultPass = "";
 
@@ -75,18 +80,18 @@ public class PasswordUtil implements PasswordUtilApi {
 
     @Override
     public void authenticateLocalRequest(ContainerRequestContext request) {
-        AuthUtil.authenticateLocalRequest(request);
+        this.authenticator.authenticateLocalRequest(request);
     }
 
     @Override
     public void authenticateNsxRequest(ContainerRequestContext request) {
-        AuthUtil.authenticate(request, RestConstants.VMIDC_NSX_LOGIN, getVmidcNsxPass());
+        this.authenticator.authenticate(request, RestConstants.VMIDC_NSX_LOGIN, getVmidcNsxPass());
 
     }
 
     @Override
     public void authenticateOscRequest(ContainerRequestContext request) {
-        AuthUtil.authenticate(request, RestConstants.OSC_DEFAULT_LOGIN, getOscDefaultPass());
+        this.authenticator.authenticate(request, RestConstants.OSC_DEFAULT_LOGIN, getOscDefaultPass());
     }
 
 }

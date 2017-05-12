@@ -18,13 +18,13 @@ package org.osc.core.broker.view.vc;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -50,9 +50,11 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
     private PasswordField rabbitMQUserPassword = null;
     private TextField rabbitMQPort = null;
     private final BaseVCWindow baseVCWindow;
+    private final EncryptionApi encrypter;
 
-    public AdvancedSettingsWindow(BaseVCWindow baseVCWindow) throws Exception {
+    public AdvancedSettingsWindow(BaseVCWindow baseVCWindow, EncryptionApi encrypter) throws Exception {
         this.baseVCWindow = baseVCWindow;
+        this.encrypter = encrypter;
         createWindow(ADVANCED_SETTINGS_CAPTION);
         getComponentModel().setOkClickedListener(new ClickListener() {
             /**
@@ -98,7 +100,7 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
                     .get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER));
         }
         if (this.baseVCWindow.providerAttributes.get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD) != null) {
-            this.rabbitMQUserPassword.setValue(EncryptionUtil.decryptAESCTR(this.baseVCWindow.providerAttributes
+            this.rabbitMQUserPassword.setValue(this.encrypter.decryptAESCTR(this.baseVCWindow.providerAttributes
                     .get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD)));
         }
         if (this.baseVCWindow.providerAttributes.get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT) != null) {
@@ -142,7 +144,7 @@ public class AdvancedSettingsWindow extends CRUDBaseWindow<OkCancelButtonModel> 
                 this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER,
                         this.rabbitMQUserName.getValue().toString());
                     this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
-                            EncryptionUtil.encryptAESCTR(this.rabbitMQUserPassword.getValue().toString()));
+                            this.encrypter.encryptAESCTR(this.rabbitMQUserPassword.getValue().toString()));
                 this.baseVCWindow.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT,
                         this.rabbitMQPort.getValue().toString());
                 close();

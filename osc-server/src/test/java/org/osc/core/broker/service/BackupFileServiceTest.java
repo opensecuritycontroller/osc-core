@@ -16,9 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.security.KeyStore;
@@ -40,20 +38,15 @@ import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
-import org.osc.core.util.encryption.EncryptionException;
 
 public class BackupFileServiceTest {
-	private enum Operation { Encryption, Decryption }
 
 	// Test classes
-	private class TestBackupFileServiceRequest implements Request {
-		public Operation operation = Operation.Encryption;
-		public byte[] backupFileBytes;
-		public String password;
-	}
+	private class TestBackupFileServiceRequest implements Request { }
 
 	private class TestBackupFileServiceResponse implements Response {
-		public byte[] encryptedBackupFileBytes;
+        public byte[] iv;
+        public SecretKey key;
 	}
 
 	/** Test service that simply encodes the input and uses test properties to access key and IV */
@@ -66,11 +59,10 @@ public class BackupFileServiceTest {
 				throws Exception {
 			TestBackupFileServiceResponse response = new TestBackupFileServiceResponse();
 
-			if(request.operation == Operation.Encryption) {
-				response.encryptedBackupFileBytes = encryptBackupFileBytes(request.backupFileBytes, request.password);
-			} else {
-				response.encryptedBackupFileBytes = decryptBackupFileBytes(request.backupFileBytes, request.password);
-			}
+			EncryptionParameters encryptionParameters = getEncryptionParameters();
+			response.iv = encryptionParameters.getIV();
+			response.key = encryptionParameters.getKey();
+
 			return response;
 		}
 
@@ -101,7 +93,6 @@ public class BackupFileServiceTest {
 
 	private Properties testProperties = new Properties();
 	private KeyStore testKeyStore;
-	private byte[] testBackupFileBytes;
 	private TestBackupFileService target = new TestBackupFileService();
 
 	private static final String BACKUP_KEY_ALIAS = "testBackupFileKeyAlias";
@@ -140,59 +131,24 @@ public class BackupFileServiceTest {
 
         this.testKeyStore = createTestKeystore();
         KeyStoreProvider.setKeyStoreFactory(this.testKeyStoreFactory);
-
-
-        this.testBackupFileBytes = new byte[20];
-		new SecureRandom().nextBytes(this.testBackupFileBytes);
     }
 
 	@Test
 	public void testExec_withValidKeyStoreProperties_ProperlyEncodesBackup() throws Exception {
 		// Arrange.
 		TestBackupFileServiceRequest testRequest = new TestBackupFileServiceRequest();
-		testRequest.password = "testPassword!@#$%";
-		testRequest.backupFileBytes = this.testBackupFileBytes;
 
-        KeyStoreProvider.getInstance().putSecretKey(BACKUP_KEY_ALIAS, generateTestSecretKey(), BACKUP_KEY_PASSWORD);
-        KeyStoreProvider.getInstance().putPassword(BACKUP_IV_ALIAS, generateTestIVHex(), BACKUP_IV_PASSWORD);
-
-		// Act.
-        // encrypt backup using service
-		testRequest.operation = Operation.Encryption;
-		TestBackupFileServiceResponse response = this.target.exec(testRequest, this.em);
-		testRequest.backupFileBytes = response.encryptedBackupFileBytes;
-		testRequest.operation = Operation.Decryption;
-		// decrypt backup using service
-		TestBackupFileServiceResponse response1 = this.target.exec(testRequest, this.em);
-
-		// Assert.
-		// ensure that decrypted bytes equal the original ones
-		assertArrayEquals(this.testBackupFileBytes, response1.encryptedBackupFileBytes);
-	}
-
-	@Test(expected=EncryptionException.class)
-	public void testExec_withInvalidDecryptionPassword_ThrowsEncryptionException() throws Exception {
-		// Arrange.
-		TestBackupFileServiceRequest testRequest = new TestBackupFileServiceRequest();
-		testRequest.password = "testPassword!@#$%";
-		testRequest.operation = Operation.Encryption;
-		testRequest.backupFileBytes = this.testBackupFileBytes;
-
-        KeyStoreProvider.getInstance().putSecretKey(BACKUP_KEY_ALIAS, generateTestSecretKey(), BACKUP_KEY_PASSWORD);
-        KeyStoreProvider.getInstance().putPassword(BACKUP_IV_ALIAS, generateTestIVHex(), BACKUP_IV_PASSWORD);
+        SecretKey secretKey = generateTestSecretKey();
+        KeyStoreProvider.getInstance().putSecretKey(BACKUP_KEY_ALIAS, secretKey, BACKUP_KEY_PASSWORD);
+        String ivHex = generateTestIVHex();
+        KeyStoreProvider.getInstance().putPassword(BACKUP_IV_ALIAS, ivHex, BACKUP_IV_PASSWORD);
 
 		// Act.
-        // encrypt backup using service
 		TestBackupFileServiceResponse response = this.target.exec(testRequest, this.em);
-		testRequest.password = "InvalidPassword";
-		testRequest.operation = Operation.Decryption;
-		testRequest.backupFileBytes = response.encryptedBackupFileBytes;
-		// decrypt backup using service
-		TestBackupFileServiceResponse response1 = this.target.exec(testRequest, this.em);
 
 		// Assert.
-		// ensure that decrypted bytes equal the original ones
-		assertArrayEquals(this.testBackupFileBytes, response1.encryptedBackupFileBytes);
+		assertEquals(secretKey, response.key);
+		assertEquals(ivHex, DatatypeConverter.printHexBinary(response.iv));
 	}
 
 	@Test

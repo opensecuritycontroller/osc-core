@@ -17,6 +17,7 @@
 package org.osc.core.util.encryption;
 
 import org.apache.commons.lang.StringUtils;
+import org.osc.core.broker.service.api.server.EncryptionException;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;

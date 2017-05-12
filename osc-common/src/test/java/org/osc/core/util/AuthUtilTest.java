@@ -16,11 +16,8 @@
  *******************************************************************************/
 package org.osc.core.util;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.KeyStore;
-import java.util.Properties;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -28,110 +25,104 @@ import javax.ws.rs.core.UriInfo;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.osc.core.util.encryption.AESCTREncryption;
-import org.osc.core.util.encryption.EncryptionException;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.LoggingApi;
 
+@RunWith(MockitoJUnitRunner.class)
 public class AuthUtilTest {
 
+    private static final String USER = "admin";
+    private static final String PASSWORD = "admin123";
+    private static final String ENCRYPTED_PASSWORD = "encrypted";
+
+    @Mock
 	private ContainerRequestContext mockRequest;
 
-	private UriInfo uriInfo;
-	// password encrypted with AES CTR
-	private String encryptedPassword;
-	private String user = "admin";
+    @Mock
+    private EncryptionApi encryption;
 
-	KeyStore testKeyStore;
-	KeyStoreProvider.KeyStoreFactory testKeyStoreFactory;
+    @Mock
+    private LoggingApi logging;
+
+    @Mock
+    private UriInfo uriInfo;
+
+    @InjectMocks
+    private AuthUtil authUtil;
 
 	@Before
 	public void setUp() throws Exception {
-        this.mockRequest = Mockito.mock(ContainerRequestContext.class);
-        this.uriInfo = Mockito.mock(UriInfo.class);
-		AESCTREncryption.setKeyProvider(new AESCTREncryption.KeyProvider() {
-			@Override
-			public String getKeyHex() throws EncryptionException {
-				return "A6EBBF1CDCC166710670DE15015EA0AF";
-			}
-
-			@Override
-			public void updateKey(String keyHex) throws EncryptionException {
-				// dont do nothing
-			}
-		});
-
-		this.encryptedPassword = EncryptionUtil.encryptAESCTR("admin123");
-	}
-
-	private String getAESCTRKeyPassword() throws IOException {
-		Properties properties = new Properties();
-		properties.load(getClass().getResourceAsStream(EncryptionUtil.SECURITY_PROPS_RESOURCE_PATH));
-		return properties.getProperty(AESCTREncryption.PROPS_AESCTR_PASSWORD);
+        Mockito.when(this.encryption.validateAESCTR(PASSWORD, ENCRYPTED_PASSWORD)).thenReturn(true);
 	}
 
 	//Invalid test cases
 	@Test(expected = WebApplicationException.class)
 	public void testAuthenticateMissingAuthorization() {
 		Mockito.when(this.mockRequest.getHeaderString("Authorization")).thenReturn(null);
-		AuthUtil.authenticate(this.mockRequest, "admin", "admin123");
+		this.authUtil.authenticate(this.mockRequest, USER, ENCRYPTED_PASSWORD);
 	}
 
 	@Test(expected = WebApplicationException.class)
 	public void testAuthenticateInvalidTokensNull() {
 		Mockito.when(this.mockRequest.getHeaderString("Authorization")).thenReturn("");
-		AuthUtil.authenticate(this.mockRequest, "admin", "admin123");
+		this.authUtil.authenticate(this.mockRequest, USER, ENCRYPTED_PASSWORD);
 	}
 
 	@Test(expected = WebApplicationException.class)
 	public void testAuthenticateInvalidTokensLength() {
 		Mockito.when(this.mockRequest.getHeaderString("Authorization")).thenReturn("abc\\s+xyz\\+s");
-		AuthUtil.authenticate(this.mockRequest, "admin", "admin123");
+		this.authUtil.authenticate(this.mockRequest, USER, ENCRYPTED_PASSWORD);
 	}
 
 	@Test(expected = WebApplicationException.class)
 	public void testAuthenticateInvalidTokensBasic() {
 		Mockito.when(this.mockRequest.getHeaderString("Authorization")).thenReturn("BASIC1\\+s");
-		AuthUtil.authenticate(this.mockRequest, "admin", "admin123");
+		this.authUtil.authenticate(this.mockRequest, USER, ENCRYPTED_PASSWORD);
 	}
 
 	@Test(expected = WebApplicationException.class)
 	public void testInvalidCredentials() {
 		//Base64 encoded string "admin1:admin12345"
 		Mockito.when(this.mockRequest.getHeaderString("Authorization")).thenReturn("Basic YWRtaW4xOmFkbWluMTIzNDU=");
-		AuthUtil.authenticate(this.mockRequest, "admin", "admin123");
+		this.authUtil.authenticate(this.mockRequest, USER, ENCRYPTED_PASSWORD);
 	}
 
 	@Test(expected = WebApplicationException.class)
 	public void testAuthenticateLocalRequestMissing() {
-		AuthUtil.authenticateLocalRequest(this.mockRequest);
+		this.authUtil.authenticateLocalRequest(this.mockRequest);
 	}
 
 	@Test(expected = WebApplicationException.class)
 	public void testAuthenticateLocalInvalidAddress() throws URISyntaxException {
 		Mockito.when(this.uriInfo.getRequestUri()).thenReturn(new URI("http://127.0.0.2"));
 		Mockito.when(this.mockRequest.getUriInfo()).thenReturn(this.uriInfo);
-		AuthUtil.authenticateLocalRequest(this.mockRequest);
+		this.authUtil.authenticateLocalRequest(this.mockRequest);
 	}
 
 	//Valid test cases
 	@Test
 	public void validAuthenticate() {
 		Mockito.when(this.mockRequest.getHeaderString("Authorization")).thenReturn("Basic YWRtaW46YWRtaW4xMjM=");
-		AuthUtil.authenticate(this.mockRequest, this.user, this.encryptedPassword);
+		this.authUtil.authenticate(this.mockRequest, USER, ENCRYPTED_PASSWORD);
 	}
 
 	@Test
 	public void validAuthenticateLocalRequestByIp() throws URISyntaxException {
 		Mockito.when(this.uriInfo.getRequestUri()).thenReturn(new URI("http://127.0.0.1"));
 		Mockito.when(this.mockRequest.getUriInfo()).thenReturn(this.uriInfo);
-		AuthUtil.authenticateLocalRequest(this.mockRequest);
+		this.authUtil.authenticateLocalRequest(this.mockRequest);
 	}
 
 	@Test
 	public void validAuthenticateLocalRequestByDomain() throws URISyntaxException {
 		Mockito.when(this.uriInfo.getRequestUri()).thenReturn(new URI("http://localhost"));
 		Mockito.when(this.mockRequest.getUriInfo()).thenReturn(this.uriInfo);
-		AuthUtil.authenticateLocalRequest(this.mockRequest);
+		this.authUtil.authenticateLocalRequest(this.mockRequest);
 	}
 
 }

@@ -18,6 +18,7 @@ package org.osc.core.broker.window.delete;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.DeleteApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.ManagerConnectorView;
@@ -43,10 +44,14 @@ public class DeleteManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
     private final DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService;
 
+    private final ServerApi server;
+
     public DeleteManagerConnectorWindow(ManagerConnectorView mcView,
-            DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService) throws Exception {
+            DeleteApplianceManagerConnectorServiceApi deleteApplianceManagerConnectorService,
+            ServerApi server) throws Exception {
         this.mcView = mcView;
         this.deleteApplianceManagerConnectorService = deleteApplianceManagerConnectorService;
+        this.server = server;
         createWindow(this.CAPTION);
     }
 
@@ -72,7 +77,7 @@ public class DeleteManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
             BaseJobResponse response = this.deleteApplianceManagerConnectorService.dispatch(delRequest);
 
-            ViewUtil.showJobNotification(response.getJobId());
+            ViewUtil.showJobNotification(response.getJobId(), this.server);
 
         } catch (Exception e) {
             log.info(e.getMessage());

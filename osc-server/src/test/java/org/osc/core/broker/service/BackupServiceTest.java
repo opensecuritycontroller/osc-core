@@ -25,12 +25,23 @@ import javax.persistence.EntityManager;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
 
+@RunWith(MockitoJUnitRunner.class)
 public class BackupServiceTest {
 
+    @Mock
+    private EncryptionApi encryption;
+
+    @InjectMocks
 	private BackupService target;
+
 	private EntityManager em;
 
 	@Before

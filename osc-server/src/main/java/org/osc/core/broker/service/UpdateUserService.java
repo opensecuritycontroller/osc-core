@@ -26,6 +26,7 @@ import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.UpdateUserServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
@@ -38,7 +39,6 @@ import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.service.validator.UserDtoValidator;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.server.Server;
-import org.osc.core.util.EncryptionUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -61,6 +61,9 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
     @Reference
     private PasswordChangePropagateMgrMetaTask passwordChangePropagateMgrMetaTask;
 
+    @Reference
+    private EncryptionApi encrypter;
+
     @Override
     public UpdateUserResponse exec(UpdateUserRequest request, EntityManager em) throws Exception {
         OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
@@ -72,20 +75,20 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
         // validate and retrieve existing entity from the database.
         User user = this.validator.validateForUpdate(request);
 
-        UserEntityMgr.toEntity(user, request);
+        UserEntityMgr.toEntity(user, request, this.encrypter);
         emgr.update(user);
         UpdateUserResponse response = new UpdateUserResponse();
 
         // If user changes password, need to reflect it in auth-filter objects
         if (user.getLoginName().equals(RestConstants.OSC_DEFAULT_LOGIN)) {
 
-            this.passwordUtil.setOscDefaultPass(EncryptionUtil.decryptAESCTR(user.getPassword()));
+            this.passwordUtil.setOscDefaultPass(this.encrypter.decryptAESCTR(user.getPassword()));
             user.setRole(RoleType.ADMIN);
             response.setJobId(startPasswordPropagateMgrJob());
 
         } else if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {
 
-            this.passwordUtil.setVmidcNsxPass(EncryptionUtil.decryptAESCTR(user.getPassword()));
+            this.passwordUtil.setVmidcNsxPass(this.encrypter.decryptAESCTR(user.getPassword()));
             user.setRole(RoleType.SYSTEM_NSX);
             response.setJobId(startPasswordPropagateNsxJob());
         }

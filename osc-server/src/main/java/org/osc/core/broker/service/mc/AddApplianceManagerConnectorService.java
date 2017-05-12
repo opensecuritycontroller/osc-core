@@ -29,6 +29,7 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
@@ -67,6 +68,9 @@ public class AddApplianceManagerConnectorService
     @Reference
     private ConformService conformService;
 
+    @Reference
+    private EncryptionApi encryption;
+
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorRequest> request, EntityManager em)
             throws Exception {
@@ -83,7 +87,7 @@ public class AddApplianceManagerConnectorService
             }
         }
 
-        ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto());
+        ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption);
         appMgrEntityMgr.create(mc);
 
         SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
@@ -130,7 +134,7 @@ public class AddApplianceManagerConnectorService
             throw new VmidcBrokerValidationException("Appliance Manager IP Address: " + request.getDto().getIpAddress() + " already exists.");
         }
 
-        checkManagerConnection(request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto()));
+        checkManagerConnection(request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption));
     }
 
     void checkManagerConnection(DryRunRequest<ApplianceManagerConnectorRequest> request,

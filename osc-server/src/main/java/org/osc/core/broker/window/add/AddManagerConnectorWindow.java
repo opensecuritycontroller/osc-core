@@ -28,6 +28,7 @@ import com.vaadin.ui.TextField;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.exceptions.RestClientException;
@@ -39,6 +40,7 @@ import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.ManagerConnectorView;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -83,13 +85,20 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
 
     private final ValidationApi validator;
 
+    private final X509TrustManagerApi trustManager;
+
+    private final ServerApi server;
+
     public AddManagerConnectorWindow(ManagerConnectorView mcView,
             AddApplianceManagerConnectorServiceApi addMCService,
-            PluginService pluginStatusService, ValidationApi validator) throws Exception {
+            PluginService pluginStatusService, ValidationApi validator,
+            X509TrustManagerApi trustManager, ServerApi server) throws Exception {
         this.mcView = mcView;
         this.addMCService = addMCService;
         this.pluginStatusService = pluginStatusService;
         this.validator = validator;
+        this.trustManager = trustManager;
+        this.server = server;
         createWindow(this.CAPTION);
     }
 
@@ -240,7 +249,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         this.mcView.parentTableClicked(addRequest.getDto().getId());
         close();
 
-        ViewUtil.showJobNotification(addResponse.getJobId());
+        ViewUtil.showJobNotification(addResponse.getJobId(), this.server);
     }
 
     private void sslAwareHandleException(final Exception originalException) {
@@ -258,7 +267,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
                     public void cancelFormAction() {
                         handleException(originalException);
                     }
-                }));
+                }, this.trustManager));
             } catch (Exception e) {
                 handleException(originalException);
             }

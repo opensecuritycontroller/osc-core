@@ -26,6 +26,7 @@ import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.api.DeleteAlertServiceApi;
 import org.osc.core.broker.service.api.ListAlertServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.request.AlertRequest;
@@ -74,6 +75,9 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
     @Reference
     AcknowledgeAlertServiceApi acknowledgeAlertService;
 
+    @Reference
+    ServerApi server;
+
     @Activate
     private void activate() {
         createView("Alerts", Arrays.asList(ToolbarButtons.ACKNOWLEDGE_ALERT, ToolbarButtons.UNACKNOWLEDGE_ALERT,
@@ -96,7 +100,7 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
             public Object generateCell(CustomTable source, Object itemId, Object columnId) {
                 AlertDto alertDto = AlertView.this.parentContainer.getItem(itemId).getBean();
                 if (alertDto.getObject() != null) {
-                    return ViewUtil.generateObjectLink(alertDto.getObject());
+                    return ViewUtil.generateObjectLink(alertDto.getObject(), AlertView.this.server);
                 }
                 return null;
             }

@@ -23,6 +23,7 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 
 public class AddVirtualizationConnectorServiceRequestValidator
@@ -51,7 +52,8 @@ public class AddVirtualizationConnectorServiceRequestValidator
 		VirtualizationConnectorDto dto = request.getDto();
 		this.dtoValidator.validateForCreate(dto);
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(dto);
+		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(dto,
+		        StaticRegistry.encryptionApi());
 
 		if (this.virtualizationConnectorUtil == null) {
 			this.virtualizationConnectorUtil = new VirtualizationConnectorUtil();

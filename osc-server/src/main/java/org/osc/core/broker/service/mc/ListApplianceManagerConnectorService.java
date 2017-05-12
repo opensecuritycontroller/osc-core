@@ -26,6 +26,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
@@ -33,16 +34,20 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class ListApplianceManagerConnectorService
         extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<ApplianceManagerConnectorDto>>
         implements ListApplianceManagerConnectorServiceApi {
 
-    private ListResponse<ApplianceManagerConnectorDto> response = new ListResponse<>();
+    @Reference
+    private EncryptionApi encryption;
+
 
     @Override
     public ListResponse<ApplianceManagerConnectorDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
+        ListResponse<ApplianceManagerConnectorDto> response = new ListResponse<>();
         // Initializing Entity Manager
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
         // to do mapping
@@ -51,7 +56,7 @@ public class ListApplianceManagerConnectorService
         // mapping all the MC objects to mc dto objects
         for (ApplianceManagerConnector mc : emgr.listAll("name")) {
             ApplianceManagerConnectorDto dto = new ApplianceManagerConnectorDto();
-            ApplianceManagerConnectorEntityMgr.fromEntity(mc, dto);
+            ApplianceManagerConnectorEntityMgr.fromEntity(mc, dto, this.encryption);
             if (request.isApi()) {
                 ApplianceManagerConnectorDto.sanitizeManagerConnector(dto);
             }
@@ -62,8 +67,8 @@ public class ListApplianceManagerConnectorService
 
             mcmList.add(dto);
         }
-        this.response.setList(mcmList);
-        return this.response;
+        response.setList(mcmList);
+        return response;
     }
 
 }

@@ -31,33 +31,34 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 public class DistributedApplianceEntityMgr {
 
     public static DistributedAppliance createEntity(EntityManager em, DistributedApplianceDto dto, Appliance a,
-            DistributedAppliance da) throws EncryptionException {
+            DistributedAppliance da, EncryptionApi encrypter) throws EncryptionException {
 
-        toEntity(a, da, dto);
+        toEntity(a, da, dto, encrypter);
 
         return da;
 
     }
 
-    public static void toEntity(Appliance a, DistributedAppliance da, DistributedApplianceDto dto) throws EncryptionException {
+    public static void toEntity(Appliance a, DistributedAppliance da, DistributedApplianceDto dto,
+            EncryptionApi encrypter) throws EncryptionException {
 
         // transform from dto to entity
         da.setId(dto.getId());
         da.setAppliance(a);
         da.setName(dto.getName());
-        da.setMgrSecretKey(EncryptionUtil.encryptAESCTR(dto.getSecretKey()));
+        da.setMgrSecretKey(encrypter.encryptAESCTR(dto.getSecretKey()));
         da.setApplianceVersion(dto.getApplianceSoftwareVersionName());
     }
 
-    public static void fromEntity(DistributedAppliance da, DistributedApplianceDto dto) throws EncryptionException {
+    public static void fromEntity(DistributedAppliance da, DistributedApplianceDto dto, EncryptionApi encrypter) throws EncryptionException {
 
         // transform from entity to dto
         dto.setId(da.getId());
@@ -69,7 +70,7 @@ public class DistributedApplianceEntityMgr {
             dto.setLastJobState(da.getLastJob().getState().name());
             dto.setLastJobId(da.getLastJob().getId());
         }
-        dto.setSecretKey(EncryptionUtil.decryptAESCTR(da.getMgrSecretKey()));
+        dto.setSecretKey(encrypter.decryptAESCTR(da.getMgrSecretKey()));
         dto.setApplianceId(da.getAppliance().getId());
         dto.setApplianceModel(da.getAppliance().getModel());
         dto.setApplianceSoftwareVersionName(da.getApplianceVersion());

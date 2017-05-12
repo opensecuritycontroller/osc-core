@@ -34,12 +34,13 @@ import org.osc.core.broker.model.entities.IscEntity;
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.job.TaskRecord;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
-import org.osc.core.util.encryption.EncryptionException;
 
 /**
  * EntityManager: a generic entity manager that handles all common CRUD
@@ -181,7 +182,8 @@ public class OSCEntityManager<T extends IscEntity> {
         if (entity instanceof User) {
             dto = new UserDto();
             try {
-                UserEntityMgr.fromEntity((User) entity, (UserDto) dto);
+                UserEntityMgr.fromEntity((User) entity, (UserDto) dto,
+                        StaticRegistry.encryptionApi());
             } catch (EncryptionException e) {
                 log.error("Unable to populate the user dto");
                 throw new RuntimeException("Encountered an error when trying to delete a user", e);

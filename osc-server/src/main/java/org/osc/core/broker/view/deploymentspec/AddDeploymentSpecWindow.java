@@ -28,6 +28,7 @@ import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.api.ListTenantServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -52,16 +53,20 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
     private AddDeploymentSpecServiceApi addDeploymentSpecService;
 
+    private ServerApi server;
+
     public AddDeploymentSpecWindow(Long vsId,
             AddDeploymentSpecServiceApi addDeploymentSpecService, ListAvailabilityZonesServiceApi listAvailabilityZonesService,
             ListFloatingIpPoolsServiceApi listFloatingIpPoolsService, ListHostServiceApi listHostService,
             ListHostAggregateServiceApi listHostAggregateService,
             ListNetworkServiceApi listNetworkService,
-            ListRegionServiceApi listRegionService, ListTenantServiceApi listTenantService) throws Exception {
+            ListRegionServiceApi listRegionService, ListTenantServiceApi listTenantService,
+            ServerApi server) throws Exception {
         super(new DeploymentSpecDto().withParentId(vsId), listAvailabilityZonesService,
                 listFloatingIpPoolsService, listHostService, listHostAggregateService, listNetworkService,
                 listRegionService, listTenantService);
         this.addDeploymentSpecService = addDeploymentSpecService;
+        this.server = server;
         createWindow(this.CAPTION);
     }
 
@@ -117,7 +122,7 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
                 BaseJobResponse response = this.addDeploymentSpecService.dispatch(req);
                 close();
 
-                ViewUtil.showJobNotification(response.getJobId());
+                ViewUtil.showJobNotification(response.getJobId(), this.server);
             }
 
         } catch (Exception e) {

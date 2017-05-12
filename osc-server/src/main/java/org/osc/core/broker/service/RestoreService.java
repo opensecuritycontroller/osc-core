@@ -26,6 +26,8 @@ import javax.persistence.EntityManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.osc.core.broker.service.api.RestoreServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.RestoreRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
@@ -35,12 +37,15 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.server.Server;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.ServerUtil;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class RestoreService extends BackupFileService<RestoreRequest, EmptySuccessResponse>
         implements RestoreServiceApi {
+
+    @Reference
+    EncryptionApi encrypter;
 
     @Override
     public EmptySuccessResponse exec(RestoreRequest request, EntityManager em) throws Exception {
@@ -136,6 +141,11 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
             }
         }
         return new EmptySuccessResponse();
+    }
+
+    protected byte[] decryptBackupFileBytes(byte[] backupFileBytes, String password) throws Exception {
+        EncryptionParameters params = getEncryptionParameters();
+        return this.encrypter.decryptAESGCM(backupFileBytes, params.getKey(), params.getIV(), password.getBytes("UTF-8"));
     }
 
     private boolean startNewServer() {

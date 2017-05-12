@@ -18,14 +18,17 @@ package org.osc.core.util;
 
 import javax.crypto.SecretKey;
 
+import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.util.encryption.AESCTREncryption;
 import org.osc.core.util.encryption.AESGCMEncryption;
 import org.osc.core.util.encryption.DESDecryption;
-import org.osc.core.util.encryption.EncryptionException;
 import org.osc.core.util.encryption.PBKDF2Derivation;
+import org.osgi.service.component.annotations.Component;
 
+@Component
 @SuppressWarnings("deprecation") // DESDecryption is used only to support legacy upgrade purposes
-public class EncryptionUtil {
+public class EncryptionUtil implements EncryptionApi {
     public static final String SECURITY_PROPS_RESOURCE_PATH = "/org/osc/core/util/security.properties";
     /**
      * Encrypts plain text with AES-GCM authenticated encryption (details in RFC5084)
@@ -35,7 +38,8 @@ public class EncryptionUtil {
      * @param aad additional authentication data
      * @return encrypted AES-GCM data
      */
-    public static byte[] encryptAESGCM(byte[] plainText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException {
+    @Override
+    public byte[] encryptAESGCM(byte[] plainText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException {
         return new AESGCMEncryption().encrypt(plainText, key, iv, aad);
     }
 
@@ -47,7 +51,8 @@ public class EncryptionUtil {
      * @param aad additional authentication data
      * @return decrypted AES-GCM data
      */
-    public static byte[] decryptAESGCM(byte[] cipherText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException {
+    @Override
+    public byte[] decryptAESGCM(byte[] cipherText, SecretKey key, byte[] iv, byte[] aad) throws EncryptionException {
         return new AESGCMEncryption().decrypt(cipherText, key, iv, aad);
     }
 
@@ -57,7 +62,8 @@ public class EncryptionUtil {
      * @param plainText text to be encrypted
      * @return IV and cypher text concatenated with ':' character
      */
-    public static String encryptAESCTR(String plainText) throws EncryptionException {
+    @Override
+    public String encryptAESCTR(String plainText) throws EncryptionException {
         return new AESCTREncryption().encrypt(plainText);
     }
 
@@ -68,7 +74,8 @@ public class EncryptionUtil {
      * @param cipherText concatenation of IV and cipher text to be decrypted
      * @return decrypted plain text
      */
-    public static String decryptAESCTR(String cipherText) throws EncryptionException {
+    @Override
+    public String decryptAESCTR(String cipherText) throws EncryptionException {
         return new AESCTREncryption().decrypt(cipherText);
     }
 
@@ -78,7 +85,8 @@ public class EncryptionUtil {
      * @param validCipherText IV and cypher text concatenated with ':' character
      * @return true if given cipher text is encrypted version of given plain text, false otherwise
      */
-    public static boolean validateAESCTR(String plainText, String validCipherText) throws EncryptionException {
+    @Override
+    public boolean validateAESCTR(String plainText, String validCipherText) throws EncryptionException {
         return new AESCTREncryption().validate(plainText, validCipherText);
     }
 
@@ -107,8 +115,9 @@ public class EncryptionUtil {
      * @param cipherText encoded string
      * @return decoded string
      */
+    @Override
     @Deprecated
-    public static String decryptDES(String cipherText) throws EncryptionException {
+    public String decryptDES(String cipherText) throws EncryptionException {
         return new DESDecryption().decrypt(cipherText);
     }
 }

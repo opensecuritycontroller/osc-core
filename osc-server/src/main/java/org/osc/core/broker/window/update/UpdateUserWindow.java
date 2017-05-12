@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.UpdateUserServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.request.UpdateUserRequest;
 import org.osc.core.broker.service.response.UpdateUserResponse;
@@ -55,9 +56,13 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private final BeanItem<UserDto> currentUser;
     private final UpdateUserServiceApi updateUserService;
 
-    public UpdateUserWindow(UserView userView, UpdateUserServiceApi updateUserService) throws Exception {
+    private final ServerApi server;
+
+    public UpdateUserWindow(UserView userView, UpdateUserServiceApi updateUserService,
+            ServerApi server) throws Exception {
         this.currentUser = userView.getParentItem();
         this.updateUserService = updateUserService;
+        this.server = server;
         createWindow(this.CAPTION);
     }
 
@@ -148,7 +153,7 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
                 UpdateUserResponse res = this.updateUserService.dispatch(updateRequest);
                 if (res.getJobId() != null) {
-                    ViewUtil.showJobNotification(res.getJobId());
+                    ViewUtil.showJobNotification(res.getJobId(), this.server);
                 }
 
                 close();

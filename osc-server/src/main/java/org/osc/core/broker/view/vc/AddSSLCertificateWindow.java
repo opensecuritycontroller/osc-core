@@ -24,12 +24,12 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.response.CertificateBasicInfoModel;
 import org.osc.core.broker.service.ssl.CertificateResolverModel;
+import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseApproveWindow;
 import org.osc.core.broker.window.button.ApproveCancelButtonModel;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
@@ -44,6 +44,7 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
     private Table sslConfigTable;
     private final ArrayList<CertificateResolverModel> certificateResolverModels;
     private final SSLCertificateWindowInterface sslCertificateWindowInterface;
+    private final X509TrustManagerApi trustManager;
 
     public interface SSLCertificateWindowInterface {
         void submitFormAction(ArrayList<CertificateResolverModel> certificateResolverModels);
@@ -51,10 +52,12 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
     }
 
     public AddSSLCertificateWindow(ArrayList<CertificateResolverModel> certificateResolverModels,
-                                   SSLCertificateWindowInterface sslCertificateWindowInterface) throws Exception {
+                                   SSLCertificateWindowInterface sslCertificateWindowInterface,
+                                   X509TrustManagerApi trustManager) throws Exception {
         super(new ApproveCancelButtonModel());
         this.certificateResolverModels = certificateResolverModels;
         this.sslCertificateWindowInterface = sslCertificateWindowInterface;
+        this.trustManager = trustManager;
         createWindow(this.CAPTION);
     }
 
@@ -103,12 +106,12 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
             try {
                 certificateBasicInfoModels.add(new CertificateBasicInfoModel(
                         basicInfoModel.getAlias(),
-                        X509TrustManagerFactory.getSha1Fingerprint(basicInfoModel.getCertificate()),
+                        this.trustManager.getSha1Fingerprint(basicInfoModel.getCertificate()),
                         basicInfoModel.getCertificate().getIssuerDN().getName(),
                         basicInfoModel.getCertificate().getNotBefore(),
                         basicInfoModel.getCertificate().getNotAfter(),
                         basicInfoModel.getCertificate().getSigAlgName(),
-                        X509TrustManagerFactory.certificateToString(basicInfoModel.getCertificate()))
+                        this.trustManager.certificateToString(basicInfoModel.getCertificate()))
                 );
             } catch (NoSuchAlgorithmException | CertificateEncodingException e) {
                 log.error("Cannot create certificate basic information model", e);
@@ -124,20 +127,16 @@ public class AddSSLCertificateWindow extends CRUDBaseApproveWindow {
 
     @Override
     public void submitForm() {
-        X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
-
-        if (trustManagerFactory != null) {
-            String caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_ADDED, new Date());
-            for (CertificateResolverModel certObj : this.certificateResolverModels) {
-                try {
-                    trustManagerFactory.addEntry(certObj.getCertificate(), certObj.getAlias());
-                } catch (Exception e) {
-                    caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FAILED_ADD, new Date());
-                    log.error("Cannot add new entry in truststore", e);
-                }
+        String caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_ADDED, new Date());
+        for (CertificateResolverModel certObj : this.certificateResolverModels) {
+            try {
+                this.trustManager.addEntry(certObj.getCertificate(), certObj.getAlias());
+            } catch (Exception e) {
+                caption = VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SSLCONFIGURATION_FAILED_ADD, new Date());
+                log.error("Cannot add new entry in truststore", e);
             }
-            ViewUtil.iscNotification(caption, null, Notification.Type.TRAY_NOTIFICATION);
         }
+        ViewUtil.iscNotification(caption, null, Notification.Type.TRAY_NOTIFICATION);
 
         this.sslCertificateWindowInterface.submitFormAction(this.certificateResolverModels);
         close();

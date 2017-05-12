@@ -32,6 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.request.AddUserRequest;
@@ -60,6 +61,9 @@ public class AddUserServiceTest {
 
     @Mock
     private UserContextApi userContext;
+
+    @Mock
+    private EncryptionApi encryption;
 
     @InjectMocks
     private AddUserService service;

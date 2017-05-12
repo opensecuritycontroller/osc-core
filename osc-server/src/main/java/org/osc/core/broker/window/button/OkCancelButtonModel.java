@@ -16,12 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.window.button;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 
-import com.google.common.collect.ImmutableList;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
@@ -74,7 +74,7 @@ public class OkCancelButtonModel implements ComponentModel {
 
     @Override
     public List<Component> getComponents() {
-        return ImmutableList.<Component>of(this.cancelButton, this.okButton);
+        return Arrays.asList(this.cancelButton, this.okButton);
     }
 
 }

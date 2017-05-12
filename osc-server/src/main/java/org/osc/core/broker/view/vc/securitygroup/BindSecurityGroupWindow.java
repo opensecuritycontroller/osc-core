@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
+import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
@@ -72,14 +73,17 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 	private Table serviceTable = null;
 
 	private final BindSecurityGroupServiceApi bindSecurityGroupService;
-        private final ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService;
+    private final ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService;
+    private final ServerApi server;
 
 	public BindSecurityGroupWindow(SecurityGroupDto sgDto,
 	        BindSecurityGroupServiceApi bindSecurityGroupService,
-	        ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService) throws Exception {
+	        ListSecurityGroupBindingsBySgServiceApi listSecurityGroupBindingsBySgService,
+	        ServerApi server) throws Exception {
 		this.currentSecurityGroup = sgDto;
         this.bindSecurityGroupService = bindSecurityGroupService;
         this.listSecurityGroupBindingsBySgService = listSecurityGroupBindingsBySgService;
+        this.server = server;
 		createWindow(this.CAPTION + " - " + this.currentSecurityGroup.getName());
 	}
 
@@ -139,7 +143,7 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 				BaseJobResponse response = this.bindSecurityGroupService.dispatch(bindRequest);
 
 				close();
-				ViewUtil.showJobNotification(response.getJobId());
+				ViewUtil.showJobNotification(response.getJobId(), this.server);
 
 			}
 

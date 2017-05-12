@@ -33,6 +33,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
@@ -42,10 +43,10 @@ import org.osc.core.broker.service.response.QueryVmInfoResponse.FlowVmInfo;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.VmInfo;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VimUtils;
-import org.osc.core.util.EncryptionUtil;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.vmware.vim25.mo.HostSystem;
 import com.vmware.vim25.mo.VirtualMachine;
@@ -56,6 +57,9 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
 
     private static final Logger log =
             Logger.getLogger(QueryVmInfoService.class);
+
+    @Reference
+    EncryptionApi encryption;
 
     @Override
     public QueryVmInfoResponse exec(QueryVmInfoRequest request, EntityManager em) throws Exception {
@@ -73,7 +77,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
             }
 
             VimUtils vmi = new VimUtils(vc.getProviderIpAddress(), vc.getProviderUsername(),
-                    EncryptionUtil.decryptAESCTR(vc.getProviderPassword()));
+                    this.encryption.decryptAESCTR(vc.getProviderPassword()));
 
             if (request.ipAddress != null && !request.ipAddress.isEmpty()) {
                 for (String ipAddress : request.ipAddress) {

@@ -18,6 +18,7 @@ package org.osc.core.broker.service;
 
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osgi.service.component.annotations.Component;
@@ -42,9 +43,12 @@ public class GetDtoFromEntityServiceFactory implements GetDtoFromEntityServiceFa
     @Reference
     private UserContextApi userContext;
 
+    @Reference
+    private EncryptionApi encrypter;
+
     @Override
     public <T extends BaseDto> GetDtoFromEntityServiceApi<T> getService(Class<T> type) {
-        return new GetDtoFromEntityService<T>(this.userContext);
+        return new GetDtoFromEntityService<T>(this.userContext, this.encrypter);
     }
 
 }
