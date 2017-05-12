@@ -17,7 +17,6 @@
 package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.UpdateUserServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
@@ -45,6 +44,9 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     final String CAPTION = "Edit User";
     private static final Logger log = Logger.getLogger(UpdateUserWindow.class);
 
+    public static final String ROLE_ADMIN = "ADMIN";
+    public static final String ROLE_SYSTEM_NSX = "SYSTEM_NSX";
+
     // form fields
     private TextField firstName = null;
     private TextField lastName = null;
@@ -57,7 +59,6 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private final UpdateUserServiceApi updateUserService;
 
     private final ServerApi server;
-
     public UpdateUserWindow(UserView userView, UpdateUserServiceApi updateUserService,
             ServerApi server) throws Exception {
         this.currentUser = userView.getParentItem();
@@ -79,8 +80,8 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.role = new ComboBox("Role");
         this.role.setTextInputAllowed(false);
         this.role.setNullSelectionAllowed(false);
-        this.role.addItem(RoleType.ADMIN);
-        this.role.select(RoleType.ADMIN);
+        this.role.addItem(UpdateUserWindow.ROLE_ADMIN);
+        this.role.select(UpdateUserWindow.ROLE_ADMIN);
 
         // filling fields with existing information
         this.loginName.setValue(this.currentUser.getItemProperty("loginName").getValue().toString());
@@ -97,8 +98,8 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         }
         if (this.loginName.getValue().equals(RestConstants.VMIDC_NSX_LOGIN)) {
             this.role.setEnabled(false);
-            this.role.addItem(RoleType.SYSTEM_NSX);
-            this.role.select(RoleType.SYSTEM_NSX);
+            this.role.addItem(ROLE_SYSTEM_NSX);
+            this.role.select(ROLE_SYSTEM_NSX);
         }
         this.role.setValue(this.currentUser.getItemProperty("role").getValue().toString());
 

@@ -17,8 +17,6 @@
 package org.osc.core.broker.view.maintenance;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.archive.FreqType;
-import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.UpdateJobsArchiveServiceApi;
@@ -68,14 +66,14 @@ public class JobsArchiverPanel extends CustomComponent {
     private Button onDemandButton = null;
 
     private final String TEXT_FREQ_OPT_WEEKLY = "Weekly";
-    private final FreqType ID_FREQ_OPT_WEEKLY = FreqType.WEEKLY;
+    private final String ID_FREQ_OPT_WEEKLY = "WEEKLY";
     private final String TEXT_FREQ_OPT_MONTHLY = "Monthly";
-    private final FreqType ID_FREQ_OPT_MONTHLY = FreqType.MONTHLY;
+    private final String ID_FREQ_OPT_MONTHLY = "MONTHLY";
 
     private final String TEXT_THRES_OPT_MONTHS = "Months";
-    private final ThresholdType ID_THRES_OPT_MONTHS = ThresholdType.MONTHS;
+    private final String ID_THRES_OPT_MONTHS = "MONTHS";
     private final String TEXT_THRES_OPT_YEARS = "Years";
-    private final ThresholdType ID_THRES_OPT_YEARS = ThresholdType.YEARS;
+    private final String ID_THRES_OPT_YEARS = "YEARS";
 
     private final String UPDATE_SCHED_BUTTON_LABEL = "Update Schedule";
     private final String ON_DEMAND_BUTTON_LABEL = "On Demand";

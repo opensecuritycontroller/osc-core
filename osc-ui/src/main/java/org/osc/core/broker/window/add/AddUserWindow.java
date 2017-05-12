@@ -17,7 +17,6 @@
 package org.osc.core.broker.window.add;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.service.api.AddUserServiceApi;
 import org.osc.core.broker.service.request.AddUserRequest;
 import org.osc.core.broker.service.response.AddUserResponse;
@@ -25,6 +24,7 @@ import org.osc.core.broker.view.UserView;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.broker.window.update.UpdateUserWindow;
 
 import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.ui.ComboBox;
@@ -71,8 +71,8 @@ public class AddUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.role = new ComboBox("Role");
         this.role.setTextInputAllowed(false);
         this.role.setNullSelectionAllowed(false);
-        this.role.addItem(RoleType.ADMIN);
-        this.role.select(RoleType.ADMIN);
+        this.role.addItem(UpdateUserWindow.ROLE_ADMIN);
+        this.role.select(UpdateUserWindow.ROLE_ADMIN);
 
         // adding not null constraint
         this.loginName.setRequired(true);

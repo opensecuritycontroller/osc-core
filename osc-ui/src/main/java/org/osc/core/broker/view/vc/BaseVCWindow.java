@@ -16,23 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
-import com.vmware.vim25.InvalidLogin;
+import java.net.ConnectException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
 import org.jclouds.http.HttpResponseException;
 import org.jclouds.rest.AuthorizationException;
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
@@ -56,16 +51,27 @@ import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
 
-import java.net.ConnectException;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.util.BeanItem;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
+import com.vmware.vim25.InvalidLogin;
 
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
+
+    public static final String ATTRIBUTE_KEY_HTTPS = "ishttps";
+    public static final String ATTRIBUTE_KEY_RABBITMQ_IP = "rabbitMQIP";
+    public static final String ATTRIBUTE_KEY_RABBITMQ_USER = "rabbitUser";
+    public static final String ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD = "rabbitMQPassword";
+    public static final String ATTRIBUTE_KEY_RABBITMQ_PORT = "rabbitMQPort";
 
     public static final String NO_CONTROLLER = "NONE";
 
@@ -565,12 +571,12 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private void updateProviderFields() {
         if (!BaseVCWindow.this.virtualizationType.getValue().equals(VirtualizationType.VMWARE.toString())) {
             // If user does not click advanced Settings we need to populate attributes with default values..
-            this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, DEFAULT_HTTPS);
-            this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, DEFAULT_RABBITMQ_USER);
-            this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, DEFAULT_RABBITMQ_PORT);
+            this.providerAttributes.put(ATTRIBUTE_KEY_HTTPS, DEFAULT_HTTPS);
+            this.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER, DEFAULT_RABBITMQ_USER);
+            this.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_PORT, DEFAULT_RABBITMQ_PORT);
 
             try {
-                this.providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
+                this.providerAttributes.put(ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD,
                         this.encrypter.encryptAESCTR(DEFAULT_RABBITMQ_USER_PASSWORD));
             } catch (EncryptionException encryptionException) {
                 handleException(encryptionException);

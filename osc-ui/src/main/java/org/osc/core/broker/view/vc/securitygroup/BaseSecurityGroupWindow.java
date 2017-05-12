@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
@@ -96,6 +95,12 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
             - SELECTED_ITEMS_REGION_COLUMN_WIDTH - 165;
 
     private static final String PROTECT_EXTERNAL = "protectExternal";
+
+    private static final String SECURITY_GROUP_MEMBER_VM = "VM";
+    private static final String SECURITY_GROUP_MEMBER_NETWORK = "NETWORK";
+    private static final String SECURITY_GROUP_MEMBER_IP = "IP";
+    private static final String SECURITY_GROUP_MEMBER_MAC = "MAC";
+    private static final String SECURITY_GROUP_MEMBER_SUBNET = "SUBNET";
 
     private final class ImmediateTextFilterDecorator implements FilterDecorator {
 
@@ -260,10 +265,10 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
         this.protectionEntityType = new ComboBox();
         this.protectionEntityType.setTextInputAllowed(false);
         this.protectionEntityType.setNullSelectionAllowed(false);
-        this.protectionEntityType.addItem(SecurityGroupMemberType.VM);
-        this.protectionEntityType.addItem(SecurityGroupMemberType.NETWORK);
-        this.protectionEntityType.addItem(SecurityGroupMemberType.SUBNET);
-        this.protectionEntityType.select(SecurityGroupMemberType.VM);
+        this.protectionEntityType.addItem(SECURITY_GROUP_MEMBER_VM);
+        this.protectionEntityType.addItem(SECURITY_GROUP_MEMBER_NETWORK);
+        this.protectionEntityType.addItem(SECURITY_GROUP_MEMBER_SUBNET);
+        this.protectionEntityType.select(SECURITY_GROUP_MEMBER_VM);
 
         this.protectionEntityType.addValueChangeListener(this.triggerPopulateFromListListener);
 
@@ -502,7 +507,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
 
             OsTenantDto tenantDto = (OsTenantDto) this.tenant.getValue();
             String region = (String) this.region.getValue();
-            SecurityGroupMemberType memberType = (SecurityGroupMemberType) this.protectionEntityType.getValue();
+            String memberType = (String) this.protectionEntityType.getValue();
             boolean isProtectAll = this.protectionTypeOption.getValue() == TYPE_ALL;
 
             this.itemsContainer.removeAllItems();
@@ -658,7 +663,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
 
         boolean isMovingToSelectedItemList = toTable == this.selectedItemsTable;
 
-        SecurityGroupMemberType memberType = (SecurityGroupMemberType) this.protectionEntityType.getValue();
+        String memberType = (String) this.protectionEntityType.getValue();
         Set<String> itemIdsSelected = (Set<String>) fromTable.getValue();
         for (String itemId : itemIdsSelected) {
             if (fromContainer.getItem(itemId) != null) {
@@ -667,7 +672,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
                 if (isMovingToSelectedItemList) {
                     toContainer.addBean(memberItem);
                     handleProtectExternal(toTable, itemId, memberItem);
-                } else if (SecurityGroupMemberType.fromText(memberItem.getType()) == memberType) {
+                } else if (memberItem.getType().equals(memberType)) {
                     // If the 'to' container is not the selected list, we need to check the current selected type
                     // from the UI and add the member only if it matches the selected type
                     toContainer.addBean(memberItem);
@@ -685,7 +690,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
     }
 
     private void handleProtectExternal(CustomTable toTable, String itemId, SecurityGroupMemberItemDto memberItem) {
-        boolean enableProtectExternalFlag = !SecurityGroupMemberType.SUBNET.toString().equals(memberItem.getType());
+        boolean enableProtectExternalFlag = !SECURITY_GROUP_MEMBER_SUBNET.equals(memberItem.getType());
         toTable.getContainerProperty(itemId, PROTECT_EXTERNAL).setReadOnly(enableProtectExternalFlag);
     }
 

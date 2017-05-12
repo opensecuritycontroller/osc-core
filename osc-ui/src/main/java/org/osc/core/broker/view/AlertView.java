@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
 import org.osc.core.broker.service.api.DeleteAlertServiceApi;
 import org.osc.core.broker.service.api.ListAlertServiceApi;
@@ -50,6 +49,8 @@ import com.vaadin.ui.Notification;
 
 @Component(service={AlertView.class}, scope=ServiceScope.PROTOTYPE)
 public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
+
+    private static final String ACKNOWLEDGEMENT_PENDING = "Pending Acknowledgement";
 
     private static final String ALERT_ID_COLUMN = "id";
     private static final String ALERT_NAME_COLUMN_ID = "name";
@@ -182,7 +183,7 @@ public class AlertView extends CRUDBaseView<AlertDto, BaseDto> {
 
     private void showPendingAcknowledgeAlerts() {
         this.parentTable.resetFilters();
-        this.parentTable.setFilterFieldValue(ALERT_STATUS_COLUMN_ID, AcknowledgementStatus.PENDING_ACKNOWLEDGEMENT.toString());
+        this.parentTable.setFilterFieldValue(ALERT_STATUS_COLUMN_ID, ACKNOWLEDGEMENT_PENDING);
     }
 
     private void showAllAlerts() {

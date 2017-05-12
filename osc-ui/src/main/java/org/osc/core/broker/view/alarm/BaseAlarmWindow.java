@@ -17,9 +17,6 @@
 package org.osc.core.broker.view.alarm;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.events.AlarmAction;
-import org.osc.core.broker.model.entities.events.EventType;
-import org.osc.core.broker.model.entities.events.Severity;
 import org.osc.core.broker.service.api.GetEmailSettingsServiceApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.dto.EmailSettingsDto;
@@ -40,6 +37,17 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextField;
 
 public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel> {
+
+    protected static final String EVENT_JOB_FAILURE = "Job Failure";
+    protected static final String EVENT_SYSTEM_FAILURE = "System Failure";
+    protected static final String EVENT_DAI_FAILURE = "DAI Failure";
+
+    protected static final String SEVERITY_HIGH = "High";
+    protected static final String SEVERITY_MEDIUM = "Medium";
+    protected static final String SEVERITY_LOW = ("Low");
+
+    protected static final String ALARM_ACTION_NONE = "None";
+    protected static final String ALARM_ACTION_EMAIL = "Email";
 
     private static final long serialVersionUID = 1L;
 
@@ -73,7 +81,7 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
             this.eventType.validate();
             this.severity.validate();
             this.alarmAction.validate();
-            if (this.alarmAction.getValue().equals(AlarmAction.EMAIL)) {
+            if (this.alarmAction.getValue().equals(ALARM_ACTION_EMAIL)) {
                 this.email.validate();
                 BaseDtoResponse<EmailSettingsDto> emailSettingsResponse = this.getEmailSettingsService.dispatch(new Request() {
                 });
@@ -98,10 +106,10 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
         this.eventType = new ComboBox("Event Type");
         this.eventType.setTextInputAllowed(false);
         this.eventType.setNullSelectionAllowed(false);
-        this.eventType.addItem(EventType.JOB_FAILURE);
-        this.eventType.addItem(EventType.SYSTEM_FAILURE);
-        this.eventType.addItem(EventType.DAI_FAILURE);
-        this.eventType.select(EventType.JOB_FAILURE);
+        this.eventType.addItem(EVENT_JOB_FAILURE);
+        this.eventType.addItem(EVENT_SYSTEM_FAILURE);
+        this.eventType.addItem(EVENT_DAI_FAILURE);
+        this.eventType.select(EVENT_JOB_FAILURE);
 
         this.regexMatch = new TextField("Regex Match");
         this.regexMatch.setValue(".*");
@@ -111,17 +119,17 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
         this.severity = new ComboBox("Severity");
         this.severity.setTextInputAllowed(false);
         this.severity.setNullSelectionAllowed(false);
-        this.severity.addItem(Severity.HIGH);
-        this.severity.addItem(Severity.MEDIUM);
-        this.severity.addItem(Severity.LOW);
-        this.severity.select(Severity.LOW);
+        this.severity.addItem(SEVERITY_HIGH);
+        this.severity.addItem(SEVERITY_MEDIUM);
+        this.severity.addItem(SEVERITY_LOW);
+        this.severity.select(SEVERITY_LOW);
 
         this.alarmAction = new ComboBox("Alarm Action");
         this.alarmAction.setTextInputAllowed(false);
         this.alarmAction.setNullSelectionAllowed(false);
-        this.alarmAction.addItem(AlarmAction.NONE);
-        this.alarmAction.addItem(AlarmAction.EMAIL);
-        this.alarmAction.select(AlarmAction.NONE);
+        this.alarmAction.addItem(ALARM_ACTION_NONE);
+        this.alarmAction.addItem(ALARM_ACTION_EMAIL);
+        this.alarmAction.select(ALARM_ACTION_NONE);
         this.alarmAction.addValueChangeListener(this.actionChangedListener);
 
         this.email = new TextField("Send email to");
@@ -160,7 +168,7 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
 
             @Override
             public void valueChange(ValueChangeEvent event) {
-                if (BaseAlarmWindow.this.alarmAction.getValue().equals(AlarmAction.EMAIL)) {
+                if (BaseAlarmWindow.this.alarmAction.getValue().equals(ALARM_ACTION_EMAIL)) {
                     BaseAlarmWindow.this.email.setVisible(true);
                 } else {
                     BaseAlarmWindow.this.email.setVisible(false);
