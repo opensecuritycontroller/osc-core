@@ -39,12 +39,16 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ForceDeleteSecurityGroupTask;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
         implements DeleteSecurityGroupServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteSecurityGroupService.class);
+
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(BaseDeleteRequest request, EntityManager em) throws Exception {
@@ -72,7 +76,7 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
                 UnlockObjectMetaTask forLambda = unlockTask;
                 chain(() -> {
                     try {
-                        Job job = ConformService.startSecurityGroupConformanceJob(em, securityGroup,
+                        Job job = this.conformService.startSecurityGroupConformanceJob(em, securityGroup,
                             forLambda, false);
                         response.setJobId(job.getId());
                         return response;

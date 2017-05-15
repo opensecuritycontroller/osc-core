@@ -47,6 +47,7 @@ public class SyncSecurityGroupJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SessionUtil.getInstance().setUser(RestConstants.OSC_DEFAULT_LOGIN);
+        ConformService conformService = (ConformService) context.getMergedJobDataMap().get(ConformService.class.getName());
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             List<SecurityGroup> sgs = HibernateUtil.getTransactionControl().required(() -> {
@@ -67,7 +68,7 @@ public class SyncSecurityGroupJob implements Job {
                                 EntityManager em = HibernateUtil.getTransactionalEntityManager();
                                 try {
                                     SecurityGroup found = em.find(SecurityGroup.class, sg.getId());
-                                    ConformService.startSecurityGroupConformanceJob(found);
+                                    conformService.startSecurityGroupConformanceJob(found);
                                 } catch (Exception ex) {
                                     AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE,
                                             new LockObjectReference(sg),

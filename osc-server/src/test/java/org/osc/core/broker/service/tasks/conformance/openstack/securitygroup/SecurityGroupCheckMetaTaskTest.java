@@ -35,6 +35,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.powermock.api.mockito.PowerMockito;
@@ -112,7 +113,8 @@ public class SecurityGroupCheckMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask(this.sg);
+        SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask().create(this.sg);
+        task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();
 
         // Act.
         task.executeTransaction(this.em);

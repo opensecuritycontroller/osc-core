@@ -95,7 +95,7 @@ public class OsTenantNotificationListener extends OsNotificationListener {
         for (SecurityGroup securityGroup : SecurityGroupEntityMgr.listByTenantId(em, keyValue)) {
             // trigger sync job for that SG
             if (securityGroup.getId().equals(((SecurityGroup) this.entity).getId())) {
-                ConformService.startSecurityGroupConformanceJob(securityGroup);
+                this.conformService.startSecurityGroupConformanceJob(securityGroup);
             }
         }
     }

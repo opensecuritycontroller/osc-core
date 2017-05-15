@@ -31,6 +31,7 @@ import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
+import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
@@ -87,6 +88,9 @@ public interface ApiFactoryService {
     String generateServiceManagerName(VirtualSystem vs) throws Exception;
 
     ManagerDeviceApi createManagerDeviceApi(VirtualSystem vs) throws Exception;
+
+    ManagerSecurityGroupInterfaceApi createManagerSecurityGroupInterfaceApi(VirtualSystem vs)
+            throws Exception;
 
     /**
      * Creates a {@code SdnControllerApi} instance for the specified controller type.

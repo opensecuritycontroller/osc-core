@@ -88,7 +88,7 @@ class SecurityGroupCheckMetaTaskTestData {
 
     public TaskGraph createSingleMcPolicyMappingGraph(SecurityGroup sg) {
         TaskGraph expectedGraph = createNoMcPolicyMappingGraph(sg);
-        expectedGraph.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask(this.MC_POLICY_MAPPING_SUPPORTED_VS),
+        expectedGraph.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask().create(this.MC_POLICY_MAPPING_SUPPORTED_VS),
                 TaskGuard.ALL_PREDECESSORS_COMPLETED);
         return expectedGraph;
     }
@@ -96,7 +96,7 @@ class SecurityGroupCheckMetaTaskTestData {
     public TaskGraph createMultipleMcPolicyMappingGraph(SecurityGroup sg) {
         TaskGraph expectedGraph = createNoMcPolicyMappingGraph(sg);
         for (VirtualSystem vs : this.MC_POLICY_MAPPING_SUPPORTED_VS_LIST) {
-            expectedGraph.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask(vs),
+            expectedGraph.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask().create(vs),
                     TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 

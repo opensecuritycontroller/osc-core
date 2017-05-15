@@ -40,12 +40,16 @@ import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGr
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.NsxServiceProfileCheckMetaTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileRequest, EmptySuccessResponse>
         implements NsxUpdateProfileServiceApi {
 
     private static final Logger log = Logger.getLogger(NsxUpdateProfileService.class);
+
+    @Reference
+    private MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
 
     @Override
     public EmptySuccessResponse exec(NsxUpdateProfileRequest request, EntityManager em) throws Exception {
@@ -84,7 +88,7 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
 
         // If the appliance manager supports policy mapping then perform OSC->MC sync of security group interfaces
         if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {
-            tg.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+            tg.appendTask(this.mgrSecurityGroupInterfacesCheckMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 
         // If the appliance manager supports security group sync then perform OSC->MC sync of security groups

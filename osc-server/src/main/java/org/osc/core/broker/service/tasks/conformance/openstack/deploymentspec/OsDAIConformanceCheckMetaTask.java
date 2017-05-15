@@ -45,6 +45,7 @@ import org.osc.sdk.controller.element.InspectionPortElement;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.controller.exception.NetworkPortNotFoundException;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Makes sure the DAI has a corresponding SVA on the specified end point. If the SVA does not exist
@@ -55,8 +56,12 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(OsDAIConformanceCheckMetaTask.class);
 
+    @Reference
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
+    @Reference
     private OsDAIUpgradeMetaTask osDAIUpgradeMetaTask;
+    @Reference
+    private DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     private DistributedApplianceInstance dai;
     private boolean doesOSHostExist;
@@ -66,6 +71,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         OsDAIConformanceCheckMetaTask task = new OsDAIConformanceCheckMetaTask();
         task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
         task.osDAIUpgradeMetaTask = this.osDAIUpgradeMetaTask;
+        task.deleteDAIFromDbTask = this.deleteDAIFromDbTask;
         task.dai = dai;
         task.doesOSHostExist = doesOSHostExist;
         return task;
@@ -115,7 +121,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                 } else {
                     log.info("Host removed from openstack: " + this.dai.getOsHostName() + "Removing Dai: "
                             + this.dai.getName());
-                    this.tg.appendTask(new DeleteDAIFromDbTask(this.dai));
+                    this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
                 }
             } else {
                 ApplianceSoftwareVersion currentSoftwareVersion = ds.getVirtualSystem().getApplianceSoftwareVersion();

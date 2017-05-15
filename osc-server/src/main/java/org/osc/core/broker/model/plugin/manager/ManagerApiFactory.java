@@ -29,7 +29,6 @@ import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.api.ManagerDomainApi;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
-import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -69,13 +68,6 @@ public class ManagerApiFactory {
 
     private static ApplianceManagerApi createApplianceManagerApi(String managerName) throws Exception {
         return apiFactoryService.createApplianceManagerApi(ManagerType.fromText(managerName));
-    }
-
-    public static ManagerSecurityGroupInterfaceApi createManagerSecurityGroupInterfaceApi(VirtualSystem vs)
-            throws Exception {
-        return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                .createManagerSecurityGroupInterfaceApi(getApplianceManagerConnectorElement(vs),
-                        new VirtualSystemElementImpl(vs));
     }
 
     public static ManagerSecurityGroupApi createManagerSecurityGroupApi(VirtualSystem vs) throws Exception {

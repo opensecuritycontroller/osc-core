@@ -38,12 +38,16 @@ import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
         implements AddSecurityGroupServiceApi {
 
     private static final Logger LOG = Logger.getLogger(AddSecurityGroupService.class);
+
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(AddOrUpdateSecurityGroupRequest request, EntityManager em) throws Exception,
@@ -86,7 +90,7 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {
                 try {
-                    Job job = ConformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+                    Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
                     return new BaseJobResponse(securityGroup.getId(), job.getId());
                 } catch (Exception e) {

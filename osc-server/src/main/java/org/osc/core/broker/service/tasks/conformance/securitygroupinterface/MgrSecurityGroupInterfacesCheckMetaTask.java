@@ -32,7 +32,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -40,11 +40,26 @@ import org.osc.core.broker.service.tasks.conformance.DowngradeLockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupInterfaceElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.google.common.base.Objects;
 
+@Component(service = MgrSecurityGroupInterfacesCheckMetaTask.class)
 public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTask {
     private static final Logger log = Logger.getLogger(MgrSecurityGroupInterfacesCheckMetaTask.class);
+
+    @Reference
+    ApiFactoryService apiFactoryService;
+
+    @Reference
+    CreateMgrSecurityGroupInterfaceTask createMgrSecurityGroupInterfaceTask;
+
+    @Reference
+    DeleteMgrSecurityGroupInterfaceTask deleteMgrSecurityGroupInterfaceTask;
+
+    @Reference
+    UpdateMgrSecurityGroupInterfaceTask updateMgrSecurityGroupInterfaceTask;
 
     private VirtualSystem vs;
     private DistributedAppliance da;
@@ -63,15 +78,25 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
      * If unlock task is not provided(null) then we acquire a write lock and RELEASE it after the tasks are finished.
      * </p>
      */
-    public MgrSecurityGroupInterfacesCheckMetaTask(DistributedAppliance da, UnlockObjectTask mcUnlockTask) {
-        this.da = da;
-        this.name = getName();
-        this.mcUnlockTask = mcUnlockTask;
+    public MgrSecurityGroupInterfacesCheckMetaTask create(DistributedAppliance da, UnlockObjectTask mcUnlockTask) {
+        MgrSecurityGroupInterfacesCheckMetaTask task = new MgrSecurityGroupInterfacesCheckMetaTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.createMgrSecurityGroupInterfaceTask = this.createMgrSecurityGroupInterfaceTask;
+        task.deleteMgrSecurityGroupInterfaceTask = this.deleteMgrSecurityGroupInterfaceTask;
+        task.updateMgrSecurityGroupInterfaceTask = this.updateMgrSecurityGroupInterfaceTask;
+        task.da = da;
+        task.mcUnlockTask = mcUnlockTask;
+        if (da != null) {
+            task.name = task.getName();
+        }
+        return task;
     }
 
-    public MgrSecurityGroupInterfacesCheckMetaTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public MgrSecurityGroupInterfacesCheckMetaTask create(VirtualSystem vs) {
+        MgrSecurityGroupInterfacesCheckMetaTask task = create(null, null);
+        task.vs = vs;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -135,7 +160,7 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         }
     }
 
-    public static TaskGraph syncSecurityGroupInterfaces(EntityManager em, VirtualSystem vs) throws Exception {
+    public TaskGraph syncSecurityGroupInterfaces(EntityManager em, VirtualSystem vs) throws Exception {
 
         TaskGraph tg = new TaskGraph();
         if (vs.getId() == null) {
@@ -144,7 +169,7 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
 
         Set<SecurityGroupInterface> securityGroupInterfaces = vs.getSecurityGroupInterfaces();
         List<? extends ManagerSecurityGroupInterfaceElement> mgrSecurityGroupInterfaces;
-        try (ManagerSecurityGroupInterfaceApi mgrApi = ManagerApiFactory.createManagerSecurityGroupInterfaceApi(vs)) {
+        try (ManagerSecurityGroupInterfaceApi mgrApi = this.apiFactoryService.createManagerSecurityGroupInterfaceApi(vs)) {
             mgrSecurityGroupInterfaces = mgrApi.listSecurityGroupInterfaces();
         }
 
@@ -161,13 +186,13 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
 
                 if (mgrSgi == null) {
                     // Add new security group to Manager
-                    tg.appendTask(new CreateMgrSecurityGroupInterfaceTask(sgi));
+                    tg.appendTask(this.createMgrSecurityGroupInterfaceTask.create(sgi));
                 } else {
                     if (isInterfaceNeedUpdate(sgi, mgrSgi)) {
                         if (sgi.getMgrSecurityGroupIntefaceId() == null && mgrSgi.getSecurityGroupInterfaceId() != null) {
                             sgi.setMgrSecurityGroupIntefaceId(mgrSgi.getSecurityGroupInterfaceId());
                         }
-                        tg.appendTask(new UpdateMgrSecurityGroupInterfaceTask(sgi));
+                        tg.appendTask(this.updateMgrSecurityGroupInterfaceTask.create(sgi));
                     }
                 }
             }
@@ -178,7 +203,7 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
             SecurityGroupInterface sgi = findVmidcSecurityGroupByMgrId(securityGroupInterfaces, mgrSgi);
             if (sgi == null || sgi.getMarkedForDeletion()) {
                 // Delete security group from Manager
-                tg.appendTask(new DeleteMgrSecurityGroupInterfaceTask(vs, mgrSgi));
+                tg.appendTask(this.deleteMgrSecurityGroupInterfaceTask.create(vs, mgrSgi));
             }
         }
         return tg;

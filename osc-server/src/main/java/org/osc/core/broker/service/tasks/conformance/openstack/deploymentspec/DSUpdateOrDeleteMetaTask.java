@@ -65,6 +65,9 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
 
+    @Reference
+    DeleteSvaServerAndDAIMetaTask deleteSvaServerAndDAIMetaTask;
+
     private DeploymentSpec ds;
     private Endpoint endPoint;
     private TaskGraph tg;
@@ -75,6 +78,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
         task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
         task.osDAIConformanceCheckMetaTask = this.osDAIConformanceCheckMetaTask;
+        task.deleteSvaServerAndDAIMetaTask = this.deleteSvaServerAndDAIMetaTask;
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
@@ -98,7 +102,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 || virtualSystem.getDistributedAppliance().getMarkedForDeletion()) {
             log.info("DS " + this.ds.getName() + " marked for deletion, deleting DS");
             for (DistributedApplianceInstance dai : this.ds.getDistributedApplianceInstances()) {
-                this.tg.addTask(new DeleteSvaServerAndDAIMetaTask(this.ds.getRegion(), dai));
+                this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
             }
             if (this.ds.getOsSecurityGroupReference() != null) {
                 this.tg.appendTask(new DeleteOsSecurityGroupTask(this.ds, this.ds.getOsSecurityGroupReference()));
@@ -212,7 +216,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             } else {
                 // Remove any extra sva/DAI
                 log.info("Removing DAI/SVA: " + dai.getName() + " for host: " + daiHostName);
-                this.tg.addTask(new DeleteSvaServerAndDAIMetaTask(this.ds.getRegion(), dai));
+                this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
             }
         }
 
@@ -317,7 +321,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     .listByDsIdAndAvailabilityZone(em, this.ds.getId(), unconformedAz);
             if (daisInZone != null) {
                 for (DistributedApplianceInstance dai : daisInZone) {
-                    this.tg.addTask(new DeleteSvaServerAndDAIMetaTask(this.ds.getRegion(), dai));
+                    this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
                 }
             }
         }

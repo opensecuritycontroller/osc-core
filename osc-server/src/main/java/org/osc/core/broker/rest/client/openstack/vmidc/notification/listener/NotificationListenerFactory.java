@@ -41,7 +41,7 @@ public class NotificationListenerFactory {
 
         switch (objectType) {
         case PORT:
-            return new OsPortNotificationListener(vc, objectType, objectIdList, entity);
+            return new OsPortNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
         case VM:
             return new OsVMNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
         case HOST_AGGREGRATE:

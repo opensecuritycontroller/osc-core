@@ -28,11 +28,15 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = DeleteSvaServerAndDAIMetaTask.class)
 class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
 
+    private DeleteDAIFromDbTask deleteDAIFromDbTask;
+
     private DistributedApplianceInstance dai;
-    private final String region;
+    private String region;
     private TaskGraph tg;
 
     /**
@@ -46,9 +50,12 @@ class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
      *            the dai id
      * @param osEndPoint
      */
-    public DeleteSvaServerAndDAIMetaTask(String region, DistributedApplianceInstance dai) {
-        this.region = region;
-        this.dai = dai;
+    public DeleteSvaServerAndDAIMetaTask create(String region, DistributedApplianceInstance dai) {
+        DeleteSvaServerAndDAIMetaTask task = new DeleteSvaServerAndDAIMetaTask();
+        task.deleteDAIFromDbTask = this.deleteDAIFromDbTask;
+        task.region = region;
+        task.dai = dai;
+        return task;
     }
 
     @Override
@@ -66,7 +73,7 @@ class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         if (this.dai.getFloatingIpId() != null) {
             this.tg.appendTask(new OsSvaDeleteFloatingIpTask(this.dai));
         }
-        this.tg.appendTask(new DeleteDAIFromDbTask(this.dai));
+        this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
     }
 
     @Override

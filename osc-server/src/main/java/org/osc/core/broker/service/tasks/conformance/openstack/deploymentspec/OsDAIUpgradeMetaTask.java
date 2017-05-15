@@ -25,16 +25,24 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Deletes existing SVA corresponding to the DAI and recreates the SVA with the new version. This task also schedules
  * security group syncs for security groups related to this DAI.
  */
+@Component(service = OsDAIUpgradeMetaTask.class)
 class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
+    @Reference
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
+
+    @Reference
+    private ConformService conformService;
 
     private DistributedApplianceInstance dai;
     private ApplianceSoftwareVersion upgradedSoftwareVersion;
@@ -43,6 +51,7 @@ class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
     public OsDAIUpgradeMetaTask create(DistributedApplianceInstance dai, ApplianceSoftwareVersion upgradedSoftwareVersion) {
         OsDAIUpgradeMetaTask task = new OsDAIUpgradeMetaTask();
         task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
+        task.conformService = this.conformService;
         task.dai = dai;
         task.upgradedSoftwareVersion = upgradedSoftwareVersion;
         return task;
@@ -61,7 +70,7 @@ class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         this.tg.appendTask(new DeleteSvaServerTask(ds.getRegion(), this.dai));
         this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.conformService);
     }
 
     @Override

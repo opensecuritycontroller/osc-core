@@ -91,6 +91,12 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     @Reference
     private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
 
+    @Reference
+    private MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
+
+    @Reference
+    private SecurityGroupCheckMetaTask securityGroupCheckMetaTask;
+
     public Long startDAConformJob(EntityManager em, DistributedAppliance da) throws Exception {
         return startDAConformJob(em, da, null, true);
     }
@@ -143,7 +149,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
             // Sync MC security group interfaces only if the appliance manager supports policy mapping.
             if (ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()))) {
-                tg.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask(da, mcReadUnlocktask),
+                tg.appendTask(this.mgrSecurityGroupInterfacesCheckMetaTask.create(da, mcReadUnlocktask),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
 
@@ -398,7 +404,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         }
     }
 
-    public static Job startSecurityGroupConformanceJob(final SecurityGroup sg, UnlockObjectMetaTask sgUnlockTask)
+    public Job startSecurityGroupConformanceJob(final SecurityGroup sg, UnlockObjectMetaTask sgUnlockTask)
             throws Exception {
         return startSecurityGroupConformanceJob(null, sg, sgUnlockTask, false);
     }
@@ -416,14 +422,14 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
      *
      * @throws Exception
      */
-    public static Job startSecurityGroupConformanceJob(EntityManager em, final SecurityGroup sg,
+    public Job startSecurityGroupConformanceJob(EntityManager em, final SecurityGroup sg,
             UnlockObjectMetaTask sgUnlockTask, boolean queueThisJob) throws Exception {
         TaskGraph tg = new TaskGraph();
         try {
             if (sgUnlockTask == null) {
                 sgUnlockTask = LockUtil.tryLockSecurityGroup(sg, sg.getVirtualizationConnector());
             }
-            tg.addTask(new SecurityGroupCheckMetaTask(sg));
+            tg.addTask(this.securityGroupCheckMetaTask.create(sg));
             tg.appendTask(sgUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             String jobName = "Syncing Security Group";
@@ -448,7 +454,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         }
     }
 
-    public static Job startBindSecurityGroupConformanceJob(EntityManager em, final SecurityGroup sg,
+    public Job startBindSecurityGroupConformanceJob(EntityManager em, final SecurityGroup sg,
             UnlockObjectMetaTask sgUnlockTask)
                     throws Exception {
 
@@ -458,7 +464,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             if (sgUnlockTask == null) {
                 sgUnlockTask = LockUtil.tryLockSecurityGroup(sg, sg.getVirtualizationConnector());
             }
-            tg.appendTask(new SecurityGroupCheckMetaTask(sg));
+            tg.appendTask(this.securityGroupCheckMetaTask.create(sg));
             tg.appendTask(sgUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             String jobName = "Bind Security Group Sync";
@@ -529,7 +535,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
      * Starts a Security Group conformance job locks/unlock the sg after
      *
      */
-    public static Job startSecurityGroupConformanceJob(SecurityGroup sg) throws Exception {
+    public Job startSecurityGroupConformanceJob(SecurityGroup sg) throws Exception {
         return startSecurityGroupConformanceJob(sg, null);
     }
 }

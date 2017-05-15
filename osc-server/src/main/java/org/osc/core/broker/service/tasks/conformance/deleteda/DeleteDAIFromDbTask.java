@@ -23,19 +23,29 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = DeleteDAIFromDbTask.class)
 public class DeleteDAIFromDbTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(DeleteDAIFromDbTask.class);
 
+    @Reference
+    private ConformService conformService;
+
     private DistributedApplianceInstance dai;
 
-    public DeleteDAIFromDbTask(DistributedApplianceInstance dai) {
-        this.dai = dai;
-        this.name = getName();
+    public DeleteDAIFromDbTask create(DistributedApplianceInstance dai) {
+        DeleteDAIFromDbTask task = new DeleteDAIFromDbTask();
+        task.conformService = this.conformService;
+        task.dai = dai;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -48,7 +58,7 @@ public class DeleteDAIFromDbTask extends TransactionalTask {
         log.debug("Start Executing DeleteDAIFromDb Task : " + this.dai.getId());
         this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
 
-        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this);
+        OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.conformService);
         OSCEntityManager.delete(em, this.dai);
     }
 

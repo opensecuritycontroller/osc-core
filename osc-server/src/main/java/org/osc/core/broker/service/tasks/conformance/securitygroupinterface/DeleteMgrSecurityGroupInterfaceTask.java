@@ -22,30 +22,38 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupInterfaceElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = DeleteMgrSecurityGroupInterfaceTask.class)
 public class DeleteMgrSecurityGroupInterfaceTask extends TransactionalTask {
     //private static final Logger log = Logger.getLogger(DeleteMgrSecurityGroupInterfaceTask.class);
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private VirtualSystem vs;
     private ManagerSecurityGroupInterfaceElement mgrSecurityGroupInterface;
 
-    public DeleteMgrSecurityGroupInterfaceTask(VirtualSystem vs,
+    public DeleteMgrSecurityGroupInterfaceTask create(VirtualSystem vs,
             ManagerSecurityGroupInterfaceElement mgrSecurityGroupInterface) {
-
-        this.vs = vs;
-        this.mgrSecurityGroupInterface = mgrSecurityGroupInterface;
-        this.name = getName();
+        DeleteMgrSecurityGroupInterfaceTask task = new DeleteMgrSecurityGroupInterfaceTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.vs = vs;
+        task.mgrSecurityGroupInterface = mgrSecurityGroupInterface;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        ManagerSecurityGroupInterfaceApi mgrApi = ManagerApiFactory.createManagerSecurityGroupInterfaceApi(this.vs);
+        ManagerSecurityGroupInterfaceApi mgrApi = this.apiFactoryService.createManagerSecurityGroupInterfaceApi(this.vs);
         if (this.mgrSecurityGroupInterface.getSecurityGroupInterfaceId() != null) {
             try {
                 mgrApi.deleteSecurityGroupInterface(this.mgrSecurityGroupInterface.getSecurityGroupInterfaceId());

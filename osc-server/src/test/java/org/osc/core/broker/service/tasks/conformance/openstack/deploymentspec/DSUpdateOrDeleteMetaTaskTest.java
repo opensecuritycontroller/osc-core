@@ -149,6 +149,7 @@ public class DSUpdateOrDeleteMetaTaskTest {
         factoryTask.osSvaCreateMetaTask = new OsSvaCreateMetaTask();
         factoryTask.osDAIConformanceCheckMetaTask = new OsDAIConformanceCheckMetaTask();
         factoryTask.mgrCheckDevicesMetaTask = new MgrCheckDevicesMetaTask();
+        factoryTask.deleteSvaServerAndDAIMetaTask = new DeleteSvaServerAndDAIMetaTask();
 
         DSUpdateOrDeleteMetaTask task = factoryTask.create(this.ds, this.novaApiMock);
 
