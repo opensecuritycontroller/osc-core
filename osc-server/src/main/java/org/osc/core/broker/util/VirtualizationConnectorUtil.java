@@ -16,10 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Map;
-
+import com.rabbitmq.client.ShutdownSignalException;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -38,7 +35,9 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class VirtualizationConnectorUtil {
 
@@ -46,7 +45,6 @@ public class VirtualizationConnectorUtil {
 
     private X509TrustManagerFactory managerFactory = null;
     private OsRabbitMQClient rabbitClient = null;
-    private Endpoint endPoint = null;
     private JCloudKeyStone keystoneAPi = null;
 
     /**
@@ -137,14 +135,9 @@ public class VirtualizationConnectorUtil {
                 try {
                     VirtualizationConnectorDto vcDto = request.getDto();
                     boolean isHttps = isHttps(vcDto.getProviderAttributes());
-
-                    if (this.endPoint == null) {
-                        this.endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
-                                vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, SslContextProvider.getInstance().getSSLContext());
-                    }
-                    if (this.keystoneAPi == null) {
-                        this.keystoneAPi = new JCloudKeyStone(this.endPoint);
-                    }
+                    Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(), vcDto.getProviderUser(),
+                            vcDto.getProviderPassword(), isHttps, SslContextProvider.getInstance().getSSLContext());
+                    this.keystoneAPi = new JCloudKeyStone(endPoint);
                     this.keystoneAPi.listTenants();
 
                 } catch (Exception exception) {
