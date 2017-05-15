@@ -15,10 +15,17 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Files;
 
+import com.vaadin.data.Item;
+import com.vaadin.server.ExternalResource;
+import com.vaadin.server.FileDownloader;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginApi;
@@ -31,6 +38,7 @@ import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.broker.view.maintenance.PluginUploader.UploadSucceededListener;
+import org.osc.core.broker.view.util.SdkUtil;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
@@ -38,16 +46,11 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.vaadin.data.Item;
-import com.vaadin.server.ExternalResource;
-import com.vaadin.server.FileDownloader;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
 
 public class SdnControllerPluginsLayout extends FormLayout {
 
@@ -57,8 +60,6 @@ public class SdnControllerPluginsLayout extends FormLayout {
     private static final String PROP_PLUGIN_SERVICES = "Services";
     private static final String PROP_PLUGIN_VERSION = "Version";
     private static final String PROP_PLUGIN_DELETE = "";
-
-    private static final String OSC_SDN_CONTROLLER_SDK_JAR_PATH = "/SDK/OscSdnControllerPlugin-sources.jar";
 
     private static final long serialVersionUID = 1L;
 
@@ -103,15 +104,8 @@ public class SdnControllerPluginsLayout extends FormLayout {
         pluginsContainer.addComponent(ViewUtil.createSubHeader("Plugins", null));
         pluginsContainer.addComponent(this.pluginsPanel);
 
-        Button downloadSdk = new Button(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SDNPLUGIN_DOWNLOAD_SDK));
-
-        URI currentLocation = UI.getCurrent().getPage().getLocation();
-        FileDownloader downloader = new FileDownloader(
-                new ExternalResource("https://" + currentLocation.getHost() + OSC_SDN_CONTROLLER_SDK_JAR_PATH));
-
-        downloader.extend(downloadSdk);
-
         Panel sdkLinkPanel = new Panel();
+        Button downloadSdk = getDownloadSdkButton();
         sdkLinkPanel.setContent(downloadSdk);
 
         sdkContainer.addComponent(ViewUtil.createSubHeader("SDK", null));
@@ -158,6 +152,17 @@ public class SdnControllerPluginsLayout extends FormLayout {
         	this.log.error("Unknown plugin event type: " + event.getType());
         	break;
         }
+    }
+
+    private Button getDownloadSdkButton() throws URISyntaxException, MalformedURLException {
+        SdkUtil sdkUtil = new SdkUtil();
+        Button downloadSdk = new Button(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SDNPLUGIN_DOWNLOAD_SDK));
+        URI currentLocation = UI.getCurrent().getPage().getLocation();
+        URI downloadLocation = new URI(currentLocation.getScheme(), null, currentLocation.getHost(),
+                currentLocation.getPort(), sdkUtil.getSdk(SdkUtil.sdkType.SDN_CONTROLLER), null, null);
+        FileDownloader downloader = new FileDownloader(new ExternalResource(downloadLocation.toURL().toString()));
+        downloader.extend(downloadSdk);
+        return downloadSdk;
     }
 
     @SuppressWarnings("unchecked")
