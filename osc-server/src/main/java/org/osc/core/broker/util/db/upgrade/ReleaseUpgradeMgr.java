@@ -299,7 +299,13 @@ public class ReleaseUpgradeMgr {
         Map<Integer, String> attrs = new HashMap<>();
 
         while (result.next()) {
-            attrs.put(result.getInt("vc_fk"), encrypter.encryptAESCTR(encrypter.decryptDES(result.getString("value"))));
+            String value = result.getString("value");
+            try {
+                value = encrypter.decryptDES(value);
+            } catch (EncryptionException e){
+                log.warn("Password is not encrypted with DES",e);
+            }
+            attrs.put(result.getInt("vc_fk"), encrypter.encryptAESCTR(value));
         }
 
         try (PreparedStatement preparedStatementUpdate = stmt.getConnection().prepareStatement("UPDATE virtualization_connector_provider_attr SET value = ? WHERE vc_fk = ? AND key = 'rabbitMQPassword'")) {
