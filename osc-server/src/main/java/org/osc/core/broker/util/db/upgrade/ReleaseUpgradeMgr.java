@@ -296,7 +296,7 @@ public class ReleaseUpgradeMgr {
             try {
                 value = EncryptionUtil.decryptDES(value);
             } catch (EncryptionException e){
-                log.error("Password is not encrypted with DES",e);
+                log.warn("Password is not encrypted with DES",e);
             }
             attrs.put(result.getInt("vc_fk"), EncryptionUtil.encryptAESCTR(value));
         }
