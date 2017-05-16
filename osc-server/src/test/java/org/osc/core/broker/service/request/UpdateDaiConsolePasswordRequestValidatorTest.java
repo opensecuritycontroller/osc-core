@@ -33,6 +33,7 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -127,7 +128,7 @@ public class UpdateDaiConsolePasswordRequestValidatorTest {
         this.em.persist(domain);
 
         VirtualizationConnector vc = new VirtualizationConnector();
-        //vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setName("vcName");
         vc.setProviderIpAddress("127.0.0.1");
@@ -137,7 +138,7 @@ public class UpdateDaiConsolePasswordRequestValidatorTest {
         this.em.persist(vc);
 
         VirtualizationConnector otherVc = new VirtualizationConnector();
-        //otherVc.setVirtualizationType(VirtualizationType.VMWARE);
+        otherVc.setVirtualizationType(VirtualizationType.OPENSTACK);
         otherVc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         otherVc.setName("otherVcName");
         otherVc.setProviderIpAddress("127.0.0.2");

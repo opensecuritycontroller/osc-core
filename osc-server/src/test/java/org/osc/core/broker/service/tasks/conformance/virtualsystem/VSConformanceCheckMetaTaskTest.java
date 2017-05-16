@@ -16,20 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_OPENSTACK_WITH_DEPLOYMENT_SPECS_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_OPENSTACK_WITH_OS_FLAVOR_REF_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.DELETE_OPENSTACK_WITH_OS_IMAGE_REF_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.TEST_VIRTUAL_SYSTEMS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_OPENSTACK_DEPLOYMENT_SPEC_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_OPENSTACK_LOCK_DEPLOYMENT_SPEC_FAILS_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_OPENSTACK_NO_DEPLOYMENT_SPEC_TASK;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.UPDATE_OPENSTACK_NO_DEPLOYMENT_SPEC_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDeleteOpenStackWithDeploymentSpecGraph;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDeleteOpenStackWithOSFlavorRefGraph;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createDeleteOpenStackWithOSImageRefGraph;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createOpenstacWhenLockingDeploymentSpecFailsGraph;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createOpenstackNoDeploymentSpecGraph;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.createOpenstackWithDeploymentSpecGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTaskTestData.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,11 +41,13 @@ import org.osc.core.util.ServerUtil;
 import org.osc.core.util.encryption.EncryptionException;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
+@PrepareForTest({LockUtil.class})
 @PowerMockIgnore("javax.net.ssl.*")
 public class VSConformanceCheckMetaTaskTest {
     @Mock
