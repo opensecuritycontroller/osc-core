@@ -16,14 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
+import com.rabbitmq.client.ShutdownSignalException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,7 +47,20 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SdnControllerApiFactory.class, RabbitMQRunner.class, EncryptionUtil.class,
@@ -67,9 +73,6 @@ public class VirtualizationConnectorUtilTest {
 
     @Mock
     private OsRabbitMQClient rabbitClient;
-
-    @Mock
-    private X509TrustManagerFactory trustManagerFactory;
 
     @Mock
     private SslContextProvider contextProvider;
@@ -86,6 +89,7 @@ public class VirtualizationConnectorUtilTest {
         when(EncryptionUtil.decryptAESCTR(any(String.class))).thenReturn("Decrypted Passowrd");
         when(this.contextProvider.getSSLContext()).thenReturn(null);
         PowerMockito.whenNew(SslContextProvider.class).withAnyArguments().thenReturn(this.contextProvider);
+        PowerMockito.whenNew(OsRabbitMQClient.class).withAnyArguments().thenReturn(this.rabbitClient);
     }
 
 	@Test

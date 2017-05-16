@@ -72,6 +72,7 @@ public class CheckSSLConnectivityVcTask extends BaseTask {
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
         dto.setControllerPassword(EncryptionUtil.decryptAESCTR(vc.getControllerPassword()));
+        dto.setProviderAttributes(vc.getProviderAttributes());
 
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
