@@ -29,10 +29,12 @@ import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntit
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service = DeleteSvaServerAndDAIMetaTask.class)
-class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
+public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
 
+    @Reference
     private DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     private DistributedApplianceInstance dai;

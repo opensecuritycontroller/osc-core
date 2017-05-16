@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
  * security group syncs for security groups related to this DAI.
  */
 @Component(service = OsDAIUpgradeMetaTask.class)
-class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
+public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
     @Reference
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
