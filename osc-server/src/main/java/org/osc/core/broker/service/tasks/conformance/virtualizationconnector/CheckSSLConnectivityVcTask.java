@@ -16,12 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
-import static java.util.stream.Collectors.toSet;
-
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -32,6 +26,11 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
+
+import javax.persistence.EntityManager;
+import java.util.Set;
+
+import static java.util.stream.Collectors.toSet;
 
 public class CheckSSLConnectivityVcTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(CheckSSLConnectivityVcTask.class);
@@ -77,6 +76,7 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
         dto.setControllerPassword(StaticRegistry.encryptionApi().decryptAESCTR(vc.getControllerPassword()));
+        dto.setProviderAttributes(vc.getProviderAttributes());
 
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
