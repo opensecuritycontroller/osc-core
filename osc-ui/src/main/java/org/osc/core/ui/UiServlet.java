@@ -60,8 +60,7 @@ public class UiServlet extends VaadinServlet implements Servlet, ServerTerminati
 
 	/*
 	 * Atmosphere tries to load websocket support using the ContextClassLoader.
-	 * So set ContextClassLoader to our uber-bundle classloader.
-	 * The uber-bundle also needs to import the Jetty websocket packages for this to work.
+	 * So set ContextClassLoader to the Http Service implementation classloader.
 	 *
 	 * @see {@DefaultAsyncSupportResolver.newCometSupport()}
 	 */
@@ -69,7 +68,7 @@ public class UiServlet extends VaadinServlet implements Servlet, ServerTerminati
 	public void init(ServletConfig config) throws ServletException {
 		final ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
 		try {
-			Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+			Thread.currentThread().setContextClassLoader(config.getClass().getClassLoader());
 			super.init(config);
 		} finally {
 			Thread.currentThread().setContextClassLoader(oldLoader);
