@@ -86,6 +86,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
+			<artifactId>osc-ui</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.osc.core</groupId>
 			<artifactId>osc-control</artifactId>
 			<version>1.0</version>
 		</dependency>
@@ -446,7 +451,7 @@
 							<target>
 								<!-- webapp UI -->
 								<copy todir="${basedir}/webapp">
-									<fileset dir="${basedir}/../osc-server/src/main/webapp"
+									<fileset dir="${basedir}/../osc-ui/src/main/webapp"
 										excludes="VAADIN/gwt-unitCache/**" />
 								</copy>
 								<!-- swagger doc -->

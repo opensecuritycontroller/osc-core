@@ -37,6 +37,8 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.broadcast.EventType;
+import org.osc.core.broker.service.common.VmidcMessages;
+import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
@@ -58,8 +60,6 @@ import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidat
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
-import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

@@ -20,9 +20,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 
+import org.osc.core.broker.service.common.VmidcMessages;
+import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.exceptions.ExtensionNotPresentException;
-import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
 
 import com.google.common.base.Optional;
 import com.google.common.io.Closeables;
