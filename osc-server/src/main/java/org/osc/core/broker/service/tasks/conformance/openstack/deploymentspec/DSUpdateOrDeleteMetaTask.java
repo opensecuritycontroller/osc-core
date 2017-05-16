@@ -50,6 +50,8 @@ import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMeta
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 @Component(service = DSUpdateOrDeleteMetaTask.class)
 public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
@@ -59,10 +61,11 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
-    @Reference
+    // optional+dynamic to break circular dependency
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     OsSvaCreateMetaTask osSvaCreateMetaTask;
 
-    @Reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
 
     @Reference

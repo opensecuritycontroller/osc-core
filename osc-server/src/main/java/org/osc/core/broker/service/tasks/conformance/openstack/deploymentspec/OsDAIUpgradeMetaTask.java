@@ -30,6 +30,8 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * Deletes existing SVA corresponding to the DAI and recreates the SVA with the new version. This task also schedules
@@ -38,7 +40,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = OsDAIUpgradeMetaTask.class)
 public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
-    @Reference
+    // optional+dynamic to break circular dependency
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference
