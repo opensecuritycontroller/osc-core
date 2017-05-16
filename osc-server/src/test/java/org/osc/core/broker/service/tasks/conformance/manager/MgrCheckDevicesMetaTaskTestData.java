@@ -26,6 +26,7 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -113,7 +114,7 @@ public class MgrCheckDevicesMetaTaskTestData {
     private static VirtualSystem createBaseVirtualSystem(Long vsId) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName("vc_name");
-        //vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setName("vcName");
         vc.setProviderIpAddress("127.0.0.1");

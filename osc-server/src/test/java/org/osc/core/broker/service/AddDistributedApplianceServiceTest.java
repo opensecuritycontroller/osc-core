@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service;
-// TODO Hailee: This file has deleted and commented code.
+
 import java.text.MessageFormat;
 import java.util.Set;
 
@@ -39,6 +39,7 @@ import org.mockito.internal.util.collections.Sets;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -149,7 +150,7 @@ public class AddDistributedApplianceServiceTest {
        this.em.persist(this.domain);
 
        this.vc = new VirtualizationConnector();
-       //this.vc.setVirtualizationType(VirtualizationType.VMWARE);
+       this.vc.setVirtualizationType(VirtualizationType.OPENSTACK);
        this.vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
        this.vc.setName("vcName");
        this.vc.setProviderIpAddress("127.0.0.1");

@@ -15,29 +15,10 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.manager;
-
+//TODO Hailee: Fix tests and use populatedatabase()
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAINS_WITHOUT_POLICIES_AND_WITH_ORPHAN_POLICIES_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITHOUT_MGR_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITHOUT_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITHOUT_POLICY_2;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITH_MULTIPLE_POLICIES_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITH_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.MGR_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.MGR_POLICY_WITHOUT_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.MGR_POLICY_WITH_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.NO_DOMAIN_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.NO_MGR_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.POLICY_WITHOUT_MGR_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.POLICY_WITH_VS_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.createPolicyGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.deletePoliciesFromDomainGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.deletePolicyGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.emptyGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.removeVendorTemplateAndDeletePolicyGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.updatePolicyGraph;
+import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -155,7 +136,6 @@ public class SyncPolicyMetaTaskTest {
             {MGR_POLICY_WITH_POLICY_MC, updatePolicyGraph(MGR_POLICY_WITH_POLICY_MC)},
             {POLICY_WITHOUT_MGR_POLICY_MC, deletePolicyGraph(POLICY_WITHOUT_MGR_POLICY_MC)},
             {POLICY_WITH_VS_POLICY_MC, removeVendorTemplateAndDeletePolicyGraph(POLICY_WITH_VS_POLICY_MC)},
-            // TODO hailee: Looks like the test below is still failing inconsistently.
             //{DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC,
             //   deleteOrphanAndVSPoliciesGraph(DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC)},
             //{DOMAINS_WITHOUT_POLICIES_AND_WITH_ORPHAN_POLICIES_MC,

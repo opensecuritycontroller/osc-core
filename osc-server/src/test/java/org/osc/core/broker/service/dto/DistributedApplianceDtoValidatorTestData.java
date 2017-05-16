@@ -38,9 +38,7 @@ public class DistributedApplianceDtoValidatorTestData {
     static Long MC_ID_NOT_FOUND = 101L;
     static Long VC_ID_NOT_FOUND = 102L;
     static Long VC_ID_OPENSTACK = 103L;
-    static Long VC_ID_VMWARE = 104L;
-    static String VC_NAME_OPENSTACK = "VC_OPENSTACK";
-    static String VC_NAME_VMWARE = "VC_VMWARE";
+    static String VC_NAME_OPENSTACK = "VC_NAME_OPENSTACK";
     static Long DA_ID_EXISTING_VC = 105L;
     static String DA_NAME_EXISTING_DA = "EXISTINGDA";
     static String DA_NAME_NEW_DA = "NEWDA";
@@ -177,14 +175,8 @@ public class DistributedApplianceDtoValidatorTestData {
     static List<Object[]> getInvalidEncapsulationTypeTestData() {
         List<Object[]> result = new ArrayList<Object[]>();
 
-        DistributedApplianceDto vmWareDaDto = createDistributedApplianceDto();
         DistributedApplianceDto openStackDaDto = createDistributedApplianceDto();
         DistributedApplianceDto openStackPolicyMappingNotSupportedDaDto = createDistributedApplianceDto();
-
-        // VMWARE VS SHOULD NOT have encapsulation type set
-        ((VirtualSystemDto)vmWareDaDto.getVirtualizationSystems().toArray()[0]).setVcId(VC_ID_VMWARE);
-        ((VirtualSystemDto)vmWareDaDto.getVirtualizationSystems().toArray()[0]).setDomainId(-1L);
-        ((VirtualSystemDto)vmWareDaDto.getVirtualizationSystems().toArray()[0]).setEncapsulationType(TagEncapsulationType.VLAN);
 
         // OPENSTACK VS SHOULD have encapsulation type set
         ((VirtualSystemDto)openStackDaDto.getVirtualizationSystems().toArray()[0]).setVcId(VC_ID_OPENSTACK);
@@ -197,7 +189,6 @@ public class DistributedApplianceDtoValidatorTestData {
         ((VirtualSystemDto)openStackPolicyMappingNotSupportedDaDto.getVirtualizationSystems().toArray()[0]).setDomainId(null);
         openStackPolicyMappingNotSupportedDaDto.setMcId(MC_ID_POLICY_MAPPING_NOT_SUPPORTED_MC);
 
-        result.add(new Object[] {vmWareDaDto,  VmidcBrokerInvalidEntryException.class, "Encapsulation Type " + VALUE_IS_SET_ERROR_MESSAGE});
         result.add(new Object[] {openStackDaDto,  VmidcBrokerInvalidEntryException.class, "Encapsulation Type " + EMPTY_VALUE_ERROR_MESSAGE});
         result.add(new Object[] {openStackPolicyMappingNotSupportedDaDto,  VmidcBrokerInvalidEntryException.class, "Encapsulation Type " + VALUE_IS_SET_ERROR_MESSAGE});
 
@@ -205,8 +196,8 @@ public class DistributedApplianceDtoValidatorTestData {
     }
 
     static Object[] getInvalidApplianceSoftwareVersionTestData() {
-        ((VirtualSystemDto)applianceSwVersionNotFoundDto.getVirtualizationSystems().toArray()[0]).setVcId(VC_ID_VMWARE);
-        ((VirtualSystemDto)applianceSwVersionNotFoundDto.getVirtualizationSystems().toArray()[0]).setEncapsulationType(null);
+        ((VirtualSystemDto)applianceSwVersionNotFoundDto.getVirtualizationSystems().toArray()[0]).setVcId(VC_ID_OPENSTACK);
+        ((VirtualSystemDto)applianceSwVersionNotFoundDto.getVirtualizationSystems().toArray()[0]).setEncapsulationType(TagEncapsulationType.VLAN);
         ((VirtualSystemDto)applianceSwVersionNotFoundDto.getVirtualizationSystems().toArray()[0]).setDomainId(-1L);
 
         applianceSwVersionNotFoundDto.setApplianceSoftwareVersionName(SW_VERSION_NOT_FOUND);

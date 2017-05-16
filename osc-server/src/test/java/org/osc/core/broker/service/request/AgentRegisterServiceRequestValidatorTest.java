@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.request;
-// TODO Hailee: This file has deleted and commented code.
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.persistence.EntityManager;
@@ -31,6 +31,7 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -110,7 +111,7 @@ public class AgentRegisterServiceRequestValidatorTest {
         this.em.persist(domain);
 
         VirtualizationConnector vc = new VirtualizationConnector();
-        //vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setName("vcName");
         vc.setProviderIpAddress("127.0.0.1");
