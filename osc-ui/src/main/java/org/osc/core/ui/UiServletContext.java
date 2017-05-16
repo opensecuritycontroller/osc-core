@@ -48,6 +48,7 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 
 })
 public class UiServletContext extends ServletContextHelper {
+    private static final String VAADIN_SERVER_BUNDLE = "com.vaadin.server";
     static final String FELIX_HTTP_NAME = "org.apache.felix.http.name";
     static final String OSC_UI_NAME = "OSC-UI";
     static final String OSC_RESOURCE_PREFIX = "/webapp";
@@ -68,7 +69,7 @@ public class UiServletContext extends ServletContextHelper {
                     new BundleTrackerCustomizer<Bundle>() {
                         @Override
                         public Bundle addingBundle(Bundle bundle, BundleEvent event) {
-                            return "com.vaadin.server".equals(bundle.getSymbolicName()) ?
+                            return VAADIN_SERVER_BUNDLE.equals(bundle.getSymbolicName()) ?
                                     bundle : null;
                         }
 
@@ -125,8 +126,6 @@ public class UiServletContext extends ServletContextHelper {
         }
 
         if(name.startsWith(OSC_VAADIN_PREFIX)) {
-            String bundleResourceLocation = name.substring(OSC_VAADIN_PREFIX.length() -1);
-
             Bundle[] bundlesToCheck = this.vaadinResourceBundles.getBundles();
             if(bundlesToCheck != null) {
                 // Sort the list to ensure a consistent check order
