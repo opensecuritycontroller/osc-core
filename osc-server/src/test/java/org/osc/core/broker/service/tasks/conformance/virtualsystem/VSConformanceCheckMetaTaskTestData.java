@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualsystem;
-// TODO Hailee: This file has deleted and commented code.
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -110,7 +110,6 @@ public class VSConformanceCheckMetaTaskTestData {
         da.setName(DEFAULT_SERVICE_NAME);
 
         ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion();
-        //asv.setImageUrl(asvImageUrl);
 
         VirtualSystem vs = new VirtualSystem(da);
         vs.setId(vsId);
@@ -118,13 +117,6 @@ public class VSConformanceCheckMetaTaskTestData {
         vs.setDomain(new Domain());
         vs.setApplianceSoftwareVersion(asv);
         vs.setDomain(new Domain());
-
-//        if (policyName != null) {
-//            Policy policy = new Policy();
-//            policy.setName(policyName);
-//
-//            vs.getDomain().addPolicy(policy);
-//        }
 
         if (TEST_VIRTUAL_SYSTEMS == null) {
             TEST_VIRTUAL_SYSTEMS = new ArrayList<VirtualSystem>();
