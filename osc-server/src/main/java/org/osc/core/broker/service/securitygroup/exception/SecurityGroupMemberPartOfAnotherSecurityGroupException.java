@@ -16,9 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securitygroup.exception;
 
+import org.osc.core.broker.service.common.VmidcMessages;
+import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
 
 @SuppressWarnings("serial")
 public class SecurityGroupMemberPartOfAnotherSecurityGroupException extends VmidcBrokerValidationException {
