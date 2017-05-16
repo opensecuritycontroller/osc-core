@@ -116,8 +116,7 @@ public class VirtualizationConnectorUtil {
                     boolean isHttps = isHttps(vcDto.getProviderAttributes());
 
                     Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
-                            vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps,
-                            SslContextProvider.getInstance().getSSLContext());
+                                vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, SslContextProvider.getInstance().getSSLContext());
                     keystoneAPi = new JCloudKeyStone(endPoint);
                     keystoneAPi.listTenants();
 

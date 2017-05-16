@@ -16,13 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
+import com.rabbitmq.client.ShutdownSignalException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +28,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-//import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
@@ -48,14 +41,21 @@ import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-//import org.osc.sdk.sdn.api.VMwareSdnApi;
-//import org.osc.sdk.sdn.exception.HttpException;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+
+//import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
+//import org.osc.sdk.sdn.api.VMwareSdnApi;
+//import org.osc.sdk.sdn.exception.HttpException;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({StaticRegistry.class,
