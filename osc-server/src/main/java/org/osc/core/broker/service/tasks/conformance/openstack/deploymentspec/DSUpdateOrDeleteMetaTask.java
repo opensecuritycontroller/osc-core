@@ -61,12 +61,12 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
-    // optional+dynamic to break circular dependency
+    // optional+dynamic to break circular DS dependency
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    OsSvaCreateMetaTask osSvaCreateMetaTask;
+    volatile OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
+    volatile OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
 
     @Reference
     DeleteSvaServerAndDAIMetaTask deleteSvaServerAndDAIMetaTask;
@@ -75,13 +75,19 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private Endpoint endPoint;
     private TaskGraph tg;
     private JCloudNova novaApi;
+    private DSUpdateOrDeleteMetaTask factory;
+
+    private void delayedInit() {
+        this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
+        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
+        this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTask;
+        this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
+    }
+
 
     public DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, Endpoint endPoint) {
         DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask();
-        task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
-        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
-        task.osDAIConformanceCheckMetaTask = this.osDAIConformanceCheckMetaTask;
-        task.deleteSvaServerAndDAIMetaTask = this.deleteSvaServerAndDAIMetaTask;
+        task.factory = this;
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
@@ -96,8 +102,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
         this.tg = new TaskGraph();
-
         OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
         this.ds = emgr.findByPrimaryKey(this.ds.getId());
         VirtualSystem virtualSystem = this.ds.getVirtualSystem();
@@ -230,6 +236,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     HostAzInfo hostInfo = hostAvailabilityZoneMap.getHostAvailibilityZoneInfo(host);
                     String hostName = hostInfo.getHostName();
                     String availabilityZone = hostInfo.getAvailabilityZone();
+
                     this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostName, availabilityZone));
                 } catch (VmidcException vmidcException) {
                     this.tg.addTask(new FailedWithObjectInfoTask(String.format(

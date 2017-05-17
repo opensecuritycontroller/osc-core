@@ -40,9 +40,9 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 @Component(service = OsDAIUpgradeMetaTask.class)
 public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
-    // optional+dynamic to break circular dependency
+    // optional+dynamic to break circular DS dependency
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private OsSvaCreateMetaTask osSvaCreateMetaTask;
+    private volatile OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference
     private ConformService conformService;
@@ -50,11 +50,16 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
     private DistributedApplianceInstance dai;
     private ApplianceSoftwareVersion upgradedSoftwareVersion;
     private TaskGraph tg;
+    private OsDAIUpgradeMetaTask factory;
+
+    private void delayedInit() {
+        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
+        this.conformService = this.factory.conformService;
+    }
 
     public OsDAIUpgradeMetaTask create(DistributedApplianceInstance dai, ApplianceSoftwareVersion upgradedSoftwareVersion) {
         OsDAIUpgradeMetaTask task = new OsDAIUpgradeMetaTask();
-        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
-        task.conformService = this.conformService;
+        task.factory = this;
         task.dai = dai;
         task.upgradedSoftwareVersion = upgradedSoftwareVersion;
         return task;
@@ -62,6 +67,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
         this.tg = new TaskGraph();
 
         OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(

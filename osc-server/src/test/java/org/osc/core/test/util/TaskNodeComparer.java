@@ -78,6 +78,11 @@ public class TaskNodeComparer {
                 }
 
                 if (t1FieldValue == null || !t1FieldValue.equals(t2FieldValue)) {
+                    // FIXME(Paremus) this is a temporary work-around as factory fields in tasks cause comparison failure
+                    // and we don't want to add equals/hashcode to all Tasks, just for testing.
+                    if ("[null]".equals(t1FieldValue.toString()) && "[null]".equals(t2FieldValue.toString())) {
+                        continue;
+                    }
                     throw new IllegalStateException(MessageFormat.format("The task {0} has the field {1} with value {2}, but the expected value was {3}",
                             t1.getName(), t1Field.getName(), t1FieldValue, t2FieldValue));
                 }

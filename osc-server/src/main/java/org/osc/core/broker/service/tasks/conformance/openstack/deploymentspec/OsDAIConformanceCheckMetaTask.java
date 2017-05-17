@@ -58,25 +58,30 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(OsDAIConformanceCheckMetaTask.class);
 
-    // optional+dynamic to break circular dependency
+    // optional+dynamic to break circular DS dependency
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private OsSvaCreateMetaTask osSvaCreateMetaTask;
+    private volatile OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private OsDAIUpgradeMetaTask osDAIUpgradeMetaTask;
+    private volatile OsDAIUpgradeMetaTask osDAIUpgradeMetaTask;
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private DeleteDAIFromDbTask deleteDAIFromDbTask;
+    private volatile DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     private DistributedApplianceInstance dai;
     private boolean doesOSHostExist;
     private TaskGraph tg;
+    private OsDAIConformanceCheckMetaTask factory;
+
+    private void delayedInit() {
+        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
+        this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTask;
+        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
+    }
 
     public OsDAIConformanceCheckMetaTask create(DistributedApplianceInstance dai, boolean doesOSHostExist) {
         OsDAIConformanceCheckMetaTask task = new OsDAIConformanceCheckMetaTask();
-        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
-        task.osDAIUpgradeMetaTask = this.osDAIUpgradeMetaTask;
-        task.deleteDAIFromDbTask = this.deleteDAIFromDbTask;
+        task.factory = this;
         task.dai = dai;
         task.doesOSHostExist = doesOSHostExist;
         return task;
@@ -84,8 +89,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
         this.tg = new TaskGraph();
-
         OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(
                 DistributedApplianceInstance.class, em);
         this.dai = daiEntityMgr.findByPrimaryKey(this.dai.getId());

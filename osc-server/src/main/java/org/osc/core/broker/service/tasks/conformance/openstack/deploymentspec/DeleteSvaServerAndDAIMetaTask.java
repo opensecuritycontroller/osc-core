@@ -36,13 +36,18 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 @Component(service = DeleteSvaServerAndDAIMetaTask.class)
 public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
 
-    // optional+dynamic to break circular dependency
+    // optional+dynamic to break circular DS dependency
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private DeleteDAIFromDbTask deleteDAIFromDbTask;
+    private volatile DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     private DistributedApplianceInstance dai;
     private String region;
     private TaskGraph tg;
+    private DeleteSvaServerAndDAIMetaTask factory;
+
+    private void delayedInit() {
+        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
+    }
 
     /**
      * Deletes the SVA associated with the DAI from openstack and deletes the DAI from the DB
@@ -57,7 +62,7 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
      */
     public DeleteSvaServerAndDAIMetaTask create(String region, DistributedApplianceInstance dai) {
         DeleteSvaServerAndDAIMetaTask task = new DeleteSvaServerAndDAIMetaTask();
-        task.deleteDAIFromDbTask = this.deleteDAIFromDbTask;
+        task.factory = this;
         task.region = region;
         task.dai = dai;
         return task;
@@ -65,6 +70,7 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
         this.tg = new TaskGraph();
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
 
@@ -78,6 +84,7 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         if (this.dai.getFloatingIpId() != null) {
             this.tg.appendTask(new OsSvaDeleteFloatingIpTask(this.dai));
         }
+
         this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
     }
 
