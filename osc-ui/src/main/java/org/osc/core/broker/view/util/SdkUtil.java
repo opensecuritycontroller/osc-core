@@ -54,7 +54,7 @@ public class SdkUtil {
                     continue;
                 }
 
-                String fileName = path.toString().replace("webapp", "");
+                String fileName = path.toString().replace("webapp", "").replace("\\","/");
                 switch (sdkType) {
                     case MANAGER:
                         if (path.getFileName().toString().matches(this.managerApiPattern)) {
@@ -76,8 +76,7 @@ public class SdkUtil {
     }
 
     private boolean validateIsJar(Path pathToFile){
-        try {
-            JarFile jarFile = new JarFile(pathToFile.toFile());
+        try(JarFile jarFile = new JarFile(pathToFile.toFile())) {
             return jarFile.size() > 0;
         } catch (IOException e) {
             this.LOG.warn("Available file: " + pathToFile.toString() + " is not valid jar package", e);
