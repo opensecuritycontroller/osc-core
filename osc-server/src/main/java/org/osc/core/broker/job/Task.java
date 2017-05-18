@@ -30,6 +30,4 @@ public interface Task {
     void execute() throws Exception;
 
     Set<LockObjectReference> getObjects();
-
-    void cleanup();
 }
