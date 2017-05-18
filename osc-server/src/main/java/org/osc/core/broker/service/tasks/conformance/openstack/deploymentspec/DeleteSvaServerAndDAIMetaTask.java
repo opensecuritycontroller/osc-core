@@ -26,8 +26,10 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -37,16 +39,24 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
 
     // optional+dynamic to break circular DS dependency
+    // TODO: remove circularity and use mandatory references
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile DeleteDAIFromDbTask deleteDAIFromDbTask;
+    private volatile ComponentServiceObjects<DeleteDAIFromDbTask> deleteDAIFromDbTaskCSO;
+    private DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     private DistributedApplianceInstance dai;
     private String region;
     private TaskGraph tg;
+    @IgnoreCompare
     private DeleteSvaServerAndDAIMetaTask factory;
 
     private void delayedInit() {
-        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
+        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+    }
+
+    @Override
+    public void cleanup() {
+        this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
     }
 
     /**

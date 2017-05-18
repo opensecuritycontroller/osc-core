@@ -45,9 +45,11 @@ import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -62,11 +64,14 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
     // optional+dynamic to break circular DS dependency
+    // TODO: remove circularity and use mandatory references
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    volatile OsSvaCreateMetaTask osSvaCreateMetaTask;
+    private volatile ComponentServiceObjects<OsSvaCreateMetaTask> osSvaCreateMetaTaskCSO;
+    OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    volatile OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
+    private volatile ComponentServiceObjects<OsDAIConformanceCheckMetaTask> osDAIConformanceCheckMetaTaskCSO;
+    OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
 
     @Reference
     DeleteSvaServerAndDAIMetaTask deleteSvaServerAndDAIMetaTask;
@@ -75,15 +80,21 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private Endpoint endPoint;
     private TaskGraph tg;
     private JCloudNova novaApi;
+    @IgnoreCompare
     private DSUpdateOrDeleteMetaTask factory;
 
     private void delayedInit() {
         this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
-        this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTask;
+        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
+        this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO.getService();
         this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
     }
 
+    @Override
+    public void cleanup() {
+        this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
+        this.factory.osDAIConformanceCheckMetaTaskCSO.ungetService(this.osDAIConformanceCheckMetaTask);
+    }
 
     public DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, Endpoint endPoint) {
         DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask();

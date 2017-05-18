@@ -27,7 +27,9 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -41,8 +43,10 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
     // optional+dynamic to break circular DS dependency
+    // TODO: remove circularity and use mandatory references
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile OsSvaCreateMetaTask osSvaCreateMetaTask;
+    private volatile ComponentServiceObjects<OsSvaCreateMetaTask> osSvaCreateMetaTaskCSO;
+    private OsSvaCreateMetaTask osSvaCreateMetaTask;
 
     @Reference
     private ConformService conformService;
@@ -50,11 +54,17 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
     private DistributedApplianceInstance dai;
     private ApplianceSoftwareVersion upgradedSoftwareVersion;
     private TaskGraph tg;
+    @IgnoreCompare
     private OsDAIUpgradeMetaTask factory;
 
     private void delayedInit() {
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
+        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
         this.conformService = this.factory.conformService;
+    }
+
+    @Override
+    public void cleanup() {
+        this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
     }
 
     public OsDAIUpgradeMetaTask create(DistributedApplianceInstance dai, ApplianceSoftwareVersion upgradedSoftwareVersion) {
