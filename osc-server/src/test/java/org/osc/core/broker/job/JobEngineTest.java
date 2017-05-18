@@ -31,6 +31,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.model.entities.job.JobRecord;
@@ -129,7 +130,9 @@ public class JobEngineTest {
         this.tg = new TaskGraph();
     }
 
+    // TODO : re-enable this once the issue #284 is addressed
     @Test
+    @Ignore
     public void testTaskDependencyExecutionOrder() throws Exception {
         // Test first level parallel followed by sequential parallel tasks
         this.tg = new TaskGraph();

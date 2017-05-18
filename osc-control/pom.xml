@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0</version>
+		<version>0.6.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>osc-control</artifactId>
@@ -54,8 +54,8 @@
 						</manifest>
 						<manifestEntries>
 							<Build-Time>${maven.build.timestamp}</Build-Time>
-							<Implementation-Build>${buildNumber}</Implementation-Build>
-							<Implementation-Version>${productVersion}</Implementation-Version>
+							<Implementation-Build>${fullVersion}</Implementation-Build>
+							<Implementation-Version>${project.version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
 
@@ -128,7 +128,7 @@
         <dependency>
             <groupId>org.osc.core</groupId>
             <artifactId>osc-common</artifactId>
-            <version>1.0</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -148,7 +148,7 @@
         <dependency>
             <groupId>org.osc.core</groupId>
             <artifactId>osc-server</artifactId>
-            <version>1.0</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

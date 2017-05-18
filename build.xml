@@ -35,7 +35,7 @@
 		</exec>
 	</target>
 
-	<target name="ovfOnly" depends="repoVersion,prodVersion" description="Runs ovfBuild and cleans up on error">
+	<target name="ovfOnly" depends="prodVersion" description="Runs ovfBuild and cleans up on error">
 		<waitfor maxwait="20" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
 			<not>
 				<available file="/tmp/build_marker" />
@@ -49,17 +49,17 @@
 			<arg value="ant" />
 			<arg value="-Dimage-format=${image-format}" />
 			<arg value="-Dbranchname=${branchname}" />
-			<arg value="-DbuildNumber=${buildNumber}" />
-			<arg value="-DproductVersion=${productVersion}" />
+			<arg value="-DbuildNumber=${fullVersion}" />
+			<arg value="-DproductVersion=${releaseVersion}" />
 		</exec>
 		<delete file="/tmp/build_marker" />
 	</target>
 
-	<target name="ovfCopy" depends="repoVersion,prodVersion,createBuildDir,copyServerUpgradeBundle,copyPlugins,copyImages" description="Copy result files to build dir">
-		<copy file="osc-server-bom/OSC.ovf" tofile="Build${buildNumber}/OSC-${buildNumber}.ovf" />
-		<replace file="Build${buildNumber}/OSC-${buildNumber}.ovf" token="$OSC_VERSION" value="${productVersion}" />
-		<zip destfile="Build${buildNumber}/OSC-${productVersion}_Build${buildNumber}.zip">
-			<fileset dir="Build${buildNumber}" includes="**/*.vmdk **/*.ovf **/serverUpgradeBundle-*.zip" />
+	<target name="ovfCopy" depends="prodVersion,createBuildDir,copyServerUpgradeBundle,copyPlugins,copyImages" description="Copy result files to build dir">
+		<copy file="osc-server-bom/OSC.ovf" tofile="Build${fullVersion}/OSC-${fullVersion}.ovf" />
+		<replace file="Build${fullVersion}/OSC-${fullVersion}.ovf" token="$OSC_VERSION" value="${releaseVersion}" />
+		<zip destfile="Build${fullVersion}/OSC-${releaseVersion}_Build${fullVersion}.zip">
+			<fileset dir="Build${fullVersion}" includes="**/*.vmdk **/*.ovf **/serverUpgradeBundle-*.zip" />
 		</zip>
 	</target>
 
@@ -67,11 +67,11 @@
 		<delete includeemptydirs="true">
 			<fileset dir="." includes="Build*/**" />
 		</delete>
-		<mkdir dir="Build${buildNumber}" />
+		<mkdir dir="Build${fullVersion}" />
 	</target>
 
 	<target name="copyServerUpgradeBundle">
-		<copy file="target/serverUpgradeBundle.zip" tofile="Build${buildNumber}/serverUpgradeBundle-${buildNumber}.zip" />
+		<copy file="target/serverUpgradeBundle.zip" tofile="Build${fullVersion}/serverUpgradeBundle-${fullVersion}.zip" />
 	</target>
 		
 	<target name="copyPlugins" if="${all}">
@@ -106,31 +106,31 @@
 
 	<target name="copyImages" depends="vmdkImageCopy,qcow2ImageCopy,rawImageCopy" description="Checks image format and copy respective files" />
 	<target name="vmdkImageCopy" depends="checkImagesTocopy" if="isvmdkImage">
-		<move file="osc-server-bom/OSC_disk-0.vmdk" tofile="Build${buildNumber}/OSC_disk-0.vmdk" />
+		<move file="osc-server-bom/OSC_disk-0.vmdk" tofile="Build${fullVersion}/OSC_disk-0.vmdk" />
 	</target>
 	<target name="qcow2ImageCopy" depends="checkImagesTocopy" if="isqcow2Image">
-		<move file="osc-server-bom/OSC_disk-0.qcow2" tofile="Build${buildNumber}/OSC_disk-0.qcow2" />
+		<move file="osc-server-bom/OSC_disk-0.qcow2" tofile="Build${fullVersion}/OSC_disk-0.qcow2" />
 	</target>
 	<target name="rawImageCopy" depends="checkImagesTocopy" if="israwImage">
-		<move file="osc-server-bom/OSC_disk-0-raw.img" tofile="Build${buildNumber}/OSC_disk-0-raw.img" />
+		<move file="osc-server-bom/OSC_disk-0-raw.img" tofile="Build${fullVersion}/OSC_disk-0-raw.img" />
 	</target>
 
 	<target name="deleteJavaJre" depends="checkFileExist" if="isJavaJreExist">
 		<delete file="${basedir}/osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz" />
 	</target>
 
-	<target name="repoVersion">
-		<exec outputproperty="buildNumber" dir="." executable="sh" failonerror="true">
+    <target name="prodVersion">
+            <!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
+            <exec outputproperty="fullVersion" dir="." executable="sh">
 			<arg value="-c" />
-			<arg value="git describe | cut -d '-' -f 2-3" />
+                <arg value="git describe --long | tr -d v" />
 		</exec>
-		<echo>Committed Revision: ${buildNumber}</echo>
-	</target>
-
-	<target name="prodVersion">
-		<exec outputproperty="productVersion" executable="cat" failonerror="true">
-			<arg value="version.txt" />
+            <!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, etc -->
+            <exec outputproperty="releaseVersion" dir="." executable="sh">
+                <arg value="-c" />
+                <arg value="git describe --abbrev=0 | tr -d v" />
 		</exec>
+            <echo>Full Version: ${fullVersion}</echo>
+            <echo>Version: ${releaseVersion}</echo>
 	</target>
-
 </project>
