@@ -414,7 +414,7 @@ public class OpenstackUtil {
      *            end of the current job.
      */
     public static void scheduleSecurityGroupJobsRelatedToDai(EntityManager em, DistributedApplianceInstance dai,
-            Task task) {
+            Task task, ConformService conformService) {
         // Check if existing SG members
         Set<SecurityGroup> sgs = SecurityGroupEntityMgr.listByDai(em, dai);
 
@@ -422,7 +422,7 @@ public class OpenstackUtil {
             Job job = JobEngine.getEngine().getJobByTask(task);
             for (SecurityGroup sg : sgs) {
                 LOG.info("Scheduling SG job for sg: " + sg + " on behalf of DAI: " + dai);
-                job.addListener(new StartSecurityGroupJobListener(sg));
+                job.addListener(new StartSecurityGroupJobListener(sg, conformService));
             }
         }
     }
@@ -431,15 +431,17 @@ public class OpenstackUtil {
         private final Logger log = Logger.getLogger(StartSecurityGroupJobListener.class);
 
         private final SecurityGroup sg;
+        private final ConformService conformService;
 
-        private StartSecurityGroupJobListener(SecurityGroup sg) {
+        private StartSecurityGroupJobListener(SecurityGroup sg, ConformService conformService) {
             this.sg = sg;
+            this.conformService = conformService;
         }
 
         @Override
         public void completed(Job job) {
             try {
-                ConformService.startSecurityGroupConformanceJob(this.sg);
+                this.conformService.startSecurityGroupConformanceJob(this.sg);
             } catch (Exception e) {
                 AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, new LockObjectReference(
                         this.sg), "Failed to submit a dependent Security Group sync job " + e.getMessage());

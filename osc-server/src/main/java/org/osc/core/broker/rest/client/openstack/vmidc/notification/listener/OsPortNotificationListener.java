@@ -43,9 +43,12 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
     private static final Logger log = Logger.getLogger(OsPortNotificationListener.class);
 
+    private final ConformService conformService;
+
     public OsPortNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity) {
+            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
         super(vc, OsNotificationObjectType.PORT, objectIdList, entity);
+        this.conformService = conformService;
         register(vc, objectType);
     }
 
@@ -166,6 +169,6 @@ public class OsPortNotificationListener extends OsNotificationListener {
     private void triggerSGSync(SecurityGroup sg, EntityManager em) throws Exception {
         log.info("Running SG sync based on OS Port notification received.");
         // Message is related to registered Security Group. Trigger sync
-        ConformService.startSecurityGroupConformanceJob(sg);
+        this.conformService.startSecurityGroupConformanceJob(sg);
     }
 }

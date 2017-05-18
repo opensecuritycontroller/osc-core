@@ -110,7 +110,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
             /*
              * If VM is not migrated then it is deleted we must trigger a SG Sync
              */
-            ConformService.startSecurityGroupConformanceJob(securityGroup);
+            this.conformService.startSecurityGroupConformanceJob(securityGroup);
         } else {
 
             /*
@@ -127,7 +127,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
                     SecurityGroup sg = SecurityGroupEntityMgr.findById(em, securityGroup.getId());
 
                     // iterate through all SGI -> DDS mappings to trigger required DDS Sync
-                    return ConformService.startSecurityGroupConformanceJob(em, sg, null, true);
+                    return this.conformService.startSecurityGroupConformanceJob(em, sg, null, true);
                 });
 
             } catch (ScopedWorkException e) {

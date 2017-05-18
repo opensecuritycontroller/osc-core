@@ -54,12 +54,16 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGroupRequest, BaseJobResponse>
         implements BindSecurityGroupServiceApi {
 
     private static final Logger log = Logger.getLogger(BindSecurityGroupService.class);
+
+    @Reference
+    private ConformService conformService;
 
     private SecurityGroup securityGroup;
 
@@ -187,7 +191,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
             TransactionalBroadcastUtil.addMessageToMap(this.securityGroup.getId(),
                     this.securityGroup.getClass().getSimpleName(), EventType.UPDATED);
 
-            Job job = ConformService.startBindSecurityGroupConformanceJob(em, this.securityGroup, unlockTask);
+            Job job = this.conformService.startBindSecurityGroupConformanceJob(em, this.securityGroup, unlockTask);
 
             response = new BaseJobResponse(job.getId());
 

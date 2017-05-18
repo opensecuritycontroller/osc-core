@@ -19,6 +19,7 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -36,6 +37,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
@@ -44,7 +46,12 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.controller.exception.NetworkPortNotFoundException;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * Makes sure the DAI has a corresponding SVA on the specified end point. If the SVA does not exist
@@ -55,17 +62,48 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(OsDAIConformanceCheckMetaTask.class);
 
+    // optional+dynamic to break circular DS dependency
+    // TODO: remove circularity and use mandatory references
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<OsSvaCreateMetaTask> osSvaCreateMetaTaskCSO;
     private OsSvaCreateMetaTask osSvaCreateMetaTask;
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<OsDAIUpgradeMetaTask> osDAIUpgradeMetaTaskCSO;
     private OsDAIUpgradeMetaTask osDAIUpgradeMetaTask;
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<DeleteDAIFromDbTask> deleteDAIFromDbTaskCSO;
+    private DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     private DistributedApplianceInstance dai;
     private boolean doesOSHostExist;
     private TaskGraph tg;
+    @IgnoreCompare
+    private OsDAIConformanceCheckMetaTask factory;
+    @IgnoreCompare
+    private AtomicBoolean initDone = new AtomicBoolean();
+
+    private void delayedInit() {
+        if (this.initDone.compareAndSet(false, true)) {
+            this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
+            this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();
+            this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+        }
+    }
+
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
+            this.factory.osDAIUpgradeMetaTaskCSO.ungetService(this.osDAIUpgradeMetaTask);
+            this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
+        }
+    }
 
     public OsDAIConformanceCheckMetaTask create(DistributedApplianceInstance dai, boolean doesOSHostExist) {
         OsDAIConformanceCheckMetaTask task = new OsDAIConformanceCheckMetaTask();
-        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
-        task.osDAIUpgradeMetaTask = this.osDAIUpgradeMetaTask;
+        task.factory = this;
         task.dai = dai;
         task.doesOSHostExist = doesOSHostExist;
         return task;
@@ -73,8 +111,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
         this.tg = new TaskGraph();
-
         OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(
                 DistributedApplianceInstance.class, em);
         this.dai = daiEntityMgr.findByPrimaryKey(this.dai.getId());
@@ -115,7 +153,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                 } else {
                     log.info("Host removed from openstack: " + this.dai.getOsHostName() + "Removing Dai: "
                             + this.dai.getName());
-                    this.tg.appendTask(new DeleteDAIFromDbTask(this.dai));
+                    this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
                 }
             } else {
                 ApplianceSoftwareVersion currentSoftwareVersion = ds.getVirtualSystem().getApplianceSoftwareVersion();
@@ -165,23 +203,21 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                     this.dai.getInspectionEgressMacAddress());
 
             InspectionPortElement inspectionPort = null;
-            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
+            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
                 String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
-                        ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<NetworkElement>(
-                                Arrays.asList(ingressPort)));
-                if (domainId != null){
+                        ds.getVirtualSystem().getVirtualizationConnector(),
+                        new ArrayList<NetworkElement>(Arrays.asList(ingressPort)));
+                if (domainId != null) {
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);
-                    inspectionPort = controller
-                            .getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
+                    inspectionPort = controller.getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
                 } else {
                     log.warn("DomainId is missing, cannot be null");
                 }
 
             } else {
-                inspectionPort = controller
-                        .getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
+                inspectionPort = controller.getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
             }
             return inspectionPort != null;
         } finally {

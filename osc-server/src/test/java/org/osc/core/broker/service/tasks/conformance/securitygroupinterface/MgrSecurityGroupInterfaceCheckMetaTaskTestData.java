@@ -200,8 +200,8 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
 
         TaskGraph tg = new TaskGraph();
-        tg.appendTask(new CreateMgrSecurityGroupInterfaceTask(sgi));
-        tg.appendTask(new DeleteMgrSecurityGroupInterfaceTask(vs, mgrSgi));
+        tg.appendTask(new CreateMgrSecurityGroupInterfaceTask().create(sgi));
+        tg.appendTask(new DeleteMgrSecurityGroupInterfaceTask().create(vs, mgrSgi));
 
         expectedGraph.addTaskGraph(tg);
         expectedGraph.appendTask(createNewUnlockObjectTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -212,7 +212,7 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
 
         TaskGraph tg = new TaskGraph();
-        tg.appendTask(new UpdateMgrSecurityGroupInterfaceTask(sgi));
+        tg.appendTask(new UpdateMgrSecurityGroupInterfaceTask().create(sgi));
 
         expectedGraph.addTaskGraph(tg);
         expectedGraph.appendTask(createNewUnlockObjectTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -223,7 +223,7 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
 
         TaskGraph tg = new TaskGraph();
-        tg.appendTask(new DeleteMgrSecurityGroupInterfaceTask(vs, mgrSgi));
+        tg.appendTask(new DeleteMgrSecurityGroupInterfaceTask().create(vs, mgrSgi));
 
         expectedGraph.addTaskGraph(tg);
         expectedGraph.appendTask(createNewUnlockObjectTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -234,9 +234,9 @@ public class MgrSecurityGroupInterfaceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
 
         TaskGraph tg = new TaskGraph();
-        tg.appendTask(new CreateMgrSecurityGroupInterfaceTask(sgi));
-        tg.appendTask(new DeleteMgrSecurityGroupInterfaceTask(vs, MGR_SGI));
-        tg.appendTask(new DeleteMgrSecurityGroupInterfaceTask(vs, MGR_SGI_TO_BE_DELETED));
+        tg.appendTask(new CreateMgrSecurityGroupInterfaceTask().create(sgi));
+        tg.appendTask(new DeleteMgrSecurityGroupInterfaceTask().create(vs, MGR_SGI));
+        tg.appendTask(new DeleteMgrSecurityGroupInterfaceTask().create(vs, MGR_SGI_TO_BE_DELETED));
 
         expectedGraph.addTaskGraph(tg);
         expectedGraph.appendTask(createNewUnlockObjectTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);

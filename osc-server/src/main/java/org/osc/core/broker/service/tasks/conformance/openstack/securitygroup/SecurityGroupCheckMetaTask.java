@@ -31,14 +31,23 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = SecurityGroupCheckMetaTask.class)
 public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
+
+    @Reference
+    MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
 
     private SecurityGroup sg;
     private TaskGraph tg;
 
-    public SecurityGroupCheckMetaTask(SecurityGroup sg) {
-        this.sg = sg;
+    public SecurityGroupCheckMetaTask create(SecurityGroup sg) {
+        SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask();
+        task.mgrSecurityGroupInterfacesCheckMetaTask = this.mgrSecurityGroupInterfacesCheckMetaTask;
+        task.sg = sg;
+        return task;
     }
 
     @Override
@@ -54,7 +63,7 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
                     this.sg.getId());
             for (VirtualSystem vs : referencedVs) {
                 if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {
-                    this.tg.appendTask(new MgrSecurityGroupInterfacesCheckMetaTask(vs),
+                    this.tg.appendTask(this.mgrSecurityGroupInterfacesCheckMetaTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 }
             }

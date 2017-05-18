@@ -23,6 +23,7 @@ import java.text.MessageFormat;
 import org.apache.commons.lang.NullArgumentException;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskNode;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 
 /**
  *  Encapsulates the functionality for comparing task nodes.
@@ -65,7 +66,7 @@ public class TaskNodeComparer {
         }
 
         for (Field t1Field : t1Fields) {
-            if (!Modifier.isFinal(t1Field.getModifiers())) {
+            if (!Modifier.isFinal(t1Field.getModifiers()) && (t1Field.getAnnotation(IgnoreCompare.class) == null)) {
                 t1Field.setAccessible(true);
                 Object t1FieldValue = t1Field.get(t1);
 
@@ -78,7 +79,8 @@ public class TaskNodeComparer {
                 }
 
                 if (t1FieldValue == null || !t1FieldValue.equals(t2FieldValue)) {
-                    throw new IllegalStateException(MessageFormat.format("The task {0} has the field {1} with value {2}, but the expected value was {3}",
+                    throw new IllegalStateException(MessageFormat.format(
+                            "The task {0} has the field {1} with value {2}, but the expected value was {3}",
                             t1.getName(), t1Field.getName(), t1FieldValue, t2FieldValue));
                 }
             }

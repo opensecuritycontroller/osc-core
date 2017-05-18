@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -26,14 +27,45 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
+import org.osgi.service.component.ComponentServiceObjects;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
-class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
+@Component(service = DeleteSvaServerAndDAIMetaTask.class)
+public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
+
+    // optional+dynamic to break circular DS dependency
+    // TODO: remove circularity and use mandatory references
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<DeleteDAIFromDbTask> deleteDAIFromDbTaskCSO;
+    private DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     private DistributedApplianceInstance dai;
-    private final String region;
+    private String region;
     private TaskGraph tg;
+    @IgnoreCompare
+    private DeleteSvaServerAndDAIMetaTask factory;
+    @IgnoreCompare
+    private AtomicBoolean initDone = new AtomicBoolean();
+
+    private void delayedInit() {
+        if (this.initDone.compareAndSet(false, true)) {
+            this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+        }
+    }
+
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
+        }
+    }
 
     /**
      * Deletes the SVA associated with the DAI from openstack and deletes the DAI from the DB
@@ -46,13 +78,17 @@ class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
      *            the dai id
      * @param osEndPoint
      */
-    public DeleteSvaServerAndDAIMetaTask(String region, DistributedApplianceInstance dai) {
-        this.region = region;
-        this.dai = dai;
+    public DeleteSvaServerAndDAIMetaTask create(String region, DistributedApplianceInstance dai) {
+        DeleteSvaServerAndDAIMetaTask task = new DeleteSvaServerAndDAIMetaTask();
+        task.factory = this;
+        task.region = region;
+        task.dai = dai;
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
         this.tg = new TaskGraph();
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
 
@@ -66,7 +102,8 @@ class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         if (this.dai.getFloatingIpId() != null) {
             this.tg.appendTask(new OsSvaDeleteFloatingIpTask(this.dai));
         }
-        this.tg.appendTask(new DeleteDAIFromDbTask(this.dai));
+
+        this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
     }
 
     @Override

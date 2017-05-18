@@ -35,19 +35,20 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
         implements SyncSecurityGroupServiceApi {
 
-//    @Reference
-//    private ApiUtil apiUtil;
+    @Reference
+    private ConformService conformService;
 
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
         SecurityGroup securityGroup = validateAndLoad(request, em);
 
-        Job job = ConformService.startSecurityGroupConformanceJob(em, securityGroup, null, false);
+        Job job = this.conformService.startSecurityGroupConformanceJob(em, securityGroup, null, false);
 
         return new BaseJobResponse(job.getId());
     }

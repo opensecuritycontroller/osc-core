@@ -59,7 +59,7 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
                 try {
                     HibernateUtil.getTransactionControl().required(() -> {
                         if (this.entity instanceof SecurityGroup) {
-                            ConformService.startSecurityGroupConformanceJob((SecurityGroup) this.entity);
+                            this.conformService.startSecurityGroupConformanceJob((SecurityGroup) this.entity);
                         }
 
                         if (this.entity instanceof DeploymentSpec) {

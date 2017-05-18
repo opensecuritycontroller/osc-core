@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -45,11 +46,16 @@ import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 @Component(service = DSUpdateOrDeleteMetaTask.class)
 public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
@@ -59,22 +65,52 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
-    @Reference
+    // optional+dynamic to break circular DS dependency
+    // TODO: remove circularity and use mandatory references
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<OsSvaCreateMetaTask> osSvaCreateMetaTaskCSO;
     OsSvaCreateMetaTask osSvaCreateMetaTask;
 
-    @Reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<OsDAIConformanceCheckMetaTask> osDAIConformanceCheckMetaTaskCSO;
     OsDAIConformanceCheckMetaTask osDAIConformanceCheckMetaTask;
+
+    @Reference
+    DeleteSvaServerAndDAIMetaTask deleteSvaServerAndDAIMetaTask;
 
     private DeploymentSpec ds;
     private Endpoint endPoint;
     private TaskGraph tg;
     private JCloudNova novaApi;
+    @IgnoreCompare
+    private DSUpdateOrDeleteMetaTask factory;
+    @IgnoreCompare
+    private AtomicBoolean initDone = new AtomicBoolean();
+
+    private void delayedInit() {
+        if (this.initDone.compareAndSet(false, true)) {
+            this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
+            // allow for test injection
+            this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO != null
+                    ? this.factory.osSvaCreateMetaTaskCSO.getService() : this.factory.osSvaCreateMetaTask;
+            this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO != null
+                    ? this.factory.osDAIConformanceCheckMetaTaskCSO.getService()
+                    : this.factory.osDAIConformanceCheckMetaTask;
+            this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
+        }
+    }
+
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
+            this.factory.osDAIConformanceCheckMetaTaskCSO.ungetService(this.osDAIConformanceCheckMetaTask);
+        }
+    }
 
     public DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, Endpoint endPoint) {
         DSUpdateOrDeleteMetaTask task = new DSUpdateOrDeleteMetaTask();
-        task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
-        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
-        task.osDAIConformanceCheckMetaTask = this.osDAIConformanceCheckMetaTask;
+        task.factory = this;
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
@@ -89,8 +125,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
         this.tg = new TaskGraph();
-
         OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
         this.ds = emgr.findByPrimaryKey(this.ds.getId());
         VirtualSystem virtualSystem = this.ds.getVirtualSystem();
@@ -98,7 +134,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 || virtualSystem.getDistributedAppliance().getMarkedForDeletion()) {
             log.info("DS " + this.ds.getName() + " marked for deletion, deleting DS");
             for (DistributedApplianceInstance dai : this.ds.getDistributedApplianceInstances()) {
-                this.tg.addTask(new DeleteSvaServerAndDAIMetaTask(this.ds.getRegion(), dai));
+                this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
             }
             if (this.ds.getOsSecurityGroupReference() != null) {
                 this.tg.appendTask(new DeleteOsSecurityGroupTask(this.ds, this.ds.getOsSecurityGroupReference()));
@@ -212,7 +248,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             } else {
                 // Remove any extra sva/DAI
                 log.info("Removing DAI/SVA: " + dai.getName() + " for host: " + daiHostName);
-                this.tg.addTask(new DeleteSvaServerAndDAIMetaTask(this.ds.getRegion(), dai));
+                this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
             }
         }
 
@@ -223,6 +259,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     HostAzInfo hostInfo = hostAvailabilityZoneMap.getHostAvailibilityZoneInfo(host);
                     String hostName = hostInfo.getHostName();
                     String availabilityZone = hostInfo.getAvailabilityZone();
+
                     this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostName, availabilityZone));
                 } catch (VmidcException vmidcException) {
                     this.tg.addTask(new FailedWithObjectInfoTask(String.format(
@@ -317,7 +354,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     .listByDsIdAndAvailabilityZone(em, this.ds.getId(), unconformedAz);
             if (daisInZone != null) {
                 for (DistributedApplianceInstance dai : daisInZone) {
-                    this.tg.addTask(new DeleteSvaServerAndDAIMetaTask(this.ds.getRegion(), dai));
+                    this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
                 }
             }
         }

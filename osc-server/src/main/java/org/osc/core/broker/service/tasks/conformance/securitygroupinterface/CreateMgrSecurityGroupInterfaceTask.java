@@ -23,20 +23,28 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = CreateMgrSecurityGroupInterfaceTask.class)
 public class CreateMgrSecurityGroupInterfaceTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(CreateMgrSecurityGroupInterfaceTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private SecurityGroupInterface securityGroupInterface;
 
-    public CreateMgrSecurityGroupInterfaceTask(SecurityGroupInterface securityGroup) {
-
-        this.securityGroupInterface = securityGroup;
-        this.name = getName();
+    public CreateMgrSecurityGroupInterfaceTask create(SecurityGroupInterface securityGroup) {
+        CreateMgrSecurityGroupInterfaceTask task = new CreateMgrSecurityGroupInterfaceTask();
+        task.apiFactoryService = this.apiFactoryService;
+        task.securityGroupInterface = securityGroup;
+        task.name = task.getName();
+        return task;
     }
 
     @Override
@@ -45,7 +53,7 @@ public class CreateMgrSecurityGroupInterfaceTask extends TransactionalTask {
         this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
 
-        ManagerSecurityGroupInterfaceApi mgrApi = ManagerApiFactory
+        ManagerSecurityGroupInterfaceApi mgrApi = this.apiFactoryService
                 .createManagerSecurityGroupInterfaceApi(this.securityGroupInterface.getVirtualSystem());
         try {
             String mgrSecurityGroupId = mgrApi.createSecurityGroupInterface(this.securityGroupInterface.getName(),
