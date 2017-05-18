@@ -30,7 +30,7 @@ public class BaseTask implements Task {
 
     @Override
     public String getName() {
-        return name;
+        return this.name;
     }
 
     @Override
@@ -39,12 +39,16 @@ public class BaseTask implements Task {
 
     @Override
     public String toString() {
-        return "BaseTask [name=" + name + "]";
+        return "BaseTask [name=" + this.name + "]";
     }
 
     @Override
     public Set<LockObjectReference> getObjects() {
         return null;
+    }
+
+    @Override
+    public void cleanup() {
     }
 
 }

@@ -57,6 +57,10 @@ public class UnlockObjectMetaTask implements MetaTask {
         return "Unlock objects";
     }
 
+    @Override
+    public void cleanup() {
+    }
+
     /**
      * Gets the lock object references held by the tasks within this meta task
      */

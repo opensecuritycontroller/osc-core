@@ -61,4 +61,8 @@ public abstract class TransactionalMetaTask implements MetaTask {
         return "[" + this.name + "]";
     }
 
+    @Override
+    public void cleanup() {
+    }
+
 }
