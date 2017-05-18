@@ -155,9 +155,9 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
     @Activate
     void activate() {
-        createView("Virtualization Connector",
+        createView("Virtualization Connectors",
                 Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE, ToolbarButtons.CONFORM_VC),
-                "Security Group",
+                "Security Groups",
                 Arrays.asList(ToolbarButtons.ADD_CHILD, ToolbarButtons.EDIT_CHILD, ToolbarButtons.DELETE_CHILD,
                         ToolbarButtons.BIND_SECURITY_GROUP, ToolbarButtons.CONFORM));
     }
