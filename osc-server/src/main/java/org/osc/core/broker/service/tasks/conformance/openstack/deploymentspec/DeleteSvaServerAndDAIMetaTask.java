@@ -51,6 +51,7 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     @IgnoreCompare
     private DeleteSvaServerAndDAIMetaTask factory;
+    @IgnoreCompare
     private AtomicBoolean initDone = new AtomicBoolean();
 
     private void delayedInit() {

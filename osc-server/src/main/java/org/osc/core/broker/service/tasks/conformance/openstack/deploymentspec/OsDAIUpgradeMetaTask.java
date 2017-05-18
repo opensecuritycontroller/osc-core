@@ -58,6 +58,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     @IgnoreCompare
     private OsDAIUpgradeMetaTask factory;
+    @IgnoreCompare
     private AtomicBoolean initDone = new AtomicBoolean();
 
     private void delayedInit() {

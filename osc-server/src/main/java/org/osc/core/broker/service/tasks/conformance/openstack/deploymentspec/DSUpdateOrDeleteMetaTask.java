@@ -84,6 +84,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private JCloudNova novaApi;
     @IgnoreCompare
     private DSUpdateOrDeleteMetaTask factory;
+    @IgnoreCompare
     private AtomicBoolean initDone = new AtomicBoolean();
 
     private void delayedInit() {

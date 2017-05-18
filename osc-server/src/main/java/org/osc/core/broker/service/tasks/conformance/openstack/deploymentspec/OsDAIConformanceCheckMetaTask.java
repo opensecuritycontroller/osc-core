@@ -81,6 +81,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     @IgnoreCompare
     private OsDAIConformanceCheckMetaTask factory;
+    @IgnoreCompare
     private AtomicBoolean initDone = new AtomicBoolean();
 
     private void delayedInit() {
