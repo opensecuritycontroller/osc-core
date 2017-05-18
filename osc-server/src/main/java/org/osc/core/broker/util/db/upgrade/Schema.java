@@ -16,20 +16,21 @@
  *******************************************************************************/
 package org.osc.core.broker.util.db.upgrade;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.archive.FreqType;
-import org.osc.core.broker.model.entities.archive.ThresholdType;
-import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.osc.core.broker.model.entities.archive.FreqType;
+import org.osc.core.broker.model.entities.archive.ThresholdType;
+import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Schema: this class will help create our vmiDC database schema and generate
@@ -1221,8 +1222,8 @@ public class Schema {
 //    }
 
     @SuppressFBWarnings(value = "SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
-    public static void createSchema() throws SQLException, KeyStoreProviderException, IOException, InterruptedException, VmidcException {
-        try (Connection connection = HibernateUtil.getSQLConnection();
+    public static void createSchema(DBConnectionManager mgr) throws SQLException, KeyStoreProviderException, IOException, InterruptedException, VmidcException {
+        try (Connection connection = mgr.getSQLConnection();
              Statement stmt = connection.createStatement()) {
 
         	connection.setAutoCommit(false);

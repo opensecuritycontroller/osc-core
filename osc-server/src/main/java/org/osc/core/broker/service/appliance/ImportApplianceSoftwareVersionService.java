@@ -90,7 +90,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                 appliance.setModel(imageMetadata.getModel());
                 appliance.setManagerSoftwareVersion(imageMetadata.getManagerVersion());
 
-                OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em);
+                OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em, this.txBroadcastUtil);
 
                 appliance = applianceEntityManager.create(appliance);
             } else {
@@ -152,7 +152,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                 asvDto.setAdditionalNicForInspection(imageMetadata.hasAdditionalNicForInspection());
 
                 OSCEntityManager<ApplianceSoftwareVersion> emgr = new OSCEntityManager<ApplianceSoftwareVersion>(
-                        ApplianceSoftwareVersion.class, em);
+                        ApplianceSoftwareVersion.class, em, this.txBroadcastUtil);
 
                 // creating new entry in the db using entity manager object
                 av = ApplianceSoftwareVersionEntityMgr.createEntity(em, asvDto, appliance);
@@ -173,13 +173,13 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                     av.setDiskSizeInGb(imageMetadata.getDiskSizeInGb());
                     av.getImageProperties().clear();
                     av.getConfigProperties().clear();
-                    OSCEntityManager.update(em, av);
+                    OSCEntityManager.update(em, av, this.txBroadcastUtil);
                     em.flush();
 
                     av.getImageProperties().putAll(imageMetadata.getImageProperties());
                     av.getConfigProperties().putAll(imageMetadata.getConfigProperties());
 
-                    OSCEntityManager.update(em, av);
+                    OSCEntityManager.update(em, av, this.txBroadcastUtil);
                 } else {
                     throw new VmidcBrokerValidationException(
                             "The composite key of Appliance Software Version, Virtualization Type, and Virtualization Software Version already exists.");

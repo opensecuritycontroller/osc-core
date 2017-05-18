@@ -40,7 +40,7 @@ public class ListAlertService extends ServiceDispatcher<BaseRequest<BaseDto>, Li
     public ListResponse<AlertDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
 
         // Initializing Entity Manager
-        OSCEntityManager<Alert> emgr = new OSCEntityManager<Alert>(Alert.class, em);
+        OSCEntityManager<Alert> emgr = new OSCEntityManager<Alert>(Alert.class, em, this.txBroadcastUtil);
 
         List<AlertDto> alertList = new ArrayList<AlertDto>();
 

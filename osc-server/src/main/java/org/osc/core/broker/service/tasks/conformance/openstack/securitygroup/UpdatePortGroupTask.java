@@ -32,17 +32,24 @@ import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.Op
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
+import org.osgi.service.component.annotations.Component;
 
-class UpdatePortGroupTask  extends TransactionalTask{
+@Component(service=UpdatePortGroupTask.class)
+public class UpdatePortGroupTask  extends TransactionalTask{
     private static final Logger LOG = Logger.getLogger(UpdatePortGroupTask.class);
 
 
     private SecurityGroup securityGroup;
     private PortGroup portGroup;
 
-    public UpdatePortGroupTask(SecurityGroup sg, PortGroup portGroup) {
-        this.securityGroup = sg;
-        this.portGroup = portGroup;
+    public UpdatePortGroupTask create(SecurityGroup sg, PortGroup portGroup) {
+        UpdatePortGroupTask task = new UpdatePortGroupTask();
+        task.securityGroup = sg;
+        task.portGroup = portGroup;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

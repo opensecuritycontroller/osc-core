@@ -40,7 +40,8 @@ import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -69,6 +70,15 @@ public class WebSocketRunner implements BroadcastListener {
     @Reference
     private ApiFactoryService apiFactoryService;
 
+    @Reference
+    private DBConnectionManager dbConnectionManager;
+
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    private AlertGenerator alertGenerator;
+
     private ServiceRegistration<BroadcastListener> registration;
 
     @Activate
@@ -78,10 +88,10 @@ public class WebSocketRunner implements BroadcastListener {
         this.registration = ctx.registerService(BroadcastListener.class, this, null);
 
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            HibernateUtil.getTransactionControl().required(() -> {
+            EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+            this.dbConnectionManager.getTransactionControl().required(() -> {
                 OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
-                        ApplianceManagerConnector.class, em);
+                        ApplianceManagerConnector.class, em, this.txBroadcastUtil);
                 this.amcs.addAll(emgr.listAll());
 
                 return null;
@@ -130,7 +140,7 @@ public class WebSocketRunner implements BroadcastListener {
 
                 } catch (Exception e) {
                     log.error("Exception during initializing web socket clients", e);
-                    AlertGenerator.processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
+                    WebSocketRunner.this.alertGenerator.processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
                             new LockObjectReference(mc), "Failed to initialize Manager notification client for '"
                                     + mc.getName() + "' (" + e.getMessage() + ")");
                 }
@@ -161,8 +171,8 @@ public class WebSocketRunner implements BroadcastListener {
         try {
             if (msg.getReceiver().equals("ApplianceManagerConnector")) {
                 if (msg.getEventType() != EventType.DELETED) {
-                    EntityManager em = HibernateUtil.getTransactionalEntityManager();
-                    mc = HibernateUtil.getTransactionControl().required(() ->
+                    EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+                    mc = this.dbConnectionManager.getTransactionControl().required(() ->
                             ApplianceManagerConnectorEntityMgr.findById(em, msg.getEntityId()));
                 } else {
                     mc = new ApplianceManagerConnector();

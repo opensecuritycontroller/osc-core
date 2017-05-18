@@ -60,7 +60,7 @@ public class OsImageCheckMetaTaskTestData {
 
         TaskGraph expectedGraph = new TaskGraph();
 
-        expectedGraph.appendTask(new UploadImageToGlanceTask(vs, REGION, expectedGlanceImageName, applianceSoftwareVersion, null),
+        expectedGraph.appendTask(new UploadImageToGlanceTask().create(vs, REGION, expectedGlanceImageName, applianceSoftwareVersion, null),
                 TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -77,9 +77,9 @@ public class OsImageCheckMetaTaskTestData {
         Set<OsImageReference> imageReferences = vs.getOsImageReference();
         for(OsImageReference imageReference: imageReferences) {
             region = imageReference.getRegion();
-            expectedGraph.appendTask(new DeleteImageReferenceTask(imageReference, vs));
+            expectedGraph.appendTask(new DeleteImageReferenceTask().create(imageReference, vs));
         }
-        expectedGraph.appendTask(new UploadImageToGlanceTask(vs, region, expectedGlanceImageName, applianceSoftwareVersion, null),
+        expectedGraph.appendTask(new UploadImageToGlanceTask().create(vs, region, expectedGlanceImageName, applianceSoftwareVersion, null),
                 TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -96,9 +96,9 @@ public class OsImageCheckMetaTaskTestData {
         Set<OsImageReference> imageReferences = vs.getOsImageReference();
         for(OsImageReference imageReference: imageReferences) {
             region = imageReference.getRegion();
-            expectedGraph.appendTask(new DeleteImageFromGlanceTask(imageReference.getRegion(), imageReference, null));
+            expectedGraph.appendTask(new DeleteImageFromGlanceTask().create(imageReference.getRegion(), imageReference, null));
         }
-        expectedGraph.appendTask(new UploadImageToGlanceTask(vs, region,
+        expectedGraph.appendTask(new UploadImageToGlanceTask().create(vs, region,
                 expectedGlanceImageName, applianceSoftwareVersion, null), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -115,12 +115,12 @@ public class OsImageCheckMetaTaskTestData {
         Set<OsImageReference> imageReferences = vs.getOsImageReference();
         for(OsImageReference imageReference: imageReferences) {
             if(imageReference.getImageRefId().equals(REF_ID_TWO)) {
-                expectedGraph.appendTask(new DeleteImageFromGlanceTask(imageReference.getRegion(), imageReference, null));
+                expectedGraph.appendTask(new DeleteImageFromGlanceTask().create(imageReference.getRegion(), imageReference, null));
             } else {
-                expectedGraph.appendTask(new DeleteImageReferenceTask(imageReference, vs));
+                expectedGraph.appendTask(new DeleteImageReferenceTask().create(imageReference, vs));
             }
         }
-        expectedGraph.appendTask(new UploadImageToGlanceTask(vs, region,
+        expectedGraph.appendTask(new UploadImageToGlanceTask().create(vs, region,
                 expectedGlanceImageName, applianceSoftwareVersion, null), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return expectedGraph;
@@ -129,7 +129,7 @@ public class OsImageCheckMetaTaskTestData {
     public static TaskGraph updateVSWithImageVersionGraph(VirtualSystem vs) {
         TaskGraph expectedGraph = new TaskGraph();
 
-        expectedGraph.appendTask(new UpdateVsWithImageVersionTask(vs));
+        expectedGraph.appendTask(new UpdateVsWithImageVersionTask().create(vs));
 
         return expectedGraph;
     }

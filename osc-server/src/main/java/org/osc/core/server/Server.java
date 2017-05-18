@@ -49,7 +49,9 @@ import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
 import org.osc.core.broker.util.PasswordUtil;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.rest.client.RestBaseClient;
@@ -151,6 +153,18 @@ public class Server implements ServerApi {
     @Reference
     private EncryptionApi encryption;
 
+    @Reference
+    private DBConnectionParameters dbParams;
+
+    @Reference
+    private DBConnectionManager dbMgr;
+
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    private AlertGenerator alertGenerator;
+
     private Thread thread;
 
     @Activate
@@ -206,9 +220,9 @@ public class Server implements ServerApi {
 
             ManagerApiFactory.init();
             SdnControllerApiFactory.init();
-            ReleaseUpgradeMgr.initDb(this.encryption);
-            DatabaseUtils.createDefaultDB();
-            DatabaseUtils.markRunningJobAborted();
+            ReleaseUpgradeMgr.initDb(this.encryption, this.dbParams, this.dbMgr);
+            DatabaseUtils.createDefaultDB(this.dbMgr, this.txBroadcastUtil);
+            DatabaseUtils.markRunningJobAborted(this.dbMgr, this.txBroadcastUtil);
 
             this.passwordUtil.initPasswordFromDb(RestConstants.VMIDC_NSX_LOGIN);
             this.passwordUtil.initPasswordFromDb(RestConstants.OSC_DEFAULT_LOGIN);
@@ -228,10 +242,10 @@ public class Server implements ServerApi {
                     String timeDifferenceString = DurationFormatUtils.formatDuration(Math.abs(timeDifference),
                             "d 'Days' H 'Hours' m 'Minutes' s 'Seconds'");
                     if (timeDifference < 0) {
-                        AlertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
+                        Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
                                 "System Clock Moved Back by " + timeDifferenceString);
                     } else {
-                        AlertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
+                        Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
                                 "System Clock Moved Forward by " + timeDifferenceString);
                     }
                     stopScheduler();
@@ -443,9 +457,6 @@ public class Server implements ServerApi {
 
         // gracefully closing all RabbitMQ clients before shutting down server
         shutdownRabbitMq();
-
-        // Ensure to close database
-        HibernateUtil.shutdown();
 
         // Gracefully closing all web socket clients before shutting down server
         shutdownWebsocket();

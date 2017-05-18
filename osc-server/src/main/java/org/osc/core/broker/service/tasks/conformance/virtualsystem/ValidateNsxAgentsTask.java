@@ -56,6 +56,9 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
         task.mgrDeleteMemberDeviceTask = this.mgrDeleteMemberDeviceTask;
         task.vs = vs;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -94,7 +97,7 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
                     dai.setNsxHostVsmUuid(agent.getHostVsmId());
                     dai.setMgmtGateway(agent.getGateway());
                     dai.setMgmtSubnetPrefixLength(agent.getSubnetPrefixLength());
-                    OSCEntityManager.update(em, dai);
+                    OSCEntityManager.update(em, dai, this.txBroadcastUtil);
                 }
                 this.nsxUpdateAgentsService.updateNsxAgentInfo(em, dai, agent);
             }
@@ -103,7 +106,7 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
         // Delete any DAIs deemed invalid
         for (DistributedApplianceInstance dai : daiToBeDeleted) {
             this.vs.removeDistributedApplianceInstance(dai);
-            OSCEntityManager.delete(em, dai);
+            OSCEntityManager.delete(em, dai, this.txBroadcastUtil);
         }
     }
 

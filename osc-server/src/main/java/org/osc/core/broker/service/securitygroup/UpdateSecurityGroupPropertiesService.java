@@ -56,7 +56,7 @@ public class UpdateSecurityGroupPropertiesService extends UpdateSecurityGroupSer
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
             log.info("Updating SecurityGroup properties: " + securityGroup.toString());
-            OSCEntityManager.update(em, securityGroup);
+            OSCEntityManager.update(em, securityGroup, this.txBroadcastUtil);
 
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {

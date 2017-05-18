@@ -26,6 +26,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.element.AgentElement;
@@ -53,7 +54,7 @@ public class NsxAgentsJob implements Job {
             HibernateUtil.getTransactionControl().required(() -> {
 
                 OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
-                        DistributedAppliance.class, em);
+                        DistributedAppliance.class, em, StaticRegistry.transactionalBroadcastUtil());
                 for (DistributedAppliance da : emgr.listAll()) {
                     for (VirtualSystem vs : da.getVirtualSystems()) {
                         AgentApi agentApi = apiFactoryService.createAgentApi(vs);
@@ -72,7 +73,7 @@ public class NsxAgentsJob implements Job {
                             }
                             if (tgtAgent == null) {
                                 vs.removeDistributedApplianceInstance(dai);
-                                OSCEntityManager.delete(em, dai);
+                                OSCEntityManager.delete(em, dai, StaticRegistry.transactionalBroadcastUtil());
                             } else {
                                 dai.setNsxAgentId(tgtAgent.getId());
                                 dai.setNsxHostId(tgtAgent.getHostId());
@@ -82,7 +83,7 @@ public class NsxAgentsJob implements Job {
                                 dai.setMgmtGateway(tgtAgent.getGateway());
                                 dai.setMgmtSubnetPrefixLength(tgtAgent.getSubnetPrefixLength());
 
-                                OSCEntityManager.update(em, dai);
+                                OSCEntityManager.update(em, dai, StaticRegistry.transactionalBroadcastUtil());
                             }
                         }
                     }

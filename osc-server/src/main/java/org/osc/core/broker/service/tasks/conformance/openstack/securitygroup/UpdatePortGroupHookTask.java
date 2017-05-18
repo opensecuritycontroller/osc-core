@@ -27,6 +27,7 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * This task is responsible for updating a inspection hook for a given
@@ -36,11 +37,24 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
  * This task is applicable to SGIs whose virtual system refers to an SDN
  * controller that supports port groups.
  */
+@Component(service = UpdatePortGroupHookTask.class)
 public final class UpdatePortGroupHookTask extends BasePortGroupHookTask {
     private static final Logger LOG = Logger.getLogger(UpdatePortGroupHookTask.class);
 
-    public UpdatePortGroupHookTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+    public UpdatePortGroupHookTask(){
+        super(null, null);
+    }
+
+    private UpdatePortGroupHookTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
         super(sgi, dai);
+    }
+
+    public UpdatePortGroupHookTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+        UpdatePortGroupHookTask task = new UpdatePortGroupHookTask(sgi, dai);
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

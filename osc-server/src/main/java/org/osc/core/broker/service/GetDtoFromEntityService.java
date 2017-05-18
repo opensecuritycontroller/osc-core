@@ -197,7 +197,7 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
 
     private <T extends IscEntity> T getEntity(Long entityId, String entityName, Class<T> clazz, EntityManager em)
             throws VmidcBrokerValidationException {
-        OSCEntityManager<T> emgr = new OSCEntityManager<T>(clazz, em);
+        OSCEntityManager<T> emgr = new OSCEntityManager<T>(clazz, em, this.txBroadcastUtil);
         T entity = emgr.findByPrimaryKey(entityId);
         if (entity == null) {
             throw new VmidcBrokerValidationException(entityName + " entry with ID " + entityId + " is not found.");

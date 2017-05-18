@@ -40,7 +40,7 @@ public class AddAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>, Ba
     public BaseResponse exec(BaseRequest<AlarmDto> request, EntityManager em) throws Exception {
 
         // Initializing Entity Manager
-        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
+        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em, this.txBroadcastUtil);
 
         // this validate function will throw exception if entry is not unique,
         // has empty fields, violates correct formatting or exceeds maximum allowed length

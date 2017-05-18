@@ -36,17 +36,23 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.SecurityGroupMemberElement;
 import org.osc.sdk.manager.element.SecurityGroupMemberListElement;
-
-class CreateMgrSecurityGroupTask extends TransactionalTask {
+import org.osgi.service.component.annotations.Component;
+@Component(service=CreateMgrSecurityGroupTask.class)
+public class CreateMgrSecurityGroupTask extends TransactionalTask {
     //private static final Logger log = Logger.getLogger(CreateMgrEndpointGroupTask.class);
 
     private SecurityGroup sg;
     private VirtualSystem vs;
 
-    public CreateMgrSecurityGroupTask(VirtualSystem vs, SecurityGroup sg) {
-        this.vs = vs;
-        this.sg = sg;
-        this.name = getName();
+    public CreateMgrSecurityGroupTask create(VirtualSystem vs, SecurityGroup sg) {
+        CreateMgrSecurityGroupTask task = new CreateMgrSecurityGroupTask();
+        task.vs = vs;
+        task.sg = sg;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -64,7 +70,7 @@ class CreateMgrSecurityGroupTask extends TransactionalTask {
             String mgrEndpointGroupId = mgrApi.createSecurityGroup(this.sg.getName(), iscId,
                     getSecurityGroupMemberListElement(this.sg));
             this.sg.setMgrId(mgrEndpointGroupId);
-            OSCEntityManager.update(em, this.sg);
+            OSCEntityManager.update(em, this.sg, this.txBroadcastUtil);
 
         } finally {
             mgrApi.close();

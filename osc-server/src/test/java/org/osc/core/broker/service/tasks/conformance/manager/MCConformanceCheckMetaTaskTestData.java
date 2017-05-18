@@ -46,16 +46,16 @@ class MCConformanceCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTaskGraph(createSyncPublicKeyGraph(mc));
 
-        Task syncDomains = new SyncDomainMetaTask(mc);
+        Task syncDomains = new SyncDomainMetaTask().create(mc);
         expectedGraph.addTask(syncDomains);
-        expectedGraph.addTask(new SyncPolicyMetaTask(mc), syncDomains);
+        expectedGraph.addTask(new SyncPolicyMetaTask().create(mc), syncDomains);
         expectedGraph.appendTask(new UnlockObjectTask(new LockObjectReference(mc), LockType.WRITE_LOCK), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         return expectedGraph;
     }
 
     private static TaskGraph createSyncPublicKeyGraph(ApplianceManagerConnector mc) throws Exception {
         TaskGraph tg = new TaskGraph();
-        tg.addTask(new SyncMgrPublicKeyTask(mc, PUBLIC_KEY));
+        tg.addTask(new SyncMgrPublicKeyTask().create(mc, PUBLIC_KEY));
         return tg;
     }
 

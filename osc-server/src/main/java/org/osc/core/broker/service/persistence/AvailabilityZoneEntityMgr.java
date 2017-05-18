@@ -29,8 +29,6 @@ public class AvailabilityZoneEntityMgr {
     }
 
     public static AvailabilityZone findById(EntityManager em, Long id) {
-        // Initializing Entity Manager
-        OSCEntityManager<AvailabilityZone> emgr = new OSCEntityManager<AvailabilityZone>(AvailabilityZone.class, em);
-        return emgr.findByPrimaryKey(id);
+        return em.find(AvailabilityZone.class, id);
     }
 }

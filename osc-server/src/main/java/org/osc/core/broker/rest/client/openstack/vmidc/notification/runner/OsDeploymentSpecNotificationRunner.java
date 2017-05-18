@@ -40,7 +40,8 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -64,6 +65,12 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
     @Reference
     private NotificationListenerFactory notificationListenerFactory;
 
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    private DBConnectionManager dbConnectionManager;
+
     private final Multimap<Long, OsNotificationListener> dsToListenerMap = ArrayListMultimap.create();
     private final HashMap<Long, VirtualizationConnector> dsToVCMap = new HashMap<Long, VirtualizationConnector>();
     private ServiceRegistration<BroadcastListener> registration;
@@ -76,10 +83,10 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         // to activate another instance of this component, only people getting the runner!
         this.registration = ctx.registerService(BroadcastListener.class, this, null);
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            HibernateUtil.getTransactionControl().required(() -> {
+            EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+            this.dbConnectionManager.getTransactionControl().required(() -> {
                 OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class,
-                        em);
+                        em, this.txBroadcastUtil);
                 List<DeploymentSpec> dsList = dsEmgr.listAll();
 
                 for (DeploymentSpec ds : dsList) {
@@ -116,8 +123,8 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
             removeListener(msg.getEntityId());
         } else {
             try {
-                EntityManager em = HibernateUtil.getTransactionalEntityManager();
-                HibernateUtil.getTransactionControl().required(() -> {
+                EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+                this.dbConnectionManager.getTransactionControl().required(() -> {
                     DeploymentSpec ds = DeploymentSpecEntityMgr.findById(em, msg.getEntityId());
                     if (ds != null) {
                         // if DS is deleted after update notification was sent

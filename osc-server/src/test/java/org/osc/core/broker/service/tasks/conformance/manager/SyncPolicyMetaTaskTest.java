@@ -18,28 +18,7 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAINS_WITHOUT_POLICIES_AND_WITH_ORPHAN_POLICIES_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITHOUT_MGR_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITHOUT_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITHOUT_POLICY_2;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITH_MULTIPLE_POLICIES_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.DOMAIN_WITH_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.MGR_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.MGR_POLICY_WITHOUT_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.MGR_POLICY_WITH_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.NO_DOMAIN_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.NO_MGR_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.POLICY_WITHOUT_MGR_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.POLICY_WITH_VS_POLICY_MC;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.VS_POLICY;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.VS_POLICY_1;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.createPolicyGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.deletePoliciesFromDomainGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.deletePolicyGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.emptyGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.removeVendorTemplateAndDeletePolicyGraph;
-import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.updatePolicyGraph;
+import static org.osc.core.broker.service.tasks.conformance.manager.SyncPolicyMetaTaskTestData.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -59,6 +38,7 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.service.tasks.conformance.virtualsystem.RemoveVendorTemplateTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
@@ -140,7 +120,13 @@ public class SyncPolicyMetaTaskTest {
     @Test
     public void testExecuteTransasction_WithVariousManagerConnectors_ExpectsCorrectTaskGraph() throws Exception {
         //Arrange.
-        SyncPolicyMetaTask task = new SyncPolicyMetaTask(this.mc);
+        SyncPolicyMetaTask task = new SyncPolicyMetaTask();
+        task.createPolicyTask = new CreatePolicyTask();
+        task.deletePolicyTask = new DeletePolicyTask();
+        task.updatePolicyTask = new UpdatePolicyTask();
+        task.removeVendorTemplateTask = new RemoveVendorTemplateTask();
+
+        task = task.create(this.mc);
 
         //Act.
         task.executeTransaction(this.em);

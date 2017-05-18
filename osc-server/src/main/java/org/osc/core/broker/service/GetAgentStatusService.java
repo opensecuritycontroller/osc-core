@@ -66,6 +66,9 @@ public class GetAgentStatusService
     private ApiFactoryService apiFactoryService;
 
     @Reference
+    private AlertGenerator alertGenerator;
+
+    @Reference
     private NsxUpdateAgentsService nsxUpdateAgentsService;
 
     @Override
@@ -196,7 +199,7 @@ public class GetAgentStatusService
         // Generate an alert if Appliance Instance Discovery flag changed from 'true' to 'false'
         if (dai.getDiscovered() != null && dai.getDiscovered() && !agentStatus.isDiscovered()) {
             LOG.warn("Generate an alert if Appliance Instance Discovery flag changed from 'true' to 'false'");
-            AlertGenerator.processDaiFailureEvent(DaiFailureType.DAI_STATUS_CHANGE, new LockObjectReference(dai),
+            this.alertGenerator.processDaiFailureEvent(DaiFailureType.DAI_STATUS_CHANGE, new LockObjectReference(dai),
                     "Appliance Instance '" + dai.getName() + "' Discovery flag changed from 'true' to 'false'");
         }
 
@@ -204,7 +207,7 @@ public class GetAgentStatusService
         // Generate an alert if Appliance Instance Inspection Ready flag changed from 'true' to 'false'
         if (dai.getInspectionReady() != null && dai.getInspectionReady() && !agentStatus.isInspectionReady()) {
             LOG.warn("Generate an alert if Appliance Instance Inspection Ready flag changed from 'true' to 'false'");
-            AlertGenerator.processDaiFailureEvent(DaiFailureType.DAI_STATUS_CHANGE, new LockObjectReference(dai),
+            this.alertGenerator.processDaiFailureEvent(DaiFailureType.DAI_STATUS_CHANGE, new LockObjectReference(dai),
                     "Appliance Instance '" + dai.getName() + "' Inspection Ready flag changed from 'true' to 'false'");
         }
 
@@ -220,6 +223,6 @@ public class GetAgentStatusService
         }
 
         // Update DAI to reflect last successful communication
-        OSCEntityManager.update(em, dai);
+        OSCEntityManager.update(em, dai, this.txBroadcastUtil);
     }
 }

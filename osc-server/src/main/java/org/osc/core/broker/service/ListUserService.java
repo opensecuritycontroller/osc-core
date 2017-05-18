@@ -42,7 +42,7 @@ public class ListUserService extends ServiceDispatcher<ListUserRequest, ListResp
     @Override
     public ListResponse<UserDto> exec(ListUserRequest request, EntityManager em) throws Exception {
         // Initializing Entity Manager
-        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em, this.txBroadcastUtil);
         // to do mapping
         List<UserDto> userList = new ArrayList<UserDto>();
 

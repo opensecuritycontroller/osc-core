@@ -33,6 +33,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * This task is responsible for removing all the inspection appliances
@@ -40,14 +41,20 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
  * does not support port group it will also remove orphan inspection hooks
  * in the controller.
  */
-class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
+@Component(service = SecurityGroupMemberAllHooksRemoveTask.class)
+public class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(SecurityGroupMemberAllHooksRemoveTask.class);
 
     private SecurityGroupMember sgm;
 
-    public SecurityGroupMemberAllHooksRemoveTask(SecurityGroupMember sgm) {
-        this.sgm = sgm;
+    public SecurityGroupMemberAllHooksRemoveTask create(SecurityGroupMember sgm) {
+        SecurityGroupMemberAllHooksRemoveTask task = new SecurityGroupMemberAllHooksRemoveTask();
+        task.sgm = sgm;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -86,7 +93,7 @@ class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
                 }
 
                 port.removeAllDais();
-                OSCEntityManager.update(em, port);
+                OSCEntityManager.update(em, port, this.txBroadcastUtil);
             }
         } finally {
             controller.close();

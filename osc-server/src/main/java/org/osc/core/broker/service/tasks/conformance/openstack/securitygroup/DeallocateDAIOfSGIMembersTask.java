@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * This task is responsible for detaching the provided DAI
@@ -28,11 +29,24 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
  * This task is applicable to SGIs whose virtual system refers to an SDN
  * controller that supports port groups.
  */
+@Component(service=DeallocateDAIOfSGIMembersTask.class)
 public class DeallocateDAIOfSGIMembersTask extends UpdateDAIToSGIMembersTask {
     private static final Logger LOG = Logger.getLogger(AllocateDAIWithSGIMembersTask.class);
 
-    public DeallocateDAIOfSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+    public DeallocateDAIOfSGIMembersTask(){
+        super(null, null);
+    }
+
+    private DeallocateDAIOfSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
         super(sgi,dai);
+    }
+
+    public DeallocateDAIOfSGIMembersTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+        DeallocateDAIOfSGIMembersTask task = new DeallocateDAIOfSGIMembersTask(sgi,dai);
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     /**

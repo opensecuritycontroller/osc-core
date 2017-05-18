@@ -40,6 +40,7 @@ import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,6 +50,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
     private EntityManager em;
     private final static String ENCAPSULATION_TYPE_FIELD = "Encapsulation Type";
     private final static String DOMAIN_ID_FIELD = "Domain Id";
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
     @Reference
     ApiFactoryService apiFactoryService;
@@ -64,7 +66,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
         validate(dto);
 
         OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
-                this.em);
+                this.em, this.txBroadcastUtil);
 
         if (emgr.isExisting("name", dto.getName())) {
             throw new VmidcBrokerValidationException("Distributed Appliance Name: " + dto.getName()
@@ -129,7 +131,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
         }
 
         OSCEntityManager<ApplianceManagerConnector> mcMgr = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, this.em);
+                ApplianceManagerConnector.class, this.em, this.txBroadcastUtil);
         ApplianceManagerConnector mc = mcMgr.findByPrimaryKey(dto.getMcId());
 
         if (mc == null) {
@@ -184,7 +186,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
             }
 
             if (isPolicyMappingSupported) {
-                OSCEntityManager<Domain> em = new OSCEntityManager<Domain>(Domain.class, this.em);
+                OSCEntityManager<Domain> em = new OSCEntityManager<Domain>(Domain.class, this.em, this.txBroadcastUtil);
                 Domain domain = em.findByPrimaryKey(vsDto.getDomainId());
 
                 if (domain == null) {

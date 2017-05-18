@@ -43,7 +43,7 @@ abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmRes
     @Override
     public TagVmResponse exec(TagVmRequest request, EntityManager em) throws Exception {
         if (this.validator == null) {
-            this.validator = new TagVmRequestValidator(em);
+            this.validator = new TagVmRequestValidator(em, this.txBroadcastUtil);
         }
 
         DistributedApplianceInstance dai = this.validator.validateAndLoad(request);

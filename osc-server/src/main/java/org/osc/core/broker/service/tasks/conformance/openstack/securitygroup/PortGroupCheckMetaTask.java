@@ -26,19 +26,36 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service=PortGroupCheckMetaTask.class)
 public class PortGroupCheckMetaTask extends TransactionalMetaTask {
     private static final Logger LOG = Logger.getLogger(PortGroupCheckMetaTask.class);
 
+    @Reference
+    CreatePortGroupTask createPortGroupTask;
+
+    @Reference
+    UpdatePortGroupTask updatePortGroupTask;
+
+    @Reference
+    DeletePortGroupTask deletePortGroupTask;
+
     private SecurityGroup securityGroup;
     boolean deleteTg;
-    private final String domainId;
+    private String domainId;
     TaskGraph tg;
 
-    public PortGroupCheckMetaTask(SecurityGroup sg, boolean deleteTg, String domainId) {
-        this.securityGroup = sg;
-        this.deleteTg = deleteTg;
-        this.domainId = domainId;
+    public PortGroupCheckMetaTask create(SecurityGroup sg, boolean deleteTg, String domainId) {
+        PortGroupCheckMetaTask task = new PortGroupCheckMetaTask();
+        task.securityGroup = sg;
+        task.deleteTg = deleteTg;
+        task.domainId = domainId;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -54,12 +71,12 @@ public class PortGroupCheckMetaTask extends TransactionalMetaTask {
 
         if (portGroupId != null) {
             if (this.deleteTg) {
-                this.tg.appendTask(new DeletePortGroupTask(this.securityGroup, portGroup));
+                this.tg.appendTask(this.deletePortGroupTask.create(this.securityGroup, portGroup));
             } else {
-                this.tg.appendTask(new UpdatePortGroupTask(this.securityGroup, portGroup));
+                this.tg.appendTask(this.updatePortGroupTask.create(this.securityGroup, portGroup));
             }
         } else {
-            this.tg.appendTask(new CreatePortGroupTask(this.securityGroup));
+            this.tg.appendTask(this.createPortGroupTask.create(this.securityGroup));
         }
     }
 

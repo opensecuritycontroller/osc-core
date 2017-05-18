@@ -16,27 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.REF_ID_ONE;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.REF_ID_THREE;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.REF_ID_TWO;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.REGION;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.REGION_FIVE;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.REGION_FOUR;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.REGION_ONE;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.REGION_THREE;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.REGION_TWO;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.SINGLE_REF_ID;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.VS_WITHOUT_IMAGE_REFERENCE;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.VS_WITH_IMAGE_WITHOUT_VERSION;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.VS_WITH_INACTIVE_IMAGE_STATUS;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.VS_WITH_MULTIPLE_IMAGES;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.VS_WITH_NULL_IMAGE;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.VS_WITH_UNEXPECTED_IMAGE_NAME;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.deleteImageFromDBAndUploadToGlanceGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.deleteImageFromGlanceAndUploadToGlanceGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.deleteImagesAndUploadToGlance;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.updateVSWithImageVersionGraph;
-import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.uploadImageGraph;
+import static org.osc.core.broker.service.tasks.conformance.openstack.OsImageCheckMetaTaskTestData.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -102,6 +82,10 @@ public class OsImageCheckMetaTaskTest {
     public void testExecuteTransaction_WithVariousVirtualSystems_ExpectsCorrectTaskGraph() throws Exception {
         //Arrange.
         OsImageCheckMetaTask task = new OsImageCheckMetaTask(this.vs, this.region, this.osEndPoint, this.glanceMock);
+        task.uploadImageToGlanceTask = new UploadImageToGlanceTask();
+        task.deleteImageReferenceTask = new DeleteImageReferenceTask();
+        task.deleteImageFromGlanceTask = new DeleteImageFromGlanceTask();
+        task.updateVsWithImageVersionTask = new UpdateVsWithImageVersionTask();
 
         //Act.
         task.executeTransaction(this.em);

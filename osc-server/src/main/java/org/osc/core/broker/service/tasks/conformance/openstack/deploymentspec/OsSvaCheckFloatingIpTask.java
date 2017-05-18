@@ -33,16 +33,23 @@ import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntit
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.InfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
 
-class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
+@Component(service = OsSvaCheckFloatingIpTask.class)
+public class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
 
     private final Logger log = Logger.getLogger(OsSvaCheckFloatingIpTask.class);
 
     private TaskGraph tg;
     private DistributedApplianceInstance dai;
 
-    public OsSvaCheckFloatingIpTask(DistributedApplianceInstance dai) {
-        this.dai = dai;
+    public OsSvaCheckFloatingIpTask create(DistributedApplianceInstance dai) {
+        OsSvaCheckFloatingIpTask task = new OsSvaCheckFloatingIpTask();
+        task.dai = dai;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -81,7 +88,7 @@ class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
                 this.log.info("Dai: " + this.dai + " Ip Address set to: " + allocatedFloatingIp);
                 this.tg.addTask(new InfoTask(infoTaskName, LockObjectReference.getObjectReferences(this.dai)));
 
-                OSCEntityManager.update(em, this.dai);
+                OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
             }
         } finally {
             nova.close();

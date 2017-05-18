@@ -30,20 +30,27 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
 /**
  *
  * Deletes Security Group and removes the SG->SGI mappings
  *
  */
+@Component(service=ForceDeleteSecurityGroupTask.class)
 public class ForceDeleteSecurityGroupTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(ForceDeleteSecurityGroupTask.class);
 
     private SecurityGroup securityGroup;
 
-    public ForceDeleteSecurityGroupTask(SecurityGroup sg) {
-        this.securityGroup = sg;
-        this.name = getName();
+    public ForceDeleteSecurityGroupTask create(SecurityGroup sg) {
+        ForceDeleteSecurityGroupTask task = new ForceDeleteSecurityGroupTask();
+        task.securityGroup = sg;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -67,10 +74,10 @@ public class ForceDeleteSecurityGroupTask extends TransactionalTask {
             // if this SGI is not referred by any other SG then remove this from Database as well.
             if (sgi.getSecurityGroups().isEmpty()) {
                 // delete SGI from Database
-                OSCEntityManager.delete(em, sgi);
+                OSCEntityManager.delete(em, sgi, this.txBroadcastUtil);
             } else {
                 // update SGI entity
-                OSCEntityManager.update(em, sgi);
+                OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
             }
         }
 
@@ -81,39 +88,39 @@ public class ForceDeleteSecurityGroupTask extends TransactionalTask {
             if (sgm.getType().equals(SecurityGroupMemberType.VM)) {
                 for (VMPort port : sgm.getVm().getPorts()) {
                     port.removeAllDais();
-                    OSCEntityManager.delete(em, port);
+                    OSCEntityManager.delete(em, port, this.txBroadcastUtil);
                 }
 
                 // remove VM from database
-                OSCEntityManager.delete(em, sgm.getVm());
+                OSCEntityManager.delete(em, sgm.getVm(), this.txBroadcastUtil);
 
             }
             if (sgm.getType().equals(SecurityGroupMemberType.NETWORK)) {
 
                 for (VMPort port : sgm.getNetwork().getPorts()) {
-                    OSCEntityManager.delete(em, port);
+                    OSCEntityManager.delete(em, port, this.txBroadcastUtil);
                 }
 
                 // remove Network from database
-                OSCEntityManager.delete(em, sgm.getNetwork());
+                OSCEntityManager.delete(em, sgm.getNetwork(), this.txBroadcastUtil);
             }
 
             if (sgm.getType().equals(SecurityGroupMemberType.SUBNET)) {
 
                 for (VMPort port : sgm.getSubnet().getPorts()) {
-                    OSCEntityManager.delete(em, port);
+                    OSCEntityManager.delete(em, port, this.txBroadcastUtil);
                 }
 
                 // remove Network from database
-                OSCEntityManager.delete(em, sgm.getSubnet());
+                OSCEntityManager.delete(em, sgm.getSubnet(), this.txBroadcastUtil);
             }
 
             // remove SGM from database
-            OSCEntityManager.delete(em, sgm);
+            OSCEntityManager.delete(em, sgm, this.txBroadcastUtil);
         }
 
         // delete security group from database
-        OSCEntityManager.delete(em, this.securityGroup);
+        OSCEntityManager.delete(em, this.securityGroup, this.txBroadcastUtil);
     }
 
     @Override

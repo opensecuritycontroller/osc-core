@@ -32,16 +32,23 @@ import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=MCDeleteMetaTask.class)
 public class MCDeleteMetaTask extends TransactionalMetaTask {
     private static final Logger log = Logger.getLogger(MCDeleteMetaTask.class);
 
     private ApplianceManagerConnector mc;
     private TaskGraph tg;
 
-    public MCDeleteMetaTask(ApplianceManagerConnector mc) {
-        this.mc = mc;
-        this.name = getName();
+    public MCDeleteMetaTask create(ApplianceManagerConnector mc) {
+        MCDeleteMetaTask task = new MCDeleteMetaTask();
+        task.mc = mc;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -72,10 +79,10 @@ public class MCDeleteMetaTask extends TransactionalMetaTask {
                 }
             }
 
-            OSCEntityManager<ApplianceManagerConnector> appMgrEntityMgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
+            OSCEntityManager<ApplianceManagerConnector> appMgrEntityMgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
             ApplianceManagerConnector connector = appMgrEntityMgr.findByPrimaryKey(this.mc.getId());
 
-            SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
+            SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             sslCertificateAttrEntityMgr.removeCertificateList(connector.getSslCertificateAttrSet());
 
             appMgrEntityMgr.delete(this.mc.getId());

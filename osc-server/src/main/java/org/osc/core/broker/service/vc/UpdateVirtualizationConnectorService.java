@@ -59,7 +59,6 @@ import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
@@ -85,7 +84,7 @@ public class UpdateVirtualizationConnectorService
 
         BaseDtoValidator.checkForNullId(request.getDto());
 
-        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
+        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
 
         // retrieve existing entry from db
         VirtualizationConnector vc = vcEntityMgr.findByPrimaryKey(request.getDto().getId());
@@ -110,7 +109,7 @@ public class UpdateVirtualizationConnectorService
             vcUnlock = LockUtil.tryLockVC(vc, LockType.WRITE_LOCK);
 
             updateVirtualizationConnector(request, vc);
-            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em);
+            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet().stream()
                     .map(SslCertificateAttrEntityMgr::createEntity)
                     .collect(toSet()),
@@ -124,14 +123,14 @@ public class UpdateVirtualizationConnectorService
                 List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByVcId(em, vc.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(daiId,
+                        this.txBroadcastUtil.addMessageToMap(daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
                 List<Long> vsIds = VirtualSystemEntityMgr.listByVcId(em, vc.getId());
                 if (vsIds != null) {
                     for (Long vsId : vsIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(vsId, VirtualSystem.class.getSimpleName(),
+                        this.txBroadcastUtil.addMessageToMap(vsId, VirtualSystem.class.getSimpleName(),
                                 EventType.UPDATED);
                     }
                 }

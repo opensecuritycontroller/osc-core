@@ -46,15 +46,26 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.validator.AlertDtoValidator;
 import org.osc.core.broker.util.EmailUtil;
 import org.osc.core.broker.util.StaticRegistry;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
-@Component(service  = AlertGeneratorApi.class)
+/**
+ * Types within the osc-server use the AlertGenerator type to process failures
+ */
+@Component(service  = {AlertGenerator.class, AlertGeneratorApi.class})
 public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi {
 
     private static final Logger log = Logger.getLogger(AlertGenerator.class);
+
+    @Reference
+    private DBConnectionManager dbConnectionManager;
+
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
     @Override
     public void completed(Job job) {
@@ -70,31 +81,31 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
         processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION, message);
     }
 
-    public static void processJobFailureEvent(Job job) {
+    public void processJobFailureEvent(Job job) {
         processFailureEvent(job, null, null, new LockObjectReference(job), job.getFailureReason());
     }
 
-    public static void processSystemFailureEvent(SystemFailureType systemFailureType, String message) {
+    public void processSystemFailureEvent(SystemFailureType systemFailureType, String message) {
         processFailureEvent(null, systemFailureType, null, null, message);
     }
 
-    public static void processSystemFailureEvent(SystemFailureType systemFailureType, LockObjectReference object,
+    public void processSystemFailureEvent(SystemFailureType systemFailureType, LockObjectReference object,
             String message) {
         processFailureEvent(null, systemFailureType, null, object, message);
     }
 
-    public static void processDaiFailureEvent(DaiFailureType daiFailureType, LockObjectReference object, String message) {
+    public void processDaiFailureEvent(DaiFailureType daiFailureType, LockObjectReference object, String message) {
         processFailureEvent(null, null, daiFailureType, object, message);
     }
 
-    private static void processFailureEvent(Job job, SystemFailureType systemFailureType,
+    private void processFailureEvent(Job job, SystemFailureType systemFailureType,
             DaiFailureType daiFailureType, LockObjectReference object, String message) {
 
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            TransactionControl txControl = HibernateUtil.getTransactionControl();
+            EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+            TransactionControl txControl = this.dbConnectionManager.getTransactionControl();
             txControl.required(() -> {
-                OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
+                OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em, this.txBroadcastUtil);
 
                 //Iterate all the alarms and look for a regex match. As of now we only support Job Failure event type.
                 //Generate alert for all the matches and perform the defined alarm action if any!
@@ -143,7 +154,7 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
         return p.matcher(match).matches();
     }
 
-    private static void generateAlertAndNotify(EntityManager em, Alarm alarm, LockObjectReference object, String message) {
+    private void generateAlertAndNotify(EntityManager em, Alarm alarm, LockObjectReference object, String message) {
 
         try {
             Alert alert = generateAlert(em, alarm, object, message);
@@ -155,7 +166,7 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
         }
     }
 
-    private static Alert generateAlert(EntityManager em, Alarm alarm, LockObjectReference object, String message)
+    private Alert generateAlert(EntityManager em, Alarm alarm, LockObjectReference object, String message)
             throws Exception {
 
         BaseRequest<AlertDto> request = new BaseRequest<AlertDto>();
@@ -174,16 +185,16 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
         Alert alert = AlertEntityMgr.createEntity(request.getDto());
 
         // creating new entry in the db using entity manager object
-        alert = OSCEntityManager.create(em, alert);
+        alert = OSCEntityManager.create(em, alert, this.txBroadcastUtil);
 
         log.info("Adding new alert - " + alert.getName());
 
         return alert;
     }
 
-    private static void processEmailFailure(EntityManager em, LockObjectReference object,
+    private void processEmailFailure(EntityManager em, LockObjectReference object,
             SystemFailureType systemFailureType, String message) {
-        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
+        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em, this.txBroadcastUtil);
         for (Alarm alarm : emgr.listAll()) {
             if (alarm.isEnabled() && alarm.getEventType().equals(EventType.SYSTEM_FAILURE)
                     && isMatchAlarm(alarm.getRegexMatch(), systemFailureType.toString())) {
@@ -199,7 +210,7 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
         }
     }
 
-    private static void sendEmail(EntityManager em, Alarm alarm, Alert alert, String message) {
+    private void sendEmail(EntityManager em, Alarm alarm, Alert alert, String message) {
 
         EmailSettings emailSettings = em.find(EmailSettings.class, 1L);
 

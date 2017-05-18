@@ -35,24 +35,31 @@ import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
 
-class VmPortHookCreateTask extends TransactionalTask {
+@Component(service = VmPortHookCreateTask.class)
+public class VmPortHookCreateTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(VmPortHookCreateTask.class);
 
-    private final String vmName;
-    private final String serviceName;
+    private String vmName;
+    private String serviceName;
     private VMPort vmPort;
     private DistributedApplianceInstance dai;
     private SecurityGroupInterface securityGroupInterface;
 
-    public VmPortHookCreateTask(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
+    public VmPortHookCreateTask create(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
             DistributedApplianceInstance daiToRedirectTo) {
-        this.vmPort = vmPort;
-        this.dai = daiToRedirectTo;
-        this.securityGroupInterface = securityGroupInterface;
-        this.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
-        this.vmName = vmPort.getVm() != null ? vmPort.getVm().getName() : vmPort.getSubnet().getName();
+        VmPortHookCreateTask task = new VmPortHookCreateTask();
+        task.vmPort = vmPort;
+        task.dai = daiToRedirectTo;
+        task.securityGroupInterface = securityGroupInterface;
+        task.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
+        task.vmName = vmPort.getVm() != null ? vmPort.getVm().getName() : vmPort.getSubnet().getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

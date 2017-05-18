@@ -58,11 +58,7 @@ public class ApplianceEntityMgr {
     }
 
     public static Appliance findById(EntityManager em, Long id) {
-
-        // Initializing Entity Manager
-        OSCEntityManager<Appliance> emgr = new OSCEntityManager<Appliance>(Appliance.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(Appliance.class, id);
     }
 
     public static Appliance findByModel(EntityManager em, String model) {

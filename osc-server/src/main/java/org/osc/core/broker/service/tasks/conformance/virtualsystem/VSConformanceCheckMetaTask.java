@@ -99,6 +99,54 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
     @Reference
+    UnregisterServiceManagerCallbackTask unregisterServiceManagerCallbackTask;
+
+    @Reference
+    DeleteServiceInstanceTask deleteServiceInstanceTask;
+
+    @Reference
+    NsxSecurityGroupInterfacesCheckMetaTask nsxSecurityGroupInterfacesCheckMetaTask;
+
+    @Reference
+    DeleteServiceTask deleteServiceTask;
+
+    @Reference
+    DeleteServiceManagerTask deleteServiceManagerTask;
+
+    @Reference
+    DeleteImageFromGlanceTask deleteImageFromGlanceTask;
+
+    @Reference
+    DeleteFlavorTask deleteFlavorTask;
+
+    @Reference
+    SecurityGroupCleanupCheckMetaTask securityGroupCleanupCheckMetaTask;
+
+    @Reference
+    DeleteVsFromDbTask deleteVsFromDbTask;
+
+    @Reference
+    RegisterServiceInstanceTask registerServiceInstanceTask;
+
+    @Reference
+    NsxSecurityGroupsCheckMetaTask nsxSecurityGroupsCheckMetaTask;
+
+    @Reference
+    GenerateVSSKeysTask generateVSSKeysTask;
+
+    @Reference
+    MgrSecurityGroupCheckMetaTask mgrSecurityGroupCheckMetaTask;
+
+    @Reference
+    DeleteDefaultServiceProfileTask deleteDefaultServiceProfileTask;
+
+    @Reference
+    RemoveVendorTemplateTask removeVendorTemplateTask;
+
+    @Reference
+    RegisterVendorTemplateTask registerVendorTemplateTask;
+
+    @Reference
     PasswordUtil passwordUtil;
 
     @Reference
@@ -115,6 +163,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
     @Reference
     MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
+
 
     private VirtualSystem vs;
     private TaskGraph tg;
@@ -133,9 +182,28 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         task.mgrDeleteVSSDeviceTask = this.mgrDeleteVSSDeviceTask;
         task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
         task.dsConformanceCheckMetaTask = this.dsConformanceCheckMetaTask;
+        task.unregisterServiceManagerCallbackTask = this.unregisterServiceManagerCallbackTask;
+        task.deleteServiceInstanceTask = this.deleteServiceInstanceTask;
+        task.nsxSecurityGroupInterfacesCheckMetaTask = this.nsxSecurityGroupInterfacesCheckMetaTask;
+        task.deleteServiceTask = this.deleteServiceTask;
+        task.deleteServiceManagerTask = this.deleteServiceManagerTask;
+        task.deleteImageFromGlanceTask = this.deleteImageFromGlanceTask;
+        task.securityGroupCleanupCheckMetaTask = this.securityGroupCleanupCheckMetaTask;
+        task.deleteFlavorTask = this.deleteFlavorTask;
+        task.deleteVsFromDbTask = this.deleteVsFromDbTask;
+        task.registerServiceInstanceTask = this.registerServiceInstanceTask;
+        task.nsxSecurityGroupsCheckMetaTask = this.nsxSecurityGroupsCheckMetaTask;
+        task.generateVSSKeysTask = this.generateVSSKeysTask;
+        task.mgrSecurityGroupCheckMetaTask = this.mgrSecurityGroupCheckMetaTask;
+        task.deleteDefaultServiceProfileTask = this.deleteDefaultServiceProfileTask;
+        task.removeVendorTemplateTask = this.removeVendorTemplateTask;
+        task.registerVendorTemplateTask = this.registerVendorTemplateTask;
         task.passwordUtil = this.passwordUtil;
         task.encryption = this.encryption;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -169,20 +237,20 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
         if (vc.getVirtualizationType() == VirtualizationType.VMWARE) {
             if (this.vs.getNsxServiceManagerId() != null) {
-                tg.appendTask(new UnregisterServiceManagerCallbackTask(this.vs));
+                tg.appendTask(this.unregisterServiceManagerCallbackTask.create(this.vs));
             }
 
             if (this.vs.getNsxServiceInstanceId() != null) {
-                tg.appendTask(new DeleteServiceInstanceTask(this.vs));
+                tg.appendTask(this.deleteServiceInstanceTask.create(this.vs));
             }
 
             if (this.vs.getNsxServiceId() != null) {
-                tg.appendTask(new NsxSecurityGroupInterfacesCheckMetaTask(this.vs));
-                tg.appendTask(new DeleteServiceTask(this.vs));
+                tg.appendTask(this.nsxSecurityGroupInterfacesCheckMetaTask.create(this.vs));
+                tg.appendTask(this.deleteServiceTask.create(this.vs));
             }
 
             if (this.vs.getNsxServiceManagerId() != null) {
-                tg.appendTask(new DeleteServiceManagerTask(this.vs));
+                tg.appendTask(this.deleteServiceManagerTask.create(this.vs));
             }
 
             tg.appendTask(this.validateNsxAgentsTask.create(this.vs));
@@ -193,16 +261,16 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
                 tg.appendTask(this.dsConformanceCheckMetaTask.create(ds, endPoint));
             }
             for (OsImageReference image : this.vs.getOsImageReference()) {
-                tg.appendTask(new DeleteImageFromGlanceTask(image.getRegion(), image, new Endpoint(vc)));
+                tg.appendTask(this.deleteImageFromGlanceTask.create(image.getRegion(), image, new Endpoint(vc)));
             }
             for (OsFlavorReference flavor : this.vs.getOsFlavorReference()) {
-                tg.appendTask(new DeleteFlavorTask(flavor.getRegion(), flavor, new Endpoint(vc)));
+                tg.appendTask(this.deleteFlavorTask.create(flavor.getRegion(), flavor, new Endpoint(vc)));
             }
         }
 
-        tg.appendTask(new SecurityGroupCleanupCheckMetaTask(this.vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        tg.appendTask(this.securityGroupCleanupCheckMetaTask.create(this.vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         tg.appendTask(this.mgrDeleteVSSDeviceTask.create(this.vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
-        tg.appendTask(new DeleteVsFromDbTask(this.vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        tg.appendTask(this.deleteVsFromDbTask.create(this.vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         return tg;
@@ -240,7 +308,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
             tg.appendTask(this.nsxDeploymentSpecCheckMetaTask.create(this.vs, updateNsxServiceAttributesScheduled));
 
             if (this.vs.getNsxServiceInstanceId() == null) {
-                tg.appendTask(new RegisterServiceInstanceTask(this.vs));
+                tg.appendTask(this.registerServiceInstanceTask.create(this.vs));
             } else {
                 // Ensure NSX service instance attributes has correct attributes.
                 tg.addTask(this.updateNsxServiceInstanceAttributesTask.create(this.vs));
@@ -250,8 +318,8 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
             // Sync NSX security group interfaces
             if (this.vs.getNsxServiceId() != null) {
-                tg.appendTask(new NsxSecurityGroupInterfacesCheckMetaTask(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-                tg.appendTask(new NsxSecurityGroupsCheckMetaTask(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                tg.appendTask(this.nsxSecurityGroupInterfacesCheckMetaTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                tg.appendTask(this.nsxSecurityGroupsCheckMetaTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
 
             tg.appendTask(this.validateNsxAgentsTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -279,7 +347,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         }
 
         if (this.vs.getKeyStore() == null) {
-            tg.appendTask(new GenerateVSSKeysTask(this.vs));
+            tg.appendTask(this.generateVSSKeysTask.create(this.vs));
         }
 
         // Sync Manager Devices
@@ -287,7 +355,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
         if (this.vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(this.vs)) {
             // Sync Manager Security Groups
-            tg.appendTask(new MgrSecurityGroupCheckMetaTask(this.vs));
+            tg.appendTask(this.mgrSecurityGroupCheckMetaTask.create(this.vs));
         }
 
         tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -359,8 +427,8 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
             if (policy.getMarkedForDeletion()) {
                 // If vendor template exist for this policy, generate remove task
                 if (vsp != null) {
-                    tg.appendTask(new DeleteDefaultServiceProfileTask(vsp));
-                    tg.appendTask(new RemoveVendorTemplateTask(vsp));
+                    tg.appendTask(this.deleteDefaultServiceProfileTask.create(vsp));
+                    tg.appendTask(this.removeVendorTemplateTask.create(vsp));
                 }
             } else {
                 // Check if vendor template already exist. If so no-op,
@@ -368,9 +436,9 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
                 if (vsp == null || vsp.getNsxVendorTemplateId() == null) {
                     RegisterVendorTemplateTask regVndTemplateTask = null;
                     if (vsp == null) {
-                        regVndTemplateTask = new RegisterVendorTemplateTask(vs, policy);
+                        regVndTemplateTask = this.registerVendorTemplateTask.create(vs, policy);
                     } else {
-                        regVndTemplateTask = new RegisterVendorTemplateTask(vsp);
+                        regVndTemplateTask = this.registerVendorTemplateTask.create(vsp);
                     }
                     tg.appendTask(regVndTemplateTask);
                 } else {

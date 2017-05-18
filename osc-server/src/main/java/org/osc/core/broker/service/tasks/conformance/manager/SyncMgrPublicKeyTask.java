@@ -26,17 +26,24 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=SyncMgrPublicKeyTask.class)
 public class SyncMgrPublicKeyTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(SyncMgrPublicKeyTask.class);
 
     private ApplianceManagerConnector mc;
     private byte[] bytes;
 
-    public SyncMgrPublicKeyTask(ApplianceManagerConnector mc, byte[] bytes) {
-        this.mc = mc;
-        this.bytes = bytes;
-        this.name = getName();
+    public SyncMgrPublicKeyTask create(ApplianceManagerConnector mc, byte[] bytes) {
+        SyncMgrPublicKeyTask task = new SyncMgrPublicKeyTask();
+        task.mc = mc;
+        task.bytes = bytes;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -47,7 +54,7 @@ public class SyncMgrPublicKeyTask extends TransactionalTask {
                 LockModeType.PESSIMISTIC_WRITE);
 
         this.mc.setPublicKey(this.bytes);
-        OSCEntityManager.update(em, this.mc);
+        OSCEntityManager.update(em, this.mc, this.txBroadcastUtil);
     }
 
     @Override

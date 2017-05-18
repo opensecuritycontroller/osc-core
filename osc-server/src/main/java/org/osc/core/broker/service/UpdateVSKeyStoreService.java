@@ -34,7 +34,7 @@ public class UpdateVSKeyStoreService extends ServiceDispatcher<UpdateVSKeyStoreR
 
         EmptySuccessResponse response = new EmptySuccessResponse();
 
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
 
         VirtualSystem vs = validate(em, request, emgr);
 

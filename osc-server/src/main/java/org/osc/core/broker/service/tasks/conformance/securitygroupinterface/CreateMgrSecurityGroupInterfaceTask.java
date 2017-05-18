@@ -44,6 +44,9 @@ public class CreateMgrSecurityGroupInterfaceTask extends TransactionalTask {
         task.apiFactoryService = this.apiFactoryService;
         task.securityGroupInterface = securityGroup;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -61,7 +64,7 @@ public class CreateMgrSecurityGroupInterfaceTask extends TransactionalTask {
             log.info("Created Manager Security Group Interface '" + mgrSecurityGroupId + "'");
 
             this.securityGroupInterface.setMgrSecurityGroupIntefaceId(mgrSecurityGroupId);
-            OSCEntityManager.update(em, this.securityGroupInterface);
+            OSCEntityManager.update(em, this.securityGroupInterface, this.txBroadcastUtil);
 
         } finally {
             mgrApi.close();

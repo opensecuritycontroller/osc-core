@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -38,8 +39,12 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.AgentRegisterServiceRequestValidator;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class AgentRegisterServiceRequestValidatorTest {
+
+    @Mock
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
     private EntityManager em;
 
@@ -79,7 +84,7 @@ public class AgentRegisterServiceRequestValidatorTest {
 
         REQUEST_VS_FOUND.setVirtualSystemId(this.vs.getId());
 
-        this.validator = new AgentRegisterServiceRequestValidator(this.em);
+        this.validator = new AgentRegisterServiceRequestValidator(this.em, this.txBroadcastUtil);
     }
 
     @After

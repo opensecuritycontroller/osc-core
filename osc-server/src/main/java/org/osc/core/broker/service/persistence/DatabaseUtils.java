@@ -40,7 +40,8 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.util.StaticRegistry;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class DatabaseUtils {
@@ -51,15 +52,15 @@ public class DatabaseUtils {
     private static final String DEFAULT_DAI_FAILURE_ALARM_NAME = "Default Appliance Instance Failure Alarm";
     public static final String DEFAULT_PASSWORD = "admin123";
 
-    public static void createDefaultDB() {
+    public static void createDefaultDB(DBConnectionManager dbMgr, TransactionalBroadcastUtil txBroadcastUtil) {
 
         log.info("================= Creating default database objects ================");
 
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            HibernateUtil.getTransactionControl().required(() -> {
-                createDefaultUsers(em);
-                createDefaultAlarms(em);
+            EntityManager em = dbMgr.getTransactionalEntityManager();
+            dbMgr.getTransactionControl().required(() -> {
+                createDefaultUsers(em, txBroadcastUtil);
+                createDefaultAlarms(em, txBroadcastUtil);
                 return null;
             });
         } catch (Exception ex) {
@@ -67,15 +68,15 @@ public class DatabaseUtils {
         }
     }
 
-    private static void createDefaultUsers(EntityManager em) throws EncryptionException {
-        OSCEntityManager<User> userEmgr = new OSCEntityManager<User>(User.class, em);
+    private static void createDefaultUsers(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) throws EncryptionException {
+        OSCEntityManager<User> userEmgr = new OSCEntityManager<User>(User.class, em, txBroadcastUtil);
         User adminUser = userEmgr.findByFieldName("loginName", RestConstants.OSC_DEFAULT_LOGIN);
         if (adminUser == null) {
             User user = new User();
             user.setLoginName(RestConstants.OSC_DEFAULT_LOGIN);
             user.setPassword(StaticRegistry.encryptionApi().encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.ADMIN);
-            OSCEntityManager.create(em, user);
+            OSCEntityManager.create(em, user, txBroadcastUtil);
         }
         User nsxUser = userEmgr.findByFieldName("loginName", RestConstants.VMIDC_NSX_LOGIN);
         if (nsxUser == null) {
@@ -83,12 +84,12 @@ public class DatabaseUtils {
             user.setLoginName(RestConstants.VMIDC_NSX_LOGIN);
             user.setPassword(StaticRegistry.encryptionApi().encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.SYSTEM_NSX);
-            OSCEntityManager.create(em, user);
+            OSCEntityManager.create(em, user, txBroadcastUtil);
         }
     }
 
-    private static void createDefaultAlarms(EntityManager em) {
-        OSCEntityManager<Alarm> alarmEmgr = new OSCEntityManager<Alarm>(Alarm.class, em);
+    private static void createDefaultAlarms(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
+        OSCEntityManager<Alarm> alarmEmgr = new OSCEntityManager<Alarm>(Alarm.class, em, txBroadcastUtil);
         Alarm alarm = alarmEmgr.findByFieldName("name", DEFAULT_JOB_FAILURE_ALARM_NAME);
         if (alarm == null) {
             Alarm defAlarm = new Alarm();
@@ -98,7 +99,7 @@ public class DatabaseUtils {
             defAlarm.setRegexMatch(".*");
             defAlarm.setSeverity(Severity.LOW);
             defAlarm.setAlarmAction(AlarmAction.NONE);
-            OSCEntityManager.create(em, defAlarm);
+            OSCEntityManager.create(em, defAlarm, txBroadcastUtil);
         }
         alarm = alarmEmgr.findByFieldName("name", DEFAULT_SYSTEM_FAILURE_ALARM_NAME);
         if (alarm == null) {
@@ -109,7 +110,7 @@ public class DatabaseUtils {
             defAlarm.setRegexMatch(".*");
             defAlarm.setSeverity(Severity.HIGH);
             defAlarm.setAlarmAction(AlarmAction.NONE);
-            OSCEntityManager.create(em, defAlarm);
+            OSCEntityManager.create(em, defAlarm, txBroadcastUtil);
         }
         alarm = alarmEmgr.findByFieldName("name", DEFAULT_DAI_FAILURE_ALARM_NAME);
         if (alarm == null) {
@@ -120,11 +121,12 @@ public class DatabaseUtils {
             defAlarm.setRegexMatch(".*");
             defAlarm.setSeverity(Severity.MEDIUM);
             defAlarm.setAlarmAction(AlarmAction.NONE);
-            OSCEntityManager.create(em, defAlarm);
+            OSCEntityManager.create(em, defAlarm, txBroadcastUtil);
         }
     }
 
-    public static void markRunningJobAborted() throws InterruptedException {
+    public static void markRunningJobAborted(DBConnectionManager dbConnectionManager,
+            TransactionalBroadcastUtil txBroadcastUtil) throws InterruptedException {
 
         log.info("================= Marking Running jobs as Aborted ================");
 
@@ -133,11 +135,11 @@ public class DatabaseUtils {
             public void run() {
 
                 try {
-                    EntityManager em = HibernateUtil.getTransactionalEntityManager();
-                    HibernateUtil.getTransactionControl().required(() -> {
+                    EntityManager em = dbConnectionManager.getTransactionalEntityManager();
+                    dbConnectionManager.getTransactionControl().required(() -> {
 
                         // In case we stopped server while jobs/tasks were running, we'll flagged them all aborted.
-                        List<TaskRecord> uncompletedTasks = new TaskEntityMgr(em).getUncompletedTasks();
+                        List<TaskRecord> uncompletedTasks = new TaskEntityMgr(em, txBroadcastUtil).getUncompletedTasks();
                         log.info("Marking " + uncompletedTasks.size() + " uncompleted Tasks as aborted");
                         for (TaskRecord task : uncompletedTasks) {
                             task.setState(TaskState.COMPLETED);

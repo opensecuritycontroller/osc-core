@@ -66,10 +66,10 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
 
     @Override
     public UpdateUserResponse exec(UpdateUserRequest request, EntityManager em) throws Exception {
-        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em, this.txBroadcastUtil);
 
         if (this.validator == null) {
-            this.validator = new UserDtoValidator(em);
+            this.validator = new UserDtoValidator(em, this.txBroadcastUtil);
         }
 
         // validate and retrieve existing entity from the database.

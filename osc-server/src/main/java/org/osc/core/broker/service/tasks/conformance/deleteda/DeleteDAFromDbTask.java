@@ -25,15 +25,22 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=DeleteDAFromDbTask.class)
 public class DeleteDAFromDbTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(DeleteDAFromDbTask.class);
 
     private DistributedAppliance da;
 
-    public DeleteDAFromDbTask(DistributedAppliance da) {
-        this.da = da;
-        this.name = getName();
+    public DeleteDAFromDbTask create(DistributedAppliance da) {
+        DeleteDAFromDbTask task = new DeleteDAFromDbTask();
+        task.da = da;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -45,7 +52,7 @@ public class DeleteDAFromDbTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) {
         log.debug("Start Executing DeleteDAFromDb Task for DA: " + this.da.getId());
         this.da = em.find(DistributedAppliance.class, this.da.getId());
-        OSCEntityManager.delete(em, this.da);
+        OSCEntityManager.delete(em, this.da, this.txBroadcastUtil);
     }
 
     @Override

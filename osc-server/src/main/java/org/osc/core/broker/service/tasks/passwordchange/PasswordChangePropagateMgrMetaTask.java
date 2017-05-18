@@ -33,9 +33,9 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
+import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osc.core.server.Server;
 
 @Component(service = PasswordChangePropagateMgrMetaTask.class)
 public class PasswordChangePropagateMgrMetaTask extends TransactionalMetaTask {
@@ -51,6 +51,10 @@ public class PasswordChangePropagateMgrMetaTask extends TransactionalMetaTask {
         PasswordChangePropagateMgrMetaTask task = new PasswordChangePropagateMgrMetaTask();
         task.name = task.getName();
         task.mcConformanceCheckMetaTask = this.mcConformanceCheckMetaTask;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -70,7 +74,7 @@ public class PasswordChangePropagateMgrMetaTask extends TransactionalMetaTask {
 
         // propagating password change to all MC
         OSCEntityManager<ApplianceManagerConnector> emgrMc = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, em);
+                ApplianceManagerConnector.class, em, this.txBroadcastUtil);
 
         for (ApplianceManagerConnector mc : emgrMc.listAll()) {
             try {

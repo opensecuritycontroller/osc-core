@@ -46,7 +46,7 @@ public class ListDistributedApplianceInstanceService
     @Override
     public ListResponse<DistributedApplianceInstanceDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
         OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, em);
+                DistributedApplianceInstance.class, em, this.txBroadcastUtil);
         List<DistributedApplianceInstanceDto> daiList = new ArrayList<DistributedApplianceInstanceDto>();
         for (DistributedApplianceInstance dai : emgr.listAll("name")) {
             Boolean providesDeviceStatus = this.apiFactoryService.providesDeviceStatus(dai.getVirtualSystem());

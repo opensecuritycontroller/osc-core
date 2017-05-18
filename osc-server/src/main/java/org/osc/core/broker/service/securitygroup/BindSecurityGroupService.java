@@ -50,7 +50,6 @@ import org.osc.core.broker.service.request.BindSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.BindSecurityGroupRequestValidator;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osgi.service.component.annotations.Component;
@@ -163,11 +162,11 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                             SecurityGroupInterfaceEntityMgr.toEntity(sgi, this.securityGroup, serviceToBindTo.getName());
 
                             log.info("Creating security group interface " + sgi.getName());
-                            OSCEntityManager.create(em, sgi);
+                            OSCEntityManager.create(em, sgi, this.txBroadcastUtil);
 
                             this.securityGroup.addSecurityGroupInterface(sgi);
                             sgi.addSecurityGroup(this.securityGroup);
-                            OSCEntityManager.update(em, this.securityGroup);
+                            OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
                         } else {
                             if (hasServiceChanged(sgi, serviceToBindTo, policy, order)) {
                                 log.info("Updating Security group interface " + sgi.getName());
@@ -176,7 +175,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                                         failurePolicyType.name()));
                                 sgi.setOrder(order);
                             }
-                            OSCEntityManager.update(em, sgi);
+                            OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
                         }
 
                         order++;
@@ -187,11 +186,11 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                 boolean isServiceSelected = isServiceSelected(servicesToBindTo, sgi.getVirtualSystem().getId());
                 if (!isServiceSelected || sgi.getMarkedForDeletion()) {
                     log.info("Marking service " + sgi.getName() + " for deletion");
-                    OSCEntityManager.markDeleted(em, sgi);
+                    OSCEntityManager.markDeleted(em, sgi, this.txBroadcastUtil);
                 }
             }
 
-            TransactionalBroadcastUtil.addMessageToMap(this.securityGroup.getId(),
+            this.txBroadcastUtil.addMessageToMap(this.securityGroup.getId(),
                     this.securityGroup.getClass().getSimpleName(), EventType.UPDATED);
 
             Job job = this.conformService.startBindSecurityGroupConformanceJob(em, this.securityGroup, unlockTask);

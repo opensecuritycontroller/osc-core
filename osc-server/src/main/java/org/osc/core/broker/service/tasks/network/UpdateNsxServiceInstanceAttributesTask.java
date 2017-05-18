@@ -46,6 +46,9 @@ public class UpdateNsxServiceInstanceAttributesTask extends TransactionalTask {
         task.vs = vs;
         task.name = task.getName();
         task.passwordUtil = this.passwordUtil;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 

@@ -26,15 +26,22 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.util.PKIUtil;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = GenerateVSSKeysTask.class)
 public class GenerateVSSKeysTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(GenerateVSSKeysTask.class);
 
     private VirtualSystem vs;
 
-    public GenerateVSSKeysTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public GenerateVSSKeysTask create(VirtualSystem vs) {
+        GenerateVSSKeysTask task = new GenerateVSSKeysTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -45,7 +52,7 @@ public class GenerateVSSKeysTask extends TransactionalTask {
 
         // generate and persist keys
         this.vs.setKeyStore(PKIUtil.generateKeyStore());
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

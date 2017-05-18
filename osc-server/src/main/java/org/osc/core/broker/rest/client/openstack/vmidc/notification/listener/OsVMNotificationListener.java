@@ -40,6 +40,7 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.server.Server;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class OsVMNotificationListener extends OsNotificationListener {
@@ -49,10 +50,14 @@ public class OsVMNotificationListener extends OsNotificationListener {
 
     private final ConformService conformService;
 
+    private final AlertGenerator alertGenerator;
+
     public OsVMNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
-        super(vc, OsNotificationObjectType.VM, objectIdList, entity);
+            List<String> objectIdList, BaseEntity entity, ConformService conformService,
+            AlertGenerator alertGenerator, Server server) {
+        super(vc, OsNotificationObjectType.VM, objectIdList, entity, server);
         this.conformService = conformService;
+        this.alertGenerator = alertGenerator;
         register(vc, objectType);
     }
 
@@ -93,7 +98,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
                     log.error(
                             "Fail to process Openstack VM (" + vmOpenstackId + ") notification - "
                                     + this.vc.getControllerIpAddress(), e);
-                    AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+                    this.alertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                             LockObjectReference.getLockObjectReference(this.entity, new LockObjectReference(this.vc)),
                             "Fail to process Openstack VM (" + vmOpenstackId + ") notification (" + e.getMessage()
                                     + ")");

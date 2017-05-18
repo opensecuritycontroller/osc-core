@@ -31,22 +31,30 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.RegisterDeploymentSpecTask;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
 import org.osc.sdk.sdn.element.DeploymentSpecElement;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=UpdateNsxDeploymentSpecTask.class)
 public class UpdateNsxDeploymentSpecTask extends TransactionalTask {
 
     final Logger log = Logger.getLogger(UpdateNsxDeploymentSpecTask.class);
 
-    private final VirtualSystem vs;
+    private VirtualSystem vs;
     private VersionedDeploymentSpec deploySpec;
 
-    public UpdateNsxDeploymentSpecTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public UpdateNsxDeploymentSpecTask create(VirtualSystem vs) {
+        UpdateNsxDeploymentSpecTask task = new UpdateNsxDeploymentSpecTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
-    public UpdateNsxDeploymentSpecTask(VirtualSystem vs, VersionedDeploymentSpec deploySpec) {
-        this(vs);
-        this.deploySpec = deploySpec;
+    public UpdateNsxDeploymentSpecTask create(VirtualSystem vs, VersionedDeploymentSpec deploySpec) {
+        UpdateNsxDeploymentSpecTask task = create(vs);
+        task.deploySpec = deploySpec;
+        return task;
     }
 
     @Override

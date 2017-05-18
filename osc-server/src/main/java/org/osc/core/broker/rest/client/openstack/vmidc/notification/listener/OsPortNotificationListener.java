@@ -37,6 +37,7 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SubnetEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.server.Server;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class OsPortNotificationListener extends OsNotificationListener {
@@ -45,10 +46,13 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
     private final ConformService conformService;
 
+    private final AlertGenerator alertGenerator;
+
     public OsPortNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
-        super(vc, OsNotificationObjectType.PORT, objectIdList, entity);
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, Server server) {
+        super(vc, OsNotificationObjectType.PORT, objectIdList, entity, server);
         this.conformService = conformService;
+        this.alertGenerator = alertGenerator;
         register(vc, objectType);
     }
 
@@ -87,7 +91,7 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
     private void handleError(Throwable e) {
         log.error("Failed to trigger Security Group Sync on Port message Received!" + e);
-        AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+        this.alertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                 LockObjectReference.getLockObjectReference(OsPortNotificationListener.this.entity, new LockObjectReference(OsPortNotificationListener.this.vc)),
                 "Fail to process Openstack Port notification (" + e.getMessage() + ")");
     }

@@ -27,6 +27,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * This task is responsible for removing a inspection hook
@@ -38,12 +39,18 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
  * This task is applicable to SGIs whose virtual system refers to an SDN
  * controller that supports port groups.
  */
+@Component(service=RemovePortGroupHookTask.class)
 public class RemovePortGroupHookTask extends TransactionalTask {
     public SecurityGroupInterface sgi;
     private static final Logger LOG = Logger.getLogger(RemovePortGroupHookTask.class);
 
-    public RemovePortGroupHookTask(SecurityGroupInterface sgi){
-        this.sgi = sgi;
+    public RemovePortGroupHookTask create(SecurityGroupInterface sgi){
+        RemovePortGroupHookTask task = new RemovePortGroupHookTask();
+        task.sgi = sgi;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -61,7 +68,7 @@ public class RemovePortGroupHookTask extends TransactionalTask {
         }
 
         this.sgi.setNetworkElementId(null);
-        OSCEntityManager.update(em, this.sgi);
+        OSCEntityManager.update(em, this.sgi, this.txBroadcastUtil);
     }
 
     @Override

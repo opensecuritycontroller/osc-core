@@ -43,6 +43,12 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
     @Reference
     ApiFactoryService apiFactoryService;
 
+    @Reference
+    ValidateSecurityGroupTenantTask validateSecurityGroupTenantTask;
+
+    @Reference
+    SecurityGroupUpdateOrDeleteMetaTask securityGroupUpdateOrDeleteMetaTask;
+
     private SecurityGroup sg;
     private TaskGraph tg;
 
@@ -50,6 +56,11 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
         SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask();
         task.mgrSecurityGroupInterfacesCheckMetaTask = this.mgrSecurityGroupInterfacesCheckMetaTask;
         task.sg = sg;
+        task.validateSecurityGroupTenantTask = this.validateSecurityGroupTenantTask;
+        task.securityGroupUpdateOrDeleteMetaTask = this.securityGroupUpdateOrDeleteMetaTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -58,8 +69,8 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
         this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
         this.tg = new TaskGraph();
-        this.tg.addTask(new ValidateSecurityGroupTenantTask(this.sg));
-        this.tg.appendTask(new SecurityGroupUpdateOrDeleteMetaTask(this.sg));
+        this.tg.addTask(this.validateSecurityGroupTenantTask.create(this.sg));
+        this.tg.appendTask(this.securityGroupUpdateOrDeleteMetaTask.create(this.sg));
 
         if (!ValidateUtil.isEmpty(this.sg.getSecurityGroupInterfaces())) {
             List<VirtualSystem> referencedVs = VirtualSystemEntityMgr.listReferencedVSBySecurityGroup(em,

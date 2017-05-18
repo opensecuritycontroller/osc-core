@@ -30,6 +30,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.server.Server;
 
 public class OsHostAggregrateNotificationListener extends OsNotificationListener {
 
@@ -37,10 +38,13 @@ public class OsHostAggregrateNotificationListener extends OsNotificationListener
 
     private final ConformService conformService;
 
+    private final AlertGenerator alertGenerator;
+
     public OsHostAggregrateNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
-        super(vc, OsNotificationObjectType.HOST_AGGREGRATE, objectIdList, entity);
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, Server server) {
+        super(vc, OsNotificationObjectType.HOST_AGGREGRATE, objectIdList, entity, server);
         this.conformService = conformService;
+        this.alertGenerator = alertGenerator;
         register(vc, objectType);
     }
 
@@ -63,7 +67,7 @@ public class OsHostAggregrateNotificationListener extends OsNotificationListener
                     });
                 } catch (Exception e) {
                     log.error("Failed post notification processing  - " + this.vc.getControllerIpAddress(), e);
-                    AlertGenerator.processSystemFailureEvent(
+                    this.alertGenerator.processSystemFailureEvent(
                             SystemFailureType.OS_NOTIFICATION_FAILURE,
                             LockObjectReference.getLockObjectReference(this.entity, new LockObjectReference(this.vc)),
                             "Fail to process Openstack Host Aggregrate (" + keyValue + ") notification ("

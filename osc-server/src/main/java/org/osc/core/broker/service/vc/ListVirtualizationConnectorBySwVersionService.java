@@ -52,7 +52,7 @@ public class ListVirtualizationConnectorBySwVersionService extends
         String swVersion = request.getSwVersion();
 
         // mapping all the VC objects to vc dto objects
-        for (VirtualizationConnector vc : VirtualizationConnectorEntityMgr.listBySwVersion(em, swVersion)) {
+        for (VirtualizationConnector vc : VirtualizationConnectorEntityMgr.listBySwVersion(em, swVersion, this.txBroadcastUtil)) {
             VirtualizationConnectorDto dto = new VirtualizationConnectorDto();
             VirtualizationConnectorEntityMgr.fromEntity(vc, dto, this.encryption);
             vcmList.add(dto);

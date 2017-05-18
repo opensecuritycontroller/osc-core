@@ -24,7 +24,9 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = DeleteImageFromGlanceTask.class)
 public class DeleteImageFromGlanceTask  extends TransactionalTask {
     private final Logger log = Logger.getLogger(DeleteImageFromGlanceTask.class);
 
@@ -32,11 +34,17 @@ public class DeleteImageFromGlanceTask  extends TransactionalTask {
     private OsImageReference imageReference;
     private Endpoint osEndPoint;
 
-    public DeleteImageFromGlanceTask(String region, OsImageReference imageReference, Endpoint osEndPoint) {
-        this.region = region;
-        this.osEndPoint = osEndPoint;
-        this.imageReference = imageReference;
-        this.name = getName();
+    public DeleteImageFromGlanceTask create(String region, OsImageReference imageReference, Endpoint osEndPoint) {
+
+        DeleteImageFromGlanceTask task = new DeleteImageFromGlanceTask();
+        task.region = region;
+        task.osEndPoint = osEndPoint;
+        task.imageReference = imageReference;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -51,7 +59,7 @@ public class DeleteImageFromGlanceTask  extends TransactionalTask {
         } finally {
             glance.close();
         }
-        OSCEntityManager.delete(em, this.imageReference);
+        OSCEntityManager.delete(em, this.imageReference, this.txBroadcastUtil);
     }
 
     @Override

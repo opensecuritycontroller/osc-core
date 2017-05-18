@@ -49,7 +49,6 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
 import org.osc.core.broker.service.validator.DtoValidator;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.util.PKIUtil;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osgi.service.component.annotations.Component;
@@ -103,14 +102,14 @@ public class UpdateDistributedApplianceService
                 List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByDaId(em, da.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(daiId,
+                        this.txBroadcastUtil.addMessageToMap(daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
             }
 
             DistributedApplianceEntityMgr.toEntity(a, da, daDto, this.encrypter);
-            OSCEntityManager.update(em, da);
+            OSCEntityManager.update(em, da, this.txBroadcastUtil);
 
             UnlockObjectMetaTask forLambda = this.ult;
             chain(() -> {
@@ -163,14 +162,14 @@ public class UpdateDistributedApplianceService
             }
         }
 
+        OSCEntityManager<VirtualSystem> vsEntityManager = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
+        OSCEntityManager<Domain> domainEntityManager = new OSCEntityManager<Domain>(Domain.class, em, this.txBroadcastUtil);
+
         for (VirtualSystem vs : da.getVirtualSystems()) {
             if (!existingVsList.contains(vs.getId())) {
-                OSCEntityManager.markDeleted(em, vs);
+                vsEntityManager.markDeleted(vs);
             }
         }
-
-        OSCEntityManager<VirtualSystem> vsEntityManager = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
-        OSCEntityManager<Domain> domainEntityManager = new OSCEntityManager<Domain>(Domain.class, em);
 
         for (VirtualSystemDto vsDto : reqVs) {
             VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, vsDto.getVcId());
@@ -196,7 +195,7 @@ public class UpdateDistributedApplianceService
                 // generate key store and persist it as byte array in db
                 newVs.setKeyStore(PKIUtil.generateKeyStore());
 
-                OSCEntityManager.create(em, newVs);
+                vsEntityManager.create(newVs);
                 da.addVirtualSystem(newVs);
             } else {
                 VirtualSystem existingVs = vsEntityManager.findByPrimaryKey(vsDto.getId());
@@ -205,7 +204,7 @@ public class UpdateDistributedApplianceService
                 // It is possible that the new version no longer support current encapsulation type,
                 // or user may want to change it.
                 existingVs.setApplianceSoftwareVersion(av);
-                OSCEntityManager.update(em, existingVs);
+                OSCEntityManager.update(em, existingVs, this.txBroadcastUtil);
             }
         }
 
@@ -244,7 +243,7 @@ public class UpdateDistributedApplianceService
             for (VirtualSystem vs : da.getVirtualSystems()) {
                 for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
                     dai.setApplianceConfig(null);
-                    OSCEntityManager.update(em, dai);
+                    OSCEntityManager.update(em, dai, this.txBroadcastUtil);
                 }
             }
         }

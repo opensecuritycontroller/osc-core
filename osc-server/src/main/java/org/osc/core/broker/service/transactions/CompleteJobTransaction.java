@@ -21,6 +21,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.LastJobContainer;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 /**
  * Attaches (in transaction) the last job record to given entity
@@ -29,8 +30,11 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 public class CompleteJobTransaction<T extends LastJobContainer> {
     private Class<T> entityType;
 
-    public CompleteJobTransaction(Class<T> entityType) {
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    public CompleteJobTransaction(Class<T> entityType, TransactionalBroadcastUtil txBroadcastUtil) {
         this.entityType = entityType;
+        this.txBroadcastUtil = txBroadcastUtil;
     }
 
     public Void run(EntityManager em, CompleteJobTransactionInput param) throws Exception {
@@ -47,7 +51,7 @@ public class CompleteJobTransaction<T extends LastJobContainer> {
         }
 
         entity.setLastJob(em.find(JobRecord.class, param.getJobId()));
-        OSCEntityManager.update(em, entity);
+        OSCEntityManager.update(em, entity, this.txBroadcastUtil);
 
         return null;
     }

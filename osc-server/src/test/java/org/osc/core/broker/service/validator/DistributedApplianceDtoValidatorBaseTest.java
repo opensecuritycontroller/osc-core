@@ -36,6 +36,7 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 /**
  * The base class for the {@link DistributedApplianceDtoValidator} unit tests.
@@ -48,6 +49,9 @@ import org.osc.core.broker.service.test.InMemDB;
 public class DistributedApplianceDtoValidatorBaseTest {
     @Mock
     protected EntityManager em;
+
+    @Mock
+    protected TransactionalBroadcastUtil txBroadcastUtil;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();

@@ -25,15 +25,22 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
-class DeleteDSFromDbTask extends TransactionalTask {
+@Component(service=DeleteDSFromDbTask.class)
+public class DeleteDSFromDbTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(DeleteDSFromDbTask.class);
 
     private DeploymentSpec ds;
 
-    public DeleteDSFromDbTask(DeploymentSpec ds) {
-        this.ds = ds;
-        this.name = getName();
+    public DeleteDSFromDbTask create(DeploymentSpec ds) {
+        DeleteDSFromDbTask task = new DeleteDSFromDbTask();
+        task.ds = ds;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -45,7 +52,7 @@ class DeleteDSFromDbTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) {
         log.debug("Start Executing DeleteDSFromDb Task : " + this.ds.getId());
         this.ds = em.find(DeploymentSpec.class, this.ds.getId());
-        OSCEntityManager.delete(em, this.ds);
+        OSCEntityManager.delete(em, this.ds, this.txBroadcastUtil);
     }
 
     @Override
