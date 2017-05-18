@@ -85,8 +85,10 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     private void delayedInit() {
         this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
-        this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO.getService();
+        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO != null
+                ? this.factory.osSvaCreateMetaTaskCSO.getService() : this.factory.osSvaCreateMetaTask;
+        this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO != null
+                ? this.factory.osDAIConformanceCheckMetaTaskCSO.getService() : this.factory.osDAIConformanceCheckMetaTask;
         this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
     }
 
