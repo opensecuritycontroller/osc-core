@@ -1,0 +1,3 @@
+# Require the HTTP whiteboard
+Require-Capability: \
+    osgi.implementation;filter:="(&(osgi.implementation=osgi.http)(version>=1)(!(version>=2)))"
