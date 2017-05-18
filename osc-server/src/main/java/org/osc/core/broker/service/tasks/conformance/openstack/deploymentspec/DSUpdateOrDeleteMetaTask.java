@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -51,6 +52,7 @@ import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMeta
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -82,20 +84,27 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private JCloudNova novaApi;
     @IgnoreCompare
     private DSUpdateOrDeleteMetaTask factory;
+    private AtomicBoolean initDone = new AtomicBoolean();
 
     private void delayedInit() {
-        this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO != null
-                ? this.factory.osSvaCreateMetaTaskCSO.getService() : this.factory.osSvaCreateMetaTask;
-        this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO != null
-                ? this.factory.osDAIConformanceCheckMetaTaskCSO.getService() : this.factory.osDAIConformanceCheckMetaTask;
-        this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
+        if (this.initDone.compareAndSet(false, true)) {
+            this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
+            // allow for test injection
+            this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO != null
+                    ? this.factory.osSvaCreateMetaTaskCSO.getService() : this.factory.osSvaCreateMetaTask;
+            this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO != null
+                    ? this.factory.osDAIConformanceCheckMetaTaskCSO.getService()
+                    : this.factory.osDAIConformanceCheckMetaTask;
+            this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
+        }
     }
 
-    @Override
-    public void cleanup() {
-        this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
-        this.factory.osDAIConformanceCheckMetaTaskCSO.ungetService(this.osDAIConformanceCheckMetaTask);
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
+            this.factory.osDAIConformanceCheckMetaTaskCSO.ungetService(this.osDAIConformanceCheckMetaTask);
+        }
     }
 
     public DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, Endpoint endPoint) {

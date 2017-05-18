@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -31,6 +32,7 @@ import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -56,18 +58,24 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     @IgnoreCompare
     private OsDAIUpgradeMetaTask factory;
+    private AtomicBoolean initDone = new AtomicBoolean();
 
     private void delayedInit() {
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
-        this.conformService = this.factory.conformService;
+        if (this.initDone.compareAndSet(false, true)) {
+            this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
+            this.conformService = this.factory.conformService;
+        }
     }
 
-    @Override
-    public void cleanup() {
-        this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
+        }
     }
 
-    public OsDAIUpgradeMetaTask create(DistributedApplianceInstance dai, ApplianceSoftwareVersion upgradedSoftwareVersion) {
+    public OsDAIUpgradeMetaTask create(DistributedApplianceInstance dai,
+            ApplianceSoftwareVersion upgradedSoftwareVersion) {
         OsDAIUpgradeMetaTask task = new OsDAIUpgradeMetaTask();
         task.factory = this;
         task.dai = dai;

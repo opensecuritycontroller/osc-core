@@ -19,6 +19,7 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -47,6 +48,7 @@ import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.controller.exception.NetworkPortNotFoundException;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -79,18 +81,23 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     @IgnoreCompare
     private OsDAIConformanceCheckMetaTask factory;
+    private AtomicBoolean initDone = new AtomicBoolean();
 
     private void delayedInit() {
-        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
-        this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();
-        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+        if (this.initDone.compareAndSet(false, true)) {
+            this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
+            this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();
+            this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+        }
     }
 
-    @Override
-    public void cleanup() {
-        this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
-        this.factory.osDAIUpgradeMetaTaskCSO.ungetService(this.osDAIUpgradeMetaTask);
-        this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.factory.osSvaCreateMetaTaskCSO.ungetService(this.osSvaCreateMetaTask);
+            this.factory.osDAIUpgradeMetaTaskCSO.ungetService(this.osDAIUpgradeMetaTask);
+            this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
+        }
     }
 
     public OsDAIConformanceCheckMetaTask create(DistributedApplianceInstance dai, boolean doesOSHostExist) {
@@ -195,23 +202,21 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                     this.dai.getInspectionEgressMacAddress());
 
             InspectionPortElement inspectionPort = null;
-            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
+            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
                 String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
-                        ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<NetworkElement>(
-                                Arrays.asList(ingressPort)));
-                if (domainId != null){
+                        ds.getVirtualSystem().getVirtualizationConnector(),
+                        new ArrayList<NetworkElement>(Arrays.asList(ingressPort)));
+                if (domainId != null) {
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);
-                    inspectionPort = controller
-                            .getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
+                    inspectionPort = controller.getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
                 } else {
                     log.warn("DomainId is missing, cannot be null");
                 }
 
             } else {
-                inspectionPort = controller
-                        .getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
+                inspectionPort = controller.getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
             }
             return inspectionPort != null;
         } finally {

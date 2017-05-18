@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -31,6 +32,7 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -49,14 +51,19 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     @IgnoreCompare
     private DeleteSvaServerAndDAIMetaTask factory;
+    private AtomicBoolean initDone = new AtomicBoolean();
 
     private void delayedInit() {
-        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+        if (this.initDone.compareAndSet(false, true)) {
+            this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+        }
     }
 
-    @Override
-    public void cleanup() {
-        this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
+        }
     }
 
     /**
