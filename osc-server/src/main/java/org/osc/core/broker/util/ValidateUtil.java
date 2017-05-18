@@ -175,7 +175,7 @@ public class ValidateUtil implements ValidationApi {
 
     public static void checkMarkedForDeletion(IscEntity entity, String name) throws Exception {
         if (entity.getMarkedForDeletion()) {
-            throw new VmidcBrokerInvalidRequestException("Invalid Request '" + name + "' is marked for Deleted");
+            throw new VmidcBrokerInvalidRequestException("Invalid Request '" + name + "' is marked for deletion");
         }
     }
 
