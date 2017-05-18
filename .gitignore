@@ -21,6 +21,7 @@ osc-server-bom/root/opt/vmidc/bin/mgr_plugins/
 osc-server-bom/root/opt/vmidc/bin/osc-control.jar
 osc-server-bom/root/opt/vmidc/bin/sdn_ctrl_plugins/
 osc-server-bom/root/opt/vmidc/bin/vmidcKeyStore.jks
+osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz
 osc-server/src/main/webapp/VAADIN/gwt-unitCache/
 osc-server/src/main/webapp/VAADIN/themes/vmidc/styles.css
 osc-server/src/main/webapp/VAADIN/widgetsets/
