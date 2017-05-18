@@ -32,6 +32,8 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This task is responsible for checking the conformance of the inspection appliances
@@ -41,17 +43,32 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
  */
 // TODO emanoel: Consider renaming the task to SecurityGroupMemberCheckAppliancesTask since
 // it does more than checking the inspection hook.
-class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
+@Component(service=SecurityGroupMemberHookCheckTask.class)
+public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
 
     private final Logger log = Logger.getLogger(SecurityGroupMemberHookCheckTask.class);
 
+    @Reference
+    VmPortAllHooksRemoveTask vmPortAllHooksRemoveTask;
+
+    @Reference
+    VmPortDeleteFromDbTask vmPortDeleteFromDbTask;
+
+    @Reference
+    VmPortHookCheckTask vmPortHookCheckTask;
+
     private TaskGraph tg;
     private SecurityGroupMember sgm;
-    private final VmDiscoveryCache vdc;
+    private VmDiscoveryCache vdc;
 
-    public SecurityGroupMemberHookCheckTask(SecurityGroupMember sgm, VmDiscoveryCache vdc) {
-        this.sgm = sgm;
-        this.vdc = vdc;
+    public SecurityGroupMemberHookCheckTask create(SecurityGroupMember sgm, VmDiscoveryCache vdc) {
+        SecurityGroupMemberHookCheckTask task = new SecurityGroupMemberHookCheckTask();
+        task.sgm = sgm;
+        task.vdc = vdc;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -75,12 +92,12 @@ class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
 
         for (VMPort port : ports) {
             if (port.getMarkedForDeletion()) {
-                this.tg.appendTask(new VmPortAllHooksRemoveTask(this.sgm, port));
-                this.tg.appendTask(new VmPortDeleteFromDbTask(this.sgm, port));
+                this.tg.appendTask(this.vmPortAllHooksRemoveTask.create(this.sgm, port));
+                this.tg.appendTask(this.vmPortDeleteFromDbTask.create(this.sgm, port));
             } else {
                 for (SecurityGroupInterface sgi : sg.getSecurityGroupInterfaces()) {
                     if (!sgi.getMarkedForDeletion() && !SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup())) {
-                        this.tg.appendTask(new VmPortHookCheckTask(this.sgm, sgi, port, this.vdc),
+                        this.tg.appendTask(this.vmPortHookCheckTask.create(this.sgm, sgi, port, this.vdc),
                                 TaskGuard.ALL_PREDECESSORS_COMPLETED);
                     }
                 }

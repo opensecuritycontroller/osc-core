@@ -26,20 +26,44 @@ import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
+@Component(service = SecurityGroupMemberNetworkCheckTask.class)
+public class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
+
+    @Reference
+    SecurityGroupMemberAllHooksRemoveTask securityGroupMemberAllHooksRemoveTask;
+
+    @Reference
+    SecurityGroupMemberDeleteTask securityGroupMemberDeleteTask;
+
+    @Reference
+    SecurityGroupMemberHookCheckTask securityGroupMemberHookCheckTask;
+
+    @Reference
+    SecurityGroupMemberNetworkUpdateTask securityGroupMemberNetworkUpdateTask;
 
     private TaskGraph tg;
     private SecurityGroupMember sgm;
     private Network network;
-    private final VmDiscoveryCache vdc;
+    private VmDiscoveryCache vdc;
     /**
      * Checks the security group member and updates the associated flows
      */
-    public SecurityGroupMemberNetworkCheckTask(SecurityGroupMember sgm, Network network, VmDiscoveryCache vdc) {
-        this.sgm = sgm;
-        this.network = network;
-        this.vdc = vdc;
+    public SecurityGroupMemberNetworkCheckTask create(SecurityGroupMember sgm, Network network, VmDiscoveryCache vdc) {
+        SecurityGroupMemberNetworkCheckTask task = new SecurityGroupMemberNetworkCheckTask();
+        task.sgm = sgm;
+        task.network = network;
+        task.vdc = vdc;
+        task.securityGroupMemberAllHooksRemoveTask = this.securityGroupMemberAllHooksRemoveTask;
+        task.securityGroupMemberDeleteTask = this.securityGroupMemberDeleteTask;
+        task.securityGroupMemberHookCheckTask = this.securityGroupMemberHookCheckTask;
+        task.securityGroupMemberNetworkUpdateTask = this.securityGroupMemberNetworkUpdateTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -62,13 +86,13 @@ class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
 
             if (neutronNetwork == null || this.sgm.getMarkedForDeletion()) {
                 if (isControllerDefined) {
-                    this.tg.addTask(new SecurityGroupMemberAllHooksRemoveTask(this.sgm));
+                    this.tg.addTask(this.securityGroupMemberAllHooksRemoveTask.create(this.sgm));
                 }
-                this.tg.appendTask(new SecurityGroupMemberDeleteTask(this.sgm));
+                this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
             } else {
-                this.tg.addTask(new SecurityGroupMemberNetworkUpdateTask(this.sgm, neutronNetwork.getName()));
+                this.tg.addTask(this.securityGroupMemberNetworkUpdateTask.create(this.sgm, neutronNetwork.getName()));
                 if (isControllerDefined) {
-                	this.tg.appendTask(new SecurityGroupMemberHookCheckTask(this.sgm, this.vdc));
+                	this.tg.appendTask(this.securityGroupMemberHookCheckTask.create(this.sgm, this.vdc));
                 }
             }
         } finally {

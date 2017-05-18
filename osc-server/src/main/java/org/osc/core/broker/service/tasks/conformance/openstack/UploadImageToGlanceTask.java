@@ -42,8 +42,10 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.StaticRegistry;
+import org.osgi.service.component.annotations.Component;
 
-class UploadImageToGlanceTask extends TransactionalTask {
+@Component(service = UploadImageToGlanceTask.class)
+public class UploadImageToGlanceTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(UploadImageToGlanceTask.class);
 
@@ -55,18 +57,23 @@ class UploadImageToGlanceTask extends TransactionalTask {
     private ApplianceSoftwareVersion applianceSoftwareVersion;
     private Endpoint osEndPoint;
 
-    public UploadImageToGlanceTask(VirtualSystem vs, String region, String glanceImageName, ApplianceSoftwareVersion applianceSoftwareVersion, Endpoint osEndPoint) {
-        this.vs = vs;
-        this.region = region;
-        this.applianceSoftwareVersion = applianceSoftwareVersion;
-        this.osEndPoint = osEndPoint;
-        this.glanceImageName = glanceImageName;
-        this.name = getName();
+    public UploadImageToGlanceTask create(VirtualSystem vs, String region, String glanceImageName, ApplianceSoftwareVersion applianceSoftwareVersion, Endpoint osEndPoint) {
+        UploadImageToGlanceTask task = new UploadImageToGlanceTask();
+        task.vs = vs;
+        task.region = region;
+        task.applianceSoftwareVersion = applianceSoftwareVersion;
+        task.osEndPoint = osEndPoint;
+        task.glanceImageName = glanceImageName;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
 
         this.vs = emgr.findByPrimaryKey(this.vs.getId());
 
@@ -97,7 +104,7 @@ class UploadImageToGlanceTask extends TransactionalTask {
 
             this.vs.addOsImageReference(new OsImageReference(this.vs, this.region, imageId));
 
-            OSCEntityManager.update(em, this.vs);
+            OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
         } finally {
             glance.close();
         }

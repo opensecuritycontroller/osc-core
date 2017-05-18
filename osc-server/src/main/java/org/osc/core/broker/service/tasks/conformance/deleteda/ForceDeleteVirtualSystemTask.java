@@ -28,14 +28,21 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=ForceDeleteVirtualSystemTask.class)
 public class ForceDeleteVirtualSystemTask extends TransactionalTask {
 
     private VirtualSystem vs;
 
-    public ForceDeleteVirtualSystemTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public ForceDeleteVirtualSystemTask create(VirtualSystem vs) {
+        ForceDeleteVirtualSystemTask task = new ForceDeleteVirtualSystemTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -50,7 +57,7 @@ public class ForceDeleteVirtualSystemTask extends TransactionalTask {
 
         // remove all DAI(s)
         for (DistributedApplianceInstance dai : this.vs.getDistributedApplianceInstances()) {
-            OSCEntityManager.delete(em, dai);
+            OSCEntityManager.delete(em, dai, this.txBroadcastUtil);
         }
 
         // remove all SGI(s) - SG references
@@ -58,25 +65,25 @@ public class ForceDeleteVirtualSystemTask extends TransactionalTask {
             for (SecurityGroup sg : sgi.getSecurityGroups()) {
                 sgi.removeSecurity(sg);
                 sg.removeSecurityInterface(sgi);
-                OSCEntityManager.update(em, sg);
-                OSCEntityManager.update(em, sgi);
+                OSCEntityManager.update(em, sg, this.txBroadcastUtil);
+                OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
             }
         }
 
         // remove all Deployment Specs for this virtual system
         for (DeploymentSpec ds : this.vs.getDeploymentSpecs()) {
-            OSCEntityManager.delete(em, ds);
+            OSCEntityManager.delete(em, ds, this.txBroadcastUtil);
         }
 
         // remove all SGI for this virtual system
         for (SecurityGroupInterface sgi : this.vs.getSecurityGroupInterfaces()) {
-            OSCEntityManager.delete(em, sgi);
+            OSCEntityManager.delete(em, sgi, this.txBroadcastUtil);
         }
 
         //TODO: Delete OsFlavorReference and OsImageReferences too
 
         // delete virtual system from database
-        OSCEntityManager.delete(em, this.vs);
+        OSCEntityManager.delete(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

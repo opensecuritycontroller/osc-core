@@ -26,15 +26,22 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceProfileApi;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=DeleteDefaultServiceProfileTask.class)
 public class DeleteDefaultServiceProfileTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(DeleteDefaultServiceProfileTask.class);
 
     private VirtualSystemPolicy vsp;
 
-    public DeleteDefaultServiceProfileTask(VirtualSystemPolicy vsp) {
-        this.vsp = vsp;
-        this.name = getName();
+    public DeleteDefaultServiceProfileTask create(VirtualSystemPolicy vsp) {
+        DeleteDefaultServiceProfileTask task = new DeleteDefaultServiceProfileTask();
+        task.vsp = vsp;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

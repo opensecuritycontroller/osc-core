@@ -55,6 +55,9 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
         task.apiFactoryService = this.apiFactoryService;
         task.passwordUtil = this.passwordUtil;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -83,7 +86,7 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
 
         this.vs.setNsxServiceManagerId(serviceManager.getId());
         this.vs.setNsxVsmUuid(serviceManager.getVsmId());
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     public static String buildRestCallbackUrl() {

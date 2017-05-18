@@ -33,7 +33,9 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=RegisterDeploymentSpecTask.class)
 public class RegisterDeploymentSpecTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(RegisterDeploymentSpecTask.class);
     public static final String ALL_MINOR_VERSIONS = ".*";
@@ -41,11 +43,16 @@ public class RegisterDeploymentSpecTask extends TransactionalTask {
     private VirtualSystem vs;
     private VmwareSoftwareVersion version;
 
-    public RegisterDeploymentSpecTask(VirtualSystem vs,
+    public RegisterDeploymentSpecTask create(VirtualSystem vs,
             VmwareSoftwareVersion version) {
-        this.vs = vs;
-        this.version = version;
-        this.name = getName();
+        RegisterDeploymentSpecTask task = new RegisterDeploymentSpecTask();
+        task.vs = vs;
+        task.version = version;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @TaskInput
@@ -61,7 +68,7 @@ public class RegisterDeploymentSpecTask extends TransactionalTask {
         this.deploymentSpecId = createDeploymentSpec(this.version);
         this.vs.getNsxDeploymentSpecIds().put(this.version,
                 this.deploymentSpecId);
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     private String createDeploymentSpec(VmwareSoftwareVersion softwareVersion)

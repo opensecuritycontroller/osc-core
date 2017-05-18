@@ -49,7 +49,7 @@ public class ListApplianceManagerConnectorService
     public ListResponse<ApplianceManagerConnectorDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
         ListResponse<ApplianceManagerConnectorDto> response = new ListResponse<>();
         // Initializing Entity Manager
-        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         // to do mapping
         List<ApplianceManagerConnectorDto> mcmList = new ArrayList<>();
 

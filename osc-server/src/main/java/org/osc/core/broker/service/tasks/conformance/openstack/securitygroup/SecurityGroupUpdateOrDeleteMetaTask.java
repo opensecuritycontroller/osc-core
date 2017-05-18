@@ -47,7 +47,7 @@ import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.service.securitygroup.BaseSecurityGroupService;
+import org.osc.core.broker.service.securitygroup.AddSecurityGroupService;
 import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPartOfAnotherSecurityGroupException;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -56,19 +56,71 @@ import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecu
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Validates the Security Group members and syncs them if needed
  */
-class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
+@Component(service = SecurityGroupUpdateOrDeleteMetaTask.class)
+public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
+
+    @Reference
+    PortGroupCheckMetaTask portGroupCheckMetaTask;
+
+    @Reference
+    CheckPortGroupHookMetaTask checkPortGroupHookMetaTask;
+
+    @Reference
+    DeleteMgrSecurityGroupTask deleteMgrSecurityGroupTask;
+
+    @Reference
+    DeleteSecurityGroupInterfaceTask deleteSecurityGroupInterfaceTask;
+
+    @Reference
+    SecurityGroupMemberMapPropagateMetaTask securityGroupMemberMapPropagateMetaTask;
+
+    @Reference
+    DeleteSecurityGroupFromDbTask deleteSecurityGroupFromDbTask;
+
+    @Reference
+    SecurityGroupMemberVmCheckTask securityGroupMemberVmCheckTask;
+
+    @Reference
+    SecurityGroupMemberNetworkCheckTask securityGroupMemberNetworkCheckTask;
+
+    @Reference
+    SecurityGroupMemberSubnetCheckTask securityGroupMemberSubnetCheckTask;
+
+    @Reference
+    VmPortHookRemoveTask vmPortHookRemoveTask;
+
+    @Reference
+    AddSecurityGroupService addSecurityGroupService;
 
     private final Logger log = Logger.getLogger(SecurityGroupUpdateOrDeleteMetaTask.class);
 
     private SecurityGroup sg;
     private TaskGraph tg;
 
-    public SecurityGroupUpdateOrDeleteMetaTask(SecurityGroup sg) {
-        this.sg = sg;
+    public SecurityGroupUpdateOrDeleteMetaTask create(SecurityGroup sg) {
+        SecurityGroupUpdateOrDeleteMetaTask task = new SecurityGroupUpdateOrDeleteMetaTask();
+        task.sg = sg;
+        task.portGroupCheckMetaTask = this.portGroupCheckMetaTask;
+        task.checkPortGroupHookMetaTask = this.checkPortGroupHookMetaTask;
+        task.deleteMgrSecurityGroupTask = this.deleteMgrSecurityGroupTask;
+        task.deleteSecurityGroupInterfaceTask = this.deleteSecurityGroupInterfaceTask;
+        task.securityGroupMemberMapPropagateMetaTask = this.securityGroupMemberMapPropagateMetaTask;
+        task.deleteSecurityGroupFromDbTask = this.deleteSecurityGroupFromDbTask;
+        task.securityGroupMemberVmCheckTask = this.securityGroupMemberVmCheckTask;
+        task.securityGroupMemberNetworkCheckTask = this.securityGroupMemberNetworkCheckTask;
+        task.securityGroupMemberSubnetCheckTask = this.securityGroupMemberSubnetCheckTask;
+        task.vmPortHookRemoveTask = this.vmPortHookRemoveTask;
+        task.addSecurityGroupService = this.addSecurityGroupService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -103,7 +155,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             if (this.sg.isProtectAll()) {
                 // Mark all current entities as deleted, as we read them they will get unmarked for deletion.
                 for (SecurityGroupMember sgm : this.sg.getSecurityGroupMembers()) {
-                    OSCEntityManager.markDeleted(em, sgm);
+                    OSCEntityManager.markDeleted(em, sgm, this.txBroadcastUtil);
                 }
                 List<String> excludedMembers = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(em,
                         this.sg.getVirtualizationConnector().getId());
@@ -117,7 +169,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                         for (Resource server : servers) {
                             if (!excludedMembers.contains(server.getId())) {
                                 try {
-                                    BaseSecurityGroupService.addSecurityGroupMember(em, this.sg,
+                                    this.addSecurityGroupService.addSecurityGroupMember(em, this.sg,
                                             new SecurityGroupMemberItemDto(region, server.getName(), server.getId(),
                                                     SecurityGroupMemberType.VM.toString(), false));
                                     // Once the VM is part of the security group, dont try to add it again.
@@ -156,7 +208,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
         if (this.sg.getVirtualizationConnector().isControllerDefined()){
             if (SdnControllerApiFactory.supportsPortGroup(this.sg)){
-                this.tg.appendTask(new PortGroupCheckMetaTask(this.sg, isDeleteTg, domainId),
+                this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg, isDeleteTg, domainId),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
         }
@@ -164,7 +216,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
             List<Task> tasksToSucceedToDeleteSGI = new ArrayList<>();
             if (SdnControllerApiFactory.supportsPortGroup(this.sg)) {
-                CheckPortGroupHookMetaTask checkPortGroupMT = new CheckPortGroupHookMetaTask(sgi, isDeleteTg);
+                CheckPortGroupHookMetaTask checkPortGroupMT = this.checkPortGroupHookMetaTask.create(sgi, isDeleteTg);
                 this.tg.appendTask(checkPortGroupMT);
                 tasksToSucceedToDeleteSGI.add(checkPortGroupMT);
             }
@@ -175,7 +227,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     ManagerSecurityGroupApi mgrSgApi = ManagerApiFactory.createManagerSecurityGroupApi(vs);
                     ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(this.sg.getMgrId());
                     if (mepg != null) {
-                        DeleteMgrSecurityGroupTask mgrSecurityGroupDelTask = new DeleteMgrSecurityGroupTask(vs, mepg);
+                        DeleteMgrSecurityGroupTask mgrSecurityGroupDelTask = this.deleteMgrSecurityGroupTask.create(vs, mepg);
                         this.tg.appendTask(mgrSecurityGroupDelTask);
                         tasksToSucceedToDeleteSGI.add(mgrSecurityGroupDelTask);
                     }
@@ -186,15 +238,15 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 }
 
                 // Ensure removal of mapping for all DAIs before removing SGI.
-                this.tg.addTask(new DeleteSecurityGroupInterfaceTask(sgi), TaskGuard.ALL_PREDECESSORS_SUCCEEDED,
+                this.tg.addTask(this.deleteSecurityGroupInterfaceTask.create(sgi), TaskGuard.ALL_PREDECESSORS_SUCCEEDED,
                         tasksToSucceedToDeleteSGI.toArray(new Task[0]));
             }
         }
 
-        this.tg.appendTask(new SecurityGroupMemberMapPropagateMetaTask(this.sg), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        this.tg.appendTask(this.securityGroupMemberMapPropagateMetaTask.create(this.sg), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         if (isDeleteTg) {
-            this.tg.appendTask(new DeleteSecurityGroupFromDbTask(this.sg), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+            this.tg.appendTask(this.deleteSecurityGroupFromDbTask.create(this.sg), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         }
 
     }
@@ -203,16 +255,16 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         // add SG Member Sync task
         for (SecurityGroupMember sgm : this.sg.getSecurityGroupMembers()) {
             if (isDeleteTg) {
-                OSCEntityManager.markDeleted(em, sgm);
+                OSCEntityManager.markDeleted(em, sgm, this.txBroadcastUtil);
             }
             if (sgm.getType() == SecurityGroupMemberType.VM) {
-                this.tg.appendTask(new SecurityGroupMemberVmCheckTask(sgm, sgm.getVm(), vdc),
+                this.tg.appendTask(this.securityGroupMemberVmCheckTask.create(sgm, sgm.getVm(), vdc),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             } else if (sgm.getType() == SecurityGroupMemberType.NETWORK) {
-                this.tg.appendTask(new SecurityGroupMemberNetworkCheckTask(sgm, sgm.getNetwork(), vdc),
+                this.tg.appendTask(this.securityGroupMemberNetworkCheckTask.create(sgm, sgm.getNetwork(), vdc),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             } else if (sgm.getType() == SecurityGroupMemberType.SUBNET) {
-                this.tg.appendTask(new SecurityGroupMemberSubnetCheckTask(sgm, sgm.getSubnet(), vdc),
+                this.tg.appendTask(this.securityGroupMemberSubnetCheckTask.create(sgm, sgm.getSubnet(), vdc),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
         }
@@ -237,7 +289,7 @@ class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 for (VMPort port : ports) {
                     DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
                             .findByVirtualSystemAndPort(em, vs, port);
-                    VmPortHookRemoveTask hookRemoveTask = new VmPortHookRemoveTask(sgm, port, assignedRedirectedDai, vs
+                    VmPortHookRemoveTask hookRemoveTask = this.vmPortHookRemoveTask.create(sgm, port, assignedRedirectedDai, vs
                             .getDistributedAppliance().getName());
                     this.tg.appendTask(hookRemoveTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
                     tasksAdded.add(hookRemoveTask);

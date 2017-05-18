@@ -31,15 +31,22 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudUtil;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
-class OsSvaDeleteFloatingIpTask extends TransactionalTask {
+@Component(service=OsSvaDeleteFloatingIpTask.class)
+public class OsSvaDeleteFloatingIpTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(OsSvaDeleteFloatingIpTask.class);
 
     private DistributedApplianceInstance dai;
 
-    public OsSvaDeleteFloatingIpTask(DistributedApplianceInstance dai) {
-        this.dai = dai;
+    public OsSvaDeleteFloatingIpTask create(DistributedApplianceInstance dai) {
+        OsSvaDeleteFloatingIpTask task = new OsSvaDeleteFloatingIpTask();
+        task.dai = dai;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -60,7 +67,7 @@ class OsSvaDeleteFloatingIpTask extends TransactionalTask {
             this.dai.setIpAddress(null);
             this.dai.setFloatingIpId(null);
 
-            OSCEntityManager.update(em, this.dai);
+            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
 
         } finally {
             nova.close();

@@ -36,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.internal.util.collections.Sets;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -52,14 +53,11 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.AddDistributedApplianceResponse;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(HibernateUtil.class)
+@RunWith(MockitoJUnitRunner.class)
 public class AddDistributedApplianceServiceTest {
 
     private static final String SECRET_KEY = "secret";
@@ -84,6 +82,12 @@ public class AddDistributedApplianceServiceTest {
 
     @Mock
     private EncryptionApi encryption;
+
+    @Mock
+    DBConnectionManager dbMgr;
+
+    @Mock
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
     @InjectMocks
     private AddDistributedApplianceService service;
@@ -112,9 +116,8 @@ public class AddDistributedApplianceServiceTest {
         Mockito.when(this.encryption.decryptAESCTR(ENCRYPTED_KEY)).
             thenReturn(SECRET_KEY);
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
 
         populateDatabase();

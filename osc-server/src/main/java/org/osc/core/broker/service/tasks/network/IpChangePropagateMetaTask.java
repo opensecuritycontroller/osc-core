@@ -63,6 +63,9 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
     private UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
     @Reference
+    private UpdateNsxDeploymentSpecTask updateNsxDeploymentSpecTask;
+
+    @Reference
     private MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
     public IpChangePropagateMetaTask create() {
@@ -73,6 +76,10 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
         task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
         task.name = task.getName();
+        task.updateNsxDeploymentSpecTask = task.updateNsxDeploymentSpecTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -82,7 +89,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
         log.debug("Start executing IP Change Propagate task");
 
         OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
-                em);
+                em, this.txBroadcastUtil);
 
         this.tg = new TaskGraph();
         for (DistributedAppliance da : emgr.listAll()) {
@@ -106,7 +113,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
                     propagateTaskGraph.addTask(this.updateNsxServiceAttributesTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating Service Deployment Spec OVF Image URL
-                    propagateTaskGraph.addTask(new UpdateNsxDeploymentSpecTask(vs),
+                    propagateTaskGraph.addTask(this.updateNsxDeploymentSpecTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating Service Instance Attributes which include vmiDC server IP
                     propagateTaskGraph.addTask(this.updateNsxServiceInstanceAttributesTask.create(vs),
@@ -123,7 +130,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
         }
 
         OSCEntityManager<ApplianceManagerConnector> emgrMc = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, em);
+                ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         for (ApplianceManagerConnector mc : emgrMc.listAll()) {
             try {
                 if (ManagerApiFactory.isPersistedUrlNotifications(mc)) {

@@ -50,7 +50,7 @@ public class MCChangeNotificationService extends ServiceDispatcher<MCChangeNotif
         BaseJobResponse response = new BaseJobResponse();
 
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, em);
+                ApplianceManagerConnector.class, em, this.txBroadcastUtil);
 
         ApplianceManagerConnector mc = validate(em, request, emgr);
 

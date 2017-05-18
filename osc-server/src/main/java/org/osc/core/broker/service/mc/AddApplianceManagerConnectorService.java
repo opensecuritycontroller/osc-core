@@ -74,7 +74,7 @@ public class AddApplianceManagerConnectorService
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorRequest> request, EntityManager em)
             throws Exception {
-        OSCEntityManager<ApplianceManagerConnector> appMgrEntityMgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
+        OSCEntityManager<ApplianceManagerConnector> appMgrEntityMgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
 
         try {
             validate(request, appMgrEntityMgr);
@@ -90,7 +90,7 @@ public class AddApplianceManagerConnectorService
         ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption);
         appMgrEntityMgr.create(mc);
 
-        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
+        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
         mc.setSslCertificateAttrSet(certificateAttrEntityMgr.storeSSLEntries(mc.getSslCertificateAttrSet(), mc.getId()));
 
         appMgrEntityMgr.update(mc);

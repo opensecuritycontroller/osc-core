@@ -22,7 +22,9 @@ import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
+import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -35,21 +37,32 @@ public class NotificationListenerFactory {
     @Reference
     private ConformService conformService;
 
+    @Reference
+    private AlertGenerator alertGenerator;
+
+    @Reference
+    private Server server;
+
     public OsNotificationListener createAndRegisterNotificationListener(VirtualizationConnector vc,
             OsNotificationObjectType objectType, List<String> objectIdList, BaseEntity entity)
             throws VmidcBrokerInvalidEntryException {
 
         switch (objectType) {
         case PORT:
-            return new OsPortNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
+            return new OsPortNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
+                    this.alertGenerator, this.server);
         case VM:
-            return new OsVMNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
+            return new OsVMNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
+                    this.alertGenerator, this.server);
         case HOST_AGGREGRATE:
-            return new OsHostAggregrateNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
+            return new OsHostAggregrateNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
+                    this.alertGenerator, this.server);
         case TENANT:
-            return new OsTenantNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
+            return new OsTenantNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
+                    this.alertGenerator, this.server);
         case NETWORK:
-            return new OsNetworkNotificationListener(vc, objectType, objectIdList, entity, this.conformService);
+            return new OsNetworkNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
+                    this.alertGenerator, this.server);
         default:
             break;
         }

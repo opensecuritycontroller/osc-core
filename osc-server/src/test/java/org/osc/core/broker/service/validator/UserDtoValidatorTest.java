@@ -40,6 +40,7 @@ import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -48,6 +49,9 @@ import junitparams.Parameters;
 public class UserDtoValidatorTest {
     @Mock
     private EntityManager em;
+
+    @Mock
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -66,7 +70,7 @@ public class UserDtoValidatorTest {
 
         populateDatabase();
 
-        this.validator = new UserDtoValidator(this.em);
+        this.validator = new UserDtoValidator(this.em, this.txBroadcastUtil);
 
         this.existingUserDto.setId(this.existingUser.getId());
     }

@@ -320,7 +320,7 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
             spec.setHostVersion(org.osc.core.broker.model.virtualization.VmwareSoftwareVersion.valueOf(sw.name())
                     .toString() + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
             spec.setOvfUrl(IMAGE_URL_OUT_OF_SYNC);
-            expectedGraph.addTask(new UpdateNsxDeploymentSpecTask(vs, spec));
+            expectedGraph.addTask(new UpdateNsxDeploymentSpecTask().create(vs, spec));
         }
         expectedGraph.addTask(updateNsxServiceAttributesTask.create(vs));
         expectedGraph.addTask(updateNsxServiceInstanceAttributesTask.create(vs));
@@ -335,7 +335,7 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
             spec.setHostVersion(org.osc.core.broker.model.virtualization.VmwareSoftwareVersion.valueOf(sw.name())
                     .toString() + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
             spec.setOvfUrl(IMAGE_URL_OUT_OF_SYNC);
-            expectedGraph.addTask(new UpdateNsxDeploymentSpecTask(vs, spec));
+            expectedGraph.addTask(new UpdateNsxDeploymentSpecTask().create(vs, spec));
         }
         expectedGraph.addTask(updateNsxServiceInstanceAttributesTask.create(vs));
         return expectedGraph;
@@ -345,7 +345,7 @@ public class NsxDeploymentSpecCheckMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         List<VmwareSoftwareVersion> versions = Arrays.asList(softwareVersions);
         for (VmwareSoftwareVersion version : versions) {
-            expectedGraph.appendTask(new RegisterDeploymentSpecTask(vs , version));
+            expectedGraph.appendTask(new RegisterDeploymentSpecTask().create(vs , version));
         }
         return expectedGraph;
     }

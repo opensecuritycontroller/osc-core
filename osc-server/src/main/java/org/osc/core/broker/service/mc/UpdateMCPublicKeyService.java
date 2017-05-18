@@ -37,7 +37,7 @@ public class UpdateMCPublicKeyService extends ServiceDispatcher<UpdateMCPublicKe
         EmptySuccessResponse response = new EmptySuccessResponse();
 
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, em);
+                ApplianceManagerConnector.class, em, this.txBroadcastUtil);
 
         ApplianceManagerConnector mc = validate(em, request);
         mc.setPublicKey(request.getPublicKey());
@@ -65,7 +65,7 @@ public class UpdateMCPublicKeyService extends ServiceDispatcher<UpdateMCPublicKe
 
         // retrieve existing entry from db
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, em);
+                ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(mcId);
 
         if (mc == null) {

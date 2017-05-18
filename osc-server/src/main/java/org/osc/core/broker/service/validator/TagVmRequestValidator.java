@@ -22,13 +22,16 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.TagVmRequest;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class TagVmRequestValidator implements RequestValidator<TagVmRequest, DistributedApplianceInstance> {
 
     private EntityManager em;
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
-    public TagVmRequestValidator(EntityManager em) {
+    public TagVmRequestValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
         this.em = em;
+        this.txBroadcastUtil = txBroadcastUtil;
     }
 
     @Override
@@ -42,7 +45,7 @@ public class TagVmRequestValidator implements RequestValidator<TagVmRequest, Dis
             throw new VmidcBrokerValidationException("Null request or invalid Appliance Instance Name.");
         }
 
-        OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<>(DistributedApplianceInstance.class, this.em);
+        OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<>(DistributedApplianceInstance.class, this.em, this.txBroadcastUtil);
         DistributedApplianceInstance dai = emgr.findByFieldName("name", request.getApplianceInstanceName());
 
         if (dai == null) {

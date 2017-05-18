@@ -41,10 +41,10 @@ public class AddUserService extends ServiceDispatcher<AddUserRequest, AddUserRes
     @Override
     protected AddUserResponse exec(AddUserRequest request, EntityManager em) throws Exception {
         // Initializing Entity Manager
-        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em, this.txBroadcastUtil);
 
         if (this.validator == null) {
-            this.validator = new UserDtoValidator(em);
+            this.validator = new UserDtoValidator(em, this.txBroadcastUtil);
         }
 
         this.validator.validateForCreate(request);

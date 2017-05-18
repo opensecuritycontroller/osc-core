@@ -28,15 +28,22 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = ForceDeleteDSTask.class)
 public class ForceDeleteDSTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(ForceDeleteDSTask.class);
 
     private DeploymentSpec ds;
 
-    public ForceDeleteDSTask(DeploymentSpec ds) {
-        this.ds = ds;
-        this.name = getName();
+    public ForceDeleteDSTask create(DeploymentSpec ds) {
+        ForceDeleteDSTask task = new ForceDeleteDSTask();
+        task.ds = ds;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -55,7 +62,7 @@ public class ForceDeleteDSTask extends TransactionalTask {
             for (VMPort port : dai.getProtectedPorts()) {
                 dai.removeProtectedPort(port);
             }
-            OSCEntityManager.delete(em, dai);
+            OSCEntityManager.delete(em, dai, this.txBroadcastUtil);
         }
 
         // remove the sg reference from database
@@ -63,11 +70,11 @@ public class ForceDeleteDSTask extends TransactionalTask {
                 this.ds.getVirtualSystem(), this.ds.getTenantId(), this.ds.getRegion()).size() <= 1;
 
         if (osSgCanBeDeleted) {
-            OSCEntityManager.delete(em, this.ds.getOsSecurityGroupReference());
+            OSCEntityManager.delete(em, this.ds.getOsSecurityGroupReference(), this.txBroadcastUtil);
         }
 
         // delete DS from the database
-        OSCEntityManager.delete(em, this.ds);
+        OSCEntityManager.delete(em, this.ds, this.txBroadcastUtil);
     }
 
     @Override

@@ -54,6 +54,9 @@ public class PasswordChangePropagateDaiMetaTask extends TransactionalMetaTask {
         task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 

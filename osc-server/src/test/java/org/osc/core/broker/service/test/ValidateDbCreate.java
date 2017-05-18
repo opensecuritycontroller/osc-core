@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.model.entities.ReleaseInfo;
 import org.osc.core.broker.model.entities.RoleType;
 import org.osc.core.broker.model.entities.User;
@@ -43,18 +43,17 @@ import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.test.util.TestTransactionControl;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({HibernateUtil.class })
+@RunWith(MockitoJUnitRunner.class)
 public class ValidateDbCreate {
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private TestTransactionControl txControl;
+
+    @Mock
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
     EntityManager em;
 
@@ -62,10 +61,6 @@ public class ValidateDbCreate {
     public void setUp() throws Exception {
         // initializing in-memory db
         this.em = InMemDB.init().createEntityManager();
-
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
 
         this.txControl.setEntityManager(this.em);
     }
@@ -97,7 +92,7 @@ public class ValidateDbCreate {
         distributedApplianceInst.setIpAddress("123.4.5.7");
         distributedApplianceInst.setName("Agent1");
 
-        OSCEntityManager.create(em, distributedApplianceInst);
+        OSCEntityManager.create(em, distributedApplianceInst, this.txBroadcastUtil);
 
         // retrieve back and validate
         distributedApplianceInst = em.find(DistributedApplianceInstance.class,
@@ -114,7 +109,7 @@ public class ValidateDbCreate {
         virtualSystem.setNsxServiceManagerId("nsx-servicemgr-4");
         virtualSystem.setVirtualizationConnector(virtualizationCon);
 
-        OSCEntityManager.create(em, virtualSystem);
+        OSCEntityManager.create(em, virtualSystem, this.txBroadcastUtil);
 
         // retrieve back and validate
         virtualSystem = em.find(VirtualSystem.class, virtualSystem.getId());
@@ -127,7 +122,7 @@ public class ValidateDbCreate {
         domain.setName("DC-1");
         domain.setMgrId("domain-id-3");
 
-        OSCEntityManager.create(em, domain);
+        OSCEntityManager.create(em, domain, this.txBroadcastUtil);
 
         // retrieve back and validate
         domain = em.find(Domain.class, domain.getId());
@@ -138,7 +133,7 @@ public class ValidateDbCreate {
     private JobRecord addJobRecord(EntityManager em){
         JobRecord jobRecord = new JobRecord();
         jobRecord.setName("testJob");
-        OSCEntityManager.create(em, jobRecord);
+        OSCEntityManager.create(em, jobRecord, this.txBroadcastUtil);
 
         // retrieve back and validate
         jobRecord = em.find(JobRecord.class, jobRecord.getId());
@@ -155,7 +150,7 @@ public class ValidateDbCreate {
         distributedAppliance.setAppliance(appliance);
         distributedAppliance.setApplianceVersion("1.0");
 
-        OSCEntityManager.create(em, distributedAppliance);
+        OSCEntityManager.create(em, distributedAppliance, this.txBroadcastUtil);
 
         // retrieve back and validate
         distributedAppliance = em.find(DistributedAppliance.class, distributedAppliance.getId());
@@ -176,7 +171,7 @@ public class ValidateDbCreate {
         virtualizationCon.setVirtualizationSoftwareVersion("12.3");
         virtualizationCon.setVirtualizationType(VirtualizationType.VMWARE);
 
-        OSCEntityManager.create(em, virtualizationCon);
+        OSCEntityManager.create(em, virtualizationCon, this.txBroadcastUtil);
 
         // retrieve back and validate
         virtualizationCon = em.find(VirtualizationConnector.class, virtualizationCon.getId());
@@ -194,7 +189,7 @@ public class ValidateDbCreate {
         applianceMgrCon.setPassword("pass123");
         applianceMgrCon.setIpAddress("172.34.5.677");
 
-        OSCEntityManager.create(em, applianceMgrCon);
+        OSCEntityManager.create(em, applianceMgrCon, this.txBroadcastUtil);
 
         // retrieve back and validate
         applianceMgrCon = em.find(ApplianceManagerConnector.class, applianceMgrCon.getId());
@@ -210,7 +205,7 @@ public class ValidateDbCreate {
         applianceSwVer.setVirtualizarionSoftwareVersion("vir_1.0");
         applianceSwVer.setVirtualizationType(VirtualizationType.VMWARE);
 
-        OSCEntityManager.create(em, applianceSwVer);
+        OSCEntityManager.create(em, applianceSwVer, this.txBroadcastUtil);
 
         // retrieve back and validate
         applianceSwVer = em.find(ApplianceSoftwareVersion.class, applianceSwVer.getId());
@@ -225,7 +220,7 @@ public class ValidateDbCreate {
         appliance.setModel("model-1");
         appliance.setManagerSoftwareVersion("1.2");
 
-        OSCEntityManager.create(em, appliance);
+        OSCEntityManager.create(em, appliance, this.txBroadcastUtil);
 
         // retrieve back and validate
         appliance = em.find(Appliance.class, appliance.getId());
@@ -237,7 +232,7 @@ public class ValidateDbCreate {
         ReleaseInfo releaseInfo = new ReleaseInfo();
 
         releaseInfo.setDbVersion(0);
-        OSCEntityManager.create(em, releaseInfo);
+        OSCEntityManager.create(em, releaseInfo, this.txBroadcastUtil);
 
         // retrieve back and validate
         releaseInfo = em.find(ReleaseInfo.class, releaseInfo.getId());
@@ -253,7 +248,7 @@ public class ValidateDbCreate {
         user.setRole(RoleType.ADMIN);
         user.setEmail("trinh_lee@mcafee.com");
 
-        OSCEntityManager.create(em, user);
+        OSCEntityManager.create(em, user, this.txBroadcastUtil);
 
         // retrieve back and validate
         user = em.find(User.class, user.getId());

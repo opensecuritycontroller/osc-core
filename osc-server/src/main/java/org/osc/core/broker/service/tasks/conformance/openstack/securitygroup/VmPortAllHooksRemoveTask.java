@@ -27,6 +27,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * This task is responsible for removing all the inspection appliances
@@ -34,7 +35,8 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
  * does not support port group it will also remove orphan inspection hooks
  * in the controller.
  */
-class VmPortAllHooksRemoveTask extends TransactionalTask {
+@Component(service=VmPortAllHooksRemoveTask.class)
+public class VmPortAllHooksRemoveTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(VmPortAllHooksRemoveTask.class);
 
@@ -43,11 +45,16 @@ class VmPortAllHooksRemoveTask extends TransactionalTask {
     private String sgmName;
     private SecurityGroupMemberType sgmType;
 
-    public VmPortAllHooksRemoveTask(SecurityGroupMember sgm, VMPort port) {
-        this.sgm = sgm;
-        this.port = port;
-        this.sgmType = sgm.getType();
-        this.sgmName = sgm.getMemberName();
+    public VmPortAllHooksRemoveTask create(SecurityGroupMember sgm, VMPort port) {
+        VmPortAllHooksRemoveTask task = new VmPortAllHooksRemoveTask();
+        task.sgm = sgm;
+        task.port = port;
+        task.sgmType = sgm.getType();
+        task.sgmName = sgm.getMemberName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -67,7 +74,7 @@ class VmPortAllHooksRemoveTask extends TransactionalTask {
             }
         }
 
-        OSCEntityManager.update(em, this.port);
+        OSCEntityManager.update(em, this.port, this.txBroadcastUtil);
     }
 
     @Override

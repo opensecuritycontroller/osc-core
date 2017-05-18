@@ -50,8 +50,6 @@ public class HostEntityMgr {
 
 
     public static Host findById(EntityManager em, Long id) {
-        // Initializing Entity Manager
-        OSCEntityManager<Host> emgr = new OSCEntityManager<Host>(Host.class, em);
-        return emgr.findByPrimaryKey(id);
+        return em.find(Host.class, id);
     }
 }

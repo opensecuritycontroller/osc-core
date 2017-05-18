@@ -39,9 +39,21 @@ import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.Add
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.DeleteSecurityGroupFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberDeleteTask;
 import org.osc.sdk.sdn.element.ServiceProfileElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = NsxServiceProfileContainerCheckMetaTask.class)
 public class NsxServiceProfileContainerCheckMetaTask extends TransactionalMetaTask {
     //private static final Logger log = Logger.getLogger(NsxServiceProfileContainerCheckMetaTask.class);
+
+    @Reference
+    AddSecurityGroupMemberTask addSecurityGroupMemberTask;
+
+    @Reference
+    SecurityGroupMemberDeleteTask securityGroupMemberDeleteTask;
+
+    @Reference
+    DeleteSecurityGroupFromDbTask deleteSecurityGroupFromDbTask;
 
     private VirtualSystem vs;
     private SecurityGroupInterface sgi;
@@ -50,22 +62,38 @@ public class NsxServiceProfileContainerCheckMetaTask extends TransactionalMetaTa
     private String tag;
     private String sgiName;
 
-    public NsxServiceProfileContainerCheckMetaTask(SecurityGroupInterface sgi, ContainerSet containerSet) {
+    private NsxServiceProfileContainerCheckMetaTask create() {
+        NsxServiceProfileContainerCheckMetaTask task = new NsxServiceProfileContainerCheckMetaTask();
+        task.addSecurityGroupMemberTask = this.addSecurityGroupMemberTask;
+        task.securityGroupMemberDeleteTask = this.securityGroupMemberDeleteTask;
+        task.deleteSecurityGroupFromDbTask = this.deleteSecurityGroupFromDbTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
+    }
+
+    public NsxServiceProfileContainerCheckMetaTask create(SecurityGroupInterface sgi, ContainerSet containerSet) {
+        NsxServiceProfileContainerCheckMetaTask task = create();
         this.sgi = sgi;
         this.vs = sgi.getVirtualSystem();
         this.tag = sgi.getTag();
         this.sgiName = sgi.getName();
         this.containerSet = containerSet;
         this.name = getName();
+        return task;
     }
 
-    public NsxServiceProfileContainerCheckMetaTask(VirtualSystem vs, ServiceProfileElement serviceProfile,
+    public NsxServiceProfileContainerCheckMetaTask create(VirtualSystem vs, ServiceProfileElement serviceProfile,
             ContainerSet containerSet) {
+        NsxServiceProfileContainerCheckMetaTask task = create();
         this.vs = vs;
         this.tag = serviceProfile.getId();
         this.sgiName = serviceProfile.getName();
         this.containerSet = containerSet;
         this.name = getName();
+
+        return task;
     }
 
     @Override
@@ -89,16 +117,16 @@ public class NsxServiceProfileContainerCheckMetaTask extends TransactionalMetaTa
                 sg = new SecurityGroup(this.sgi.getVirtualSystem().getVirtualizationConnector(), container.getId());
                 sg.setName(container.getName());
                 sg.addSecurityGroupInterface(this.sgi);
-                OSCEntityManager.create(em, sg);
+                OSCEntityManager.create(em, sg, this.txBroadcastUtil);
                 this.sgi.addSecurityGroup(sg);
-                OSCEntityManager.update(em, this.sgi);
+                OSCEntityManager.update(em, this.sgi, this.txBroadcastUtil);
             } else {
                 if (!sg.getName().equals(container.getName())) {
                     this.tg.appendTask(new InfoTask(String.format("Renaming Security Group from '%s' to '%s'",
                             sg.getName(), container.getName())));
 
                     sg.setName(container.getName());
-                    OSCEntityManager.update(em, sg);
+                    OSCEntityManager.update(em, sg, this.txBroadcastUtil);
                 }
             }
 
@@ -107,7 +135,7 @@ public class NsxServiceProfileContainerCheckMetaTask extends TransactionalMetaTa
                     SecurityGroupMember sgm = findSecurityGroupMember(sg.getSecurityGroupMembers(),
                             SecurityGroupMemberType.fromText(container.getType()), address);
                     if (sgm == null) {
-                        this.tg.appendTask(new AddSecurityGroupMemberTask(sg, SecurityGroupMemberType
+                        this.tg.appendTask(this.addSecurityGroupMemberTask.create(sg, SecurityGroupMemberType
                                 .fromText(container.getType()), address));
                     }
                 }
@@ -116,7 +144,7 @@ public class NsxServiceProfileContainerCheckMetaTask extends TransactionalMetaTa
             // Remove dangling sgm
             for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
                 if (!isExistSecurityGroupMember(sgm, container)) {
-                    this.tg.appendTask(new SecurityGroupMemberDeleteTask(sgm));
+                    this.tg.appendTask(this.securityGroupMemberDeleteTask.create(sgm));
                 }
             }
         }
@@ -124,7 +152,7 @@ public class NsxServiceProfileContainerCheckMetaTask extends TransactionalMetaTa
         // Remove dangling sg
         for (SecurityGroup sg : sgs) {
             if (!isExistSecurityGroup(sg, this.containerSet.getList())) {
-                this.tg.appendTask(new DeleteSecurityGroupFromDbTask(sg));
+                this.tg.appendTask(this.deleteSecurityGroupFromDbTask.create(sg));
             }
         }
     }

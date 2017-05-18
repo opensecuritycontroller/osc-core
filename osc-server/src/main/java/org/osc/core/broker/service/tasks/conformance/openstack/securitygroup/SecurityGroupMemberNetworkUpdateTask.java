@@ -41,18 +41,30 @@ import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
+@Component(service = SecurityGroupMemberNetworkUpdateTask.class)
+public class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
 
     private final Logger log = Logger.getLogger(SecurityGroupMemberNetworkUpdateTask.class);
     private TaskGraph tg;
 
-    private SecurityGroupMember sgm;
-    private final String networkName;
+    @Reference
+    MarkStalePortsAsDeletedTask markStalePortsAsDeletedTask;
 
-    public SecurityGroupMemberNetworkUpdateTask(SecurityGroupMember sgm, String networkName) {
-        this.sgm = sgm;
-        this.networkName = networkName;
+    private SecurityGroupMember sgm;
+    private String networkName;
+
+    public SecurityGroupMemberNetworkUpdateTask create(SecurityGroupMember sgm, String networkName) {
+        SecurityGroupMemberNetworkUpdateTask task = new SecurityGroupMemberNetworkUpdateTask();
+        task.sgm = sgm;
+        task.networkName = networkName;
+        task.markStalePortsAsDeletedTask = this.markStalePortsAsDeletedTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -90,7 +102,7 @@ class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
                         }
                         vmPort = new VMPort(network, osPort.getMacAddress(), network.getOpenstackId(), osPort.getId(),
                                 ipAddresses);
-                        OSCEntityManager.create(em, vmPort);
+                        OSCEntityManager.create(em, vmPort, this.txBroadcastUtil);
                         this.log.info("Creating port for Network '" + network.getName() + "' with Port:" + vmPort);
                     } else {
                         //Port exists check if it belongs to a VM
@@ -134,7 +146,7 @@ class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
             }
             // Any ports not listed from openstack but are in our database are stale and need to be removed(after hooks
             // are removed) so marking them as deleted
-            this.tg.appendTask(new MarkStalePortsAsDeletedTask(network, existingOsPortIds),
+            this.tg.appendTask(this.markStalePortsAsDeletedTask.create(network, existingOsPortIds),
                     TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         } finally {
@@ -143,7 +155,7 @@ class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
             }
         }
 
-        OSCEntityManager.update(em, network);
+        OSCEntityManager.update(em, network, this.txBroadcastUtil);
     }
 
     @Override

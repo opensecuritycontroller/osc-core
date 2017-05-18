@@ -27,15 +27,23 @@ import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceInstanceApi;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = RegisterServiceInstanceTask.class)
 public class RegisterServiceInstanceTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(RegisterServiceInstanceTask.class);
 
     private VirtualSystem vs;
 
-    public RegisterServiceInstanceTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public RegisterServiceInstanceTask create(VirtualSystem vs) {
+
+        RegisterServiceInstanceTask task = new RegisterServiceInstanceTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -49,7 +57,7 @@ public class RegisterServiceInstanceTask extends TransactionalTask {
 
         // persist the svcInstanceId
         this.vs.setNsxServiceInstanceId(serviceInstanceId);
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

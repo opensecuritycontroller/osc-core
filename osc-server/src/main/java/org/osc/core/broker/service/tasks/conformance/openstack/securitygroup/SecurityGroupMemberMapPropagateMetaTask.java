@@ -29,15 +29,27 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = SecurityGroupMemberMapPropagateMetaTask.class)
 public class SecurityGroupMemberMapPropagateMetaTask extends TransactionalMetaTask {
+
+    @Reference
+    MgrSecurityGroupCheckMetaTask mgrSecurityGroupCheckMetaTask;
 
     private SecurityGroup sg;
 
     private TaskGraph tg;
 
-    public SecurityGroupMemberMapPropagateMetaTask(SecurityGroup sg) {
-        this.sg = sg;
+    public SecurityGroupMemberMapPropagateMetaTask create(SecurityGroup sg) {
+        SecurityGroupMemberMapPropagateMetaTask task = new SecurityGroupMemberMapPropagateMetaTask();
+        task.sg = sg;
+        task.mgrSecurityGroupCheckMetaTask = this.mgrSecurityGroupCheckMetaTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -49,7 +61,7 @@ public class SecurityGroupMemberMapPropagateMetaTask extends TransactionalMetaTa
             VirtualSystem vs = sgi.getVirtualSystem();
             if (vs.getMgrId() != null  && ManagerApiFactory.syncsSecurityGroup(vs)) {
                 // Sync SG members mapping to the manager directly
-                this.tg.addTask(new MgrSecurityGroupCheckMetaTask(vs, this.sg), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                this.tg.addTask(this.mgrSecurityGroupCheckMetaTask.create(vs, this.sg), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
         }
     }

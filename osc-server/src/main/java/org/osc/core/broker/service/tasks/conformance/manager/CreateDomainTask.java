@@ -26,17 +26,25 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=CreateDomainTask.class)
 public class CreateDomainTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(CreateDomainTask.class);
 
     private ApplianceManagerConnector mc;
     private Domain domain;
 
-    public CreateDomainTask(ApplianceManagerConnector mc, Domain domain) {
-        this.mc = mc;
-        this.domain = domain;
-        this.name = getName();
+    public CreateDomainTask create(ApplianceManagerConnector mc, Domain domain) {
+        CreateDomainTask task = new CreateDomainTask();
+
+        task.mc = mc;
+        task.domain = domain;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -48,7 +56,7 @@ public class CreateDomainTask extends TransactionalTask {
         newDomain.setMgrId(this.domain.getMgrId());
         newDomain.setName(this.domain.getName());
 
-        OSCEntityManager.create(em, newDomain);
+        OSCEntityManager.create(em, newDomain, this.txBroadcastUtil);
     }
 
     @Override

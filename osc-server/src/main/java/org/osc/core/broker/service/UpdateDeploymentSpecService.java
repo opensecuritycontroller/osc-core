@@ -84,7 +84,7 @@ public class UpdateDeploymentSpecService
 
                 }
             }
-            OSCEntityManager.update(em, this.ds);
+            OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
             UnlockObjectMetaTask forLambda = dsUnlock;
             chain(() -> {
                 try {
@@ -169,7 +169,7 @@ public class UpdateDeploymentSpecService
             HostAggregate dsHostAggr = dsHaIter.next();
             if (!doesSetContainHostAggr(selectedHaDtoSet, dsHostAggr)) {
                 log.info("Deleting Host Aggregate :" + dsHostAggr.getOpenstackId());
-                OSCEntityManager.delete(em, dsHostAggr);
+                OSCEntityManager.delete(em, dsHostAggr, this.txBroadcastUtil);
                 dsHaIter.remove();
             }
         }
@@ -221,7 +221,7 @@ public class UpdateDeploymentSpecService
             AvailabilityZone dsAz = dsAzIter.next();
             if (!doesSetContainAz(selectedAZDtoSet, dsAz)) {
                 log.info("Deleting Availability Zone:" + dsAz.getZone());
-                OSCEntityManager.delete(em, dsAz);
+                OSCEntityManager.delete(em, dsAz, this.txBroadcastUtil);
                 dsAzIter.remove();
             }
         }
@@ -271,7 +271,7 @@ public class UpdateDeploymentSpecService
             Host dsHost = dsHostIter.next();
             if (!doesSetContainHost(selectedHostDtoSet, dsHost)) {
                 log.info("Deleting Host:" + dsHost.getName());
-                OSCEntityManager.delete(em, dsHost);
+                OSCEntityManager.delete(em, dsHost, this.txBroadcastUtil);
                 dsHostIter.remove();
             }
         }

@@ -27,19 +27,18 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.ArgumentMatcher;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(HibernateUtil.class)
 public class DeleteImageReferenceTaskTest {
     @Rule public ExpectedException exception = ExpectedException.none();
 
@@ -48,6 +47,16 @@ public class DeleteImageReferenceTaskTest {
 
     @Mock(answer=Answers.CALLS_REAL_METHODS)
     TestTransactionControl txControl;
+
+    @Mock
+    DBConnectionManager dbMgr;
+
+    @Mock
+    TransactionalBroadcastUtil txBroadcastUtil;
+
+    @InjectMocks
+    DeleteImageReferenceTask factory;
+
 
     private OsImageReference imageReference;
     private OsImageReference otherImageReference;
@@ -62,9 +71,8 @@ public class DeleteImageReferenceTaskTest {
 
         this.txControl.setEntityManager(this.em);
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
         this.vs = new VirtualSystem();
         this.vs.setId(1L);
@@ -92,7 +100,7 @@ public class DeleteImageReferenceTaskTest {
     @Test
     public void testExecuteTransaction_WithImage_DeletesAndUpdatesVS() throws Exception {
         //Arrange.
-        DeleteImageReferenceTask task = new DeleteImageReferenceTask(this.imageReference, this.vs);
+        DeleteImageReferenceTask task = this.factory.create(this.imageReference, this.vs);
 
         //Act.
         task.execute();
@@ -106,7 +114,7 @@ public class DeleteImageReferenceTaskTest {
     @Test
     public void testExecuteTransaction_WithImageNotInVS_DeletesAndUpdatesVS() throws Exception {
         //Arrange.
-        DeleteImageReferenceTask task = new DeleteImageReferenceTask(this.otherImageReference, this.vs);
+        DeleteImageReferenceTask task = this.factory.create(this.otherImageReference, this.vs);
 
         //Act.
         task.execute();

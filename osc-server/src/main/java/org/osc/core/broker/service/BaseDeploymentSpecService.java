@@ -81,18 +81,18 @@ public abstract class BaseDeploymentSpecService<I extends Request, O extends Res
     protected HostAggregate createHostAggregate(EntityManager em, HostAggregateDto haDto, DeploymentSpec ds) {
         HostAggregate ha = new HostAggregate(ds, haDto.getOpenstackId());
         HostAggregateEntityMgr.toEntity(ha, haDto);
-        return OSCEntityManager.create(em, ha);
+        return OSCEntityManager.create(em, ha, this.txBroadcastUtil);
     }
 
     protected AvailabilityZone createAvailabilityZone(EntityManager em, AvailabilityZoneDto azDto, DeploymentSpec ds) {
         AvailabilityZone az = new AvailabilityZone(ds, azDto.getRegion(), azDto.getZone());
-        return OSCEntityManager.create(em, az);
+        return OSCEntityManager.create(em, az, this.txBroadcastUtil);
     }
 
     protected Host createHost(EntityManager em, HostDto hostDto, DeploymentSpec ds) {
         Host hs = new Host(ds, hostDto.getOpenstackId());
         HostEntityMgr.toEntity(hs, hostDto);
-        return OSCEntityManager.create(em, hs);
+        return OSCEntityManager.create(em, hs, this.txBroadcastUtil);
     }
 
 }

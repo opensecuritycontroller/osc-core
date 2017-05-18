@@ -25,17 +25,24 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=UpdatePolicyTask.class)
 public class UpdatePolicyTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(UpdatePolicyTask.class);
 
     private Policy policy;
     private String newName;
 
-    public UpdatePolicyTask(Policy policy, String newName) {
-        this.policy = policy;
-        this.newName = newName;
-        this.name = getName();
+    public UpdatePolicyTask create(Policy policy, String newName) {
+        UpdatePolicyTask task = new UpdatePolicyTask();
+        task.policy = policy;
+        task.newName = newName;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -44,7 +51,7 @@ public class UpdatePolicyTask extends TransactionalTask {
         log.debug("Start excecuting UpdatePolicyTask Task. Policy '" + this.policy.getName() + "'");
         this.policy = em.find(Policy.class, this.policy.getId());
         this.policy.setName(this.newName);
-        OSCEntityManager.update(em, this.policy);
+        OSCEntityManager.update(em, this.policy, this.txBroadcastUtil);
     }
 
     @Override

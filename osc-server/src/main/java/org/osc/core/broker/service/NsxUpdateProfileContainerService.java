@@ -35,12 +35,19 @@ import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGr
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxServiceProfileContainerCheckMetaTask;
 import org.osc.core.util.NetworkUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 @Component
 public class NsxUpdateProfileContainerService
         extends ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse>
         implements NsxUpdateProfileContainerServiceApi {
 
     //private static final Logger log = Logger.getLogger(NsxUpdateProfileContainerService.class);
+
+    @Reference
+    NsxServiceProfileContainerCheckMetaTask nsxCheckMetaTask;
+
+    @Reference
+    MgrSecurityGroupCheckMetaTask mgrCheckMetaTask;
 
     @Override
     public BaseJobResponse exec(NsxUpdateProfileContainerRequest request, EntityManager em) throws Exception {
@@ -65,12 +72,12 @@ public class NsxUpdateProfileContainerService
         SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(em, vs,
                 request.serviceProfileId);
 
-        NsxServiceProfileContainerCheckMetaTask syncTask = new NsxServiceProfileContainerCheckMetaTask(sgi,
+        NsxServiceProfileContainerCheckMetaTask syncTask = this.nsxCheckMetaTask.create(sgi,
                 request.containerSet);
         tg.addTask(syncTask);
 
         if (vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(vs)) {
-            tg.addTask(new MgrSecurityGroupCheckMetaTask(vs), syncTask);
+            tg.addTask(this.mgrCheckMetaTask.create(vs), syncTask);
         }
 
         Job job = JobEngine.getEngine().submit(

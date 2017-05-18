@@ -30,15 +30,22 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=SecurityGroupMemberDeleteTask.class)
 public class SecurityGroupMemberDeleteTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(SecurityGroupMemberDeleteTask.class);
 
     private SecurityGroupMember sgm;
 
-    public SecurityGroupMemberDeleteTask(SecurityGroupMember sgm) {
-        this.sgm = sgm;
+    public SecurityGroupMemberDeleteTask create(SecurityGroupMember sgm) {
+        SecurityGroupMemberDeleteTask task = new SecurityGroupMemberDeleteTask();
+        task.sgm = sgm;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -55,13 +62,13 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
                 int totalVmPorts = vm.getPorts().size();
                 for (VMPort vmport : vm.getPorts()) {
                     if (vmport.getNetwork() == null) {
-                        OSCEntityManager.delete(em, vmport);
+                        OSCEntityManager.delete(em, vmport, this.txBroadcastUtil);
                         portsDeleted++;
                     }
                 }
                 if (portsDeleted == totalVmPorts) {
                     // Only if all ports were deleted, delete the VM.
-                    OSCEntityManager.delete(em, vm);
+                    OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
                 }
             } else {
                 vm.getSecurityGroupMembers().remove(this.sgm);
@@ -77,15 +84,15 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
                 for (VMPort vmPort : network.getPorts()) {
                     // If the VM was created on behalf of this port, delete it.
                     VM vm = vmPort.getVm();
-                    OSCEntityManager.delete(em, vmPort);
+                    OSCEntityManager.delete(em, vmPort, this.txBroadcastUtil);
                     if (vm != null) {
                         vm.removePort(vmPort);
                         if (vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 0) {
-                            OSCEntityManager.delete(em, vm);
+                            OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
                         }
                     }
                 }
-                OSCEntityManager.delete(em, network);
+                OSCEntityManager.delete(em, network, this.txBroadcastUtil);
             }
             this.log.info("Deleting Security Group member from " + this.sgm.getSecurityGroup().getName());
             network.getSecurityGroupMembers().remove(this.sgm);
@@ -98,20 +105,20 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
                 for (VMPort vmPort : subnet.getPorts()) {
                     // If the VM was created on behalf of this port, delete it.
                     VM vm = vmPort.getVm();
-                    OSCEntityManager.delete(em, vmPort);
+                    OSCEntityManager.delete(em, vmPort, this.txBroadcastUtil);
                     if (vm != null) {
                         vm.removePort(vmPort);
                         if (vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 0) {
-                            OSCEntityManager.delete(em, vm);
+                            OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
                         }
                     }
                 }
-                OSCEntityManager.delete(em, subnet);
+                OSCEntityManager.delete(em, subnet, this.txBroadcastUtil);
             }
             this.log.info("Deleting Security Group member from " + this.sgm.getSecurityGroup().getName());
             subnet.getSecurityGroupMembers().remove(this.sgm);
         }
-        OSCEntityManager.delete(em, this.sgm);
+        OSCEntityManager.delete(em, this.sgm, this.txBroadcastUtil);
     }
 
     @Override

@@ -53,6 +53,9 @@ public class UpdateNsxServiceManagerTask extends TransactionalTask {
         task.apiFactoryService = this.apiFactoryService;
         task.passwordUtil = this.passwordUtil;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 

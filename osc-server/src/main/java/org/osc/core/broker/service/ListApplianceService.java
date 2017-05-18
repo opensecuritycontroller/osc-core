@@ -40,7 +40,7 @@ public class ListApplianceService extends ServiceDispatcher<BaseRequest<BaseDto>
         ListResponse<ApplianceDto> response = new ListResponse<ApplianceDto>();
 
         // Initializing Entity Manager
-        OSCEntityManager<Appliance> emgr = new OSCEntityManager<Appliance>(Appliance.class, em);
+        OSCEntityManager<Appliance> emgr = new OSCEntityManager<Appliance>(Appliance.class, em, this.txBroadcastUtil);
         // to do mapping
         List<ApplianceDto> dtoList = new ArrayList<ApplianceDto>();
 

@@ -299,7 +299,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         }
 
         OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, em);
+                DistributedApplianceInstance.class, em, this.txBroadcastUtil);
         DistributedApplianceInstance dai = emgr.findByFieldName("name", request.applianceInstanceName);
 
         if (dai == null) {

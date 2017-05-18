@@ -43,7 +43,7 @@ public class ListEncapsulationTypeByVersionTypeAndModel
         String virtType = request.getVcType().name();
         List<org.osc.core.broker.model.entities.appliance.TagEncapsulationType> list = ApplianceSoftwareVersionEntityMgr.getEncapsulationByApplianceSoftwareVersion(
                 em, request.getAppliacneSoftwareVersion(), request.getAppliacneModel(),
-                virtType == null ? null : VirtualizationType.valueOf(virtType));
+                virtType == null ? null : VirtualizationType.valueOf(virtType), this.txBroadcastUtil);
 
         if(list != null) {
             this.response.setList(list.stream()

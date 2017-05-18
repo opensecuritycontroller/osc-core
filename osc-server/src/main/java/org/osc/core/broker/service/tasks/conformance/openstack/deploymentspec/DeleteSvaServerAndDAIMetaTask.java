@@ -44,7 +44,15 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     // TODO: remove circularity and use mandatory references
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     private volatile ComponentServiceObjects<DeleteDAIFromDbTask> deleteDAIFromDbTaskCSO;
+
     private DeleteDAIFromDbTask deleteDAIFromDbTask;
+
+    @Reference
+    private DeleteInspectionPortTask deleteInspectionPort;
+    @Reference
+    private DeleteSvaServerTask deleteSvaServer;
+    @Reference
+    private OsSvaDeleteFloatingIpTask osSvadeleteFloatingIp;
 
     private DistributedApplianceInstance dai;
     private String region;
@@ -83,6 +91,12 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         task.factory = this;
         task.region = region;
         task.dai = dai;
+        task.deleteInspectionPort = this.deleteInspectionPort;
+        task.deleteSvaServer = this.deleteSvaServer;
+        task.osSvadeleteFloatingIp = this.osSvadeleteFloatingIp;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -96,11 +110,11 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
             throw new VmidcBrokerValidationException("Server is being actively used to protect other servers");
         }
         if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
-            this.tg.appendTask(new DeleteInspectionPortTask(this.region, this.dai));
+            this.tg.appendTask(this.deleteInspectionPort.create(this.region, this.dai));
         }
-        this.tg.addTask(new DeleteSvaServerTask(this.region, this.dai));
+        this.tg.addTask(this.deleteSvaServer.create(this.region, this.dai));
         if (this.dai.getFloatingIpId() != null) {
-            this.tg.appendTask(new OsSvaDeleteFloatingIpTask(this.dai));
+            this.tg.appendTask(this.osSvadeleteFloatingIp.create(this.dai));
         }
 
         this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));

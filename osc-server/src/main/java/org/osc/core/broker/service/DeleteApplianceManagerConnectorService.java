@@ -32,12 +32,16 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.manager.MCDeleteMetaTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class DeleteApplianceManagerConnectorService extends
         ServiceDispatcher<BaseIdRequest, BaseJobResponse> implements DeleteApplianceManagerConnectorServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteApplianceManagerConnectorService.class);
+
+    @Reference
+    MCDeleteMetaTask mcDeleteMetaTask;
 
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
@@ -68,7 +72,7 @@ public class DeleteApplianceManagerConnectorService extends
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new MCDeleteMetaTask(mc));
+        tg.addTask(this.mcDeleteMetaTask.create(mc));
         Job job = JobEngine.getEngine().submit("Delete Appliance Manager Connector '" + mc.getName() + "'", tg,
                 LockObjectReference.getObjectReferences(mc));
         return job.getId();

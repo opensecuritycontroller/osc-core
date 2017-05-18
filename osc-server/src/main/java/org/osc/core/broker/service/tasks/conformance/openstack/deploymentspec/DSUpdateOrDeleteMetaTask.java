@@ -65,6 +65,12 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
+    @Reference
+    DeleteOsSecurityGroupTask deleteOSSecurityGroup;
+
+    @Reference
+    DeleteDSFromDbTask deleteDsFromDb;
+
     // optional+dynamic to break circular DS dependency
     // TODO: remove circularity and use mandatory references
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
@@ -114,6 +120,11 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
+        task.deleteOSSecurityGroup = this.deleteOSSecurityGroup;
+        task.deleteDsFromDb = this.deleteDsFromDb;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -127,7 +138,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     public void executeTransaction(EntityManager em) throws Exception {
         delayedInit();
         this.tg = new TaskGraph();
-        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
+        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
         this.ds = emgr.findByPrimaryKey(this.ds.getId());
         VirtualSystem virtualSystem = this.ds.getVirtualSystem();
         if (this.ds.getMarkedForDeletion() || virtualSystem.getMarkedForDeletion()
@@ -137,10 +148,10 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
             }
             if (this.ds.getOsSecurityGroupReference() != null) {
-                this.tg.appendTask(new DeleteOsSecurityGroupTask(this.ds, this.ds.getOsSecurityGroupReference()));
+                this.tg.appendTask(this.deleteOSSecurityGroup.create(this.ds, this.ds.getOsSecurityGroupReference()));
             }
             this.tg.appendTask(this.mgrCheckDevicesMetaTask.create(virtualSystem));
-            this.tg.appendTask(new DeleteDSFromDbTask(this.ds));
+            this.tg.appendTask(this.deleteDsFromDb.create(this.ds));
         } else {
             buildDsUpdateTaskGraph(em);
         }
@@ -209,15 +220,15 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 // Pigiback to update Host Aggr name in case it changed
                 if (!osHostAggr.getName().equals(dsHostAggrInstance.getName())) {
                     dsHostAggrInstance.setName(osHostAggr.getName());
-                    OSCEntityManager.update(em, dsHostAggrInstance);
+                    OSCEntityManager.update(em, dsHostAggrInstance, this.txBroadcastUtil);
                 }
             } else {
                 // Host aggr has been deleted, delete the host aggr from ds
                 log.info(String.format("Host Aggregate %s(%s) has been deleted from openstack. Deleting from DS.",
                         dsHostAggrInstance.getName(), dsHostAggrInstance.getId()));
-                OSCEntityManager.delete(em, dsHostAggrInstance);
+                OSCEntityManager.delete(em, dsHostAggrInstance, this.txBroadcastUtil);
                 dsHostAggrIter.remove();
-                OSCEntityManager.update(em, this.ds);
+                OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
             }
         }
 

@@ -40,7 +40,7 @@ public class DeleteAlarmService extends ServiceDispatcher<BaseIdRequest, EmptySu
             throw new VmidcBrokerValidationException("Alarm entry with id " + request.getId() + " is not found.");
         }
 
-        OSCEntityManager.delete(em, alarm);
+        OSCEntityManager.delete(em, alarm, this.txBroadcastUtil);
         return new EmptySuccessResponse();
     }
 }

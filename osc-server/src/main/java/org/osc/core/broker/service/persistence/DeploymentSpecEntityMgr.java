@@ -149,11 +149,7 @@ public class DeploymentSpecEntityMgr {
 	}
 
     public static DeploymentSpec findById(EntityManager em, Long id) {
-
-        // Initializing Entity Manager
-        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(DeploymentSpec.class, id);
     }
 
     public static List<DeploymentSpec> listDeploymentSpecByTenentId(EntityManager em, String tenantId) {

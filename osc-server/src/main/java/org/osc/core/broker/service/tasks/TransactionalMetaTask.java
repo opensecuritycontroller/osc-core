@@ -22,7 +22,9 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.MetaTask;
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
@@ -30,13 +32,19 @@ public abstract class TransactionalMetaTask implements MetaTask {
 
     protected String name;
 
+    @Reference
+    protected TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    protected DBConnectionManager dbConnectionManager;
+
     public TransactionalMetaTask() {
     }
 
     @Override
     public void execute() throws Exception {
-        EntityManager em = HibernateUtil.getTransactionalEntityManager();
-        TransactionControl txControl = HibernateUtil.getTransactionControl();
+        EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+        TransactionControl txControl = this.dbConnectionManager.getTransactionControl();
         try {
             txControl.required(() -> {
                     executeTransaction(em);

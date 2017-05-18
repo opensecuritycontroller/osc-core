@@ -33,21 +33,28 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * This Task is invoked only if SDN Controller supports Port Group
  */
+@Component(service = DeleteInspectionPortTask.class)
 public class DeleteInspectionPortTask extends TransactionalTask {
 
     private static final Logger LOG = Logger.getLogger(DeleteInspectionPortTask.class);
 
     private DistributedApplianceInstance dai;
-    private final String region;
+    private String region;
 
 
-    public DeleteInspectionPortTask(String region, DistributedApplianceInstance dai) {
-        this.region = region;
-        this.dai = dai;
+    public DeleteInspectionPortTask create(String region, DistributedApplianceInstance dai) {
+        DeleteInspectionPortTask task = new DeleteInspectionPortTask();
+        task.region = region;
+        task.dai = dai;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

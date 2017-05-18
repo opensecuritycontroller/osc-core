@@ -46,6 +46,9 @@ public class DeleteMgrSecurityGroupInterfaceTask extends TransactionalTask {
         task.vs = vs;
         task.mgrSecurityGroupInterface = mgrSecurityGroupInterface;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 

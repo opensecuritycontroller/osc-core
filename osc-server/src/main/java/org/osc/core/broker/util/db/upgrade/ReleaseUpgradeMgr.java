@@ -36,8 +36,8 @@ import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
-import org.osc.core.broker.util.db.HibernateUtil;
 
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
@@ -54,7 +54,8 @@ public class ReleaseUpgradeMgr {
 
     private static final Logger log = Logger.getLogger(ReleaseUpgradeMgr.class);
 
-    public static void initDb(EncryptionApi encrypter) throws Exception {
+    public static void initDb(EncryptionApi encrypter, DBConnectionParameters params,
+            DBConnectionManager dbMgr) throws Exception {
 
         if (!isLastUpgradeSucceeded()) {
             // If last upgrade wasn't successful (upgrade marker file is still present), revert back to previous backed up DB.
@@ -63,15 +64,15 @@ public class ReleaseUpgradeMgr {
         }
 
     	// if DB password is set to default then replace it with the secure one
-        replaceDefaultDBPassword();
+        replaceDefaultDBPassword(params, dbMgr);
 
-        ReleaseInfo currentRecord = getCurrentReleaseInfo();
+        ReleaseInfo currentRecord = getCurrentReleaseInfo(dbMgr);
 
         if (currentRecord == null) { // not found, initial version
             log.info("Fresh-installing security broker database");
 
             // create db schema first
-            Schema.createSchema();
+            Schema.createSchema(dbMgr);
 
         } else {
 
@@ -92,7 +93,7 @@ public class ReleaseUpgradeMgr {
                 // make sure to update the ReleaseInfo record with the TARGET DB VERSION
                 // use switch statement without break statement (fall-thru flow) to force incremental upgrade chain.
 
-                try (Connection connection = HibernateUtil.getSQLConnection();
+                try (Connection connection = dbMgr.getSQLConnection();
                      Statement stmt = connection.createStatement()) {
                     connection.setAutoCommit(false);
 
@@ -118,10 +119,10 @@ public class ReleaseUpgradeMgr {
         deleteUpgradeMarkerFile();
     }
 
-    private static void replaceDefaultDBPassword() throws Exception {
-    	DBConnectionParameters params = new DBConnectionParameters();
+    private static void replaceDefaultDBPassword(DBConnectionParameters params,
+            DBConnectionManager dbMgr) throws Exception {
     	if (params.isDefaultPasswordSet()) {
-    		HibernateUtil.replaceDefaultDBPassword(params);
+    	    dbMgr.replaceDefaultDBPassword();
     	}
     }
 
@@ -1799,10 +1800,10 @@ public class ReleaseUpgradeMgr {
         FileUtils.copyFile(new File("vmiDCDB.h2.db.bak"), new File("vmiDCDB.h2.db"));
     }
 
-    private static ReleaseInfo getCurrentReleaseInfo() throws Exception {
+    private static ReleaseInfo getCurrentReleaseInfo(DBConnectionManager dbMgr) throws Exception {
         ReleaseInfo releaseInfo = null;
 
-        try (Connection connection = HibernateUtil.getSQLConnection()) {
+        try (Connection connection = dbMgr.getSQLConnection()) {
             if (tableExists(connection, "RELEASE_INFO")) {
                 releaseInfo = getDbVersion(connection);
             }

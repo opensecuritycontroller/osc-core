@@ -41,18 +41,30 @@ import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
+@Component(service=SecurityGroupMemberSubnetUpdateTask.class)
+public class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
 
     private final Logger log = Logger.getLogger(SecurityGroupMemberSubnetUpdateTask.class);
     private TaskGraph tg;
 
-    private SecurityGroupMember sgm;
-    private final String subnetName;
+    @Reference
+    MarkStalePortsAsDeletedTask markStalePortsAsDeletedTask;
 
-    public SecurityGroupMemberSubnetUpdateTask(SecurityGroupMember sgm, String subnetName) {
-        this.sgm = sgm;
-        this.subnetName = subnetName;
+    private SecurityGroupMember sgm;
+    private String subnetName;
+
+    public SecurityGroupMemberSubnetUpdateTask create(SecurityGroupMember sgm, String subnetName) {
+        SecurityGroupMemberSubnetUpdateTask task = new SecurityGroupMemberSubnetUpdateTask();
+        task.sgm = sgm;
+        task.subnetName = subnetName;
+        task.markStalePortsAsDeletedTask = this.markStalePortsAsDeletedTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -92,7 +104,7 @@ class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
                         }
                         vmPort = new VMPort(subnet, osPort.getMacAddress(), subnet.getOpenstackId(), osPort.getId(),
                                 ipAddresses);
-                        OSCEntityManager.create(em, vmPort);
+                        OSCEntityManager.create(em, vmPort, this.txBroadcastUtil);
                         this.log.info("Creating port for Subnet '" + subnet.getName() + "' with Port:" + vmPort);
                     } else {
                         //Port exists check if it belongs to a VM
@@ -131,7 +143,7 @@ class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
                         }
                         // Port belongs to this Subnet. It it was mark deleted by Protect External flag and user reverted it then revert mark deletion flag and remove it from staled port list
                         if (vmPort.getMarkedForDeletion()) {
-                            OSCEntityManager.unMarkDeleted(em, vmPort);
+                            OSCEntityManager.unMarkDeleted(em, vmPort, this.txBroadcastUtil);
                             existingOsPortIds.remove(osPort.getId());
                         }
                     }
@@ -143,7 +155,7 @@ class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
             }
             // Any ports not listed from openstack but are in our database are stale and need to be removed(after hooks
             // are removed) so marking them as deleted
-            this.tg.appendTask(new MarkStalePortsAsDeletedTask(subnet, existingOsPortIds),
+            this.tg.appendTask(this.markStalePortsAsDeletedTask.create(subnet, existingOsPortIds),
                     TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         } finally {
@@ -152,7 +164,7 @@ class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
             }
         }
 
-        OSCEntityManager.update(em, subnet);
+        OSCEntityManager.update(em, subnet, this.txBroadcastUtil);
     }
 
     @Override

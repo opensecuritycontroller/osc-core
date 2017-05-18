@@ -24,13 +24,16 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class AgentRegisterServiceRequestValidator implements RequestValidator<AgentRegisterServiceRequest, DistributedApplianceInstance> {
     private EntityManager em;
     private static final Logger log = Logger.getLogger(AgentRegisterServiceRequestValidator.class);
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
-    public AgentRegisterServiceRequestValidator(EntityManager em) {
+    public AgentRegisterServiceRequestValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
         this.em = em;
+        this.txBroadcastUtil = txBroadcastUtil;
     }
 
     @Override
@@ -41,7 +44,7 @@ public class AgentRegisterServiceRequestValidator implements RequestValidator<Ag
     @Override
     public DistributedApplianceInstance validateAndLoad(AgentRegisterServiceRequest request) throws Exception {
         OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, this.em);
+                DistributedApplianceInstance.class, this.em, this.txBroadcastUtil);
 
         DistributedApplianceInstance dai = null;
 
@@ -73,7 +76,7 @@ public class AgentRegisterServiceRequestValidator implements RequestValidator<Ag
         if (dai != null) {
             vs = dai.getVirtualSystem();
         } else {
-            OSCEntityManager<VirtualSystem> vsMgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, this.em);
+            OSCEntityManager<VirtualSystem> vsMgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, this.em, this.txBroadcastUtil);
             vs = vsMgr.findByPrimaryKey(request.getVsId());
         }
 

@@ -45,7 +45,7 @@ public class LoginService extends ServiceDispatcher<LoginRequest, LoginResponse>
 
         validate(em, request);
         // Initializing Entity Manager
-        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em, this.txBroadcastUtil);
         User user = emgr.findByFieldName("loginName", request.getLoginName());
         if (user == null) {
             throw new VmidcException("Wrong username and/or password! Please try again.");

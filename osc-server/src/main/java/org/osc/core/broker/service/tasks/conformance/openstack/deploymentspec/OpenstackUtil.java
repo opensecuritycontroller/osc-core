@@ -58,13 +58,13 @@ import org.osc.core.broker.rest.client.openstack.jcloud.HostAvailabilityZoneMapp
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMEntityManager;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.element.NetworkElement;
 
@@ -443,7 +443,7 @@ public class OpenstackUtil {
             try {
                 this.conformService.startSecurityGroupConformanceJob(this.sg);
             } catch (Exception e) {
-                AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, new LockObjectReference(
+                StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, new LockObjectReference(
                         this.sg), "Failed to submit a dependent Security Group sync job " + e.getMessage());
                 this.log.error("Fail to submit a dependent SG sync job for sg: " + this.sg, e);
             }
@@ -481,7 +481,7 @@ public class OpenstackUtil {
             nova = new JCloudNova(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
             Server osVm = nova.getServer(region, osPort.getDeviceId());
             if (null == osVm) {
-                OSCEntityManager.delete(em, vmPort);
+                OSCEntityManager.delete(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
                 //TODO sridhar handle stale VM delete ?
                 return;
 
@@ -489,7 +489,7 @@ public class OpenstackUtil {
             VM vm = VMEntityManager.findByOpenstackId(em, osPort.getDeviceId());
             if (vm == null) {
                 vm = new VM(region, osPort.getDeviceId(), osVm.getName());
-                OSCEntityManager.create(em, vm);
+                OSCEntityManager.create(em, vm, StaticRegistry.transactionalBroadcastUtil());
             }
             vmPort.setVm(vm);
             // Update vm host if needed
@@ -497,10 +497,10 @@ public class OpenstackUtil {
             if (serverExtendedAttributes != null && serverExtendedAttributes.getHypervisorHostName() != null) {
                 if (!serverExtendedAttributes.getHypervisorHostName().equals(vm.getHost())) {
                     vm.setHost(serverExtendedAttributes.getHypervisorHostName());
-                    OSCEntityManager.update(em, vm);
+                    OSCEntityManager.update(em, vm, StaticRegistry.transactionalBroadcastUtil());
                 }
             }
-            OSCEntityManager.update(em, vmPort);
+            OSCEntityManager.update(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
         } finally {
             if (nova != null) {
                 nova.close();

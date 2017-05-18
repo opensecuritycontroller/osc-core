@@ -45,9 +45,6 @@ public class NetworkEntityManager {
     }
 
     public static Network findById(EntityManager em, Long id) {
-        // Initializing Entity Manager
-        OSCEntityManager<Network> emgr = new OSCEntityManager<Network>(Network.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(Network.class, id);
     }
 }

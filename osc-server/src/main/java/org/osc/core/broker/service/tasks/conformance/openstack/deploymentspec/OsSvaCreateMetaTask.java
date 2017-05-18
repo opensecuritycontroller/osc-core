@@ -51,6 +51,12 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
     @Reference
     private OsSvaServerCreateTask osSvaServerCreateTask;
     @Reference
+    private OsSvaEnsureActiveTask osSvaEnsureActiveTask;
+    @Reference
+    private OsSvaCheckFloatingIpTask osSvaCheckFloatingIpTask;
+    @Reference
+    private OsSvaCheckNetworkInfoTask osSvaCheckNetworkInfoTask;
+    @Reference
     private ConformService conformService;
 
     private TaskGraph tg;
@@ -79,12 +85,18 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
         task.ds = ds;
         task.hypervisorHostName = hypervisorHostName;
         task.dai = null;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
     public OsSvaCreateMetaTask create(DistributedApplianceInstance dai) {
         OsSvaCreateMetaTask task = create(dai.getDeploymentSpec(), dai.getOsHostName(), dai.getOsAvailabilityZone());
         task.dai = dai;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -103,15 +115,15 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
                 this.dai.getOsHostName()));
         this.availabilityZone = this.dai.getOsAvailabilityZone();
 
-        OSCEntityManager.update(em, this.dai);
+        OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
 
         this.tg.addTask(this.osSvaServerCreateTask.create(this.dai, this.hypervisorHostName, this.availabilityZone));
-        this.tg.appendTask(new OsSvaEnsureActiveTask(this.dai));
+        this.tg.appendTask(this.osSvaEnsureActiveTask.create(this.dai));
         if (!StringUtils.isBlank(this.ds.getFloatingIpPoolName())) {
-            this.tg.appendTask(new OsSvaCheckFloatingIpTask(this.dai));
+            this.tg.appendTask(this.osSvaCheckFloatingIpTask.create(this.dai));
         }
 
-        this.tg.appendTask(new OsSvaCheckNetworkInfoTask(this.dai));
+        this.tg.appendTask(this.osSvaCheckNetworkInfoTask.create(this.dai));
 
         try (ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(this.dai.getVirtualSystem())) {
             if (mgrApi.isDeviceGroupSupported()) {
@@ -150,7 +162,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
             dai.setDeploymentSpec(ds);
             // setting temporary name since it is mandatory field
             dai.setName("Temporary" + UUID.randomUUID().toString());
-            dai = OSCEntityManager.create(em, dai);
+            dai = OSCEntityManager.create(em, dai, this.txBroadcastUtil);
 
             // Generate a unique, intuitive and immutable name
             daiName = ds.getVirtualSystem().getName() + "-" + dai.getId().toString();
@@ -158,7 +170,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
             dai.setName(daiName);
 
-            OSCEntityManager.update(em, dai);
+            OSCEntityManager.update(em, dai, this.txBroadcastUtil);
             this.log.info("Creating new DAI " + dai);
         }
         return dai;

@@ -45,6 +45,9 @@ public class MgrCreateMemberDeviceTask extends TransactionalTask {
         task.apiFactoryService = this.apiFactoryService;
         task.dai = dai;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -65,7 +68,7 @@ public class MgrCreateMemberDeviceTask extends TransactionalTask {
         }
     }
 
-    public static void createMemberDevice(EntityManager em, DistributedApplianceInstance dai, ManagerDeviceApi mgrApi)
+    public void createMemberDevice(EntityManager em, DistributedApplianceInstance dai, ManagerDeviceApi mgrApi)
             throws Exception {
         try {
             String mgrDeviceId = mgrApi.createDeviceMember(dai.getName(), dai.getHostName(), dai.getIpAddress(),
@@ -75,7 +78,7 @@ public class MgrCreateMemberDeviceTask extends TransactionalTask {
 
             updateApplianceConfigIfNeeded(dai, mgrApi);
 
-            OSCEntityManager.update(em, dai);
+            OSCEntityManager.update(em, dai, this.txBroadcastUtil);
 
         } catch (Exception e) {
 
@@ -90,7 +93,7 @@ public class MgrCreateMemberDeviceTask extends TransactionalTask {
 
                 updateApplianceConfigIfNeeded(dai, mgrApi);
 
-                OSCEntityManager.update(em, dai);
+                OSCEntityManager.update(em, dai, this.txBroadcastUtil);
             } else {
                 throw e;
             }

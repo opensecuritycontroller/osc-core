@@ -37,7 +37,7 @@ public class ListTaskService extends ServiceDispatcher<ListTaskRequest, ListResp
     public ListResponse<TaskRecordDto> exec(ListTaskRequest request, EntityManager em) throws Exception {
 
         List<TaskRecordDto> dtoList = new ArrayList<TaskRecordDto>();
-        TaskEntityMgr emgr = new TaskEntityMgr(em);
+        TaskEntityMgr emgr = new TaskEntityMgr(em, this.txBroadcastUtil);
 
         for (TaskRecord tr : emgr.getTasksByJobId(request.getJobId())) {
             TaskRecordDto dto = new TaskRecordDto();

@@ -25,15 +25,22 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = DeleteVsFromDbTask.class)
 public class DeleteVsFromDbTask extends TransactionalTask {
     //private static final Logger log = Logger.getLogger(DeleteVsFromDbTask.class);
 
     private VirtualSystem vs;
 
-    public DeleteVsFromDbTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public DeleteVsFromDbTask create(VirtualSystem vs) {
+        DeleteVsFromDbTask task = new DeleteVsFromDbTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -45,7 +52,7 @@ public class DeleteVsFromDbTask extends TransactionalTask {
                             + " need to be unbinded before the Virtual system can be deleted", this.vs
                             .getVirtualizationConnector().getName()));
         }
-        OSCEntityManager.delete(em, this.vs);
+        OSCEntityManager.delete(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

@@ -55,7 +55,7 @@ public class AddVirtualizationConnectorService
     @Override
     public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
         if (this.validator == null) {
-            this.validator = new AddVirtualizationConnectorServiceRequestValidator(em);
+            this.validator = new AddVirtualizationConnectorServiceRequestValidator(em, this.txBroadcastUtil);
         }
         try {
             this.validator.validate(request);
@@ -69,10 +69,10 @@ public class AddVirtualizationConnectorService
         }
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encryption);
-        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
+        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
         vc = vcEntityMgr.create(vc);
 
-        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
+        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
         vc.setSslCertificateAttrSet(certificateAttrEntityMgr.storeSSLEntries(vc.getSslCertificateAttrSet(), vc.getId()));
 
         vcEntityMgr.update(vc);

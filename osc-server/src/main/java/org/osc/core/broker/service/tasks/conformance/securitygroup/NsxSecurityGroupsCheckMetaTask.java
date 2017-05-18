@@ -35,16 +35,36 @@ import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.Del
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberDeleteTask;
 import org.osc.sdk.sdn.api.ServiceProfileApi;
 import org.osc.sdk.sdn.element.SecurityGroupElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service=NsxSecurityGroupsCheckMetaTask.class)
 public class NsxSecurityGroupsCheckMetaTask extends TransactionalMetaTask {
     //private static final Logger log = Logger.getLogger(NsxSecurityGroupsCheckMetaTask.class);
+
+    @Reference
+    DeleteSecurityGroupFromDbTask deleteSecurityGroupFromDbTask;
+
+    @Reference
+    SecurityGroupMemberDeleteTask securityGroupMemberDeleteTask;
+
+    @Reference
+    NsxServiceProfileContainerCheckMetaTask nsxServiceProfileContainerCheckMetaTask;
 
     private VirtualSystem vs;
     private TaskGraph tg;
 
-    public NsxSecurityGroupsCheckMetaTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public NsxSecurityGroupsCheckMetaTask create(VirtualSystem vs) {
+        NsxSecurityGroupsCheckMetaTask task = new NsxSecurityGroupsCheckMetaTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.deleteSecurityGroupFromDbTask = this.deleteSecurityGroupFromDbTask;
+        task.securityGroupMemberDeleteTask = this.securityGroupMemberDeleteTask;
+        task.nsxServiceProfileContainerCheckMetaTask = this.nsxServiceProfileContainerCheckMetaTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -55,16 +75,16 @@ public class NsxSecurityGroupsCheckMetaTask extends TransactionalMetaTask {
         ServiceProfileApi serviceProfileApi = VMwareSdnApiFactory.createServiceProfileApi(this.vs);
         for (SecurityGroupInterface sgi : this.vs.getSecurityGroupInterfaces()) {
             List<SecurityGroupElement> securityGroups = serviceProfileApi.getSecurityGroups(sgi.getTag());
-            this.tg.appendTask(new NsxServiceProfileContainerCheckMetaTask(sgi, new ContainerSet(securityGroups)));
+            this.tg.appendTask(this.nsxServiceProfileContainerCheckMetaTask.create(sgi, new ContainerSet(securityGroups)));
         }
 
         List<SecurityGroup> unbindedSecurityGroups = SecurityGroupEntityMgr.listSecurityGroupsByVsAndNoBindings(
                 em, this.vs);
         for (SecurityGroup sg : unbindedSecurityGroups) {
             for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
-                this.tg.appendTask(new SecurityGroupMemberDeleteTask(sgm));
+                this.tg.appendTask(this.securityGroupMemberDeleteTask.create(sgm));
             }
-            this.tg.appendTask(new DeleteSecurityGroupFromDbTask(sg));
+            this.tg.appendTask(this.deleteSecurityGroupFromDbTask.create(sg));
         }
     }
 

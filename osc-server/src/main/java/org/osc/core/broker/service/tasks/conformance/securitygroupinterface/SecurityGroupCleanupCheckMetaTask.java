@@ -25,15 +25,26 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service=SecurityGroupCleanupCheckMetaTask.class)
 public class SecurityGroupCleanupCheckMetaTask extends TransactionalMetaTask {
+
+    @Reference
+    DeleteSecurityGroupInterfaceTask deleteSecurityGroupInterfaceTask;
 
     private VirtualSystem vs;
     private TaskGraph tg;
 
-    public SecurityGroupCleanupCheckMetaTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public SecurityGroupCleanupCheckMetaTask create(VirtualSystem vs) {
+        SecurityGroupCleanupCheckMetaTask task = new SecurityGroupCleanupCheckMetaTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -44,7 +55,7 @@ public class SecurityGroupCleanupCheckMetaTask extends TransactionalMetaTask {
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         for (SecurityGroupInterface sgi : this.vs.getSecurityGroupInterfaces()) {
-            this.tg.appendTask(new DeleteSecurityGroupInterfaceTask(sgi));
+            this.tg.appendTask(this.deleteSecurityGroupInterfaceTask.create(sgi));
         }
     }
 
