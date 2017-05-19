@@ -87,15 +87,10 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
             .put(NOTIFICATION_TYPE, String.class).put(SYNC_SECURITY_GROUP, Boolean.class)
             .put(PROVIDE_DEVICE_STATUS, Boolean.class).put(SYNC_POLICY_MAPPING, Boolean.class).build();
 
-    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES =
-            ImmutableMap.<String, Class<?>>builder()
-            .put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class)
-            .put(SUPPORT_SFC, Boolean.class)
-            .put(SUPPORT_FAILURE_POLICY, Boolean.class)
-            .put(USE_PROVIDER_CREDS, Boolean.class)
-            .put(QUERY_PORT_INFO, Boolean.class)
-            .put(SUPPORT_PORT_GROUP, Boolean.class)
-            .build();
+    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES = ImmutableMap
+            .<String, Class<?>>builder().put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class).put(SUPPORT_SFC, Boolean.class)
+            .put(SUPPORT_FAILURE_POLICY, Boolean.class).put(USE_PROVIDER_CREDS, Boolean.class)
+            .put(QUERY_PORT_INFO, Boolean.class).put(SUPPORT_PORT_GROUP, Boolean.class).build();
 
     private Map<String, ApplianceManagerApi> managerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<ApplianceManagerApi>> managerRefs = new ConcurrentHashMap<>();
@@ -124,37 +119,34 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     @Activate
     void activate(BundleContext context) {
         List<PluginListener> earlyArrivers;
-        synchronized(this.pluginListeners) {
+        synchronized (this.pluginListeners) {
             this.context = context;
             this.listenersActive = true;
 
-            earlyArrivers = this.pluginListeners.entrySet().stream()
-                .filter(e -> e.getValue().isEmpty())
-                .map(Entry::getKey)
-                .collect(Collectors.toList());
+            earlyArrivers = this.pluginListeners.entrySet().stream().filter(e -> e.getValue().isEmpty())
+                    .map(Entry::getKey).collect(Collectors.toList());
         }
 
-        earlyArrivers.stream()
-            .forEach(pl -> {
-                    // Always create trackers without holding any monitors or locks
-                    // to avoid potential deadlock
-                    List<PluginTracker<?>> trackers = createTrackers(pl);
+        earlyArrivers.stream().forEach(pl -> {
+            // Always create trackers without holding any monitors or locks
+            // to avoid potential deadlock
+            List<PluginTracker<?>> trackers = createTrackers(pl);
 
-                    synchronized (this.pluginListeners) {
-                        if(this.listenersActive) {
-                            // We should only add the trackers if the plugin is still
-                            // in the map with an empty collection
-                            List<PluginTracker<?>> old = this.pluginListeners.get(pl);
-                            if(old != null && old.isEmpty()) {
-                                this.pluginListeners.put(pl, trackers);
-                                trackers = Collections.emptyList();
-                            }
-                        }
+            synchronized (this.pluginListeners) {
+                if (this.listenersActive) {
+                    // We should only add the trackers if the plugin is still
+                    // in the map with an empty collection
+                    List<PluginTracker<?>> old = this.pluginListeners.get(pl);
+                    if (old != null && old.isEmpty()) {
+                        this.pluginListeners.put(pl, trackers);
+                        trackers = Collections.emptyList();
                     }
+                }
+            }
 
-                    // If our trackers weren't added then close them
-                    trackers.forEach(PluginTracker::close);
-                });
+            // If our trackers weren't added then close them
+            trackers.forEach(PluginTracker::close);
+        });
 
     }
 
@@ -163,30 +155,29 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         PluginTrackerCustomizer customizer = pe -> notifyListener(pe, pl);
         @SuppressWarnings("unchecked")
         List<PluginTracker<?>> trackers = Arrays.asList(
-                    newPluginTracker(customizer, ApplianceManagerApi.class,
-                            PluginType.MANAGER, REQUIRED_MANAGER_PLUGIN_PROPERTIES),
-                    newPluginTracker(customizer, SdnControllerApi.class, PluginType.SDN,
-                            REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES),
-                    newPluginTracker(customizer, VMwareSdnApi.class, PluginType.NSX,
-                            null));
+                newPluginTracker(customizer, ApplianceManagerApi.class, PluginType.MANAGER,
+                        REQUIRED_MANAGER_PLUGIN_PROPERTIES),
+                newPluginTracker(customizer, SdnControllerApi.class, PluginType.SDN,
+                        REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES),
+                newPluginTracker(customizer, VMwareSdnApi.class, PluginType.NSX, null));
         return trackers;
     }
 
     private void notifyListener(org.osc.core.broker.model.plugin.PluginEvent<?> event, PluginListener pl) {
         PluginEvent.Type eventType;
-        switch(event.getType()) {
-            case ADDING:
-                eventType = Type.ADDING;
-                break;
-            case MODIFIED:
-                eventType = Type.MODIFIED;
-                break;
-            case REMOVED:
-                eventType = Type.REMOVED;
-                break;
-            default:
-                this.log.error("Received an unknown plugin event type " + event.getType());
-                return;
+        switch (event.getType()) {
+        case ADDING:
+            eventType = Type.ADDING;
+            break;
+        case MODIFIED:
+            eventType = Type.MODIFIED;
+            break;
+        case REMOVED:
+            eventType = Type.REMOVED;
+            break;
+        default:
+            this.log.error("Received an unknown plugin event type " + event.getType());
+            return;
         }
 
         PluginEvent toSend = new PluginEvent(eventType, event.getPlugin());
@@ -218,7 +209,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         if (name instanceof String) {
             this.log.info("add plugin: " + name);
             refs.put((String) name, serviceObjs);
-
 
         } else {
             this.log.warn(String.format("add plugin ignored as %s=%s", OSC_PLUGIN_NAME, name));
@@ -273,7 +263,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     void addPluginListener(PluginListener listener) {
         synchronized (this.pluginListeners) {
-            if(!this.listenersActive) {
+            if (!this.listenersActive) {
                 // Early joiner waits for startup
                 this.pluginListeners.put(listener, emptyList());
                 return;
@@ -290,7 +280,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         // component is deactivating, therefore we only add the listener
         // if it should be active
         synchronized (this.pluginListeners) {
-            if(this.listenersActive) {
+            if (this.listenersActive) {
                 this.pluginListeners.put(listener, trackers);
                 trackers = emptyList();
             }
@@ -308,7 +298,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
             trackers = this.pluginListeners.remove(listener);
         }
 
-        if(trackers != null) {
+        if (trackers != null) {
             trackers.forEach(PluginTracker::close);
         }
     }
@@ -529,7 +519,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         return tracker;
     }
 
-
     @Override
     public boolean usesProviderCreds(String controllerType) throws Exception {
         return (boolean) getPluginProperty(ControllerType.fromText(controllerType), Constants.USE_PROVIDER_CREDS);
@@ -547,7 +536,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     }
 
     @Override
-    public ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs) throws EncryptionException {
+    public ApplianceManagerConnectorElement getApplianceManagerConnectorElement(VirtualSystem vs)
+            throws EncryptionException {
         return getApplianceManagerConnectorElement(vs.getDistributedAppliance().getApplianceManagerConnector());
     }
 
@@ -556,6 +546,12 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
                 .createManagerSecurityGroupInterfaceApi(getApplianceManagerConnectorElement(vs),
                         new VirtualSystemElementImpl(vs));
+    }
+
+    @Override
+    public Boolean providesDeviceStatus(VirtualSystem virtualSystem) throws Exception {
+        return providesDeviceStatus(ManagerType
+                .fromText(virtualSystem.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
 }

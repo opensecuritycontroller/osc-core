@@ -29,7 +29,6 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElementImpl;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
@@ -66,7 +65,7 @@ public class ApplianceAgentsJob implements Job {
                     ApplianceManagerConnector apmc = vs.getDistributedAppliance().getApplianceManagerConnector();
                     ManagerDeviceMemberApi agentApi =  apiFactoryService.createManagerDeviceMemberApi(apmc, vs);
 
-                    if (ManagerApiFactory.providesDeviceStatus(vs)) {
+                    if (apiFactoryService.providesDeviceStatus(vs)) {
                         List<ManagerDeviceMemberStatusElement> agentElems = agentApi.getFullStatus(
                                 vs.getDistributedApplianceInstances().stream()
                                 .map(DistributedApplianceInstanceElementImpl::new)

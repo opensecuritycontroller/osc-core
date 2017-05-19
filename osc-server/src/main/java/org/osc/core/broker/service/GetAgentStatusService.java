@@ -37,7 +37,6 @@ import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElementImpl;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.GetAgentStatusServiceApi;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -100,7 +99,7 @@ public class GetAgentStatusService
             VirtualSystem vs = entry.getKey();
 
             List<DistributedApplianceInstance> list = entry.getValue();
-            if (ManagerApiFactory.providesDeviceStatus(vs)) {
+            if (this.apiFactoryService.providesDeviceStatus(vs)) {
                 List<DistributedApplianceInstanceElement> elements = list.stream()
                         .map(DistributedApplianceInstanceElementImpl::new)
                         .collect(Collectors.toList());

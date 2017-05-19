@@ -91,11 +91,6 @@ public class ManagerApiFactory {
                 ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
-    public static Boolean providesDeviceStatus(VirtualSystem vs) throws Exception {
-        return apiFactoryService.providesDeviceStatus(
-                ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
-    }
-
     public static Boolean syncsPolicyMapping(ManagerType managerType) throws Exception {
         return apiFactoryService.syncsPolicyMapping(managerType);
     }

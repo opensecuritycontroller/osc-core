@@ -58,6 +58,8 @@ public interface ApiFactoryService {
 
     Boolean providesDeviceStatus(ManagerType managerType) throws Exception;
 
+    Boolean providesDeviceStatus(VirtualSystem virtualSystem) throws Exception;
+
     String getAuthenticationType(ManagerType managerType) throws Exception;
 
     boolean isBasicAuth(ManagerType managerType) throws Exception;

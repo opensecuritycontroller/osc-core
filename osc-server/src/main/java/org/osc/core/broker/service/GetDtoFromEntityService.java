@@ -35,6 +35,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
@@ -81,11 +82,13 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 public class GetDtoFromEntityService<R extends BaseDto> extends
         ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDtoFromEntityServiceApi<R> {
 
-    private EncryptionApi encrypter;
+    private final EncryptionApi encrypter;
+    private final ApiFactoryService apiFactoryService;
 
-    GetDtoFromEntityService(UserContextApi userContext, EncryptionApi encrypter) {
+    GetDtoFromEntityService(UserContextApi userContext, EncryptionApi encrypter, ApiFactoryService apiFactoryService) {
         this.userContext = userContext;
         this.encrypter = encrypter;
+        this.apiFactoryService = apiFactoryService;
     }
 
     @SuppressWarnings("unchecked")
@@ -150,7 +153,8 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
         } else if (entityName.equals("DistributedApplianceInstance")) {
             DistributedApplianceInstance entity = getEntity(entityId, entityName, DistributedApplianceInstance.class,
                     em);
-            DistributedApplianceInstanceDto dto = DistributedApplianceInstanceEntityMgr.fromEntity(entity);
+            Boolean providesDeviceStatus = this.apiFactoryService.providesDeviceStatus(entity.getVirtualSystem());
+            DistributedApplianceInstanceDto dto = DistributedApplianceInstanceEntityMgr.fromEntity(entity, providesDeviceStatus);
             res.setDto((R) dto);
         } else if (entityName.equals("VirtualSystem")) {
             VirtualSystem entity = getEntity(entityId, entityName, VirtualSystem.class, em);

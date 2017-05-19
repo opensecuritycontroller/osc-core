@@ -30,14 +30,13 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
 public class DistributedApplianceInstanceEntityMgr {
 
-    public static DistributedApplianceInstanceDto fromEntity(DistributedApplianceInstance dai) throws Exception {
-        Boolean providesDeviceStatus = ManagerApiFactory.providesDeviceStatus(dai.getVirtualSystem());
+    public static DistributedApplianceInstanceDto fromEntity(DistributedApplianceInstance dai, Boolean providesDeviceStatus) throws Exception {
+//        Boolean providesDeviceStatus = ManagerApiFactory.providesDeviceStatus(dai.getVirtualSystem());
 
         String discovered = providesDeviceStatus ? (dai.getDiscovered() != null ? dai.getDiscovered().toString() : "") : "N/A";
         String inspectionReady = providesDeviceStatus ? (dai.getInspectionReady() != null ? dai.getInspectionReady().toString() : "") : "N/A";
