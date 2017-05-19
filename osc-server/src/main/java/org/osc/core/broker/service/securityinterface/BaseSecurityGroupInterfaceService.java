@@ -36,7 +36,7 @@ public abstract class BaseSecurityGroupInterfaceService<I extends Request, O ext
 ServiceDispatcher<I, O> {
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    protected ApiFactoryService apiFactoryService;
 
     protected VirtualSystem validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
         SecurityGroupInterfaceDtoValidator.checkForNullFields(dto);
