@@ -19,8 +19,6 @@ package org.osc.core.broker.service.validator;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.util.ValidateUtil;
 
@@ -36,8 +34,8 @@ public class ApplianceManagerConnectorDtoValidator {
      *             in case the required fields are null or fields which should
      *             NOT be specified are specified
      */
-    public static void checkForNullFields(ApplianceManagerConnectorDto dto, boolean skipPasswordNullCheck)
-            throws Exception {
+    public static void checkForNullFields(ApplianceManagerConnectorDto dto, boolean skipPasswordNullCheck,
+            boolean isBasicAuth, boolean isKeyAuth) throws Exception {
 
         // build a map of (field,value) pairs to be checked for null/empty
         // values
@@ -48,11 +46,9 @@ public class ApplianceManagerConnectorDtoValidator {
         notNullFieldsMap.put("Type", dto.getManagerType());
         notNullFieldsMap.put("IP Address", dto.getIpAddress());
 
-        ManagerType managerType = ManagerType.fromText(dto.getManagerType());
-
-        if (ManagerApiFactory.isKeyAuth(managerType) && !skipPasswordNullCheck) {
+        if (isKeyAuth && !skipPasswordNullCheck) {
             notNullFieldsMap.put("API Key", dto.getApiKey());
-        } else if (ManagerApiFactory.isBasicAuth(managerType)) {
+        } else if (isBasicAuth) {
             if (!skipPasswordNullCheck) {
                 notNullFieldsMap.put("Password", dto.getPassword());
             }
@@ -64,16 +60,16 @@ public class ApplianceManagerConnectorDtoValidator {
         ValidateUtil.validateFieldsAreNull(nullFieldsMap);
     }
 
-    public static void checkForNullFields(ApplianceManagerConnectorDto dto) throws Exception {
-        checkForNullFields(dto, false);
+    public static void checkForNullFields(ApplianceManagerConnectorDto dto, boolean isBasicAuth, boolean isKeyAuth) throws Exception {
+        checkForNullFields(dto, false, isBasicAuth);
     }
 
-    public static void checkFieldLength(ApplianceManagerConnectorDto dto) throws Exception {
+    public static void checkFieldLength(ApplianceManagerConnectorDto dto, boolean isBasicAuth) throws Exception {
 
         Map<String, String> map = new HashMap<String, String>();
 
         map.put("Name", dto.getName());
-        if (ManagerApiFactory.isBasicAuth(ManagerType.fromText(dto.getManagerType()))) {
+        if (isBasicAuth) {
             map.put("Password", dto.getPassword());
             map.put("User Name", dto.getUsername());
         }

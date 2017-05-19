@@ -60,10 +60,13 @@ public class ManagerType implements ManagerTypeElement {
         managerTypes.add(type);
     }
 
+    public static void setTypes(Set<String> types) {
+        managerTypes.clear();
+        managerTypes.addAll(types);
+    }
+
     public static Set<String> values() {
-        Set<String> values = new TreeSet<>(managerTypes);
-        values.addAll(ManagerApiFactory.getManagerTypes());
-        return values;
+        return new TreeSet<String>(managerTypes);
     }
 
     public String getValue() {

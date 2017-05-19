@@ -120,8 +120,11 @@ public class AddApplianceManagerConnectorService
     private void validate(DryRunRequest<ApplianceManagerConnectorRequest> request,
                           OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
-        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto());
-        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto());
+        ManagerType managerType = ManagerType.fromText(request.getDto().getManagerType());
+        boolean basicAuth = this.apiFactoryService.isBasicAuth(managerType);
+        boolean keyAuth = this.apiFactoryService.isKeyAuth(managerType);
+        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), basicAuth, keyAuth);
+        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto(), basicAuth);
 
         // check for uniqueness of mc name
         if (emgr.isExisting("name", request.getDto().getName())) {

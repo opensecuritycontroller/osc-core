@@ -179,9 +179,11 @@ public class UpdateApplianceManagerConnectorService
     private void validate(EntityManager em, DryRunRequest<ApplianceManagerConnectorRequest> request,
                           ApplianceManagerConnector existingMc, OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
+        boolean basicAuth = this.apiFactoryService.isBasicAuth(ManagerType.fromText(request.getDto().getManagerType()));
+
         // check for null/empty values
-        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), request.isApi());
-        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto());
+        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), request.isApi(), basicAuth);
+        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto(), basicAuth);
 
         // entry must pre-exist in db
         if (existingMc == null) {

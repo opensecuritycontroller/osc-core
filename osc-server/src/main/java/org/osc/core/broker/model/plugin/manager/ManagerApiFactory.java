@@ -16,15 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.manager;
 
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
-import org.osc.sdk.manager.api.IscJobNotificationApi;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.api.ManagerDomainApi;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
@@ -62,10 +59,6 @@ public class ManagerApiFactory {
         }
     }
 
-    public static Set<String> getManagerTypes() {
-        return apiFactoryService.getManagerTypes();
-    }
-
     private static ApplianceManagerApi createApplianceManagerApi(String managerName) throws Exception {
         return apiFactoryService.createApplianceManagerApi(ManagerType.fromText(managerName));
     }
@@ -97,25 +90,8 @@ public class ManagerApiFactory {
                 .createManagerCallbackNotificationApi(getApplianceManagerConnectorElement(mc));
     }
 
-    public static IscJobNotificationApi createIscJobNotificationApi(VirtualSystem vs) throws Exception {
-        return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-                .createIscJobNotificationApi(getApplianceManagerConnectorElement(vs), new VirtualSystemElementImpl(vs));
-    }
-
     public static boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception {
         return apiFactoryService.isPersistedUrlNotifications(mc);
-    }
-
-    public static boolean isWebSocketNotifications(ApplianceManagerConnector mc) throws Exception {
-        return apiFactoryService.isWebSocketNotifications(mc);
-    }
-
-    public static boolean isBasicAuth(ManagerType mt) throws Exception {
-        return apiFactoryService.isBasicAuth(mt);
-    }
-
-    public static boolean isKeyAuth(ManagerType mt) throws Exception {
-        return apiFactoryService.isKeyAuth(mt);
     }
 
     private static ApplianceManagerConnectorElement getApplianceManagerConnectorElement(ApplianceManagerConnector mc)

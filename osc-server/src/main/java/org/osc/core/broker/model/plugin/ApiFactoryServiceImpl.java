@@ -236,10 +236,12 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     void addApplianceManagerApi(ComponentServiceObjects<ApplianceManagerApi> serviceObjs) {
         addApi(serviceObjs, this.managerRefs);
+        ManagerType.setTypes(getManagerTypes());
     }
 
     void removeApplianceManagerApi(ComponentServiceObjects<ApplianceManagerApi> serviceObjs) {
         removeApi(serviceObjs, this.managerRefs, this.managerApis);
+        ManagerType.setTypes(getManagerTypes());
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)

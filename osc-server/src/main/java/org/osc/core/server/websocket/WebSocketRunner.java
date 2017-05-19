@@ -31,7 +31,6 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.WebSocketClient;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ManagerApi;
@@ -110,7 +109,7 @@ public class WebSocketRunner implements BroadcastListener {
 
                 try {
                     try {
-                        isWebSocketNotification = ManagerApiFactory.isWebSocketNotifications(mc);
+                        isWebSocketNotification = WebSocketRunner.this.apiFactoryService.isWebSocketNotifications(mc);
                     } catch (VmidcException e) {
                         // VmidcException: Open Security Controller: Unsupported Manager type 'NSM'
                         String msg = e.getMessage();
@@ -197,7 +196,7 @@ public class WebSocketRunner implements BroadcastListener {
     }
 
     private void updateMCNotificationThreadMap(ApplianceManagerConnector mc, EventType event) throws Exception {
-        if (event == EventType.ADDED && ManagerApiFactory.isWebSocketNotifications(mc)) {
+        if (event == EventType.ADDED && this.apiFactoryService.isWebSocketNotifications(mc)) {
 
             /*
              * Case 1: Server started/restarted
@@ -208,7 +207,7 @@ public class WebSocketRunner implements BroadcastListener {
 
             this.webSocketConnections.put(mc.getId(), new WebSocketClient(mc, this.managerApis, this.apiFactoryService));
 
-        } else if (event == EventType.UPDATED && ManagerApiFactory.isWebSocketNotifications(mc)) {
+        } else if (event == EventType.UPDATED && this.apiFactoryService.isWebSocketNotifications(mc)) {
 
             ApplianceManagerConnector oldMC = this.webSocketConnections.get(mc.getId()).getMc();
 
