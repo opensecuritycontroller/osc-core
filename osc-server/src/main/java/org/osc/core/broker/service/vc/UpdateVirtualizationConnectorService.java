@@ -48,6 +48,7 @@ import org.osc.core.broker.service.request.SslCertificatesExtendedException;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
 import org.osc.core.broker.view.common.VmidcMessages_;
@@ -173,6 +174,16 @@ public class UpdateVirtualizationConnectorService
         }
 
         VirtualizationConnectorDto.checkFieldFormat(dto);
+
+        // check for uniqueness of controller IP
+        if (dto.isControllerDefined()) {
+            ValidateUtil.checkForValidIpAddressFormat(dto.getControllerIP());
+            if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
+
+                throw new VmidcBrokerValidationException(
+                        "Controller IP Address: " + dto.getControllerIP() + " already exists.");
+            }
+        }
 
         // check for uniqueness of vc IP
         if (emgr.isDuplicate("providerIpAddress", dto.getProviderIP(), dto.getId())) {

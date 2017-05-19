@@ -17,10 +17,7 @@
 package org.osc.core.broker.service.request;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import javax.persistence.EntityManager;
 
@@ -105,6 +102,15 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
 
         // Assert.
         verify(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
+    }
+
+    @Test
+    public void testValidate_WithValidateAndLoadRequest_ThrowsUnsupportedException() throws Exception {
+        // Arrange.
+        this.exception.expect(UnsupportedOperationException.class);
+
+        // Act.
+        this.validator.validateAndLoad(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST);
     }
 
 }

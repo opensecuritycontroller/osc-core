@@ -16,10 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS_2;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS_2;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.createVirtualisationConnector;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.*;
 
 import javax.persistence.EntityManager;
 
@@ -49,7 +46,7 @@ public class VirtualizationConnectorDtoValidatorBaseTest {
     protected VirtualizationConnectorDtoValidator dtoValidator;
 
     @Before
-    public void testInitialize() {
+    public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
         this.em = InMemDB.getEntityManagerFactory().createEntityManager();
@@ -70,6 +67,9 @@ public class VirtualizationConnectorDtoValidatorBaseTest {
 
        this.em.persist(createVirtualisationConnector(OPENSTACK_NAME_ALREADY_EXISTS,
                CONTROLLER_IP_ALREADY_EXISTS_2, PROVIDER_IP_ALREADY_EXISTS_2));
+
+       this.em.persist(createVirtualisationConnector("VC NAME",
+               CONTROLLER_IP_ALREADY_EXISTS, PROVIDER_IP_ALREADY_EXISTS));
 
        this.em.getTransaction().commit();
 

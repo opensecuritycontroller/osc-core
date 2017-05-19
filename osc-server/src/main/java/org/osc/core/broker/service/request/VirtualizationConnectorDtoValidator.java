@@ -25,6 +25,7 @@ import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.ValidateUtil;
 
 public class VirtualizationConnectorDtoValidator
 		implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
@@ -58,6 +59,16 @@ public class VirtualizationConnectorDtoValidator
                     "Virtualization Connector Name: " + dto.getName() + " already exists.");
         }
 
+        // check for uniqueness of controller IP
+        if (dto.isControllerDefined()) {
+            ValidateUtil.checkForValidIpAddressFormat(dto.getControllerIP());
+            if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
+
+                throw new VmidcBrokerValidationException(
+                        "Controller IP Address: " + dto.getControllerIP() + " already exists.");
+            }
+        }
+
         VirtualizationConnectorDto.checkFieldFormat(dto);
 
         // check for uniqueness of provider IP
@@ -66,16 +77,6 @@ public class VirtualizationConnectorDtoValidator
             throw new VmidcBrokerValidationException(
                     "Provider IP Address: " + dto.getProviderIP() + " already exists.");
         }
-
-        // check for uniqueness of controller IP
-        if (dto.isControllerDefined()) {
-            if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
-
-                throw new VmidcBrokerValidationException(
-                        "Controller IP Address: " + dto.getControllerIP() + " already exists.");
-            }
-        }
-
 	}
 
 	@Override
