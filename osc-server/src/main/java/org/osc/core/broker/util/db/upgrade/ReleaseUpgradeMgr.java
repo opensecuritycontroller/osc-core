@@ -251,8 +251,16 @@ public class ReleaseUpgradeMgr {
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE DROP COLUMN nsx_vsm_uuid;");
         execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN nsx_service_id, "
                 + "nsx_service_instance_id, nsx_service_manager_id, nsx_vsm_uuid;");
+
         execSql(stmt, "drop table VIRTUAL_SYSTEM_POLICY;");
+        execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop column if exists virtual_system_policy_fk;");
+
         execSql(stmt, "drop table VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM drop column if exists nsx_deployment_spec_id;");
+
+        execSql(stmt, "drop table VIRTUAL_SYSTEM_MGR_FILE;");
+
+        execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_NSX';");
 
     }
 

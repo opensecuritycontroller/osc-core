@@ -98,7 +98,7 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
 
     public Long startIpPropagateJob() throws Exception {
 
-        log.info("Start propagating new IP(" + NetworkUtil.getHostIpAddress() + ") to all managers and DAIs");
+        log.info("Start propagating new IP(" + NetworkUtil.getHostIpAddress() + ") to all managers");
 
         TaskGraph tg = new TaskGraph();
 
@@ -106,7 +106,7 @@ public class SetNetworkSettingsService extends ServiceDispatcher<SetNetworkSetti
 
         Job job = JobEngine.getEngine().submit(
                 "Updating " + Server.SHORT_PRODUCT_NAME
-                        + " IP to Appliance Instance Agent(s), Element Manager(s) and Security Manager(s)", tg, null);
+                        + " IP to Security Manager(s)", tg, null);
         log.info("Done submitting with jobId: " + job.getId());
         return job.getId();
 

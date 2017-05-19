@@ -60,13 +60,21 @@ public class VirtualizationConnectorDtoValidator
 
         VirtualizationConnectorDto.checkFieldFormat(dto);
 
-        // check for uniqueness of vc IP
+        // check for uniqueness of provider IP
         if (emgr.isExisting("providerIpAddress", dto.getProviderIP())) {
 
             throw new VmidcBrokerValidationException(
                     "Provider IP Address: " + dto.getProviderIP() + " already exists.");
         }
 
+        // check for uniqueness of controller IP
+        if (dto.isControllerDefined()) {
+            if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
+
+                throw new VmidcBrokerValidationException(
+                        "Controller IP Address: " + dto.getControllerIP() + " already exists.");
+            }
+        }
 
 	}
 

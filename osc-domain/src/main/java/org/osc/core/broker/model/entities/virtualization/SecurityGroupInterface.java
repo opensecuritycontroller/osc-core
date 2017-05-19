@@ -60,6 +60,7 @@ public class SecurityGroupInterface extends BaseEntity {
     foreignKey = @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM"))
     private VirtualSystem virtualSystem;
 
+    @Column(nullable = false)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "policy_fk", foreignKey = @ForeignKey(name = "FK_SGI_POLICY"))
     private Policy policy;
