@@ -18,8 +18,6 @@ package org.osc.core.broker.model.plugin.sdncontroller;
 
 import static org.osc.sdk.controller.Constants.*;
 
-import java.util.HashMap;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -33,8 +31,6 @@ import org.osc.core.broker.model.plugin.manager.ServiceUnavailableException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.StaticRegistry;
-import org.osc.sdk.controller.FlowInfo;
-import org.osc.sdk.controller.FlowPortInfo;
 import org.osc.sdk.controller.Status;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
@@ -83,7 +79,7 @@ public class SdnControllerApiFactory {
         }
     }
 
-    public static SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs, String region) throws Exception {
+    private static SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs, String region) throws Exception {
         return createNetworkRedirectionApi(vs.getVirtualizationConnector(), region);
     }
 
@@ -118,13 +114,6 @@ public class SdnControllerApiFactory {
     public static Status getStatus(VirtualizationConnector vc, String region) throws Exception {
         try (SdnControllerApi networkControllerApi = createNetworkControllerApi(vc.getControllerType())) {
             return networkControllerApi.getStatus(getVirtualizationConnectorElement(vc), region);
-        }
-    }
-
-    public static HashMap<String, FlowPortInfo> queryPortInfo(VirtualizationConnector vc, String region,
-            HashMap<String, FlowInfo> portsQuery) throws Exception {
-        try (SdnControllerApi networkControllerApi = createNetworkControllerApi(vc.getControllerType())) {
-            return networkControllerApi.queryPortInfo(getVirtualizationConnectorElement(vc), region, portsQuery);
         }
     }
 

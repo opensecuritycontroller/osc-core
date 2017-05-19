@@ -65,6 +65,9 @@ public class GetAgentStatusService
     @Reference
     private ApiFactoryService apiFactoryService;
 
+    @Reference
+    private NsxUpdateAgentsService nsxUpdateAgentsService;
+
     @Override
     public GetAgentStatusResponse exec(DistributedApplianceInstancesRequest request, EntityManager em) throws Exception {
         this.em = em;
@@ -149,7 +152,7 @@ public class GetAgentStatusService
         return agentStatusList;
     }
 
-    private static void handleResponse(
+    private void handleResponse(
             EntityManager em,
             List<AgentStatusResponse> agentStatusList,
             List<ManagerDeviceMemberStatusElement> agentElems,
@@ -189,7 +192,7 @@ public class GetAgentStatusService
         }
     }
 
-    private static void updateDaiAgentStatusInfo(EntityManager em, AgentStatusResponse agentStatus, DistributedApplianceInstance dai) {
+    private void updateDaiAgentStatusInfo(EntityManager em, AgentStatusResponse agentStatus, DistributedApplianceInstance dai) {
         // Generate an alert if Appliance Instance Discovery flag changed from 'true' to 'false'
         if (dai.getDiscovered() != null && dai.getDiscovered() && !agentStatus.isDiscovered()) {
             LOG.warn("Generate an alert if Appliance Instance Discovery flag changed from 'true' to 'false'");
@@ -213,7 +216,7 @@ public class GetAgentStatusService
         }
 
         if (dai.getVirtualSystem().getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-            NsxUpdateAgentsService.updateNsxAgentInfo(em, dai);
+            this.nsxUpdateAgentsService.updateNsxAgentInfo(em, dai);
         }
 
         // Update DAI to reflect last successful communication

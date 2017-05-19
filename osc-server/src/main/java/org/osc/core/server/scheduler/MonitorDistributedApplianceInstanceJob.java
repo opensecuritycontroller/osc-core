@@ -33,6 +33,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -53,10 +54,13 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
 
     }
 
-    public static void scheduleMonitorDaiJob() {
+    public static void scheduleMonitorDaiJob(NsxUpdateAgentsService nsxUpdateAgentsService) {
 
         try {
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
+
+            JobDataMap jobDataMap = new JobDataMap();
+            jobDataMap.put(NsxUpdateAgentsService.class.getName(), nsxUpdateAgentsService);
 
             JobDetail monitorDaiJob = JobBuilder.newJob(MonitorDistributedApplianceInstanceJob.class).build();
 
@@ -80,6 +84,7 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
         try {
+            NsxUpdateAgentsService nsxUpdateAgentsService = (NsxUpdateAgentsService) context.getMergedJobDataMap().get(NsxUpdateAgentsService.class.getName());
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             HibernateUtil.getTransactionControl().required(() -> {
                 OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
@@ -104,7 +109,7 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
                         // In case of NSX, update
                         if (dai.getVirtualSystem().getVirtualizationConnector()
                                 .getVirtualizationType() == VirtualizationType.VMWARE) {
-                            NsxUpdateAgentsService.updateNsxAgentInfo(em, dai, "UNKNOWN");
+                            nsxUpdateAgentsService.updateNsxAgentInfo(em, dai, "UNKNOWN");
                         }
                         dai.setDiscovered(null);
                         dai.setInspectionReady(null);

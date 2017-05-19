@@ -31,7 +31,6 @@ import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.AgentStatusElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.NsxUpdateAgentsServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -53,7 +52,7 @@ import org.osc.sdk.sdn.element.AgentStatusElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component
+@Component(service = {NsxUpdateAgentsService.class, NsxUpdateAgentsServiceApi.class})
 public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsRequest, NsxUpdateAgentsResponse>
         implements NsxUpdateAgentsServiceApi {
 
@@ -107,19 +106,19 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         return response;
     }
 
-    public static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, String status) {
+    public void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, String status) {
         updateNsxAgentInfo(em, dai, null, status);
     }
 
-    public static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent) {
+    public void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent) {
         updateNsxAgentInfo(em, dai, agent, null);
     }
 
-    public static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai) {
+    public void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai) {
         updateNsxAgentInfo(em, dai, null, null);
     }
 
-    private static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent, String status) {
+    private void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent, String status) {
         // Locate and update DAI's NSX agent id, if not already set.
         if (dai.getNsxAgentId() == null) {
 
@@ -143,7 +142,7 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         // Update NSX agent status
         if (dai.getNsxAgentId() != null) {
             try {
-                AgentApi agentApi = VMwareSdnApiFactory.createAgentApi(dai.getVirtualSystem());
+                AgentApi agentApi = this.apiFactoryService.createAgentApi(dai.getVirtualSystem());
                 String currentStatus = null;
                 AgentStatusElement agentStatus;
 
@@ -185,9 +184,9 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         }
     }
 
-    private static AgentElement findNsxAgent(DistributedApplianceInstance dai) {
+    private AgentElement findNsxAgent(DistributedApplianceInstance dai) {
         try {
-            AgentApi agentApi = VMwareSdnApiFactory.createAgentApi(dai.getVirtualSystem());
+            AgentApi agentApi = this.apiFactoryService.createAgentApi(dai.getVirtualSystem());
             List<AgentElement> agents = agentApi.getAgents(dai.getVirtualSystem().getNsxServiceId());
             for (AgentElement agent : agents) {
                 if (agent.getIpAddress() == null) {

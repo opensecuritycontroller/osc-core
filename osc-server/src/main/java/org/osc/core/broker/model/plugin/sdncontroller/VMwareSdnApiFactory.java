@@ -17,7 +17,6 @@
 package org.osc.core.broker.model.plugin.sdncontroller;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
 import org.osc.sdk.sdn.api.SecurityTagApi;
 import org.osc.sdk.sdn.api.ServiceApi;
@@ -27,11 +26,6 @@ import org.osc.sdk.sdn.api.ServiceProfileApi;
 import org.osc.sdk.sdn.api.VendorTemplateApi;
 
 public class VMwareSdnApiFactory {
-    public static AgentApi createAgentApi(VirtualSystem vs) throws Exception {
-        return SdnControllerApiFactory.createVMwareSdnApi(vs.getVirtualizationConnector())
-                .createAgentApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
-    }
-
     public static ServiceProfileApi createServiceProfileApi(VirtualSystem vs) throws Exception {
         return SdnControllerApiFactory.createVMwareSdnApi(vs.getVirtualizationConnector())
                 .createServiceProfileApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));

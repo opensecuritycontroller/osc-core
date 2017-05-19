@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -42,6 +42,12 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
 
     @Reference
     private MgrDeleteMemberDeviceTask mgrDeleteMemberDeviceTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private NsxUpdateAgentsService nsxUpdateAgentsService;
 
     private VirtualSystem vs;
 
@@ -62,7 +68,7 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
             return;
         }
 
-        AgentApi agentApi = VMwareSdnApiFactory.createAgentApi(this.vs);
+        AgentApi agentApi = this.apiFactoryService.createAgentApi(this.vs);
         List<AgentElement> nsxAgents = agentApi.getAgents(this.vs.getNsxServiceId());
 
         // Check DAIs
@@ -90,7 +96,7 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
                     dai.setMgmtSubnetPrefixLength(agent.getSubnetPrefixLength());
                     OSCEntityManager.update(em, dai);
                 }
-                NsxUpdateAgentsService.updateNsxAgentInfo(em, dai, agent);
+                this.nsxUpdateAgentsService.updateNsxAgentInfo(em, dai, agent);
             }
         }
 

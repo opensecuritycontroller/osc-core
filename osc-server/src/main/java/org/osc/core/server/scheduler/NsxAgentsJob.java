@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.sdn.api.AgentApi;
@@ -34,6 +34,7 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+// TODO this class is not used
 public class NsxAgentsJob implements Job {
 
     private static final Logger LOG = Logger.getLogger(NsxAgentsJob.class);
@@ -46,6 +47,7 @@ public class NsxAgentsJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
         try {
+            ApiFactoryService apiFactoryService =  (ApiFactoryService) context.getMergedJobDataMap().get(ApiFactoryService.class.getName());
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
 
             HibernateUtil.getTransactionControl().required(() -> {
@@ -54,7 +56,7 @@ public class NsxAgentsJob implements Job {
                         DistributedAppliance.class, em);
                 for (DistributedAppliance da : emgr.listAll()) {
                     for (VirtualSystem vs : da.getVirtualSystems()) {
-                        AgentApi agentApi = VMwareSdnApiFactory.createAgentApi(vs);
+                        AgentApi agentApi = apiFactoryService.createAgentApi(vs);
                         List<AgentElement> agents = agentApi.getAgents(vs.getNsxServiceId());
 
                         for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {

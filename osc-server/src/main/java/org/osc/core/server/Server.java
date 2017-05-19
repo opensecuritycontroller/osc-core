@@ -38,6 +38,7 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
@@ -123,6 +124,9 @@ public class Server implements ServerApi {
 
     @Reference
     private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private NsxUpdateAgentsService nsxUpdateAgentsService;
 
     @Reference
     private PasswordUtil passwordUtil;
@@ -342,7 +346,7 @@ public class Server implements ServerApi {
         scheduler.scheduleJob(syncDaJob, syncDaJobTrigger);
         scheduler.scheduleJob(syncSgJob, syncSgJobTrigger);
 
-        MonitorDistributedApplianceInstanceJob.scheduleMonitorDaiJob();
+        MonitorDistributedApplianceInstanceJob.scheduleMonitorDaiJob(this.nsxUpdateAgentsService);
 
         this.archiveService.maybeScheduleArchiveJob();
     }

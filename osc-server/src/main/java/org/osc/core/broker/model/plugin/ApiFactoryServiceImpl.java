@@ -22,6 +22,7 @@ import static org.osc.sdk.manager.Constants.*;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,6 +44,8 @@ import org.osc.core.broker.model.plugin.manager.ApplianceManagerConnectorElement
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.manager.VirtualSystemElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
+import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
+import org.osc.core.broker.model.plugin.sdncontroller.VirtualizationConnectorElementImpl;
 import org.osc.core.broker.service.api.plugin.PluginEvent;
 import org.osc.core.broker.service.api.plugin.PluginEvent.Type;
 import org.osc.core.broker.service.api.plugin.PluginListener;
@@ -54,7 +57,10 @@ import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.controller.Constants;
+import org.osc.sdk.controller.FlowInfo;
+import org.osc.sdk.controller.FlowPortInfo;
 import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.element.VirtualizationConnectorElement;
 import org.osc.sdk.manager.ManagerAuthenticationType;
 import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
@@ -63,6 +69,7 @@ import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
+import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
@@ -568,6 +575,35 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     public String getExternalServiceName(VirtualSystem virtualSystem) throws Exception {
         return getExternalServiceName(
                 ManagerType.fromText(virtualSystem.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
+    @Override
+    public Map<String, FlowPortInfo> queryPortInfo(VirtualizationConnector vc, String region,
+            HashMap<String, FlowInfo> portsQuery) throws Exception {
+        try (SdnControllerApi networkControllerApi = createNetworkControllerApi(vc.getControllerType())) {
+            return networkControllerApi.queryPortInfo(getVirtualizationConnectorElement(vc), region, portsQuery);
+        }
+    }
+
+    @Override
+    public SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception {
+        return createNetworkControllerApi(ControllerType.fromText(controllerType));
+    }
+
+    private VirtualizationConnectorElement getVirtualizationConnectorElement(VirtualizationConnector vc)
+            throws Exception {
+        VirtualizationConnector shallowClone = new VirtualizationConnector(vc);
+        shallowClone.setProviderPassword(this.encrypter.decryptAESCTR(shallowClone.getProviderPassword()));
+        if (!StringUtils.isEmpty(shallowClone.getControllerPassword())) {
+            shallowClone.setControllerPassword(this.encrypter.decryptAESCTR(shallowClone.getControllerPassword()));
+        }
+        return new VirtualizationConnectorElementImpl(shallowClone);
+    }
+
+    @Override
+    public AgentApi createAgentApi(VirtualSystem vs) throws Exception {
+        return createVMwareSdnApi(vs.getVirtualizationConnector())
+        .createAgentApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
     }
 
 }
