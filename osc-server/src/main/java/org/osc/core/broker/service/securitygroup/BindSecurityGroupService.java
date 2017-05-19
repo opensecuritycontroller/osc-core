@@ -30,7 +30,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
@@ -64,6 +64,9 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 
     @Reference
     private ConformService conformService;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private SecurityGroup securityGroup;
 
@@ -102,7 +105,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                 }
 
                 Policy policy = null;
-                boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(vs);
+                boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(vs);
 
                 if (serviceToBindTo.getPolicyId() == null) {
                     if (isPolicyMappingSupported) {

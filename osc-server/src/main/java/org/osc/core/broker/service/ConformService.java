@@ -39,7 +39,6 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.service.api.ConformServiceApi;
@@ -148,7 +147,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             tg.appendTask(this.daConformanceCheckMetaTask.create(da), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             // Sync MC security group interfaces only if the appliance manager supports policy mapping.
-            if (ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()))) {
+            if (this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()))) {
                 tg.appendTask(this.mgrSecurityGroupInterfacesCheckMetaTask.create(da, mcReadUnlocktask),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }

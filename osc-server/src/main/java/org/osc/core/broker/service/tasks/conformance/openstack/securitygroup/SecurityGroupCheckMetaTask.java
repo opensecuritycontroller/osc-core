@@ -26,7 +26,7 @@ import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
@@ -39,6 +39,9 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
     @Reference
     MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
+
+    @Reference
+    ApiFactoryService apiFactoryService;
 
     private SecurityGroup sg;
     private TaskGraph tg;
@@ -62,7 +65,7 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
             List<VirtualSystem> referencedVs = VirtualSystemEntityMgr.listReferencedVSBySecurityGroup(em,
                     this.sg.getId());
             for (VirtualSystem vs : referencedVs) {
-                if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {
+                if (vs.getMgrId() != null && this.apiFactoryService.syncsPolicyMapping(vs)) {
                     this.tg.appendTask(this.mgrSecurityGroupInterfacesCheckMetaTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 }

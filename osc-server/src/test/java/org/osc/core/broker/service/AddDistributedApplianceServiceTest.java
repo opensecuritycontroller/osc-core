@@ -103,6 +103,9 @@ public class AddDistributedApplianceServiceTest {
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
+        // @InjectMocks should do this
+        this.service.validator = this.validatorMock;
+
         this.em = InMemDB.getEntityManagerFactory().createEntityManager();
 
         this.txControl.setEntityManager(this.em);

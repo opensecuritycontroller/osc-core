@@ -31,6 +31,7 @@ import javax.persistence.EntityManager;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -385,6 +386,17 @@ public class ImportApplianceSoftwareVersionServiceTest {
         ServerUtil.isEnoughSpace();
 
         // validate is called
+        Matcher<Boolean> isPolicyMappingSupported = new BaseMatcher<Boolean>() {
+
+            @Override
+            public boolean matches(Object arg0) {
+                return true;
+            }
+
+            @Override
+            public void describeTo(Description arg0) {
+            }
+        };
         verify(this.imageMetaDataValidator).validate(Mockito.argThat(
                 new BaseMatcher<ImageMetadata>() {
 
@@ -402,7 +414,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
                                 gson.toJson(ImportApplianceSoftwareVersionServiceTest.this.imageMetaData));
                     }
 
-                }));
+                }), Mockito.booleanThat(isPolicyMappingSupported));
 
         // asv ID matches
         assertEquals("Appliance Software Version Id mismatch", id, response.getId());

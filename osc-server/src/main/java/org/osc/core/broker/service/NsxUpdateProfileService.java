@@ -27,6 +27,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.api.NsxUpdateProfileServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -50,6 +51,9 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
 
     @Reference
     private MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public EmptySuccessResponse exec(NsxUpdateProfileRequest request, EntityManager em) throws Exception {
@@ -87,7 +91,7 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
         tg.appendTask(new NsxServiceProfileCheckMetaTask(vs, serviceProfile));
 
         // If the appliance manager supports policy mapping then perform OSC->MC sync of security group interfaces
-        if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {
+        if (vs.getMgrId() != null && this.apiFactoryService.syncsPolicyMapping(vs)) {
             tg.appendTask(this.mgrSecurityGroupInterfacesCheckMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 

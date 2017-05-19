@@ -50,6 +50,8 @@ public interface ApiFactoryService {
 
     Boolean syncsPolicyMapping(ManagerType managerType) throws Exception;
 
+    Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception;
+
     Boolean syncsSecurityGroup(ManagerType managerType) throws Exception;
 
     String getServiceName(ManagerType managerType) throws Exception;

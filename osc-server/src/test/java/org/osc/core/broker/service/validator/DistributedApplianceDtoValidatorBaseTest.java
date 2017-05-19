@@ -33,10 +33,9 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.test.InMemDB;
-import org.powermock.api.mockito.PowerMockito;
 
 /**
  * The base class for the {@link DistributedApplianceDtoValidator} unit tests.
@@ -76,11 +75,13 @@ public class DistributedApplianceDtoValidatorBaseTest {
 
         populateDatabase();
 
-        this.validator = new DistributedApplianceDtoValidator(this.em);
+        ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
 
-        PowerMockito.mockStatic(ManagerApiFactory.class);
+        this.validator = new DistributedApplianceDtoValidator().create(this.em);
+        this.validator.apiFactoryService = apiFactoryService;
+
         ManagerType.addType(ManagerType.NSM.getValue());
-        Mockito.when(ManagerApiFactory.syncsPolicyMapping(ManagerType.NSM)).thenReturn(true);
+        Mockito.when(apiFactoryService.syncsPolicyMapping(ManagerType.NSM)).thenReturn(true);
     }
 
     @After

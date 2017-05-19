@@ -18,7 +18,6 @@ package org.osc.core.broker.service.appliance;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.image.ImageMetadata;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.util.VersionUtil;
@@ -28,7 +27,7 @@ public class ImageMetadataValidator {
 
     private static final Logger log = Logger.getLogger(ImageMetadataValidator.class);
 
-    public void validate(ImageMetadata imageMetadata) throws Exception {
+    public void validate(ImageMetadata imageMetadata, boolean isPolicyMappingSupported) throws Exception {
         ImageMetadata.checkForNullFields(imageMetadata);
 
         Version minIscVersion = imageMetadata.getMinIscVersion();
@@ -58,7 +57,6 @@ public class ImageMetadataValidator {
             throw new VmidcBrokerValidationException(
                     "Invalid File Format. Invalid Manager Type and/or Virtualization Type and/or Virtualization Version and/or Encapsulation Type.");
         }
-        boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(imageMetadata.getManagerType());
 
         if (!imageMetadata.getEncapsulationTypes().isEmpty() && imageMetadata.getVirtualizationType().isVmware()) {
             throw new VmidcBrokerValidationException(

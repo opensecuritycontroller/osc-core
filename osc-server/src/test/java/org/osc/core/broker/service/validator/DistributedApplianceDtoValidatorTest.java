@@ -27,18 +27,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ManagerApiFactory.class})
 public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDtoValidatorBaseTest{
 //    private DistributedAppliance existingDa;
 
@@ -47,9 +44,9 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
     public void testInitialize() throws Exception{
         super.testInitialize();
 
-        PowerMockito.mockStatic(ManagerApiFactory.class);
+        ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
         ManagerType.addType(ManagerType.NSM.getValue());
-        Mockito.when(ManagerApiFactory.syncsPolicyMapping(ManagerType.NSM)).thenReturn(true);
+        Mockito.when(apiFactoryService.syncsPolicyMapping(ManagerType.NSM)).thenReturn(true);
     }
 
     @Test

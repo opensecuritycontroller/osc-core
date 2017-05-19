@@ -75,12 +75,16 @@ public class UpdateDistributedApplianceService
     @Reference
     ApiFactoryService apiFactoryService;
 
+    @Reference
+    private DistributedApplianceDtoValidator validatorFactory;
+
+
     @Override
     public BaseJobResponse exec(BaseRequest<DistributedApplianceDto> request, EntityManager em)
             throws Exception {
         DistributedApplianceDto daDto = request.getDto();
         if (this.validator == null) {
-            this.validator = new DistributedApplianceDtoValidator(em);
+            this.validator = this.validatorFactory.create(em);
         }
 
         try {

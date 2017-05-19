@@ -52,7 +52,10 @@ public class AddDistributedApplianceService
         extends ServiceDispatcher<BaseRequest<DistributedApplianceDto>, AddDistributedApplianceResponse>
         implements AddDistributedApplianceServiceApi {
 
-    private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
+    DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
+
+    @Reference
+    private DistributedApplianceDtoValidator validatorFactory;
 
     @Reference
     private ConformService conformService;
@@ -70,7 +73,7 @@ public class AddDistributedApplianceService
         DistributedApplianceDto daDto = request.getDto();
 
         if (this.validator == null) {
-            this.validator = new DistributedApplianceDtoValidator(em);
+            this.validator = this.validatorFactory.create(em);
         }
 
         this.validator.validateForCreate(daDto);

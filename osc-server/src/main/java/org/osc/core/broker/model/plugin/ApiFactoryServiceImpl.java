@@ -554,4 +554,10 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
                 .fromText(virtualSystem.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
+    @Override
+    public Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception {
+        return syncsPolicyMapping(
+                ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
 }

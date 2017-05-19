@@ -29,7 +29,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
@@ -41,14 +41,22 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = DistributedApplianceDtoValidator.class)
 public class DistributedApplianceDtoValidator implements DtoValidator<DistributedApplianceDto, DistributedAppliance> {
     private EntityManager em;
     private final static String ENCAPSULATION_TYPE_FIELD = "Encapsulation Type";
     private final static String DOMAIN_ID_FIELD = "Domain Id";
 
-    public DistributedApplianceDtoValidator(EntityManager em) {
-        this.em = em;
+    @Reference
+    ApiFactoryService apiFactoryService;
+
+    public DistributedApplianceDtoValidator create(EntityManager em) {
+        DistributedApplianceDtoValidator validator = new DistributedApplianceDtoValidator();
+        validator.em = em;
+        return validator;
     }
 
     @Override
@@ -143,7 +151,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
             HashMap<String, Object> nullFields = new HashMap<>();
             HashMap<String, Object> notNullFields = new HashMap<>();
 
-            boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()));
+            boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()));
 
             if (isPolicyMappingSupported) {
                 if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {

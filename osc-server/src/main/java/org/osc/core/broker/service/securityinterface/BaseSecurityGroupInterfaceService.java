@@ -21,7 +21,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Policy;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -30,9 +30,13 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.service.validator.SecurityGroupInterfaceDtoValidator;
+import org.osgi.service.component.annotations.Reference;
 
 public abstract class BaseSecurityGroupInterfaceService<I extends Request, O extends Response> extends
 ServiceDispatcher<I, O> {
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     protected VirtualSystem validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
         SecurityGroupInterfaceDtoValidator.checkForNullFields(dto);
@@ -45,7 +49,7 @@ ServiceDispatcher<I, O> {
             + "  is either not found or is been deleted by the user.");
         }
 
-        if (!ManagerApiFactory.syncsPolicyMapping(vs)) {
+        if (!this.apiFactoryService.syncsPolicyMapping(vs)) {
             throw new VmidcBrokerValidationException("Security group interfaces cannot be created or updated for appliance manager that does not support policy mapping.");
         }
 
