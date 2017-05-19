@@ -20,7 +20,7 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.jboss.logging.Logger;
+import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
