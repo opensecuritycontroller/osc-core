@@ -25,6 +25,7 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -87,7 +88,8 @@ public class AddApplianceManagerConnectorService
             }
         }
 
-        ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption);
+        String serviceName = this.apiFactoryService.getServiceName(ManagerType.fromText(request.getDto().getManagerType()));
+        ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption, serviceName);
         appMgrEntityMgr.create(mc);
 
         SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
@@ -134,7 +136,8 @@ public class AddApplianceManagerConnectorService
             throw new VmidcBrokerValidationException("Appliance Manager IP Address: " + request.getDto().getIpAddress() + " already exists.");
         }
 
-        checkManagerConnection(request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption));
+        String serviceName = this.apiFactoryService.getServiceName(ManagerType.fromText(request.getDto().getManagerType()));
+        checkManagerConnection(request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption, serviceName));
     }
 
     void checkManagerConnection(DryRunRequest<ApplianceManagerConnectorRequest> request,

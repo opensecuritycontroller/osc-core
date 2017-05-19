@@ -91,15 +91,6 @@ public class ManagerApiFactory {
                 ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
-    public static String getExternalServiceName(VirtualSystem vs) throws Exception {
-        return apiFactoryService.getExternalServiceName(
-                ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
-    }
-
-    public static String getServiceName(ManagerType managerType) throws Exception {
-        return apiFactoryService.getServiceName(managerType);
-    }
-
     public static ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc)
             throws Exception {
         return createApplianceManagerApi(mc.getManagerType())

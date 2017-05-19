@@ -560,4 +560,10 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
                 ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
     }
 
+    @Override
+    public String getExternalServiceName(VirtualSystem virtualSystem) throws Exception {
+        return getExternalServiceName(
+                ManagerType.fromText(virtualSystem.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
 }

@@ -70,6 +70,8 @@ public interface ApiFactoryService {
 
     String getExternalServiceName(ManagerType managerType) throws Exception;
 
+    String getExternalServiceName(VirtualSystem virtualSystem) throws Exception;
+
     String getVendorName(ManagerType managerType) throws Exception;
 
     Boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception;
