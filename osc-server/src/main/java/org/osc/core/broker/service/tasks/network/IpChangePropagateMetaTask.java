@@ -76,7 +76,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
         task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
         task.name = task.getName();
-        task.updateNsxDeploymentSpecTask = task.updateNsxDeploymentSpecTask;
+        task.updateNsxDeploymentSpecTask = this.updateNsxDeploymentSpecTask;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
