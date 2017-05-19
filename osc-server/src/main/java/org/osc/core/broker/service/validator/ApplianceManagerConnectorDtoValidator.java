@@ -61,7 +61,7 @@ public class ApplianceManagerConnectorDtoValidator {
     }
 
     public static void checkForNullFields(ApplianceManagerConnectorDto dto, boolean isBasicAuth, boolean isKeyAuth) throws Exception {
-        checkForNullFields(dto, false, isBasicAuth);
+        checkForNullFields(dto, false, isBasicAuth, isKeyAuth);
     }
 
     public static void checkFieldLength(ApplianceManagerConnectorDto dto, boolean isBasicAuth) throws Exception {
