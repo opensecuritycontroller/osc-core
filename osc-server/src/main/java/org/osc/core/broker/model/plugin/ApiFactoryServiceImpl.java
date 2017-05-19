@@ -247,10 +247,12 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     void addSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
         addApi(serviceObjs, this.sdnControllerRefs);
+        ControllerType.setTypes(getControllerTypes());
     }
 
     void removeSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
         removeApi(serviceObjs, this.sdnControllerRefs, null);
+        ControllerType.setTypes(getControllerTypes());
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)

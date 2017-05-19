@@ -49,7 +49,7 @@ public class ManagerType implements ManagerTypeElement {
     }
 
     public static ManagerType fromText(String text) {
-        if (!managerTypes.contains(text) && !values().contains(text)) {
+        if (!managerTypes.contains(text)) {
             throw new IllegalArgumentException("No manager type found for '" + text + "'");
         }
         return new ManagerType(text);

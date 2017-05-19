@@ -19,7 +19,6 @@ package org.osc.core.broker.model.plugin.sdncontroller;
 import static org.osc.sdk.controller.Constants.*;
 
 import java.util.HashMap;
-import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -180,10 +179,6 @@ public class SdnControllerApiFactory {
         if (apiFactoryService == null) {
             throw new ServiceUnavailableException(ApiFactoryService.class.getName());
         }
-    }
-
-    public static Set<String> getControllerTypes() {
-        return apiFactoryService.getControllerTypes();
     }
 
     private static Boolean supportsFailurePolicy(ControllerType controllerType) throws Exception {
