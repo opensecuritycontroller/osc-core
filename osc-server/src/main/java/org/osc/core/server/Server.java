@@ -147,18 +147,18 @@ public class Server {
 
             NetworkSettingsApi api = new NetworkSettingsApi();
             if (api.getNetworkSettings().isDhcp()) {
-                EnvironmentProperties nsxEnv = parseEnvironmentPropertiesXml();
-                if (nsxEnv != null) {
+                EnvironmentProperties envProp = parseEnvironmentPropertiesXml();
+                if (envProp != null) {
                     try {
-                        log.info("Setting network info: " + nsxEnv.toString());
-                        if (nsxEnv.hostIpAddress != null && !nsxEnv.hostIpAddress.isEmpty()) {
+                        log.info("Setting network info: " + envProp.toString());
+                        if (envProp.hostIpAddress != null && !envProp.hostIpAddress.isEmpty()) {
                             NetworkSettingsDto networkSettingsDto = new NetworkSettingsDto();
                             networkSettingsDto.setDhcp(false);
-                            networkSettingsDto.setHostIpAddress(nsxEnv.hostIpAddress);
-                            networkSettingsDto.setHostSubnetMask(nsxEnv.hostSubnetMask);
-                            networkSettingsDto.setHostDefaultGateway(nsxEnv.hostDefaultGateway);
-                            networkSettingsDto.setHostDnsServer1(nsxEnv.hostDnsServer1);
-                            networkSettingsDto.setHostDnsServer2(nsxEnv.hostDnsServer2);
+                            networkSettingsDto.setHostIpAddress(envProp.hostIpAddress);
+                            networkSettingsDto.setHostSubnetMask(envProp.hostSubnetMask);
+                            networkSettingsDto.setHostDefaultGateway(envProp.hostDefaultGateway);
+                            networkSettingsDto.setHostDnsServer1(envProp.hostDnsServer1);
+                            networkSettingsDto.setHostDnsServer2(envProp.hostDnsServer2);
                             api.setNetworkSettings(networkSettingsDto);
                         }
                     } catch (Exception ex) {
@@ -234,7 +234,7 @@ public class Server {
 
         @Override
         public String toString() {
-            return "NsxEnv [dhcp=" + this.dhcp + ", hostIpAddress=" + this.hostIpAddress + ", hostSubnetMask="
+            return "EnvProp [dhcp=" + this.dhcp + ", hostIpAddress=" + this.hostIpAddress + ", hostSubnetMask="
                     + this.hostSubnetMask + ", hostDefaultGateway=" + this.hostDefaultGateway + ", hostDnsServer1="
                     + this.hostDnsServer1 + ", hostDnsServer2=" + this.hostDnsServer2 + ", hostname=" + this.hostname
                     + ", defaultCliPassword=" + this.defaultCliPassword + ", defaultGuiPassword="
