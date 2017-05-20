@@ -100,7 +100,7 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
     @Activate
     private void activate() {
 
-        createView("Manager Connector", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT,
+        createView("Manager Connectors", Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT,
                 ToolbarButtons.DELETE, ToolbarButtons.CONFORM), "Policies", null);
     }
 
