@@ -81,8 +81,8 @@ public class ApplianceView extends CRUDBaseView<ApplianceDto, ApplianceSoftwareV
 
     @Activate
     private void activate() {
-        createView("Model", Arrays.asList(ToolbarButtons.DELETE, ToolbarButtons.AUTO_IMPORT_APPLIANCE),
-                "Software Version", Arrays.asList(ToolbarButtons.DELETE_CHILD));
+        createView("Models", Arrays.asList(ToolbarButtons.DELETE, ToolbarButtons.AUTO_IMPORT_APPLIANCE),
+                "Software Versions", Arrays.asList(ToolbarButtons.DELETE_CHILD));
 
         ViewUtil.getButtonById(this.parentToolbar, ToolbarButtons.AUTO_IMPORT_APPLIANCE.getId()).setEnabled(true);
     }
