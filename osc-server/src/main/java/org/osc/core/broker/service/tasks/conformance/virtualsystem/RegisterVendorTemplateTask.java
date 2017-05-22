@@ -32,7 +32,7 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osgi.service.component.annotations.Component;
 
-@Component
+@Component(service = RegisterVendorTemplateTask.class)
 public class RegisterVendorTemplateTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(RegisterVendorTemplateTask.class);
 
