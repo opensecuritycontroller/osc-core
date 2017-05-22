@@ -23,7 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 
 import org.apache.commons.lang.StringUtils;
-import org.jboss.logging.Logger;
+import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;

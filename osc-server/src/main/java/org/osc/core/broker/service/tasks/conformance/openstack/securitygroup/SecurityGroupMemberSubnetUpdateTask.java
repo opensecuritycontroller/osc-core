@@ -22,7 +22,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.jboss.logging.Logger;
+import org.apache.log4j.Logger;
 import org.jclouds.openstack.neutron.v2.domain.IP;
 import org.jclouds.openstack.neutron.v2.domain.Port;
 import org.osc.core.broker.job.TaskGraph;

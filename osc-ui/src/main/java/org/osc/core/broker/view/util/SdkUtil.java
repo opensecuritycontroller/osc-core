@@ -66,6 +66,8 @@ public class SdkUtil {
                             return fileName;
                         }
                         break;
+                    default:
+                        return "";
                 }
             }
         } catch (IOException ex) {

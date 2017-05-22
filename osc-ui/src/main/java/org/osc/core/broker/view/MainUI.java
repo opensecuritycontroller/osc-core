@@ -98,7 +98,7 @@ public class MainUI extends UI implements BroadcastListener {
     public static final String VIEW_FRAGMENT_VIRTUALIZATION_CONNECTORS = "Virtualization Connectors";
     public static final String VIEW_FRAGMENT_SECURITY_MANAGER_CONNECTORS = "Manager Connectors";
     public static final String VIEW_FRAGMENT_SECURITY_FUNCTION_CATALOG = "Service Function Catalog";
-    public static final String VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES = "Distributed Appliance";
+    public static final String VIEW_FRAGMENT_DISTRIBUTED_APPLIANCES = "Distributed Appliances";
 
     // Manage Views
     public static final String VIEW_FRAGMENT_SERVER = "Server";

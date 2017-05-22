@@ -69,8 +69,8 @@ public class ForceDeleteDSTask extends TransactionalTask {
         boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(em,
                 this.ds.getVirtualSystem(), this.ds.getTenantId(), this.ds.getRegion()).size() <= 1;
 
-        if (osSgCanBeDeleted) {
-            OSCEntityManager.delete(em, this.ds.getOsSecurityGroupReference(), this.txBroadcastUtil);
+        if (osSgCanBeDeleted && this.ds.getOsSecurityGroupReference() != null) {
+            OSCEntityManager.delete(em, this.ds.getOsSecurityGroupReference());
         }
 
         // delete DS from the database
