@@ -43,11 +43,14 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
@@ -64,7 +67,9 @@ import com.google.common.collect.Multimap;
  service=OsSecurityGroupNotificationRunner.class)
 public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
-    @Reference
+    // optional+dynamic to break circular references
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ServiceReference<NotificationListenerFactory> notificationListenerFactorySR;
     private NotificationListenerFactory notificationListenerFactory;
 
     @Reference
@@ -78,9 +83,12 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
     private static final Logger log = Logger.getLogger(OsSecurityGroupNotificationRunner.class);
     private ServiceRegistration<BroadcastListener> registration;
+    private BundleContext context;
 
     @Activate
     void start(BundleContext ctx) throws InterruptedException, VmidcException {
+        this.context = ctx;
+        this.notificationListenerFactory = ctx.getService(this.notificationListenerFactorySR);
         // This is not done automatically by DS as we do not want the broadcast whiteboard
         // to activate another instance of this component, only people getting the runner!
         this.registration = ctx.registerService(BroadcastListener.class, this, null);
@@ -108,6 +116,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
     @Deactivate
     void shutdown() {
+        this.context.ungetService(this.notificationListenerFactorySR);
         try {
             this.registration.unregister();
         } catch (IllegalStateException ise) {

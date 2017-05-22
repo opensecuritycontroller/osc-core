@@ -144,7 +144,7 @@ public class Server implements ServerApi {
     private ComponentServiceObjects<RabbitMQRunner> rabbitRunnerFactory;
 
     @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC)
-    private List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
+    private volatile List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
 
     @Reference
     private EncryptionApi encryption;

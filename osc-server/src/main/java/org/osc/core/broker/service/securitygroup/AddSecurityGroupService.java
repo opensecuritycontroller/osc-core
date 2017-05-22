@@ -44,6 +44,7 @@ import org.osgi.service.component.annotations.Reference;
  * The implementation is advertised so that it can be used in
  * SecurityGroupUpdateOrDeleteMetaTask
  */
+// TODO this service causes circularity. DS references are optional+dynamic as work around.
 @Component(service={AddSecurityGroupService.class, AddSecurityGroupServiceApi.class})
 public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
         implements AddSecurityGroupServiceApi {
