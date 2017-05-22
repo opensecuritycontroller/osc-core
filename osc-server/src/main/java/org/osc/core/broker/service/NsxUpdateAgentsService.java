@@ -53,7 +53,7 @@ import org.osc.sdk.sdn.element.AgentStatusElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component
+@Component(service = {NsxUpdateAgentsService.class, NsxUpdateAgentsServiceApi.class})
 public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsRequest, NsxUpdateAgentsResponse>
         implements NsxUpdateAgentsServiceApi {
 
