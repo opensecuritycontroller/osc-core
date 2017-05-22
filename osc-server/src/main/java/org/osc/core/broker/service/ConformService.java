@@ -17,6 +17,7 @@
 package org.osc.core.broker.service;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -61,8 +62,14 @@ import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
@@ -89,9 +96,6 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     MCConformanceCheckMetaTask mcConformanceCheckMetaTask;
 
     @Reference
-    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
-
-    @Reference
     private MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
 
     @Reference
@@ -102,6 +106,33 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
     @Reference
     private CheckSSLConnectivityVcTask checkSSLConnectivityVcTask;
+
+    // optional+dynamic to resolve circular reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ServiceReference<DSConformanceCheckMetaTask> dsConformanceCheckMetaTaskSR;
+    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
+
+    private final AtomicBoolean initDone = new AtomicBoolean();
+
+    private BundleContext context;
+
+    private void delayedInit() {
+        if (this.initDone.compareAndSet(false, true)) {
+            this.dsConformanceCheckMetaTask = this.context.getService(this.dsConformanceCheckMetaTaskSR);
+        }
+    }
+
+    @Activate
+    private void activate(BundleContext context) {
+        this.context = context;
+    }
+
+    @Deactivate
+    private void deactivate(BundleContext context) {
+        if (this.initDone.get()) {
+            context.ungetService(this.dsConformanceCheckMetaTaskSR);
+        }
+    }
 
     public Long startDAConformJob(EntityManager em, DistributedAppliance da) throws Exception {
         return startDAConformJob(em, da, null, true);
@@ -339,6 +370,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
      */
     private Job startDsConformanceJob(EntityManager em, final DeploymentSpec ds,
             UnlockObjectMetaTask dsUnlockTask, boolean queueThisJob) throws Exception {
+        delayedInit();
         TaskGraph tg = new TaskGraph();
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
         DistributedAppliance da = ds.getVirtualSystem().getDistributedAppliance();

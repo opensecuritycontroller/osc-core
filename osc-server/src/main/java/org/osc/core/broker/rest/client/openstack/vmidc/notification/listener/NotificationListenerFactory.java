@@ -31,6 +31,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * This factory spawns new listener object and registers it based given object type to the VC specific Rabit MQ client
  */
+// TODO this service causes circularity. DS references are optional+dynamic as work around.
 @Component(service = NotificationListenerFactory.class)
 public class NotificationListenerFactory {
 

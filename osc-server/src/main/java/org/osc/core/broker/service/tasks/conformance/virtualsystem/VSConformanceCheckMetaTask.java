@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -41,6 +42,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.GenerateVSSKeysTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
@@ -68,8 +70,14 @@ import org.osc.sdk.sdn.api.ServiceApi;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceElement;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 import com.google.common.base.Objects;
 
@@ -156,59 +164,87 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
     @Reference
-    DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
-
-    @Reference
     ValidateNsxAgentsTask validateNsxAgentsTask;
 
     @Reference
     MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
 
+    // optional+dynamic to resolve circular reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ServiceReference<DSConformanceCheckMetaTask> dsConformanceCheckMetaTaskSR;
+    DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
 
     private VirtualSystem vs;
     private TaskGraph tg;
 
+    @IgnoreCompare
+    private VSConformanceCheckMetaTask factory;
+    @IgnoreCompare
+    private final AtomicBoolean initDone = new AtomicBoolean();
+    private BundleContext context;
+
     public VSConformanceCheckMetaTask create(VirtualSystem vs) {
         VSConformanceCheckMetaTask task = new VSConformanceCheckMetaTask();
+        task.factory = this;
         task.vs = vs;
-        task.apiFactoryService = this.apiFactoryService;
-        task.createNsxServiceManagerTask = this.createNsxServiceManagerTask;
-        task.createNsxServiceTask = this.createNsxServiceTask;
-        task.updateNsxServiceManagerTask = this.updateNsxServiceManagerTask;
-        task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
-        task.nsxDeploymentSpecCheckMetaTask = this.nsxDeploymentSpecCheckMetaTask;
-        task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
-        task.validateNsxAgentsTask = this.validateNsxAgentsTask;
-        task.mgrDeleteVSSDeviceTask = this.mgrDeleteVSSDeviceTask;
-        task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
-        task.dsConformanceCheckMetaTask = this.dsConformanceCheckMetaTask;
-        task.unregisterServiceManagerCallbackTask = this.unregisterServiceManagerCallbackTask;
-        task.deleteServiceInstanceTask = this.deleteServiceInstanceTask;
-        task.nsxSecurityGroupInterfacesCheckMetaTask = this.nsxSecurityGroupInterfacesCheckMetaTask;
-        task.deleteServiceTask = this.deleteServiceTask;
-        task.deleteServiceManagerTask = this.deleteServiceManagerTask;
-        task.deleteImageFromGlanceTask = this.deleteImageFromGlanceTask;
-        task.securityGroupCleanupCheckMetaTask = this.securityGroupCleanupCheckMetaTask;
-        task.deleteFlavorTask = this.deleteFlavorTask;
-        task.deleteVsFromDbTask = this.deleteVsFromDbTask;
-        task.registerServiceInstanceTask = this.registerServiceInstanceTask;
-        task.nsxSecurityGroupsCheckMetaTask = this.nsxSecurityGroupsCheckMetaTask;
-        task.generateVSSKeysTask = this.generateVSSKeysTask;
-        task.mgrSecurityGroupCheckMetaTask = this.mgrSecurityGroupCheckMetaTask;
-        task.deleteDefaultServiceProfileTask = this.deleteDefaultServiceProfileTask;
-        task.removeVendorTemplateTask = this.removeVendorTemplateTask;
-        task.registerVendorTemplateTask = this.registerVendorTemplateTask;
-        task.passwordUtil = this.passwordUtil;
-        task.encryption = this.encryption;
         task.name = task.getName();
-        task.dbConnectionManager = this.dbConnectionManager;
-        task.txBroadcastUtil = this.txBroadcastUtil;
-
         return task;
+    }
+
+    @Activate
+    private void activate(BundleContext context) {
+        this.context = context;
+    }
+
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.context.ungetService(this.dsConformanceCheckMetaTaskSR);
+        }
+    }
+
+    private void delayedInit() {
+        if (this.initDone.compareAndSet(false, true)) {
+            this.dsConformanceCheckMetaTask = this.factory.dsConformanceCheckMetaTaskSR != null
+                    ? this.context.getService(this.factory.dsConformanceCheckMetaTaskSR)
+                    : this.factory.dsConformanceCheckMetaTask;
+
+            this.apiFactoryService = this.factory.apiFactoryService;
+            this.createNsxServiceManagerTask = this.factory.createNsxServiceManagerTask;
+            this.createNsxServiceTask = this.factory.createNsxServiceTask;
+            this.updateNsxServiceManagerTask = this.factory.updateNsxServiceManagerTask;
+            this.updateNsxServiceAttributesTask = this.factory.updateNsxServiceAttributesTask;
+            this.nsxDeploymentSpecCheckMetaTask = this.factory.nsxDeploymentSpecCheckMetaTask;
+            this.updateNsxServiceInstanceAttributesTask = this.factory.updateNsxServiceInstanceAttributesTask;
+            this.validateNsxAgentsTask = this.factory.validateNsxAgentsTask;
+            this.mgrDeleteVSSDeviceTask = this.factory.mgrDeleteVSSDeviceTask;
+            this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
+            this.unregisterServiceManagerCallbackTask = this.factory.unregisterServiceManagerCallbackTask;
+            this.deleteServiceInstanceTask = this.factory.deleteServiceInstanceTask;
+            this.nsxSecurityGroupInterfacesCheckMetaTask = this.factory.nsxSecurityGroupInterfacesCheckMetaTask;
+            this.deleteServiceTask = this.factory.deleteServiceTask;
+            this.deleteServiceManagerTask = this.factory.deleteServiceManagerTask;
+            this.deleteImageFromGlanceTask = this.factory.deleteImageFromGlanceTask;
+            this.securityGroupCleanupCheckMetaTask = this.factory.securityGroupCleanupCheckMetaTask;
+            this.deleteFlavorTask = this.factory.deleteFlavorTask;
+            this.deleteVsFromDbTask = this.factory.deleteVsFromDbTask;
+            this.registerServiceInstanceTask = this.factory.registerServiceInstanceTask;
+            this.nsxSecurityGroupsCheckMetaTask = this.factory.nsxSecurityGroupsCheckMetaTask;
+            this.generateVSSKeysTask = this.factory.generateVSSKeysTask;
+            this.mgrSecurityGroupCheckMetaTask = this.factory.mgrSecurityGroupCheckMetaTask;
+            this.deleteDefaultServiceProfileTask = this.factory.deleteDefaultServiceProfileTask;
+            this.removeVendorTemplateTask = this.factory.removeVendorTemplateTask;
+            this.registerVendorTemplateTask = this.factory.registerVendorTemplateTask;
+            this.passwordUtil = this.factory.passwordUtil;
+            this.encryption = this.factory.encryption;
+            this.dbConnectionManager = this.factory.dbConnectionManager;
+            this.txBroadcastUtil = this.factory.txBroadcastUtil;
+        }
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -56,8 +57,14 @@ import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecu
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.DeleteSecurityGroupInterfaceTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupElement;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * Validates the Security Group members and syncs them if needed
@@ -95,7 +102,9 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     VmPortHookRemoveTask vmPortHookRemoveTask;
 
-    @Reference
+    // optional+dynamic to break circular reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ServiceReference<AddSecurityGroupService> addSecurityGroupServiceSR;
     AddSecurityGroupService addSecurityGroupService;
 
     private final Logger log = Logger.getLogger(SecurityGroupUpdateOrDeleteMetaTask.class);
@@ -103,28 +112,52 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private SecurityGroup sg;
     private TaskGraph tg;
 
+    private SecurityGroupUpdateOrDeleteMetaTask factory;
+    private final AtomicBoolean initDone = new AtomicBoolean();
+
+    private BundleContext context;
+
     public SecurityGroupUpdateOrDeleteMetaTask create(SecurityGroup sg) {
         SecurityGroupUpdateOrDeleteMetaTask task = new SecurityGroupUpdateOrDeleteMetaTask();
+        this.factory = this;
         task.sg = sg;
-        task.portGroupCheckMetaTask = this.portGroupCheckMetaTask;
-        task.checkPortGroupHookMetaTask = this.checkPortGroupHookMetaTask;
-        task.deleteMgrSecurityGroupTask = this.deleteMgrSecurityGroupTask;
-        task.deleteSecurityGroupInterfaceTask = this.deleteSecurityGroupInterfaceTask;
-        task.securityGroupMemberMapPropagateMetaTask = this.securityGroupMemberMapPropagateMetaTask;
-        task.deleteSecurityGroupFromDbTask = this.deleteSecurityGroupFromDbTask;
-        task.securityGroupMemberVmCheckTask = this.securityGroupMemberVmCheckTask;
-        task.securityGroupMemberNetworkCheckTask = this.securityGroupMemberNetworkCheckTask;
-        task.securityGroupMemberSubnetCheckTask = this.securityGroupMemberSubnetCheckTask;
-        task.vmPortHookRemoveTask = this.vmPortHookRemoveTask;
-        task.addSecurityGroupService = this.addSecurityGroupService;
-        task.dbConnectionManager = this.dbConnectionManager;
-        task.txBroadcastUtil = this.txBroadcastUtil;
-
+        this.name = task.getName();
         return task;
+    }
+
+    private void delayedInit() {
+        if (this.initDone.compareAndSet(false, true)) {
+            this.addSecurityGroupService = this.context.getService(this.factory.addSecurityGroupServiceSR);
+            this.portGroupCheckMetaTask = this.factory.portGroupCheckMetaTask;
+            this.checkPortGroupHookMetaTask = this.factory.checkPortGroupHookMetaTask;
+            this.deleteMgrSecurityGroupTask = this.factory.deleteMgrSecurityGroupTask;
+            this.deleteSecurityGroupInterfaceTask = this.factory.deleteSecurityGroupInterfaceTask;
+            this.securityGroupMemberMapPropagateMetaTask = this.factory.securityGroupMemberMapPropagateMetaTask;
+            this.deleteSecurityGroupFromDbTask = this.factory.deleteSecurityGroupFromDbTask;
+            this.securityGroupMemberVmCheckTask = this.factory.securityGroupMemberVmCheckTask;
+            this.securityGroupMemberNetworkCheckTask = this.factory.securityGroupMemberNetworkCheckTask;
+            this.securityGroupMemberSubnetCheckTask = this.factory.securityGroupMemberSubnetCheckTask;
+            this.vmPortHookRemoveTask = this.factory.vmPortHookRemoveTask;
+            this.dbConnectionManager = this.factory.dbConnectionManager;
+            this.txBroadcastUtil = this.factory.txBroadcastUtil;
+        }
+    }
+
+    @Activate
+    private void activate(BundleContext context) {
+        this.context = context;
+    }
+
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.context.getService(this.factory.addSecurityGroupServiceSR);
+        }
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
         this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
         this.tg = new TaskGraph();

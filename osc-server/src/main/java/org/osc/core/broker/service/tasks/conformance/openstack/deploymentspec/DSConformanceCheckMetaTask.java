@@ -38,6 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  * Conforms the DS according to its settings. This task assumes a Lock has been placed on the DS by the job
  * containing this task
  */
+// TODO this task causes circular references in DS, so all @References to it are optional+dynamic
 @Component(service = DSConformanceCheckMetaTask.class)
 public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
 
