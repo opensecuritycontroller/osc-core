@@ -225,10 +225,6 @@ public class DistributedApplianceInstanceDto extends BaseDto {
         return this.hostname;
     }
 
-    public void setHostname(String nsxHostname) {
-        this.hostname = nsxHostname;
-    }
-
     public String getLastStatus() {
         return this.lastStatus;
     }

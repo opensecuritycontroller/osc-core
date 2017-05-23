@@ -117,27 +117,6 @@ public class SecurityGroupEntityMgr {
                     em.createQuery(nwNumberCriteria).getSingleResult(),
                     em.createQuery(subNumberCriteria).getSingleResult()));
 
-        } else if (sg.getVirtualizationConnector().getVirtualizationType()
-                == VirtualizationType.VMWARE) {
-
-            CriteriaQuery<Long> ipNumberCriteria = cb.createQuery(Long.class);
-
-            Root<SecurityGroupMember> ipRoot = ipNumberCriteria.from(SecurityGroupMember.class);
-            ipNumberCriteria = ipNumberCriteria.select(cb.count(ipRoot))
-                    .where(cb.equal(ipRoot.join("securityGroup").get("id"), dto.getId()),
-                           cb.equal(ipRoot.get("type"), SecurityGroupMemberType.IP));
-
-            CriteriaQuery<Long> macNumberCriteria = cb.createQuery(Long.class);
-
-            Root<SecurityGroupMember> macRoot = macNumberCriteria.from(SecurityGroupMember.class);
-            macNumberCriteria = macNumberCriteria.select(cb.count(macRoot))
-                    .where(cb.equal(macRoot.join("securityGroup").get("id"), dto.getId()),
-                           cb.equal(macRoot.get("type"), SecurityGroupMemberType.MAC));
-
-            dto.setMemberDescription(String.format("IP: %d , Mac: %d ",
-                    em.createQuery(ipNumberCriteria).getSingleResult(),
-                    em.createQuery(macNumberCriteria).getSingleResult()));
-
         }
 
         return dto;
@@ -318,23 +297,6 @@ public class SecurityGroupEntityMgr {
         OSCEntityManager<SecurityGroup> emgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
 
         return emgr.findByPrimaryKey(id);
-    }
-
-    public static List<SecurityGroup> findByNsxServiceProfileIdAndVs(EntityManager em, VirtualSystem vs,
-            String serviceProfileId) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-
-        CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
-
-        Root<SecurityGroup> root = query.from(SecurityGroup.class);
-        Join<SecurityGroup, Object> join = root.join("securityGroupMembers");
-        query = query.select(root)
-                .distinct(true)
-                .where(cb.and(
-                        cb.equal(join.get("tag"), serviceProfileId),
-                        cb.equal(join.get("virtualSystem"), vs)));
-
-        return em.createQuery(query).getResultList();
     }
 
     public static List<SecurityGroup> listByProtectAllAndtenantId(EntityManager em, String tenantId) {

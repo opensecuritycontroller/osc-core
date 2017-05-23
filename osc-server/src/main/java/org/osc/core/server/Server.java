@@ -36,7 +36,6 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.service.ConformService;
@@ -148,18 +147,18 @@ public class Server {
 
             NetworkSettingsApi api = new NetworkSettingsApi();
             if (api.getNetworkSettings().isDhcp()) {
-                NsxEnv nsxEnv = parseNsxEnvXml();
-                if (nsxEnv != null) {
+                EnvironmentProperties envProp = parseEnvironmentPropertiesXml();
+                if (envProp != null) {
                     try {
-                        log.info("Setting network info: " + nsxEnv.toString());
-                        if (nsxEnv.hostIpAddress != null && !nsxEnv.hostIpAddress.isEmpty()) {
+                        log.info("Setting network info: " + envProp.toString());
+                        if (envProp.hostIpAddress != null && !envProp.hostIpAddress.isEmpty()) {
                             NetworkSettingsDto networkSettingsDto = new NetworkSettingsDto();
                             networkSettingsDto.setDhcp(false);
-                            networkSettingsDto.setHostIpAddress(nsxEnv.hostIpAddress);
-                            networkSettingsDto.setHostSubnetMask(nsxEnv.hostSubnetMask);
-                            networkSettingsDto.setHostDefaultGateway(nsxEnv.hostDefaultGateway);
-                            networkSettingsDto.setHostDnsServer1(nsxEnv.hostDnsServer1);
-                            networkSettingsDto.setHostDnsServer2(nsxEnv.hostDnsServer2);
+                            networkSettingsDto.setHostIpAddress(envProp.hostIpAddress);
+                            networkSettingsDto.setHostSubnetMask(envProp.hostSubnetMask);
+                            networkSettingsDto.setHostDefaultGateway(envProp.hostDefaultGateway);
+                            networkSettingsDto.setHostDnsServer1(envProp.hostDnsServer1);
+                            networkSettingsDto.setHostDnsServer2(envProp.hostDnsServer2);
                             api.setNetworkSettings(networkSettingsDto);
                         }
                     } catch (Exception ex) {
@@ -174,7 +173,6 @@ public class Server {
             DatabaseUtils.createDefaultDB();
             DatabaseUtils.markRunningJobAborted();
 
-            PasswordUtil.initPasswordFromDb(NsxAuthFilter.VMIDC_NSX_LOGIN);
             PasswordUtil.initPasswordFromDb(OscAuthFilter.OSC_DEFAULT_LOGIN);
 
             JobEngine.getEngine().addJobCompletionListener(new AlertGenerator());
@@ -220,7 +218,7 @@ public class Server {
         }
     }
 
-    public static class NsxEnv {
+    public static class EnvironmentProperties {
         private static final String OVF_ENV_XML_DIR = "/mnt/media";
         private static final String OVF_ENV_XML_FILE = "ovf-env.xml";
 
@@ -236,7 +234,7 @@ public class Server {
 
         @Override
         public String toString() {
-            return "NsxEnv [dhcp=" + this.dhcp + ", hostIpAddress=" + this.hostIpAddress + ", hostSubnetMask="
+            return "EnvProp [dhcp=" + this.dhcp + ", hostIpAddress=" + this.hostIpAddress + ", hostSubnetMask="
                     + this.hostSubnetMask + ", hostDefaultGateway=" + this.hostDefaultGateway + ", hostDnsServer1="
                     + this.hostDnsServer1 + ", hostDnsServer2=" + this.hostDnsServer2 + ", hostname=" + this.hostname
                     + ", defaultCliPassword=" + this.defaultCliPassword + ", defaultGuiPassword="
@@ -245,8 +243,8 @@ public class Server {
 
     }
 
-    public static NsxEnv parseNsxEnvXml() throws ParserConfigurationException, SAXException, IOException {
-        File vmwareConf = new File(NsxEnv.OVF_ENV_XML_DIR + File.separator + NsxEnv.OVF_ENV_XML_FILE);
+    public static EnvironmentProperties parseEnvironmentPropertiesXml() throws ParserConfigurationException, SAXException, IOException {
+        File vmwareConf = new File(EnvironmentProperties.OVF_ENV_XML_DIR + File.separator + EnvironmentProperties.OVF_ENV_XML_FILE);
         if (!vmwareConf.exists()) {
             log.info("VMware Virtual Appliance Configuration file missing.");
             return null;
@@ -256,7 +254,7 @@ public class Server {
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document document = db.parse(vmwareConf);
 
-        NsxEnv env = new NsxEnv();
+        EnvironmentProperties env = new EnvironmentProperties();
         NodeList nodeList = document.getElementsByTagName("Property");
         for (int i = 0, size = nodeList.getLength(); i < size; i++) {
             String key = nodeList.item(i).getAttributes().getNamedItem("oe:key").getTextContent();

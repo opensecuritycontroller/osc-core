@@ -21,7 +21,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -46,17 +45,11 @@ public class DeleteSecurityGroupInterfaceTask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
 
-        this.securityGroupInterface = (SecurityGroupInterface) em.find(SecurityGroupInterface.class,
+        this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
-        boolean isVmwareSGI = this.securityGroupInterface.getVirtualSystem()
-                .getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE;
 
         for (SecurityGroup sg : this.securityGroupInterface.getSecurityGroups()) {
             sg.removeSecurityInterface(this.securityGroupInterface);
-            // If Security Group has no bindings left to any service profiles, delete the SG and its members.
-            if (isVmwareSGI && sg.getSecurityGroupInterfaces().size() == 0) {
-                OSCEntityManager.delete(em, sg);
-            }
         }
 
         OSCEntityManager.delete(em, this.securityGroupInterface);

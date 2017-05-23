@@ -114,7 +114,7 @@ public class MgrCheckDevicesMetaTaskTestData {
     private static VirtualSystem createBaseVirtualSystem(Long vsId) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName("vc_name");
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setName("vcName");
         vc.setProviderIpAddress("127.0.0.1");

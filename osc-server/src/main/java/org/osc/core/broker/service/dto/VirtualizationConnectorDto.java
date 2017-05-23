@@ -16,7 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.job.JobState;
 import org.osc.core.broker.job.JobStatus;
@@ -28,14 +37,7 @@ import org.osc.core.broker.model.virtualization.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.util.ValidateUtil;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import io.swagger.annotations.ApiModelProperty;
 
 // Virtualization Connector Data Transfer Object associated with VC entity
 @XmlRootElement(name = "virtualizationConnector")
@@ -48,7 +50,6 @@ public class VirtualizationConnectorDto extends BaseDto {
     @ApiModelProperty(required = true)
     private VirtualizationType type;
 
-    // Virtualization Type VmWare
     @ApiModelProperty(value = "The Ip of the SDN controller, required if controller is going to be defined")
     private String controllerIP = "";
 
@@ -231,8 +232,7 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     @ApiModelProperty(hidden = true)
     public boolean isControllerDefined() {
-        return (getControllerType() != null && !getControllerType().equals(ControllerType.NONE))
-                || getType().isVmware();
+        return (getControllerType() != null && !getControllerType().equals(ControllerType.NONE));
     }
 
     @Override
@@ -264,21 +264,7 @@ public class VirtualizationConnectorDto extends BaseDto {
         notNullFieldsMap.put("Type", dto.getType());
         ValidateUtil.checkForNullFields(notNullFieldsMap);
 
-        if (dto.getType().isVmware()) {
-            notNullFieldsMap.put("Controller IP Address", dto.getControllerIP());
-            notNullFieldsMap.put("Controller User Name", dto.getControllerUser());
-            if (!skipPasswordNullCheck) {
-                notNullFieldsMap.put("Controller Password", dto.getControllerPassword());
-            }
-            nullFieldsMap.put("Rabbit MQ User",
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER));
-            nullFieldsMap.put("Rabbit MQ Password",
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD));
-            nullFieldsMap.put("Rabbit MQ Port",
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT));
-            nullFieldsMap.put("Admin Tenant", dto.getAdminTenantName());
-
-        } else if (dto.getType().isOpenstack()) {
+        if (dto.getType().isOpenstack()) {
             notNullFieldsMap.put("Admin Tenant Name", dto.getAdminTenantName());
             if (!dto.isControllerDefined()) {
                 nullFieldsMap.put("Controller IP Address", dto.getControllerIP());

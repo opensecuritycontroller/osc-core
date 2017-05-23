@@ -192,7 +192,7 @@ public class UpdateDistributedApplianceServiceTest {
         this.em.persist(this.domain);
 
         this.vc = new VirtualizationConnector();
-        this.vc.setVirtualizationType(VirtualizationType.VMWARE);
+        this.vc.setVirtualizationType(VirtualizationType.OPENSTACK);
         this.vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         this.vc.setName("vcName");
         this.vc.setProviderIpAddress("127.0.0.1");
@@ -202,7 +202,7 @@ public class UpdateDistributedApplianceServiceTest {
         this.em.persist(this.vc);
 
         this.vcToBeDeleted = new VirtualizationConnector();
-        this.vcToBeDeleted.setVirtualizationType(VirtualizationType.VMWARE);
+        this.vcToBeDeleted.setVirtualizationType(VirtualizationType.OPENSTACK);
         this.vcToBeDeleted.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         this.vcToBeDeleted.setName("vcToDeleteName");
         this.vcToBeDeleted.setProviderIpAddress("192.168.1.1");

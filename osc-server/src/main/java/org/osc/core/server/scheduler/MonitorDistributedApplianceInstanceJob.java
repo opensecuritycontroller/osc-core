@@ -25,9 +25,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
-import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -101,11 +99,6 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
                                 "Health status information for Appliance Instance '" + dai.getName()
                                 + "' not timely reported and is out of date");
 
-                        // In case of NSX, update
-                        if (dai.getVirtualSystem().getVirtualizationConnector()
-                                .getVirtualizationType() == VirtualizationType.VMWARE) {
-                            NsxUpdateAgentsService.updateNsxAgentInfo(em, dai, "UNKNOWN");
-                        }
                         dai.setDiscovered(null);
                         dai.setInspectionReady(null);
                     }

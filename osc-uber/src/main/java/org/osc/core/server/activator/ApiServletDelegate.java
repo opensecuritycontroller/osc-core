@@ -34,7 +34,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.api.AlarmApis;
 import org.osc.core.broker.rest.server.api.AlertApis;
@@ -49,7 +48,6 @@ import org.osc.core.broker.rest.server.api.ServerMgmtApis;
 import org.osc.core.broker.rest.server.api.VirtualSystemApis;
 import org.osc.core.broker.rest.server.api.VirtualizationConnectorApis;
 import org.osc.core.broker.rest.server.api.proprietary.NsmMgrApis;
-import org.osc.core.broker.rest.server.api.proprietary.NsxApis;
 import org.osc.core.broker.rest.server.exception.BadRequestExceptionMapper;
 import org.osc.core.broker.rest.server.exception.InternalServerErrorExceptionMapper;
 import org.osc.core.broker.rest.server.exception.JsonProcessingExceptionMapper;
@@ -93,8 +91,6 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
     @Reference
     private NsmMgrApis nsmMgrApis;
     @Reference
-    private NsxApis nsxApis;
-    @Reference
     private ServerDebugApis serverDebugApis;
     @Reference
     private ServerMgmtApis serverMgmtApis;
@@ -113,7 +109,6 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
 
         //Auth Filters
         super.register(AgentAuthFilter.class);
-        super.register(NsxAuthFilter.class);
         super.register(LocalHostAuthFilter.class);
         super.register(OscAuthFilter.class);
 
@@ -131,7 +126,7 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
         // agent & server apis
         super.registerInstances(this.alarmApis, this.alertApis, this.applianceApis, this.distributedApplianceApis,
                 this.distributedApplianceInstanceApis, this.jobApis, this.managerApis, this.managerConnectorApis,
-                this.nsmMgrApis, this.nsxApis, this.serverDebugApis, this.serverMgmtApis, this.virtualSystemApis,
+                this.nsmMgrApis, this.serverDebugApis, this.serverMgmtApis, this.virtualSystemApis,
                 this.virtualizationConnectorApis);
 
         this.container = new ServletContainer(this);

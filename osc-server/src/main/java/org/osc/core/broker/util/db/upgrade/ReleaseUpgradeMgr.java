@@ -16,17 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.util.db.upgrade;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.h2.util.StringUtils;
-import org.osc.core.broker.model.entities.ReleaseInfo;
-import org.osc.core.broker.model.entities.archive.FreqType;
-import org.osc.core.broker.model.entities.archive.ThresholdType;
-import org.osc.core.broker.util.db.DBConnectionParameters;
-import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.util.EncryptionUtil;
-import org.osc.core.util.encryption.EncryptionException;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -38,6 +27,17 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.h2.util.StringUtils;
+import org.osc.core.broker.model.entities.ReleaseInfo;
+import org.osc.core.broker.model.entities.archive.FreqType;
+import org.osc.core.broker.model.entities.archive.ThresholdType;
+import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.util.EncryptionUtil;
+import org.osc.core.util.encryption.EncryptionException;
+
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
  * create a single record in ReleaseInfo database table to manage this.
@@ -47,7 +47,7 @@ public class ReleaseUpgradeMgr {
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
-    public static final int TARGET_DB_VERSION = 78;
+    public static final int TARGET_DB_VERSION = 79;
 
     private static final String DB_UPGRADE_IN_PROGRESS_MARKER_FILE = "dbUpgradeInProgressMarker";
 
@@ -231,6 +231,8 @@ public class ReleaseUpgradeMgr {
                 upgrade76to77(stmt);
             case 77:
                 upgrade77to78(stmt);
+            case 78:
+                upgrade78to79(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -240,6 +242,26 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+
+    private static void upgrade78to79(Statement stmt) throws SQLException, EncryptionException {
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN nsx_agent_id, "
+                + "nsx_host_id, nsx_host_name, nsx_host_vsm_uuid, nsx_vm_id;");
+        execSql(stmt, "alter table SECURITY_GROUP DROP COLUMN nsx_agent_id;");
+        execSql(stmt, "alter table SECURITY_GROUP_INTERFACE DROP COLUMN nsx_vsm_uuid;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN nsx_service_id, "
+                + "nsx_service_instance_id, nsx_service_manager_id, nsx_vsm_uuid;");
+
+        execSql(stmt, "drop table VIRTUAL_SYSTEM_POLICY;");
+        execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop column if exists virtual_system_policy_fk;");
+
+        execSql(stmt, "drop table VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM drop column if exists nsx_deployment_spec_id;");
+
+        execSql(stmt, "drop table VIRTUAL_SYSTEM_MGR_FILE;");
+
+        execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_NSX';");
+
     }
 
     private static void upgrade77to78(Statement stmt) throws SQLException, EncryptionException {

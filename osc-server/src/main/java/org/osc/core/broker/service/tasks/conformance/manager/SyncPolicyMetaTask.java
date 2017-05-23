@@ -23,16 +23,12 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.service.persistence.VirtualSystemPolicyEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
-import org.osc.core.broker.service.tasks.conformance.virtualsystem.RemoveVendorTemplateTask;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
 import org.osc.sdk.manager.element.ManagerPolicyElement;
 
@@ -86,17 +82,6 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
             for (Policy policy : policies) {
                 ManagerPolicyElement mgrPolicy = findByMgrPolicyId(mgrPolicies, policy.getMgrPolicyId());
                 if (mgrPolicy == null) {
-
-                    // Need to delete the associated VirtualSystemPolicy entries first
-                    List<VirtualSystemPolicy> vsPolicies = VirtualSystemPolicyEntityMgr.listVSPolicyByPolicyId(em,
-                            policy.getId());
-
-                    if (vsPolicies != null) {
-                        for (VirtualSystemPolicy vsPolicy : vsPolicies) {
-                            this.tg.appendTask(new RemoveVendorTemplateTask(vsPolicy), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-                        }
-                    }
-
                     // Delete policy
                     this.tg.appendTask(new DeletePolicyTask(policy));
                 }

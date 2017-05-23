@@ -26,11 +26,11 @@ import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
+import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -69,11 +69,13 @@ class SecurityGroupCheckMetaTaskTestData {
         policy.setName(baseName + "_policy");
         policy.setMgrPolicyId(baseName + "_mgrPolicy");
 
-        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
-        vsp.setPolicy(policy);
-
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
+        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policy, baseName + "_tag", FailurePolicyType.NA, 1L);
         sgi.setName(baseName + "_sgi");
+
+        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
+        sg.setName(baseName + "_sg");
+        sg.addSecurityGroupInterface(sgi);
+        sgi.addSecurityGroup(sg);
 
         this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG.addSecurityGroupInterface(sgi);
         sgi.addSecurityGroup(this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG);
@@ -112,14 +114,10 @@ class SecurityGroupCheckMetaTaskTestData {
         policy.setName(baseName + "_policy");
         policy.setMgrPolicyId(baseName + "_mgrPolicy");
 
-        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
-        vsp.setPolicy(policy);
-
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
+        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policy, baseName + "_tag", FailurePolicyType.NA, 2L);
         sgi.setName(baseName + "_sgi");
 
-
-        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null);
+        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg");
         sg.addSecurityGroupInterface(sgi);
         sgi.addSecurityGroup(sg);
@@ -132,7 +130,7 @@ class SecurityGroupCheckMetaTaskTestData {
             ManagerType mgrType) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(baseName + "_vc");
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setProviderIpAddress(baseName + "_providerIp");
         vc.setProviderUsername("Natasha");

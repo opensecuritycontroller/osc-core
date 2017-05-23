@@ -16,7 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.*;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS_2;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS_2;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.createVirtualisationConnector;
 
 import javax.persistence.EntityManager;
 
@@ -64,9 +67,6 @@ public class VirtualizationConnectorDtoValidatorBaseTest {
 
     private void populateDatabase() {
        this.em.getTransaction().begin();
-
-       this.em.persist(createVirtualisationConnector(VMWARE_NAME_ALREADY_EXISTS,
-               CONTROLLER_IP_ALREADY_EXISTS, PROVIDER_IP_ALREADY_EXISTS));
 
        this.em.persist(createVirtualisationConnector(OPENSTACK_NAME_ALREADY_EXISTS,
                CONTROLLER_IP_ALREADY_EXISTS_2, PROVIDER_IP_ALREADY_EXISTS_2));

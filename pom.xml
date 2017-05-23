@@ -122,9 +122,7 @@
 			<modules>
 				<module>../sdn-controller-api</module>
                 <module>../security-mgr-api</module>
-                <module>../vmware-nsx-api</module>
-            
-                <module>../vmware-nsx-plugin</module>
+
                 <module>../sdn-controller-nsc-plugin</module>
                 <module>../security-mgr-nsm-plugin</module>
                 <module>../security-mgr-smc-plugin</module>

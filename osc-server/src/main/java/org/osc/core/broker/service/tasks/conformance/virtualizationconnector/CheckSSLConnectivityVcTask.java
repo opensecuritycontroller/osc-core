@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -25,8 +27,6 @@ import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.tasks.BaseTask;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.util.EncryptionUtil;
-
-import java.util.Set;
 
 public class CheckSSLConnectivityVcTask extends BaseTask {
     private static final Logger log = Logger.getLogger(CheckSSLConnectivityVcTask.class);
@@ -44,9 +44,7 @@ public class CheckSSLConnectivityVcTask extends BaseTask {
         log.debug("Start executing CheckSSLConnectivityVcTask Task. VC: '" + this.vc.getName() + "'");
         VirtualizationConnectorUtil virtualizationConnectorUtil = new VirtualizationConnectorUtil();
         DryRunRequest<VirtualizationConnectorDto> request = createRequest(this.vc);
-        if (VirtualizationType.fromText(this.vc.getVirtualizationType().name()).equals(VirtualizationType.VMWARE)) {
-            virtualizationConnectorUtil.checkVmwareConnection(request, this.vc);
-        } else {
+        if (VirtualizationType.fromText(this.vc.getVirtualizationType().name()).equals(VirtualizationType.OPENSTACK)) {
             virtualizationConnectorUtil.checkOpenstackConnection(request, this.vc);
         }
     }
