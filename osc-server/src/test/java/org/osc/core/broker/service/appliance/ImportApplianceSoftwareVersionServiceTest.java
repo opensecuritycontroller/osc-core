@@ -64,7 +64,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ServerUtil.class, FileUtils.class, FileUtil.class, HibernateUtil.class, ManagerApiFactory.class})
+@PrepareForTest({ ServerUtil.class, FileUtils.class, FileUtil.class, HibernateUtil.class, ManagerApiFactory.class })
 public class ImportApplianceSoftwareVersionServiceTest {
 
     private static final Long APPLIANCE_ID = 123L;
@@ -121,7 +121,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
         Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
         Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
 
-
         File mockMetaDataFile = mock(File.class);
         File mockPayloadFile = mock(File.class);
 
@@ -129,7 +128,8 @@ public class ImportApplianceSoftwareVersionServiceTest {
         when(mockPayloadFile.getName()).thenReturn(OVF_IMAGE_NAME);
 
         PowerMockito.mockStatic(FileUtil.class);
-        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] { mockMetaDataFile, mockPayloadFile});
+        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString()))
+                .thenReturn(new File[] { mockMetaDataFile, mockPayloadFile });
 
         // Image meta data setup
         when(this.imageMetaData.getImageName()).thenReturn(OVF_IMAGE_NAME);
@@ -179,11 +179,12 @@ public class ImportApplianceSoftwareVersionServiceTest {
         BaseResponse response = this.service.dispatch(new ImportFileRequest(""));
 
         // Assert.
-        Appliance appliance = this.em.createQuery(
-                "Select a from Appliance a where a.model = '" + NON_EXISTING_SOFTWARE_MODEL + "'",
-                Appliance.class).getSingleResult();
+        Appliance appliance = this.em
+                .createQuery("Select a from Appliance a where a.model = '" + NON_EXISTING_SOFTWARE_MODEL + "'",
+                        Appliance.class)
+                .getSingleResult();
         Assert.assertNotNull(appliance);
-//        verify(this.sessionMock).save(argThat(new ApplianceMatcher(NON_EXISTING_SOFTWARE_MODEL)));
+        //        verify(this.sessionMock).save(argThat(new ApplianceMatcher(NON_EXISTING_SOFTWARE_MODEL)));
         verifySuccessfulImport(response, appliance.getId());
     }
 
@@ -196,9 +197,9 @@ public class ImportApplianceSoftwareVersionServiceTest {
         BaseResponse response = this.service.dispatch(new ImportFileRequest(""));
 
         // Assert.
-        Appliance appliance = this.em.createQuery(
-                "Select a from Appliance a where a.model = '" + SOFTWARE_MODEL + "'",
-                Appliance.class).getSingleResult();
+        Appliance appliance = this.em
+                .createQuery("Select a from Appliance a where a.model = '" + SOFTWARE_MODEL + "'", Appliance.class)
+                .getSingleResult();
         Assert.assertNotNull(appliance);
         verifySuccessfulImport(response, appliance.getId());
     }
@@ -212,9 +213,10 @@ public class ImportApplianceSoftwareVersionServiceTest {
         BaseResponse response = this.service.dispatch(new ImportFileRequest(""));
 
         // Assert.
-        Appliance appliance = this.em.createQuery(
-                "Select a from Appliance a where a.model = '" + NON_EXISTING_SOFTWARE_MODEL + "'",
-                Appliance.class).getSingleResult();
+        Appliance appliance = this.em
+                .createQuery("Select a from Appliance a where a.model = '" + NON_EXISTING_SOFTWARE_MODEL + "'",
+                        Appliance.class)
+                .getSingleResult();
         Assert.assertNotNull(appliance);
         verifySuccessfulImport(response, appliance.getId());
     }
@@ -230,7 +232,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         // Causes isImageMissing to return false, which means file is already present.
         this.validAsv.setImageUrl(".");
-//        this.sessionStub.stubSaveEntity(new ApplianceSoftwareVersionMatcher(this.imageMetaData), ASV_ID);
+        //        this.sessionStub.stubSaveEntity(new ApplianceSoftwareVersionMatcher(this.imageMetaData), ASV_ID);
 
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage("Virtualization Software Version already exists");
@@ -255,60 +257,25 @@ public class ImportApplianceSoftwareVersionServiceTest {
     }
 
     private void createExistingAppliance() {
-           this.em.getTransaction().begin();
+        this.em.getTransaction().begin();
 
-           Appliance app = new Appliance();
-           app.setManagerSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
-           app.setManagerType(ManagerType.NSM.getValue());
-           app.setModel(SOFTWARE_MODEL);
+        Appliance app = new Appliance();
+        app.setManagerSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
+        app.setManagerType(ManagerType.NSM.getValue());
+        app.setModel(SOFTWARE_MODEL);
 
-           this.em.persist(app);
+        this.em.persist(app);
 
-           ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
-           asv.setApplianceSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
-           asv.setImageUrl(OVF_IMAGE_NAME);
-           asv.setVirtualizarionSoftwareVersion(OS_ICEHOUSE.toString());
-           asv.setVirtualizationType(VirtualizationType.OPENSTACK);
+        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
+        asv.setApplianceSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
+        asv.setImageUrl(OVF_IMAGE_NAME);
+        asv.setVirtualizarionSoftwareVersion(OS_ICEHOUSE.toString());
+        asv.setVirtualizationType(VirtualizationType.OPENSTACK);
 
-           this.em.persist(asv);
-    //
-    //       this.sessionStub.stubFindApplianceByModel(SOFTWARE_MODEL, mockExistingMatchingAppliance);
-    //       this.sessionStub.stubFindApplianceByModel(NON_EXISTING_SOFTWARE_MODEL, null);
-    //
-    //       this.sessionStub.stubSaveEntity(new InstanceOf(Appliance.class), APPLIANCE_ID);
-    //
-    //       // Appliance Software Version Mocking
-    //       this.sessionStub.stubFindApplianceSoftwareVersion(
-    //               APPLIANCE_ID, NON_EXISTING_SOFTWARE_VERSION,
-    //               VirtualizationType.VMWARE,
-    //               VmwareSoftwareVersion.VMWARE_V5_5.toString(),
-    //               null);
-    //
-    //       this.sessionStub.stubFindApplianceSoftwareVersionByImageUrl(NON_EXISTING_OVF_IMAGE_NAME, null);
-    //
-    //       this.sessionStub.stubSaveEntity(new ApplianceSoftwareVersionMatcher(this.imageMetaData), ASV_ID);
-    //
-    //       this.validAsv = new ApplianceSoftwareVersion();
-    //       this.validAsv.setId(ASV_ID);
-    //
-    //       this.sessionStub.stubFindApplianceSoftwareVersion(
-    //               APPLIANCE_ID,
-    //               SOFTWARE_VERSION,
-    //               VirtualizationType.VMWARE,
-    //               VmwareSoftwareVersion.VMWARE_V5_5.toString(),
-    //               this.validAsv);
-    //
-    //       this.sessionStub.stubFindApplianceSoftwareVersionByImageUrl(OVF_IMAGE_NAME, this.validAsv);
-    //
-    //       ApplianceManagerConnector mcPolicyMappingSupported = new ApplianceManagerConnector();
-    //       ManagerType mgrTypePolicyMappingSupported = ManagerType.NSM;
-    //       mcPolicyMappingSupported.setManagerType(mgrTypePolicyMappingSupported.toString());
-    //       Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_VALID_MC)).thenReturn(mcPolicyMappingSupported);
-    //
-           //Mockito.when(applianceMgrPolicyMappingSupported.isPolicyMappingSupported()).thenReturn(true);
+        this.em.persist(asv);
 
-           this.em.getTransaction().commit();
-        }
+        this.em.getTransaction().commit();
+    }
 
     @Test
     public void testDispatch_ImportApplianceWithLowDiskSpace_ExpectsErrorResponse() throws Exception {
@@ -330,7 +297,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
     @Test
     public void testDispatch_ImportApplianceMissingMetaDataFile_ExpectsErrorResponse() throws Exception {
         // Arrange. Make sure input is missing all files
-        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[]{});
+        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] {});
 
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage("Missing metadata file");
