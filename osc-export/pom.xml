@@ -498,7 +498,7 @@
 									<zipfileset dir="${basedir}/../osc-control/target"
 										includes="osc-control-upgrade.jar" fullpath="opt/vmidc/bin/osc-server.jar" />
 									<fileset dir="${basedir}/../osc-server-bom/Sources">
-										<include name="jre-8u112-linux-x64.tar.gz" />
+										<include name="jre-8u131-linux-x64.tar.gz" />
 									</fileset>
 								</zip>
 
