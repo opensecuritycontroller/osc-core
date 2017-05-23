@@ -29,6 +29,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
+import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -176,7 +177,7 @@ public class UpdateVirtualizationConnectorService
         VirtualizationConnectorDto.checkFieldFormat(dto);
 
         // check for uniqueness of controller IP
-        if (dto.isControllerDefined()) {
+        if (dto.isControllerDefined() && !SdnControllerApiFactory.usesProviderCreds(dto.getControllerType())) {
             ValidateUtil.checkForValidIpAddressFormat(dto.getControllerIP());
             if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
 
