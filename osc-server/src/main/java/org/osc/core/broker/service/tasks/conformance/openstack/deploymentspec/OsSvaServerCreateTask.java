@@ -95,6 +95,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     public OsSvaServerCreateTask create(DistributedApplianceInstance dai, String hypervisorName, String availabilityZone) {
         OsSvaServerCreateTask task = new OsSvaServerCreateTask();
         task.apiFactoryService = this.apiFactoryService;
+        task.server = this.server;
         task.dai = dai;
         task.availabilityZone = availabilityZone;
         task.hypervisorHostName = hypervisorName;
