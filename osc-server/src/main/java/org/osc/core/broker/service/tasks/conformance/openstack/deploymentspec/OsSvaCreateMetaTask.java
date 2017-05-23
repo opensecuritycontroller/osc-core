@@ -80,11 +80,16 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
         task.apiFactoryService = this.apiFactoryService;
         task.mgrCreateMemberDeviceTask = this.mgrCreateMemberDeviceTask;
         task.osSvaServerCreateTask = this.osSvaServerCreateTask;
+        task.osSvaEnsureActiveTask = this.osSvaEnsureActiveTask;
+        task.osSvaCheckFloatingIpTask = this.osSvaCheckFloatingIpTask;
+        task.osSvaCheckNetworkInfoTask = this.osSvaCheckNetworkInfoTask;
         task.conformService = this.conformService;
-        task.availabilityZone = availabilityZone;
+
         task.ds = ds;
         task.hypervisorHostName = hypervisorHostName;
+        task.availabilityZone = availabilityZone;
         task.dai = null;
+
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -94,9 +99,6 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
     public OsSvaCreateMetaTask create(DistributedApplianceInstance dai) {
         OsSvaCreateMetaTask task = create(dai.getDeploymentSpec(), dai.getOsHostName(), dai.getOsAvailabilityZone());
         task.dai = dai;
-        task.dbConnectionManager = this.dbConnectionManager;
-        task.txBroadcastUtil = this.txBroadcastUtil;
-
         return task;
     }
 
