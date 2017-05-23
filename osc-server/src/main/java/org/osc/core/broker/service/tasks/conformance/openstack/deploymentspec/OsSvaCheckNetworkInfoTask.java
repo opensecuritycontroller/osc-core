@@ -149,7 +149,8 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
 
     @Override
     public String getName() {
-        return String.format("Checking the network information for the distributed appliance instance '%s'", this.dai.getName());
+        return String.format("Checking the network information for the distributed appliance instance '%s'",
+                this.dai != null ? this.dai.getName() : "dai is null");
     }
 
     @Override
