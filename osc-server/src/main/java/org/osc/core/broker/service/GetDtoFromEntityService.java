@@ -77,6 +77,8 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 
 public class GetDtoFromEntityService<R extends BaseDto> extends
         ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDtoFromEntityServiceApi<R> {
@@ -84,8 +86,11 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
     private final EncryptionApi encrypter;
     private final ApiFactoryService apiFactoryService;
 
-    GetDtoFromEntityService(UserContextApi userContext, EncryptionApi encrypter, ApiFactoryService apiFactoryService) {
+    GetDtoFromEntityService(UserContextApi userContext, DBConnectionManager dbConnectionManager, TransactionalBroadcastUtil txBroadcastUtil,
+            EncryptionApi encrypter, ApiFactoryService apiFactoryService) {
         this.userContext = userContext;
+        this.dbConnectionManager = dbConnectionManager;
+        this.txBroadcastUtil = txBroadcastUtil;
         this.encrypter = encrypter;
         this.apiFactoryService = apiFactoryService;
     }
