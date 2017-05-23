@@ -119,7 +119,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     public SecurityGroupUpdateOrDeleteMetaTask create(SecurityGroup sg) {
         SecurityGroupUpdateOrDeleteMetaTask task = new SecurityGroupUpdateOrDeleteMetaTask();
-        this.factory = this;
+        task.factory = this;
         task.sg = sg;
         this.name = task.getName();
         return task;
