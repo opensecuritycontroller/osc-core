@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.osc.core</groupId>
     <artifactId>osc-root</artifactId>
-	<version>0.6.0-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>org.osc.core:osc-root</name>
     <description>OSC Parent Project</description>
@@ -207,8 +207,7 @@
                                     <regexMessage>The project version is ${project.version} but it must be ${releaseVersion}.</regexMessage>
                                 </requireProperty>
                             </rules>
-                            <!--  TODO emanoel: Turn this to true after the release/tag is created on the repository. -->
-                            <fail>false</fail>
+                            <fail>true</fail>
                         </configuration>
                     </execution>
                 </executions>
