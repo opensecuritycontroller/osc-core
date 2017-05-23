@@ -58,6 +58,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
     public DistributedApplianceDtoValidator create(EntityManager em) {
         DistributedApplianceDtoValidator validator = new DistributedApplianceDtoValidator();
         validator.em = em;
+        validator.apiFactoryService = this.apiFactoryService;
         return validator;
     }
 
