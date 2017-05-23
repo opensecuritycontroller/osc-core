@@ -227,7 +227,7 @@ public class Server implements ServerApi {
             this.passwordUtil.initPasswordFromDb(RestConstants.VMIDC_NSX_LOGIN);
             this.passwordUtil.initPasswordFromDb(RestConstants.OSC_DEFAULT_LOGIN);
 
-            JobEngine.getEngine().addJobCompletionListener(new AlertGenerator());
+            JobEngine.getEngine().addJobCompletionListener(this.alertGenerator);
 
             addShutdownHook();
             startScheduler();
