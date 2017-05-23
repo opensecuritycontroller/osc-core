@@ -104,6 +104,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     ? this.factory.osDAIConformanceCheckMetaTaskCSO.getService()
                     : this.factory.osDAIConformanceCheckMetaTask;
             this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
+            this.deleteOSSecurityGroup = this.factory.deleteOSSecurityGroup;
+            this.deleteDsFromDb = this.factory.deleteDsFromDb;
             this.dbConnectionManager = this.factory.dbConnectionManager;
             this.txBroadcastUtil = this.factory.txBroadcastUtil;
         }
@@ -123,10 +125,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
-        task.deleteOSSecurityGroup = this.deleteOSSecurityGroup;
-        task.deleteDsFromDb = this.deleteDsFromDb;
-        task.dbConnectionManager = this.dbConnectionManager;
-        task.txBroadcastUtil = this.txBroadcastUtil;
 
         return task;
     }

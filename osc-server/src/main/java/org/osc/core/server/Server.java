@@ -182,6 +182,12 @@ public class Server implements ServerApi {
 
         this.thread = new Thread(server, "Start-Server");
         this.thread.start();
+
+        try {
+            // ensure startServer() starts to run before publishing ServerApi service
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
     }
 
     private void startServer() throws Exception {
