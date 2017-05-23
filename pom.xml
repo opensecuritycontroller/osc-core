@@ -199,8 +199,7 @@
                                     <regexMessage>The project version is ${project.version} but it must be ${releaseVersion}.</regexMessage>
                                 </requireProperty>
                             </rules>
-                            <!--  TODO emanoel: Turn this to true after the release/tag is created on the repository. -->
-                            <fail>false</fail>
+                            <fail>true</fail>
                         </configuration>
                     </execution>
                 </executions>
