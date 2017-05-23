@@ -16,25 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DA_ID_EXISTING_VC;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.DOMAIN_ID_INVALID_NAME;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.MC_ID_POLICY_MAPPING_NOT_SUPPORTED_MC;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.REPLACE_WITH_DOMAIN_ID;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.REPLACE_WITH_NULL;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_OPENSTACK;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_ID_VMWARE;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.VC_NAME_VMWARE;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getDaVcAlreadyExistsTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidApplianceIdTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidApplianceSoftwareVersionTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidDomainTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidEncapsulationTypeTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidMngrConnectorIdTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidNameTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidSecretKeyTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidSwVersionTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidVcIdTestData;
-import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.getInvalidVirtualizationSystemsCollectionData;
+import static org.osc.core.broker.service.dto.DistributedApplianceDtoValidatorTestData.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,7 +48,7 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
     DistributedApplianceDto dtoParam;
     Class<Throwable> exceptionTypeParam;
     String expectedErrorMessageParam;
-    private VirtualizationConnector vmWareVc;
+    private VirtualizationConnector ostVc;
     private ApplianceManagerConnector mcPolicyMappingNotSupported;
     private Domain invalidDomain;
 
@@ -86,36 +68,22 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
         ManagerType mgrTypePolicyMappingNotSupported = ManagerType.SMC;
         ManagerType.addType(ManagerType.SMC.getValue());
 
-//        Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_NOT_FOUND)).thenReturn(null);
-//        Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_POLICY_MAPPING_NOT_SUPPORTED_MC)).thenReturn(mcPolicyMappingNotSupported);
-//        Mockito.when(this.sessionMock.get(VirtualizationConnector.class, VC_ID_NOT_FOUND)).thenReturn(null);
-//        Mockito.when(this.sessionMock.get(VirtualizationConnector.class, VC_ID_VMWARE)).thenReturn(vmWareVc);
-//        Mockito.when(this.sessionMock.get(Domain.class, DOMAIN_ID_INVALID_NAME)).thenReturn(invalidDomain);
-//
-//        this.sessionStub.stubFindApplianceSoftwareVersion(applianceSwVersionNotFoundDto.getApplianceId(),
-//                SW_VERSION_NOT_FOUND,
-//                vmWareVc.getVirtualizationType(),
-//                vmWareVc.getVirtualizationSoftwareVersion(),
-//                null);
-//
-//        this.sessionStub.stubFindVirtualSystem(DA_ID_EXISTING_VC, VC_ID_OPENSTACK, new VirtualSystem());
-
         Mockito.when(ManagerApiFactory.syncsPolicyMapping(mgrTypePolicyMappingNotSupported)).thenReturn(false);
     }
 
     private void populateDatabase() {
         this.em.getTransaction().begin();
 
-        this.vmWareVc = new VirtualizationConnector();
-        this.vmWareVc.setVirtualizationType(VirtualizationType.VMWARE);
-        this.vmWareVc.setVirtualizationSoftwareVersion("softwareVersion");
+        this.ostVc = new VirtualizationConnector();
+        this.ostVc.setVirtualizationType(VirtualizationType.OPENSTACK);
+        this.ostVc.setVirtualizationSoftwareVersion("softwareVersion");
 
-        this.vmWareVc.setName(VC_NAME_VMWARE);
-        this.vmWareVc.setProviderIpAddress("127.0.0.2");
-        this.vmWareVc.setProviderUsername("Natasha");
-        this.vmWareVc.setProviderPassword("********");
+        this.ostVc.setName("ostName");
+        this.ostVc.setProviderIpAddress("127.0.0.2");
+        this.ostVc.setProviderUsername("Natasha");
+        this.ostVc.setProviderPassword("********");
 
-        this.em.persist(this.vmWareVc);
+        this.em.persist(this.ostVc);
 
         this.invalidDomain = new Domain(this.amc);
         this.invalidDomain.setName(StringUtils.rightPad("invalidName", 156, 'e'));
@@ -163,8 +131,6 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
                     vsDto.setVcId(this.vc.getId());
                 } else if (REPLACE_WITH_NULL.equals(vsDto.getVcId())) {
                     vsDto.setVcId(null);
-                } else if (VC_ID_VMWARE.equals(vsDto.getVcId())) {
-                    vsDto.setVcId(this.vmWareVc.getId());
                 } else if (VC_ID_OPENSTACK.equals(vsDto.getVcId())) {
                     vsDto.setVcId(this.vc.getId());
                 }

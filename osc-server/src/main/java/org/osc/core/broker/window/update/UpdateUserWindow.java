@@ -18,7 +18,6 @@ package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.RoleType;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.service.UpdateUserService;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.request.UpdateUserRequest;
@@ -89,11 +88,6 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         }
         if (this.currentUser.getItemProperty("lastName").getValue() != null) {
             this.lastName.setValue(this.currentUser.getItemProperty("lastName").getValue().toString());
-        }
-        if (this.loginName.getValue().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
-            this.role.setEnabled(false);
-            this.role.addItem(RoleType.SYSTEM_NSX);
-            this.role.select(RoleType.SYSTEM_NSX);
         }
         this.role.setValue(this.currentUser.getItemProperty("role").getValue().toString());
 

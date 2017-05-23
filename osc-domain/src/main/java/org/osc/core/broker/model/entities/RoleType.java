@@ -17,7 +17,7 @@
 package org.osc.core.broker.model.entities;
 
 public enum RoleType {
-    ADMIN("ADMIN"), SYSTEM_NSX("SYSTEM_NSX");
+    ADMIN("ADMIN");
 
     private final String text;
 

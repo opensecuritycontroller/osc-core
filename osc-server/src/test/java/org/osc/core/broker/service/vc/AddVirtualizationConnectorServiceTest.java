@@ -16,6 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NOCONTROLLER_REQUEST;
+
+import java.util.ArrayList;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,20 +59,6 @@ import org.osc.core.util.EncryptionUtil;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import java.util.ArrayList;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.VMWARE_REQUEST;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({X509TrustManagerFactory.class, EncryptionUtil.class, HibernateUtil.class, LockUtil.class })
@@ -131,19 +127,19 @@ public class AddVirtualizationConnectorServiceTest {
     }
 
     @Test
-    public void testDispatch_WhenVmWareRequest_ReturnsResponse() throws Exception {
+    public void testDispatch_WhenOpenStackRequest_ReturnsResponse() throws Exception {
 
         // Arrange.
-        doNothing().when(this.validatorMock).validate(VMWARE_REQUEST);
+        doNothing().when(this.validatorMock).validate(OPENSTACK_NOCONTROLLER_REQUEST);
 
         // Act.
-        BaseJobResponse response = this.service.dispatch(VMWARE_REQUEST);
+        BaseJobResponse response = this.service.dispatch(OPENSTACK_NOCONTROLLER_REQUEST);
 
         // Assert.
-        VirtualizationConnector vc = this.em.createQuery("Select vc from VirtualizationConnector vc where vc.name = '" + VMWARE_REQUEST.getDto().getName() + "'", VirtualizationConnector.class)
+        VirtualizationConnector vc = this.em.createQuery("Select vc from VirtualizationConnector vc where vc.name = '" + OPENSTACK_NOCONTROLLER_REQUEST.getDto().getName() + "'", VirtualizationConnector.class)
                 .getSingleResult();
         validateResponse(response, vc.getId());
-        verify(this.validatorMock).validate(VMWARE_REQUEST);
+        verify(this.validatorMock).validate(OPENSTACK_NOCONTROLLER_REQUEST);
         Assert.assertNotNull("Not updated", vc.getUpdatedTimestamp());
         Assert.assertTrue("Job id should be equal", 5L == response.getJobId());
     }

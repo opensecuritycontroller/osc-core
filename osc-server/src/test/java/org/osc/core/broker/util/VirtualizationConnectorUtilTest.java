@@ -27,7 +27,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
@@ -40,8 +39,6 @@ import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.util.EncryptionUtil;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
-import org.osc.sdk.sdn.exception.HttpException;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -93,31 +90,6 @@ public class VirtualizationConnectorUtilTest {
     }
 
 	@Test
-	public void testVmwareConnection_WithSkipDryRunRequest_ReturnsSuccessful() throws Exception {
-
-		// Arrange.
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
-		request.setSkipAllDryRun(true);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-
-		PowerMockito.mockStatic(SdnControllerApiFactory.class);
-		VMwareSdnApi vmwareSdnApi = mock(VMwareSdnApi.class);
-		when(SdnControllerApiFactory.createVMwareSdnApi(vc)).thenReturn(vmwareSdnApi);
-		doNothing().when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
-
-		// Act.
-		this.util.checkVmwareConnection(spyRequest, vc);
-
-		// Assert
-		verify(vmwareSdnApi, times(0)).checkStatus(any(VMwareSdnConnector.class));
-		verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-
-	}
-
-	@Test
 	public void testOpenstackConnection_WithSkipDryRunRequest_ReturnsSuccessful() throws Exception {
 
 		// Arrange.
@@ -134,141 +106,6 @@ public class VirtualizationConnectorUtilTest {
 		verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 		verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION);
 
-	}
-
-	@Test
-	public void testVmwareConnection_WithIgnoreProviderException_WhenProviderCheckStatusSuccess_ReturnsSuccessful() throws Exception {
-
-		// Arrange
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
-
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
-
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		VirtualizationConnector spyVc = spy(vc);
-		PowerMockito.mockStatic(SdnControllerApiFactory.class);
-		VMwareSdnApi vmwareSdnApi = mock(VMwareSdnApi.class);
-		when(SdnControllerApiFactory.createVMwareSdnApi(spyVc)).thenReturn(vmwareSdnApi);
-		doNothing().when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
-
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-
-		// Act.
-		this.util.checkVmwareConnection(spyRequest, spyVc);
-
-		// Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-		verify(vmwareSdnApi, times(1)).checkStatus(any(VMwareSdnConnector.class));
-	}
-
-	@Test
-	public void testVmwareConnection_WithIgnoreProviderException_WhenProviderCheckStatusFail_throwsErrorTypeException() throws Exception {
-
-		// Arrange
-		this.exception.expect(ErrorTypeException.class);
-
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
-
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		VirtualizationConnector spyVc = spy(vc);
-		PowerMockito.mockStatic(SdnControllerApiFactory.class);
-		VMwareSdnApi vmwareSdnApi = spy(VMwareSdnApi.class);
-		when(SdnControllerApiFactory.createVMwareSdnApi(spyVc)).thenReturn(vmwareSdnApi);
-		HttpException httpException = new HttpException(10, null, null, null, null);
-		doThrow(httpException).when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
-
-		// Act.
-		this.util.checkVmwareConnection(spyRequest, spyVc);
-
-		//Assert
-		verify(vmwareSdnApi, times(1)).checkStatus(any(VMwareSdnConnector.class));
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-	}
-
-	@Test
-	public void testVmwareConnection_WithIgnoreProviderException_WhenProviderCheckStatusFail_WhenFetchCertificatesFromUrl_throwsErrorTypeException() throws Exception {
-
-		// Arrange
-		this.exception.expect(ErrorTypeException.class);
-
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
-
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		VirtualizationConnector spyVc = spy(vc);
-		PowerMockito.mockStatic(SdnControllerApiFactory.class);
-		VMwareSdnApi vmwareSdnApi = spy(VMwareSdnApi.class);
-		when(SdnControllerApiFactory.createVMwareSdnApi(spyVc)).thenReturn(vmwareSdnApi);
-		HttpException httpException = new HttpException(null, null, "http://www.osctest.com", null, null);
-		doThrow(httpException).when(vmwareSdnApi).checkStatus(any(VMwareSdnConnector.class));
-
-		// Act.
-		this.util.checkVmwareConnection(spyRequest, spyVc);
-
-		//Assert
-		verify(vmwareSdnApi, times(1)).checkStatus(any(VMwareSdnConnector.class));
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-	}
-
-
-	@Test
-	public void testVmwareConnection_WithIgnoreControllerException_WhenVCenterConnectionFail_ReturnsErrorTypeException() throws Exception {
-
-		// Arrange
-		this.exception.expect(ErrorTypeException.class);
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
-
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		VirtualizationConnector spyVc = spy(vc);
-		PowerMockito.whenNew(VimUtils.class).withAnyArguments().thenThrow(new RemoteException());
-
-
-		// Act.
-		this.util.checkVmwareConnection(spyRequest, spyVc);
-
-		//Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-	}
-
-	@Test
-	public void testVmwareConnection_WithIgnoreControllerException_WhenVCenterConnectionSuccess_ReturnsSuccessful() throws Exception {
-
-		// Arrange
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData.getVmwareRequest();
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
-
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto());
-		VirtualizationConnector spyVc = spy(vc);
-		VimUtils utils = mock(VimUtils.class);
-		this.util.setVimUtils(utils);
-
-
-		// Act.
-		this.util.checkVmwareConnection(spyRequest, spyVc);
-
-		//Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 	}
 
 	@Test

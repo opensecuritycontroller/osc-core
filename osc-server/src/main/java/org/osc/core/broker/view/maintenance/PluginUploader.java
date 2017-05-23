@@ -50,7 +50,7 @@ import com.vaadin.ui.VerticalLayout;
 public class PluginUploader extends CustomComponent implements Receiver, FailedListener, SucceededListener {
 
     public enum PluginType {
-        MANAGER, SDN, NSX;
+        MANAGER, SDN;
     }
 
     private static final Logger log = Logger.getLogger(PluginUploader.class);

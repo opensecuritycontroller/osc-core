@@ -35,7 +35,6 @@ import org.osc.core.broker.model.entities.job.JobStatus;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.model.entities.job.TaskState;
 import org.osc.core.broker.model.entities.job.TaskStatus;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -76,14 +75,6 @@ public class DatabaseUtils {
             user.setLoginName(OscAuthFilter.OSC_DEFAULT_LOGIN);
             user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
             user.setRole(RoleType.ADMIN);
-            OSCEntityManager.create(em, user);
-        }
-        User nsxUser = userEmgr.findByFieldName("loginName", NsxAuthFilter.VMIDC_NSX_LOGIN);
-        if (nsxUser == null) {
-            User user = new User();
-            user.setLoginName(NsxAuthFilter.VMIDC_NSX_LOGIN);
-            user.setPassword(EncryptionUtil.encryptAESCTR(DEFAULT_PASSWORD));
-            user.setRole(RoleType.SYSTEM_NSX);
             OSCEntityManager.create(em, user);
         }
     }

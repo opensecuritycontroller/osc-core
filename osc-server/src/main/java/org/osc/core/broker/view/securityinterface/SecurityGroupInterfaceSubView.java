@@ -60,7 +60,7 @@ public class SecurityGroupInterfaceSubView extends CRUDBaseSubView<VirtualSystem
         super(currentView, title, buttons, vs);
         if (!vs.isMarkForDeletion()) {
             ViewUtil.enableToolBarButtons(
-                    ((VirtualSystemDto) this.parent).getVirtualizationType() != VirtualizationType.VMWARE && isPolicyMappingSupported(),
+                    ((VirtualSystemDto) this.parent).getVirtualizationType() == VirtualizationType.OPENSTACK && isPolicyMappingSupported(),
                     this.toolbar, Arrays.asList(ToolbarButtons.ADD.getId()));
         } else {
             //Disable CRUD buttons

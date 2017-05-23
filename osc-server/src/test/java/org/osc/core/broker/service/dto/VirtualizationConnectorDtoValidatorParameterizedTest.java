@@ -23,20 +23,26 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
+import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.server.Server;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
+@PrepareForTest({ SdnControllerApiFactory.class })
 public class VirtualizationConnectorDtoValidatorParameterizedTest extends VirtualizationConnectorDtoValidatorBaseTest {
 	private VirtualizationConnectorDto dtoParam;
 	private Class<Throwable> exceptionTypeParam;
@@ -49,6 +55,18 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		this.expectedErrorMessageParam = expectedErrorMessage;
 	}
 
+    @Override
+    @Before
+    public void testInitialize() throws Exception {
+	    super.testInitialize();
+        final String controllerTypeNSC = "NSC";
+	    ControllerType.addType(controllerTypeNSC);
+
+        PowerMockito.spy(SdnControllerApiFactory.class);
+        PowerMockito.doReturn(false).when(SdnControllerApiFactory.class, "usesProviderCreds",
+                ControllerType.fromText(controllerTypeNSC));
+    }
+
 	@Test
 	public void testValidateForCreate_UsingInvalidField_ThrowsExpectedException() throws Exception {
 		// Arrange.
@@ -60,7 +78,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 	}
 
 	@Parameters()
-	public static Collection<Object[]> getInvalidFieldsTestData() {
+	public static Collection<Object[]> getInvalidFieldsTestData() throws Exception {
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		result.addAll(getInvalidNameTestData());
@@ -205,7 +223,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		for (String invalidVersion : invalidVersions) {
-			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforVmware();
+			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStack();
 			vcDto.setSoftwareVersion(invalidVersion);
 			String errorMessage = Server.PRODUCT_NAME + ": " + "Software Version " + EMPTY_VALUE_ERROR_MESSAGE;
 
@@ -223,7 +241,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		for (String invalidName : invalidNames) {
-			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforVmware();
+			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStack();
 			vcDto.setProviderIP(invalidName);
 			String errorMessage = Server.PRODUCT_NAME + ": " + "Provider IP Address " + EMPTY_VALUE_ERROR_MESSAGE;
 
@@ -241,7 +259,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		for (String invalidName : invalidNames) {
-			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforVmware();
+			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStackwithSDN();
 			vcDto.setControllerIP(invalidName);
 			String errorMessage = Server.PRODUCT_NAME + ": " + "Controller IP Address " + EMPTY_VALUE_ERROR_MESSAGE;
 
@@ -260,7 +278,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		for (String invalidName : invalidNames) {
-			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforVmware();
+			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStack();
 			vcDto.setName(invalidName);
 			String errorMessage = invalidName == null || invalidName == ""
 					? Server.PRODUCT_NAME + ": " + "Name " + EMPTY_VALUE_ERROR_MESSAGE
@@ -283,7 +301,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		for (String invalidName : invalidNames) {
-			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforVmware();
+			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStackwithSDN();
 			vcDto.setControllerPassword(invalidName);
 			String errorMessage = invalidName == null || invalidName == ""
 					? Server.PRODUCT_NAME + ": " + "Controller Password " + EMPTY_VALUE_ERROR_MESSAGE
@@ -306,7 +324,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		for (String invalidName : invalidNames) {
-			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforVmware();
+			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStackwithSDN();
 			vcDto.setProviderPassword(invalidName);
 			String errorMessage = invalidName == null || invalidName == ""
 					? Server.PRODUCT_NAME + ": " + "Provider Password " + EMPTY_VALUE_ERROR_MESSAGE
@@ -322,14 +340,14 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		return result;
 	}
 
-	static List<Object[]> getInvalidControllerUserNameTestData() {
-		String[] invalidNames = new String[] { null, "",
+	static List<Object[]> getInvalidControllerUserNameTestData() throws Exception {
+	    String[] invalidNames = new String[] { null, "",
 				StringUtils.rightPad("dtoName", ValidateUtil.DEFAULT_MAX_LEN + 10, 'e') };
 
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		for (String invalidName : invalidNames) {
-			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforVmware();
+			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStackwithSDN();
 			vcDto.setControllerUser(invalidName);
 			String errorMessage = invalidName == null || invalidName == ""
 					? Server.PRODUCT_NAME + ": " + "Controller User Name " + EMPTY_VALUE_ERROR_MESSAGE
@@ -352,7 +370,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		for (String invalidName : invalidNames) {
-			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforVmware();
+			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStack();
 			vcDto.setProviderUser(invalidName);
 			String errorMessage = invalidName == null || invalidName == ""
 					? Server.PRODUCT_NAME + ": " + "Provider User Name " + EMPTY_VALUE_ERROR_MESSAGE
@@ -374,7 +392,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		List<Object[]> result = new ArrayList<Object[]>();
 
 		for (String invalidType : invalidTypes) {
-			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforVmware();
+			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStack();
 			// TODO: No setters allowed to VirtualizationType Enum
 			String errorMessage = Server.PRODUCT_NAME + ": " + "Type " + EMPTY_VALUE_ERROR_MESSAGE;
 

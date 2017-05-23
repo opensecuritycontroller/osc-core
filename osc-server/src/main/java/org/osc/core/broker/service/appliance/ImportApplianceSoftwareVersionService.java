@@ -96,8 +96,6 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
             String virtualizationVersion = "";
             if (virtualizationType.isOpenstack()) {
                 virtualizationVersion = this.imageMetadata.getOpenstackVirtualizationVersion().toString();
-            } else if (virtualizationType.isVmware()) {
-                virtualizationVersion = this.imageMetadata.getVmwareVirtualizationVersion().toString();
             }
 
             String softwareVersion = this.imageMetadata.getSoftwareVersion();
@@ -220,23 +218,12 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
         this.imageMetadataValidator.validate(this.imageMetadata);
 
         boolean isImageFileMissing = true;
-        boolean checkOvfExists = this.imageMetadata.getVirtualizationType().isVmware();
 
         for (File tmpFolderFile : tmpFolderList) {
             String fileName = FilenameUtils.getName(tmpFolderFile.getName());
             if (fileName.equals(this.imageMetadata.getImageName())) {
-                if (checkOvfExists) {
-                    String extension = FilenameUtils.getExtension(tmpFolderFile.getName());
-                    if (extension.equals("ovf")) {
-                        isImageFileMissing = false;
-                        break;
-                    } else {
-                        break;
-                    }
-                } else {
-                    isImageFileMissing = false;
-                    break;
-                }
+                isImageFileMissing = false;
+                break;
             }
         }
 

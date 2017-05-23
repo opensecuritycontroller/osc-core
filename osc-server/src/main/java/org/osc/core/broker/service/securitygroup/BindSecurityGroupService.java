@@ -26,7 +26,6 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
@@ -35,7 +34,6 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.exceptions.ActionNotSupportedException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
@@ -220,12 +218,6 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
         }
 
         ValidateUtil.checkMarkedForDeletion(this.securityGroup, this.securityGroup.getName());
-
-        if (this.securityGroup.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-            throw new ActionNotSupportedException(
-                    "Invalid Action. Binding of Security Group for Vmware Virtualization Connectors needs to done "
-                            + "through NSX.");
-        }
 
         List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
         if (services == null) {

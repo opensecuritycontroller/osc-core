@@ -99,8 +99,7 @@ public class SecurityGroupCheckMetaTaskTest {
                this.em.persist(sgi.getVirtualSystem().getApplianceSoftwareVersion());
                this.em.persist(sgi.getVirtualSystem().getDomain());
                this.em.persist(sgi.getVirtualSystem());
-               this.em.persist(sgi.getVirtualSystemPolicy().getPolicy());
-               this.em.persist(sgi.getVirtualSystemPolicy());
+               this.em.persist(sgi.getPolicy());
                this.em.persist(sgi);
            }
            this.em.persist(sg);

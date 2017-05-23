@@ -24,11 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.jclouds.openstack.nova.v2_0.domain.Server;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
-import org.osc.core.broker.util.VimUtils;
 import org.osc.sdk.controller.FlowInfo;
-
-import com.vmware.vim25.mo.HostSystem;
-import com.vmware.vim25.mo.VirtualMachine;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -52,16 +48,6 @@ public class QueryVmInfoResponse implements Response {
 
         public VmInfo() {
 
-        }
-
-        public VmInfo(VirtualMachine vm, VimUtils vmi) {
-            this.vmName = vm.getName();
-            this.vmId = vm.getMOR().getVal();
-            this.vmUuid = vm.getConfig().getInstanceUuid();
-            this.vmIpAddress = vm.getGuest().getIpAddress();
-            HostSystem host = vmi.getVmHost(vm);
-            this.hostName = host.getName();
-            this.hostId = host.getMOR().get_value();
         }
 
         public VmInfo(VM vm) {

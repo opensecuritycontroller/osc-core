@@ -16,13 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import com.vaadin.data.util.BeanContainer;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.CustomTable;
-import com.vaadin.ui.CustomTable.ColumnGenerator;
-import com.vaadin.ui.Notification;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
@@ -53,9 +50,13 @@ import org.osc.core.broker.view.vc.securitygroup.BindSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.UpdateSecurityGroupWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import com.vaadin.data.util.BeanContainer;
+import com.vaadin.data.util.BeanItem;
+import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.CustomTable;
+import com.vaadin.ui.CustomTable.ColumnGenerator;
+import com.vaadin.ui.Notification;
 
 public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConnectorDto, SecurityGroupDto> {
 
@@ -346,11 +347,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     }
 
     private void setToolbars(VirtualizationConnectorDto selected) {
-        if (selected.getType().isVmware()) {
-            // Disable for type VMWARE
-            ViewUtil.setButtonsEnabled(false, this.childToolbar);
-        } else {
-            // Enable SubView Buttons if VS is type VMWARE
+        if (selected.getType().isOpenstack()) {
+            // Enable SubView Buttons if VS is type Openstack
             ViewUtil.enableToolBarButtons(true, this.childToolbar, Arrays.asList(ToolbarButtons.ADD.getId()));
         }
     }

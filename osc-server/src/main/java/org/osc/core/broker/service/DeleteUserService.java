@@ -20,7 +20,6 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.rest.server.AgentAuthFilter;
-import org.osc.core.broker.rest.server.NsxAuthFilter;
 import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -65,10 +64,6 @@ public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, Empt
         if (user.getLoginName().equals(AgentAuthFilter.VMIDC_AGENT_LOGIN)) {
 
             throw new VmidcBrokerValidationException("Cannot delete pre-configured 'agent' user.");
-        }
-        if (user.getLoginName().equals(NsxAuthFilter.VMIDC_NSX_LOGIN)) {
-
-            throw new VmidcBrokerValidationException("Cannot delete pre-configured 'nsx' user.");
         }
     }
 }

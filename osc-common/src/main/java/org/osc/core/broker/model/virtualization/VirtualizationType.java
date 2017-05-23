@@ -18,7 +18,6 @@ package org.osc.core.broker.model.virtualization;
 
 
 public enum VirtualizationType {
-    VMWARE("VMWARE"),
     OPENSTACK("OPENSTACK");
 
     private final String text;
@@ -40,12 +39,8 @@ public enum VirtualizationType {
         return this.text;
     }
 
-    public boolean isVmware() {
-        return this.equals(VirtualizationType.VMWARE);
-    }
-
     public boolean isOpenstack() {
-        return this.equals(VirtualizationType.OPENSTACK);
+        return equals(VirtualizationType.OPENSTACK);
     }
 
     @Override

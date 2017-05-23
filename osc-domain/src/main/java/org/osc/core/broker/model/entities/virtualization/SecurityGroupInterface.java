@@ -34,7 +34,6 @@ import javax.persistence.UniqueConstraint;
 
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.Policy;
 
 @SuppressWarnings("serial")
@@ -61,27 +60,13 @@ public class SecurityGroupInterface extends BaseEntity {
     foreignKey = @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM"))
     private VirtualSystem virtualSystem;
 
-    /**
-     * Either the VSP or the policy may be populated. For appliance managers that do not support policy mapping this value
-     * will be null. VSP will be set when the controller is handling the policy binding. If ISC is handling the policy binding, the policy
-     * should be set.
-     */
-
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "virtual_system_policy_fk",
-    foreignKey = @ForeignKey(name = "FK_SG_VIRTUAL_SYSTEM_POLIC"))
-    private VirtualSystemPolicy virtualSystemPolicy;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "policy_fk", foreignKey = @ForeignKey(name = "FK_SGI_POLICY"))
+    @JoinColumn(name = "policy_fk", nullable = false,
+        foreignKey = @ForeignKey(name = "FK_SGI_POLICY"))
     private Policy policy;
 
-    @Column(name = "nsx_vsm_uuid")
-    private String nsxVsmUuid;
-
     /**
-     * The tag is assumed to be in the format "SOMESTRING" "-" "LONG VALUE". In case of
-     * NSX it will be serviceprofile-456 and in case of a custom isc tag it will be in the format
+     * The tag is assumed to be in the format "SOMESTRING" "-" "LONG VALUE".
      * isc-456 for example.
      */
     @Column(name = "tag", nullable = true)
@@ -110,13 +95,6 @@ public class SecurityGroupInterface extends BaseEntity {
     @Column(name = "network_elem_id")
     private String networkElementId;
 
-    public SecurityGroupInterface(VirtualSystemPolicy virtualSystemPolicy, String tag) {
-        super();
-        this.virtualSystemPolicy = virtualSystemPolicy;
-        this.virtualSystem = virtualSystemPolicy.getVirtualSystem();
-        this.tag = tag;
-    }
-
     public SecurityGroupInterface(VirtualSystem virtualSystem, Policy policy, String tag,
             FailurePolicyType failurePolicyType, Long order) {
         super();
@@ -136,10 +114,6 @@ public class SecurityGroupInterface extends BaseEntity {
         return this.policy;
     }
 
-    public VirtualSystemPolicy getVirtualSystemPolicy() {
-        return this.virtualSystemPolicy;
-    }
-
     public void setPolicy(Policy policy) {
         this.policy = policy;
     }
@@ -150,14 +124,6 @@ public class SecurityGroupInterface extends BaseEntity {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getNsxVsmUuid() {
-        return this.nsxVsmUuid;
-    }
-
-    public void setNsxVsmUuid(String nsxVsmUuid) {
-        this.nsxVsmUuid = nsxVsmUuid;
     }
 
     public String getTag() {
@@ -177,10 +143,7 @@ public class SecurityGroupInterface extends BaseEntity {
     }
 
     public Policy getMgrPolicy() {
-        if (this.virtualSystemPolicy == null) {
-            return this.policy;
-        }
-        return this.virtualSystemPolicy.getPolicy();
+        return this.policy;
     }
 
     public VirtualSystem getVirtualSystem() {

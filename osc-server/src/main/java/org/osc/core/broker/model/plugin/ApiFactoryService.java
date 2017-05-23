@@ -21,10 +21,8 @@ import java.util.Set;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.view.maintenance.PluginUploader.PluginType;
 import org.osc.core.util.encryption.EncryptionException;
 import org.osc.sdk.controller.api.SdnControllerApi;
@@ -32,7 +30,6 @@ import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osgi.annotation.versioning.ConsumerType;
 
 @ConsumerType
@@ -101,15 +98,6 @@ public interface ApiFactoryService {
      * @throws Exception
      */
     Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception;
-
-    /**
-     * Creates a {@code VMwareSdnApi} instance for the specified {@code VirtualizationConnector} type.
-     *
-     * @param vc
-     * @return
-     * @throws VmidcException
-     */
-    VMwareSdnApi createVMwareSdnApi(VirtualizationConnector vc) throws VmidcException;
 
     /**
      * Gets the set of currently registered manager types.

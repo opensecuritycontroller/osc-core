@@ -33,7 +33,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
@@ -75,17 +74,6 @@ public class DistributedApplianceInstance extends BaseEntity {
     private Boolean discovered;
     @Column(name = "inspection_ready")
     private Boolean inspectionReady;
-
-    @Column(name = "nsx_host_id")
-    private String nsxHostId;
-    @Column(name = "nsx_host_name")
-    private String nsxHostName;
-    @Column(name = "nsx_host_vsm_uuid")
-    private String nsxHostVsmUuid;
-    @Column(name = "nsx_vm_id")
-    private String nsxVmId;
-    @Column(name = "nsx_agent_id")
-    private String nsxAgentId;
 
     @Column(name = "os_host_name")
     private String osHostName;
@@ -188,46 +176,6 @@ public class DistributedApplianceInstance extends BaseEntity {
         this.mgrDeviceId = mgrDeviceId;
     }
 
-    public String getNsxAgentId() {
-        return this.nsxAgentId;
-    }
-
-    public void setNsxAgentId(String nsxAgentId) {
-        this.nsxAgentId = nsxAgentId;
-    }
-
-    public String getNsxVmId() {
-        return this.nsxVmId;
-    }
-
-    public void setNsxVmId(String nsxVmId) {
-        this.nsxVmId = nsxVmId;
-    }
-
-    public String getNsxHostId() {
-        return this.nsxHostId;
-    }
-
-    public void setNsxHostId(String nsxHostId) {
-        this.nsxHostId = nsxHostId;
-    }
-
-    public String getNsxHostName() {
-        return this.nsxHostName;
-    }
-
-    public void setNsxHostName(String nsxHostName) {
-        this.nsxHostName = nsxHostName;
-    }
-
-    public String getNsxHostVsmUuid() {
-        return this.nsxHostVsmUuid;
-    }
-
-    public void setNsxHostVsmUuid(String nsxHostVsmUuid) {
-        this.nsxHostVsmUuid = nsxHostVsmUuid;
-    }
-
     public Long getWorkloadInterfaces() {
         return this.workloadInterfaces;
     }
@@ -297,12 +245,10 @@ public class DistributedApplianceInstance extends BaseEntity {
     }
 
     /**
-     * Returns the host name. For VMWARE deployments, returns the nsx hostname. For openstack, returns the hypervisor
-     * hostname.
-     *
+     * Returns the host name. For openstack, returns the hypervisor hostname.
      */
     public String getHostName() {
-        return StringUtils.isEmpty(this.nsxHostName) ? this.osHostName : this.nsxHostName;
+        return this.osHostName;
     }
 
     public byte[] getApplianceConfig() {
