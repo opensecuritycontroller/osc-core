@@ -65,6 +65,8 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     private void delayedInit() {
         if (this.initDone.compareAndSet(false, true)) {
             this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+            this.dbConnectionManager = this.factory.dbConnectionManager;
+            this.txBroadcastUtil = this.factory.txBroadcastUtil;
         }
     }
 

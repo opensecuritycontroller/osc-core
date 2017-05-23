@@ -104,6 +104,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
             this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
             this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();
             this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+            this.dbConnectionManager = this.factory.dbConnectionManager;
+            this.txBroadcastUtil = this.factory.txBroadcastUtil;
         }
     }
 

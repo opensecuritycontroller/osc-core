@@ -103,6 +103,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     ? this.factory.osDAIConformanceCheckMetaTaskCSO.getService()
                     : this.factory.osDAIConformanceCheckMetaTask;
             this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
+            this.dbConnectionManager = this.factory.dbConnectionManager;
+            this.txBroadcastUtil = this.factory.txBroadcastUtil;
         }
     }
 
