@@ -54,8 +54,9 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
     public SecurityGroupCheckMetaTask create(SecurityGroup sg) {
         SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask();
-        task.mgrSecurityGroupInterfacesCheckMetaTask = this.mgrSecurityGroupInterfacesCheckMetaTask;
         task.sg = sg;
+        task.mgrSecurityGroupInterfacesCheckMetaTask = this.mgrSecurityGroupInterfacesCheckMetaTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.validateSecurityGroupTenantTask = this.validateSecurityGroupTenantTask;
         task.securityGroupUpdateOrDeleteMetaTask = this.securityGroupUpdateOrDeleteMetaTask;
         task.dbConnectionManager = this.dbConnectionManager;
