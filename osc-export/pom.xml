@@ -341,7 +341,7 @@
 									<tasks>
 										<exec executable="wget">
 											<arg
-												line="--no-check-certificate --no-cookies --header &quot;Cookie: oraclelicense=accept-securebackup-cookie&quot; http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jre-8u112-linux-x64.tar.gz -P &quot;${basedir}/../osc-server-bom/Sources&quot; -nv" />
+												line="--no-check-certificate --no-cookies --header &quot;Cookie: oraclelicense=accept-securebackup-cookie&quot; http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jre-8u131-linux-x64.tar.gz -P &quot;${basedir}/../osc-server-bom/Sources&quot; -nv" />
 										</exec>
 									</tasks>
 								</configuration>
@@ -498,7 +498,7 @@
 									<zipfileset dir="${basedir}/../osc-control/target"
 										includes="osc-control-upgrade.jar" fullpath="opt/vmidc/bin/osc-server.jar" />
 									<fileset dir="${basedir}/../osc-server-bom/Sources">
-										<include name="jre-8u112-linux-x64.tar.gz" />
+										<include name="jre-8u131-linux-x64.tar.gz" />
 									</fileset>
 								</zip>
 
