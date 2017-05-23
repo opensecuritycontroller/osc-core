@@ -75,10 +75,10 @@
 	</target>
 		
 	<target name="copyPlugins" if="${all}">
-		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${buildNumber}/SampleMgrPlugin.bar" />
-		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${buildNumber}/NsmMgrPlugin.bar" />
-		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${buildNumber}/SmcMgrPlugin.bar" />
-		<copy file="${basedir}/../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" tofile="Build${buildNumber}/NscSdnControllerPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${fullVersion}/SampleMgrPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${fullVersion}/NsmMgrPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${fullVersion}/SmcMgrPlugin.bar" />
+		<copy file="${basedir}/../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" tofile="Build${fullVersion}/NscSdnControllerPlugin.bar" />
 	</target>
 
 	<target name="checkImagesTocopy">
