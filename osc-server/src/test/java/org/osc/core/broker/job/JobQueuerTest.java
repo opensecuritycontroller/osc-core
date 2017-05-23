@@ -25,6 +25,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.internal.InOrderImpl;
@@ -64,7 +65,9 @@ public class JobQueuerTest {
         JobEngine.getEngine().shutdownForTest();
     }
 
+    // TODO : re-enable this once the issue #284 is addressed
     @Test
+    @Ignore // this test is unstable
     public void testPutJob() {
 
         final TaskGraph tg = new TaskGraph();

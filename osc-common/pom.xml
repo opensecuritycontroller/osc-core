@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0</version>
+		<version>0.6.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 
@@ -30,7 +30,7 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-tools</artifactId>
-			<version>0.1</version>
+			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -276,8 +276,8 @@
 					<archive>
 						<manifestEntries>
 							<Build-Time>${maven.build.timestamp}</Build-Time>
-							<Implementation-Build>${buildNumber}</Implementation-Build>
-							<Implementation-Version>${productVersion}</Implementation-Version>
+							<Implementation-Build>${fullVersion}</Implementation-Build>
+							<Implementation-Version>${project.version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>

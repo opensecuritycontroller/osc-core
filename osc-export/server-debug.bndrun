@@ -31,15 +31,15 @@ x-runproperties.debug: \
 	org.apache.felix.scr;version='[2.0.6,2.0.7)',\
 	org.glassfish.hk2.external.aopalliance-repackaged;version='[2.5.0,2.5.1)',\
 	org.glassfish.hk2.external.javax.inject;version='[2.5.0,2.5.1)',\
-	osc-uber;version='[1.0.0,1.0.1)',\
+	osc-uber;version='[0.6.0,0.6.1)',\
 	com.sun.mail.javax.mail;version='[1.5.6,1.5.7)',\
 	biz.aQute.bndlib;version='[3.3.0,3.3.1)',\
 	biz.aQute.repository;version='[3.3.0,3.3.1)',\
-	osc-installer;version='[1.0.0,1.0.1)',\
-	osc-resolver;version='[1.0.0,1.0.1)',\
+	osc-installer;version='[0.6.0,0.6.1)',\
+	osc-resolver;version='[0.6.0,0.6.1)',\
 	slf4j.api;version='[1.7.21,1.7.22)',\
 	slf4j.simple;version='[1.7.21,1.7.22)',\
-	osc-installer-simple;version='[1.0.0,1.0.1)',\
+	osc-installer-simple;version='[0.6.0,0.6.1)',\
 	org.glassfish.hk2.api;version='[2.5.0,2.5.1)',\
 	org.glassfish.hk2.locator;version='[2.5.0,2.5.1)',\
 	org.glassfish.hk2.utils;version='[2.5.0,2.5.1)',\
@@ -53,7 +53,7 @@ x-runproperties.debug: \
 	org.apache.felix.webconsole.plugins.ds;version='[2.0.2,2.0.3)',\
 	org.apache.felix.resolver;version='[1.10.1,1.10.2)',\
 	javassist;version='[3.20.0,3.20.1)',\
-	osc-uber-jcloud;version='[1.0.0,1.0.1)',\
+	osc-uber-jcloud;version='[0.6.0,0.6.1)',\
 	javax.websocket-api;version='[1.0.0,1.0.1)',\
 	javax.ws.rs-api;version='[2.0.1,2.0.2)',\
 	org.glassfish.jersey.core.jersey-server;version='[2.25.0,2.25.1)',\
@@ -76,7 +76,7 @@ x-runproperties.debug: \
 	org.jboss.logging.jboss-logging;version='[3.3.0,3.3.1)',\
 	org.apache.commons.lang;version='[2.6.0,2.6.1)',\
 	org.osgi.service.repository;version='[1.1.0,1.1.1)',\
-	osc-domain;version='[1.0.0,1.0.1)',\
+	osc-domain;version='[0.6.0,0.6.1)',\
 	openstack-keystone;version='[2.0.0,2.0.1)',\
 	org.apache.aries.jpa.container;version='[2.6.0,2.6.1)',\
 	org.apache.servicemix.bundles.antlr;version='[2.7.7,2.7.8)',\

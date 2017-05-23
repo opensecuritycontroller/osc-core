@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0</version>
+		<version>0.6.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>osc-export</artifactId>
@@ -77,32 +77,32 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-uber</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-uber-jcloud</artifactId>
-			<version>1.0.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-control</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-installer</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-installer-simple</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-resolver</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
@@ -448,11 +448,11 @@
 
 								<copy todir="${basedir}/webapp/SDK">
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.0.0-SNAPSHOT">
+										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.0.0">
 										<include name="**/*-sources.jar" />
 									</fileset>
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/1.0.0-SNAPSHOT">
+										dir="${user.home}/.m2/repository/org/osc/api/security-mgr-api/1.0.0">
 										<include name="**/*-sources.jar" />
 									</fileset>
 								</copy>

@@ -22,8 +22,9 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.Manifest;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.log4j.Logger;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class VersionUtil {
     private static final Logger log = Logger.getLogger(VersionUtil.class);
@@ -33,7 +34,9 @@ public class VersionUtil {
     public static class Version implements Comparable<Version> {
         private Long major;
         private Long minor;
+        private Long patch;
         private String build;
+        // TODO emanoel: Remove the buildtime as it might be no longer needed
         private String buildTime;
         private String versionStr;
 
@@ -44,6 +47,7 @@ public class VersionUtil {
         public Version(Long major, Long minor, String build) {
             this.major = major;
             this.minor = minor;
+            this.patch = 0L; // Default to 0 if not provided.
             this.build = build;
         }
 
@@ -61,6 +65,14 @@ public class VersionUtil {
 
         public void setMinor(Long minor) {
             this.minor = minor;
+        }
+
+        public Long getPatch() {
+            return this.patch;
+        }
+
+        public void setPatch(Long patch) {
+            this.patch = patch;
         }
 
         public String getBuild() {
@@ -90,11 +102,11 @@ public class VersionUtil {
 
         @JsonIgnore
         public String getShortVersionStr() {
-            if (this.major == null || this.minor == null) {
+            if (this.major == null || this.minor == null || this.patch == null) {
                 return null;
             }
 
-            return this.major.toString() + "." + this.minor.toString();
+            return this.major.toString() + "." + this.minor.toString() + "." + this.patch.toString();
         }
 
         @JsonIgnore
@@ -121,6 +133,7 @@ public class VersionUtil {
             String versionStr = getVersionStr();
             String otherVersionStr = other.getVersionStr();
 
+            // TODO emanoel: Replace DEBUG version with SNAPSHOT
             // Debug versions
             if (versionStr != null && otherVersionStr != null && versionStr.equals(DEBUG_VERSION_STRING)
                     && otherVersionStr.equals(DEBUG_VERSION_STRING)) {
@@ -139,10 +152,13 @@ public class VersionUtil {
             if (!getMinor().equals(other.getMinor())) {
                 return getMinor().compareTo(other.getMinor());
             }
+            if (!getPatch().equals(other.getPatch())) {
+                return getPatch().compareTo(other.getPatch());
+            }
             if (!getBuild().equals(other.getBuild())) {
-            	long buildNumber = getBuildNumber();
-            	long otherBuildNumber = other.getBuildNumber();
-            	return (int)(buildNumber - otherBuildNumber);
+                long buildNumber = getBuildNumber();
+                long otherBuildNumber = other.getBuildNumber();
+                return (int)(buildNumber - otherBuildNumber);
             }
             return 0;
         }
@@ -164,19 +180,25 @@ public class VersionUtil {
         Version version = new Version();
         String versionStr = manifest.getMainAttributes().getValue("Implementation-Version");
 
-        int dot = versionStr.indexOf('.');
-        Long major = Long.valueOf(versionStr.substring(0, dot));
-        Long minor = Long.valueOf(versionStr.substring(dot + 1));
+        String[] versionParts = versionStr.split("-|\\.");
+
+        Long major = Long.parseLong(versionParts[0]);
+        Long minor =  versionParts.length > 1 ? Long.parseLong(versionParts[1]) : 0L;
+        Long patch =  versionParts.length > 2 ? Long.parseLong(versionParts[2]) : 0L;
         String buildStr = manifest.getMainAttributes().getValue("Implementation-Build");
 
         if (buildStr == null || buildStr.isEmpty()) {
-        	throw new IllegalArgumentException("The provided build string should not be null or empty.");
+            throw new IllegalArgumentException("The provided build string should not be null or empty.");
         }
-        
+
+        String[] buildParts = buildStr.split("-");
+        buildStr = buildParts[buildParts.length - 2] + "-" + buildParts[buildParts.length - 1];
+
         String buildTime = manifest.getMainAttributes().getValue("Build-Time");
 
         version.setMajor(major);
         version.setMinor(minor);
+        version.setPatch(patch);
         version.setBuild(buildStr);
         version.setBuildTime(buildTime);
 
