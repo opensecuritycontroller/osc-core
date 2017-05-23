@@ -65,7 +65,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
     @Override
     protected void delayedInit() {
-        if (this.initDone.compareAndSet(false, true)) {
+        if (this.factory.initDone.compareAndSet(false, true)) {
             this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
             this.conformService = this.factory.conformService;
             this.dbConnectionManager = this.factory.dbConnectionManager;

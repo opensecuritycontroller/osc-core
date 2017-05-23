@@ -95,7 +95,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     @Override
     protected void delayedInit() {
-        if (this.initDone.compareAndSet(false, true)) {
+        if (this.factory.initDone.compareAndSet(false, true)) {
             this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
             // allow for test injection
             this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO != null
