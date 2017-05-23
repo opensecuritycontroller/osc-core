@@ -19,7 +19,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.osc.core</groupId>
 	<artifactId>osc-tools</artifactId>
-	<version>0.1</version>
+	<version>0.6.0-SNAPSHOT</version>
 	<name>org.osc.core:osc-tools</name>
 	<build>
 		<plugins>
@@ -41,11 +41,66 @@
                     <archive>
                         <manifestEntries>
                             <Build-Time>${maven.build.timestamp}</Build-Time>
-                            <Implementation-Build>${buildNumber}</Implementation-Build>
-                            <Implementation-Version>${productVersion}</Implementation-Version>
+                            <Implementation-Build>${fullVersion}</Implementation-Build>
+							<Implementation-Version>${project.version}</Implementation-Version>
                         </manifestEntries>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<id>prodVer</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
+                                <exec outputproperty="fullVersion" dir="." executable="sh">
+									<arg value="-c" />
+									<arg value="git describe --long | tr -d v" />
+								</exec>
+                                <!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, etc -->
+                                <exec outputproperty="releaseVersion" dir="." executable="sh">
+									<arg value="-c" />
+									<arg value="git describe --abbrev=0 | tr -d v" />
+								</exec>
+								<echo>Full Version: ${fullVersion}</echo>
+                                <echo>Version: ${releaseVersion}</echo>
+							</target>
+							<exportAntProperties>true</exportAntProperties>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.4.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-property</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireProperty>
+                                    <property>project.version</property>
+                                    <message>The project version must be set.</message>
+                                    <regex>${releaseVersion}</regex>
+                                    <regexMessage>The project version is ${project.version} but it must be ${releaseVersion}.</regexMessage>
+                                </requireProperty>
+                            </rules>
+                            <!--  TODO emanoel: Turn this to true after the release/tag is created on the repository. -->
+                            <fail>false</fail>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 		</plugins>
 	</build>

@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0</version>
+		<version>0.6.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>osc-server</artifactId>
@@ -33,6 +33,11 @@
         <repository>
             <id>osc-nexus</id>
             <name>OSC Nexus</name>
+            <url>http://ci.opensecuritycontroller.org:8082/nexus/content/repositories/releases/</url>
+        </repository>
+        <repository>
+            <id>osc-nexus-snapshot</id>
+            <name>OSC Nexus Snapshot</name>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -82,32 +87,32 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-domain</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-service-api</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-common</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-tools</artifactId>
-			<version>0.1</version>
+			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-installer</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		
 		<dependency>
@@ -315,8 +320,8 @@
 						</manifest>
 						<manifestEntries>
 							<Build-Time>${maven.build.timestamp}</Build-Time>
-							<Implementation-Build>${buildNumber}</Implementation-Build>
-							<Implementation-Version>${productVersion}</Implementation-Version>
+							<Implementation-Build>${fullVersion}</Implementation-Build>
+							<Implementation-Version>${project.version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>

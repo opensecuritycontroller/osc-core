@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0</version>
+		<version>0.6.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>osc-rest-server</artifactId>
@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-service-api</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
@@ -151,8 +151,8 @@
 						</manifest>
 						<manifestEntries>
 							<Build-Time>${maven.build.timestamp}</Build-Time>
-							<Implementation-Build>${buildNumber}</Implementation-Build>
-							<Implementation-Version>${productVersion}</Implementation-Version>
+							<Implementation-Build>${fullVersion}</Implementation-Build>
+							<Implementation-Version>${project.version}</Implementation-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -171,7 +171,7 @@
 							<basePath>/</basePath>
 							<info>
 								<title>OSC API Documentation</title>
-								<version>1.0</version>
+								<version>${project.version}</version>
 								<description>
 									Id's(Id and Parent Id) specified in the body of
 									entities needs to match

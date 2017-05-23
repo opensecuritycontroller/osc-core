@@ -68,6 +68,7 @@ public class JobQueuerTest {
         JobEngine.getEngine().shutdownForTest();
     }
 
+    // TODO : re-enable this once the issue #284 is addressed
     @Test
     @Ignore // this test is unstable
     public void testPutJob() {
