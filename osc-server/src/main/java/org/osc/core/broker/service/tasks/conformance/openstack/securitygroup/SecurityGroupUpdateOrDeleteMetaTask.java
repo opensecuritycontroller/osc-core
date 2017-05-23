@@ -125,7 +125,8 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         return task;
     }
 
-    private void delayedInit() {
+    @Override
+    protected void delayedInit() {
         if (this.initDone.compareAndSet(false, true)) {
             this.addSecurityGroupService = this.context.getService(this.factory.addSecurityGroupServiceSR);
             this.portGroupCheckMetaTask = this.factory.portGroupCheckMetaTask;

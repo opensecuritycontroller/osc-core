@@ -43,6 +43,7 @@ public abstract class TransactionalMetaTask implements MetaTask {
 
     @Override
     public void execute() throws Exception {
+        delayedInit();
         EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
         TransactionControl txControl = this.dbConnectionManager.getTransactionControl();
         try {
@@ -58,6 +59,9 @@ public abstract class TransactionalMetaTask implements MetaTask {
     }
 
     public abstract void executeTransaction(EntityManager em) throws Exception;
+
+    protected void delayedInit() {
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {

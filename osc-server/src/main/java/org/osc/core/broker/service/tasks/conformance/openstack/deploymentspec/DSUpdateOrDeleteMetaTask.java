@@ -93,7 +93,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @IgnoreCompare
     private AtomicBoolean initDone = new AtomicBoolean();
 
-    private void delayedInit() {
+    @Override
+    protected void delayedInit() {
         if (this.initDone.compareAndSet(false, true)) {
             this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
             // allow for test injection

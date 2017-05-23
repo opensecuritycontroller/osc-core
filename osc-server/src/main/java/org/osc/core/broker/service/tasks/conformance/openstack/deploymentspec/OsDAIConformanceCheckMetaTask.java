@@ -99,7 +99,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     @IgnoreCompare
     private AtomicBoolean initDone = new AtomicBoolean();
 
-    private void delayedInit() {
+    @Override
+    protected void delayedInit() {
         if (this.initDone.compareAndSet(false, true)) {
             this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
             this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();

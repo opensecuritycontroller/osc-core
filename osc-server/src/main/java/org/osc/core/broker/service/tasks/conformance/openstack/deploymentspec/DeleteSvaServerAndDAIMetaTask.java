@@ -62,7 +62,8 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     @IgnoreCompare
     private AtomicBoolean initDone = new AtomicBoolean();
 
-    private void delayedInit() {
+    @Override
+    protected void delayedInit() {
         if (this.initDone.compareAndSet(false, true)) {
             this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
             this.dbConnectionManager = this.factory.dbConnectionManager;

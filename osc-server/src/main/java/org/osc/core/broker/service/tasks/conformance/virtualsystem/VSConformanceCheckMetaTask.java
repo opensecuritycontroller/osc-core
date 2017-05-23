@@ -203,7 +203,8 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         }
     }
 
-    private void delayedInit() {
+    @Override
+    protected void delayedInit() {
         if (this.initDone.compareAndSet(false, true)) {
             this.dsConformanceCheckMetaTask = this.factory.dsConformanceCheckMetaTaskSR != null
                     ? this.context.getService(this.factory.dsConformanceCheckMetaTaskSR)
