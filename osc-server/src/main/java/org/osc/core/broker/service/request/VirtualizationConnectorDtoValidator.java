@@ -20,6 +20,7 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.service.dto.DtoValidator;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -60,7 +61,7 @@ public class VirtualizationConnectorDtoValidator
         }
 
         // check for uniqueness of controller IP
-        if (dto.isControllerDefined()) {
+        if (dto.isControllerDefined() && !SdnControllerApiFactory.usesProviderCreds(dto.getControllerType())) {
             ValidateUtil.checkForValidIpAddressFormat(dto.getControllerIP());
             if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
 
