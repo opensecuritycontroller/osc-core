@@ -102,12 +102,15 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     @Override
     protected void delayedInit() {
         if (this.factory.initDone.compareAndSet(false, true)) {
-            this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
-            this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();
-            this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
-            this.dbConnectionManager = this.factory.dbConnectionManager;
-            this.txBroadcastUtil = this.factory.txBroadcastUtil;
+            this.factory.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
+            this.factory.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();
+            this.factory.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
         }
+        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
+        this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTask;
+        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
+        this.dbConnectionManager = this.factory.dbConnectionManager;
+        this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
 
     @Deactivate

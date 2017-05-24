@@ -206,41 +206,43 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     @Override
     protected void delayedInit() {
         if (this.factory.initDone.compareAndSet(false, true)) {
-            this.dsConformanceCheckMetaTask = this.factory.dsConformanceCheckMetaTaskSR != null
-                    ? this.factory.context.getService(this.factory.dsConformanceCheckMetaTaskSR)
-                    : this.factory.dsConformanceCheckMetaTask;
-
-            this.apiFactoryService = this.factory.apiFactoryService;
-            this.createNsxServiceManagerTask = this.factory.createNsxServiceManagerTask;
-            this.createNsxServiceTask = this.factory.createNsxServiceTask;
-            this.updateNsxServiceManagerTask = this.factory.updateNsxServiceManagerTask;
-            this.updateNsxServiceAttributesTask = this.factory.updateNsxServiceAttributesTask;
-            this.nsxDeploymentSpecCheckMetaTask = this.factory.nsxDeploymentSpecCheckMetaTask;
-            this.updateNsxServiceInstanceAttributesTask = this.factory.updateNsxServiceInstanceAttributesTask;
-            this.validateNsxAgentsTask = this.factory.validateNsxAgentsTask;
-            this.mgrDeleteVSSDeviceTask = this.factory.mgrDeleteVSSDeviceTask;
-            this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
-            this.unregisterServiceManagerCallbackTask = this.factory.unregisterServiceManagerCallbackTask;
-            this.deleteServiceInstanceTask = this.factory.deleteServiceInstanceTask;
-            this.nsxSecurityGroupInterfacesCheckMetaTask = this.factory.nsxSecurityGroupInterfacesCheckMetaTask;
-            this.deleteServiceTask = this.factory.deleteServiceTask;
-            this.deleteServiceManagerTask = this.factory.deleteServiceManagerTask;
-            this.deleteImageFromGlanceTask = this.factory.deleteImageFromGlanceTask;
-            this.securityGroupCleanupCheckMetaTask = this.factory.securityGroupCleanupCheckMetaTask;
-            this.deleteFlavorTask = this.factory.deleteFlavorTask;
-            this.deleteVsFromDbTask = this.factory.deleteVsFromDbTask;
-            this.registerServiceInstanceTask = this.factory.registerServiceInstanceTask;
-            this.nsxSecurityGroupsCheckMetaTask = this.factory.nsxSecurityGroupsCheckMetaTask;
-            this.generateVSSKeysTask = this.factory.generateVSSKeysTask;
-            this.mgrSecurityGroupCheckMetaTask = this.factory.mgrSecurityGroupCheckMetaTask;
-            this.deleteDefaultServiceProfileTask = this.factory.deleteDefaultServiceProfileTask;
-            this.removeVendorTemplateTask = this.factory.removeVendorTemplateTask;
-            this.registerVendorTemplateTask = this.factory.registerVendorTemplateTask;
-            this.passwordUtil = this.factory.passwordUtil;
-            this.encryption = this.factory.encryption;
-            this.dbConnectionManager = this.factory.dbConnectionManager;
-            this.txBroadcastUtil = this.factory.txBroadcastUtil;
+            if (this.factory.dsConformanceCheckMetaTaskSR != null) {
+                this.factory.dsConformanceCheckMetaTask = this.factory.context
+                        .getService(this.factory.dsConformanceCheckMetaTaskSR);
+            }
         }
+
+        this.dsConformanceCheckMetaTask = this.factory.dsConformanceCheckMetaTask;
+        this.apiFactoryService = this.factory.apiFactoryService;
+        this.createNsxServiceManagerTask = this.factory.createNsxServiceManagerTask;
+        this.createNsxServiceTask = this.factory.createNsxServiceTask;
+        this.updateNsxServiceManagerTask = this.factory.updateNsxServiceManagerTask;
+        this.updateNsxServiceAttributesTask = this.factory.updateNsxServiceAttributesTask;
+        this.nsxDeploymentSpecCheckMetaTask = this.factory.nsxDeploymentSpecCheckMetaTask;
+        this.updateNsxServiceInstanceAttributesTask = this.factory.updateNsxServiceInstanceAttributesTask;
+        this.validateNsxAgentsTask = this.factory.validateNsxAgentsTask;
+        this.mgrDeleteVSSDeviceTask = this.factory.mgrDeleteVSSDeviceTask;
+        this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
+        this.unregisterServiceManagerCallbackTask = this.factory.unregisterServiceManagerCallbackTask;
+        this.deleteServiceInstanceTask = this.factory.deleteServiceInstanceTask;
+        this.nsxSecurityGroupInterfacesCheckMetaTask = this.factory.nsxSecurityGroupInterfacesCheckMetaTask;
+        this.deleteServiceTask = this.factory.deleteServiceTask;
+        this.deleteServiceManagerTask = this.factory.deleteServiceManagerTask;
+        this.deleteImageFromGlanceTask = this.factory.deleteImageFromGlanceTask;
+        this.securityGroupCleanupCheckMetaTask = this.factory.securityGroupCleanupCheckMetaTask;
+        this.deleteFlavorTask = this.factory.deleteFlavorTask;
+        this.deleteVsFromDbTask = this.factory.deleteVsFromDbTask;
+        this.registerServiceInstanceTask = this.factory.registerServiceInstanceTask;
+        this.nsxSecurityGroupsCheckMetaTask = this.factory.nsxSecurityGroupsCheckMetaTask;
+        this.generateVSSKeysTask = this.factory.generateVSSKeysTask;
+        this.mgrSecurityGroupCheckMetaTask = this.factory.mgrSecurityGroupCheckMetaTask;
+        this.deleteDefaultServiceProfileTask = this.factory.deleteDefaultServiceProfileTask;
+        this.removeVendorTemplateTask = this.factory.removeVendorTemplateTask;
+        this.registerVendorTemplateTask = this.factory.registerVendorTemplateTask;
+        this.passwordUtil = this.factory.passwordUtil;
+        this.encryption = this.factory.encryption;
+        this.dbConnectionManager = this.factory.dbConnectionManager;
+        this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
 
     @Override
@@ -355,8 +357,10 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
             // Sync NSX security group interfaces
             if (this.vs.getNsxServiceId() != null) {
-                tg.appendTask(this.nsxSecurityGroupInterfacesCheckMetaTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-                tg.appendTask(this.nsxSecurityGroupsCheckMetaTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                tg.appendTask(this.nsxSecurityGroupInterfacesCheckMetaTask.create(this.vs),
+                        TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                tg.appendTask(this.nsxSecurityGroupsCheckMetaTask.create(this.vs),
+                        TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
 
             tg.appendTask(this.validateNsxAgentsTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -413,8 +417,8 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         String restUrl = CreateNsxServiceManagerTask.buildRestCallbackUrl();
         String smurl = serviceManager.getCallbackUrl();
         if (!Objects.equal(smurl, restUrl)) {
-            LOG.info("Nsx Service Manager image url (" + serviceManager.getCallbackUrl() + ") is out of sync (" + restUrl
-                    + ")");
+            LOG.info("Nsx Service Manager image url (" + serviceManager.getCallbackUrl() + ") is out of sync ("
+                    + restUrl + ")");
             return true;
         }
 

@@ -65,10 +65,12 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     @Override
     protected void delayedInit() {
         if (this.factory.initDone.compareAndSet(false, true)) {
-            this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
-            this.dbConnectionManager = this.factory.dbConnectionManager;
-            this.txBroadcastUtil = this.factory.txBroadcastUtil;
+            this.factory.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
         }
+
+        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
+        this.dbConnectionManager = this.factory.dbConnectionManager;
+        this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
 
     @Deactivate
@@ -112,7 +114,7 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         if (this.dai.getProtectedPorts() != null && !this.dai.getProtectedPorts().isEmpty()) {
             throw new VmidcBrokerValidationException("Server is being actively used to protect other servers");
         }
-        if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
+        if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
             this.tg.appendTask(this.deleteInspectionPort.create(this.region, this.dai));
         }
         this.tg.addTask(this.deleteSvaServer.create(this.region, this.dai));
