@@ -52,9 +52,6 @@ public class VirtualizationConnectorUtil {
     @Reference
     private ApiFactoryService apiFactoryService;
 
-    // wip
-    private VirtualizationConnectorUtil() {}
-
     /**
      * Checks connection for vmware.
      *
