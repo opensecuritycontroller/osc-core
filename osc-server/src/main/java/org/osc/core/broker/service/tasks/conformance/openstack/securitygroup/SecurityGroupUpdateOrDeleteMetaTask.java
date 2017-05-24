@@ -51,6 +51,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.securitygroup.AddSecurityGroupService;
 import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPartOfAnotherSecurityGroupException;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.DeleteMgrSecurityGroupTask;
@@ -112,7 +113,9 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private SecurityGroup sg;
     private TaskGraph tg;
 
+    @IgnoreCompare
     private SecurityGroupUpdateOrDeleteMetaTask factory;
+    @IgnoreCompare
     private final AtomicBoolean initDone = new AtomicBoolean();
 
     private BundleContext context;
