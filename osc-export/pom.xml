@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0</version>
+		<version>0.6.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>osc-export</artifactId>
@@ -77,37 +77,37 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-uber</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-uber-jcloud</artifactId>
-			<version>1.0.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-ui</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-control</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-installer</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-installer-simple</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-resolver</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
@@ -291,7 +291,7 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-rest-server</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 
