@@ -197,7 +197,6 @@ public class JobEngineTest {
     // TODO https://github.com/opensecuritycontroller/osc-core/issues/284
     @Ignore
     @Test
-    @Ignore
     public void testTaskDependencyExecutionOrder() throws Exception {
         // Test first level parallel followed by sequential parallel tasks
         this.tg = new TaskGraph();

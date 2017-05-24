@@ -178,14 +178,11 @@ public class Server implements ServerApi {
             }
         };
 
+        startRabbitMq();
+        startWebsocket();
+
         this.thread = new Thread(server, "Start-Server");
         this.thread.start();
-
-        try {
-            // ensure startServer() starts to run before publishing ServerApi service
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-        }
     }
 
     private void startServer() throws Exception {
@@ -233,9 +230,6 @@ public class Server implements ServerApi {
 
             addShutdownHook();
             startScheduler();
-
-            startRabbitMq();
-            startWebsocket();
 
             Thread timeMonitorThread = ServerUtil.getTimeMonitorThread(new TimeChangeCommand() {
 
