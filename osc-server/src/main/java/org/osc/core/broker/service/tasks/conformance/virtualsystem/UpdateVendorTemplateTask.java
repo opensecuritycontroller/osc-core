@@ -25,6 +25,7 @@ import org.osc.core.broker.job.TaskInput;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osgi.service.component.annotations.Component;
@@ -34,6 +35,7 @@ import org.osgi.service.component.annotations.Reference;
 public class UpdateVendorTemplateTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(UpdateVendorTemplateTask.class);
 
+    @IgnoreCompare
     @Reference
     private ApiFactoryService apiFactoryService;
 

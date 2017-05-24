@@ -124,6 +124,7 @@ public class SyncPolicyMetaTaskTest {
         task.deletePolicyTask = new DeletePolicyTask();
         task.updatePolicyTask = new UpdatePolicyTask();
         task.removeVendorTemplateTask = new RemoveVendorTemplateTask();
+        task.apiFactoryService = this.apiFactoryService;
 
         task = task.create(this.mc);
 

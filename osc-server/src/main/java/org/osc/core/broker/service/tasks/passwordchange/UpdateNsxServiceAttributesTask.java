@@ -25,6 +25,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.RestConstants;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.ServerUtil;
@@ -39,6 +40,7 @@ public class UpdateNsxServiceAttributesTask extends TransactionalTask {
     @Reference
     public PasswordUtil passwordUtil;
 
+    @IgnoreCompare
     @Reference
     private ApiFactoryService apiFactoryService;
 

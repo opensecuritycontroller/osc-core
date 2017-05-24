@@ -121,6 +121,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
     public void testExecuteTransaction_WithVariousVirtualSystems_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
         NsxDeploymentSpecCheckMetaTask task = this.nsxDeploymentSpecCheckMetaTask.create(this.vs, this.updateNsxServiceAttributesScheduled);
+        task.apiFactoryService = this.apiFactoryService;
 
         // Act.
         task.executeTransaction(this.em);

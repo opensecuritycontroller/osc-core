@@ -32,6 +32,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxDeploymentSpecTask;
@@ -67,8 +68,9 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
     @Reference
     UpdateNsxDeploymentSpecTask updateNsxDeploymentSpecTask;
 
+    @IgnoreCompare
     @Reference
-    private ApiFactoryService apiFactoryService;
+    ApiFactoryService apiFactoryService;
 
     private TaskGraph tg;
     private VirtualSystem vs;

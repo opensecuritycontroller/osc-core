@@ -56,7 +56,7 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
     RemoveVendorTemplateTask removeVendorTemplateTask;
 
     @Reference
-    private ApiFactoryService apiFactoryService;
+    ApiFactoryService apiFactoryService;
 
     private ApplianceManagerConnector mc;
     private TaskGraph tg;

@@ -168,7 +168,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
 
     @Reference
-    private UpdateVendorTemplateTask updateVendorTemplateTask;
+    UpdateVendorTemplateTask updateVendorTemplateTask;
 
     // optional+dynamic to resolve circular reference
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)

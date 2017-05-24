@@ -19,7 +19,9 @@ package org.osc.core.broker.service.validator;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -29,8 +31,12 @@ public class VirtualizationConnectorDtoValidatorTest extends VirtualizationConne
     @Test
     public void testValidate_WhenVcRequest_ReturnsSuccessful() throws Exception {
 
+        // Arrange.
+        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto();
+        ControllerType.addType(dto.getControllerType());
+
         // Act.
-        this.dtoValidator.validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
+        this.dtoValidator.validateForCreate(dto);
 
         //Assert
         Assert.assertTrue(true);

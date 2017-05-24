@@ -44,7 +44,7 @@ public class RemoveVendorTemplateTask extends TransactionalTask {
     public RemoveVendorTemplateTask create(VirtualSystemPolicy vsp) {
         RemoveVendorTemplateTask task = new RemoveVendorTemplateTask();
         task.vsp = vsp;
-        task.name = getName();
+        task.name = task.getName();
         task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;

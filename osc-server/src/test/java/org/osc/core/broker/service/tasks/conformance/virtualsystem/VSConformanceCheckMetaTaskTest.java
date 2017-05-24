@@ -122,6 +122,9 @@ public class VSConformanceCheckMetaTaskTest {
     @InjectMocks
     private MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
 
+    @InjectMocks
+    private UpdateVendorTemplateTask updateVendorTemplateTask;
+
     private ServiceManagerApi serviceManagerApiMock;
     private ServiceApi serviceApiMock;
 
@@ -155,6 +158,7 @@ public class VSConformanceCheckMetaTaskTest {
         this.vsConformanceCheckMetaTask.dsConformanceCheckMetaTask = this.dsConformanceCheckMetaTask;
         this.vsConformanceCheckMetaTask.validateNsxAgentsTask = this.validateNsxAgentsTask;
         this.vsConformanceCheckMetaTask.mgrDeleteVSSDeviceTask = this.mgrDeleteVSSDeviceTask;
+        this.vsConformanceCheckMetaTask.updateVendorTemplateTask = this.updateVendorTemplateTask;
         this.vsConformanceCheckMetaTask.registerServiceInstanceTask = new RegisterServiceInstanceTask();
         this.vsConformanceCheckMetaTask.generateVSSKeysTask = new GenerateVSSKeysTask();
         this.vsConformanceCheckMetaTask.nsxSecurityGroupInterfacesCheckMetaTask = new NsxSecurityGroupInterfacesCheckMetaTask();
