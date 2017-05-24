@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.util.ArrayList;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
@@ -33,9 +35,7 @@ import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.rest.client.crypto.model.CertificateResolverModel;
 
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Map;
+import com.rabbitmq.client.ShutdownSignalException;
 
 public class VirtualizationConnectorUtil {
 

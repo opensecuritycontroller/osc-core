@@ -221,9 +221,10 @@ public class UpdateVirtualizationConnectorService
         // Transforms the existing vc based on the update request
         updateVirtualizationConnector(request, existingVc);
 
-		if (dto.getType().isOpenstack()) {
-		}
-		this.util.checkOpenstackConnection(request, existingVc);
+        if (dto.getType().isOpenstack()) {
+            this.util.checkOpenstackConnection(request, existingVc);
+        }
+
     }
 
     /**
