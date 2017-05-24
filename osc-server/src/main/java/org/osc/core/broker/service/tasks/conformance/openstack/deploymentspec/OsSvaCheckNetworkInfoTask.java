@@ -48,7 +48,7 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
 
     public OsSvaCheckNetworkInfoTask create(DistributedApplianceInstance dai) {
         OsSvaCheckNetworkInfoTask task = new OsSvaCheckNetworkInfoTask();
-        this.dai = dai;
+        task.dai = dai;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
