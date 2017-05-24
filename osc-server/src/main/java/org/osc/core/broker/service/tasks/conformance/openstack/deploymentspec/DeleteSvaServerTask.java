@@ -59,6 +59,7 @@ public class DeleteSvaServerTask extends TransactionalTask {
         DeleteSvaServerTask task = new DeleteSvaServerTask();
         task.region = region;
         task.dai = dai;
+        task.server = this.server;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
