@@ -30,14 +30,14 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class DistributedApplianceInstanceEntityMgr {
 
-    public static DistributedApplianceInstanceDto fromEntity(DistributedApplianceInstance dai) throws Exception {
-        Boolean providesDeviceStatus = ManagerApiFactory.providesDeviceStatus(dai.getVirtualSystem());
+    public static DistributedApplianceInstanceDto fromEntity(DistributedApplianceInstance dai, Boolean providesDeviceStatus) throws Exception {
+//        Boolean providesDeviceStatus = ManagerApiFactory.providesDeviceStatus(dai.getVirtualSystem());
 
         String discovered = providesDeviceStatus ? (dai.getDiscovered() != null ? dai.getDiscovered().toString() : "") : "N/A";
         String inspectionReady = providesDeviceStatus ? (dai.getInspectionReady() != null ? dai.getInspectionReady().toString() : "") : "N/A";
@@ -247,18 +247,14 @@ public class DistributedApplianceInstanceEntityMgr {
     }
 
     public static DistributedApplianceInstance findById(EntityManager em, Long id) {
-
-        // Initializing Entity Manager
-        OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(DistributedApplianceInstance.class, id);
     }
 
-    public static DistributedApplianceInstance findByName(EntityManager em, String name) {
+    public static DistributedApplianceInstance findByName(EntityManager em, String name,
+            TransactionalBroadcastUtil txBroadcastUtil) {
 
         OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, em);
+                DistributedApplianceInstance.class, em, txBroadcastUtil);
 
         return emgr.findByFieldName("name", name);
     }

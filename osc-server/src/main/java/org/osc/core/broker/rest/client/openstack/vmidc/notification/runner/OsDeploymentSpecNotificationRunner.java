@@ -40,13 +40,17 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
@@ -61,25 +65,36 @@ import com.google.common.collect.Multimap;
 @Component(scope=ServiceScope.PROTOTYPE,
  service=OsDeploymentSpecNotificationRunner.class)
 public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
-    @Reference
+    // optional+dynamic to break circular references
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ServiceReference<NotificationListenerFactory> notificationListenerFactorySR;
     private NotificationListenerFactory notificationListenerFactory;
+
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    private DBConnectionManager dbConnectionManager;
 
     private final Multimap<Long, OsNotificationListener> dsToListenerMap = ArrayListMultimap.create();
     private final HashMap<Long, VirtualizationConnector> dsToVCMap = new HashMap<Long, VirtualizationConnector>();
     private ServiceRegistration<BroadcastListener> registration;
+    private BundleContext context;
 
     private static final Logger log = Logger.getLogger(OsDeploymentSpecNotificationRunner.class);
 
     @Activate
     void start(BundleContext ctx) throws InterruptedException, VmidcException {
+        this.context = ctx;
+        this.notificationListenerFactory = ctx.getService(this.notificationListenerFactorySR);
         // This is not done automatically by DS as we do not want the broadcast whiteboard
         // to activate another instance of this component, only people getting the runner!
         this.registration = ctx.registerService(BroadcastListener.class, this, null);
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            HibernateUtil.getTransactionControl().required(() -> {
+            EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+            this.dbConnectionManager.getTransactionControl().required(() -> {
                 OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class,
-                        em);
+                        em, this.txBroadcastUtil);
                 List<DeploymentSpec> dsList = dsEmgr.listAll();
 
                 for (DeploymentSpec ds : dsList) {
@@ -101,6 +116,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
 
     @Deactivate
     void shutdown() {
+        this.context.ungetService(this.notificationListenerFactorySR);
         try {
             this.registration.unregister();
         } catch (IllegalStateException ise) {
@@ -116,8 +132,8 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
             removeListener(msg.getEntityId());
         } else {
             try {
-                EntityManager em = HibernateUtil.getTransactionalEntityManager();
-                HibernateUtil.getTransactionControl().required(() -> {
+                EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+                this.dbConnectionManager.getTransactionControl().required(() -> {
                     DeploymentSpec ds = DeploymentSpecEntityMgr.findById(em, msg.getEntityId());
                     if (ds != null) {
                         // if DS is deleted after update notification was sent

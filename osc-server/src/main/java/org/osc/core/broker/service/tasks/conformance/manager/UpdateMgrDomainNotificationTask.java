@@ -51,6 +51,9 @@ public class UpdateMgrDomainNotificationTask extends TransactionalTask {
         task.name = task.getName();
         task.oldBrokerIp = oldBrokerIp;
         task.passwordUtil = this.passwordUtil;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -67,7 +70,7 @@ public class UpdateMgrDomainNotificationTask extends TransactionalTask {
                     RestConstants.OSC_DEFAULT_LOGIN, this.passwordUtil.getOscDefaultPass());
 
             this.mc.setLastKnownNotificationIpAddress(ServerUtil.getServerIP());
-            OSCEntityManager.update(em, this.mc);
+            OSCEntityManager.update(em, this.mc, this.txBroadcastUtil);
 
         } finally {
 

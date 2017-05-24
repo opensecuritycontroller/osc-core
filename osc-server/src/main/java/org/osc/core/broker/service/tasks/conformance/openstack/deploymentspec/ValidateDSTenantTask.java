@@ -29,23 +29,30 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Validates the DS tenant exists and syncs the name if needed
  */
-class ValidateDSTenantTask extends TransactionalTask {
+@Component(service=ValidateDSTenantTask.class)
+public class ValidateDSTenantTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(ValidateDSTenantTask.class);
 
     private DeploymentSpec ds;
 
-    public ValidateDSTenantTask(DeploymentSpec ds) {
-        this.ds = ds;
+    public ValidateDSTenantTask create(DeploymentSpec ds) {
+        ValidateDSTenantTask task = new ValidateDSTenantTask();
+        task.ds = ds;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
+        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
         this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
 
         if (!this.ds.getMarkedForDeletion()) {
@@ -59,14 +66,14 @@ class ValidateDSTenantTask extends TransactionalTask {
                     this.log.info("DS tenant " + this.ds.getTenantName()
                             + " Deleted from openstack. Marking DS for deletion.");
                     // Tenant was deleted, mark ds for deleting as well
-                    OSCEntityManager.markDeleted(em, this.ds);
+                    OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
                 } else {
                     // Sync the tenant name if needed
                     if (!tenant.getName().equals(this.ds.getTenantName())) {
                         this.log.info("DS tenant name updated from " + this.ds.getTenantName() + " to "
                                 + tenant.getName());
                         this.ds.setTenantName(tenant.getName());
-                        OSCEntityManager.update(em, this.ds);
+                        OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
                     }
                 }
 

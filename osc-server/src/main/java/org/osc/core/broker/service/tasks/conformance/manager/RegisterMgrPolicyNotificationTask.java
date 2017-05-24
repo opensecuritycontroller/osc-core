@@ -49,6 +49,9 @@ public class RegisterMgrPolicyNotificationTask extends TransactionalTask {
         task.mc = mc;
         task.name = task.getName();
         task.passwordUtil = this.passwordUtil;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -64,7 +67,7 @@ public class RegisterMgrPolicyNotificationTask extends TransactionalTask {
             mgrApi.createPolicyGroupNotificationRegistration(Server.getApiPort(), RestConstants.OSC_DEFAULT_LOGIN,
                     this.passwordUtil.getOscDefaultPass());
             this.mc.setLastKnownNotificationIpAddress(ServerUtil.getServerIP());
-            OSCEntityManager.update(em, this.mc);
+            OSCEntityManager.update(em, this.mc, this.txBroadcastUtil);
         } finally {
             if (mgrApi != null) {
                 mgrApi.close();

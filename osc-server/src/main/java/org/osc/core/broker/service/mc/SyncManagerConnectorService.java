@@ -39,7 +39,7 @@ public class SyncManagerConnectorService extends ServiceDispatcher<BaseJobReques
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
         request.validateId();
-        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(request.getId());
         validate(request, mc);
         Long jobId = this.conformService.startMCConformJob(mc, em).getId();

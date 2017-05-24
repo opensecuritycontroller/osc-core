@@ -42,7 +42,7 @@ public class ListTenantByVcIdService extends ServiceDispatcher<BaseIdRequest, Li
         ListResponse<OsTenantDto> response = new ListResponse<>();
 
         // Initializing Entity Manager
-        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(VirtualizationConnector.class, em);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(VirtualizationConnector.class, em, this.txBroadcastUtil);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());

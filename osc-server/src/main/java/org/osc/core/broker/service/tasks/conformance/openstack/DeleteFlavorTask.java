@@ -24,7 +24,9 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = DeleteFlavorTask.class)
 public class DeleteFlavorTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(DeleteFlavorTask.class);
@@ -33,10 +35,16 @@ public class DeleteFlavorTask extends TransactionalTask {
     private OsFlavorReference flavorReference;
     private Endpoint osEndPoint;
 
-    public DeleteFlavorTask(String region, OsFlavorReference flavorReference, Endpoint osEndPoint) {
-        this.region = region;
-        this.osEndPoint = osEndPoint;
-        this.flavorReference = flavorReference;
+    public DeleteFlavorTask create(String region, OsFlavorReference flavorReference, Endpoint osEndPoint) {
+
+        DeleteFlavorTask task = new DeleteFlavorTask();
+        task.region = region;
+        task.osEndPoint = osEndPoint;
+        task.flavorReference = flavorReference;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -52,7 +60,7 @@ public class DeleteFlavorTask extends TransactionalTask {
         // We have to find the entity again as the one reference by
         // this.flavorReference is detached.
         OSCEntityManager.delete(em, em.find(OsFlavorReference.class,
-                this.flavorReference.getId()));
+                this.flavorReference.getId()), this.txBroadcastUtil);
 
     }
 

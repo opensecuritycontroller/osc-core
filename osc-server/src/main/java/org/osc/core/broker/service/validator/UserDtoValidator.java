@@ -26,20 +26,23 @@ import org.osc.core.broker.model.entities.User;
 import org.osc.core.broker.service.dto.UserDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 
 public class UserDtoValidator implements DtoValidator<UserDto, User> {
     EntityManager em;
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
-    public UserDtoValidator(EntityManager em) {
+    public UserDtoValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
         this.em = em;
+        this.txBroadcastUtil = txBroadcastUtil;
     }
 
     @Override
     public void validateForCreate(UserDto dto) throws Exception {
         validate(dto);
 
-        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, this.em);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, this.em, this.txBroadcastUtil);
 
         if (emgr.isExisting("loginName", dto.getLoginName())) {
             throw new VmidcBrokerValidationException("User Login Name: " + dto.getLoginName() + " already exists.");
@@ -52,7 +55,7 @@ public class UserDtoValidator implements DtoValidator<UserDto, User> {
 
         validate(dto);
 
-        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, this.em);
+        OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, this.em, this.txBroadcastUtil);
 
         User user = emgr.findByPrimaryKey(dto.getId());
 

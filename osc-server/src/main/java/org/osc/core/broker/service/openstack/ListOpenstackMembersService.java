@@ -59,7 +59,7 @@ public class ListOpenstackMembersService
     public ListResponse<SecurityGroupMemberItemDto> exec(ListOpenstackMembersRequest request, EntityManager em)
             throws Exception {
 
-        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getParentId());
         List<String> existingMemberIds = new ArrayList<>();
         // If current selected members is set to null, assume this is first load and populate existing member ids from

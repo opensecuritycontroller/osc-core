@@ -29,23 +29,21 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.test.util.TaskGraphHelper;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-@PrepareForTest({ManagerApiFactory.class})
 public class SecurityGroupCheckMetaTaskTest {
 
     public EntityManager em;
@@ -53,6 +51,8 @@ public class SecurityGroupCheckMetaTaskTest {
     private SecurityGroup sg;
 
     private TaskGraph expectedGraph;
+
+    private ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
 
     // This must be an instance because otherwise the entities
     // it creates retain state between tests (which is bad!)
@@ -72,11 +72,10 @@ public class SecurityGroupCheckMetaTaskTest {
 
         populateDatabase();
 
-        PowerMockito.mockStatic(ManagerApiFactory.class);
-        when(ManagerApiFactory.syncsPolicyMapping(this.testData.MC_POLICY_MAPPING_NOT_SUPPORTED_VS)).thenReturn(false);
+        when(this.apiFactoryService.syncsPolicyMapping(this.testData.MC_POLICY_MAPPING_NOT_SUPPORTED_VS)).thenReturn(false);
 
         for (VirtualSystem vs: this.testData.MC_POLICY_MAPPING_SUPPORTED_VS_LIST) {
-            when(ManagerApiFactory.syncsPolicyMapping(vs)).thenReturn(true);
+            when(this.apiFactoryService.syncsPolicyMapping(vs)).thenReturn(true);
         }
     }
 
@@ -113,8 +112,14 @@ public class SecurityGroupCheckMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask().create(this.sg);
+        SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask();
         task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();
+        task.securityGroupUpdateOrDeleteMetaTask = new SecurityGroupUpdateOrDeleteMetaTask();
+        task.validateSecurityGroupTenantTask = new ValidateSecurityGroupTenantTask();
+
+        task = task.create(this.sg);
+        task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();
+        task.apiFactoryService = this.apiFactoryService;
 
         // Act.
         task.executeTransaction(this.em);

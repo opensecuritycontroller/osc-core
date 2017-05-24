@@ -60,11 +60,7 @@ public class VirtualSystemEntityMgr {
     }
 
     public static VirtualSystem findById(EntityManager em, Long id) {
-
-        // Initializing Entity Manager
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(VirtualSystem.class, id);
     }
 
     public static VirtualSystem findByNsxServiceInstanceIdAndVsmUuid(EntityManager em, String serviceVsmUuid,

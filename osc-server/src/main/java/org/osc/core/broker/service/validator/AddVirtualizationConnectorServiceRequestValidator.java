@@ -24,6 +24,7 @@ import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.util.StaticRegistry;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 
 public class AddVirtualizationConnectorServiceRequestValidator
@@ -34,19 +35,22 @@ public class AddVirtualizationConnectorServiceRequestValidator
 
 	private VirtualizationConnectorUtil virtualizationConnectorUtil;
 
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
 	public void setVirtualizationConnectorUtil(VirtualizationConnectorUtil virtualizationConnectorUtil) {
 		this.virtualizationConnectorUtil = virtualizationConnectorUtil;
 	}
 
-	public AddVirtualizationConnectorServiceRequestValidator(EntityManager em) {
+	public AddVirtualizationConnectorServiceRequestValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
 		this.em = em;
+        this.txBroadcastUtil = txBroadcastUtil;
 	}
 
 	@Override
 	public void validate(DryRunRequest<VirtualizationConnectorRequest> request) throws Exception {
 
 		if (this.dtoValidator == null) {
-			this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em);
+			this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em, this.txBroadcastUtil);
 		}
 
 		VirtualizationConnectorDto dto = request.getDto();

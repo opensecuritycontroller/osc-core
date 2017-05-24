@@ -52,6 +52,9 @@ public class ValidateNsxTask extends TransactionalTask {
         task.vs = vs;
         task.apiFactoryService = this.apiFactoryService;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -123,7 +126,7 @@ public class ValidateNsxTask extends TransactionalTask {
                 if (!isNsxVendorTemplateInSync(vsp, templateId)) {
                     LOG.info("Vendor template for policy '" + vsp.getPolicy().getName() + "' was out of sync");
                     vsp.setNsxVendorTemplateId(templateId);
-                    OSCEntityManager.update(em, vsp);
+                    OSCEntityManager.update(em, vsp, this.txBroadcastUtil);
                 }
             }
         } else {
@@ -134,7 +137,7 @@ public class ValidateNsxTask extends TransactionalTask {
             this.vs.getVirtualSystemPolicies().clear();
         }
 
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     private void setNsxServiceManager(ServiceManagerElement svcMgr) {

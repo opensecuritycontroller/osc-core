@@ -27,13 +27,20 @@ import org.osc.core.broker.rest.client.nsx.model.ServiceManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=UnregisterServiceManagerCallbackTask.class)
 public class UnregisterServiceManagerCallbackTask extends TransactionalTask {
     private VirtualSystem vs;
 
-    public UnregisterServiceManagerCallbackTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public UnregisterServiceManagerCallbackTask create(VirtualSystem vs) {
+        UnregisterServiceManagerCallbackTask task = new UnregisterServiceManagerCallbackTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

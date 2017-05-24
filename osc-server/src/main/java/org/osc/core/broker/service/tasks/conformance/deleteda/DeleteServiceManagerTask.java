@@ -27,15 +27,22 @@ import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = DeleteServiceManagerTask.class)
 public class DeleteServiceManagerTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(DeleteServiceManagerTask.class);
 
     private VirtualSystem vs;
 
-    public DeleteServiceManagerTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public DeleteServiceManagerTask create(VirtualSystem vs) {
+        DeleteServiceManagerTask task = new DeleteServiceManagerTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -51,7 +58,7 @@ public class DeleteServiceManagerTask extends TransactionalTask {
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
         this.vs.setNsxServiceManagerId(null);
         this.vs.setNsxVsmUuid(null);
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

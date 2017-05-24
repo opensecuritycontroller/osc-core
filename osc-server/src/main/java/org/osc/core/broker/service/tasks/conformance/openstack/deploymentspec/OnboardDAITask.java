@@ -32,14 +32,21 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=OnboardDAITask.class)
 public class OnboardDAITask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(OnboardDAITask.class);
     private DistributedApplianceInstance dai;
 
-    public OnboardDAITask(DistributedApplianceInstance dai) {
-        this.dai = dai;
-        this.name = getName();
+    public OnboardDAITask create(DistributedApplianceInstance dai) {
+        OnboardDAITask task = new OnboardDAITask();
+        task.dai = dai;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

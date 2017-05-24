@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockRequest;
@@ -26,17 +28,22 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.osgi.service.component.annotations.Component;
 
-import javax.persistence.EntityManager;
-
+@Component(service=VCDeleteMetaTask.class)
 public class VCDeleteMetaTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(VCDeleteMetaTask.class);
 
     private VirtualizationConnector vc;
 
-    public VCDeleteMetaTask(VirtualizationConnector vc) {
-        this.vc = vc;
-        this.name = getName();
+    public VCDeleteMetaTask create(VirtualizationConnector vc) {
+        VCDeleteMetaTask task = new VCDeleteMetaTask();
+        task.vc = vc;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -47,10 +54,10 @@ public class VCDeleteMetaTask extends TransactionalTask {
         try {
             this.vc = em.find(VirtualizationConnector.class, this.vc.getId());
             vcUnlockTask = LockUtil.lockVC(this.vc, LockType.WRITE_LOCK);
-            OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
+            OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
             VirtualizationConnector connector = vcEntityMgr.findByPrimaryKey(this.vc.getId());
 
-            SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
+            SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             sslCertificateAttrEntityMgr.removeCertificateList(connector.getSslCertificateAttrSet());
             vcEntityMgr.delete(this.vc.getId());
         } catch (Exception ex) {

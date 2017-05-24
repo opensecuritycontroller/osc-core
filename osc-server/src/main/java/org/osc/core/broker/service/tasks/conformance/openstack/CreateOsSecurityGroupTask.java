@@ -34,7 +34,9 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=CreateOsSecurityGroupTask.class)
 public class CreateOsSecurityGroupTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(CreateOsSecurityGroupTask.class);
@@ -43,10 +45,15 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
     private String sgName;
     private Endpoint osEndPoint;
 
-    public CreateOsSecurityGroupTask(DeploymentSpec ds, Endpoint osEndPoint) {
-        this.ds = ds;
-        this.osEndPoint = osEndPoint;
-        this.sgName = ds.getVirtualSystem().getName() + "_" + ds.getRegion() + "_" + ds.getTenantName();
+    public CreateOsSecurityGroupTask create(DeploymentSpec ds, Endpoint osEndPoint) {
+        CreateOsSecurityGroupTask task = new CreateOsSecurityGroupTask();
+        task.ds = ds;
+        task.osEndPoint = osEndPoint;
+        task.sgName = ds.getVirtualSystem().getName() + "_" + ds.getRegion() + "_" + ds.getTenantName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -64,7 +71,7 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
             OsSecurityGroupReference sgRef = new OsSecurityGroupReference(securityGroup.getId(), this.sgName, this.ds);
             this.ds.setOsSecurityGroupReference(sgRef);
 
-            OSCEntityManager.create(em, sgRef);
+            OSCEntityManager.create(em, sgRef, this.txBroadcastUtil);
 
         } finally {
             neutron.close();

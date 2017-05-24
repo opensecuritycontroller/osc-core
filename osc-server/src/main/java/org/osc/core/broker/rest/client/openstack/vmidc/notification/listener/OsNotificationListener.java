@@ -22,7 +22,7 @@ import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
-import org.osc.core.broker.util.StaticRegistry;
+import org.osc.core.server.Server;
 
 /**
  * This abstract class implements a generic listener object which will listen to Notifications of the registered type
@@ -37,6 +37,7 @@ public abstract class OsNotificationListener implements NotificationListener {
     protected OsNotificationObjectType objectType;
     protected List<String> objectIdList;
     protected BaseEntity entity;
+    private Server server;
 
     public List<String> getObjectIdList() {
         return this.objectIdList;
@@ -47,17 +48,18 @@ public abstract class OsNotificationListener implements NotificationListener {
     }
 
     public OsNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity) {
+            List<String> objectIdList, BaseEntity entity, Server server) {
         super();
         this.vc = vc;
         this.objectType = objectType;
         this.objectIdList = objectIdList;
         this.entity = entity;
+        this.server = server;
     }
 
     @Override
     public void register(VirtualizationConnector vc, OsNotificationObjectType objectType) {
-        OsRabbitMQClient client = StaticRegistry.server().getActiveRabbitMQRunner()
+        OsRabbitMQClient client = this.server.getActiveRabbitMQRunner()
                 .getVcToRabbitMQClientMap().get(vc.getId());
         if (client != null) {
             client.registerListener(this, objectType);
@@ -67,7 +69,7 @@ public abstract class OsNotificationListener implements NotificationListener {
 
     @Override
     public void unRegister(VirtualizationConnector vc, OsNotificationObjectType objectType) {
-        OsRabbitMQClient client = StaticRegistry.server().getActiveRabbitMQRunner()
+        OsRabbitMQClient client = this.server.getActiveRabbitMQRunner()
                 .getVcToRabbitMQClientMap().get(vc.getId());
         if (client != null) {
             client.removeListener(this, objectType);

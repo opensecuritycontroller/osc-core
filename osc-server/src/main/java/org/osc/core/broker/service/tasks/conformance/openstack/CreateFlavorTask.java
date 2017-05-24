@@ -29,8 +29,10 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
-class CreateFlavorTask extends TransactionalTask {
+@Component(service = CreateFlavorTask.class)
+public class CreateFlavorTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(CreateFlavorTask.class);
 
@@ -40,18 +42,23 @@ class CreateFlavorTask extends TransactionalTask {
     private ApplianceSoftwareVersion applianceSoftwareVersion;
     private Endpoint osEndPoint;
 
-    public CreateFlavorTask(VirtualSystem vs, String region, String flavorName, ApplianceSoftwareVersion applianceSoftwareVersion, Endpoint osEndPoint) {
-        this.vs = vs;
-        this.region = region;
-        this.applianceSoftwareVersion = applianceSoftwareVersion;
-        this.flavorName = flavorName;
-        this.osEndPoint = osEndPoint;
+    public CreateFlavorTask create(VirtualSystem vs, String region, String flavorName, ApplianceSoftwareVersion applianceSoftwareVersion, Endpoint osEndPoint) {
+        CreateFlavorTask task = new CreateFlavorTask();
+        task.vs = vs;
+        task.region = region;
+        task.applianceSoftwareVersion = applianceSoftwareVersion;
+        task.flavorName = flavorName;
+        task.osEndPoint = osEndPoint;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        OSCEntityManager<VirtualSystem> vsEntityMgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
-        OSCEntityManager<ApplianceSoftwareVersion> asvEntiyMgr = new OSCEntityManager<ApplianceSoftwareVersion>(ApplianceSoftwareVersion.class, em);
+        OSCEntityManager<VirtualSystem> vsEntityMgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
+        OSCEntityManager<ApplianceSoftwareVersion> asvEntiyMgr = new OSCEntityManager<ApplianceSoftwareVersion>(ApplianceSoftwareVersion.class, em, this.txBroadcastUtil);
 
         this.vs = vsEntityMgr.findByPrimaryKey(this.vs.getId());
         this.applianceSoftwareVersion = asvEntiyMgr.findByPrimaryKey(this.applianceSoftwareVersion.getId());
@@ -67,7 +74,7 @@ class CreateFlavorTask extends TransactionalTask {
 
             this.vs.addOsFlavorReference(new OsFlavorReference(this.vs, this.region, flavorId));
 
-            OSCEntityManager.update(em, this.vs);
+            OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
         } finally {
             nova.close();
         }

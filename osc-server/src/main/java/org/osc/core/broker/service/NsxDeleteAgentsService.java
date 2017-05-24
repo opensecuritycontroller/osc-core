@@ -43,13 +43,13 @@ public class NsxDeleteAgentsService extends ServiceDispatcher<NsxDeleteAgentsReq
     public EmptySuccessResponse exec(NsxDeleteAgentsRequest request, EntityManager em) throws Exception {
 
         OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, em);
+                DistributedApplianceInstance.class, em, this.txBroadcastUtil);
 
         DistributedApplianceInstance dai = validate(em, request, emgr);
 
         if (dai != null) {
             if (this.mgrDeleteMemberDeviceTask.deleteMemberDevice(dai)) {
-                OSCEntityManager.delete(em, dai);
+                OSCEntityManager.delete(em, dai, this.txBroadcastUtil);
             }
         } else {
             log.info("An unregistered nsx appliance agent '" + request.agentIds + "' had been undeployed.");

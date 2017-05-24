@@ -41,7 +41,7 @@ public class AcknowledgeAlertService extends ServiceDispatcher<AlertRequest, Emp
     @Override
     public EmptySuccessResponse exec(AlertRequest request, EntityManager em) throws Exception {
         EmptySuccessResponse response = new EmptySuccessResponse();
-        OSCEntityManager<Alert> emgr = new OSCEntityManager<Alert>(Alert.class, em);
+        OSCEntityManager<Alert> emgr = new OSCEntityManager<Alert>(Alert.class, em, this.txBroadcastUtil);
 
         if (request.isAcknowledge()) {
             for (AlertDto dto : request.getDtoList()) {

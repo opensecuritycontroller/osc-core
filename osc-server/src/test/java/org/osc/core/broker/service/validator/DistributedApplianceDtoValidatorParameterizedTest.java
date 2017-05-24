@@ -35,17 +35,15 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-@PrepareForTest({ManagerApiFactory.class})
 public class DistributedApplianceDtoValidatorParameterizedTest extends DistributedApplianceDtoValidatorBaseTest {
     DistributedApplianceDto dtoParam;
     Class<Throwable> exceptionTypeParam;
@@ -84,7 +82,9 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
 //
 //        this.sessionStub.stubFindVirtualSystem(DA_ID_EXISTING_VC, VC_ID_OPENSTACK, new VirtualSystem());
 
-        Mockito.when(ManagerApiFactory.syncsPolicyMapping(mgrTypePolicyMappingNotSupported)).thenReturn(false);
+        ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
+
+        Mockito.when(apiFactoryService.syncsPolicyMapping(mgrTypePolicyMappingNotSupported)).thenReturn(false);
     }
 
     private void populateDatabase() {

@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +28,8 @@ import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.sdk.controller.FlowInfo;
+import org.osc.sdk.controller.FlowPortInfo;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
@@ -34,6 +37,7 @@ import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
+import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osgi.annotation.versioning.ConsumerType;
 
@@ -50,6 +54,8 @@ public interface ApiFactoryService {
 
     Boolean syncsPolicyMapping(ManagerType managerType) throws Exception;
 
+    Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception;
+
     Boolean syncsSecurityGroup(ManagerType managerType) throws Exception;
 
     String getServiceName(ManagerType managerType) throws Exception;
@@ -58,6 +64,8 @@ public interface ApiFactoryService {
 
     Boolean providesDeviceStatus(ManagerType managerType) throws Exception;
 
+    Boolean providesDeviceStatus(VirtualSystem virtualSystem) throws Exception;
+
     String getAuthenticationType(ManagerType managerType) throws Exception;
 
     boolean isBasicAuth(ManagerType managerType) throws Exception;
@@ -65,6 +73,8 @@ public interface ApiFactoryService {
     boolean isKeyAuth(ManagerType managerType) throws Exception;
 
     String getExternalServiceName(ManagerType managerType) throws Exception;
+
+    String getExternalServiceName(VirtualSystem virtualSystem) throws Exception;
 
     String getVendorName(ManagerType managerType) throws Exception;
 
@@ -154,4 +164,10 @@ public interface ApiFactoryService {
     <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
             PluginType pluginType, Map<String, Class<?>> requiredProperties);
 
+    Map<String, FlowPortInfo> queryPortInfo(VirtualizationConnector vc, String region,
+            HashMap<String, FlowInfo> portsQuery) throws Exception;
+
+    SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception;
+
+    AgentApi createAgentApi(VirtualSystem vs) throws Exception;
 }

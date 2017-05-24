@@ -54,7 +54,7 @@ public class GetMCPublicKeyService extends ServiceDispatcher<GetMCPublicKeyReque
 
         // retrieve existing entry from db
         OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, em);
+                ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(mcId);
 
         if (mc == null) {

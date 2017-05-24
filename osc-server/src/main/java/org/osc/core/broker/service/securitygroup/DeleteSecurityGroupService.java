@@ -50,6 +50,9 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
     @Reference
     private ConformService conformService;
 
+    @Reference
+    ForceDeleteSecurityGroupTask forceDeleteSecurityGroupTask;
+
     @Override
     public BaseJobResponse exec(BaseDeleteRequest request, EntityManager em) throws Exception {
         SecurityGroup securityGroup = validate(em, request);
@@ -62,7 +65,7 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
                     securityGroup.getVirtualizationConnector());
             if (request.isForceDelete()) {
                 TaskGraph tg = new TaskGraph();
-                tg.addTask(new ForceDeleteSecurityGroupTask(securityGroup));
+                tg.addTask(this.forceDeleteSecurityGroupTask.create(securityGroup));
                 tg.appendTask(unlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 Job job = JobEngine.getEngine().submit(
                         "Force Delete Security Group '" + securityGroup.getName() + "'", tg,
@@ -72,7 +75,7 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
             } else {
 
                 // Mark this security Group for Deletion and Trigger  Sync Job
-                OSCEntityManager.markDeleted(em, securityGroup);
+                OSCEntityManager.markDeleted(em, securityGroup, this.txBroadcastUtil);
                 UnlockObjectMetaTask forLambda = unlockTask;
                 chain(() -> {
                     try {

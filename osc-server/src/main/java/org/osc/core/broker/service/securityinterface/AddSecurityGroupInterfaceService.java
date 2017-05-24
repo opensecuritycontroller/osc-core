@@ -60,7 +60,7 @@ public class AddSecurityGroupInterfaceService
                 SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Creating SecurityGroupInterface: " + sgi.toString());
-        OSCEntityManager.create(em, sgi);
+        OSCEntityManager.create(em, sgi, this.txBroadcastUtil);
 
         chain(() -> {
             Long jobId = this.conformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());

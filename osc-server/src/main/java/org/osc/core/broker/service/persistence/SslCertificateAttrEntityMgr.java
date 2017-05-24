@@ -16,12 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import org.osc.core.broker.model.entities.SslCertificateAttr;
-import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,13 +23,21 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
+import org.osc.core.broker.model.entities.SslCertificateAttr;
+import org.osc.core.broker.service.dto.SslCertificateAttrDto;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+
 public class SslCertificateAttrEntityMgr extends OSCEntityManager<SslCertificateAttr> {
 
     public static final String replaceTimestampPattern = "\\_([0-9]+)";
     private static final String genericAliasNamePattern = "^([a-zA-Z_]+)\\_([0-9]+)$";
 
-    public SslCertificateAttrEntityMgr(EntityManager em) {
-        super(SslCertificateAttr.class, em);
+    public SslCertificateAttrEntityMgr(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
+        super(SslCertificateAttr.class, em, txBroadcastUtil);
     }
 
     public static SslCertificateAttr createEntity(SslCertificateAttrDto dto) {

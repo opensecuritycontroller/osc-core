@@ -36,14 +36,38 @@ import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxServicePro
 import org.osc.sdk.sdn.api.ServiceProfileApi;
 import org.osc.sdk.sdn.element.SecurityGroupElement;
 import org.osc.sdk.sdn.element.ServiceProfileElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service=NsxSecurityGroupInterfacesCheckMetaTask.class)
 public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTask {
     private VirtualSystem vs;
     private TaskGraph tg;
 
-    public NsxSecurityGroupInterfacesCheckMetaTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    @Reference
+    CreateSecurityGroupInterfaceTask createSecurityGroupInterfaceTask;
+
+    @Reference
+    UpdateSecurityGroupInterfaceTask updateSecurityGroupInterfaceTask;
+
+    @Reference
+    DeleteSecurityGroupInterfaceTask deleteSecurityGroupInterfaceTask;
+
+    @Reference
+    NsxServiceProfileContainerCheckMetaTask nsxServiceProfileContainerCheckMetaTask;
+
+    public NsxSecurityGroupInterfacesCheckMetaTask create(VirtualSystem vs) {
+        NsxSecurityGroupInterfacesCheckMetaTask task = new NsxSecurityGroupInterfacesCheckMetaTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.createSecurityGroupInterfaceTask = this.createSecurityGroupInterfaceTask;
+        task.updateSecurityGroupInterfaceTask = this.updateSecurityGroupInterfaceTask;
+        task.deleteSecurityGroupInterfaceTask = this.deleteSecurityGroupInterfaceTask;
+        task.nsxServiceProfileContainerCheckMetaTask = this.nsxServiceProfileContainerCheckMetaTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -71,12 +95,12 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
                 }
             }
             if (!found) {
-                this.tg.appendTask(new DeleteSecurityGroupInterfaceTask(dbSecurityGroupInterface));
+                this.tg.appendTask(this.deleteSecurityGroupInterfaceTask.create(dbSecurityGroupInterface));
             }
         }
     }
 
-    public static void processServiceProfile(EntityManager em, TaskGraph tg, VirtualSystem vs,
+    public void processServiceProfile(EntityManager em, TaskGraph tg, VirtualSystem vs,
             ServiceProfile serviceProfile) throws Exception {
 
         ServiceProfileApi serviceProfileApi = VMwareSdnApiFactory.createServiceProfileApi(vs);
@@ -84,7 +108,7 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         processServiceProfile(em, serviceProfileApi, tg, vs, serviceProfile);
     }
 
-    private static void processServiceProfile(EntityManager em, ServiceProfileApi serviceProfileApi,
+    private void processServiceProfile(EntityManager em, ServiceProfileApi serviceProfileApi,
             TaskGraph tg, VirtualSystem vs, ServiceProfileElement serviceProfile) throws Exception {
 
         // Locate the relevant Security Group in our DB associate with this Service Profile
@@ -99,7 +123,7 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
             // Later, we'll also remove it the interface binding from mgr.
 
             if (sgi != null) {
-                tg.appendTask(new DeleteSecurityGroupInterfaceTask(sgi));
+                tg.appendTask(this.deleteSecurityGroupInterfaceTask.create(sgi));
             }
 
         } else {
@@ -110,20 +134,20 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
 
             if (sgi == null) {
                 // Create SGI
-                tg.appendTask(new CreateSecurityGroupInterfaceTask(vsp, serviceProfile));
+                tg.appendTask(this.createSecurityGroupInterfaceTask.create(vsp, serviceProfile));
 
             } else {
 
                 // Existing binding. Check if binding attributes changed.
                 if (isChanged(sgi, serviceProfile)) {
-                    tg.appendTask(new UpdateSecurityGroupInterfaceTask(sgi, vsp, serviceProfile));
+                    tg.appendTask(this.updateSecurityGroupInterfaceTask.create(sgi, vsp, serviceProfile));
                 }
             }
 
             // Sync SGs binded to SGI
             List<SecurityGroupElement> securityGroups = serviceProfileApi.getSecurityGroups(serviceProfile.getId());
             ContainerSet containerSet = new ContainerSet(securityGroups);
-            tg.appendTask(new NsxServiceProfileContainerCheckMetaTask(vs, serviceProfile, containerSet));
+            tg.appendTask(this.nsxServiceProfileContainerCheckMetaTask.create(vs, serviceProfile, containerSet));
         }
     }
 

@@ -46,6 +46,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.manager.element.JobElement;
 import org.osgi.service.transaction.control.ScopedWorkException;
@@ -134,7 +135,7 @@ public class Job implements Runnable, JobElement {
             txControl.requiresNew(() -> {
                 this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
                 this.jobRecord.setStatus(getEntityStatus());
-                OSCEntityManager.update(em, this.jobRecord);
+                OSCEntityManager.update(em, this.jobRecord, StaticRegistry.transactionalBroadcastUtil());
                 return null;
             });
         } catch (ScopedWorkException e) {
@@ -400,7 +401,7 @@ public class Job implements Runnable, JobElement {
                 this.jobRecord.setStartedTimestamp(getStartedTimestamp());
                 this.jobRecord.setCompletedTimestamp(getCompletedTimestamp());
                 this.jobRecord.setFailureReason(getFailureReason());
-                OSCEntityManager.update(em, this.jobRecord);
+                OSCEntityManager.update(em, this.jobRecord, StaticRegistry.transactionalBroadcastUtil());
                 return null;
             });
         } catch (ScopedWorkException e) {
@@ -599,7 +600,7 @@ public class Job implements Runnable, JobElement {
                         }
                     }
 
-                    OSCEntityManager.create(em, jobRecord);
+                    OSCEntityManager.create(em, jobRecord, StaticRegistry.transactionalBroadcastUtil());
 
                     setJobStore(jobRecord);
                 }
@@ -661,9 +662,9 @@ public class Job implements Runnable, JobElement {
                     }
                 }
 
-                OSCEntityManager.create(em, taskRecord);
+                OSCEntityManager.create(em, taskRecord, StaticRegistry.transactionalBroadcastUtil());
             } else {
-                OSCEntityManager.update(em, taskRecord);
+                OSCEntityManager.update(em, taskRecord, StaticRegistry.transactionalBroadcastUtil());
             }
         }
 
@@ -701,7 +702,8 @@ public class Job implements Runnable, JobElement {
 
             if (taskNode.getProducer() != null) {
                 taskNode.getProducer().getTaskRecord().addChild(taskRecord);
-                OSCEntityManager.update(em, taskNode.getProducer().getTaskRecord());
+                OSCEntityManager.update(em, taskNode.getProducer().getTaskRecord(),
+                        StaticRegistry.transactionalBroadcastUtil());
             }
         }
     }

@@ -40,7 +40,7 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova.CreatedServer
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.util.StaticRegistry;
+import org.osc.core.server.Server;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
@@ -85,6 +85,9 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     @Reference
     private ApiFactoryService apiFactoryService;
 
+    @Reference
+    private Server server;
+
     private DistributedApplianceInstance dai;
     private String availabilityZone;
     private String hypervisorHostName;
@@ -92,9 +95,13 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     public OsSvaServerCreateTask create(DistributedApplianceInstance dai, String hypervisorName, String availabilityZone) {
         OsSvaServerCreateTask task = new OsSvaServerCreateTask();
         task.apiFactoryService = this.apiFactoryService;
+        task.server = this.server;
         task.dai = dai;
         task.availabilityZone = availabilityZone;
         task.hypervisorHostName = hypervisorName;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -151,7 +158,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                     );
             // Add new server ID to VM notification listener for this DS
 
-            StaticRegistry.server().getActiveRabbitMQRunner().getOsDeploymentSpecNotificationRunner()
+            this.server.getActiveRabbitMQRunner().getOsDeploymentSpecNotificationRunner()
                 .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
             if (vc.isControllerDefined()) {
@@ -179,7 +186,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
 
             this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getOsServerId());
 
-            OSCEntityManager.update(em, this.dai);
+            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
 
         } finally {
             nova.close();

@@ -45,9 +45,6 @@ public class SubnetEntityManager {
     }
 
     public static Subnet findById(EntityManager em, Long id) {
-        // Initializing Entity Manager
-        OSCEntityManager<Subnet> emgr = new OSCEntityManager<Subnet>(Subnet.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(Subnet.class, id);
     }
 }

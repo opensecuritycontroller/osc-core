@@ -72,6 +72,18 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 	@Reference
 	private UpdateMgrPolicyNotificationTask updateMgrPolicyNotificationTask;
 
+	@Reference
+	SyncMgrPublicKeyTask syncMgrPublicKeyTask;
+
+	@Reference
+	private DowngradeLockObjectTask downgradeLockObjectTask;
+
+	@Reference
+	SyncDomainMetaTask syncDomainMetaTask;
+
+	@Reference
+	SyncPolicyMetaTask syncPolicyMetaTask;
+
 	/**
 	 * Start MC conformance task. A write lock exists for the duration of this task and any tasks kicked off by this
 	 * task.
@@ -94,6 +106,13 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
         task.registerMgrPolicyNotificationTask = this.registerMgrPolicyNotificationTask;
         task.updateMgrDomainNotificationTask = this.updateMgrDomainNotificationTask;
         task.updateMgrPolicyNotificationTask = this.updateMgrPolicyNotificationTask;
+        task.syncMgrPublicKeyTask = this.syncMgrPublicKeyTask;
+        task.downgradeLockObjectTask = this.downgradeLockObjectTask;
+        task.syncDomainMetaTask = this.syncDomainMetaTask;
+        task.syncPolicyMetaTask = this.syncPolicyMetaTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -126,10 +145,10 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 			}
 
 			if (this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(this.mc.getManagerType()))) {
-				Task syncDomains = new SyncDomainMetaTask(this.mc);
+				Task syncDomains = this.syncDomainMetaTask.create(this.mc);
 				this.tg.addTask(syncDomains);
 
-				Task syncPolicies = new SyncPolicyMetaTask(this.mc);
+				Task syncPolicies = this.syncPolicyMetaTask.create(this.mc);
 				this.tg.addTask(syncPolicies, syncDomains);
 			}
 
@@ -138,7 +157,7 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 			} else {
 				if (isLockProvided) {
 					//downgrade lock since we upgraded it at the start
-					this.tg.appendTask(new DowngradeLockObjectTask(new LockRequest(this.mcUnlockTask)),
+					this.tg.appendTask(this.downgradeLockObjectTask.create(new LockRequest(this.mcUnlockTask)),
 							TaskGuard.ALL_PREDECESSORS_COMPLETED);
 				} else {
 					this.tg.appendTask(this.mcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -162,7 +181,7 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
                 byte[] bytes = applianceManagerApi.getPublicKey(this.apiFactoryService.getApplianceManagerConnectorElement(this.mc));
 
 		if (bytes != null && (this.mc.getPublicKey() == null || !Arrays.equals(this.mc.getPublicKey(), bytes))) {
-			tg.addTask(new SyncMgrPublicKeyTask(this.mc, bytes));
+			tg.addTask(this.syncMgrPublicKeyTask.create(this.mc, bytes));
 		}
 
 		return tg;

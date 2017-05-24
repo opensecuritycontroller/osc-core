@@ -41,7 +41,7 @@ public class DeleteAlertService extends ServiceDispatcher<AlertRequest, EmptySuc
             if (alert == null) {
                 throw new VmidcBrokerValidationException("Alarm entry with id " + dto.getId() + " is not found.");
             }
-            OSCEntityManager.delete(em, alert);
+            OSCEntityManager.delete(em, alert, this.txBroadcastUtil);
         }
         return response;
     }

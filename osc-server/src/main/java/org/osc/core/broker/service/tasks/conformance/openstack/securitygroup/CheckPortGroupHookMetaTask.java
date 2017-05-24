@@ -36,6 +36,8 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionHookElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This metatask is responsible for checking whether a port
@@ -45,15 +47,37 @@ import org.osc.sdk.controller.element.InspectionHookElement;
  * This task is applicable to SGIs whose virtual system refers to an SDN
  * controller that supports port groups.
  */
+@Component(service=CheckPortGroupHookMetaTask.class)
 public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
     private SecurityGroupInterface sgi;
     private TaskGraph tg;
     private static final Logger LOG = Logger.getLogger(CheckPortGroupHookMetaTask.class);
-    private final boolean isDeleteTaskGraph;
+    private boolean isDeleteTaskGraph;
 
-    public CheckPortGroupHookMetaTask(SecurityGroupInterface sgi, boolean isDeleteTg) {
-        this.sgi = sgi;
-        this.isDeleteTaskGraph = isDeleteTg;
+    @Reference
+    AllocateDAIWithSGIMembersTask allocateDai;
+
+    @Reference
+    DeallocateDAIOfSGIMembersTask deallocateDai;
+
+    @Reference
+    CreatePortGroupHookTask createPortGroupHook;
+
+    @Reference
+    RemovePortGroupHookTask removePortGroupHook;
+
+    public CheckPortGroupHookMetaTask create(SecurityGroupInterface sgi, boolean isDeleteTg) {
+        CheckPortGroupHookMetaTask task = new CheckPortGroupHookMetaTask();
+        task.sgi = sgi;
+        task.isDeleteTaskGraph = isDeleteTg;
+        task.allocateDai = this.allocateDai;
+        task.deallocateDai = this.deallocateDai;
+        task.createPortGroupHook = this.createPortGroupHook;
+        task.removePortGroupHook = this.removePortGroupHook;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -86,8 +110,8 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         if (!this.sgi.getMarkedForDeletion() && !this.isDeleteTaskGraph) {
             if (existingInspHook == null) {
                 assignedRedirectedDai = assignedRedirectedDai == null ? getDeployedDAI(sgm, protectedPort, em) : assignedRedirectedDai;
-                this.tg.appendTask(new AllocateDAIWithSGIMembersTask(this.sgi, assignedRedirectedDai));
-                this.tg.appendTask(new CreatePortGroupHookTask(this.sgi, assignedRedirectedDai));
+                this.tg.appendTask(this.allocateDai.create(this.sgi, assignedRedirectedDai));
+                this.tg.appendTask(this.createPortGroupHook.create(this.sgi, assignedRedirectedDai));
             } else {
                 if (assignedRedirectedDai == null) {
                     throw new VmidcBrokerValidationException(
@@ -108,11 +132,11 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
             }
         } else {
             if (existingInspHook != null) {
-                this.tg.appendTask(new RemovePortGroupHookTask(this.sgi));
+                this.tg.appendTask(this.removePortGroupHook.create(this.sgi));
             }
 
             if (assignedRedirectedDai != null) {
-                this.tg.appendTask(new DeallocateDAIOfSGIMembersTask(this.sgi, assignedRedirectedDai));
+                this.tg.appendTask(this.deallocateDai.create(this.sgi, assignedRedirectedDai));
             }
         }
     }

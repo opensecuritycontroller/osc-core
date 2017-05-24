@@ -26,7 +26,10 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.request.ServiceProfile;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = NsxServiceProfileCheckMetaTask.class)
 public class NsxServiceProfileCheckMetaTask extends TransactionalMetaTask {
     private static final Logger log = Logger.getLogger(NsxServiceProfileCheckMetaTask.class);
 
@@ -34,10 +37,19 @@ public class NsxServiceProfileCheckMetaTask extends TransactionalMetaTask {
     private ServiceProfile serviceProfile;
     private TaskGraph tg;
 
-    public NsxServiceProfileCheckMetaTask(VirtualSystem vs, ServiceProfile serviceProfile) {
-        this.vs = vs;
-        this.serviceProfile = serviceProfile;
-        this.name = getName();
+    @Reference
+    NsxSecurityGroupInterfacesCheckMetaTask nsxSecurityGroupInterfacesCheckMetaTask;
+
+    public NsxServiceProfileCheckMetaTask create(VirtualSystem vs, ServiceProfile serviceProfile) {
+        NsxServiceProfileCheckMetaTask task = new NsxServiceProfileCheckMetaTask();
+        task.vs = vs;
+        task.serviceProfile = serviceProfile;
+        task.name = task.getName();
+        task.nsxSecurityGroupInterfacesCheckMetaTask = this.nsxSecurityGroupInterfacesCheckMetaTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -48,7 +60,7 @@ public class NsxServiceProfileCheckMetaTask extends TransactionalMetaTask {
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        NsxSecurityGroupInterfacesCheckMetaTask.processServiceProfile(em, this.tg, this.vs, this.serviceProfile);
+        this.nsxSecurityGroupInterfacesCheckMetaTask.processServiceProfile(em, this.tg, this.vs, this.serviceProfile);
     }
 
     @Override

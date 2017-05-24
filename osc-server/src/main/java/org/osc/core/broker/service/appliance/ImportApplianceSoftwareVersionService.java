@@ -29,7 +29,7 @@ import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.image.ImageMetadata;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.common.VmidcMessages;
@@ -48,6 +48,7 @@ import org.osc.core.util.ServerUtil;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -58,6 +59,9 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
         implements ImportApplianceSoftwareVersionServiceApi {
 
     private static final Logger log = Logger.getLogger(ImportApplianceSoftwareVersionService.class);
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private ImageMetadataValidator imageMetadataValidator;
 
@@ -86,7 +90,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                 appliance.setModel(imageMetadata.getModel());
                 appliance.setManagerSoftwareVersion(imageMetadata.getManagerVersion());
 
-                OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em);
+                OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em, this.txBroadcastUtil);
 
                 appliance = applianceEntityManager.create(appliance);
             } else {
@@ -121,7 +125,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                     org.osc.core.broker.model.entities.appliance.VirtualizationType.valueOf(
                             virtualizationType.name()), virtualizationVersion);
 
-            boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(imageMetadata.getManagerType());
+            boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(imageMetadata.getManagerType());
             if (av == null) {
 
                 ApplianceSoftwareVersion asv = ApplianceSoftwareVersionEntityMgr.findByImageUrl(em,
@@ -148,7 +152,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                 asvDto.setAdditionalNicForInspection(imageMetadata.hasAdditionalNicForInspection());
 
                 OSCEntityManager<ApplianceSoftwareVersion> emgr = new OSCEntityManager<ApplianceSoftwareVersion>(
-                        ApplianceSoftwareVersion.class, em);
+                        ApplianceSoftwareVersion.class, em, this.txBroadcastUtil);
 
                 // creating new entry in the db using entity manager object
                 av = ApplianceSoftwareVersionEntityMgr.createEntity(em, asvDto, appliance);
@@ -169,13 +173,13 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
                     av.setDiskSizeInGb(imageMetadata.getDiskSizeInGb());
                     av.getImageProperties().clear();
                     av.getConfigProperties().clear();
-                    OSCEntityManager.update(em, av);
+                    OSCEntityManager.update(em, av, this.txBroadcastUtil);
                     em.flush();
 
                     av.getImageProperties().putAll(imageMetadata.getImageProperties());
                     av.getConfigProperties().putAll(imageMetadata.getConfigProperties());
 
-                    OSCEntityManager.update(em, av);
+                    OSCEntityManager.update(em, av, this.txBroadcastUtil);
                 } else {
                     throw new VmidcBrokerValidationException(
                             "The composite key of Appliance Software Version, Virtualization Type, and Virtualization Software Version already exists.");
@@ -224,7 +228,8 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
             this.imageMetadataValidator = new ImageMetadataValidator();
         }
 
-        this.imageMetadataValidator.validate(imageMetadata);
+        boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(imageMetadata.getManagerType());
+        this.imageMetadataValidator.validate(imageMetadata, isPolicyMappingSupported);
 
         boolean isImageFileMissing = true;
         boolean checkOvfExists = imageMetadata.getVirtualizationType().isVmware();

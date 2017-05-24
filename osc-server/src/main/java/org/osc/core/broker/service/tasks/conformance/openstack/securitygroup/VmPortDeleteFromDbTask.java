@@ -27,17 +27,24 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
-class VmPortDeleteFromDbTask extends TransactionalTask {
+@Component(service = VmPortDeleteFromDbTask.class)
+public class VmPortDeleteFromDbTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(VmPortDeleteFromDbTask.class);
 
-    private final SecurityGroupMember sgm;
+    private SecurityGroupMember sgm;
     private VMPort vmPort;
 
-    public VmPortDeleteFromDbTask(SecurityGroupMember sgm, VMPort vmPort) {
-        this.sgm = sgm;
-        this.vmPort = vmPort;
+    public VmPortDeleteFromDbTask create(SecurityGroupMember sgm, VMPort vmPort) {
+        VmPortDeleteFromDbTask task = new VmPortDeleteFromDbTask();
+        task.sgm = sgm;
+        task.vmPort = vmPort;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -49,7 +56,7 @@ class VmPortDeleteFromDbTask extends TransactionalTask {
             this.log.info(String.format("Deleting Security Group Member VM '%s' Port with mac '%s'", vm.getName(),
                     this.vmPort.getMacAddresses()));
             vm.removePort(this.vmPort);
-            OSCEntityManager.delete(em, this.vmPort);
+            OSCEntityManager.delete(em, this.vmPort, this.txBroadcastUtil);
         } else if (this.sgm.getType() == SecurityGroupMemberType.NETWORK) {
             Network network = this.sgm.getNetwork();
             this.log.info(String.format("Deleting VM Port with MAC '%s' of Network '%s' from Security Group '%s'",
@@ -59,9 +66,9 @@ class VmPortDeleteFromDbTask extends TransactionalTask {
             VM vm = this.vmPort.getVm();
             // If the VM was created on behalf of this port and has no other ports, delete it.
             if (vm != null && vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 1) {
-                OSCEntityManager.delete(em, vm);
+                OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
             }
-            OSCEntityManager.delete(em, this.vmPort);
+            OSCEntityManager.delete(em, this.vmPort, this.txBroadcastUtil);
         } else if (this.sgm.getType() == SecurityGroupMemberType.SUBNET) {
             Subnet subnet = this.sgm.getSubnet();
             this.log.info(String.format("Deleting VM Port with MAC '%s' of Subnet '%s' from Security Group '%s'",
@@ -72,10 +79,10 @@ class VmPortDeleteFromDbTask extends TransactionalTask {
                 VM vm = this.vmPort.getVm();
                 // If the VM was created on behalf of this port and has no other ports, delete it.
                 if (vm != null && vm.getSecurityGroupMembers().size() == 0 && vm.getPorts().size() <= 1) {
-                    OSCEntityManager.delete(em, vm);
+                    OSCEntityManager.delete(em, vm, this.txBroadcastUtil);
                 }
             }
-            OSCEntityManager.delete(em, this.vmPort);
+            OSCEntityManager.delete(em, this.vmPort, this.txBroadcastUtil);
         }
 
     }

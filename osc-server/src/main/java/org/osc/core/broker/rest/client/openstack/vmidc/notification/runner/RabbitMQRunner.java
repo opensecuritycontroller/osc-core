@@ -66,6 +66,9 @@ public class RabbitMQRunner implements BroadcastListener {
     @Reference
     EncryptionApi encryption;
 
+    @Reference
+    AlertGenerator alertGenerator;
+
     private ServiceRegistration<BroadcastListener> registration;
 
     @Activate
@@ -101,7 +104,7 @@ public class RabbitMQRunner implements BroadcastListener {
 
     private void handleError(Throwable e) {
         log.error("Exception during initializing RabbitMQ clients", e);
-        AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+        this.alertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                 "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
     }
 
@@ -130,7 +133,7 @@ public class RabbitMQRunner implements BroadcastListener {
     private void handleError(VirtualizationConnector vc, Throwable e) {
         log.error("Failed to create RabbitMQ Client for given Open Stack " + vc.getId() + " due to "
                 + e.getMessage());
-        AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+        this.alertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                 "Fail to initialize RabbitMQ Client (" + e.getMessage() + ")");
     }
 
@@ -222,7 +225,7 @@ public class RabbitMQRunner implements BroadcastListener {
                     rabbitMqClient.connect();
                 } catch (Exception e) {
                     log.error("Exception during initializing RabbitMQ client - " + rabbitMqClient.getServerIP(), e);
-                    AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+                    RabbitMQRunner.this.alertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                             new LockObjectReference(vc),
                             "Fail to connect to Openstack Notification Server (" + e.getMessage() + ")");
                 }

@@ -41,7 +41,7 @@ public class ListHostService extends ServiceDispatcher<BaseOpenStackRequest, Lis
     public ListResponse<HostDto> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
         ListResponse<HostDto> response = new ListResponse<>();
 
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
         JCloudNova novaApi = null;

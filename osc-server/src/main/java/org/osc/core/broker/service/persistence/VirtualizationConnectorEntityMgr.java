@@ -35,6 +35,7 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 
 public class VirtualizationConnectorEntityMgr {
@@ -114,25 +115,27 @@ public class VirtualizationConnectorEntityMgr {
         }
     }
 
-    public static VirtualizationConnector findByName(EntityManager em, String name) {
+    public static VirtualizationConnector findByName(EntityManager em, String name,
+            TransactionalBroadcastUtil txBroadcastUtil) {
 
         // Initializing Entity Manager
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
-                VirtualizationConnector.class, em);
+                VirtualizationConnector.class, em, txBroadcastUtil);
 
         return emgr.findByFieldName("name", name);
     }
 
-    public static List<VirtualizationConnector> listBySwVersion(EntityManager em, String swVersion) {
+    public static List<VirtualizationConnector> listBySwVersion(EntityManager em, String swVersion,
+            TransactionalBroadcastUtil txBroadcastUtil) {
 
         // get appliance software version based on software version provided
         OSCEntityManager<ApplianceSoftwareVersion> emgr1 = new OSCEntityManager<ApplianceSoftwareVersion>(
-                ApplianceSoftwareVersion.class, em);
+                ApplianceSoftwareVersion.class, em, txBroadcastUtil);
         List<ApplianceSoftwareVersion> asvList = emgr1.listByFieldName("applianceSoftwareVersion", swVersion);
 
         // Initializing Entity Manager
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
-                VirtualizationConnector.class, em);
+                VirtualizationConnector.class, em, txBroadcastUtil);
 
         ArrayList<VirtualizationConnector> vcList = new ArrayList<VirtualizationConnector>();
 
@@ -184,11 +187,7 @@ public class VirtualizationConnectorEntityMgr {
 
     public static VirtualizationConnector findById(EntityManager em, Long id) {
 
-        // Initializing Entity Manager
-        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
-                VirtualizationConnector.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(VirtualizationConnector.class, id);
     }
 
     public static List<VirtualizationConnector> listByType(EntityManager em, VirtualizationType type) {

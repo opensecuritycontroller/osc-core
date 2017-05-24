@@ -45,6 +45,9 @@ public class DeleteDAIFromDbTask extends TransactionalTask {
         task.conformService = this.conformService;
         task.dai = dai;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -59,7 +62,7 @@ public class DeleteDAIFromDbTask extends TransactionalTask {
         this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
 
         OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.conformService);
-        OSCEntityManager.delete(em, this.dai);
+        OSCEntityManager.delete(em, this.dai, this.txBroadcastUtil);
     }
 
     @Override

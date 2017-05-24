@@ -24,7 +24,7 @@ import org.osc.core.broker.service.api.PasswordUtilApi;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.util.AuthUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -35,6 +35,12 @@ public class PasswordUtil implements PasswordUtilApi {
 
     @Reference
     AuthUtil authenticator;
+
+    @Reference
+    DBConnectionManager dbConnectionManager;
+
+    @Reference
+    TransactionalBroadcastUtil txBroadcastUtil;
 
     private String vmidcNsxPass = "";
     private String oscDefaultPass = "";
@@ -59,12 +65,12 @@ public class PasswordUtil implements PasswordUtilApi {
 
     public void initPasswordFromDb(String loginName) throws InterruptedException, VmidcException {
 
-        EntityManager em = HibernateUtil.getTransactionalEntityManager();
+        EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
         User user;
 
         try {
-            user = HibernateUtil.getTransactionControl().required(() -> {
-                OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em);
+            user = this.dbConnectionManager.getTransactionControl().required(() -> {
+                OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em, this.txBroadcastUtil);
                 return  emgr.findByFieldName("loginName", loginName);
             });
             if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {

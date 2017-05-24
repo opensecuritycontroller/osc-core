@@ -38,7 +38,7 @@ public class DeleteApplianceService extends ServiceDispatcher<BaseIdRequest, Emp
         validate(em, request);
 
         // Initializing Entity Manager
-        OSCEntityManager<Appliance> emgr = new OSCEntityManager<Appliance>(Appliance.class, em);
+        OSCEntityManager<Appliance> emgr = new OSCEntityManager<Appliance>(Appliance.class, em, this.txBroadcastUtil);
 
         emgr.delete(request.getId());
 

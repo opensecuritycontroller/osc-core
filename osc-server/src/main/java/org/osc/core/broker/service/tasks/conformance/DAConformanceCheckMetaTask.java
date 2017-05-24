@@ -58,6 +58,9 @@ public class DAConformanceCheckMetaTask extends TransactionalMetaTask {
         task.vsConformanceCheckMetaTask = this.vsConformanceCheckMetaTask;
         task.validateNsxTask = this.validateNsxTask;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 

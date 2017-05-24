@@ -34,22 +34,29 @@ import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ele
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
 
-class VmPortHookRemoveTask extends TransactionalTask {
+@Component(service = VmPortHookRemoveTask.class)
+public class VmPortHookRemoveTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(VmPortHookRemoveTask.class);
 
     private SecurityGroupMember sgm;
-    private final String serviceName;
+    private String serviceName;
     private VMPort vmPort;
     private DistributedApplianceInstance dai;
 
-    public VmPortHookRemoveTask(SecurityGroupMember sgm, VMPort vmPort, DistributedApplianceInstance daiToRedirectTo,
+    public VmPortHookRemoveTask create(SecurityGroupMember sgm, VMPort vmPort, DistributedApplianceInstance daiToRedirectTo,
             String serviceName) {
-        this.vmPort = vmPort;
-        this.dai = daiToRedirectTo;
-        this.serviceName = serviceName;
-        this.sgm = sgm;
+        VmPortHookRemoveTask task = new VmPortHookRemoveTask();
+        task.vmPort = vmPort;
+        task.dai = daiToRedirectTo;
+        task.serviceName = serviceName;
+        task.sgm = sgm;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -92,7 +99,7 @@ class VmPortHookRemoveTask extends TransactionalTask {
                 }
             }
             this.vmPort.removeDai(this.dai);
-            OSCEntityManager.update(em, this.vmPort);
+            OSCEntityManager.update(em, this.vmPort, this.txBroadcastUtil);
         }
     }
 

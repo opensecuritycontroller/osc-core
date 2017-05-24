@@ -33,7 +33,8 @@ import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osgi.service.component.annotations.Reference;
@@ -58,6 +59,12 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
      */
     @Reference
     protected UserContextApi userContext;
+
+    @Reference
+    protected DBConnectionManager dbConnectionManager;
+
+    @Reference
+    protected TransactionalBroadcastUtil txBroadcastUtil;
 
     private final Queue<ChainedDispatch<O>> chainedDispatches = new LinkedList<>();
 
@@ -188,7 +195,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
      */
     @VisibleForTesting
     protected EntityManager getEntityManager() throws InterruptedException, VmidcException {
-        return HibernateUtil.getTransactionalEntityManager();
+        return this.dbConnectionManager.getTransactionalEntityManager();
     }
 
     /**
@@ -200,7 +207,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
      */
     @VisibleForTesting
     protected TransactionControl getTransactionControl() throws InterruptedException, VmidcException {
-        return HibernateUtil.getTransactionControl();
+        return this.dbConnectionManager.getTransactionControl();
     }
 
     protected abstract O exec(I request, EntityManager em) throws Exception;

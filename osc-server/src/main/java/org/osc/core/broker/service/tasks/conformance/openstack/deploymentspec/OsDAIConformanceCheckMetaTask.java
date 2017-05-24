@@ -62,6 +62,21 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(OsDAIConformanceCheckMetaTask.class);
 
+    @Reference
+    DeleteSvaServerTask deleteSvaServerTask;
+
+    @Reference
+    OsSvaEnsureActiveTask osSvaEnsureActiveTask;
+
+    @Reference
+    OsSvaStateCheckTask osSvaStateCheckTask;
+
+    @Reference
+    OnboardDAITask onboardDAITask;
+
+    @Reference
+    OsSvaCheckFloatingIpTask osSvaCheckFloatingIpTask;
+
     // optional+dynamic to break circular DS dependency
     // TODO: remove circularity and use mandatory references
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
@@ -84,12 +99,18 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     @IgnoreCompare
     private AtomicBoolean initDone = new AtomicBoolean();
 
-    private void delayedInit() {
-        if (this.initDone.compareAndSet(false, true)) {
-            this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
-            this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();
-            this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+    @Override
+    protected void delayedInit() {
+        if (this.factory.initDone.compareAndSet(false, true)) {
+            this.factory.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
+            this.factory.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTaskCSO.getService();
+            this.factory.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
         }
+        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
+        this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTask;
+        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
+        this.dbConnectionManager = this.factory.dbConnectionManager;
+        this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
 
     @Deactivate
@@ -106,6 +127,14 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         task.factory = this;
         task.dai = dai;
         task.doesOSHostExist = doesOSHostExist;
+        task.deleteSvaServerTask = this.deleteSvaServerTask;
+        task.osSvaEnsureActiveTask = this.osSvaEnsureActiveTask;
+        task.osSvaStateCheckTask = this.osSvaStateCheckTask;
+        task.onboardDAITask = this.onboardDAITask;
+        task.osSvaCheckFloatingIpTask = this.osSvaCheckFloatingIpTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -114,7 +143,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         delayedInit();
         this.tg = new TaskGraph();
         OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, em);
+                DistributedApplianceInstance.class, em, this.txBroadcastUtil);
         this.dai = daiEntityMgr.findByPrimaryKey(this.dai.getId());
 
         DeploymentSpec ds = this.dai.getDeploymentSpec();
@@ -143,7 +172,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                  */
                 if (namedSva != null) {
                     log.info("Missing SVA found by name, deleting stale SVA to redeploy: " + this.dai.getName());
-                    this.tg.addTask(new DeleteSvaServerTask(ds.getRegion(), this.dai));
+                    this.tg.addTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
                 }
 
                 // Make sure host exists in openstack cluster
@@ -167,22 +196,22 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                 }
 
                 if (doesSvaVersionMatchVsVersion) {
-                    this.tg.appendTask(new OsSvaEnsureActiveTask(this.dai));
+                    this.tg.appendTask(this.osSvaEnsureActiveTask.create(this.dai));
                     if (!StringUtils.isEmpty(ds.getFloatingIpPoolName())) {
                         // Check if floating ip is assigned to SVA
-                        this.tg.appendTask(new OsSvaCheckFloatingIpTask(this.dai));
+                        this.tg.appendTask(this.osSvaCheckFloatingIpTask.create(this.dai));
 
                         // TODO: Future. Check if OS SG is assigned to DAI
 
                     }
-                    this.tg.addTask(new OsSvaStateCheckTask(this.dai));
+                    this.tg.addTask(this.osSvaStateCheckTask.create(this.dai));
                 } else {
                     this.tg.appendTask(this.osDAIUpgradeMetaTask.create(this.dai, currentSoftwareVersion));
                 }
 
                 if (vc.isControllerDefined()) {
                     if (!isPortRegistered()) {
-                        this.tg.appendTask(new OnboardDAITask(this.dai));
+                        this.tg.appendTask(this.onboardDAITask.create(this.dai));
                     }
                 }
 

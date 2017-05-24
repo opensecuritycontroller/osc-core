@@ -35,9 +35,9 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ManagerApi;
 import org.osc.core.broker.service.exceptions.RestClientException;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.exception.ClientResponseNotOkException;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
@@ -104,7 +104,7 @@ public class WebSocketClient {
                         log.error(
                                 "Exception during initializing web socket client for MC. "
                                         + WebSocketClient.this.mc.getName(), e);
-                        AlertGenerator.processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
+                        StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
                                 new LockObjectReference(mc), "Trying to initialize Manager Web Socket Api... "
                                         + WebSocketClient.this.mc.getName());
                         try {

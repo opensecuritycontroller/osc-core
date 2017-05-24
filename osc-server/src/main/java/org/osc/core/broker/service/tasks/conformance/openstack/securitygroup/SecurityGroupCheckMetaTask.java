@@ -26,7 +26,7 @@ import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
@@ -40,13 +40,28 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
     @Reference
     MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
 
+    @Reference
+    ApiFactoryService apiFactoryService;
+
+    @Reference
+    ValidateSecurityGroupTenantTask validateSecurityGroupTenantTask;
+
+    @Reference
+    SecurityGroupUpdateOrDeleteMetaTask securityGroupUpdateOrDeleteMetaTask;
+
     private SecurityGroup sg;
     private TaskGraph tg;
 
     public SecurityGroupCheckMetaTask create(SecurityGroup sg) {
         SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask();
-        task.mgrSecurityGroupInterfacesCheckMetaTask = this.mgrSecurityGroupInterfacesCheckMetaTask;
         task.sg = sg;
+        task.mgrSecurityGroupInterfacesCheckMetaTask = this.mgrSecurityGroupInterfacesCheckMetaTask;
+        task.apiFactoryService = this.apiFactoryService;
+        task.validateSecurityGroupTenantTask = this.validateSecurityGroupTenantTask;
+        task.securityGroupUpdateOrDeleteMetaTask = this.securityGroupUpdateOrDeleteMetaTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -55,14 +70,14 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
         this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
         this.tg = new TaskGraph();
-        this.tg.addTask(new ValidateSecurityGroupTenantTask(this.sg));
-        this.tg.appendTask(new SecurityGroupUpdateOrDeleteMetaTask(this.sg));
+        this.tg.addTask(this.validateSecurityGroupTenantTask.create(this.sg));
+        this.tg.appendTask(this.securityGroupUpdateOrDeleteMetaTask.create(this.sg));
 
         if (!ValidateUtil.isEmpty(this.sg.getSecurityGroupInterfaces())) {
             List<VirtualSystem> referencedVs = VirtualSystemEntityMgr.listReferencedVSBySecurityGroup(em,
                     this.sg.getId());
             for (VirtualSystem vs : referencedVs) {
-                if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {
+                if (vs.getMgrId() != null && this.apiFactoryService.syncsPolicyMapping(vs)) {
                     this.tg.appendTask(this.mgrSecurityGroupInterfacesCheckMetaTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 }

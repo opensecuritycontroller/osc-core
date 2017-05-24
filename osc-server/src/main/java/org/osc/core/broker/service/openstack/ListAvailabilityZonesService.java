@@ -46,7 +46,7 @@ public class ListAvailabilityZonesService
         ListResponse<AvailabilityZoneDto> response = new ListResponse<AvailabilityZoneDto>();
         List<AvailabilityZoneDto> azList = new ArrayList<AvailabilityZoneDto>();
         // Initializing Entity Manager
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();

@@ -51,7 +51,8 @@ import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteDATask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TaskGraphMatcher;
 import org.osc.core.test.util.TestTransactionControl;
 import org.powermock.api.mockito.PowerMockito;
@@ -59,7 +60,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({LockUtil.class, JobEngine.class, HibernateUtil.class})
+@PrepareForTest({LockUtil.class, JobEngine.class})
 public class DeleteDistributedApplianceServiceTest {
 
     private static final Long VALID_ID = 1L;
@@ -97,6 +98,12 @@ public class DeleteDistributedApplianceServiceTest {
     @Mock
     private UserContextApi userContext;
 
+    @Mock
+    private DBConnectionManager dbMgr;
+
+    @Mock
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
     @InjectMocks
     private VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
 
@@ -118,14 +125,15 @@ public class DeleteDistributedApplianceServiceTest {
         // @InjectMocks does not inject these fields
         this.deleteDistributedApplianceService.vsConformanceCheckMetaTask = this.vsConformanceCheckMetaTask;
         this.deleteDistributedApplianceService.validateNsxTask = this.validateNsxTask;
+        this.deleteDistributedApplianceService.forceDeleteDATask = new ForceDeleteDATask();
+        this.deleteDistributedApplianceService.deleteDAFromDbTask = new DeleteDAFromDbTask();
 
         Mockito.when(this.em.getTransaction()).thenReturn(this.tx);
 
         this.txControl.setEntityManager(this.em);
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
         VALID_DA_WITH_SYSTEMS.setName("name");
         VALID_DA_WITH_SYSTEMS.setId(VALID_ID);
@@ -161,11 +169,11 @@ public class DeleteDistributedApplianceServiceTest {
         Job job = Mockito.mock(Job.class);
 
         TaskGraph taskGraphWithForceDeleteTask = new TaskGraph();
-        taskGraphWithForceDeleteTask.addTask(new ForceDeleteDATask(VALID_DA));
+        taskGraphWithForceDeleteTask.addTask(new ForceDeleteDATask().create(VALID_DA));
         taskGraphWithForceDeleteTask.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         TaskGraph taskGraphWithDeleteTask = new TaskGraph();
-        taskGraphWithDeleteTask.appendTask(new DeleteDAFromDbTask(VALID_DA), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        taskGraphWithDeleteTask.appendTask(new DeleteDAFromDbTask().create(VALID_DA), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         taskGraphWithDeleteTask.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         TaskGraph taskGraphWithDeleteTaskAndVsTasks = new TaskGraph();
@@ -177,7 +185,7 @@ public class DeleteDistributedApplianceServiceTest {
         TaskGraph openStackVsDeleteTaskGraph = new TaskGraph();
         openStackVsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(openStackVirtualSystem));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(openStackVsDeleteTaskGraph);
-        taskGraphWithDeleteTaskAndVsTasks.appendTask(new DeleteDAFromDbTask(VALID_DA_WITH_SYSTEMS), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+        taskGraphWithDeleteTaskAndVsTasks.appendTask(new DeleteDAFromDbTask().create(VALID_DA_WITH_SYSTEMS), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         taskGraphWithDeleteTaskAndVsTasks.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         Mockito.when(JobEngine.getEngine()).thenReturn(this.jobEngine);

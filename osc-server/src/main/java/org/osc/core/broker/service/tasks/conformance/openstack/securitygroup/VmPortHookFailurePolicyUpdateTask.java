@@ -28,24 +28,31 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
 
-class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
+@Component(service=VmPortHookFailurePolicyUpdateTask.class)
+public class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
 
     //private final Logger log = Logger.getLogger(SecurityGroupMemberVmHookFailurePolicyUpdateTask.class);
 
-    private final String vmName;
-    private final String serviceName;
+    private String vmName;
+    private String serviceName;
     private VMPort vmPort;
     private DistributedApplianceInstance dai;
     private SecurityGroupInterface securityGroupInterface;
 
-    public VmPortHookFailurePolicyUpdateTask(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
+    public VmPortHookFailurePolicyUpdateTask create(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
             DistributedApplianceInstance daiToRedirectTo) {
-        this.vmPort = vmPort;
-        this.dai = daiToRedirectTo;
-        this.securityGroupInterface = securityGroupInterface;
-        this.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
-        this.vmName = vmPort.getVm().getName();
+        VmPortHookFailurePolicyUpdateTask task = new VmPortHookFailurePolicyUpdateTask();
+        task.vmPort = vmPort;
+        task.dai = daiToRedirectTo;
+        task.securityGroupInterface = securityGroupInterface;
+        task.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
+        task.vmName = vmPort.getVm().getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

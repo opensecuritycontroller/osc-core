@@ -27,7 +27,6 @@ import javax.persistence.criteria.Root;
 
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
@@ -37,23 +36,22 @@ import org.osc.core.broker.util.db.HibernateUtil;
 public class ApplianceManagerConnectorEntityMgr {
 
     public static ApplianceManagerConnector createEntity(ApplianceManagerConnectorDto dto,
-            EncryptionApi encryption) throws Exception {
+            EncryptionApi encryption, String serviceName) throws Exception {
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
 
-        toEntity(mc, dto, encryption);
+        toEntity(mc, dto, encryption, serviceName);
 
         return mc;
     }
 
     public static void toEntity(ApplianceManagerConnector mc, ApplianceManagerConnectorDto dto,
-            EncryptionApi encryption) throws Exception {
+            EncryptionApi encryption, String serviceName) throws Exception {
 
         // Transform from dto to entity
         mc.setId(dto.getId());
         mc.setName(dto.getName());
         mc.setManagerType(dto.getManagerType());
-        mc.setServiceType(ManagerApiFactory.getServiceName(
-                ManagerType.fromText(dto.getManagerType())));
+        mc.setServiceType(serviceName);
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
         mc.setPassword(encryption.encryptAESCTR(dto.getPassword()));
@@ -86,11 +84,7 @@ public class ApplianceManagerConnectorEntityMgr {
     }
 
     public static ApplianceManagerConnector findById(EntityManager em, Long id) {
-
-        // Initializing Entity Manager
-        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(ApplianceManagerConnector.class, id);
     }
 
     public static List<ApplianceManagerConnector> listByManagerType(EntityManager em, ManagerType type) {

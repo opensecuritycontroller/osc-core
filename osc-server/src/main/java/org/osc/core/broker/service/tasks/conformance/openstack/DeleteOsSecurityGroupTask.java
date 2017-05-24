@@ -27,7 +27,9 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = DeleteOsSecurityGroupTask.class)
 public class DeleteOsSecurityGroupTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(DeleteOsSecurityGroupTask.class);
@@ -38,9 +40,14 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
     private DeploymentSpec ds;
     private OsSecurityGroupReference sgReference;
 
-    public DeleteOsSecurityGroupTask(DeploymentSpec ds, OsSecurityGroupReference sgReference) {
-        this.ds = ds;
-        this.sgReference = sgReference;
+    public DeleteOsSecurityGroupTask create(DeploymentSpec ds, OsSecurityGroupReference sgReference) {
+        DeleteOsSecurityGroupTask task = new DeleteOsSecurityGroupTask();
+        task.ds = ds;
+        task.sgReference = sgReference;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -83,10 +90,10 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
 
             for (DeploymentSpec ds : this.sgReference.getDeploymentSpecs()) {
                 ds.setOsSecurityGroupReference(null);
-                OSCEntityManager.update(em, ds);
+                OSCEntityManager.update(em, ds, this.txBroadcastUtil);
             }
             this.sgReference.getDeploymentSpecs().clear();
-            OSCEntityManager.delete(em, this.sgReference);
+            OSCEntityManager.delete(em, this.sgReference, this.txBroadcastUtil);
         }
     }
 

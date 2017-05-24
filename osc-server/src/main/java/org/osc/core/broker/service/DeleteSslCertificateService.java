@@ -40,7 +40,7 @@ public class DeleteSslCertificateService extends ServiceDispatcher<DeleteSslEntr
         }
 
         try {
-            SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
+            SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             boolean succeed = certificateAttrEntityMgr.removeAlias(request.getAlias());
             log.info("Deleted alias: " + request.getAlias() + " from trust store status: " + succeed);
             if (!succeed) {

@@ -16,11 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.BaseDto;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -29,11 +32,14 @@ import org.osgi.service.component.annotations.Reference;
  *
  * This factory provides a {@link #getService(Class)} method to get an appropriately typed instance.
  *
- * To avoid using a factory like this, and to use DS directly, we would need refactor GetDtoFromEntity not to be generic:
- * <UL><LI>
+ * To avoid using a factory like this, and to use DS directly, we would need refactor GetDtoFromEntity not to be
+ * generic:
+ * <UL>
+ * <LI>
  * We could create multiple versions of the API representing specific types, and register each of those as a DS
  * services.
- * </LI><LI>
+ * </LI>
+ * <LI>
  * We could add multiple versions of each method to a non-generic interface.
  * </UL>
  */
@@ -44,11 +50,21 @@ public class GetDtoFromEntityServiceFactory implements GetDtoFromEntityServiceFa
     private UserContextApi userContext;
 
     @Reference
+    private DBConnectionManager dbConnectionManager;
+
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
     private EncryptionApi encrypter;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public <T extends BaseDto> GetDtoFromEntityServiceApi<T> getService(Class<T> type) {
-        return new GetDtoFromEntityService<T>(this.userContext, this.encrypter);
+        return new GetDtoFromEntityService<T>(this.userContext, this.dbConnectionManager, this.txBroadcastUtil,
+                this.encrypter, this.apiFactoryService);
     }
 
 }

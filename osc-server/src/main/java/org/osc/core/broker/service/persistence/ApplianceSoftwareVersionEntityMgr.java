@@ -34,6 +34,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class ApplianceSoftwareVersionEntityMgr {
 
@@ -214,8 +215,9 @@ public class ApplianceSoftwareVersionEntityMgr {
      * @return
      *         List of Appliance Software version objects
      */
-    public static List<ApplianceSoftwareVersion> findBSoftwareByVersion(EntityManager em, String version) {
-        return new OSCEntityManager<>(ApplianceSoftwareVersion.class, em)
+    public static List<ApplianceSoftwareVersion> findBSoftwareByVersion(EntityManager em, String version,
+            TransactionalBroadcastUtil txBroadcastUtil) {
+        return new OSCEntityManager<>(ApplianceSoftwareVersion.class, em, txBroadcastUtil)
                 .listByFieldName("applianceSoftwareVersion", version);
     }
 
@@ -227,9 +229,9 @@ public class ApplianceSoftwareVersionEntityMgr {
      *         List of TagEncapsulationType for a gives Appliance software version
      */
     public static List<TagEncapsulationType> getEncapsulationByApplianceSoftwareVersion(EntityManager em,
-            String version, String model, VirtualizationType vcType) {
+            String version, String model, VirtualizationType vcType, TransactionalBroadcastUtil txBroadcastUtil) {
 
-        List<ApplianceSoftwareVersion> applianceList = findBSoftwareByVersion(em, version);
+        List<ApplianceSoftwareVersion> applianceList = findBSoftwareByVersion(em, version, txBroadcastUtil);
 
         for (ApplianceSoftwareVersion av : applianceList) {
             // return list of encapsulation type if the appliance software version is of Type Open stack and Encapsulation Type is not empty

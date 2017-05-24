@@ -22,17 +22,23 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.ListDistributedApplianceInstanceByVSServiceApi;
 import org.osc.core.broker.service.dto.DistributedApplianceInstanceDto;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class ListDistributedApplianceInstanceByVSService
         extends ServiceDispatcher<BaseIdRequest, ListResponse<DistributedApplianceInstanceDto>>
         implements ListDistributedApplianceInstanceByVSServiceApi {
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     ListResponse<DistributedApplianceInstanceDto> response = new ListResponse<DistributedApplianceInstanceDto>();
 
     @Override
@@ -40,7 +46,8 @@ public class ListDistributedApplianceInstanceByVSService
         List<DistributedApplianceInstanceDto> dtoList = new ArrayList<DistributedApplianceInstanceDto>();
         for (DistributedApplianceInstance dai : DistributedApplianceInstanceEntityMgr.listByVsId(em,
                 request.getId())) {
-            DistributedApplianceInstanceDto dto = DistributedApplianceInstanceEntityMgr.fromEntity(dai);
+            Boolean providesDeviceStatus = this.apiFactoryService.providesDeviceStatus(dai.getVirtualSystem());
+            DistributedApplianceInstanceDto dto = DistributedApplianceInstanceEntityMgr.fromEntity(dai, providesDeviceStatus);
             dtoList.add(dto);
         }
         this.response.setList(dtoList);

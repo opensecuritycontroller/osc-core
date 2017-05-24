@@ -27,24 +27,31 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
 
-class VmPortHookTagUpdateTask extends TransactionalTask {
+@Component(service=VmPortHookTagUpdateTask.class)
+public class VmPortHookTagUpdateTask extends TransactionalTask {
 
     //private final Logger log = Logger.getLogger(SecurityGroupMemberVmHookTagUpdateTask.class);
 
-    private final String vmName;
-    private final String serviceName;
+    private String vmName;
+    private String serviceName;
     private VMPort vmPort;
     private DistributedApplianceInstance dai;
     private SecurityGroupInterface securityGroupInterface;
 
-    public VmPortHookTagUpdateTask(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
+    public VmPortHookTagUpdateTask create(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
             DistributedApplianceInstance daiToRedirectTo) {
-        this.vmPort = vmPort;
-        this.dai = daiToRedirectTo;
-        this.securityGroupInterface = securityGroupInterface;
-        this.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
-        this.vmName = vmPort.getVm().getName();
+        VmPortHookTagUpdateTask task = new VmPortHookTagUpdateTask();
+        task.vmPort = vmPort;
+        task.dai = daiToRedirectTo;
+        task.securityGroupInterface = securityGroupInterface;
+        task.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
+        task.vmName = vmPort.getVm().getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
