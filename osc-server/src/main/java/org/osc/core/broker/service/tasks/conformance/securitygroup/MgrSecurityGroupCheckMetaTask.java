@@ -27,7 +27,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
@@ -48,6 +48,9 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
     @Reference
     private DeleteMgrSecurityGroupTask deleteMgrSecurityGroupTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
     private SecurityGroup sg;
     private TaskGraph tg;
@@ -59,6 +62,7 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         task.createMgrSecurityGroupTask = this.createMgrSecurityGroupTask;
         task.updateMgrSecurityGroupTask = this.updateMgrSecurityGroupTask;
         task.deleteMgrSecurityGroupTask = this.deleteMgrSecurityGroupTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -81,7 +85,7 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         }
 
         this.tg = new TaskGraph();
-        ManagerSecurityGroupApi mgrSgApi = ManagerApiFactory.createManagerSecurityGroupApi(this.vs);
+        ManagerSecurityGroupApi mgrSgApi = this.apiFactoryService.createManagerSecurityGroupApi(this.vs);
 
         if (this.sg == null) {
             // Sync all security groups across the vs'es

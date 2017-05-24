@@ -30,7 +30,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.FailedInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -68,6 +68,9 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
     @Reference
     private MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     public IpChangePropagateMetaTask create() {
         IpChangePropagateMetaTask task = new IpChangePropagateMetaTask();
         task.updateNsxServiceManagerTask = this.updateNsxServiceManagerTask;
@@ -77,6 +80,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
         task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
         task.name = task.getName();
         task.updateNsxDeploymentSpecTask = this.updateNsxDeploymentSpecTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -133,7 +137,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
                 ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         for (ApplianceManagerConnector mc : emgrMc.listAll()) {
             try {
-                if (ManagerApiFactory.isPersistedUrlNotifications(mc)) {
+                if (this.apiFactoryService.isPersistedUrlNotifications(mc)) {
                     TaskGraph propagateTaskGraph = new TaskGraph();
 
                     LockObjectReference or = new LockObjectReference(mc.getId(), mc.getName(),

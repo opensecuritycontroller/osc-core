@@ -23,14 +23,18 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service=UpdateMgrSecurityGroupTask.class)
 public class UpdateMgrSecurityGroupTask extends TransactionalTask {
     //private static final Logger log = Logger.getLogger(UpdateMgrSecurityGroupInterfaceTask.class);
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private SecurityGroup sg;
     private VirtualSystem vs;
@@ -40,6 +44,7 @@ public class UpdateMgrSecurityGroupTask extends TransactionalTask {
         task.vs = vs;
         task.sg = securityGroup;
         task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -50,7 +55,7 @@ public class UpdateMgrSecurityGroupTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
-        ManagerSecurityGroupApi mgrApi = ManagerApiFactory.createManagerSecurityGroupApi(this.vs);
+        ManagerSecurityGroupApi mgrApi = this.apiFactoryService.createManagerSecurityGroupApi(this.vs);
         try {
             mgrApi.updateSecurityGroup(this.sg.getMgrId(), this.sg.getName(),
                     CreateMgrSecurityGroupTask.getSecurityGroupMemberListElement(this.sg));

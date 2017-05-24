@@ -37,26 +37,24 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.RemoveVendorTemplateTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
 import org.osc.sdk.manager.element.ManagerPolicyElement;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-@PrepareForTest({ ManagerApiFactory.class })
 public class SyncPolicyMetaTaskTest {
 
     public EntityManager em;
 
     private ApplianceManagerConnector mc;
     private TaskGraph expectedGraph;
+    private ApiFactoryService apiFactoryService;
 
     public SyncPolicyMetaTaskTest(ApplianceManagerConnector mc, TaskGraph tg) {
         this.mc = mc;
@@ -71,7 +69,8 @@ public class SyncPolicyMetaTaskTest {
 
         populateDatabase();
 
-        PowerMockito.mockStatic(ManagerApiFactory.class);
+        this.apiFactoryService = Mockito.mock(ApiFactoryService.class);
+
         registerMgrPolicies(NO_MGR_POLICY_MC, DOMAIN_WITHOUT_POLICY.getMgrId(), null);
         registerMgrPolicies(MGR_POLICY_WITHOUT_POLICY_MC, DOMAIN_WITHOUT_POLICY_2.getMgrId(), Arrays.asList(MGR_POLICY));
         registerMgrPolicies(MGR_POLICY_WITH_POLICY_MC, DOMAIN_WITH_POLICY.getMgrId(), Arrays.asList(MGR_POLICY));
@@ -158,6 +157,6 @@ public class SyncPolicyMetaTaskTest {
         ManagerPolicyApi mgrPolicyApi = mock(ManagerPolicyApi.class);
         Mockito.<List<? extends ManagerPolicyElement>>when(mgrPolicyApi.getPolicyList(policyMgrId)).thenReturn(returnValue);
 
-        when(ManagerApiFactory.createManagerPolicyApi(mc)).thenReturn(mgrPolicyApi);
+        when(this.apiFactoryService.createManagerPolicyApi(mc)).thenReturn(mgrPolicyApi);
     }
 }

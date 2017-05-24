@@ -24,7 +24,7 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.NsxUpdateProfileContainerServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
@@ -48,6 +48,9 @@ public class NsxUpdateProfileContainerService
 
     @Reference
     MgrSecurityGroupCheckMetaTask mgrCheckMetaTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public BaseJobResponse exec(NsxUpdateProfileContainerRequest request, EntityManager em) throws Exception {
@@ -76,7 +79,7 @@ public class NsxUpdateProfileContainerService
                 request.containerSet);
         tg.addTask(syncTask);
 
-        if (vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(vs)) {
+        if (vs.getMgrId() != null && this.apiFactoryService.syncsSecurityGroup(vs)) {
             tg.addTask(this.mgrCheckMetaTask.create(vs), syncTask);
         }
 

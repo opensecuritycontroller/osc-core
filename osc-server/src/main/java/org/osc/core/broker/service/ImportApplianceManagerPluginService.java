@@ -26,7 +26,7 @@ import javax.persistence.EntityManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -55,7 +55,7 @@ public class ImportApplianceManagerPluginService extends ServiceDispatcher<Impor
 
 		validate(em, request, tmpUploadFolder);
 
-		File pluginTarget = new File(ManagerApiFactory.MANAGER_PLUGINS_DIRECTORY, this.deploymentName);
+		File pluginTarget = new File(ApiFactoryService.MANAGER_PLUGINS_DIRECTORY, this.deploymentName);
 
 		FileUtils.copyFile(this.barFile, pluginTarget);
 

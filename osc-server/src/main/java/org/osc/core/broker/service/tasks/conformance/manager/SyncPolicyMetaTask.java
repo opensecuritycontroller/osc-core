@@ -29,7 +29,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.VirtualSystemPolicyEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.RemoveVendorTemplateTask;
@@ -55,6 +55,9 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
     @Reference
     RemoveVendorTemplateTask removeVendorTemplateTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private ApplianceManagerConnector mc;
     private TaskGraph tg;
 
@@ -66,6 +69,7 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
         task.updatePolicyTask = this.updatePolicyTask;
         task.deletePolicyTask = this.deletePolicyTask;
         task.removeVendorTemplateTask = this.removeVendorTemplateTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -83,7 +87,7 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
         Set<Domain> domains = this.mc.getDomains();
 
         for (Domain domain : domains) {
-            ManagerPolicyApi mgrApi = ManagerApiFactory.createManagerPolicyApi(this.mc);
+            ManagerPolicyApi mgrApi = this.apiFactoryService.createManagerPolicyApi(this.mc);
             List<? extends ManagerPolicyElement> mgrPolicies = mgrApi.getPolicyList(domain.getMgrId());
             if (mgrPolicies == null) {
                 continue;

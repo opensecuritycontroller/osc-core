@@ -31,7 +31,6 @@ import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
@@ -193,7 +192,7 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
 
 		ManagerCallbackNotificationApi mgrApi = null;
 		try {
-			mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(mc);
+			mgrApi = this.apiFactoryService.createManagerUrlNotificationApi(mc);
 
 			// Need to cache old broker ip because the manager tasks update the
 			// LastKnownBrokerIp on the MC

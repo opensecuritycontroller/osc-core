@@ -36,7 +36,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.service.LockUtil;
@@ -394,7 +393,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         // Sync Manager Devices
         tg.appendTask(this.mgrCheckDevicesMetaTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
-        if (this.vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(this.vs)) {
+        if (this.vs.getMgrId() != null && this.apiFactoryService.syncsSecurityGroup(this.vs)) {
             // Sync Manager Security Groups
             tg.appendTask(this.mgrSecurityGroupCheckMetaTask.create(this.vs));
         }

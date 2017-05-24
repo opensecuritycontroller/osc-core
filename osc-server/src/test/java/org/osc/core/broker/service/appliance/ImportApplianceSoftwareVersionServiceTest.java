@@ -49,7 +49,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.api.server.UserContextApi;
@@ -72,7 +71,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.google.gson.Gson;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ServerUtil.class, FileUtils.class, FileUtil.class, ManagerApiFactory.class})
+@PrepareForTest({ServerUtil.class, FileUtils.class, FileUtil.class})
 public class ImportApplianceSoftwareVersionServiceTest {
 
     private static final String TEST_TMP_FOLDER = "testTmpFolder";
@@ -180,7 +179,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         ApplianceManagerApi applianceMgrPolicyMappingSupported = Mockito.mock(ApplianceManagerApi.class);
 
-        PowerMockito.mockStatic(ManagerApiFactory.class);
         Mockito.when(this.apiFactoryService.createApplianceManagerApi(ManagerType.NSM))
                 .thenReturn(applianceMgrPolicyMappingSupported);
 

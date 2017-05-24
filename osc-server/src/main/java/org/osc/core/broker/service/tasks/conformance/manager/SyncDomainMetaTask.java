@@ -25,7 +25,7 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.InfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -45,6 +45,9 @@ public class SyncDomainMetaTask extends TransactionalMetaTask {
     @Reference
     DeleteDomainTask deleteDomainTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private ApplianceManagerConnector mc;
     private TaskGraph tg;
 
@@ -54,6 +57,7 @@ public class SyncDomainMetaTask extends TransactionalMetaTask {
         task.name = task.getName();
         task.createDomainTask = this.createDomainTask;
         task.deleteDomainTask = this.deleteDomainTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -66,7 +70,7 @@ public class SyncDomainMetaTask extends TransactionalMetaTask {
         this.tg = new TaskGraph();
 
         this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId());
-        ManagerDomainApi mgrApi = ManagerApiFactory.createManagerDomainApi(this.mc);
+        ManagerDomainApi mgrApi = this.apiFactoryService.createManagerDomainApi(this.mc);
 
         Set<Domain> domains = this.mc.getDomains();
         List<? extends ManagerDomainElement> mgrDomains = mgrApi.listDomains();

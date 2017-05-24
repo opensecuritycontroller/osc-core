@@ -24,7 +24,7 @@ import javax.persistence.LockModeType;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -42,6 +42,9 @@ public class RegisterMgrPolicyNotificationTask extends TransactionalTask {
     @Reference
     private PasswordUtil passwordUtil;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private ApplianceManagerConnector mc;
 
     public RegisterMgrPolicyNotificationTask create(ApplianceManagerConnector mc) {
@@ -49,6 +52,7 @@ public class RegisterMgrPolicyNotificationTask extends TransactionalTask {
         task.mc = mc;
         task.name = task.getName();
         task.passwordUtil = this.passwordUtil;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -63,7 +67,7 @@ public class RegisterMgrPolicyNotificationTask extends TransactionalTask {
                 LockModeType.PESSIMISTIC_WRITE);
         ManagerCallbackNotificationApi mgrApi = null;
         try {
-            mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(this.mc);
+            mgrApi = this.apiFactoryService.createManagerUrlNotificationApi(this.mc);
             mgrApi.createPolicyGroupNotificationRegistration(Server.getApiPort(), RestConstants.OSC_DEFAULT_LOGIN,
                     this.passwordUtil.getOscDefaultPass());
             this.mc.setLastKnownNotificationIpAddress(ServerUtil.getServerIP());

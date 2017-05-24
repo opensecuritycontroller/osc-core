@@ -26,7 +26,6 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ServiceUnavailableException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
@@ -150,7 +149,7 @@ public class SdnControllerApiFactory {
     }
 
     public static void init() throws Exception {
-        bundleContext = FrameworkUtil.getBundle(ManagerApiFactory.class).getBundleContext();
+        bundleContext = FrameworkUtil.getBundle(SdnControllerApiFactory.class).getBundleContext();
 
         ServiceTracker<ApiFactoryService, ApiFactoryService> apiFactoryTracker = new ServiceTracker<>(bundleContext,
                 ApiFactoryService.class, null);

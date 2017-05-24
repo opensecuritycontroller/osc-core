@@ -32,8 +32,12 @@ import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
+import org.osc.sdk.manager.api.ManagerDomainApi;
+import org.osc.sdk.manager.api.ManagerPolicyApi;
+import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
@@ -43,13 +47,8 @@ import org.osgi.annotation.versioning.ConsumerType;
 
 @ConsumerType
 public interface ApiFactoryService {
-    /**
-     * Creates an {@code ApplianceManagerApi} instance for the specified manager type.
-     *
-     * @param managerName
-     * @return
-     * @throws Exception
-     */
+    String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
+
     ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception;
 
     Boolean syncsPolicyMapping(ManagerType managerType) throws Exception;
@@ -170,4 +169,14 @@ public interface ApiFactoryService {
     SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception;
 
     AgentApi createAgentApi(VirtualSystem vs) throws Exception;
+
+    ManagerSecurityGroupApi createManagerSecurityGroupApi(VirtualSystem vs) throws Exception;
+
+    ManagerPolicyApi createManagerPolicyApi(ApplianceManagerConnector mc) throws Exception;
+
+    ManagerDomainApi createManagerDomainApi(ApplianceManagerConnector mc) throws Exception;
+
+    Boolean syncsSecurityGroup(VirtualSystem vs) throws Exception;
+
+    ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc) throws Exception;
 }

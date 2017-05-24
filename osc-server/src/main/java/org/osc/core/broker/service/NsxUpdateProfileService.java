@@ -28,7 +28,6 @@ import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.api.NsxUpdateProfileServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
@@ -102,7 +101,7 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
         }
 
         // If the appliance manager supports security group sync then perform OSC->MC sync of security groups
-        if (vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(vs)) {
+        if (vs.getMgrId() != null && this.apiFactoryService.syncsSecurityGroup(vs)) {
             tg.appendTask(this.mgrSecurityGroupCheckMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 

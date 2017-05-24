@@ -38,7 +38,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
@@ -103,6 +103,9 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     VmPortHookRemoveTask vmPortHookRemoveTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     // optional+dynamic to break circular reference
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     private volatile ServiceReference<AddSecurityGroupService> addSecurityGroupServiceSR;
@@ -145,6 +148,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         this.securityGroupMemberNetworkCheckTask = this.factory.securityGroupMemberNetworkCheckTask;
         this.securityGroupMemberSubnetCheckTask = this.factory.securityGroupMemberSubnetCheckTask;
         this.vmPortHookRemoveTask = this.factory.vmPortHookRemoveTask;
+        this.apiFactoryService = this.factory.apiFactoryService;
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
@@ -260,8 +264,8 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
             if (sgi.getMarkedForDeletion() || isDeleteTg) {
                 VirtualSystem vs = sgi.getVirtualSystem();
-                if (ManagerApiFactory.syncsSecurityGroup(vs)) {
-                    ManagerSecurityGroupApi mgrSgApi = ManagerApiFactory.createManagerSecurityGroupApi(vs);
+                if (this.apiFactoryService.syncsSecurityGroup(vs)) {
+                    ManagerSecurityGroupApi mgrSgApi = this.apiFactoryService.createManagerSecurityGroupApi(vs);
                     ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(this.sg.getMgrId());
                     if (mepg != null) {
                         DeleteMgrSecurityGroupTask mgrSecurityGroupDelTask = this.deleteMgrSecurityGroupTask.create(vs,

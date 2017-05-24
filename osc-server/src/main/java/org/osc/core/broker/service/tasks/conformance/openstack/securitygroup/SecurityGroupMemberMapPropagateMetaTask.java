@@ -26,7 +26,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
 import org.osgi.service.component.annotations.Component;
@@ -38,6 +38,9 @@ public class SecurityGroupMemberMapPropagateMetaTask extends TransactionalMetaTa
     @Reference
     MgrSecurityGroupCheckMetaTask mgrSecurityGroupCheckMetaTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private SecurityGroup sg;
 
     private TaskGraph tg;
@@ -46,6 +49,7 @@ public class SecurityGroupMemberMapPropagateMetaTask extends TransactionalMetaTa
         SecurityGroupMemberMapPropagateMetaTask task = new SecurityGroupMemberMapPropagateMetaTask();
         task.sg = sg;
         task.mgrSecurityGroupCheckMetaTask = this.mgrSecurityGroupCheckMetaTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -59,7 +63,7 @@ public class SecurityGroupMemberMapPropagateMetaTask extends TransactionalMetaTa
         this.tg = new TaskGraph();
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
             VirtualSystem vs = sgi.getVirtualSystem();
-            if (vs.getMgrId() != null  && ManagerApiFactory.syncsSecurityGroup(vs)) {
+            if (vs.getMgrId() != null  && this.apiFactoryService.syncsSecurityGroup(vs)) {
                 // Sync SG members mapping to the manager directly
                 this.tg.addTask(this.mgrSecurityGroupCheckMetaTask.create(vs, this.sg), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }

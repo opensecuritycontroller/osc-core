@@ -64,8 +64,12 @@ import org.osc.sdk.controller.element.VirtualizationConnectorElement;
 import org.osc.sdk.manager.ManagerAuthenticationType;
 import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
+import org.osc.sdk.manager.api.ManagerDomainApi;
+import org.osc.sdk.manager.api.ManagerPolicyApi;
+import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
@@ -604,6 +608,38 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     public AgentApi createAgentApi(VirtualSystem vs) throws Exception {
         return createVMwareSdnApi(vs.getVirtualizationConnector())
         .createAgentApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
+    }
+
+    @Override
+    public ManagerSecurityGroupApi createManagerSecurityGroupApi(VirtualSystem vs) throws Exception {
+        return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
+        .createManagerSecurityGroupApi(getApplianceManagerConnectorElement(vs),
+                new VirtualSystemElementImpl(vs));
+    }
+
+    @Override
+    public ManagerPolicyApi createManagerPolicyApi(ApplianceManagerConnector mc) throws Exception {
+        return createApplianceManagerApi(mc.getManagerType())
+                .createManagerPolicyApi(getApplianceManagerConnectorElement(mc));
+    }
+
+    @Override
+    public ManagerDomainApi createManagerDomainApi(ApplianceManagerConnector mc) throws Exception {
+        return createApplianceManagerApi(mc.getManagerType())
+                .createManagerDomainApi(getApplianceManagerConnectorElement(mc));
+    }
+
+    @Override
+    public Boolean syncsSecurityGroup(VirtualSystem vs) throws Exception {
+        return syncsSecurityGroup(
+                ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+    }
+
+    @Override
+    public ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc)
+            throws Exception {
+        return createApplianceManagerApi(mc.getManagerType())
+                .createManagerCallbackNotificationApi(getApplianceManagerConnectorElement(mc));
     }
 
 }
