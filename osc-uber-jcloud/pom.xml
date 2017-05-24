@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0</version>
+		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>osc-uber-jcloud</artifactId>
@@ -177,5 +177,4 @@
 			<version>2.0.0</version>
 		</dependency>
 	</dependencies>
-	<version>1.0.0</version>
 </project>

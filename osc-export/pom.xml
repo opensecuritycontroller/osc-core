@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0</version>
+		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>osc-export</artifactId>
@@ -77,37 +77,37 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-uber</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-uber-jcloud</artifactId>
-			<version>1.0.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-ui</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-control</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-installer</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-installer-simple</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-resolver</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
@@ -291,7 +291,7 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-rest-server</artifactId>
-			<version>1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 
@@ -351,7 +351,7 @@
 									<tasks>
 										<exec executable="wget">
 											<arg
-												line="--no-check-certificate --no-cookies --header &quot;Cookie: oraclelicense=accept-securebackup-cookie&quot; http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jre-8u112-linux-x64.tar.gz -P &quot;${basedir}/../osc-server-bom/Sources&quot; -nv" />
+												line="--no-check-certificate --no-cookies --header &quot;Cookie: oraclelicense=accept-securebackup-cookie&quot; http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jre-8u131-linux-x64.tar.gz -P &quot;${basedir}/../osc-server-bom/Sources&quot; -nv" />
 										</exec>
 									</tasks>
 								</configuration>
@@ -511,7 +511,7 @@
 									<zipfileset dir="${basedir}/../osc-control/target"
 										includes="osc-control-upgrade.jar" fullpath="opt/vmidc/bin/osc-server.jar" />
 									<fileset dir="${basedir}/../osc-server-bom/Sources">
-										<include name="jre-8u112-linux-x64.tar.gz" />
+										<include name="jre-8u131-linux-x64.tar.gz" />
 									</fileset>
 								</zip>
 

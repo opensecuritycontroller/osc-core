@@ -11,7 +11,7 @@
     <exec executable="tar" resultproperty="ovf.result">
       <arg value="--directory=root/opt/vmidc/jre" />
       <arg value="-xzf" />
-      <arg value="Sources/jre-8u112-linux-x64.tar.gz" />
+      <arg value="Sources/jre-8u131-linux-x64.tar.gz" />
       <arg value="--strip" />
       <arg value="1" />
     </exec>
