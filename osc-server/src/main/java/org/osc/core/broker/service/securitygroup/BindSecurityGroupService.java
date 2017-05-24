@@ -31,7 +31,6 @@ import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -124,7 +123,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                     }
                 }
 
-                if (SdnControllerApiFactory.supportsFailurePolicy(this.securityGroup)){
+                if (this.apiFactoryService.supportsFailurePolicy(this.securityGroup)){
                     // If failure policy is supported, failure policy is a required field
                     if (serviceToBindTo.getFailurePolicyType() == null
                             || serviceToBindTo.getFailurePolicyType() == FailurePolicyType.NA) {
@@ -141,7 +140,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                 }
 
                 FailurePolicyType failurePolicyType =
-                        SdnControllerApiFactory.supportsFailurePolicy(this.securityGroup) ? serviceToBindTo.getFailurePolicyType() : FailurePolicyType.NA;
+                        this.apiFactoryService.supportsFailurePolicy(this.securityGroup) ? serviceToBindTo.getFailurePolicyType() : FailurePolicyType.NA;
 
                         SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
                                 .findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
@@ -247,7 +246,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
         }
 
         if (services.size() > 1) {
-            if (!SdnControllerApiFactory.supportsServiceFunctionChaining(this.securityGroup)){
+            if (!this.apiFactoryService.supportsServiceFunctionChaining(this.securityGroup)){
                 throw new VmidcBrokerValidationException("SDN Controller Plugin of type '"
                         + this.securityGroup.getVirtualizationConnector().getControllerType()
                         + "' does not support more then one Service (Service Function Chaining)");

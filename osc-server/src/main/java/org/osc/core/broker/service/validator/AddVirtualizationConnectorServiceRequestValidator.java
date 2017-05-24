@@ -19,6 +19,7 @@ package org.osc.core.broker.service.validator;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
@@ -28,50 +29,48 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 
 public class AddVirtualizationConnectorServiceRequestValidator
-		implements RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> {
-	private EntityManager em;
+        implements RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> {
+    private EntityManager em;
 
-	private DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> dtoValidator;
+    private DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> dtoValidator;
 
-	private VirtualizationConnectorUtil virtualizationConnectorUtil;
+    private VirtualizationConnectorUtil virtualizationConnectorUtil;
 
     private TransactionalBroadcastUtil txBroadcastUtil;
 
-	public void setVirtualizationConnectorUtil(VirtualizationConnectorUtil virtualizationConnectorUtil) {
-		this.virtualizationConnectorUtil = virtualizationConnectorUtil;
-	}
+    private ApiFactoryService apiFactoryService;
 
-	public AddVirtualizationConnectorServiceRequestValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
-		this.em = em;
+    public AddVirtualizationConnectorServiceRequestValidator(EntityManager em,
+            TransactionalBroadcastUtil txBroadcastUtil, VirtualizationConnectorUtil virtualizationConnectorUtil, ApiFactoryService apiFactoryService) {
+        this.em = em;
         this.txBroadcastUtil = txBroadcastUtil;
-	}
+        this.virtualizationConnectorUtil = virtualizationConnectorUtil;
+        this.apiFactoryService = apiFactoryService;
+    }
 
-	@Override
-	public void validate(DryRunRequest<VirtualizationConnectorRequest> request) throws Exception {
+    @Override
+    public void validate(DryRunRequest<VirtualizationConnectorRequest> request) throws Exception {
 
-		if (this.dtoValidator == null) {
-			this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em, this.txBroadcastUtil);
-		}
+        if (this.dtoValidator == null) {
+            this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em, this.txBroadcastUtil, this.apiFactoryService);
+        }
 
-		VirtualizationConnectorDto dto = request.getDto();
-		this.dtoValidator.validateForCreate(dto);
+        VirtualizationConnectorDto dto = request.getDto();
+        this.dtoValidator.validateForCreate(dto);
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(dto,
-		        StaticRegistry.encryptionApi());
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(dto, StaticRegistry.encryptionApi());
 
-		if (this.virtualizationConnectorUtil == null) {
-			this.virtualizationConnectorUtil = new VirtualizationConnectorUtil();
-		}
-		if (dto.getType().isVmware()) {
-			this.virtualizationConnectorUtil.checkVmwareConnection(request, vc);
-		} else {
-			this.virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
-		}
-	}
+        if (dto.getType().isVmware()) {
+            this.virtualizationConnectorUtil.checkVmwareConnection(request, vc);
+        } else {
+            this.virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
+        }
+    }
 
-	@Override
-	public VirtualizationConnector validateAndLoad(DryRunRequest<VirtualizationConnectorRequest> request) throws Exception {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public VirtualizationConnector validateAndLoad(DryRunRequest<VirtualizationConnectorRequest> request)
+            throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 }

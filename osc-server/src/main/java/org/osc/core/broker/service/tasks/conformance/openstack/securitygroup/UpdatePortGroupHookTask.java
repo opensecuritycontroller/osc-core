@@ -21,13 +21,14 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.InspectionHookElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This task is responsible for updating a inspection hook for a given
@@ -41,6 +42,9 @@ import org.osgi.service.component.annotations.Component;
 public final class UpdatePortGroupHookTask extends BasePortGroupHookTask {
     private static final Logger LOG = Logger.getLogger(UpdatePortGroupHookTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     public UpdatePortGroupHookTask(){
         super(null, null);
     }
@@ -51,6 +55,7 @@ public final class UpdatePortGroupHookTask extends BasePortGroupHookTask {
 
     public UpdatePortGroupHookTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
         UpdatePortGroupHookTask task = new UpdatePortGroupHookTask(sgi, dai);
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -63,7 +68,7 @@ public final class UpdatePortGroupHookTask extends BasePortGroupHookTask {
 
         String inspectionHookId = getSGI().getNetworkElementId();
 
-        try (SdnRedirectionApi redirection = SdnControllerApiFactory.createNetworkRedirectionApi(getSGI().getVirtualSystem())) {
+        try (SdnRedirectionApi redirection = this.apiFactoryService.createNetworkRedirectionApi(getSGI().getVirtualSystem())) {
             InspectionHookElementImpl inspectionHook =
                     new InspectionHookElementImpl(inspectionHookId, getPortGroup(),
                             new DefaultInspectionPort(getIngressPort(), getEgressPort()),

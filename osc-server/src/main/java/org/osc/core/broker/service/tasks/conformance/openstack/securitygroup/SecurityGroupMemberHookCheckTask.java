@@ -29,7 +29,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
@@ -57,6 +57,9 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
     @Reference
     VmPortHookCheckTask vmPortHookCheckTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private TaskGraph tg;
     private SecurityGroupMember sgm;
     private VmDiscoveryCache vdc;
@@ -65,6 +68,10 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
         SecurityGroupMemberHookCheckTask task = new SecurityGroupMemberHookCheckTask();
         task.sgm = sgm;
         task.vdc = vdc;
+        task.vmPortAllHooksRemoveTask = this.vmPortAllHooksRemoveTask;
+        task.vmPortDeleteFromDbTask = this.vmPortDeleteFromDbTask;
+        task.vmPortHookCheckTask = this.vmPortHookCheckTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -96,7 +103,7 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
                 this.tg.appendTask(this.vmPortDeleteFromDbTask.create(this.sgm, port));
             } else {
                 for (SecurityGroupInterface sgi : sg.getSecurityGroupInterfaces()) {
-                    if (!sgi.getMarkedForDeletion() && !SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup())) {
+                    if (!sgi.getMarkedForDeletion() && !this.apiFactoryService.supportsPortGroup(this.sgm.getSecurityGroup())) {
                         this.tg.appendTask(this.vmPortHookCheckTask.create(this.sgm, sgi, port, this.vdc),
                                 TaskGuard.ALL_PREDECESSORS_COMPLETED);
                     }

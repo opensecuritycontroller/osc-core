@@ -20,8 +20,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
@@ -30,7 +33,9 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
+import org.osc.sdk.controller.Status;
 import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
@@ -55,6 +60,7 @@ import org.osgi.annotation.versioning.ConsumerType;
 @ConsumerType
 public interface ApiFactoryService {
     String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
+    String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
 
     ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception;
 
@@ -200,4 +206,32 @@ public interface ApiFactoryService {
     VendorTemplateApi createVendorTemplateApi(VirtualSystem vs) throws Exception;
 
     DeploymentSpecApi createDeploymentSpecApi(VirtualSystem vs) throws Exception;
+
+    SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs) throws Exception;
+
+    SdnRedirectionApi createNetworkRedirectionApi(VirtualizationConnector vc) throws Exception;
+
+    SdnRedirectionApi createNetworkRedirectionApi(DistributedApplianceInstance dai) throws Exception;
+
+    SdnRedirectionApi createNetworkRedirectionApi(SecurityGroupMember sgm) throws Exception;
+
+    Status getStatus(VirtualizationConnector vc, String region) throws Exception;
+
+    Boolean supportsOffboxRedirection(VirtualSystem vs) throws Exception;
+
+    Boolean supportsOffboxRedirection(SecurityGroup sg) throws Exception;
+
+    Boolean supportsServiceFunctionChaining(SecurityGroup sg) throws Exception;
+
+    Boolean supportsFailurePolicy(SecurityGroup sg) throws Exception;
+
+    Boolean usesProviderCreds(ControllerType controllerType) throws Exception;
+
+    Boolean providesTrafficPortInfo(ControllerType controllerType) throws Exception;
+
+    Boolean supportsPortGroup(VirtualSystem vs) throws Exception;
+
+    Boolean supportsPortGroup(SecurityGroup sg) throws Exception;
+
+
 }

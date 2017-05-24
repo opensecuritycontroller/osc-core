@@ -40,7 +40,6 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
@@ -177,7 +176,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             // If the SDN supports PG hook we need to retrieve the domainId before
             // the members are deleted.
             String domainId = null;
-            if (SdnControllerApiFactory.supportsPortGroup(this.sg)) {
+            if (this.apiFactoryService.supportsPortGroup(this.sg)) {
                 VMPort sgMemberPort = OpenstackUtil.getAnyProtectedPort(this.sg);
 
                 domainId = OpenstackUtil.extractDomainId(this.sg.getTenantId(),
@@ -248,7 +247,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         addSGMemberSyncJob(em, isDeleteTg, vdc);
 
         if (this.sg.getVirtualizationConnector().isControllerDefined()) {
-            if (SdnControllerApiFactory.supportsPortGroup(this.sg)) {
+            if (this.apiFactoryService.supportsPortGroup(this.sg)) {
                 this.tg.appendTask(this.portGroupCheckMetaTask.create(this.sg, isDeleteTg, domainId),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
@@ -256,7 +255,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
             List<Task> tasksToSucceedToDeleteSGI = new ArrayList<>();
-            if (SdnControllerApiFactory.supportsPortGroup(this.sg)) {
+            if (this.apiFactoryService.supportsPortGroup(this.sg)) {
                 CheckPortGroupHookMetaTask checkPortGroupMT = this.checkPortGroupHookMetaTask.create(sgi, isDeleteTg);
                 this.tg.appendTask(checkPortGroupMT);
                 tasksToSucceedToDeleteSGI.add(checkPortGroupMT);
@@ -275,7 +274,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     }
                 }
 
-                if (!SdnControllerApiFactory.supportsPortGroup(this.sg)) {
+                if (!this.apiFactoryService.supportsPortGroup(this.sg)) {
                     tasksToSucceedToDeleteSGI.addAll(addSGMemberRemoveHooksTask(em, sgi));
                 }
 

@@ -26,23 +26,28 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service=OnboardDAITask.class)
 public class OnboardDAITask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(OnboardDAITask.class);
     private DistributedApplianceInstance dai;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     public OnboardDAITask create(DistributedApplianceInstance dai) {
         OnboardDAITask task = new OnboardDAITask();
         task.dai = dai;
         task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -57,14 +62,14 @@ public class OnboardDAITask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
+        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
-            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
+            if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
                 String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
                         ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<NetworkElement>(

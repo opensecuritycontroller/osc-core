@@ -30,6 +30,7 @@ import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
@@ -71,13 +72,18 @@ public class UpdateVirtualizationConnectorService
         implements UpdateVirtualizationConnectorServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
-    private VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
+
+    @Reference
+    private VirtualizationConnectorUtil util;
 
     @Reference
     private ConformService conformService;
 
     @Reference
     private EncryptionApi encryption;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
@@ -163,7 +169,8 @@ public class UpdateVirtualizationConnectorService
 
         // check for null/empty values
         VirtualizationConnectorDto dto = request.getDto();
-        VirtualizationConnectorDtoValidator.checkForNullFields(dto, request.isApi());
+        VirtualizationConnectorDtoValidator.checkForNullFields(dto, request.isApi(), this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
+                dto.getControllerType())));
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);
 
         // entry must pre-exist in db

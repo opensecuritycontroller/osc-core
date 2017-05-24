@@ -52,7 +52,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.HostAvailabilityZoneMapping;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
@@ -208,10 +207,10 @@ public class OpenstackUtil {
             String tenantId,
             String region,
             String domainId,
-            String host) throws Exception {
+            String host,
+            boolean supportsOffboxRedirection) throws Exception {
 
         DeploymentSpec selectedDs = null;
-        boolean supportsOffboxRedirection = SdnControllerApiFactory.supportsOffboxRedirection(vs);
 
         // Get all DSs that are uses the same region
         for (DeploymentSpec ds : vs.getDeploymentSpecs()) {

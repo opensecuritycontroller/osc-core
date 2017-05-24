@@ -24,7 +24,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
@@ -54,6 +54,9 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
     @Reference
     private OsSvaDeleteFloatingIpTask osSvadeleteFloatingIp;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private DistributedApplianceInstance dai;
     private String region;
     private TaskGraph tg;
@@ -69,6 +72,11 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         }
 
         this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
+        this.deleteInspectionPort = this.factory.deleteInspectionPort;
+        this.deleteSvaServer = this.factory.deleteSvaServer;
+        this.osSvadeleteFloatingIp = this.factory.osSvadeleteFloatingIp;
+        this.apiFactoryService = this.factory.apiFactoryService;
+
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
@@ -96,11 +104,6 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         task.factory = this;
         task.region = region;
         task.dai = dai;
-        task.deleteInspectionPort = this.deleteInspectionPort;
-        task.deleteSvaServer = this.deleteSvaServer;
-        task.osSvadeleteFloatingIp = this.osSvadeleteFloatingIp;
-        task.dbConnectionManager = this.dbConnectionManager;
-        task.txBroadcastUtil = this.txBroadcastUtil;
 
         return task;
     }
@@ -114,7 +117,7 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         if (this.dai.getProtectedPorts() != null && !this.dai.getProtectedPorts().isEmpty()) {
             throw new VmidcBrokerValidationException("Server is being actively used to protect other servers");
         }
-        if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
+        if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
             this.tg.appendTask(this.deleteInspectionPort.create(this.region, this.dai));
         }
         this.tg.addTask(this.deleteSvaServer.create(this.region, this.dai));

@@ -32,8 +32,8 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -69,6 +69,9 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
     @Reference
     VmPortHookFailurePolicyUpdateTask vmPortHookFailurePolicyUpdateTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private TaskGraph tg;
     private SecurityGroupMember sgm;
     private SecurityGroupInterface securityGroupInterface;
@@ -90,6 +93,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
         task.vmPortHookTagUpdateTask = this.vmPortHookTagUpdateTask;
         task.vmPortHookOrderUpdateTask = this.vmPortHookOrderUpdateTask;
         task.vmPortHookFailurePolicyUpdateTask = this.vmPortHookFailurePolicyUpdateTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -132,7 +136,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
                 if (this.sgm.getType().equals(SecurityGroupMemberType.SUBNET) && this.sgm.getSubnet().isProtectExternal()
                         && this.vmPort.getVm() == null) {
 
-                    if (SdnControllerApiFactory.supportsOffboxRedirection(this.sgm.getSecurityGroup())) {
+                    if (this.apiFactoryService.supportsOffboxRedirection(this.sgm.getSecurityGroup())) {
                         assignedRedirectedDai = OpenstackUtil.findDeployedDAI(
                                 em,
                                 this.vs,
@@ -140,7 +144,8 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
                                 tenantId,
                                 getMemberRegion(this.sgm),
                                 sgmDomainId,
-                                null);
+                                null,
+                                this.apiFactoryService.supportsOffboxRedirection(this.vs));
                     } else {
                         throw new VmidcBrokerValidationException(
                                 "Protecting External Traffic feature is not supported by your SDN controller. Please make sure your SDN controller supports offboxing");
@@ -154,7 +159,8 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
                             tenantId,
                             getMemberRegion(this.sgm),
                             sgmDomainId,
-                            this.vmPort.getVm().getHost());
+                            this.vmPort.getVm().getHost(),
+                            this.apiFactoryService.supportsOffboxRedirection(this.vs));
                 }
 
                 if (assignedRedirectedDai != null) {
@@ -185,7 +191,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
             this.log.info("Checking Inspection Hook for Security group Member: " + this.sgm.getMemberName());
 
             InspectionHookElement hook;
-            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(assignedRedirectedDai)) {
+            try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(assignedRedirectedDai)) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(
                         assignedRedirectedDai.getInspectionOsIngressPortId(),
                         assignedRedirectedDai.getInspectionIngressMacAddress());

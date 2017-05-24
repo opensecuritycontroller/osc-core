@@ -34,7 +34,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
@@ -223,7 +222,6 @@ public class Server implements ServerApi {
                 }
             }
 
-            SdnControllerApiFactory.init();
             ReleaseUpgradeMgr.initDb(this.encryption, this.dbParams, this.dbMgr);
             DatabaseUtils.createDefaultDB(this.dbMgr, this.txBroadcastUtil);
             DatabaseUtils.markRunningJobAborted(this.dbMgr, this.txBroadcastUtil);

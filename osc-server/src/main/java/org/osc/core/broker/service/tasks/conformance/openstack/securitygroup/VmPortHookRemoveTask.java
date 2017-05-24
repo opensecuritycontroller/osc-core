@@ -26,8 +26,8 @@ import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
@@ -35,6 +35,7 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service = VmPortHookRemoveTask.class)
 public class VmPortHookRemoveTask extends TransactionalTask {
@@ -46,6 +47,9 @@ public class VmPortHookRemoveTask extends TransactionalTask {
     private VMPort vmPort;
     private DistributedApplianceInstance dai;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     public VmPortHookRemoveTask create(SecurityGroupMember sgm, VMPort vmPort, DistributedApplianceInstance daiToRedirectTo,
             String serviceName) {
         VmPortHookRemoveTask task = new VmPortHookRemoveTask();
@@ -53,6 +57,7 @@ public class VmPortHookRemoveTask extends TransactionalTask {
         task.dai = daiToRedirectTo;
         task.serviceName = serviceName;
         task.sgm = sgm;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -84,12 +89,12 @@ public class VmPortHookRemoveTask extends TransactionalTask {
                                 this.vmPort.getMacAddresses(), this.sgm.getMemberName(), this.serviceName));
             }
 
-            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);) {
+            try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                         this.dai.getInspectionIngressMacAddress());
                 DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                         this.dai.getInspectionEgressMacAddress());
-                if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
+                if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
                     String portGroupId = this.sgm.getSecurityGroup().getNetworkElementId();
                     PortGroup portGroup = new PortGroup();
                     portGroup.setPortGroupId(portGroupId);

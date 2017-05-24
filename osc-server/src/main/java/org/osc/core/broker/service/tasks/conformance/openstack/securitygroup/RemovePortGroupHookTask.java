@@ -23,11 +23,12 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This task is responsible for removing a inspection hook
@@ -44,9 +45,13 @@ public class RemovePortGroupHookTask extends TransactionalTask {
     public SecurityGroupInterface sgi;
     private static final Logger LOG = Logger.getLogger(RemovePortGroupHookTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     public RemovePortGroupHookTask create(SecurityGroupInterface sgi){
         RemovePortGroupHookTask task = new RemovePortGroupHookTask();
         task.sgi = sgi;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -62,7 +67,7 @@ public class RemovePortGroupHookTask extends TransactionalTask {
             return;
         }
 
-        try (SdnRedirectionApi redirection = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgi.getVirtualSystem())) {
+        try (SdnRedirectionApi redirection = this.apiFactoryService.createNetworkRedirectionApi(this.sgi.getVirtualSystem())) {
             redirection.removeInspectionHook(this.sgi.getNetworkElementId());
             LOG.info(String.format("The port group hook %s was removed.", this.sgi.getNetworkElementId()));
         }

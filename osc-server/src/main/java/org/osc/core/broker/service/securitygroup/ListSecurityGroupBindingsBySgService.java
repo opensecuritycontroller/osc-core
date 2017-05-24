@@ -27,8 +27,8 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
@@ -42,11 +42,15 @@ import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class ListSecurityGroupBindingsBySgService
         extends ServiceDispatcher<BaseIdRequest, ListResponse<VirtualSystemPolicyBindingDto>>
         implements ListSecurityGroupBindingsBySgServiceApi {
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public ListResponse<VirtualSystemPolicyBindingDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
@@ -83,7 +87,7 @@ public class ListSecurityGroupBindingsBySgService
         // Other available Bindings
         if (sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
             FailurePolicyType failurePolicyType =
-                    SdnControllerApiFactory.supportsFailurePolicy(sg) ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA;
+                    this.apiFactoryService.supportsFailurePolicy(sg) ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA;
 
             for (VirtualSystem vs : vsSet) {
                 // Only allow binding to non-deleted services

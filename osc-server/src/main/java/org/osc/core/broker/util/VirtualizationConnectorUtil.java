@@ -16,10 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
@@ -34,16 +37,23 @@ import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Map;
+import com.rabbitmq.client.ShutdownSignalException;
 
+@Component(service = VirtualizationConnectorUtil.class)
 public class VirtualizationConnectorUtil {
 
     private static final Logger LOG = Logger.getLogger(VirtualizationConnectorUtil.class);
 
     private X509TrustManagerFactory managerFactory = null;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    // wip
+    private VirtualizationConnectorUtil() {}
 
     /**
      * Checks connection for vmware.
@@ -67,7 +77,7 @@ public class VirtualizationConnectorUtil {
             if (!request.isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION)) {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "nsx");
                 try {
-                    VMwareSdnApi vmwareSdnApi = SdnControllerApiFactory.createVMwareSdnApi(vc);
+                    VMwareSdnApi vmwareSdnApi = this.apiFactoryService.createVMwareSdnApi(vc);
                     vmwareSdnApi.checkStatus(new VMwareSdnConnector(vc));
                 } catch (HttpException exception) {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
@@ -120,7 +130,7 @@ public class VirtualizationConnectorUtil {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstack");
                 try {
                     // Check NSC Connectivity and Credentials
-                    SdnControllerApiFactory.getStatus(vc, null);
+                    this.apiFactoryService.getStatus(vc, null);
                 } catch (Exception exception) {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
                     LOG.warn(

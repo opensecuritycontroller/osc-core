@@ -28,12 +28,13 @@ import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This task is responsible for removing all the inspection appliances
@@ -48,9 +49,13 @@ public class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
 
     private SecurityGroupMember sgm;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     public SecurityGroupMemberAllHooksRemoveTask create(SecurityGroupMember sgm) {
         SecurityGroupMemberAllHooksRemoveTask task = new SecurityGroupMemberAllHooksRemoveTask();
         task.sgm = sgm;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -80,7 +85,7 @@ public class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
             ports = subnet.getPorts();
         }
 
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgm);
+        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.sgm);
 
         try {
             for (VMPort port : ports) {
@@ -88,7 +93,7 @@ public class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
                         + "' And port: '" + port.getElementId() + "'");
 
                 // If port group is not supported also remove the inspection hooks from the controller.
-                if (!SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup())) {
+                if (!this.apiFactoryService.supportsPortGroup(this.sgm.getSecurityGroup())) {
                 controller.removeAllInspectionHooks(new NetworkElementImpl(port));
                 }
 

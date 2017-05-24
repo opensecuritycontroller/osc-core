@@ -35,7 +35,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
@@ -56,6 +56,9 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
     @Reference
     CreateOsSecurityGroupTask createOsSecurityGroupTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private DeploymentSpec ds;
     private TaskGraph tg;
 
@@ -64,6 +67,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         task.ds = ds;
         task.name = task.getName();
         task.createOsSecurityGroupTask = this.createOsSecurityGroupTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -94,7 +98,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
             // The only SDN controller that currently returns true for supportsPortGroup is Nuage.
             boolean skipSecurityGroupCreation = vs.getVirtualizationConnector().isControllerDefined()
-                    ? SdnControllerApiFactory.supportsPortGroup(vs) : false;
+                    ? this.apiFactoryService.supportsPortGroup(vs) : false;
             // If DS or DDS both have no os security group reference, create OS SG
             if (sgReference == null) {
                 //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud

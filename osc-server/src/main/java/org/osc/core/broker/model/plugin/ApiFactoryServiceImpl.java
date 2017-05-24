@@ -37,8 +37,11 @@ import javax.annotation.concurrent.GuardedBy;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ApplianceManagerConnectorElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
@@ -53,13 +56,16 @@ import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.controller.Constants;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
+import org.osc.sdk.controller.Status;
 import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.VirtualizationConnectorElement;
 import org.osc.sdk.manager.ManagerAuthenticationType;
 import org.osc.sdk.manager.ManagerNotificationSubscriptionType;
@@ -689,6 +695,113 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     public DeploymentSpecApi createDeploymentSpecApi(VirtualSystem vs) throws Exception {
         return createVMwareSdnApi(vs.getVirtualizationConnector())
                 .createDeploymentSpecApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
+    }
+
+    @Override
+    public SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs) throws Exception {
+        return createNetworkRedirectionApi(vs.getVirtualizationConnector(), null);
+    }
+
+    private SdnRedirectionApi createNetworkRedirectionApi(VirtualizationConnector vc, String region)
+            throws Exception {
+        SdnControllerApi sca = createNetworkControllerApi(vc.getControllerType());
+        return sca.createRedirectionApi(getVirtualizationConnectorElement(vc), region);
+    }
+
+    @Override
+    public SdnRedirectionApi createNetworkRedirectionApi(VirtualizationConnector vc) throws Exception {
+        return createNetworkRedirectionApi(vc, null);
+    }
+
+    @Override
+    public SdnRedirectionApi createNetworkRedirectionApi(DistributedApplianceInstance dai) throws Exception {
+        return createNetworkRedirectionApi(dai.getVirtualSystem(), dai.getDeploymentSpec().getRegion());
+    }
+
+    private SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs, String region) throws Exception {
+        return createNetworkRedirectionApi(vs.getVirtualizationConnector(), region);
+    }
+
+    @Override
+    public SdnRedirectionApi createNetworkRedirectionApi(SecurityGroupMember sgm) throws Exception {
+        return createNetworkRedirectionApi(sgm.getSecurityGroup().getVirtualizationConnector(), getMemberRegion(sgm));
+    }
+
+    private String getMemberRegion(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        switch (sgm.getType()) {
+        case VM:
+            return sgm.getVm().getRegion();
+        case NETWORK:
+            return sgm.getNetwork().getRegion();
+        case SUBNET:
+            return sgm.getSubnet().getRegion();
+        default:
+            throw new VmidcBrokerValidationException("Openstack Id is not applicable for Members of type '" + sgm.getType()
+            + "'");
+        }
+    }
+
+    @Override
+    public Status getStatus(VirtualizationConnector vc, String region) throws Exception {
+        try (SdnControllerApi networkControllerApi = createNetworkControllerApi(vc.getControllerType())) {
+            return networkControllerApi.getStatus(getVirtualizationConnectorElement(vc), region);
+        }
+    }
+
+    @Override
+    public Boolean supportsOffboxRedirection(VirtualSystem vs) throws Exception {
+        return supportsOffboxRedirection(ControllerType.fromText(vs.getVirtualizationConnector().getControllerType()));
+    }
+
+    private Boolean supportsOffboxRedirection(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_OFFBOX_REDIRECTION);
+    }
+
+    @Override
+    public Boolean supportsOffboxRedirection(SecurityGroup sg) throws Exception {
+        return supportsOffboxRedirection(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+    }
+
+    @Override
+    public Boolean supportsServiceFunctionChaining(SecurityGroup sg) throws Exception {
+        return supportsServiceFunctionChaining(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+    }
+
+    private Boolean supportsServiceFunctionChaining(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_SFC);
+    }
+
+    @Override
+    public Boolean supportsFailurePolicy(SecurityGroup sg) throws Exception {
+        return supportsFailurePolicy(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+    }
+
+    private Boolean supportsFailurePolicy(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_FAILURE_POLICY);
+    }
+
+    @Override
+    public Boolean usesProviderCreds(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, USE_PROVIDER_CREDS);
+    }
+
+    @Override
+    public Boolean providesTrafficPortInfo(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, QUERY_PORT_INFO);
+    }
+
+    @Override
+    public Boolean supportsPortGroup(VirtualSystem vs) throws Exception {
+        return supportsPortGroup(ControllerType.fromText(vs.getVirtualizationConnector().getControllerType()));
+    }
+
+    private Boolean supportsPortGroup(ControllerType controllerType) throws Exception {
+        return (Boolean) getPluginProperty(controllerType, SUPPORT_PORT_GROUP);
+    }
+
+    @Override
+    public Boolean supportsPortGroup(SecurityGroup sg) throws Exception {
+        return supportsPortGroup(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
     }
 
 }

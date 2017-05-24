@@ -20,6 +20,7 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
@@ -35,6 +36,7 @@ import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.validator.AddVirtualizationConnectorServiceRequestValidator;
 import org.osc.core.broker.service.validator.RequestValidator;
+import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,10 +54,17 @@ public class AddVirtualizationConnectorService
     @Reference
     EncryptionApi encryption;
 
+    @Reference
+    private VirtualizationConnectorUtil virtualizationConnectorUtil;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     @Override
     public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
         if (this.validator == null) {
-            this.validator = new AddVirtualizationConnectorServiceRequestValidator(em, this.txBroadcastUtil);
+            this.validator = new AddVirtualizationConnectorServiceRequestValidator(em, this.txBroadcastUtil,
+                    this.virtualizationConnectorUtil, this.apiFactoryService);
         }
         try {
             this.validator.validate(request);

@@ -26,24 +26,28 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service = CreatePortGroupTask.class)
 public class CreatePortGroupTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(CreatePortGroupTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private SecurityGroup securityGroup;
 
     public CreatePortGroupTask create(SecurityGroup sg) {
         CreatePortGroupTask task = new CreatePortGroupTask();
         task.securityGroup = sg;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -67,7 +71,7 @@ public class CreatePortGroupTask extends TransactionalTask {
                     this.securityGroup.getTenantName(), this.securityGroup.getName()));
         }
 
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(
+        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
                 this.securityGroup.getVirtualizationConnector());
         if (CollectionUtils.isNotEmpty(protectedPorts)) {
             for (NetworkElement vmPort : protectedPorts) {

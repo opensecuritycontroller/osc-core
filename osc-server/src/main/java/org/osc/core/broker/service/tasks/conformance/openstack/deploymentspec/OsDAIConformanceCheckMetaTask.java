@@ -33,7 +33,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -77,6 +77,9 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     @Reference
     OsSvaCheckFloatingIpTask osSvaCheckFloatingIpTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     // optional+dynamic to break circular DS dependency
     // TODO: remove circularity and use mandatory references
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
@@ -109,6 +112,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
         this.osDAIUpgradeMetaTask = this.factory.osDAIUpgradeMetaTask;
         this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
+        this.apiFactoryService = this.factory.apiFactoryService;
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
@@ -224,7 +228,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     }
 
     private boolean isPortRegistered() throws NetworkPortNotFoundException, Exception {
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
+        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());
@@ -232,7 +236,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                     this.dai.getInspectionEgressMacAddress());
 
             InspectionPortElement inspectionPort = null;
-            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
+            if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
                 String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
                         ds.getVirtualSystem().getVirtualizationConnector(),

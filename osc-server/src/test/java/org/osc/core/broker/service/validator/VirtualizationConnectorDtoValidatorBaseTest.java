@@ -26,6 +26,7 @@ import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
@@ -42,6 +43,9 @@ public class VirtualizationConnectorDtoValidatorBaseTest {
     @Mock
     TransactionalBroadcastUtil txBroadcastUtil;
 
+    @Mock
+    ApiFactoryService apiFactoryService;
+
     private EntityManager em;
 
     @Rule
@@ -57,7 +61,7 @@ public class VirtualizationConnectorDtoValidatorBaseTest {
 
         populateDatabase();
 
-        this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em, this.txBroadcastUtil);
+        this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em, this.txBroadcastUtil, this.apiFactoryService);
 
     }
 

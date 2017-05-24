@@ -26,7 +26,7 @@ import javax.persistence.EntityManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -55,7 +55,7 @@ public class ImportSdnControllerPluginService extends ServiceDispatcher<ImportFi
 
         validate(em, request, tmpUploadFolder);
 
-        File pluginTarget = new File(SdnControllerApiFactory.SDN_CONTROLLER_PLUGINS_DIRECTORY, this.deploymentName);
+        File pluginTarget = new File(ApiFactoryService.SDN_CONTROLLER_PLUGINS_DIRECTORY, this.deploymentName);
 
         FileUtils.copyFile(this.barFile, pluginTarget);
 

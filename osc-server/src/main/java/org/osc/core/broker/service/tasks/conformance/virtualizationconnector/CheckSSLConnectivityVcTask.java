@@ -44,6 +44,9 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
     @Reference
     private EncryptionApi encryptionApi;
 
+    @Reference
+    private VirtualizationConnectorUtil virtualizationConnectorUtil;
+
     public CheckSSLConnectivityVcTask create(VirtualizationConnector vc) {
         CheckSSLConnectivityVcTask task = new CheckSSLConnectivityVcTask();
         task.vc = vc;
@@ -59,12 +62,11 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.vc = em.find(VirtualizationConnector.class, this.vc.getId());
         log.debug("Start executing CheckSSLConnectivityVcTask Task. VC: '" + this.vc.getName() + "'");
-        VirtualizationConnectorUtil virtualizationConnectorUtil = new VirtualizationConnectorUtil();
         DryRunRequest<VirtualizationConnectorDto> request = createRequest(this.vc);
         if (VirtualizationType.fromText(this.vc.getVirtualizationType().name()).equals(VirtualizationType.VMWARE)) {
-            virtualizationConnectorUtil.checkVmwareConnection(request, this.vc);
+            this.virtualizationConnectorUtil.checkVmwareConnection(request, this.vc);
         } else {
-            virtualizationConnectorUtil.checkOpenstackConnection(request, this.vc);
+            this.virtualizationConnectorUtil.checkOpenstackConnection(request, this.vc);
         }
     }
 

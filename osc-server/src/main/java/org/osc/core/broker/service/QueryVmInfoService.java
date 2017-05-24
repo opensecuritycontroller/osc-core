@@ -29,7 +29,6 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
@@ -189,7 +188,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                     neutron = new JCloudNeutron(new Endpoint(vc));
                     nova = new JCloudNova(new Endpoint(vc));
 
-                    if (SdnControllerApiFactory.providesTrafficPortInfo(ControllerType.fromText(vc.getControllerType()))) {
+                    if (this.apiFactoryService.providesTrafficPortInfo(ControllerType.fromText(vc.getControllerType()))) {
                         // Search using SDN controller
                         Map<String, FlowPortInfo> flowPortInfo = this.apiFactoryService.queryPortInfo(vc, null, request.flow);
 

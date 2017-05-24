@@ -21,14 +21,15 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service=VmPortHookFailurePolicyUpdateTask.class)
 public class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
@@ -41,6 +42,9 @@ public class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
     private DistributedApplianceInstance dai;
     private SecurityGroupInterface securityGroupInterface;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     public VmPortHookFailurePolicyUpdateTask create(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
             DistributedApplianceInstance daiToRedirectTo) {
         VmPortHookFailurePolicyUpdateTask task = new VmPortHookFailurePolicyUpdateTask();
@@ -49,6 +53,7 @@ public class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
         task.securityGroupInterface = securityGroupInterface;
         task.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
         task.vmName = vmPort.getVm().getName();
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -63,7 +68,7 @@ public class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
         this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
 
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
+        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());
