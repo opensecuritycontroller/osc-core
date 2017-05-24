@@ -52,6 +52,7 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
         task.vc = vc;
         task.name = task.getName();
         task.encryptionApi = this.encryptionApi;
+        task.virtualizationConnectorUtil = this.virtualizationConnectorUtil;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
