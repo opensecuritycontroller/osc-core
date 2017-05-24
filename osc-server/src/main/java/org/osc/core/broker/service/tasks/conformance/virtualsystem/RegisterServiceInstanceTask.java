@@ -23,15 +23,19 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceInstanceApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service = RegisterServiceInstanceTask.class)
 public class RegisterServiceInstanceTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(RegisterServiceInstanceTask.class);
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private VirtualSystem vs;
 
@@ -40,6 +44,7 @@ public class RegisterServiceInstanceTask extends TransactionalTask {
         RegisterServiceInstanceTask task = new RegisterServiceInstanceTask();
         task.vs = vs;
         task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -52,7 +57,7 @@ public class RegisterServiceInstanceTask extends TransactionalTask {
         LOG.debug("Start executing GetServiceInstanceTask");
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        ServiceInstanceApi serviceInstanceApi = VMwareSdnApiFactory.createServiceInstanceApi(this.vs);
+        ServiceInstanceApi serviceInstanceApi = this.apiFactoryService.createServiceInstanceApi(this.vs);
         String serviceInstanceId = serviceInstanceApi.createServiceInstance(this.vs.getDistributedAppliance().getName() + "-GlobalInstance", this.vs.getNsxServiceId());
 
         // persist the svcInstanceId

@@ -26,7 +26,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualSystemPolicyEntityMgr;
 import org.osc.core.broker.service.request.ContainerSet;
@@ -56,6 +56,9 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
     @Reference
     NsxServiceProfileContainerCheckMetaTask nsxServiceProfileContainerCheckMetaTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     public NsxSecurityGroupInterfacesCheckMetaTask create(VirtualSystem vs) {
         NsxSecurityGroupInterfacesCheckMetaTask task = new NsxSecurityGroupInterfacesCheckMetaTask();
         task.vs = vs;
@@ -64,6 +67,7 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         task.updateSecurityGroupInterfaceTask = this.updateSecurityGroupInterfaceTask;
         task.deleteSecurityGroupInterfaceTask = this.deleteSecurityGroupInterfaceTask;
         task.nsxServiceProfileContainerCheckMetaTask = this.nsxServiceProfileContainerCheckMetaTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -77,7 +81,7 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        ServiceProfileApi serviceProfileApi = VMwareSdnApiFactory.createServiceProfileApi(this.vs);
+        ServiceProfileApi serviceProfileApi = this.apiFactoryService.createServiceProfileApi(this.vs);
 
         //List<ServiceProfile> serviceProfiles = spa.getServiceProfilesByServiceId();
         List<ServiceProfileElement> serviceProfiles = serviceProfileApi.getServiceProfiles(this.vs.getNsxServiceId());
@@ -103,7 +107,7 @@ public class NsxSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
     public void processServiceProfile(EntityManager em, TaskGraph tg, VirtualSystem vs,
             ServiceProfile serviceProfile) throws Exception {
 
-        ServiceProfileApi serviceProfileApi = VMwareSdnApiFactory.createServiceProfileApi(vs);
+        ServiceProfileApi serviceProfileApi = this.apiFactoryService.createServiceProfileApi(vs);
 
         processServiceProfile(em, serviceProfileApi, tg, vs, serviceProfile);
     }

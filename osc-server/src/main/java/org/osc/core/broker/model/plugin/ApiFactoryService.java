@@ -42,7 +42,14 @@ import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 import org.osc.sdk.sdn.api.AgentApi;
+import org.osc.sdk.sdn.api.DeploymentSpecApi;
+import org.osc.sdk.sdn.api.SecurityTagApi;
+import org.osc.sdk.sdn.api.ServiceApi;
+import org.osc.sdk.sdn.api.ServiceInstanceApi;
+import org.osc.sdk.sdn.api.ServiceManagerApi;
+import org.osc.sdk.sdn.api.ServiceProfileApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
+import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osgi.annotation.versioning.ConsumerType;
 
 @ConsumerType
@@ -179,4 +186,18 @@ public interface ApiFactoryService {
     Boolean syncsSecurityGroup(VirtualSystem vs) throws Exception;
 
     ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc) throws Exception;
+
+    ServiceProfileApi createServiceProfileApi(VirtualSystem vs) throws Exception;
+
+    SecurityTagApi createSecurityTagApi(VirtualSystem vs) throws Exception;
+
+    ServiceApi createServiceApi(VirtualSystem vs) throws Exception;
+
+    ServiceManagerApi createServiceManagerApi(VirtualSystem vs) throws Exception;
+
+    ServiceInstanceApi createServiceInstanceApi(VirtualSystem vs) throws Exception;
+
+    VendorTemplateApi createVendorTemplateApi(VirtualSystem vs) throws Exception;
+
+    DeploymentSpecApi createDeploymentSpecApi(VirtualSystem vs) throws Exception;
 }

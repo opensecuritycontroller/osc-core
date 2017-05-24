@@ -27,7 +27,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.request.ContainerSet;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -51,6 +51,9 @@ public class NsxSecurityGroupsCheckMetaTask extends TransactionalMetaTask {
     @Reference
     NsxServiceProfileContainerCheckMetaTask nsxServiceProfileContainerCheckMetaTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
     private TaskGraph tg;
 
@@ -61,6 +64,7 @@ public class NsxSecurityGroupsCheckMetaTask extends TransactionalMetaTask {
         task.deleteSecurityGroupFromDbTask = this.deleteSecurityGroupFromDbTask;
         task.securityGroupMemberDeleteTask = this.securityGroupMemberDeleteTask;
         task.nsxServiceProfileContainerCheckMetaTask = this.nsxServiceProfileContainerCheckMetaTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -72,7 +76,7 @@ public class NsxSecurityGroupsCheckMetaTask extends TransactionalMetaTask {
         this.tg = new TaskGraph();
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
-        ServiceProfileApi serviceProfileApi = VMwareSdnApiFactory.createServiceProfileApi(this.vs);
+        ServiceProfileApi serviceProfileApi = this.apiFactoryService.createServiceProfileApi(this.vs);
         for (SecurityGroupInterface sgi : this.vs.getSecurityGroupInterfaces()) {
             List<SecurityGroupElement> securityGroups = serviceProfileApi.getSecurityGroups(sgi.getTag());
             this.tg.appendTask(this.nsxServiceProfileContainerCheckMetaTask.create(sgi, new ContainerSet(securityGroups)));

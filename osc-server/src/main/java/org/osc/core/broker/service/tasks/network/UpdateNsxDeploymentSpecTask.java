@@ -25,18 +25,22 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.RegisterDeploymentSpecTask;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
 import org.osc.sdk.sdn.element.DeploymentSpecElement;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service=UpdateNsxDeploymentSpecTask.class)
 public class UpdateNsxDeploymentSpecTask extends TransactionalTask {
 
     final Logger log = Logger.getLogger(UpdateNsxDeploymentSpecTask.class);
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private VirtualSystem vs;
     private VersionedDeploymentSpec deploySpec;
@@ -45,6 +49,7 @@ public class UpdateNsxDeploymentSpecTask extends TransactionalTask {
         UpdateNsxDeploymentSpecTask task = new UpdateNsxDeploymentSpecTask();
         task.vs = vs;
         task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -59,7 +64,7 @@ public class UpdateNsxDeploymentSpecTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        DeploymentSpecApi deploymentSpecApi = VMwareSdnApiFactory.createDeploymentSpecApi(this.vs);
+        DeploymentSpecApi deploymentSpecApi = this.apiFactoryService.createDeploymentSpecApi(this.vs);
         String imageName = this.vs.getApplianceSoftwareVersion().getImageUrl();
         if (this.deploySpec != null){
             this.deploySpec.setOvfUrl(RegisterDeploymentSpecTask.generateOvfUrl(imageName));

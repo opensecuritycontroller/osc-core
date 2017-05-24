@@ -25,7 +25,6 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceApi;
@@ -62,7 +61,7 @@ public class ValidateNsxTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
-        ServiceManagerApi serviceManagerApi = VMwareSdnApiFactory.createServiceManagerApi(this.vs);
+        ServiceManagerApi serviceManagerApi = this.apiFactoryService.createServiceManagerApi(this.vs);
         // Handle service name change. Should not be interpret as a service removal
         ServiceManagerElement svcMgr = null;
         if (this.vs.getNsxServiceManagerId() != null) {
@@ -79,7 +78,7 @@ public class ValidateNsxTask extends TransactionalTask {
 
         if (this.vs.getNsxServiceManagerId() != null) {
             //NsxServiceApi svcApi = new NsxServiceApi(this.vs);
-            ServiceApi serviceApi = VMwareSdnApiFactory.createServiceApi(this.vs);
+            ServiceApi serviceApi = this.apiFactoryService.createServiceApi(this.vs);
             ServiceElement service = null;
 
             // Handle name change. Should not be interpret as a service removal
@@ -108,7 +107,7 @@ public class ValidateNsxTask extends TransactionalTask {
         }
 
         if (this.vs.getNsxServiceId() != null) {
-            ServiceInstanceApi serviceInstanceApi = VMwareSdnApiFactory.createServiceInstanceApi(this.vs);
+            ServiceInstanceApi serviceInstanceApi = this.apiFactoryService.createServiceInstanceApi(this.vs);
             String serviceInstanceId = serviceInstanceApi.getServiceInstanceIdByServiceId(this.vs.getNsxServiceId());
 
             if (!isNsxServiceInstanceInSync(serviceInstanceId)) {
@@ -118,7 +117,7 @@ public class ValidateNsxTask extends TransactionalTask {
 
             Set<VirtualSystemPolicy> policies = this.vs.getVirtualSystemPolicies();
             for (VirtualSystemPolicy vsp : policies) {
-                VendorTemplateApi templateApi = VMwareSdnApiFactory.createVendorTemplateApi(vsp.getVirtualSystem());
+                VendorTemplateApi templateApi = this.apiFactoryService.createVendorTemplateApi(vsp.getVirtualSystem());
                 String templateId = templateApi.getVendorTemplateIdByVendorId(
                         vsp.getVirtualSystem().getNsxServiceId(),
                         vsp.getPolicy().getId().toString());

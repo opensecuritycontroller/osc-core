@@ -30,7 +30,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
@@ -67,6 +67,9 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
     @Reference
     UpdateNsxDeploymentSpecTask updateNsxDeploymentSpecTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private TaskGraph tg;
     private VirtualSystem vs;
     private boolean updateNsxServiceAttributesScheduled;
@@ -80,6 +83,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
         task.registerDeploymentSpecTask = this.registerDeploymentSpecTask;
         task.updateNsxDeploymentSpecTask = this.updateNsxDeploymentSpecTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -102,7 +106,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
             vsSoftwareVersions.add(VmwareSoftwareVersion.valueOf(vsv.name()));//now ordered by enum ordinal
         }
 
-        DeploymentSpecApi deploymentSpecApi = VMwareSdnApiFactory.createDeploymentSpecApi(this.vs);
+        DeploymentSpecApi deploymentSpecApi = this.apiFactoryService.createDeploymentSpecApi(this.vs);
         List<DeploymentSpecElement> deploymentSpecs = deploymentSpecApi.getDeploymentSpecs(this.vs.getNsxServiceId());
         List<VmwareSoftwareVersion> apiSoftwareVersions = new ArrayList<>();
         for (DeploymentSpecElement ds : deploymentSpecs){

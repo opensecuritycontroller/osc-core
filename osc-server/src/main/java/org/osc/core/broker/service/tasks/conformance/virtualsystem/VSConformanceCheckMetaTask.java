@@ -36,7 +36,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -168,6 +167,9 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     @Reference
     MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
 
+    @Reference
+    private UpdateVendorTemplateTask updateVendorTemplateTask;
+
     // optional+dynamic to resolve circular reference
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     private volatile ServiceReference<DSConformanceCheckMetaTask> dsConformanceCheckMetaTaskSR;
@@ -240,6 +242,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         this.registerVendorTemplateTask = this.factory.registerVendorTemplateTask;
         this.passwordUtil = this.factory.passwordUtil;
         this.encryption = this.factory.encryption;
+        this.updateVendorTemplateTask = this.factory.updateVendorTemplateTask;
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
@@ -403,7 +406,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     }
 
     private boolean isNsxServiceManagerOutOfSync(VirtualSystem vs) throws Exception {
-        ServiceManagerApi serviceManagerApi = VMwareSdnApiFactory.createServiceManagerApi(vs);
+        ServiceManagerApi serviceManagerApi = this.apiFactoryService.createServiceManagerApi(vs);
         ServiceManagerElement serviceManager = serviceManagerApi.getServiceManager(vs.getNsxServiceManagerId());
 
         // Check name
@@ -431,7 +434,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     }
 
     private boolean isNsxServiceOutOfSync(VirtualSystem vs) throws Exception {
-        ServiceApi serviceApi = VMwareSdnApiFactory.createServiceApi(vs);
+        ServiceApi serviceApi = this.apiFactoryService.createServiceApi(vs);
         ServiceElement service = serviceApi.getService(vs.getNsxServiceId());
 
         // Check name
@@ -484,7 +487,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
                 } else {
                     if (vs.getNsxServiceId() != null) {
                         // Update for vendor template name change
-                        tg.appendTask(new UpdateVendorTemplateTask(vsp, vsp.getPolicy().getName()));
+                        tg.appendTask(this.updateVendorTemplateTask.create(vsp, vsp.getPolicy().getName()));
                     }
                 }
             }

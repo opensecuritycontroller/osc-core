@@ -22,21 +22,27 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.nsx.model.ServiceManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
 import org.osc.sdk.sdn.element.ServiceManagerElement;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service=UnregisterServiceManagerCallbackTask.class)
 public class UnregisterServiceManagerCallbackTask extends TransactionalTask {
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
 
     public UnregisterServiceManagerCallbackTask create(VirtualSystem vs) {
         UnregisterServiceManagerCallbackTask task = new UnregisterServiceManagerCallbackTask();
         task.vs = vs;
         task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -45,7 +51,7 @@ public class UnregisterServiceManagerCallbackTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        ServiceManagerApi serviceManagerApi = VMwareSdnApiFactory.createServiceManagerApi(this.vs);
+        ServiceManagerApi serviceManagerApi = this.apiFactoryService.createServiceManagerApi(this.vs);
         ServiceManagerElement serviceManagerElement = serviceManagerApi.getServiceManager(this.vs.getNsxServiceManagerId());
         ServiceManager serviceManager = new ServiceManager(serviceManagerElement);
         serviceManager.setRestUrl(null);

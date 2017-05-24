@@ -618,7 +618,7 @@ public class VSConformanceCheckMetaTaskTestData {
         expectedGraph.appendTask(nsxDeploymentSpecCheckMetaTask.create(vs, false));
         expectedGraph.appendTask(new RegisterServiceInstanceTask().create(vs));
         VirtualSystemPolicy vsp = (VirtualSystemPolicy)vs.getVirtualSystemPolicies().toArray()[0];
-        expectedGraph.appendTask(new UpdateVendorTemplateTask(vsp, vsp.getPolicy().getName()));
+        expectedGraph.appendTask(new UpdateVendorTemplateTask().create(vsp, vsp.getPolicy().getName()));
         expectedGraph.appendTask(new NsxSecurityGroupInterfacesCheckMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new NsxSecurityGroupsCheckMetaTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new ValidateNsxAgentsTask().create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);

@@ -24,20 +24,32 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskInput;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.VendorTemplateApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = UpdateVendorTemplateTask.class)
 public class UpdateVendorTemplateTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(UpdateVendorTemplateTask.class);
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private VirtualSystemPolicy vsp;
     private String newPolicyName;
 
-    public UpdateVendorTemplateTask(VirtualSystemPolicy vsp, String newPolicyName) {
-        this.vsp = vsp;
-        this.name = getName();
-        this.newPolicyName = newPolicyName;
+    public UpdateVendorTemplateTask create(VirtualSystemPolicy vsp, String newPolicyName) {
+        UpdateVendorTemplateTask task = new UpdateVendorTemplateTask();
+        task.vsp = vsp;
+        task.name = task.getName();
+        task.newPolicyName = newPolicyName;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @TaskInput
@@ -52,7 +64,7 @@ public class UpdateVendorTemplateTask extends TransactionalTask {
         String templateId = this.vsp.getNsxVendorTemplateId();
 
         if(templateId != null && !templateId.isEmpty()) {
-            VendorTemplateApi templateApi = VMwareSdnApiFactory.createVendorTemplateApi(this.vsp.getVirtualSystem());
+            VendorTemplateApi templateApi = this.apiFactoryService.createVendorTemplateApi(this.vsp.getVirtualSystem());
             templateApi.updateVendorTemplate(
                     this.vsp.getVirtualSystem().getNsxServiceId(),
                     templateId,

@@ -35,7 +35,6 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
@@ -72,7 +71,7 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-@PrepareForTest({VMwareSdnApiFactory.class, LockUtil.class, CreateNsxServiceManagerTask.class, StaticRegistry.class})
+@PrepareForTest({LockUtil.class, CreateNsxServiceManagerTask.class, StaticRegistry.class})
 @PowerMockIgnore("javax.net.ssl.*")
 public class VSConformanceCheckMetaTaskTest {
 
@@ -203,15 +202,14 @@ public class VSConformanceCheckMetaTaskTest {
                 UPDATE_OPENSTACK_LOCK_DEPLOYMENT_SPEC_FAILS_VS.getDistributedAppliance().getApplianceManagerConnector(),
                 UPDATE_OPENSTACK_LOCK_DEPLOYMENT_SPEC_FAILS_VS.getVirtualizationConnector());
 
-        PowerMockito.mockStatic(VMwareSdnApiFactory.class);
-        Mockito.when(VMwareSdnApiFactory.createServiceManagerApi(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS)).thenReturn(this.serviceManagerApiMock);
-        Mockito.when(VMwareSdnApiFactory.createServiceManagerApi(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS)).thenReturn(this.serviceManagerApiMock);
-        Mockito.when(VMwareSdnApiFactory.createServiceManagerApi(UPDATE_VMWARE_SERVICEMANAGER_PASSWORD_OUT_OF_SYNC_VS)).thenReturn(this.serviceManagerApiMock);
+        Mockito.when(apiFactoryService.createServiceManagerApi(UPDATE_VMWARE_SERVICEMANAGER_NAME_OUT_OF_SYNC_VS)).thenReturn(this.serviceManagerApiMock);
+        Mockito.when(apiFactoryService.createServiceManagerApi(UPDATE_VMWARE_SERVICEMANAGER_URL_OUT_OF_SYNC_VS)).thenReturn(this.serviceManagerApiMock);
+        Mockito.when(apiFactoryService.createServiceManagerApi(UPDATE_VMWARE_SERVICEMANAGER_PASSWORD_OUT_OF_SYNC_VS)).thenReturn(this.serviceManagerApiMock);
 
-        Mockito.when(VMwareSdnApiFactory.createServiceApi(UPDATE_VMWARE_SERVICE_NAME_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
-        Mockito.when(VMwareSdnApiFactory.createServiceApi(UPDATE_VMWARE_SERVICE_IP_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
-        Mockito.when(VMwareSdnApiFactory.createServiceApi(UPDATE_VMWARE_SERVICE_PASSWORD_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
-        Mockito.when(VMwareSdnApiFactory.createServiceApi(UPDATE_VMWARE_VSPOLICY_NAME_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
+        Mockito.when(apiFactoryService.createServiceApi(UPDATE_VMWARE_SERVICE_NAME_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
+        Mockito.when(apiFactoryService.createServiceApi(UPDATE_VMWARE_SERVICE_IP_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
+        Mockito.when(apiFactoryService.createServiceApi(UPDATE_VMWARE_SERVICE_PASSWORD_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
+        Mockito.when(apiFactoryService.createServiceApi(UPDATE_VMWARE_VSPOLICY_NAME_OUT_OF_SYNC_VS)).thenReturn(this.serviceApiMock);
 
         PowerMockito.mockStatic(StaticRegistry.class);
         Mockito.when(StaticRegistry.encryptionApi()).thenReturn(encryption);

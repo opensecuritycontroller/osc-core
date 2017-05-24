@@ -37,7 +37,7 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
 import org.osc.core.broker.service.tasks.network.UpdateNsxDeploymentSpecTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
@@ -51,7 +51,7 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-@PrepareForTest({VMwareSdnApiFactory.class, RegisterDeploymentSpecTask.class})
+@PrepareForTest({RegisterDeploymentSpecTask.class})
 public class NsxDeploymentSpecCheckMetaTaskTest {
     private static final String VMWARE_5_5_STRING = "5.5";
 
@@ -59,6 +59,8 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
 
     @Mock
     public EntityManager em;
+
+    private ApiFactoryService apiFactoryService;
 
     private static String DEFAULT_IMAGE_URL = "DEFAULT_IMAGE_URL";
     private static String ALL_DEPLOY_SPECS_MISSING = "ALL";
@@ -91,8 +93,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
     public void testInitialize() throws Exception{
         MockitoAnnotations.initMocks(this);
         this.deploymentSpecApiMock = Mockito.mock(DeploymentSpecApi.class);
-
-        PowerMockito.mockStatic(VMwareSdnApiFactory.class);
+        this.apiFactoryService = Mockito.mock(ApiFactoryService.class);
 
         for (VirtualSystem vs: TEST_VIRTUAL_SYSTEMS) {
             Mockito.doReturn(vs).when(this.em).find(VirtualSystem.class, vs.getId());
@@ -131,7 +132,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
     private void stubRegisterDeploySpecsForANewDistributedAppliance(VirtualSystem vs) throws Exception{
         List<VersionedDeploymentSpec> apiVersionedDeplSpecs= java.util.Collections.emptyList();
 
-        Mockito.when(VMwareSdnApiFactory.createDeploymentSpecApi(vs)).thenReturn(this.deploymentSpecApiMock);
+        Mockito.when(this.apiFactoryService.createDeploymentSpecApi(vs)).thenReturn(this.deploymentSpecApiMock);
         Mockito.doReturn(apiVersionedDeplSpecs).when(this.deploymentSpecApiMock).getDeploymentSpecs(vs.getNsxServiceId());
     }
 
@@ -154,7 +155,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
             versionedSpecsList.add(vds);
         }
 
-        Mockito.when(VMwareSdnApiFactory.createDeploymentSpecApi(vs)).thenReturn(this.deploymentSpecApiMock);
+        Mockito.when(this.apiFactoryService.createDeploymentSpecApi(vs)).thenReturn(this.deploymentSpecApiMock);
         Mockito.doReturn(versionedSpecsList).when(this.deploymentSpecApiMock).getDeploymentSpecs(vs.getNsxServiceId());
     }
 
@@ -164,7 +165,7 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
         List<VersionedDeploymentSpec> versionedSpecsList = new ArrayList<VersionedDeploymentSpec>();
         versionedSpecsList.add(vds);
 
-        Mockito.when(VMwareSdnApiFactory.createDeploymentSpecApi(vs)).thenReturn(this.deploymentSpecApiMock);
+        Mockito.when(this.apiFactoryService.createDeploymentSpecApi(vs)).thenReturn(this.deploymentSpecApiMock);
         if (!outOfSync){
             Mockito.doReturn(versionedSpecsList).when(this.deploymentSpecApiMock).getDeploymentSpecs(vs.getNsxServiceId());
         } else {

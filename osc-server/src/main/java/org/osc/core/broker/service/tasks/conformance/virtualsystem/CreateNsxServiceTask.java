@@ -24,7 +24,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.Service;
@@ -65,7 +64,7 @@ public class CreateNsxServiceTask extends TransactionalTask {
         LOG.debug("Start executing CreateNsxServiceTask for vs " + this.vs.getId());
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
-        ServiceApi serviceApi = VMwareSdnApiFactory.createServiceApi(this.vs);
+        ServiceApi serviceApi = this.apiFactoryService.createServiceApi(this.vs);
         ServiceElement service = serviceApi.findService(this.vs.getDistributedAppliance().getName());
         String serviceId = service == null ? null : service.getId();
         if (serviceId == null) {

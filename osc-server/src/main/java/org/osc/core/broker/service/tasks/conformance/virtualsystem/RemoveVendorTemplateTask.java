@@ -25,22 +25,27 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskInput;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service=RemoveVendorTemplateTask.class)
 public class RemoveVendorTemplateTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(RemoveVendorTemplateTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystemPolicy vsp;
 
     public RemoveVendorTemplateTask create(VirtualSystemPolicy vsp) {
         RemoveVendorTemplateTask task = new RemoveVendorTemplateTask();
-        this.vsp = vsp;
-        this.name = getName();
+        task.vsp = vsp;
+        task.name = getName();
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -57,7 +62,7 @@ public class RemoveVendorTemplateTask extends TransactionalTask {
 
         this.vsp = em.find(VirtualSystemPolicy.class, this.vsp.getId());
 
-        VendorTemplateApi templateApi = VMwareSdnApiFactory.createVendorTemplateApi(this.vsp.getVirtualSystem());
+        VendorTemplateApi templateApi = this.apiFactoryService.createVendorTemplateApi(this.vsp.getVirtualSystem());
         templateApi.deleteVendorTemplate(
                 this.vsp.getVirtualSystem().getNsxServiceId(),
                 this.vsp.getNsxVendorTemplateId(),

@@ -74,7 +74,14 @@ import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
 import org.osc.sdk.sdn.api.AgentApi;
+import org.osc.sdk.sdn.api.DeploymentSpecApi;
+import org.osc.sdk.sdn.api.SecurityTagApi;
+import org.osc.sdk.sdn.api.ServiceApi;
+import org.osc.sdk.sdn.api.ServiceInstanceApi;
+import org.osc.sdk.sdn.api.ServiceManagerApi;
+import org.osc.sdk.sdn.api.ServiceProfileApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
+import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
@@ -640,6 +647,48 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
             throws Exception {
         return createApplianceManagerApi(mc.getManagerType())
                 .createManagerCallbackNotificationApi(getApplianceManagerConnectorElement(mc));
+    }
+
+    @Override
+    public ServiceProfileApi createServiceProfileApi(VirtualSystem vs) throws Exception {
+        return createVMwareSdnApi(vs.getVirtualizationConnector())
+        .createServiceProfileApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
+    }
+
+    @Override
+    public SecurityTagApi createSecurityTagApi(VirtualSystem vs) throws Exception {
+        return createVMwareSdnApi(vs.getVirtualizationConnector())
+                .createSecurityTagApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
+    }
+
+    @Override
+    public ServiceApi createServiceApi(VirtualSystem vs) throws Exception {
+        return createVMwareSdnApi(vs.getVirtualizationConnector())
+                .createServiceApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
+    }
+
+    @Override
+    public ServiceManagerApi createServiceManagerApi(VirtualSystem vs) throws Exception {
+        return createVMwareSdnApi(vs.getVirtualizationConnector())
+                .createServiceManagerApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
+    }
+
+    @Override
+    public ServiceInstanceApi createServiceInstanceApi(VirtualSystem vs) throws Exception {
+        return createVMwareSdnApi(vs.getVirtualizationConnector())
+                .createServiceInstanceApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
+    }
+
+    @Override
+    public VendorTemplateApi createVendorTemplateApi(VirtualSystem vs) throws Exception {
+        return createVMwareSdnApi(vs.getVirtualizationConnector())
+                .createVendorTemplateApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
+    }
+
+    @Override
+    public DeploymentSpecApi createDeploymentSpecApi(VirtualSystem vs) throws Exception {
+        return createVMwareSdnApi(vs.getVirtualizationConnector())
+                .createDeploymentSpecApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
     }
 
 }

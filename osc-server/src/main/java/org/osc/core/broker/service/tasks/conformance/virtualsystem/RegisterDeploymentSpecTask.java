@@ -26,7 +26,7 @@ import org.osc.core.broker.job.TaskOutput;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -34,11 +34,15 @@ import org.osc.core.server.Server;
 import org.osc.core.util.ServerUtil;
 import org.osc.sdk.sdn.api.DeploymentSpecApi;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service=RegisterDeploymentSpecTask.class)
 public class RegisterDeploymentSpecTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(RegisterDeploymentSpecTask.class);
     public static final String ALL_MINOR_VERSIONS = ".*";
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private VirtualSystem vs;
     private VmwareSoftwareVersion version;
@@ -49,6 +53,7 @@ public class RegisterDeploymentSpecTask extends TransactionalTask {
         task.vs = vs;
         task.version = version;
         task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -73,7 +78,7 @@ public class RegisterDeploymentSpecTask extends TransactionalTask {
 
     private String createDeploymentSpec(VmwareSoftwareVersion softwareVersion)
             throws Exception {
-        DeploymentSpecApi deploymentSpecApi = VMwareSdnApiFactory.createDeploymentSpecApi(this.vs);
+        DeploymentSpecApi deploymentSpecApi = this.apiFactoryService.createDeploymentSpecApi(this.vs);
         VersionedDeploymentSpec deploymentSpec = new VersionedDeploymentSpec();
         deploymentSpec.setOvfUrl(generateOvfUrl(this.vs.getApplianceSoftwareVersion().getImageUrl()));
         deploymentSpec.setHostVersion(softwareVersion + RegisterDeploymentSpecTask.ALL_MINOR_VERSIONS);
