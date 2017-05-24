@@ -61,4 +61,25 @@ public class FileUtil {
         return prop;
     }
 
+    /**
+     * Returns the files included within the zip file
+     *
+     * @param filename the zip file
+     * @param intendedDir the zip potential location
+     * @return name of the file
+     * @throws IllegalStateException if name is incorrect
+     */
+    public static String preventPathTraversal(String filename, String intendedDir)
+            throws IOException {
+        File f = new File(filename);
+        File iD = new File(intendedDir);
+        String canPath = f.getCanonicalPath();
+        String canID = iD.getCanonicalPath();
+
+        if (canPath.startsWith(canID)) {
+            return canPath;
+        } else {
+            throw new IllegalStateException("File is not inside extract directory.");
+        }
+    }
 }

@@ -108,7 +108,7 @@ public class ArchiveUtil {
                     filename = Paths.get(zipParentDir.toString(), entry.getName()).toString();
                 }
 
-                String name = preventPathTraversal(filename, destination);
+                String name = FileUtil.preventPathTraversal(filename, destination);
                 if (entry.isDirectory()) {
                     new File(name).mkdir();
                     continue;
@@ -155,28 +155,6 @@ public class ArchiveUtil {
             zis.closeEntry();
         }
         return files;
-    }
-
-    /**
-     * Returns the files included within the zip file
-     *
-     * @param filename the zip file
-     * @param intendedDir the zip potential location
-     * @return name of the file
-     * @throws IllegalStateException if name is incorrect
-     */
-    private static String preventPathTraversal(String filename, String intendedDir)
-            throws java.io.IOException {
-        File f = new File(filename);
-        File iD = new File(intendedDir);
-        String canPath = f.getCanonicalPath();
-        String canID = iD.getCanonicalPath();
-
-        if (canPath.startsWith(canID)) {
-            return canPath;
-        } else {
-            throw new IllegalStateException("File is not inside extract directory.");
-        }
     }
 
 }

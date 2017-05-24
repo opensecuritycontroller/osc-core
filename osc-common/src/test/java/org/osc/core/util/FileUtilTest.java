@@ -141,6 +141,20 @@ public class FileUtilTest {
         Assert.assertEquals("Different size of loaded properties file", 0, prop.size());
     }
 
+    @Test
+    public void testUploadFile_WithPathTraversalVulnerability_ThrowsIOException() throws IllegalStateException, IOException {
+        // Arrange.
+
+        String dir = System.getProperty("user.dir");
+        String filename = "../traversal/file.txt";
+
+        this.exception.expect(IllegalStateException.class);
+
+        // Act.
+        FileUtil.preventPathTraversal(filename,dir);
+
+    }
+
     private void populateTemporaryFolder() throws IOException {
         for (int i = 0; i < this.numberOfFilesInDirectory; i++) {
             File regularFile = new File(this.homeDirectory, "test_" + i + ".txt");
