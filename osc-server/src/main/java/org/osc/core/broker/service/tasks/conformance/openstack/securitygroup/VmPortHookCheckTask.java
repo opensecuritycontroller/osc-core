@@ -87,8 +87,8 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
         task.sgm = sgm;
         task.securityGroupInterface = bindedSGI;
         task.vmPort = vmPort;
-        task.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
         task.vdc = vdc;
+        task.serviceName = bindedSGI.getVirtualSystem().getDistributedAppliance().getName();
         task.vmPortHookCreateTask = this.vmPortHookCreateTask;
         task.vmPortHookTagUpdateTask = this.vmPortHookTagUpdateTask;
         task.vmPortHookOrderUpdateTask = this.vmPortHookOrderUpdateTask;
