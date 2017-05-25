@@ -38,13 +38,17 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
+import org.osc.core.broker.service.appliance.UploadConfig;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.util.StaticRegistry;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 
-@Component(service = UploadImageToGlanceTask.class)
+@Component(service = UploadImageToGlanceTask.class,
+        configurationPid = "org.osc.core.broker.upload",
+        configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class UploadImageToGlanceTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(UploadImageToGlanceTask.class);
@@ -56,6 +60,12 @@ public class UploadImageToGlanceTask extends TransactionalTask {
     private String glanceImageName;
     private ApplianceSoftwareVersion applianceSoftwareVersion;
     private Endpoint osEndPoint;
+    private String uploadPath;
+
+    @Activate
+    void activate(UploadConfig config) {
+        this.uploadPath = config.upload_path();
+    }
 
     public UploadImageToGlanceTask create(VirtualSystem vs, String region, String glanceImageName, ApplianceSoftwareVersion applianceSoftwareVersion, Endpoint osEndPoint) {
         UploadImageToGlanceTask task = new UploadImageToGlanceTask();
@@ -65,6 +75,7 @@ public class UploadImageToGlanceTask extends TransactionalTask {
         task.osEndPoint = osEndPoint;
         task.glanceImageName = glanceImageName;
         task.name = task.getName();
+        task.uploadPath = this.uploadPath;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -80,8 +91,7 @@ public class UploadImageToGlanceTask extends TransactionalTask {
         JCloudGlance glance = new JCloudGlance(this.osEndPoint);
         try {
             this.log.info("Uploading image " + this.glanceImageName + " to region + " + this.region);
-            File imageFile = new File(StaticRegistry.uploadPath()
-                    + this.applianceSoftwareVersion.getImageUrl());
+            File imageFile = new File(this.uploadPath + this.applianceSoftwareVersion.getImageUrl());
             String fileExtension = FilenameUtils.getExtension(this.applianceSoftwareVersion.getImageUrl())
                     .toUpperCase();
             if (fileExtension.equals("QCOW")) {

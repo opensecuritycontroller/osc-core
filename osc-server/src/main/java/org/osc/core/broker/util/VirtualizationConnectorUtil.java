@@ -35,6 +35,7 @@ import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.server.Server;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 import org.osgi.service.component.annotations.Component;
@@ -51,6 +52,9 @@ public class VirtualizationConnectorUtil {
 
     @Reference
     private ApiFactoryService apiFactoryService;
+
+    @Reference
+    Server server;
 
     /**
      * Checks connection for vmware.
@@ -165,8 +169,7 @@ public class VirtualizationConnectorUtil {
                 } catch (ShutdownSignalException shutdownException) {
                     // If its an existing VC which we are connected to, then this exception is expected
                     if (vc.getId() != null) {
-                        OsRabbitMQClient osRabbitMQClient = StaticRegistry.server()
-                                .getActiveRabbitMQRunner().getVcToRabbitMQClientMap().get(vc.getId());
+                        OsRabbitMQClient osRabbitMQClient = this.server.getActiveRabbitMQRunner().getVcToRabbitMQClientMap().get(vc.getId());
                         if (osRabbitMQClient != null && osRabbitMQClient.isConnected()) {
                             LOG.info("Exception encountered when connecting to RabbitMQ, ignoring since we are already connected", shutdownException);
                         } else {

@@ -483,14 +483,12 @@ public class VirtualizationConnectorUtilTest {
 		errorList.add(ErrorType.PROVIDER_EXCEPTION);
 		request.addErrorsToIgnore(errorList);
 
-		PowerMockito.mockStatic(StaticRegistry.class);
-
         Server server = Mockito.mock(Server.class);
         RabbitMQRunner runner = Mockito.mock(RabbitMQRunner.class);
+        this.util.server = server;
 
         @SuppressWarnings("unchecked")
         HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
-        when(StaticRegistry.server()).thenReturn(server);
         when(server.getActiveRabbitMQRunner()).thenReturn(runner);
         when(runner.getVcToRabbitMQClientMap()).thenReturn(map);
 
@@ -515,14 +513,12 @@ public class VirtualizationConnectorUtilTest {
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
 				.getOpenStackRequestwithSDN();
 
-		PowerMockito.mockStatic(StaticRegistry.class);
-
 		Server server = Mockito.mock(Server.class);
 		RabbitMQRunner runner = Mockito.mock(RabbitMQRunner.class);
+		this.util.server = server;
 
 		@SuppressWarnings("unchecked")
         HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
-		when(StaticRegistry.server()).thenReturn(server);
 		when(server.getActiveRabbitMQRunner()).thenReturn(runner);
 		when(runner.getVcToRabbitMQClientMap()).thenReturn(map);
 		OsRabbitMQClient mqClient = mock(OsRabbitMQClient.class);
