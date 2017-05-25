@@ -94,7 +94,7 @@ import org.xml.sax.SAXException;
  * this part of the {@link ServerApi} would expose a lot of the server
  * internals through the API.
  *
- * The Server impl is registered after startRabbitMQ() to avoid clients getting Server reference before it is started.
+ * Server impl is published manually, after RabbitMQ has been started.
  */
 @Component(immediate = true)
 public class Server implements ServerApi {

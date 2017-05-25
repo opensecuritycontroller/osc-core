@@ -19,6 +19,7 @@ package org.osc.core.broker.util;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -38,8 +39,12 @@ import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.server.Server;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 import com.rabbitmq.client.ShutdownSignalException;
 
@@ -53,17 +58,39 @@ public class VirtualizationConnectorUtil {
     @Reference
     private ApiFactoryService apiFactoryService;
 
-    @Reference
+    // optional+dynamic to break circular dependency
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<Server> serverCSO;
     Server server;
+
+    private AtomicBoolean initDone = new AtomicBoolean();
+
+    private Server lazyGetServer() {
+        if (this.initDone.compareAndSet(false, true)) {
+            if (this.serverCSO != null) { // allow for test injection
+                this.server = this.serverCSO.getService();
+            }
+        }
+        return this.server;
+    }
+
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.serverCSO.ungetService(this.server);
+        }
+    }
 
     /**
      * Checks connection for vmware.
      *
-     * @throws ErrorTypeException in case of controller/provider connection issues
-     * @throws Exception          in case of any other issues
+     * @throws ErrorTypeException
+     *             in case of controller/provider connection issues
+     * @throws Exception
+     *             in case of any other issues
      */
     public <T extends VirtualizationConnectorDto> void checkVmwareConnection(DryRunRequest<T> request,
-                                      VirtualizationConnector vc) throws Exception {
+            VirtualizationConnector vc) throws Exception {
         if (!request.isSkipAllDryRun()) {
 
             ErrorTypeException errorTypeException = null;
@@ -82,8 +109,8 @@ public class VirtualizationConnectorUtil {
                     vmwareSdnApi.checkStatus(new VMwareSdnConnector(vc));
                 } catch (HttpException exception) {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
-                    LOG.warn("Rest Exception encountered when trying to add NSX info to Virtualization Connector, " +
-                            "allowing user to either ignore or correct issue.");
+                    LOG.warn("Rest Exception encountered when trying to add NSX info to Virtualization Connector, "
+                            + "allowing user to either ignore or correct issue.");
                 }
             }
 
@@ -91,11 +118,12 @@ public class VirtualizationConnectorUtil {
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "vmware");
                 try {
-                    new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(), request.getDto().getProviderPassword());
+                    new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(),
+                            request.getDto().getProviderPassword());
                 } catch (RemoteException remoteException) {
                     errorTypeException = new ErrorTypeException(remoteException, ErrorType.PROVIDER_EXCEPTION);
-                    LOG.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, " +
-                            "allowing user to either ignore or correct issue.");
+                    LOG.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, "
+                            + "allowing user to either ignore or correct issue.");
                 }
             }
 
@@ -109,15 +137,16 @@ public class VirtualizationConnectorUtil {
         }
     }
 
-
     /**
      * Checks connection for openstack.
      *
-     * @throws ErrorTypeException in case of keystone/controller/rabbitmq connection issues
-     * @throws Exception          in case of any other issues
+     * @throws ErrorTypeException
+     *             in case of keystone/controller/rabbitmq connection issues
+     * @throws Exception
+     *             in case of any other issues
      */
     public <T extends VirtualizationConnectorDto> void checkOpenstackConnection(DryRunRequest<T> request,
-                                         VirtualizationConnector vc) throws Exception {
+            VirtualizationConnector vc) throws Exception {
         if (!request.isSkipAllDryRun()) {
 
             ErrorTypeException errorTypeException = null;
@@ -127,7 +156,8 @@ public class VirtualizationConnectorUtil {
                 this.managerFactory = X509TrustManagerFactory.getInstance();
             }
 
-            if (request.getDto().isControllerDefined() && !request.isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION)) {
+            if (request.getDto().isControllerDefined()
+                    && !request.isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION)) {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstack");
                 try {
                     // Check NSC Connectivity and Credentials
@@ -147,13 +177,15 @@ public class VirtualizationConnectorUtil {
                     boolean isHttps = isHttps(vcDto.getProviderAttributes());
 
                     Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
-                                vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps, SslContextProvider.getInstance().getSSLContext());
+                            vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps,
+                            SslContextProvider.getInstance().getSSLContext());
                     keystoneAPi = new JCloudKeyStone(endPoint);
                     keystoneAPi.listTenants();
 
                 } catch (Exception exception) {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
-                    LOG.warn("Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
+                    LOG.warn(
+                            "Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
                 } finally {
                     if (keystoneAPi != null) {
                         keystoneAPi.close();
@@ -169,18 +201,23 @@ public class VirtualizationConnectorUtil {
                 } catch (ShutdownSignalException shutdownException) {
                     // If its an existing VC which we are connected to, then this exception is expected
                     if (vc.getId() != null) {
-                        OsRabbitMQClient osRabbitMQClient = this.server.getActiveRabbitMQRunner().getVcToRabbitMQClientMap().get(vc.getId());
+                        OsRabbitMQClient osRabbitMQClient = lazyGetServer().getActiveRabbitMQRunner()
+                                .getVcToRabbitMQClientMap().get(vc.getId());
                         if (osRabbitMQClient != null && osRabbitMQClient.isConnected()) {
-                            LOG.info("Exception encountered when connecting to RabbitMQ, ignoring since we are already connected", shutdownException);
+                            LOG.info(
+                                    "Exception encountered when connecting to RabbitMQ, ignoring since we are already connected",
+                                    shutdownException);
                         } else {
-                            errorTypeException = new ErrorTypeException(shutdownException, ErrorType.RABBITMQ_EXCEPTION);
+                            errorTypeException = new ErrorTypeException(shutdownException,
+                                    ErrorType.RABBITMQ_EXCEPTION);
                         }
                     } else {
                         errorTypeException = new ErrorTypeException(shutdownException, ErrorType.RABBITMQ_EXCEPTION);
                     }
                 } catch (Throwable exception) {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.RABBITMQ_EXCEPTION);
-                    LOG.warn("Exception encountered when trying to connect to RabbitMQ, allowing user to either ignore or correct issue");
+                    LOG.warn(
+                            "Exception encountered when trying to connect to RabbitMQ, allowing user to either ignore or correct issue");
                 }
             }
 
@@ -195,12 +232,12 @@ public class VirtualizationConnectorUtil {
     }
 
     private static boolean isHttps(Map<String, String> attributes) {
-        return attributes.containsKey(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS) &&
-                String.valueOf(true).equals(attributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS));
+        return attributes.containsKey(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS)
+                && String.valueOf(true).equals(attributes.get(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS));
     }
 
     private void initSSLCertificatesListener(X509TrustManagerFactory managerFactory,
-                                             ArrayList<CertificateResolverModel> resolverList, String aliasPrefix) {
+            ArrayList<CertificateResolverModel> resolverList, String aliasPrefix) {
         try {
             managerFactory.setListener(model -> {
                 model.setAlias(aliasPrefix + "_" + model.getAlias());
