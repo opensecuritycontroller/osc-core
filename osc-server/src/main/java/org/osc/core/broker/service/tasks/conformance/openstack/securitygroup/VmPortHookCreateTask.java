@@ -58,7 +58,7 @@ public class VmPortHookCreateTask extends TransactionalTask {
         task.vmPort = vmPort;
         task.dai = daiToRedirectTo;
         task.securityGroupInterface = securityGroupInterface;
-        task.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
+        task.serviceName = securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
         task.vmName = vmPort.getVm() != null ? vmPort.getVm().getName() : vmPort.getSubnet().getName();
         task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
