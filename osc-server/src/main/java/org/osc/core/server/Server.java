@@ -178,9 +178,6 @@ public class Server implements ServerApi {
             }
         };
 
-        startRabbitMq();
-        startWebsocket();
-
         this.thread = new Thread(server, "Start-Server");
         this.thread.start();
     }
@@ -227,6 +224,9 @@ public class Server implements ServerApi {
             this.passwordUtil.initPasswordFromDb(RestConstants.OSC_DEFAULT_LOGIN);
 
             JobEngine.getEngine().addJobCompletionListener(this.alertGenerator);
+
+            startRabbitMq();
+            startWebsocket();
 
             addShutdownHook();
             startScheduler();
