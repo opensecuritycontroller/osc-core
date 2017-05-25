@@ -118,12 +118,7 @@ public class DistributedApplianceEntityMgr {
     }
 
     public static DistributedAppliance findById(EntityManager em, Long id) {
-
-        // Initializing Entity Manager
-        OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
-                em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(DistributedAppliance.class, id);
     }
 
     public static boolean isCompositeKeyExisting(EntityManager em, String mcName, String vcName, long avID) {

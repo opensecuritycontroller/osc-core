@@ -31,6 +31,7 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.DistributedApplianceInstanceElementImpl;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.element.ManagerDeviceMemberStatusElement;
@@ -55,7 +56,7 @@ public class ApplianceAgentsJob implements Job {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             List<DistributedAppliance> das = HibernateUtil.getTransactionControl().required(() -> {
                 OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
-                        DistributedAppliance.class, em);
+                        DistributedAppliance.class, em, StaticRegistry.transactionalBroadcastUtil());
 
                 return emgr.listAll();
             });
@@ -96,7 +97,7 @@ public class ApplianceAgentsJob implements Job {
                     }
                 }
 
-                OSCEntityManager.update(em, dai);
+                OSCEntityManager.update(em, dai, StaticRegistry.transactionalBroadcastUtil());
                 return null;
             });
 

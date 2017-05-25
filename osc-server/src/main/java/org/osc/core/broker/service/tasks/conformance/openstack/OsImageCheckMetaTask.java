@@ -32,11 +32,26 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsImageRefere
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.google.common.base.Joiner;
 
+@Component(service=OsImageCheckMetaTask.class)
 public class OsImageCheckMetaTask extends TransactionalMetaTask {
     private static final Logger LOG = Logger.getLogger(OsImageCheckMetaTask.class);
+
+    @Reference
+    DeleteImageReferenceTask deleteImageReferenceTask;
+
+    @Reference
+    DeleteImageFromGlanceTask deleteImageFromGlanceTask;
+
+    @Reference
+    UploadImageToGlanceTask uploadImageToGlanceTask;
+
+    @Reference
+    UpdateVsWithImageVersionTask updateVsWithImageVersionTask;
 
     private VirtualSystem vs;
     private String vcName;
@@ -45,8 +60,18 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     private JCloudGlance glance;
 
-    public OsImageCheckMetaTask(VirtualSystem vs, String region, Endpoint osEndPoint) {
-        this(vs, region, osEndPoint, null);
+    public OsImageCheckMetaTask() {}
+
+    public OsImageCheckMetaTask create(VirtualSystem vs, String region, Endpoint osEndPoint) {
+        OsImageCheckMetaTask task = new OsImageCheckMetaTask(vs, region, osEndPoint, null);
+        task.deleteImageReferenceTask = this.deleteImageReferenceTask;
+        task.deleteImageFromGlanceTask = this.deleteImageFromGlanceTask;
+        task.uploadImageToGlanceTask = this.uploadImageToGlanceTask;
+        task.updateVsWithImageVersionTask = this.updateVsWithImageVersionTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     // package private constructor for testing purposes
@@ -85,21 +110,21 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
                 if (imageReference.getRegion().equals(this.region)) {
                     ImageDetails image = this.glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
                     if (image == null || image != null && image.getStatus() != Status.ACTIVE) {
-                        this.tg.appendTask(new DeleteImageReferenceTask(imageReference, this.vs));
+                        this.tg.appendTask(this.deleteImageReferenceTask.create(imageReference, this.vs));
                     } else if (!image.getName().equals(expectedGlanceImageName)) {
                         // Assume image name is changed, means the version is upgraded since image name contains version
                         // information. Delete existing image and create new image.
-                        this.tg.appendTask(new DeleteImageFromGlanceTask(this.region, imageReference, this.osEndPoint));
+                        this.tg.appendTask(this.deleteImageFromGlanceTask.create(this.region, imageReference, this.osEndPoint));
                     } else {
                         uploadImage = false;
                     }
                 }
             }
             if (uploadImage) {
-                this.tg.appendTask(new UploadImageToGlanceTask(this.vs, this.region, expectedGlanceImageName,
+                this.tg.appendTask(this.uploadImageToGlanceTask.create(this.vs, this.region, expectedGlanceImageName,
                         applianceSoftwareVersion, this.osEndPoint), TaskGuard.ALL_PREDECESSORS_COMPLETED);
             } else if (!imageReferences.isEmpty()){
-                this.tg.appendTask(new UpdateVsWithImageVersionTask(this.vs));
+                this.tg.appendTask(this.updateVsWithImageVersionTask.create(this.vs));
             }
         } finally {
             this.glance.close();

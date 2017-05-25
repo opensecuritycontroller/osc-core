@@ -33,6 +33,7 @@ import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.VCDeleteMetaTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class DeleteVirtualizationConnectorService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
@@ -40,11 +41,14 @@ public class DeleteVirtualizationConnectorService extends ServiceDispatcher<Base
 
     private static final Logger log = Logger.getLogger(DeleteVirtualizationConnectorService.class);
 
+    @Reference
+    VCDeleteMetaTask deleteMetaTask;
+
     @Override
     public BaseJobResponse exec(BaseIdRequest request, EntityManager em) throws Exception {
         validate(em, request);
 
-        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
+        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = vcEntityMgr.findByPrimaryKey(request.getId());
         return new BaseJobResponse(startJob(vc));
     }
@@ -66,7 +70,7 @@ public class DeleteVirtualizationConnectorService extends ServiceDispatcher<Base
 
         TaskGraph tg = new TaskGraph();
 
-        tg.addTask(new VCDeleteMetaTask(vc));
+        tg.addTask(this.deleteMetaTask.create(vc));
         Job job = JobEngine.getEngine().submit("Delete Virtualization Connector '" + vc.getName() + "'", tg,
                 LockObjectReference.getObjectReferences(vc));
         return job.getId();

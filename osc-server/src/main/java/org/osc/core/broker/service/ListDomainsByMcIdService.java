@@ -49,7 +49,7 @@ public class ListDomainsByMcIdService extends ServiceDispatcher<BaseIdRequest, L
                     "Appliance Manager Connector with ID " + request.getId() + " is not found.");
         }
 
-        OSCEntityManager<Domain> oscEm = new OSCEntityManager<Domain>(Domain.class, em);
+        OSCEntityManager<Domain> oscEm = new OSCEntityManager<Domain>(Domain.class, em, this.txBroadcastUtil);
 
         List<Domain> entityList = oscEm.findByParentId("applianceManagerConnector", mcId,
                 "name");

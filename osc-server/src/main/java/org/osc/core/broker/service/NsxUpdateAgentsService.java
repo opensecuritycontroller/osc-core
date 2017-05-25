@@ -53,7 +53,7 @@ import org.osc.sdk.sdn.element.AgentStatusElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component
+@Component(service = {NsxUpdateAgentsService.class, NsxUpdateAgentsServiceApi.class})
 public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsRequest, NsxUpdateAgentsResponse>
         implements NsxUpdateAgentsServiceApi {
 
@@ -61,6 +61,12 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
 
     @Reference
     private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private AlertGenerator alertGenerator;
+
+    @Reference
+    private MgrCreateMemberDeviceTask mgrCreateMemberDeviceTask;
 
     @Override
     public NsxUpdateAgentsResponse exec(NsxUpdateAgentsRequest request, EntityManager em) throws Exception {
@@ -107,19 +113,19 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         return response;
     }
 
-    public static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, String status) {
+    public void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, String status) {
         updateNsxAgentInfo(em, dai, null, status);
     }
 
-    public static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent) {
+    public void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent) {
         updateNsxAgentInfo(em, dai, agent, null);
     }
 
-    public static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai) {
+    public void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai) {
         updateNsxAgentInfo(em, dai, null, null);
     }
 
-    private static void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent, String status) {
+    private void updateNsxAgentInfo(EntityManager em, DistributedApplianceInstance dai, AgentElement agent, String status) {
         // Locate and update DAI's NSX agent id, if not already set.
         if (dai.getNsxAgentId() == null) {
 
@@ -136,7 +142,7 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
                 dai.setMgmtGateway(agent.getGateway());
                 dai.setMgmtSubnetPrefixLength(agent.getSubnetPrefixLength());
                 LOG.info("Associate DAI " + dai.getName() + " with NSX agent " + dai.getNsxAgentId());
-                OSCEntityManager.update(em, dai);
+                OSCEntityManager.update(em, dai, this.txBroadcastUtil);
             }
         }
 
@@ -178,7 +184,7 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
                 }
             } catch (Exception e) {
                 LOG.error("Fail to set health status for NSX agent " + dai.getNsxAgentId(), e);
-                AlertGenerator.processDaiFailureEvent(DaiFailureType.DAI_NSX_STATUS_UPDATE,
+                this.alertGenerator.processDaiFailureEvent(DaiFailureType.DAI_NSX_STATUS_UPDATE,
                         new LockObjectReference(dai),
                         "Fail to set NSX Health Status for Appliance Instance '" + dai.getName() + "'");
             }
@@ -213,7 +219,7 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         }
 
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
-                VirtualizationConnector.class, em);
+                VirtualizationConnector.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByFieldName("controllerIpAddress", request.nsxIpAddress);
 
         if (vc == null) {
@@ -252,14 +258,14 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
 
         dai.setName("Temporary" + UUID.randomUUID().toString());
 
-        dai = OSCEntityManager.create(em, dai);
+        dai = OSCEntityManager.create(em, dai, this.txBroadcastUtil);
         LOG.info("Created new DAI " + dai);
 
         // Generate a unique, intuitive and immutable name
         String applianceName = vs.getName() + "-" + dai.getId().toString();
         dai.setName(applianceName);
 
-        OSCEntityManager.update(em, dai);
+        OSCEntityManager.update(em, dai, this.txBroadcastUtil);
 
         checkMemberDevice(dai, em);
     }
@@ -267,7 +273,7 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
     private void checkMemberDevice(DistributedApplianceInstance dai, EntityManager em) throws Exception {
         try (ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(dai.getVirtualSystem())) {
             if (mgrApi.isDeviceGroupSupported()) {
-                MgrCreateMemberDeviceTask.createMemberDevice(em, dai, mgrApi);
+                this.mgrCreateMemberDeviceTask.createMemberDevice(em, dai, mgrApi);
             } else {
                 ManagerDeviceMemberElement mgrDeviceMember = mgrApi.findDeviceMemberByName(dai.getName());
                 if (mgrDeviceMember != null) {
@@ -277,11 +283,11 @@ public class NsxUpdateAgentsService extends ServiceDispatcher<NsxUpdateAgentsReq
         }
     }
 
-    private static void updateDAIManagerId(EntityManager em, DistributedApplianceInstance dai,
+    private void updateDAIManagerId(EntityManager em, DistributedApplianceInstance dai,
             ManagerDeviceMemberElement mgrDeviceMember) {
         if (dai != null && !mgrDeviceMember.getId().equals(dai.getMgrDeviceId())) {
             dai.setMgrDeviceId(mgrDeviceMember.getId());
-            OSCEntityManager.update(em, dai);
+            OSCEntityManager.update(em, dai, this.txBroadcastUtil);
         }
     }
 }

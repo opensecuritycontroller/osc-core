@@ -43,6 +43,9 @@ public class UpdateDAISManagerDeviceId extends TransactionalTask {
         UpdateDAISManagerDeviceId task = new UpdateDAISManagerDeviceId();
         task.apiFactoryService = this.apiFactoryService;
         task.vs = vs;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -55,7 +58,7 @@ public class UpdateDAISManagerDeviceId extends TransactionalTask {
                     if (dai.getName().equals(mgrDeviceMember.getName())
                             && !mgrDeviceMember.getId().equals(dai.getMgrDeviceId())) {
                         dai.setMgrDeviceId(mgrDeviceMember.getId());
-                        OSCEntityManager.update(em, dai);
+                        OSCEntityManager.update(em, dai, this.txBroadcastUtil);
                     }
                 }
             }

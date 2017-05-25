@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
+import org.osc.core.broker.service.NsxUpdateAgentsService;
+import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.appliance.UploadConfig;
 import org.osc.core.broker.service.broadcast.Broadcaster;
@@ -47,6 +49,15 @@ public class StaticRegistry {
     @Reference
     private EncryptionApi encryptionApi;
 
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    private AlertGenerator alertGenerator;
+
+    @Reference
+    private NsxUpdateAgentsService nsxUpdateAgentsService;
+
     private String uploadPath;
 
     private static StaticRegistry instance = null;
@@ -71,5 +82,17 @@ public class StaticRegistry {
 
     public static EncryptionApi encryptionApi() {
         return instance.encryptionApi;
+    }
+
+    public static TransactionalBroadcastUtil transactionalBroadcastUtil() {
+        return instance.txBroadcastUtil;
+    }
+
+    public static AlertGenerator alertGenerator() {
+        return instance.alertGenerator;
+    }
+
+    public static NsxUpdateAgentsService nsxUpdateAgentsService() {
+        return instance.nsxUpdateAgentsService;
     }
 }

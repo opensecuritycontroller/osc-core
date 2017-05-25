@@ -58,7 +58,6 @@ import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osgi.service.component.annotations.Component;
@@ -85,7 +84,7 @@ public class UpdateApplianceManagerConnectorService
 
         BaseDtoValidator.checkForNullId(request.getDto());
 
-        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
 
         // retrieve existing entry from db
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(request.getDto().getId());
@@ -109,7 +108,7 @@ public class UpdateApplianceManagerConnectorService
             mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
 
             updateApplianceManagerConnector(request, mc);
-            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em);
+            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             mc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(
                     request.getDto().getSslCertificateAttrSet().stream()
                         .map(SslCertificateAttrEntityMgr::createEntity)
@@ -124,7 +123,7 @@ public class UpdateApplianceManagerConnectorService
                 List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByMcId(em, mc.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(daiId,
+                        this.txBroadcastUtil.addMessageToMap(daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }

@@ -25,10 +25,10 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.quartz.Job;
@@ -52,7 +52,7 @@ public class SyncDistributedApplianceJob implements Job {
 
             List<DistributedAppliance> das = HibernateUtil.getTransactionControl().required(() -> {
                 OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
-                        DistributedAppliance.class, em);
+                        DistributedAppliance.class, em, StaticRegistry.transactionalBroadcastUtil());
                 return emgr.listAll();
             });
 
@@ -70,7 +70,7 @@ public class SyncDistributedApplianceJob implements Job {
                                     DistributedAppliance found = em.find(DistributedAppliance.class, da.getId());
                                     conformService.startDAConformJob(em, found, null, false);
                                 } catch (Exception ex) {
-                                    AlertGenerator.processSystemFailureEvent(
+                                    StaticRegistry.alertGenerator().processSystemFailureEvent(
                                             SystemFailureType.SCHEDULER_FAILURE,
                                             new LockObjectReference(da),
                                             "Failure during scheduling of Distributed Appliance Sync. "
@@ -90,11 +90,11 @@ public class SyncDistributedApplianceJob implements Job {
             }
 
         } catch (ScopedWorkException ex) {
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
+            StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
                     "Failure during scheduling of Distributed Appliances Sync. " + ex.getCause().getMessage());
             log.error("Fail to get database session or query DAs", ex.getCause());
         } catch (Exception ex) {
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
+            StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
                     "Failure during scheduling of Distributed Appliances Sync. " + ex.getMessage());
             log.error("Fail to get database session or query DAs", ex);
 

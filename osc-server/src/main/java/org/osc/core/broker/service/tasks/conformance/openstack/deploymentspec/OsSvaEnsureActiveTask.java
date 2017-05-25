@@ -26,18 +26,25 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Ensures the SVA vm is active. Basically waits until the SVA is active for us to
  * follow up with other tasks which rely on the server being active and ready.
  * This is a transactional task but does not updates on the enities so should be safe from conflicts
  */
-class OsSvaEnsureActiveTask extends TransactionalTask {
+@Component(service=OsSvaEnsureActiveTask.class)
+public class OsSvaEnsureActiveTask extends TransactionalTask {
 
     private DistributedApplianceInstance dai;
 
-    public OsSvaEnsureActiveTask(DistributedApplianceInstance dai) {
-        this.dai = dai;
+    public OsSvaEnsureActiveTask create(DistributedApplianceInstance dai) {
+        OsSvaEnsureActiveTask task = new OsSvaEnsureActiveTask();
+        task.dai = dai;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

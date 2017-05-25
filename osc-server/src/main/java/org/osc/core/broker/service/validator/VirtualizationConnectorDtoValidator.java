@@ -33,6 +33,7 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 
 public class VirtualizationConnectorDtoValidator
@@ -40,16 +41,18 @@ public class VirtualizationConnectorDtoValidator
 
 	private EntityManager em;
 	private static final Logger LOG = Logger.getLogger(VirtualizationConnectorDtoValidator.class);
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
-	public VirtualizationConnectorDtoValidator(EntityManager em) {
+	public VirtualizationConnectorDtoValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
 		this.em = em;
+        this.txBroadcastUtil = txBroadcastUtil;
 	}
 
 	@Override
 	public void validateForCreate(VirtualizationConnectorDto dto) throws Exception {
 		// Initializing Entity Manager
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(
-                VirtualizationConnector.class, this.em);
+                VirtualizationConnector.class, this.em, this.txBroadcastUtil);
 
         VirtualizationConnectorDtoValidator.checkForNullFields(dto);
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);

@@ -36,6 +36,7 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.powermock.api.mockito.PowerMockito;
 
 /**
@@ -49,6 +50,9 @@ import org.powermock.api.mockito.PowerMockito;
 public class DistributedApplianceDtoValidatorBaseTest {
     @Mock
     protected EntityManager em;
+
+    @Mock
+    protected TransactionalBroadcastUtil txBroadcastUtil;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -76,7 +80,7 @@ public class DistributedApplianceDtoValidatorBaseTest {
 
         populateDatabase();
 
-        this.validator = new DistributedApplianceDtoValidator(this.em);
+        this.validator = new DistributedApplianceDtoValidator(this.em, this.txBroadcastUtil);
 
         PowerMockito.mockStatic(ManagerApiFactory.class);
         ManagerType.addType(ManagerType.NSM.getValue());

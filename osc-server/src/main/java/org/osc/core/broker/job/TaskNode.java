@@ -34,6 +34,7 @@ import org.osc.core.broker.job.Job.TaskChangeListener;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.manager.element.TaskElement;
 import org.osgi.service.transaction.control.ScopedWorkException;
@@ -147,7 +148,7 @@ public class TaskNode implements Runnable, TaskElement {
 
                 this.taskRecord.setName(getSafeTaskName());
 
-                OSCEntityManager.update(em, this.taskRecord);
+                OSCEntityManager.update(em, this.taskRecord, StaticRegistry.transactionalBroadcastUtil());
                 return null;
             });
         } catch (ScopedWorkException e) {
@@ -235,7 +236,7 @@ public class TaskNode implements Runnable, TaskElement {
                         this.taskRecord.setFailReason(this.failReason.toString());
                     }
                 }
-                OSCEntityManager.update(em, this.taskRecord);
+                OSCEntityManager.update(em, this.taskRecord, StaticRegistry.transactionalBroadcastUtil());
                 return null;
             });
         } catch (ScopedWorkException e) {

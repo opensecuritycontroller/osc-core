@@ -45,6 +45,9 @@ public class MgrDeleteVSSDeviceTask extends TransactionalTask {
         task.apiFactoryService = this.apiFactoryService;
         task.vs = vs;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 

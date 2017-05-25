@@ -17,6 +17,7 @@
 package org.osc.core.broker.service;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -60,9 +61,16 @@ import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrS
 import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.CheckSSLConnectivityVcTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
@@ -89,13 +97,43 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     MCConformanceCheckMetaTask mcConformanceCheckMetaTask;
 
     @Reference
-    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
-
-    @Reference
     private MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
 
     @Reference
     private SecurityGroupCheckMetaTask securityGroupCheckMetaTask;
+
+    @Reference
+    private DowngradeLockObjectTask downgradeLockObjectTask;
+
+    @Reference
+    private CheckSSLConnectivityVcTask checkSSLConnectivityVcTask;
+
+    // optional+dynamic to resolve circular reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ServiceReference<DSConformanceCheckMetaTask> dsConformanceCheckMetaTaskSR;
+    private DSConformanceCheckMetaTask dsConformanceCheckMetaTask;
+
+    private final AtomicBoolean initDone = new AtomicBoolean();
+
+    private BundleContext context;
+
+    private void delayedInit() {
+        if (this.initDone.compareAndSet(false, true)) {
+            this.dsConformanceCheckMetaTask = this.context.getService(this.dsConformanceCheckMetaTaskSR);
+        }
+    }
+
+    @Activate
+    private void activate(BundleContext context) {
+        this.context = context;
+    }
+
+    @Deactivate
+    private void deactivate(BundleContext context) {
+        if (this.initDone.get()) {
+            context.ungetService(this.dsConformanceCheckMetaTaskSR);
+        }
+    }
 
     public Long startDAConformJob(EntityManager em, DistributedAppliance da) throws Exception {
         return startDAConformJob(em, da, null, true);
@@ -143,7 +181,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
             Task mcCheck = this.mcConformanceCheckMetaTask.create(mc, mcReadUnlocktask);
             tg.addTask(mcCheck);
-            tg.appendTask(new DowngradeLockObjectTask(new LockRequest(daWriteUnlocktask)),
+            tg.appendTask(this.downgradeLockObjectTask.create(new LockRequest(daWriteUnlocktask)),
                     TaskGuard.ALL_PREDECESSORS_COMPLETED);
             tg.appendTask(this.daConformanceCheckMetaTask.create(da), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
@@ -161,9 +199,10 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 @Override
                 public void completed(Job job) {
                     try {
-                        HibernateUtil.getTransactionControl().required(() ->
-                        new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class)
-                        .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
+                        ConformService.this.dbConnectionManager.getTransactionControl().required(() ->
+                        new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class,
+                                ConformService.this.txBroadcastUtil)
+                        .run(ConformService.this.dbConnectionManager.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
                     } catch (Exception e) {
                         log.error("A serious error occurred in the Job Listener", e);
                         throw new RuntimeException("No Transactional resources are available", e);
@@ -171,7 +210,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 }
             });
             da.setLastJob(em.find(JobRecord.class, job.getId()));
-            OSCEntityManager.update(em, da);
+            OSCEntityManager.update(em, da, this.txBroadcastUtil);
 
             try {
                 List<DeploymentSpec> dss = DeploymentSpecEntityMgr.listDeploymentSpecByDistributedAppliance(em, da);
@@ -195,7 +234,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
     public BaseJobResponse exec(ConformRequest request, EntityManager em) throws Exception {
 
         OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
-                em);
+                em, this.txBroadcastUtil);
         DistributedAppliance da = emgr.findByPrimaryKey(request.getDaId());
 
         if (da == null) {
@@ -241,9 +280,10 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             @Override
             public void completed(Job job) {
                 try {
-                    HibernateUtil.getTransactionControl().required(() ->
-                    new CompleteJobTransaction<ApplianceManagerConnector>(ApplianceManagerConnector.class)
-                    .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(mc.getId(), job.getId())));
+                    ConformService.this.dbConnectionManager.getTransactionControl().required(() ->
+                    new CompleteJobTransaction<ApplianceManagerConnector>(ApplianceManagerConnector.class,
+                            ConformService.this.txBroadcastUtil)
+                    .run(ConformService.this.dbConnectionManager.getTransactionalEntityManager(), new CompleteJobTransactionInput(mc.getId(), job.getId())));
                 } catch (Exception e) {
                     log.error("A serious error occurred in the Job Listener", e);
                     throw new RuntimeException("No Transactional resources are available", e);
@@ -256,7 +296,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         // mc.getId(),
         // new LockOptions(LockMode.PESSIMISTIC_WRITE));
         mc.setLastJob(em.find(JobRecord.class, job.getId()));
-        OSCEntityManager.update(em, mc);
+        OSCEntityManager.update(em, mc, this.txBroadcastUtil);
 
         log.info("Done submitting with jobId: " + job.getId());
         return job;
@@ -274,15 +314,16 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         log.info("Start VC (id:" + vc.getId() + ") Synchronization Job");
         TaskGraph tg = new TaskGraph();
         UnlockObjectTask vcUnlockTask = LockUtil.lockVC(vc, LockRequest.LockType.READ_LOCK);
-        tg.addTask(new CheckSSLConnectivityVcTask(vc));
+        tg.addTask(this.checkSSLConnectivityVcTask.create(vc));
         tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         Job job = JobEngine.getEngine().submit("Syncing Virtualization Connector '" + vc.getName() + "'", tg,
                 LockObjectReference.getObjectReferences(vc), job1 -> {
                     try {
-                        HibernateUtil.getTransactionControl().required(() ->
-                        new CompleteJobTransaction<>(VirtualizationConnector.class)
-                        .run(HibernateUtil.getTransactionalEntityManager(),
+                        this.dbConnectionManager.getTransactionControl().required(() ->
+                        new CompleteJobTransaction<>(VirtualizationConnector.class,
+                                this.txBroadcastUtil)
+                        .run(this.dbConnectionManager.getTransactionalEntityManager(),
                                 new CompleteJobTransactionInput(vc.getId(), job1.getId())));
                     } catch (Exception e) {
                         log.error("A serious error occurred in the Job Listener", e);
@@ -291,7 +332,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 });
 
         vc.setLastJob(em.find(JobRecord.class, job.getId()));
-        OSCEntityManager.update(em, vc);
+        OSCEntityManager.update(em, vc, this.txBroadcastUtil);
 
         log.info("Done submitting with jobId: " + job.getId());
         return job;
@@ -330,6 +371,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
      */
     private Job startDsConformanceJob(EntityManager em, final DeploymentSpec ds,
             UnlockObjectMetaTask dsUnlockTask, boolean queueThisJob) throws Exception {
+        delayedInit();
         TaskGraph tg = new TaskGraph();
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
         DistributedAppliance da = ds.getVirtualSystem().getDistributedAppliance();
@@ -377,7 +419,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         // and make this decision using if(txControl.activeTransaction()) {...}
         if (em != null) {
             ds.setLastJob(em.find(JobRecord.class, job.getId()));
-            OSCEntityManager.update(em, ds);
+            OSCEntityManager.update(em, ds, StaticRegistry.transactionalBroadcastUtil());
 
         } else {
 
@@ -388,7 +430,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                     DeploymentSpec ds1 = DeploymentSpecEntityMgr.findById(txEm, ds.getId());
                     if (ds1 != null) {
                         ds1.setLastJob(txEm.find(JobRecord.class, job.getId()));
-                        OSCEntityManager.update(txEm, ds1);
+                        OSCEntityManager.update(txEm, ds1, StaticRegistry.transactionalBroadcastUtil());
                     }
                     return null;
                 });
@@ -502,7 +544,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
         if (em != null) {
             sg.setLastJob(em.find(JobRecord.class, job.getId()));
-            OSCEntityManager.update(em, sg);
+            OSCEntityManager.update(em, sg, StaticRegistry.transactionalBroadcastUtil());
         } else {
 
             try {
@@ -515,7 +557,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                         securityGroupEntity = txEm.find(SecurityGroup.class, sg.getId());
 
                         securityGroupEntity.setLastJob(txEm.find(JobRecord.class, job.getId()));
-                        OSCEntityManager.update(txEm, securityGroupEntity);
+                        OSCEntityManager.update(txEm, securityGroupEntity, StaticRegistry.transactionalBroadcastUtil());
                     }
                     return null;
                 });

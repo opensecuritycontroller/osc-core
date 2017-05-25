@@ -113,7 +113,12 @@ public class SecurityGroupCheckMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask().create(this.sg);
+        SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask();
+        task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();
+        task.securityGroupUpdateOrDeleteMetaTask = new SecurityGroupUpdateOrDeleteMetaTask();
+        task.validateSecurityGroupTenantTask = new ValidateSecurityGroupTenantTask();
+
+        task = task.create(this.sg);
         task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();
 
         // Act.

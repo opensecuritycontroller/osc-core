@@ -29,15 +29,22 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
-class OsSvaStateCheckTask extends TransactionalTask {
+@Component(service=OsSvaStateCheckTask.class)
+public class OsSvaStateCheckTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(OsSvaStateCheckTask.class);
 
     private DistributedApplianceInstance dai;
 
-    public OsSvaStateCheckTask(DistributedApplianceInstance dai) {
-        this.dai = dai;
+    public OsSvaStateCheckTask create(DistributedApplianceInstance dai) {
+        OsSvaStateCheckTask task = new OsSvaStateCheckTask();
+        task.dai = dai;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

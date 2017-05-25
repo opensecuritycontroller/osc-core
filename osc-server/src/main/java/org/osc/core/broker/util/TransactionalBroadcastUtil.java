@@ -21,39 +21,50 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
+import org.osc.core.broker.service.broadcast.Broadcaster;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.BaseDto;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.TransactionContext;
 import org.osgi.service.transaction.control.TransactionControl;
 import org.osgi.service.transaction.control.TransactionStatus;
 
+@Component(service=TransactionalBroadcastUtil.class)
 public class TransactionalBroadcastUtil {
+
+    @Reference
+    Broadcaster broadcaster;
+
+    @Reference
+    DBConnectionManager dbConnectionManager;
 
     private final static Logger log = Logger.getLogger(TransactionalBroadcastUtil.class);
 
-    private static void sendBroadcast(List<BroadcastMessage> messages) {
+    private void sendBroadcast(List<BroadcastMessage> messages) {
         try {
             for (BroadcastMessage msg : messages) {
                 log.debug("Broadcasting Message: " + msg.toString());
-                StaticRegistry.broadcaster().broadcast(msg);
+                this.broadcaster.broadcast(msg);
             }
         } catch (Exception ex) {
             log.error("Broadcasting messages failed", ex);
         }
     }
 
-    public static synchronized void addMessageToMap(final Long entityId, String receiver,
+    public synchronized void addMessageToMap(final Long entityId, String receiver,
             EventType eventType) {
         addMessageToMap(entityId, receiver, eventType, null);
     }
-    public static synchronized void addMessageToMap(final Long entityId, String receiver,
+
+    public synchronized void addMessageToMap(final Long entityId, String receiver,
             EventType eventType, BaseDto dto) {
         BroadcastMessage msg = new BroadcastMessage(entityId, receiver, eventType, dto);
 
         TransactionControl txControl;
         try {
-            txControl = HibernateUtil.getTransactionControl();
+            txControl = this.dbConnectionManager.getTransactionControl();
         } catch (Exception e) {
             log.error("Unable to acquire the current transaction context", e);
             throw new RuntimeException(e);

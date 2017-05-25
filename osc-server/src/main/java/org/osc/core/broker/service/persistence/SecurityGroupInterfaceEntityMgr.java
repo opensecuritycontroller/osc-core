@@ -103,9 +103,7 @@ public class SecurityGroupInterfaceEntityMgr {
     }
 
     public static SecurityGroupInterface findById(EntityManager em, Long id) {
-        OSCEntityManager<SecurityGroupInterface> emgr = new OSCEntityManager<SecurityGroupInterface>(
-                SecurityGroupInterface.class, em);
-        return emgr.findByPrimaryKey(id);
+        return em.find(SecurityGroupInterface.class, id);
     }
 
 }

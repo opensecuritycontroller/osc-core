@@ -26,21 +26,33 @@ import org.osc.core.broker.service.persistence.NetworkEntityManager;
 import org.osc.core.broker.service.persistence.SubnetEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
-class MarkStalePortsAsDeletedTask extends TransactionalTask {
+@Component(service=MarkStalePortsAsDeletedTask.class)
+public class MarkStalePortsAsDeletedTask extends TransactionalTask {
 
     private Network network;
     private Subnet subnet;
     private List<String> validPorts;
 
-    public MarkStalePortsAsDeletedTask(Network network, List<String> validPorts) {
-        this.network = network;
-        this.validPorts = validPorts;
+    public MarkStalePortsAsDeletedTask create(Network network, List<String> validPorts) {
+        MarkStalePortsAsDeletedTask task = new MarkStalePortsAsDeletedTask();
+        task.network = network;
+        task.validPorts = validPorts;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
-    public MarkStalePortsAsDeletedTask(Subnet subnet, List<String> validPorts) {
-        this.subnet = subnet;
-        this.validPorts = validPorts;
+    public MarkStalePortsAsDeletedTask create(Subnet subnet, List<String> validPorts) {
+        MarkStalePortsAsDeletedTask task = new MarkStalePortsAsDeletedTask();
+        task.subnet = subnet;
+        task.validPorts = validPorts;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

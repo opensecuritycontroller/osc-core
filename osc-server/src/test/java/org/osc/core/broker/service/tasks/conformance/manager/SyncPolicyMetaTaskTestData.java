@@ -119,58 +119,58 @@ public class SyncPolicyMetaTaskTestData {
         policy.setName("MGR_POLICY");
         policy.setMgrPolicyId("ID");
 
-        expectedGraph.appendTask(new CreatePolicyTask(mc, DOMAIN_WITHOUT_POLICY_2, policy));
+        expectedGraph.appendTask(new CreatePolicyTask().create(mc, DOMAIN_WITHOUT_POLICY_2, policy));
 
         return expectedGraph;
     }
 
     public static TaskGraph updatePolicyGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new UpdatePolicyTask(POLICY_WITH_MGR_POLICY, "MGR_POLICY"));
+        expectedGraph.appendTask(new UpdatePolicyTask().create(POLICY_WITH_MGR_POLICY, "MGR_POLICY"));
 
         return expectedGraph;
     }
 
     public static TaskGraph deletePolicyGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITHOUT_MGR_POLICY));
+        expectedGraph.appendTask(new DeletePolicyTask().create(POLICY_WITHOUT_MGR_POLICY));
 
         return expectedGraph;
     }
 
     public static TaskGraph removeVendorTemplateAndDeletePolicyGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-        expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_VS_POLICY));
+        expectedGraph.appendTask(new RemoveVendorTemplateTask().create(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(new DeletePolicyTask().create(POLICY_WITH_VS_POLICY));
 
         return expectedGraph;
     }
 
     public static TaskGraph deleteOrphanAndVSPoliciesGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new UpdatePolicyTask(POLICY_WITH_MGR_POLICY, "MGR_POLICY"));
-        expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITHOUT_MGR_POLICY));
-        expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-        expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_VS_POLICY));
+        expectedGraph.appendTask(new UpdatePolicyTask().create(POLICY_WITH_MGR_POLICY, "MGR_POLICY"));
+        expectedGraph.appendTask(new DeletePolicyTask().create(POLICY_WITHOUT_MGR_POLICY));
+        expectedGraph.appendTask(new RemoveVendorTemplateTask().create(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(new DeletePolicyTask().create(POLICY_WITH_VS_POLICY));
 
         return expectedGraph;
     }
 
     public static TaskGraph deletePoliciesWithoutMgrPoliciesGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITHOUT_MGR_POLICY));
-        expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-        expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_VS_POLICY));
+        expectedGraph.appendTask(new DeletePolicyTask().create(POLICY_WITHOUT_MGR_POLICY));
+        expectedGraph.appendTask(new RemoveVendorTemplateTask().create(VS_POLICY), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(new DeletePolicyTask().create(POLICY_WITH_VS_POLICY));
 
         return expectedGraph;
     }
 
     public static TaskGraph deletePoliciesFromDomainGraph(ApplianceManagerConnector mc) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITHOUT_MGR_POLICY_1));
-        expectedGraph.appendTask(new RemoveVendorTemplateTask(VS_POLICY_1), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-        expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_VS_POLICY_1));
-        expectedGraph.appendTask(new DeletePolicyTask(POLICY_WITH_MGR_POLICY_1));
+        expectedGraph.appendTask(new DeletePolicyTask().create(POLICY_WITHOUT_MGR_POLICY_1));
+        expectedGraph.appendTask(new RemoveVendorTemplateTask().create(VS_POLICY_1), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        expectedGraph.appendTask(new DeletePolicyTask().create(POLICY_WITH_VS_POLICY_1));
+        expectedGraph.appendTask(new DeletePolicyTask().create(POLICY_WITH_MGR_POLICY_1));
 
         return expectedGraph;
     }

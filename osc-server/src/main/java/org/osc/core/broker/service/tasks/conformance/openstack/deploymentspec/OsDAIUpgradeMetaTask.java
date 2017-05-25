@@ -52,6 +52,8 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
 
     @Reference
     private ConformService conformService;
+    @Reference
+    private DeleteSvaServerTask deleteSvaServerTask;
 
     private DistributedApplianceInstance dai;
     private ApplianceSoftwareVersion upgradedSoftwareVersion;
@@ -81,6 +83,9 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         task.factory = this;
         task.dai = dai;
         task.upgradedSoftwareVersion = upgradedSoftwareVersion;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -90,12 +95,12 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         this.tg = new TaskGraph();
 
         OSCEntityManager<DistributedApplianceInstance> daiEntityMgr = new OSCEntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, em);
+                DistributedApplianceInstance.class, em, this.txBroadcastUtil);
         this.dai = daiEntityMgr.findByPrimaryKey(this.dai.getId());
 
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
-        this.tg.appendTask(new DeleteSvaServerTask(ds.getRegion(), this.dai));
+        this.tg.appendTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
         this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
 
         OpenstackUtil.scheduleSecurityGroupJobsRelatedToDai(em, this.dai, this, this.conformService);

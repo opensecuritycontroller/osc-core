@@ -35,7 +35,7 @@ public class UpdateJobsArchiveService extends ServiceDispatcher<BaseRequest<Jobs
 
     @Override
     public BaseResponse exec(BaseRequest<JobsArchiveDto> request, EntityManager em) throws Exception {
-        OSCEntityManager<JobsArchive> emgr = new OSCEntityManager<JobsArchive>(JobsArchive.class, em);
+        OSCEntityManager<JobsArchive> emgr = new OSCEntityManager<JobsArchive>(JobsArchive.class, em, this.txBroadcastUtil);
 
         // retrieve existing entry from db
         JobsArchive jobsArchive = emgr.findByPrimaryKey(request.getDto().getId());

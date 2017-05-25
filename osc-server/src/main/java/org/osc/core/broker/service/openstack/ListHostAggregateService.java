@@ -44,7 +44,7 @@ public class ListHostAggregateService extends ServiceDispatcher<BaseOpenStackReq
         try {
             ListResponse<HostAggregateDto> response = new ListResponse<>();
 
-            OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em);
+            OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
 
             VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 

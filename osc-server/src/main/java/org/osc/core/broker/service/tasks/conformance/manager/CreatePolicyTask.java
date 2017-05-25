@@ -27,7 +27,9 @@ import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = CreatePolicyTask.class)
 public class CreatePolicyTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(CreatePolicyTask.class);
 
@@ -35,11 +37,16 @@ public class CreatePolicyTask extends TransactionalTask {
     private Domain domain;
     private Policy policy;
 
-    public CreatePolicyTask(ApplianceManagerConnector mc, Domain domain, Policy policy) {
-        this.mc = mc;
-        this.domain = domain;
-        this.policy = policy;
-        this.name = getName();
+    public CreatePolicyTask create(ApplianceManagerConnector mc, Domain domain, Policy policy) {
+        CreatePolicyTask task = new CreatePolicyTask();
+        task.mc = mc;
+        task.domain = domain;
+        task.policy = policy;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -53,7 +60,7 @@ public class CreatePolicyTask extends TransactionalTask {
         newPolicy.setMgrPolicyId(this.policy.getMgrPolicyId());
         newPolicy.setName(this.policy.getName());
         this.domain.addPolicy(newPolicy);
-        OSCEntityManager.update(em, this.domain);
+        OSCEntityManager.update(em, this.domain, this.txBroadcastUtil);
     }
 
     @Override

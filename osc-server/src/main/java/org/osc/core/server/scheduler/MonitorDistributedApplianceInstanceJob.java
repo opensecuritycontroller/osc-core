@@ -27,9 +27,8 @@ import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
-import org.osc.core.broker.service.NsxUpdateAgentsService;
-import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -83,7 +82,7 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             HibernateUtil.getTransactionControl().required(() -> {
                 OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
-                        DistributedApplianceInstance.class, em);
+                        DistributedApplianceInstance.class, em, StaticRegistry.transactionalBroadcastUtil());
                 List<DistributedApplianceInstance> dais = emgr.listAll();
 
                 for (DistributedApplianceInstance dai : dais) {
@@ -95,7 +94,7 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
                     if (date == null || new Date().compareTo(date) > 0) {
                         log.warn("Generate an alert for DAI '" + dai.getName()
                         + "' since we have not receive expected registration request (every 3 minutes)");
-                        AlertGenerator.processDaiFailureEvent(DaiFailureType.DAI_TIMEOUT,
+                        StaticRegistry.alertGenerator().processDaiFailureEvent(DaiFailureType.DAI_TIMEOUT,
                                 new LockObjectReference(dai.getId(), dai.getName(),
                                         ObjectType.DISTRIBUTED_APPLIANCE_INSTANCE),
                                 "Health status information for Appliance Instance '" + dai.getName()
@@ -104,7 +103,7 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
                         // In case of NSX, update
                         if (dai.getVirtualSystem().getVirtualizationConnector()
                                 .getVirtualizationType() == VirtualizationType.VMWARE) {
-                            NsxUpdateAgentsService.updateNsxAgentInfo(em, dai, "UNKNOWN");
+                            StaticRegistry.nsxUpdateAgentsService().updateNsxAgentInfo(em, dai, "UNKNOWN");
                         }
                         dai.setDiscovered(null);
                         dai.setInspectionReady(null);

@@ -23,14 +23,21 @@ import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
 
-class DeletePortGroupTask extends TransactionalTask {
+@Component(service = DeletePortGroupTask.class)
+public class DeletePortGroupTask extends TransactionalTask {
     private PortGroup portGroup;
     private SecurityGroup securityGroup;
 
-    public DeletePortGroupTask(SecurityGroup securityGroup, PortGroup portGroup){
-        this.securityGroup = securityGroup;
-        this.portGroup = portGroup;
+    public DeletePortGroupTask create (SecurityGroup securityGroup, PortGroup portGroup){
+        DeletePortGroupTask task = new DeletePortGroupTask();
+        task.securityGroup = securityGroup;
+        task.portGroup = portGroup;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

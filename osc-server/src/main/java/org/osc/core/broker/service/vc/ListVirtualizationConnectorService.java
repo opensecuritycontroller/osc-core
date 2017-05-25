@@ -48,7 +48,7 @@ public class ListVirtualizationConnectorService
     public ListResponse<VirtualizationConnectorDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws EncryptionException {
         // Initializing Entity Manager
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(
-                VirtualizationConnector.class, em);
+                VirtualizationConnector.class, em, this.txBroadcastUtil);
         // to do mapping
         List<VirtualizationConnectorDto> vcmList = new ArrayList<VirtualizationConnectorDto>();
 

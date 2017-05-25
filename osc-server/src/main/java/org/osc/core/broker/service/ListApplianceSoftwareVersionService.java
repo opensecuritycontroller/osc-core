@@ -40,7 +40,7 @@ public class ListApplianceSoftwareVersionService
     public ListResponse<ApplianceSoftwareVersionDto> exec(ListApplianceSoftwareVersionRequest request, EntityManager em) {
         // Initializing Entity Manager
         OSCEntityManager<ApplianceSoftwareVersion> emgr = new OSCEntityManager<ApplianceSoftwareVersion>(
-                ApplianceSoftwareVersion.class, em);
+                ApplianceSoftwareVersion.class, em, this.txBroadcastUtil);
         // to do mapping
         List<ApplianceSoftwareVersionDto> dtoList = new ArrayList<ApplianceSoftwareVersionDto>();
 

@@ -71,6 +71,8 @@ public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
         task.updateDAISManagerDeviceId = this.updateDAISManagerDeviceId;
         task.vs = vs;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
         return task;
     }
 
@@ -94,7 +96,7 @@ public class MgrCheckDevicesMetaTask extends TransactionalMetaTask {
             if (mgrApi.isDeviceGroupSupported() && this.vs.getMgrId() != null) {
                 for (ManagerDeviceMemberElement device : mgrApi.listDeviceMembers()) {
                     DistributedApplianceInstance dai = DistributedApplianceInstanceEntityMgr.findByName(em,
-                            device.getName());
+                            device.getName(), this.txBroadcastUtil);
                     if (dai == null) {
                         this.tg.appendTask(this.mgrDeleteMemberDeviceTask.create(this.vs, device));
                     }

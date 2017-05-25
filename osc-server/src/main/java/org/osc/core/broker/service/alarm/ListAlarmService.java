@@ -39,7 +39,7 @@ public class ListAlarmService extends ServiceDispatcher<BaseRequest<BaseDto>, Li
     @Override
     public ListResponse<AlarmDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
         // Initializing Entity Manager
-        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
+        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em, this.txBroadcastUtil);
 
         List<AlarmDto> alarmList = new ArrayList<AlarmDto>();
 

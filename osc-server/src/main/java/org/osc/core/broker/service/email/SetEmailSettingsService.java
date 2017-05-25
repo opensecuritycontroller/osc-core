@@ -40,7 +40,7 @@ public class SetEmailSettingsService extends ServiceDispatcher<BaseRequest<Email
 
     @Override
     public EmptySuccessResponse exec(BaseRequest<EmailSettingsDto> request, EntityManager em) throws Exception {
-        OSCEntityManager<EmailSettings> emgr = new OSCEntityManager<EmailSettings>(EmailSettings.class, em);
+        OSCEntityManager<EmailSettings> emgr = new OSCEntityManager<EmailSettings>(EmailSettings.class, em, this.txBroadcastUtil);
 
         validateEmailSettings(request);
 

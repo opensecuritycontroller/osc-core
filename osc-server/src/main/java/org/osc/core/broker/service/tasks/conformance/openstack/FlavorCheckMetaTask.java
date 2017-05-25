@@ -33,12 +33,21 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.google.common.base.Joiner;
 
+@Component(service=FlavorCheckMetaTask.class)
 public class FlavorCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(FlavorCheckMetaTask.class);
+
+    @Reference
+    CreateFlavorTask createFlavorTask;
+
+    @Reference
+    DeleteFlavorTask deleteFlavor;
 
     private VirtualSystem vs;
     private String vcName;
@@ -46,12 +55,19 @@ public class FlavorCheckMetaTask extends TransactionalMetaTask {
     private Endpoint osEndPoint;
     private TaskGraph tg;
 
-    public FlavorCheckMetaTask(VirtualSystem vs, String region, Endpoint osEndPoint) {
-        this.vs = vs;
-        this.vcName = vs.getVirtualizationConnector().getName();
-        this.osEndPoint = osEndPoint;
-        this.region = region;
-        this.name = getName();
+    public FlavorCheckMetaTask create(VirtualSystem vs, String region, Endpoint osEndPoint) {
+        FlavorCheckMetaTask task = new FlavorCheckMetaTask();
+        task.vs = vs;
+        task.vcName = vs.getVirtualizationConnector().getName();
+        task.osEndPoint = osEndPoint;
+        task.region = region;
+        task.name = task.getName();
+        task.createFlavorTask = this.createFlavorTask;
+        task.deleteFlavor = this.deleteFlavor;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -81,22 +97,22 @@ public class FlavorCheckMetaTask extends TransactionalMetaTask {
                     Flavor flavor = nova.getFlavorById(flavorReference.getRegion(), flavorReference.getFlavorRefId());
                     if (flavor == null) {
                         iterator.remove();
-                        OSCEntityManager.delete(em, flavorReference);
+                        OSCEntityManager.delete(em, flavorReference, this.txBroadcastUtil);
                     } else if(!flavor.getName().equals(expectedFlavorName)) {
                         // Assume flavor name is changed, means the version is upgraded since flavor name contains version
                         // information. Delete existing flavor and create new flavor.
-                        this.tg.addTask(new DeleteFlavorTask(this.region, flavorReference, this.osEndPoint));
+                        this.tg.addTask(this.deleteFlavor.create(this.region, flavorReference, this.osEndPoint));
                     } else {
                         createFlavor = false;
                     }
                 }
             }
             if (createFlavor) {
-                this.tg.appendTask(new CreateFlavorTask(vs, this.region, expectedFlavorName, applianceSoftwareVersion,
+                this.tg.appendTask(this.createFlavorTask.create(vs, this.region, expectedFlavorName, applianceSoftwareVersion,
                         this.osEndPoint));
             }
 
-            OSCEntityManager.update(em, vs);
+            OSCEntityManager.update(em, vs, this.txBroadcastUtil);
         } finally {
             nova.close();
         }

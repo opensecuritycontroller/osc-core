@@ -61,6 +61,9 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
     @Reference
     UpdateMgrSecurityGroupInterfaceTask updateMgrSecurityGroupInterfaceTask;
 
+    @Reference
+    DowngradeLockObjectTask downgradeLockObjectTask;
+
     private VirtualSystem vs;
     private DistributedAppliance da;
     private TaskGraph tg;
@@ -86,9 +89,13 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
         task.updateMgrSecurityGroupInterfaceTask = this.updateMgrSecurityGroupInterfaceTask;
         task.da = da;
         task.mcUnlockTask = mcUnlockTask;
+        task.downgradeLockObjectTask = this.downgradeLockObjectTask;
         if (da != null) {
             task.name = task.getName();
         }
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -143,7 +150,7 @@ public class MgrSecurityGroupInterfacesCheckMetaTask extends TransactionalMetaTa
             } else {
                 if (isLockProvided) {
                     // downgrade lock since we upgraded it at the start
-                    this.tg.appendTask(new DowngradeLockObjectTask(new LockRequest(this.mcUnlockTask)),
+                    this.tg.appendTask(this.downgradeLockObjectTask.create(new LockRequest(this.mcUnlockTask)),
                             TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 } else {
                     this.tg.appendTask(this.mcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);

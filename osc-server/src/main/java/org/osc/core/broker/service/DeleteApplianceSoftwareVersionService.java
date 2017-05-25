@@ -78,7 +78,7 @@ public class DeleteApplianceSoftwareVersionService extends ServiceDispatcher<Bas
             log.error("File: " + av.getImageUrl() + " Not Found. Continuing with deleting the Record");
         }
 
-        OSCEntityManager.delete(em, av);
+        OSCEntityManager.delete(em, av, this.txBroadcastUtil);
 
         EmptySuccessResponse response = new EmptySuccessResponse();
         return response;

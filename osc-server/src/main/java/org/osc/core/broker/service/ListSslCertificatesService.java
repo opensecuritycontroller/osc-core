@@ -39,7 +39,7 @@ public class ListSslCertificatesService
     protected ListResponse<CertificateBasicInfoModel> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
         List<CertificateBasicInfoModel> certificateInfoList = X509TrustManagerFactory.getInstance().getCertificateInfoList();
 
-        SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
+        SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
         List<SslCertificateAttrDto> sslEntriesList = sslCertificateAttrEntityMgr.getSslEntriesList();
 
         for (CertificateBasicInfoModel cim : certificateInfoList) {

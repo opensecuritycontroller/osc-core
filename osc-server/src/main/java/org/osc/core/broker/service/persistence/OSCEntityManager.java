@@ -53,10 +53,12 @@ public class OSCEntityManager<T extends IscEntity> {
 
     protected EntityManager em;
     private Class<T> clazz;
+    protected TransactionalBroadcastUtil txBroadcastUtil;
 
-    public OSCEntityManager(Class<T> clazz, EntityManager em) {
+    public OSCEntityManager(Class<T> clazz, EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
         this.em = em;
         this.clazz = clazz;
+        this.txBroadcastUtil = txBroadcastUtil;
     }
 
     public List<T> listAll() {
@@ -89,20 +91,20 @@ public class OSCEntityManager<T extends IscEntity> {
     }
 
     public T create(T entity) {
-        return OSCEntityManager.create(this.em, entity);
+        return OSCEntityManager.create(this.em, entity, this.txBroadcastUtil);
     }
 
     public void update(T entity) {
-        OSCEntityManager.update(this.em, entity);
+        OSCEntityManager.update(this.em, entity, this.txBroadcastUtil);
     }
 
     public void markDeleted(T entity) {
-        OSCEntityManager.markDeleted(this.em, entity);
+        OSCEntityManager.markDeleted(this.em, entity, this.txBroadcastUtil);
     }
 
     public void delete(Serializable id) {
         T entity = this.findByPrimaryKey(id);
-        OSCEntityManager.delete(this.em, entity);
+        OSCEntityManager.delete(this.em, entity, this.txBroadcastUtil);
     }
 
     @SuppressWarnings("unchecked")
@@ -114,7 +116,8 @@ public class OSCEntityManager<T extends IscEntity> {
         em.refresh(entity, LockModeType.PESSIMISTIC_WRITE);
     }
 
-    public static <T extends IscEntity> T create(EntityManager em, T entity) {
+    public static <T extends IscEntity> T create(EntityManager em, T entity,
+            TransactionalBroadcastUtil txBroadcastUtil) {
         String contextUser = SessionUtil.getInstance().getCurrentUser();
         entity.setCreatedBy(contextUser);
         entity.setCreatedTimestamp(new Date());
@@ -127,13 +130,14 @@ public class OSCEntityManager<T extends IscEntity> {
         }
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
+        txBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.ADDED, dto);
 
         return entity;
     }
 
-    public static void update(EntityManager em, IscEntity entity) {
+    public static void update(EntityManager em, IscEntity entity,
+            TransactionalBroadcastUtil txBroadcastUtil) {
         String contextUser = SessionUtil.getInstance().getCurrentUser();
         entity.setUpdatedBy(contextUser);
         entity.setUpdatedTimestamp(new Date());
@@ -146,11 +150,12 @@ public class OSCEntityManager<T extends IscEntity> {
         }
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
+        txBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.UPDATED, dto);
     }
 
-    public static void markDeleted(EntityManager em, IscEntity entity) {
+    public static void markDeleted(EntityManager em, IscEntity entity,
+            TransactionalBroadcastUtil txBroadcastUtil) {
         String contextUser = SessionUtil.getInstance().getCurrentUser();
         entity.setMarkedForDeletion(true);
         entity.setDeletedBy(contextUser);
@@ -159,11 +164,12 @@ public class OSCEntityManager<T extends IscEntity> {
         em.merge(entity);
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
+        txBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.UPDATED);
     }
 
-    public static void unMarkDeleted(EntityManager em, IscEntity entity) {
+    public static void unMarkDeleted(EntityManager em, IscEntity entity,
+            TransactionalBroadcastUtil txBroadcastUtil) {
         entity.setMarkedForDeletion(false);
         entity.setDeletedBy(null);
         entity.setDeletedTimestamp(null);
@@ -171,11 +177,12 @@ public class OSCEntityManager<T extends IscEntity> {
         em.merge(entity);
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
+        txBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.UPDATED);
     }
 
-    public static void delete(EntityManager em, IscEntity entity) {
+    public static void delete(EntityManager em, IscEntity entity,
+            TransactionalBroadcastUtil txBroadcastUtil) {
         em.remove(entity);
 
         BaseDto dto = null;
@@ -191,7 +198,7 @@ public class OSCEntityManager<T extends IscEntity> {
         }
 
         // Broadcasting changes to UI
-        TransactionalBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
+        txBroadcastUtil.addMessageToMap(entity.getId(), entity.getClass().getSimpleName(),
                 EventType.DELETED, dto);
 
         if (entity instanceof VirtualSystem) {
@@ -200,7 +207,7 @@ public class OSCEntityManager<T extends IscEntity> {
             // After removing a VS (not mark deleted) we send additional broadcast message to respective DA.
             VirtualSystem vs = (VirtualSystem) entity;
             if (!vs.getDistributedAppliance().getMarkedForDeletion()) {
-                TransactionalBroadcastUtil.addMessageToMap(vs.getDistributedAppliance().getId(), vs
+                txBroadcastUtil.addMessageToMap(vs.getDistributedAppliance().getId(), vs
                         .getDistributedAppliance().getClass().getSimpleName(), EventType.UPDATED);
             }
         }

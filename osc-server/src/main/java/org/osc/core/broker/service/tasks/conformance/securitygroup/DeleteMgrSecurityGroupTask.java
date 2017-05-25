@@ -26,16 +26,23 @@ import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupElement;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=DeleteMgrSecurityGroupTask.class)
 public class DeleteMgrSecurityGroupTask extends TransactionalTask {
 
     private VirtualSystem vs;
     private ManagerSecurityGroupElement msge;
 
-    public DeleteMgrSecurityGroupTask(VirtualSystem vs, ManagerSecurityGroupElement msge) {
-        this.vs = vs;
-        this.msge = msge;
-        this.name = getName();
+    public DeleteMgrSecurityGroupTask create(VirtualSystem vs, ManagerSecurityGroupElement msge) {
+        DeleteMgrSecurityGroupTask task = new DeleteMgrSecurityGroupTask();
+        task.vs = vs;
+        task.msge = msge;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

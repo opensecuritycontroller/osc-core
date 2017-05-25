@@ -41,7 +41,7 @@ public class ListFloatingIpPoolsService extends ServiceDispatcher<BaseOpenStackR
     public ListResponse<String> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
         ListResponse<String> response = new ListResponse<>();
 
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
 
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 

@@ -26,15 +26,22 @@ import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VirtualSystemPolicyEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=DeletePolicyTask.class)
 public class DeletePolicyTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(DeletePolicyTask.class);
 
     private Policy policy;
 
-    public DeletePolicyTask(Policy policy) {
-        this.policy = policy;
-        this.name = getName();
+    public DeletePolicyTask create(Policy policy) {
+        DeletePolicyTask task = new DeletePolicyTask();
+        task.policy = policy;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -52,7 +59,7 @@ public class DeletePolicyTask extends TransactionalTask {
             this.policy = em.find(Policy.class, policyId);
             // We're assuming it is ok to delete the policy as Manager will ensure
             // it is not referenced by any security group.
-            OSCEntityManager.delete(em, this.policy);
+            OSCEntityManager.delete(em, this.policy, this.txBroadcastUtil);
         }
 
     }

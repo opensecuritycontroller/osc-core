@@ -30,14 +30,19 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.util.StaticRegistry;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-class DeleteSvaServerTask extends TransactionalTask {
+@Component(service = DeleteSvaServerTask.class)
+public class DeleteSvaServerTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(DeleteSvaServerTask.class);
 
+    @Reference
+    org.osc.core.server.Server server;
+
     private DistributedApplianceInstance dai;
-    private final String region;
+    private String region;
 
     /**
      * Deletes the SVA associated with the DAI from openstack
@@ -50,9 +55,14 @@ class DeleteSvaServerTask extends TransactionalTask {
      *            the dai id
      * @param osEndPoint
      */
-    public DeleteSvaServerTask(String region, DistributedApplianceInstance dai) {
-        this.region = region;
-        this.dai = dai;
+    public DeleteSvaServerTask create(String region, DistributedApplianceInstance dai) {
+        DeleteSvaServerTask task = new DeleteSvaServerTask();
+        task.region = region;
+        task.dai = dai;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -77,7 +87,7 @@ class DeleteSvaServerTask extends TransactionalTask {
                 serverId = sva.getId();
             }
 
-            StaticRegistry.server().getActiveRabbitMQRunner().getOsDeploymentSpecNotificationRunner()
+            this.server.getActiveRabbitMQRunner().getOsDeploymentSpecNotificationRunner()
                 .removeIdFromListener(this.dai.getDeploymentSpec().getId(), serverId);
 
             this.log.info("Deleting Server " + serverId + " from region " + this.region);

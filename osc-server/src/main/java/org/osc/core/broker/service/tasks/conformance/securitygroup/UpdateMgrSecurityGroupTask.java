@@ -26,17 +26,24 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
+import org.osgi.service.component.annotations.Component;
 
-class UpdateMgrSecurityGroupTask extends TransactionalTask {
+@Component(service=UpdateMgrSecurityGroupTask.class)
+public class UpdateMgrSecurityGroupTask extends TransactionalTask {
     //private static final Logger log = Logger.getLogger(UpdateMgrSecurityGroupInterfaceTask.class);
 
     private SecurityGroup sg;
     private VirtualSystem vs;
 
-    public UpdateMgrSecurityGroupTask(VirtualSystem vs, SecurityGroup securityGroup) {
-        this.vs = vs;
-        this.sg = securityGroup;
-        this.name = getName();
+    public UpdateMgrSecurityGroupTask create(VirtualSystem vs, SecurityGroup securityGroup) {
+        UpdateMgrSecurityGroupTask task = new UpdateMgrSecurityGroupTask();
+        task.vs = vs;
+        task.sg = securityGroup;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

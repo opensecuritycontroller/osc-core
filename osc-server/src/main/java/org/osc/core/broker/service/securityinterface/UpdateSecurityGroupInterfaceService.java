@@ -54,7 +54,7 @@ public class UpdateSecurityGroupInterfaceService
                 SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Updating SecurityGroupInterface: " + sgi.toString());
-        OSCEntityManager.update(em, sgi);
+        OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
         chain(() -> {
             Long jobId = this.conformService.startDAConformJob(em, sgi.getVirtualSystem().getDistributedAppliance());
             return new BaseJobResponse(sgi.getId(), jobId);

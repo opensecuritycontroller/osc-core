@@ -28,11 +28,13 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Validates the DS tenant exists and syncs the name if needed
  */
-class ValidateDSNetworkTask extends TransactionalTask {
+@Component(service=ValidateDSNetworkTask.class)
+public class ValidateDSNetworkTask extends TransactionalTask {
 
     final Logger log = Logger.getLogger(ValidateDSNetworkTask.class);
 
@@ -53,18 +55,23 @@ class ValidateDSNetworkTask extends TransactionalTask {
     }
 
     private DeploymentSpec ds;
-    private final Endpoint endPoint;
-    private final NetworkType networkType;
+    private Endpoint endPoint;
+    private NetworkType networkType;
 
-    public ValidateDSNetworkTask(DeploymentSpec ds, Endpoint endPoint, NetworkType networkType) {
-        this.ds = ds;
-        this.endPoint = endPoint;
-        this.networkType = networkType;
+    public ValidateDSNetworkTask create(DeploymentSpec ds, Endpoint endPoint, NetworkType networkType) {
+        ValidateDSNetworkTask task = new ValidateDSNetworkTask();
+        task.ds = ds;
+        task.endPoint = endPoint;
+        task.networkType = networkType;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
+        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
         this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
 
         if (!this.ds.getMarkedForDeletion()) {
@@ -84,7 +91,7 @@ class ValidateDSNetworkTask extends TransactionalTask {
                     this.log.info("DS " + this.networkType + " network " + networkName
                             + " Deleted from openstack. Marking DS for deletion.");
                     // network was deleted, mark ds for deleting as well
-                    OSCEntityManager.markDeleted(em, this.ds);
+                    OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
                 } else {
                     // Sync the network name if needed
                     if (!neutronNetwork.getName().equals(networkName)) {
@@ -95,7 +102,7 @@ class ValidateDSNetworkTask extends TransactionalTask {
                         } else {
                             this.ds.setInspectionNetworkName(neutronNetwork.getName());
                         }
-                        OSCEntityManager.update(em, this.ds);
+                        OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
                     }
                 }
             } finally {

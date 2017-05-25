@@ -16,19 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualsystem;
 
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.IMAGE_URL_OUT_OF_SYNC;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.TEST_VIRTUAL_SYSTEMS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_APPLIANCEVERSION_IMAGE_URL_OUT_OF_SYNC_UPDATE_NSX_SCHED_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_APPLIANCEVERSION_IMAGE_URL_OUT_OF_SYNC_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_NEW_DIST_APPL_NO_DEPLOYMENT_SPEC_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_NSX_ALL_DEPLOY_SPEC_MISSING_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_NSX_DS_OUT_OF_SYNC_5_5_X_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_NSX_DS_OUT_OF_SYNC_6_X_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_OSC_DB_UPGRADE_NEW_ESX_VERSION_SUPPORT_NSX_OOS_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.VMWARE_OSC_DB_UPGRADE_NEW_ESX_VERSION_SUPPORT_VS;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.createApplVersionImageUrlOutOfSyncUpdateNsxSchedGraph;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.createApplianceVersionImageUrlOutOfSyncGraph;
-import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.createRegisterDeploySpecExpectedGraph;
+import static org.osc.core.broker.service.tasks.conformance.virtualsystem.NsxDeploymentSpecCheckMetaTaskTestData.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +39,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
 import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
+import org.osc.core.broker.service.tasks.network.UpdateNsxDeploymentSpecTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
 import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
 import org.osc.core.test.util.TaskGraphHelper;
@@ -94,6 +83,8 @@ public class NsxDeploymentSpecCheckMetaTaskTest {
         this.nsxDeploymentSpecCheckMetaTask = new NsxDeploymentSpecCheckMetaTask();
         this.nsxDeploymentSpecCheckMetaTask.updateNsxServiceAttributesTask = updateNsxServiceAttributesTask;
         this.nsxDeploymentSpecCheckMetaTask.updateNsxServiceInstanceAttributesTask = updateNsxServiceInstanceAttributesTask;
+        this.nsxDeploymentSpecCheckMetaTask.updateNsxDeploymentSpecTask = new UpdateNsxDeploymentSpecTask();
+        this.nsxDeploymentSpecCheckMetaTask.registerDeploymentSpecTask = new RegisterDeploymentSpecTask();
     }
 
     @Before

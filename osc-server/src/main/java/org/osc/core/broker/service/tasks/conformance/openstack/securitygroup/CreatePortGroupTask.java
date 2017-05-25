@@ -32,15 +32,22 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
+import org.osgi.service.component.annotations.Component;
 
-class CreatePortGroupTask extends TransactionalTask {
+@Component(service = CreatePortGroupTask.class)
+public class CreatePortGroupTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(CreatePortGroupTask.class);
 
 
     private SecurityGroup securityGroup;
 
-    public CreatePortGroupTask(SecurityGroup sg) {
-        this.securityGroup = sg;
+    public CreatePortGroupTask create(SecurityGroup sg) {
+        CreatePortGroupTask task = new CreatePortGroupTask();
+        task.securityGroup = sg;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

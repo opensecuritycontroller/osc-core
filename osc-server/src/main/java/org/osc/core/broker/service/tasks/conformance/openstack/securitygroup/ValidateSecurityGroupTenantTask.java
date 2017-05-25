@@ -28,23 +28,30 @@ import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * Validates the DS tenant exists and syncs the name if needed
  */
-class ValidateSecurityGroupTenantTask extends TransactionalTask {
+@Component(service=ValidateSecurityGroupTenantTask.class)
+public class ValidateSecurityGroupTenantTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(ValidateSecurityGroupTenantTask.class);
 
     private SecurityGroup securityGroup;
 
-    public ValidateSecurityGroupTenantTask(SecurityGroup securityGroup) {
-        this.securityGroup = securityGroup;
+    public ValidateSecurityGroupTenantTask create(SecurityGroup securityGroup) {
+        ValidateSecurityGroupTenantTask task = new ValidateSecurityGroupTenantTask();
+        task.securityGroup = securityGroup;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
+        OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em, this.txBroadcastUtil);
         this.securityGroup = sgEmgr.findByPrimaryKey(this.securityGroup.getId());
 
         this.log.info("Validating the Security Group tenant " + this.securityGroup.getTenantName() + " exists.");
@@ -55,13 +62,13 @@ class ValidateSecurityGroupTenantTask extends TransactionalTask {
             if (tenant == null) {
                 this.log.info("Security Group tenant " + this.securityGroup.getTenantName() + " Deleted from openstack. Marking Security Group for deletion.");
                 // Tenant was deleted, mark Security Group for deleting as well
-                OSCEntityManager.markDeleted(em, this.securityGroup);
+                OSCEntityManager.markDeleted(em, this.securityGroup, this.txBroadcastUtil);
             } else {
                 // Sync the tenant name if needed
                 if (!tenant.getName().equals(this.securityGroup.getTenantName())) {
                     this.log.info("Security Group tenant name updated from " + this.securityGroup.getTenantName() + " to " + tenant.getName());
                     this.securityGroup.setTenantName(tenant.getName());
-                    OSCEntityManager.update(em, this.securityGroup);
+                    OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
                 }
             }
 

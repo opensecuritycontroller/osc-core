@@ -90,12 +90,12 @@ public class UpdateSecurityGroupService
                 boolean isMemberSelected = selectedMemberOsId.contains(entityOpenstackId);
                 if (!isMemberSelected) {
                     log.info("Removing Member: " + sgMemberEntity.getMemberName());
-                    OSCEntityManager.markDeleted(em, sgMemberEntity);
+                    OSCEntityManager.markDeleted(em, sgMemberEntity, this.txBroadcastUtil);
                 }
             }
 
             log.info("Updating SecurityGroup: " + securityGroup.toString());
-            OSCEntityManager.update(em, securityGroup);
+            OSCEntityManager.update(em, securityGroup, this.txBroadcastUtil);
 
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {

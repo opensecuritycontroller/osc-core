@@ -86,11 +86,7 @@ public class ApplianceManagerConnectorEntityMgr {
     }
 
     public static ApplianceManagerConnector findById(EntityManager em, Long id) {
-
-        // Initializing Entity Manager
-        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(ApplianceManagerConnector.class, id);
     }
 
     public static List<ApplianceManagerConnector> listByManagerType(EntityManager em, ManagerType type) {

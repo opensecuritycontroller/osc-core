@@ -51,6 +51,12 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
     @Reference
     private MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
 
+    @Reference
+    NsxServiceProfileCheckMetaTask nsxServiceProfileCheckMetaTask;
+
+    @Reference
+    MgrSecurityGroupCheckMetaTask mgrSecurityGroupCheckMetaTask;
+
     @Override
     public EmptySuccessResponse exec(NsxUpdateProfileRequest request, EntityManager em) throws Exception {
 
@@ -84,7 +90,7 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
         tg.addTask(new LockObjectTask(lockRequest));
 
         // NSX->ISC sync of security group interfaces to reflect security group/service profile re-assignment
-        tg.appendTask(new NsxServiceProfileCheckMetaTask(vs, serviceProfile));
+        tg.appendTask(this.nsxServiceProfileCheckMetaTask.create(vs, serviceProfile));
 
         // If the appliance manager supports policy mapping then perform OSC->MC sync of security group interfaces
         if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {
@@ -93,7 +99,7 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
 
         // If the appliance manager supports security group sync then perform OSC->MC sync of security groups
         if (vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(vs)) {
-            tg.appendTask(new MgrSecurityGroupCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+            tg.appendTask(this.mgrSecurityGroupCheckMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 
         tg.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);

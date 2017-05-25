@@ -22,15 +22,22 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=DeleteDomainTask.class)
 public class DeleteDomainTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(DeleteDomainTask.class);
 
     private Domain domain;
 
-    public DeleteDomainTask(Domain domain) {
-        this.domain = domain;
-        this.name = getName();
+    public DeleteDomainTask create(Domain domain) {
+        DeleteDomainTask task = new DeleteDomainTask();
+        task.domain = domain;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -38,7 +45,7 @@ public class DeleteDomainTask extends TransactionalTask {
 
         log.debug("Start excecuting DeleteDomainTask Task. Domain '" + this.domain.getName() + "'");
         this.domain = em.find(Domain.class, this.domain.getId());
-        OSCEntityManager.delete(em, this.domain);
+        OSCEntityManager.delete(em, this.domain, this.txBroadcastUtil);
     }
 
     @Override

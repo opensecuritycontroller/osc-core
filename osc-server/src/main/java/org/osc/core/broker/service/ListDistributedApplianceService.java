@@ -48,7 +48,7 @@ public class ListDistributedApplianceService
         ListResponse<DistributedApplianceDto> response = new ListResponse<DistributedApplianceDto>();
         // Initializing Entity Manager
         OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
-                em);
+                em, this.txBroadcastUtil);
         // to do mapping
         List<DistributedApplianceDto> dtoList = new ArrayList<DistributedApplianceDto>();
 

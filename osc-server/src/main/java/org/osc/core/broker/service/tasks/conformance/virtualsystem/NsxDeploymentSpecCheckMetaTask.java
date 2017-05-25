@@ -61,6 +61,12 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
     @Reference
     UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
+    @Reference
+    RegisterDeploymentSpecTask registerDeploymentSpecTask;
+
+    @Reference
+    UpdateNsxDeploymentSpecTask updateNsxDeploymentSpecTask;
+
     private TaskGraph tg;
     private VirtualSystem vs;
     private boolean updateNsxServiceAttributesScheduled;
@@ -72,6 +78,11 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
         task.updateNsxServiceAttributesScheduled = updateNsxServiceAttributesScheduled;
         task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
+        task.registerDeploymentSpecTask = this.registerDeploymentSpecTask;
+        task.updateNsxDeploymentSpecTask = this.updateNsxDeploymentSpecTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -107,7 +118,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
             //new DA added(create DS's)
             List<VmwareSoftwareVersion> softVersions = Arrays.asList(VmwareSoftwareVersion.values());
             for (VmwareSoftwareVersion version : softVersions){
-                this.tg.appendTask(new RegisterDeploymentSpecTask(this.vs, version));
+                this.tg.appendTask(this.registerDeploymentSpecTask.create(this.vs, version));
             }
         } else if (nsxDepSpecsOutOfSync.isEmpty() && vsSoftwareVersions.size() == VmwareSoftwareVersion.values().length){
             //specs are in sync on nsx and vs
@@ -117,7 +128,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
                 if (!StringUtils.isEmpty(spec.getImageUrl()) && !spec.getImageUrl().equals(imageUrl)) {
                     // DA/applianceSoftwareVersion changed
                     log.info("image url:" + imageUrl + " vds url:" + spec.getImageUrl());
-                    this.tg.addTask(new UpdateNsxDeploymentSpecTask(this.vs, new VersionedDeploymentSpec(spec)));
+                    this.tg.addTask(this.updateNsxDeploymentSpecTask.create(this.vs, new VersionedDeploymentSpec(spec)));
                     deploymentSpecChanged = true;
                 }
             }
@@ -130,7 +141,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
                 List<VmwareSoftwareVersion> outOfSyncList = getOutofSyncSpecs(softwareVersionsToSync, apiSoftwareVersions);
 
                 for (VmwareSoftwareVersion softVersion : outOfSyncList){
-                    this.tg.appendTask(new RegisterDeploymentSpecTask(this.vs, softVersion));
+                    this.tg.appendTask(this.registerDeploymentSpecTask.create(this.vs, softVersion));
                 }
 
             } else {
@@ -139,7 +150,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
                 //new deployspec is created on nsx, clear the expired/missing deployspec
                 this.vs.getNsxDeploymentSpecIds().keySet().removeAll(nsxDepSpecsOutOfSync);
                 for (VmwareSoftwareVersion softVersion : nsxDepSpecsOutOfSync) {
-                    this.tg.appendTask(new RegisterDeploymentSpecTask(this.vs, softVersion));
+                    this.tg.appendTask(this.registerDeploymentSpecTask.create(this.vs, softVersion));
                 }
             }
 

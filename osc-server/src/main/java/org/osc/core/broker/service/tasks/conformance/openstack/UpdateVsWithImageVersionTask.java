@@ -27,15 +27,22 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = UpdateVsWithImageVersionTask.class)
 public class UpdateVsWithImageVersionTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(UpdateVsWithImageVersionTask.class);
 
     private VirtualSystem vs;
 
-    public UpdateVsWithImageVersionTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public UpdateVsWithImageVersionTask create(VirtualSystem vs) {
+        UpdateVsWithImageVersionTask task = new UpdateVsWithImageVersionTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -58,7 +65,7 @@ public class UpdateVsWithImageVersionTask extends TransactionalTask {
         }
 
         if(needsUpdate) {
-            OSCEntityManager.update(em, this.vs);
+            OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
             LOG.info("Updating virtual system " + this.vs.getName());
         }
     }

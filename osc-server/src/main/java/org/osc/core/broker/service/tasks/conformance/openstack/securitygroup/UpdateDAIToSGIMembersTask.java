@@ -76,8 +76,8 @@ public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
 
         for (VMPort port : ports) {
             updatePortProtection(port);
-            OSCEntityManager.update(em, port);
-            OSCEntityManager.update(em, this.dai);
+            OSCEntityManager.update(em, port, this.txBroadcastUtil);
+            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
         }
     }
 

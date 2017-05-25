@@ -49,7 +49,7 @@ public class DeleteSecurityGroupInterfaceService extends ServiceDispatcher<BaseI
 
         log.info("Deleting SecurityGroupInterface: " + this.sgi.getName());
 
-        OSCEntityManager.delete(em, this.sgi);
+        OSCEntityManager.delete(em, this.sgi, this.txBroadcastUtil);
 
         chain(() -> {
             Long jobId = this.conformService.startDAConformJob(em, this.sgi.getVirtualSystem().getDistributedAppliance());

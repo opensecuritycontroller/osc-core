@@ -60,7 +60,7 @@ public class ListSecurityGroupInterfaceServiceByVirtualSystem
 
     private VirtualSystem validateAndLoad(BaseIdRequest req, EntityManager em) throws Exception {
         BaseIdRequestValidator.checkForNullId(req);
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
         VirtualSystem vs = emgr.findByPrimaryKey(req.getId());
         if (vs == null) {
             throw new VmidcBrokerValidationException("Virtual System with Id: " + req.getId() + "  is not found.");

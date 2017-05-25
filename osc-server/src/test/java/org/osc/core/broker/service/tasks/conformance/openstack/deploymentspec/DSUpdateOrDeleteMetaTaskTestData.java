@@ -264,10 +264,10 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new DeleteSvaServerAndDAIMetaTask().create(ds.getRegion(), (DistributedApplianceInstance) ds.getDistributedApplianceInstances().toArray()[0]));
         if (ds.getOsSecurityGroupReference() != null) {
-            expectedGraph.appendTask(new DeleteOsSecurityGroupTask(ds, ds.getOsSecurityGroupReference()));
+            expectedGraph.appendTask(new DeleteOsSecurityGroupTask().create(ds, ds.getOsSecurityGroupReference()));
         }
         expectedGraph.appendTask(new MgrCheckDevicesMetaTask().create(ds.getVirtualSystem()));
-        expectedGraph.appendTask(new DeleteDSFromDbTask(ds));
+        expectedGraph.appendTask(new DeleteDSFromDbTask().create(ds));
         return expectedGraph;
     }
 

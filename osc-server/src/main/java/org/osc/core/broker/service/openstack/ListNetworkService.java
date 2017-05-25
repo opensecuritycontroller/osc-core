@@ -44,7 +44,7 @@ public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, 
         ListResponse<OsNetworkDto> response = new ListResponse<>();
 
         // Initializing Entity Manager
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
