@@ -19,6 +19,7 @@ package org.osc.core.broker.util;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -38,8 +39,12 @@ import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 import com.rabbitmq.client.ShutdownSignalException;
 
@@ -54,8 +59,26 @@ public class VirtualizationConnectorUtil {
     private ApiFactoryService apiFactoryService;
 
     // target ensures this only binds to active runner published by Server
-    @Reference(target = "(active=true)")
+    @Reference(target = "(active=true)", cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<RabbitMQRunner> activeRunnerCSO;
     RabbitMQRunner activeRunner;
+
+    private final AtomicBoolean initDone = new AtomicBoolean();
+
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.activeRunnerCSO.ungetService(this.activeRunner);
+        }
+    }
+
+    private void delayedInit() {
+        if (this.initDone.compareAndSet(false, true)) {
+            if (this.activeRunnerCSO != null) { // allow test injection
+                this.activeRunner = this.activeRunnerCSO.getService();
+            }
+        }
+    }
 
     /**
      * Checks connection for vmware.
@@ -177,6 +200,7 @@ public class VirtualizationConnectorUtil {
                 } catch (ShutdownSignalException shutdownException) {
                     // If its an existing VC which we are connected to, then this exception is expected
                     if (vc.getId() != null) {
+                        delayedInit();
                         OsRabbitMQClient osRabbitMQClient = this.activeRunner.getVcToRabbitMQClientMap().get(vc.getId());
                         if (osRabbitMQClient != null && osRabbitMQClient.isConnected()) {
                             LOG.info(

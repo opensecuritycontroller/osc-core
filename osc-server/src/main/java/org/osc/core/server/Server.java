@@ -543,7 +543,12 @@ public class Server implements ServerApi {
     }
 
     public void shutdownRabbitMq() {
-        this.rabbitMQRegistration.unregister();
+        try {
+            this.rabbitMQRegistration.unregister();
+        } catch (IllegalStateException ise) {
+            // No problem - this means the service was
+            // already unregistered (e.g. by bundle stop)
+        }
         this.rabbitRunnerFactory.ungetService(this.rabbitMQRunner);
         log.info("Shutdown of RabbitMQ succeeded");
         this.rabbitMQRunner = null;
