@@ -238,14 +238,14 @@ public class Server implements ServerApi {
 
             JobEngine.getEngine().addJobCompletionListener(this.alertGenerator);
 
+            // register Server explicitly; can't use DS as it's registered too early
+            this.serverRegistration = this.context.registerService(Server.class, this, null);
+
             startRabbitMq();
             startWebsocket();
 
             addShutdownHook();
             startScheduler();
-
-            // register Server explicitly; can't use DS as it's registered too early
-            this.serverRegistration = this.context.registerService(Server.class, this, null);
 
             Thread timeMonitorThread = ServerUtil.getTimeMonitorThread(new TimeChangeCommand() {
 
