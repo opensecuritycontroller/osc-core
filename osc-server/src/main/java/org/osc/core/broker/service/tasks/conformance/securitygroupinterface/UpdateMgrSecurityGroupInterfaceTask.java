@@ -41,6 +41,7 @@ public class UpdateMgrSecurityGroupInterfaceTask extends TransactionalTask {
         UpdateMgrSecurityGroupInterfaceTask task = new UpdateMgrSecurityGroupInterfaceTask();
         task.securityGroupInterface = securityGroupInterface;
         task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
