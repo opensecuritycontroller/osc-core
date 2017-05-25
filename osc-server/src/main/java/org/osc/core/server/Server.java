@@ -63,9 +63,12 @@ import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.util.VersionUtil;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -90,8 +93,10 @@ import org.xml.sax.SAXException;
  * numerous types can access {@link #getActiveRabbitMQRunner()}. Making
  * this part of the {@link ServerApi} would expose a lot of the server
  * internals through the API.
+ *
+ * The Server impl is registered after startRabbitMQ() to avoid clients getting Server reference before it is started.
  */
-@Component(immediate = true, service = {ServerApi.class, Server.class})
+@Component(immediate = true)
 public class Server implements ServerApi {
     // Need to change the package name of Server class to org.osc.core.server
 
@@ -164,9 +169,12 @@ public class Server implements ServerApi {
     private AlertGenerator alertGenerator;
 
     private Thread thread;
+    private BundleContext context;
+    private ServiceRegistration<Server> serverRegistration;
 
     @Activate
-    void activate() {
+    void activate(BundleContext context) {
+        this.context = context;
         Runnable server = new Runnable() {
             @Override
             public void run() {
@@ -180,6 +188,11 @@ public class Server implements ServerApi {
 
         this.thread = new Thread(server, "Start-Server");
         this.thread.start();
+    }
+
+    @Deactivate
+    private void deactivate() {
+        this.serverRegistration.unregister();
     }
 
     private void startServer() throws Exception {
@@ -230,6 +243,9 @@ public class Server implements ServerApi {
 
             addShutdownHook();
             startScheduler();
+
+            // register Server explicitly; can't use DS as it's registered too early
+            this.serverRegistration = this.context.registerService(Server.class, this, null);
 
             Thread timeMonitorThread = ServerUtil.getTimeMonitorThread(new TimeChangeCommand() {
 
