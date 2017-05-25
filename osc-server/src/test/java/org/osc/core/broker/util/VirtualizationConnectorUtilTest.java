@@ -49,7 +49,6 @@ import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.server.Server;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
 import org.powermock.api.mockito.PowerMockito;
@@ -483,13 +482,11 @@ public class VirtualizationConnectorUtilTest {
 		errorList.add(ErrorType.PROVIDER_EXCEPTION);
 		request.addErrorsToIgnore(errorList);
 
-        Server server = Mockito.mock(Server.class);
         RabbitMQRunner runner = Mockito.mock(RabbitMQRunner.class);
-        this.util.server = server;
+        this.util.activeRunner = runner;
 
         @SuppressWarnings("unchecked")
         HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
-        when(server.getActiveRabbitMQRunner()).thenReturn(runner);
         when(runner.getVcToRabbitMQClientMap()).thenReturn(map);
 
 		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
@@ -513,13 +510,11 @@ public class VirtualizationConnectorUtilTest {
 		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
 				.getOpenStackRequestwithSDN();
 
-		Server server = Mockito.mock(Server.class);
 		RabbitMQRunner runner = Mockito.mock(RabbitMQRunner.class);
-		this.util.server = server;
+		this.util.activeRunner = runner;
 
 		@SuppressWarnings("unchecked")
         HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
-		when(server.getActiveRabbitMQRunner()).thenReturn(runner);
 		when(runner.getVcToRabbitMQClientMap()).thenReturn(map);
 		OsRabbitMQClient mqClient = mock(OsRabbitMQClient.class);
 		doReturn(mqClient).when(map).get(any(Integer.class));

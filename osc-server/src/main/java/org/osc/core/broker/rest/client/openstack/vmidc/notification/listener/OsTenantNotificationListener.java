@@ -30,12 +30,12 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.server.Server;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class OsTenantNotificationListener extends OsNotificationListener {
@@ -47,8 +47,8 @@ public class OsTenantNotificationListener extends OsNotificationListener {
     private final AlertGenerator alertGenerator;
 
     public OsTenantNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, Server server) {
-        super(vc, OsNotificationObjectType.TENANT, objectIdList, entity, server);
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner) {
+        super(vc, OsNotificationObjectType.TENANT, objectIdList, entity, activeRunner);
         this.conformService = conformService;
         this.alertGenerator = alertGenerator;
         register(vc, objectType);

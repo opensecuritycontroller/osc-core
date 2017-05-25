@@ -19,7 +19,6 @@ package org.osc.core.broker.util;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -28,6 +27,7 @@ import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
@@ -36,15 +36,10 @@ import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.server.Server;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
 import org.osc.sdk.sdn.exception.HttpException;
-import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 
 import com.rabbitmq.client.ShutdownSignalException;
 
@@ -58,28 +53,9 @@ public class VirtualizationConnectorUtil {
     @Reference
     private ApiFactoryService apiFactoryService;
 
-    // optional+dynamic to break circular dependency
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<Server> serverCSO;
-    Server server;
-
-    private AtomicBoolean initDone = new AtomicBoolean();
-
-    private Server lazyGetServer() {
-        if (this.initDone.compareAndSet(false, true)) {
-            if (this.serverCSO != null) { // allow for test injection
-                this.server = this.serverCSO.getService();
-            }
-        }
-        return this.server;
-    }
-
-    @Deactivate
-    private void deactivate() {
-        if (this.initDone.get()) {
-            this.serverCSO.ungetService(this.server);
-        }
-    }
+    // target ensures this only binds to active runner published by Server
+    @Reference(target = "(active=true)")
+    RabbitMQRunner activeRunner;
 
     /**
      * Checks connection for vmware.
@@ -201,8 +177,7 @@ public class VirtualizationConnectorUtil {
                 } catch (ShutdownSignalException shutdownException) {
                     // If its an existing VC which we are connected to, then this exception is expected
                     if (vc.getId() != null) {
-                        OsRabbitMQClient osRabbitMQClient = lazyGetServer().getActiveRabbitMQRunner()
-                                .getVcToRabbitMQClientMap().get(vc.getId());
+                        OsRabbitMQClient osRabbitMQClient = this.activeRunner.getVcToRabbitMQClientMap().get(vc.getId());
                         if (osRabbitMQClient != null && osRabbitMQClient.isConnected()) {
                             LOG.info(
                                     "Exception encountered when connecting to RabbitMQ, ignoring since we are already connected",

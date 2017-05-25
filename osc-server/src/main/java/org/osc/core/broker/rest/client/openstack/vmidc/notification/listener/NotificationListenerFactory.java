@@ -17,21 +17,16 @@
 package org.osc.core.broker.rest.client.openstack.vmidc.notification.listener;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
-import org.osc.core.server.Server;
-import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * This factory spawns new listener object and registers it based given object type to the VC specific Rabit MQ client
@@ -45,44 +40,30 @@ public class NotificationListenerFactory {
     @Reference
     private AlertGenerator alertGenerator;
 
-    // optional+dynamic to break circular dependency
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private volatile ComponentServiceObjects<Server> serverCSO;
-    private Server server;
-
-    private AtomicBoolean initDone = new AtomicBoolean();
-
-    @Deactivate
-    private void deactivate() {
-        if (this.initDone.get()) {
-            this.serverCSO.ungetService(this.server);
-        }
-    }
+    // target ensures this only binds to active runner published by Server
+    @Reference(target = "(active=true)")
+    private RabbitMQRunner activeRunner;
 
     public OsNotificationListener createAndRegisterNotificationListener(VirtualizationConnector vc,
             OsNotificationObjectType objectType, List<String> objectIdList, BaseEntity entity)
             throws VmidcBrokerInvalidEntryException {
 
-        if (this.initDone.compareAndSet(false, true)) {
-            this.server = this.serverCSO.getService();
-        }
-
         switch (objectType) {
         case PORT:
             return new OsPortNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.server);
+                    this.alertGenerator, this.activeRunner);
         case VM:
             return new OsVMNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.server);
+                    this.alertGenerator, this.activeRunner);
         case HOST_AGGREGRATE:
             return new OsHostAggregrateNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.server);
+                    this.alertGenerator, this.activeRunner);
         case TENANT:
             return new OsTenantNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.server);
+                    this.alertGenerator, this.activeRunner);
         case NETWORK:
             return new OsNetworkNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.server);
+                    this.alertGenerator, this.activeRunner);
         default:
             break;
         }

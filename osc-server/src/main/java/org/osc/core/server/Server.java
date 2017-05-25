@@ -21,6 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -68,7 +70,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -93,10 +94,8 @@ import org.xml.sax.SAXException;
  * numerous types can access {@link #getActiveRabbitMQRunner()}. Making
  * this part of the {@link ServerApi} would expose a lot of the server
  * internals through the API.
- *
- * Server impl is published manually, after RabbitMQ has been started.
  */
-@Component(immediate = true)
+@Component(immediate = true, service = {Server.class, ServerApi.class})
 public class Server implements ServerApi {
     // Need to change the package name of Server class to org.osc.core.server
 
@@ -170,7 +169,7 @@ public class Server implements ServerApi {
 
     private Thread thread;
     private BundleContext context;
-    private ServiceRegistration<Server> serverRegistration;
+    private ServiceRegistration<RabbitMQRunner> rabbitMQRegistration;
 
     @Activate
     void activate(BundleContext context) {
@@ -188,11 +187,6 @@ public class Server implements ServerApi {
 
         this.thread = new Thread(server, "Start-Server");
         this.thread.start();
-    }
-
-    @Deactivate
-    private void deactivate() {
-        this.serverRegistration.unregister();
     }
 
     private void startServer() throws Exception {
@@ -237,9 +231,6 @@ public class Server implements ServerApi {
             this.passwordUtil.initPasswordFromDb(RestConstants.OSC_DEFAULT_LOGIN);
 
             JobEngine.getEngine().addJobCompletionListener(this.alertGenerator);
-
-            // register Server explicitly; can't use DS as it's registered too early
-            this.serverRegistration = this.context.registerService(Server.class, this, null);
 
             startRabbitMq();
             startWebsocket();
@@ -543,21 +534,19 @@ public class Server implements ServerApi {
         return future.getPromise();
     }
 
+    public void startRabbitMq() {
+        Dictionary<String, Object> props = new Hashtable<>();
+        props.put("active", "true");
+        this.rabbitMQRunner = this.rabbitRunnerFactory.getService();
+        this.rabbitMQRegistration = this.context.registerService(RabbitMQRunner.class, this.rabbitMQRunner, props);
+        log.info("Started RabbitMQ Runner");
+    }
+
     public void shutdownRabbitMq() {
+        this.rabbitMQRegistration.unregister();
         this.rabbitRunnerFactory.ungetService(this.rabbitMQRunner);
         log.info("Shutdown of RabbitMQ succeeded");
         this.rabbitMQRunner = null;
-    }
-
-    public void shutdownWebsocket() {
-        this.webSocketFactory.ungetService(this.wsRunner);
-        log.info("Shutdown of WebSocket succeeded");
-        this.wsRunner = null;
-    }
-
-    public void startRabbitMq() {
-        this.rabbitMQRunner = this.rabbitRunnerFactory.getService();
-        log.info("Started RabbitMQ Runner");
     }
 
     public void startWebsocket() {
@@ -570,8 +559,10 @@ public class Server implements ServerApi {
         log.info("Started Web Socket Runner");
     }
 
-    public RabbitMQRunner getActiveRabbitMQRunner() {
-        return this.rabbitMQRunner;
+    public void shutdownWebsocket() {
+        this.webSocketFactory.ungetService(this.wsRunner);
+        log.info("Shutdown of WebSocket succeeded");
+        this.wsRunner = null;
     }
 
     @Override

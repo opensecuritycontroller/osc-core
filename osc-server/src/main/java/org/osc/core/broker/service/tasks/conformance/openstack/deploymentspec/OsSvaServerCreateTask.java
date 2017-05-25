@@ -36,10 +36,10 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova.CreatedServerDetails;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.server.Server;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
@@ -84,8 +84,9 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     @Reference
     private ApiFactoryService apiFactoryService;
 
-    @Reference
-    private Server server;
+    // target ensures this only binds to active runner published by Server
+    @Reference(target = "(active=true)")
+    private RabbitMQRunner activeRunner;
 
     private DistributedApplianceInstance dai;
     private String availabilityZone;
@@ -94,7 +95,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     public OsSvaServerCreateTask create(DistributedApplianceInstance dai, String hypervisorName, String availabilityZone) {
         OsSvaServerCreateTask task = new OsSvaServerCreateTask();
         task.apiFactoryService = this.apiFactoryService;
-        task.server = this.server;
+        task.activeRunner = this.activeRunner;
         task.dai = dai;
         task.availabilityZone = availabilityZone;
         task.hypervisorHostName = hypervisorName;
@@ -157,7 +158,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                     );
             // Add new server ID to VM notification listener for this DS
 
-            this.server.getActiveRabbitMQRunner().getOsDeploymentSpecNotificationRunner()
+            this.activeRunner.getOsDeploymentSpecNotificationRunner()
                 .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
             if (vc.isControllerDefined()) {

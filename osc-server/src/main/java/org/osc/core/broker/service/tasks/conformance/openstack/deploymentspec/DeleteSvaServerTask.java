@@ -27,6 +27,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -38,8 +39,9 @@ public class DeleteSvaServerTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(DeleteSvaServerTask.class);
 
-    @Reference
-    org.osc.core.server.Server server;
+    // target ensures this only binds to active runner published by Server
+    @Reference(target = "(active=true)")
+    private RabbitMQRunner activeRunner;
 
     private DistributedApplianceInstance dai;
     private String region;
@@ -59,7 +61,7 @@ public class DeleteSvaServerTask extends TransactionalTask {
         DeleteSvaServerTask task = new DeleteSvaServerTask();
         task.region = region;
         task.dai = dai;
-        task.server = this.server;
+        task.activeRunner = this.activeRunner;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -88,7 +90,7 @@ public class DeleteSvaServerTask extends TransactionalTask {
                 serverId = sva.getId();
             }
 
-            this.server.getActiveRabbitMQRunner().getOsDeploymentSpecNotificationRunner()
+            this.activeRunner.getOsDeploymentSpecNotificationRunner()
                 .removeIdFromListener(this.dai.getDeploymentSpec().getId(), serverId);
 
             this.log.info("Deleting Server " + serverId + " from region " + this.region);

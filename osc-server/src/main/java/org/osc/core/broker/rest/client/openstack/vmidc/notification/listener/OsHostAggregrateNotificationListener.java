@@ -27,10 +27,10 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.util.db.HibernateUtil;
-import org.osc.core.server.Server;
 
 public class OsHostAggregrateNotificationListener extends OsNotificationListener {
 
@@ -41,8 +41,8 @@ public class OsHostAggregrateNotificationListener extends OsNotificationListener
     private final AlertGenerator alertGenerator;
 
     public OsHostAggregrateNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, Server server) {
-        super(vc, OsNotificationObjectType.HOST_AGGREGRATE, objectIdList, entity, server);
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRuner) {
+        super(vc, OsNotificationObjectType.HOST_AGGREGRATE, objectIdList, entity, activeRuner);
         this.conformService = conformService;
         this.alertGenerator = alertGenerator;
         register(vc, objectType);
