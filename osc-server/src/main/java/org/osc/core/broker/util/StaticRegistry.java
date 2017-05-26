@@ -23,14 +23,13 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * This registry is a work-around to temporarily allow some static calls to remain after they have been removed from the
- * REST API.
+ * This registry provides access to few services needed by utility classes, and avoids having to convert all those
+ * utility classes to services.
  *
  * The methods in this class should <b>not</b> be called from static initialisers, as this class is not initialised at
  * static initialisation time; instead they should be called from static methods.
  */
 @Component(service = StaticRegistry.class, immediate = true)
-@Deprecated
 public class StaticRegistry {
 
     @Reference
