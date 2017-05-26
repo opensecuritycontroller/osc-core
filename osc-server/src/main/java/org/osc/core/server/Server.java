@@ -36,6 +36,8 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDeploymentSpecNotificationRunner;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsSecurityGroupNotificationRunner;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
@@ -148,6 +150,11 @@ public class Server implements ServerApi {
     @Reference(service=RabbitMQRunner.class,
             scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private ComponentServiceObjects<RabbitMQRunner> rabbitRunnerFactory;
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<OsSecurityGroupNotificationRunner> securityGroupRunnerCSO;
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<OsDeploymentSpecNotificationRunner> deploymentSpecRunnerCSO;
 
     @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC)
     private volatile List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
@@ -539,6 +546,8 @@ public class Server implements ServerApi {
         props.put("active", "true");
         this.rabbitMQRunner = this.rabbitRunnerFactory.getService();
         this.rabbitMQRegistration = this.context.registerService(RabbitMQRunner.class, this.rabbitMQRunner, props);
+        this.rabbitMQRunner.setDeploymentSpecRunner(this.deploymentSpecRunnerCSO.getService());
+        this.rabbitMQRunner.setsecurityGroupRunner(this.securityGroupRunnerCSO.getService());
         log.info("Started RabbitMQ Runner");
     }
 
@@ -549,6 +558,8 @@ public class Server implements ServerApi {
             // No problem - this means the service was
             // already unregistered (e.g. by bundle stop)
         }
+        this.deploymentSpecRunnerCSO.ungetService(this.rabbitMQRunner.getOsDeploymentSpecNotificationRunner());
+        this.securityGroupRunnerCSO.ungetService(this.rabbitMQRunner.getSecurityGroupRunner());
         this.rabbitRunnerFactory.ungetService(this.rabbitMQRunner);
         log.info("Shutdown of RabbitMQ succeeded");
         this.rabbitMQRunner = null;

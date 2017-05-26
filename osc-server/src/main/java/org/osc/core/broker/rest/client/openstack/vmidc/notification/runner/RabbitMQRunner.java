@@ -41,7 +41,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceScope;
 import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
@@ -58,9 +57,9 @@ public class RabbitMQRunner implements BroadcastListener {
     private static HashMap<Long, Thread> vcToRabbitMQRunnerThreadMap = new HashMap<>();
     private static HashMap<Long, OsRabbitMQClient> vcToRabbitMQClientMap = new HashMap<>();
 
-    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
+//    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private OsSecurityGroupNotificationRunner securityGroupRunner;
-    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
+//    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private OsDeploymentSpecNotificationRunner deploymentSpecRunner;
 
     @Reference
@@ -303,5 +302,17 @@ public class RabbitMQRunner implements BroadcastListener {
 
     public OsDeploymentSpecNotificationRunner getOsDeploymentSpecNotificationRunner() {
         return this.deploymentSpecRunner;
+    }
+
+    public void setDeploymentSpecRunner(OsDeploymentSpecNotificationRunner runner) {
+        this.deploymentSpecRunner = runner;
+    }
+
+    public OsSecurityGroupNotificationRunner getSecurityGroupRunner() {
+        return this.securityGroupRunner;
+    }
+
+    public void setsecurityGroupRunner(OsSecurityGroupNotificationRunner securityGroupRunner) {
+        this.securityGroupRunner = securityGroupRunner;
     }
 }
