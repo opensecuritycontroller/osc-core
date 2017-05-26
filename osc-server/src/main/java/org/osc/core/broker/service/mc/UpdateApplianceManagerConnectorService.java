@@ -245,7 +245,7 @@ public class UpdateApplianceManagerConnectorService
         String mcDbApiKey = existingMc.getApiKey();
 
         ApplianceManagerConnectorDto dto = request.getDto();
-        String serviceName = this.apiFactoryService.getServiceName( ManagerType.fromText(dto.getManagerType()));
+        String serviceName = this.apiFactoryService.getServiceName(ManagerType.fromText(dto.getManagerType()));
         ApplianceManagerConnectorEntityMgr.toEntity(existingMc, dto, this.encryption, serviceName);
 
         if (request.isApi()) {
