@@ -35,7 +35,7 @@ public class DeletePortGroupTask extends TransactionalTask {
     private PortGroup portGroup;
     private SecurityGroup securityGroup;
 
-    public DeletePortGroupTask create (SecurityGroup securityGroup, PortGroup portGroup){
+    public DeletePortGroupTask create(SecurityGroup securityGroup, PortGroup portGroup){
         DeletePortGroupTask task = new DeletePortGroupTask();
         task.securityGroup = securityGroup;
         task.portGroup = portGroup;

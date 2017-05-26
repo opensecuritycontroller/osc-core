@@ -37,7 +37,7 @@ public final class AllocateDAIWithSGIMembersTask extends UpdateDAIToSGIMembersTa
         super(null, null);
     }
 
-    private AllocateDAIWithSGIMembersTask (SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+    private AllocateDAIWithSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
         super(sgi,dai);
     }
 
