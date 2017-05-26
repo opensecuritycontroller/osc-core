@@ -14,14 +14,18 @@
 # limitations under the License.
 
 sudo: false
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
 language:
     - java
 jdk:
     - oraclejdk8
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+#Issue with BND tools, see https://github.com/bndtools/bndtools/issues/1294
+before_install:
+    - mkdir -p $HOME/.bnd/default-ws/cnf/cache/3.3.0/bnd-cache/biz.aQute.launcher
+    - wget -O $HOME/.bnd/default-ws/cnf/cache/3.3.0/bnd-cache/biz.aQute.launcher/biz.aQute.launcher-3.3.0.jar http://central.maven.org/maven2/biz/aQute/bnd/biz.aQute.launcher/3.3.0/biz.aQute.launcher-3.3.0.jar
 install: 
     true
 script:
