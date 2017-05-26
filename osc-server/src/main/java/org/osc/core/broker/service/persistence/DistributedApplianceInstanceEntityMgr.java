@@ -37,8 +37,6 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 public class DistributedApplianceInstanceEntityMgr {
 
     public static DistributedApplianceInstanceDto fromEntity(DistributedApplianceInstance dai, Boolean providesDeviceStatus) throws Exception {
-//        Boolean providesDeviceStatus = ManagerApiFactory.providesDeviceStatus(dai.getVirtualSystem());
-
         String discovered = providesDeviceStatus ? (dai.getDiscovered() != null ? dai.getDiscovered().toString() : "") : "N/A";
         String inspectionReady = providesDeviceStatus ? (dai.getInspectionReady() != null ? dai.getInspectionReady().toString() : "") : "N/A";
         String lastStatus = providesDeviceStatus ? (dai.getLastStatus() != null ? dai.getLastStatus().toString() : "") : "N/A";
