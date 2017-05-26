@@ -30,8 +30,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VmwareSoftwareVersion;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.nsx.model.VersionedDeploymentSpec;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.network.UpdateNsxDeploymentSpecTask;
@@ -61,6 +62,16 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
     @Reference
     UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
+    @Reference
+    RegisterDeploymentSpecTask registerDeploymentSpecTask;
+
+    @Reference
+    UpdateNsxDeploymentSpecTask updateNsxDeploymentSpecTask;
+
+    @IgnoreCompare
+    @Reference
+    ApiFactoryService apiFactoryService;
+
     private TaskGraph tg;
     private VirtualSystem vs;
     private boolean updateNsxServiceAttributesScheduled;
@@ -72,6 +83,12 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
         task.updateNsxServiceAttributesScheduled = updateNsxServiceAttributesScheduled;
         task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
+        task.registerDeploymentSpecTask = this.registerDeploymentSpecTask;
+        task.updateNsxDeploymentSpecTask = this.updateNsxDeploymentSpecTask;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -91,7 +108,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
             vsSoftwareVersions.add(VmwareSoftwareVersion.valueOf(vsv.name()));//now ordered by enum ordinal
         }
 
-        DeploymentSpecApi deploymentSpecApi = VMwareSdnApiFactory.createDeploymentSpecApi(this.vs);
+        DeploymentSpecApi deploymentSpecApi = this.apiFactoryService.createDeploymentSpecApi(this.vs);
         List<DeploymentSpecElement> deploymentSpecs = deploymentSpecApi.getDeploymentSpecs(this.vs.getNsxServiceId());
         List<VmwareSoftwareVersion> apiSoftwareVersions = new ArrayList<>();
         for (DeploymentSpecElement ds : deploymentSpecs){
@@ -107,7 +124,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
             //new DA added(create DS's)
             List<VmwareSoftwareVersion> softVersions = Arrays.asList(VmwareSoftwareVersion.values());
             for (VmwareSoftwareVersion version : softVersions){
-                this.tg.appendTask(new RegisterDeploymentSpecTask(this.vs, version));
+                this.tg.appendTask(this.registerDeploymentSpecTask.create(this.vs, version));
             }
         } else if (nsxDepSpecsOutOfSync.isEmpty() && vsSoftwareVersions.size() == VmwareSoftwareVersion.values().length){
             //specs are in sync on nsx and vs
@@ -117,7 +134,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
                 if (!StringUtils.isEmpty(spec.getImageUrl()) && !spec.getImageUrl().equals(imageUrl)) {
                     // DA/applianceSoftwareVersion changed
                     log.info("image url:" + imageUrl + " vds url:" + spec.getImageUrl());
-                    this.tg.addTask(new UpdateNsxDeploymentSpecTask(this.vs, new VersionedDeploymentSpec(spec)));
+                    this.tg.addTask(this.updateNsxDeploymentSpecTask.create(this.vs, new VersionedDeploymentSpec(spec)));
                     deploymentSpecChanged = true;
                 }
             }
@@ -130,7 +147,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
                 List<VmwareSoftwareVersion> outOfSyncList = getOutofSyncSpecs(softwareVersionsToSync, apiSoftwareVersions);
 
                 for (VmwareSoftwareVersion softVersion : outOfSyncList){
-                    this.tg.appendTask(new RegisterDeploymentSpecTask(this.vs, softVersion));
+                    this.tg.appendTask(this.registerDeploymentSpecTask.create(this.vs, softVersion));
                 }
 
             } else {
@@ -139,7 +156,7 @@ public class NsxDeploymentSpecCheckMetaTask extends TransactionalMetaTask {
                 //new deployspec is created on nsx, clear the expired/missing deployspec
                 this.vs.getNsxDeploymentSpecIds().keySet().removeAll(nsxDepSpecsOutOfSync);
                 for (VmwareSoftwareVersion softVersion : nsxDepSpecsOutOfSync) {
-                    this.tg.appendTask(new RegisterDeploymentSpecTask(this.vs, softVersion));
+                    this.tg.appendTask(this.registerDeploymentSpecTask.create(this.vs, softVersion));
                 }
             }
 

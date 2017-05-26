@@ -31,15 +31,21 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-
+import org.osgi.service.component.annotations.Component;
+@Component(service = ForceDeleteDATask.class)
 public class ForceDeleteDATask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(ForceDeleteDATask.class);
 
     private DistributedAppliance da;
 
-    public ForceDeleteDATask(DistributedAppliance da) {
-        this.da = da;
-        this.name = getName();
+    public ForceDeleteDATask create(DistributedAppliance da) {
+        ForceDeleteDATask task = new ForceDeleteDATask();
+        task.da = da;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -58,7 +64,7 @@ public class ForceDeleteDATask extends TransactionalTask {
 
             // remove all DAI(s)
             for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
-                OSCEntityManager.delete(em, dai);
+                OSCEntityManager.delete(em, dai, this.txBroadcastUtil);
             }
 
             // remove all SGI(s) - SG references
@@ -66,27 +72,27 @@ public class ForceDeleteDATask extends TransactionalTask {
                 for (SecurityGroup sg : sgi.getSecurityGroups()) {
                     sgi.removeSecurity(sg);
                     sg.removeSecurityInterface(sgi);
-                    OSCEntityManager.update(em, sg);
-                    OSCEntityManager.update(em, sgi);
+                    OSCEntityManager.update(em, sg, this.txBroadcastUtil);
+                    OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
                 }
             }
 
             // remove all Deployment Specs for this virtual system
             for (DeploymentSpec ds : vs.getDeploymentSpecs()) {
-                OSCEntityManager.delete(em, ds);
+                OSCEntityManager.delete(em, ds, this.txBroadcastUtil);
             }
 
             // remove all SGI for this virtual system
             for (SecurityGroupInterface sgi : vs.getSecurityGroupInterfaces()) {
-                OSCEntityManager.delete(em, sgi);
+                OSCEntityManager.delete(em, sgi, this.txBroadcastUtil);
             }
 
             // delete virtual system from database
-            OSCEntityManager.delete(em, vs);
+            OSCEntityManager.delete(em, vs, this.txBroadcastUtil);
         }
 
         // delete distributed appliance from database
-        OSCEntityManager.delete(em, da);
+        OSCEntityManager.delete(em, da, this.txBroadcastUtil);
     }
 
     @Override

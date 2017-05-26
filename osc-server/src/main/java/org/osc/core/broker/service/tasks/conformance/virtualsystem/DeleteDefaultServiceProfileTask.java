@@ -23,18 +23,30 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceProfileApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service=DeleteDefaultServiceProfileTask.class)
 public class DeleteDefaultServiceProfileTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(DeleteDefaultServiceProfileTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystemPolicy vsp;
 
-    public DeleteDefaultServiceProfileTask(VirtualSystemPolicy vsp) {
-        this.vsp = vsp;
-        this.name = getName();
+    public DeleteDefaultServiceProfileTask create(VirtualSystemPolicy vsp) {
+        DeleteDefaultServiceProfileTask task = new DeleteDefaultServiceProfileTask();
+        task.vsp = vsp;
+        task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -42,7 +54,7 @@ public class DeleteDefaultServiceProfileTask extends TransactionalTask {
         log.debug("Start excecuting DeleteDefaultServiceProfileTask");
 
         this.vsp = em.find(VirtualSystemPolicy.class, this.vsp.getId());
-        ServiceProfileApi serviceProfileApi = VMwareSdnApiFactory.createServiceProfileApi(this.vsp.getVirtualSystem());
+        ServiceProfileApi serviceProfileApi = this.apiFactoryService.createServiceProfileApi(this.vsp.getVirtualSystem());
         serviceProfileApi.deleteServiceProfile(this.vsp.getVirtualSystem().getNsxServiceId(), this.vsp.getNsxVendorTemplateId());
         log.debug("Deleted service profile of the service: " + this.vsp.getVirtualSystem().getNsxServiceId() + " for vendor template: " + this.vsp.getNsxVendorTemplateId());
     }

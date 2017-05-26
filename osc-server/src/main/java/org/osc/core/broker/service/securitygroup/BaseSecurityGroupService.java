@@ -127,7 +127,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
         }
     }
 
-    public static void addSecurityGroupMember(EntityManager em, SecurityGroup securityGroup,
+    public void addSecurityGroupMember(EntityManager em, SecurityGroup securityGroup,
             SecurityGroupMemberItemDto securityGroupMemberDto) throws VmidcBrokerValidationException {
         String openstackId = securityGroupMemberDto.getOpenstackId();
         SecurityGroupMemberType type = SecurityGroupMemberType.fromText(securityGroupMemberDto.getType());
@@ -160,9 +160,9 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                 throw new VmidcBrokerValidationException(String.format("Invalid Security Group Member Type ('%s')",
                         type));
             }
-            OSCEntityManager.create(em, entity);
+            OSCEntityManager.create(em, entity, this.txBroadcastUtil);
             SecurityGroupMember securityGroupMember = new SecurityGroupMember(securityGroup, entity);
-            OSCEntityManager.create(em, securityGroupMember);
+            OSCEntityManager.create(em, securityGroupMember, this.txBroadcastUtil);
         } else {
             log.info(type.toString() + " Already exists in DB: " + securityGroupMemberDto.getName());
 
@@ -178,7 +178,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                         if (sgm.getMarkedForDeletion()) {
                             log.info(type.toString() + ": " + securityGroupMemberDto.getName()
                                     + " Marked as deleted, marking undeleted.");
-                            OSCEntityManager.unMarkDeleted(em, sgm);
+                            OSCEntityManager.unMarkDeleted(em, sgm, this.txBroadcastUtil);
                         }
                     } else {
                         // entity is part of another security group. Check if its an active member
@@ -193,7 +193,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                         // If entity is not already a member but its an 'in-active'(deleted) member in another security group
                         // create a SGM for it.
                         SecurityGroupMember securityGroupMember = new SecurityGroupMember(securityGroup, entity);
-                        OSCEntityManager.create(em, securityGroupMember);
+                        OSCEntityManager.create(em, securityGroupMember, this.txBroadcastUtil);
                     }
                 }
 
@@ -201,7 +201,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                 if (entity.getType().equals(SecurityGroupMemberType.SUBNET)) {
                     // Update Protect External flag for every SG update
                     ((Subnet) entity).setProtectExternal(securityGroupMemberDto.isProtectExternal());
-                    OSCEntityManager.update(em, entity);
+                    OSCEntityManager.update(em, entity, this.txBroadcastUtil);
                 }
 
             } else {
@@ -227,7 +227,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                 // If entity is indirect member of this and ONLY this security group, create a member for it.
                 if (securityGroups.size() == 1 && securityGroups.contains(securityGroup)) {
                     SecurityGroupMember securityGroupMember = new SecurityGroupMember(securityGroup, entity);
-                    OSCEntityManager.create(em, securityGroupMember);
+                    OSCEntityManager.create(em, securityGroupMember, this.txBroadcastUtil);
                 } else {
                     StringBuilder securityGroupNamesBuilder = new StringBuilder();
                     for (SecurityGroup sg : securityGroups) {

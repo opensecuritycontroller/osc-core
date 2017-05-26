@@ -26,8 +26,8 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.DefaultInspectionPort;
@@ -35,24 +35,36 @@ import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.TagEncapsulationType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-class VmPortHookCreateTask extends TransactionalTask {
+@Component(service = VmPortHookCreateTask.class)
+public class VmPortHookCreateTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(VmPortHookCreateTask.class);
 
-    private final String vmName;
-    private final String serviceName;
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    private String vmName;
+    private String serviceName;
     private VMPort vmPort;
     private DistributedApplianceInstance dai;
     private SecurityGroupInterface securityGroupInterface;
 
-    public VmPortHookCreateTask(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
+    public VmPortHookCreateTask create(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
             DistributedApplianceInstance daiToRedirectTo) {
-        this.vmPort = vmPort;
-        this.dai = daiToRedirectTo;
-        this.securityGroupInterface = securityGroupInterface;
-        this.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
-        this.vmName = vmPort.getVm() != null ? vmPort.getVm().getName() : vmPort.getSubnet().getName();
+        VmPortHookCreateTask task = new VmPortHookCreateTask();
+        task.vmPort = vmPort;
+        task.dai = daiToRedirectTo;
+        task.securityGroupInterface = securityGroupInterface;
+        task.serviceName = securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
+        task.vmName = vmPort.getVm() != null ? vmPort.getVm().getName() : vmPort.getSubnet().getName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -65,7 +77,7 @@ class VmPortHookCreateTask extends TransactionalTask {
 
         this.log.info(String.format("Creating Inspection Hooks for Security Group Member VM '%s' for service '%s'",
                 this.vmName, this.serviceName));
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
+        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
 
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(
@@ -77,7 +89,7 @@ class VmPortHookCreateTask extends TransactionalTask {
 
             TagEncapsulationType encapsulationType = vs.getEncapsulationType() != null
                     ? TagEncapsulationType.valueOf(vs.getEncapsulationType().name()) : null;
-            if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())){
+            if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
                 String portGroupId = this.securityGroupInterface.getSecurityGroup().getNetworkElementId();
                 if (portGroupId != null){
                     PortGroup portGroup = new PortGroup();

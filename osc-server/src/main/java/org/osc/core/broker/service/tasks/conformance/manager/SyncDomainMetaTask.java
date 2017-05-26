@@ -25,23 +25,43 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.InfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.sdk.manager.api.ManagerDomainApi;
 import org.osc.sdk.manager.element.ManagerDomainElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service=SyncDomainMetaTask.class)
 public class SyncDomainMetaTask extends TransactionalMetaTask {
 
     //private static final Logger log = Logger.getLogger(SyncDomainMetaTask.class);
 
+    @Reference
+    CreateDomainTask createDomainTask;
+
+    @Reference
+    DeleteDomainTask deleteDomainTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private ApplianceManagerConnector mc;
     private TaskGraph tg;
 
-    public SyncDomainMetaTask(ApplianceManagerConnector mc) {
-        this.mc = mc;
-        this.name = getName();
+    public SyncDomainMetaTask create(ApplianceManagerConnector mc) {
+        SyncDomainMetaTask task = new SyncDomainMetaTask();
+        task.mc = mc;
+        task.name = task.getName();
+        task.createDomainTask = this.createDomainTask;
+        task.deleteDomainTask = this.deleteDomainTask;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -50,7 +70,7 @@ public class SyncDomainMetaTask extends TransactionalMetaTask {
         this.tg = new TaskGraph();
 
         this.mc = em.find(ApplianceManagerConnector.class, this.mc.getId());
-        ManagerDomainApi mgrApi = ManagerApiFactory.createManagerDomainApi(this.mc);
+        ManagerDomainApi mgrApi = this.apiFactoryService.createManagerDomainApi(this.mc);
 
         Set<Domain> domains = this.mc.getDomains();
         List<? extends ManagerDomainElement> mgrDomains = mgrApi.listDomains();
@@ -65,12 +85,12 @@ public class SyncDomainMetaTask extends TransactionalMetaTask {
                 domain = new Domain(this.mc);
                 domain.setName(mgrDomain.getName());
                 domain.setMgrId(mgrDomain.getId().toString());
-                this.tg.appendTask(new CreateDomainTask(this.mc, domain));
+                this.tg.appendTask(this.createDomainTask.create(this.mc, domain));
             } else {
                 // Update policy attributes
                 if (!domain.getName().equals(mgrDomain.getName())) {
                     domain.setName(mgrDomain.getName());
-                    OSCEntityManager.update(em, domain);
+                    OSCEntityManager.update(em, domain, this.txBroadcastUtil);
                     this.tg.appendTask(new InfoTask("Updated Domain name ('" + mgrDomain.getName() + "')"));
                 }
             }
@@ -81,7 +101,7 @@ public class SyncDomainMetaTask extends TransactionalMetaTask {
             ManagerDomainElement mgrDomain = findByMgrDomainId(mgrDomains, domain.getMgrId());
             if (mgrDomain == null) {
                 // Delete domain
-                this.tg.appendTask(new DeleteDomainTask(domain));
+                this.tg.appendTask(this.deleteDomainTask.create(domain));
             }
         }
 

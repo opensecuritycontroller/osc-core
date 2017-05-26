@@ -40,7 +40,12 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component
+/**
+ * The implementation is advertised so that it can be used in
+ * SecurityGroupUpdateOrDeleteMetaTask
+ */
+// TODO this service causes circularity. DS references are optional+dynamic as work around.
+@Component(service={AddSecurityGroupService.class, AddSecurityGroupServiceApi.class})
 public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
         implements AddSecurityGroupServiceApi {
 
@@ -76,7 +81,7 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
             LOG.info("Creating security group: " + securityGroup.toString());
-            OSCEntityManager.create(em, securityGroup);
+            OSCEntityManager.create(em, securityGroup, this.txBroadcastUtil);
 
             if (!securityGroup.isProtectAll()) {
                 for (SecurityGroupMemberItemDto securityGroupMemberDto : request.getMembers()) {
@@ -85,7 +90,7 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
                 }
             }
 
-            OSCEntityManager.update(em, securityGroup);
+            OSCEntityManager.update(em, securityGroup, this.txBroadcastUtil);
 
             UnlockObjectMetaTask forLambda = unlockTask;
             chain(() -> {

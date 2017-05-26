@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -36,6 +37,7 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class TagVmRequestValidatorTest {
 
@@ -49,6 +51,9 @@ public class TagVmRequestValidatorTest {
 
     EntityManager em;
 
+    @Mock
+    TransactionalBroadcastUtil txBroadcastUtil;
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -60,7 +65,7 @@ public class TagVmRequestValidatorTest {
 
         this.em = InMemDB.getEntityManagerFactory().createEntityManager();
 
-        this.validator = new TagVmRequestValidator(this.em);
+        this.validator = new TagVmRequestValidator(this.em, this.txBroadcastUtil);
     }
 
     @After
@@ -143,7 +148,7 @@ public class TagVmRequestValidatorTest {
     public void testValidateAndLoad_WithNullSession_ThrowsNullPointerException() throws Exception {
         // Arrange.
         this.exception.expect(NullPointerException.class);
-        TagVmRequestValidator nullInitializedValidator = new TagVmRequestValidator(null);
+        TagVmRequestValidator nullInitializedValidator = new TagVmRequestValidator(null, this.txBroadcastUtil);
 
         // Act.
         nullInitializedValidator.validateAndLoad(VALID_REQUEST);

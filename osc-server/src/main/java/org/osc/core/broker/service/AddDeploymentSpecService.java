@@ -63,7 +63,7 @@ public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequ
                     .addUnlockTask(LockUtil.tryLockVCObject(this.vs.getVirtualizationConnector(), LockType.READ_LOCK));
 
             DeploymentSpec ds = DeploymentSpecEntityMgr.createEntity(request.getDto(), this.vs);
-            OSCEntityManager.create(em, ds);
+            OSCEntityManager.create(em, ds, this.txBroadcastUtil);
             ds.setAvailabilityZones(createAvailabilityZones(ds, request.getDto(), em));
             ds.setHosts(createHosts(ds, request.getDto(), em));
             ds.setHostAggregates(createHostAggregates(ds, request.getDto(), em));

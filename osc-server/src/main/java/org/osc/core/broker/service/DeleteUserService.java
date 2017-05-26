@@ -46,7 +46,7 @@ public class DeleteUserService extends ServiceDispatcher<DeleteUserRequest, Empt
         // If a user is deleted then all the sessions associated with
         // that user should be ended. The broadcast of the entity deletion
         // takes care of this
-        OSCEntityManager.delete(em, user);
+        OSCEntityManager.delete(em, user, this.txBroadcastUtil);
 
         return new EmptySuccessResponse();
     }

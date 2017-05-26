@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -41,6 +42,7 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.UpdateDaiConsolePasswordRequestValidator;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 import com.google.common.collect.Sets;
 
@@ -84,6 +86,9 @@ public class UpdateDaiConsolePasswordRequestValidatorTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
+    @Mock
+    TransactionalBroadcastUtil txBroadcastUtil;
+
     EntityManager em;
 
     private UpdateDaiConsolePasswordRequestValidator validator;
@@ -96,7 +101,7 @@ public class UpdateDaiConsolePasswordRequestValidatorTest {
 
         populateDatabase();
 
-        this.validator = new UpdateDaiConsolePasswordRequestValidator(this.em);
+        this.validator = new UpdateDaiConsolePasswordRequestValidator(this.em, this.txBroadcastUtil);
     }
 
     @After

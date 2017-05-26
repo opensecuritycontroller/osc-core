@@ -16,60 +16,48 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
+import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.server.EncryptionApi;
-import org.osc.core.broker.service.appliance.UploadConfig;
-import org.osc.core.broker.service.broadcast.Broadcaster;
-import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * This registry is a work-around to temporarily allow some static calls to remain after they have been removed from the
- * REST API.
+ * This registry provides access to few services needed by utility classes, and avoids having to convert all those
+ * utility classes to services.
  *
  * The methods in this class should <b>not</b> be called from static initialisers, as this class is not initialised at
  * static initialisation time; instead they should be called from static methods.
  */
-@Component(service = StaticRegistry.class, immediate = true,
-    configurationPid="org.osc.core.broker.upload",
-    configurationPolicy=ConfigurationPolicy.REQUIRE)
-@Deprecated
+@Component(service = StaticRegistry.class, immediate = true)
 public class StaticRegistry {
-
-    @Reference
-    private Server server;
-
-    @Reference
-    private Broadcaster broadcaster;
 
     @Reference
     private EncryptionApi encryptionApi;
 
-    private String uploadPath;
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    private AlertGenerator alertGenerator;
 
     private static StaticRegistry instance = null;
 
     @Activate
-    void activate(UploadConfig config) {
-        this.uploadPath = config.upload_path();
+    void activate() {
         instance = this;
-    }
-
-    public static Server server() {
-        return instance.server;
-    }
-
-    public static Broadcaster broadcaster() {
-        return instance.broadcaster;
-    }
-
-    public static String uploadPath() {
-        return instance.uploadPath;
     }
 
     public static EncryptionApi encryptionApi() {
         return instance.encryptionApi;
     }
+
+    public static TransactionalBroadcastUtil transactionalBroadcastUtil() {
+        return instance.txBroadcastUtil;
+    }
+
+    public static AlertGenerator alertGenerator() {
+        return instance.alertGenerator;
+    }
+
 }

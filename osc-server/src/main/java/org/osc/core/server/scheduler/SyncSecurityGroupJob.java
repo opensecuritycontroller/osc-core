@@ -26,10 +26,10 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.quartz.Job;
@@ -51,7 +51,7 @@ public class SyncSecurityGroupJob implements Job {
         try {
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             List<SecurityGroup> sgs = HibernateUtil.getTransactionControl().required(() -> {
-                OSCEntityManager<SecurityGroup> emgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
+                OSCEntityManager<SecurityGroup> emgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em, StaticRegistry.transactionalBroadcastUtil());
                 return emgr.listAll();
             });
 
@@ -70,7 +70,7 @@ public class SyncSecurityGroupJob implements Job {
                                     SecurityGroup found = em.find(SecurityGroup.class, sg.getId());
                                     conformService.startSecurityGroupConformanceJob(found);
                                 } catch (Exception ex) {
-                                    AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE,
+                                    StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE,
                                             new LockObjectReference(sg),
                                             "Failure during scheduling of Security Group Sync. " + ex.getMessage());
                                     log.error("Fail to sync SG " + sg.getName(), ex);
@@ -87,11 +87,11 @@ public class SyncSecurityGroupJob implements Job {
                 sgSync.start();
             }
         } catch (ScopedWorkException ex) {
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
+            StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
                     "Failure during scheduling of Security Groups Sync. " + ex.getCause().getMessage());
             log.error("Fail to get database session or query SGs", ex.getCause());
         } catch (Exception ex) {
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
+            StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.SCHEDULER_FAILURE, null,
                     "Failure during scheduling of Security Groups Sync. " + ex.getMessage());
             log.error("Fail to get database session or query SGs", ex);
         }

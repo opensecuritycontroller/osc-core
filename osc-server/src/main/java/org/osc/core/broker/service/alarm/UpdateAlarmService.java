@@ -40,7 +40,7 @@ public class UpdateAlarmService extends ServiceDispatcher<BaseRequest<AlarmDto>,
     @Override
     public BaseResponse exec(BaseRequest<AlarmDto> request, EntityManager em) throws Exception {
 
-        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em);
+        OSCEntityManager<Alarm> emgr = new OSCEntityManager<Alarm>(Alarm.class, em, this.txBroadcastUtil);
 
         // retrieve existing entry from db
         Alarm alarm = emgr.findByPrimaryKey(request.getDto().getId());

@@ -20,7 +20,7 @@ import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.TagVmRequest;
@@ -30,6 +30,7 @@ import org.osc.core.broker.service.validator.TagVmRequestValidator;
 import org.osc.core.broker.util.VimUtils;
 import org.osc.core.server.Server;
 import org.osc.sdk.sdn.api.SecurityTagApi;
+import org.osgi.service.component.annotations.Reference;
 
 import com.vmware.vim25.mo.VirtualMachine;
 
@@ -40,10 +41,13 @@ abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmRes
     private VimUtils vimUtils;
     private SecurityTagApi securityTagApi;
 
+    @Reference
+    protected ApiFactoryService apiFactoryService;
+
     @Override
     public TagVmResponse exec(TagVmRequest request, EntityManager em) throws Exception {
         if (this.validator == null) {
-            this.validator = new TagVmRequestValidator(em);
+            this.validator = new TagVmRequestValidator(em, this.txBroadcastUtil);
         }
 
         DistributedApplianceInstance dai = this.validator.validateAndLoad(request);
@@ -54,7 +58,7 @@ abstract class BaseTagVmService extends ServiceDispatcher<TagVmRequest, TagVmRes
         TagVmResponse resp = modifyVmTag(request, new TagVmResponse());
 
         if (this.securityTagApi == null) {
-            this.securityTagApi = VMwareSdnApiFactory.createSecurityTagApi(dai.getVirtualSystem());
+            this.securityTagApi = this.apiFactoryService.createSecurityTagApi(dai.getVirtualSystem());
         }
 
         modifyNsxSecurityTagApi(this.securityTagApi, vm, resp);

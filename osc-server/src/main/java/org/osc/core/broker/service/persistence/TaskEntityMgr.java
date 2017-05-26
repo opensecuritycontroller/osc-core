@@ -37,11 +37,12 @@ import org.osc.core.broker.service.dto.TaskFailureRecordDto;
 import org.osc.core.broker.service.dto.TaskRecordDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
 
-    public TaskEntityMgr(EntityManager em) {
-        super(TaskRecord.class, em);
+    public TaskEntityMgr(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
+        super(TaskRecord.class, em, txBroadcastUtil);
     }
 
     public static TaskRecordDto fromEntity(TaskRecord tr) {

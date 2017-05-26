@@ -21,11 +21,13 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This task is responsible for creating a inspection hook for a given
@@ -36,11 +38,29 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
  * This task is applicable to SGIs whose virtual system refers to an SDN
  * controller that supports port groups.
  */
+@Component(service=CreatePortGroupHookTask.class)
 public final class CreatePortGroupHookTask extends BasePortGroupHookTask {
     private static final Logger LOG = Logger.getLogger(CreatePortGroupHookTask.class);
 
-    public CreatePortGroupHookTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    public CreatePortGroupHookTask() {
+        super(null, null);
+    }
+
+    private CreatePortGroupHookTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
         super(sgi, dai);
+    }
+
+    public CreatePortGroupHookTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+        CreatePortGroupHookTask task = new CreatePortGroupHookTask(sgi, dai);
+
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -48,7 +68,7 @@ public final class CreatePortGroupHookTask extends BasePortGroupHookTask {
         super.executeTransaction(em);
         String inspectionHookId = null;
 
-        try (SdnRedirectionApi redirection = SdnControllerApiFactory.createNetworkRedirectionApi(getSGI().getVirtualSystem())) {
+        try (SdnRedirectionApi redirection = this.apiFactoryService.createNetworkRedirectionApi(getSGI().getVirtualSystem())) {
             inspectionHookId = redirection.installInspectionHook(getPortGroup(),
                     new DefaultInspectionPort(getIngressPort(), getEgressPort()),
                     getSGI().getTagValue(), null,
@@ -63,7 +83,7 @@ public final class CreatePortGroupHookTask extends BasePortGroupHookTask {
         }
 
         getSGI().setNetworkElementId(inspectionHookId);
-        OSCEntityManager.update(em, getSGI());
+        OSCEntityManager.update(em, getSGI(), this.txBroadcastUtil);
     }
 
     @Override

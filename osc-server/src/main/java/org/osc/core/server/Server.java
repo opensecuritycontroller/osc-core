@@ -21,6 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -34,10 +36,11 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDeploymentSpecNotificationRunner;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsSecurityGroupNotificationRunner;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
+import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
@@ -48,7 +51,9 @@ import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.broker.service.persistence.DatabaseUtils;
 import org.osc.core.broker.util.PasswordUtil;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.rest.client.RestBaseClient;
@@ -62,6 +67,8 @@ import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
 import org.osc.core.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.util.VersionUtil;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -90,7 +97,7 @@ import org.xml.sax.SAXException;
  * this part of the {@link ServerApi} would expose a lot of the server
  * internals through the API.
  */
-@Component(immediate = true, service = {ServerApi.class, Server.class})
+@Component(immediate = true, service = {Server.class, ServerApi.class})
 public class Server implements ServerApi {
     // Need to change the package name of Server class to org.osc.core.server
 
@@ -125,6 +132,9 @@ public class Server implements ServerApi {
     private ApiFactoryService apiFactoryService;
 
     @Reference
+    private NsxUpdateAgentsService nsxUpdateAgentsService;
+
+    @Reference
     private PasswordUtil passwordUtil;
 
     @Reference
@@ -141,16 +151,36 @@ public class Server implements ServerApi {
             scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private ComponentServiceObjects<RabbitMQRunner> rabbitRunnerFactory;
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<OsSecurityGroupNotificationRunner> securityGroupRunnerCSO;
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<OsDeploymentSpecNotificationRunner> deploymentSpecRunnerCSO;
+
     @Reference(cardinality=ReferenceCardinality.MULTIPLE, policy=ReferencePolicy.DYNAMIC)
-    private List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
+    private volatile List<ServerTerminationListener> terminationListeners = new CopyOnWriteArrayList<>();
 
     @Reference
     private EncryptionApi encryption;
 
+    @Reference
+    private DBConnectionParameters dbParams;
+
+    @Reference
+    private DBConnectionManager dbMgr;
+
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    private AlertGenerator alertGenerator;
+
     private Thread thread;
+    private BundleContext context;
+    private ServiceRegistration<RabbitMQRunner> rabbitMQRegistration;
 
     @Activate
-    void activate() {
+    void activate(BundleContext context) {
+        this.context = context;
         Runnable server = new Runnable() {
             @Override
             public void run() {
@@ -200,22 +230,20 @@ public class Server implements ServerApi {
                 }
             }
 
-            ManagerApiFactory.init();
-            SdnControllerApiFactory.init();
-            ReleaseUpgradeMgr.initDb(this.encryption);
-            DatabaseUtils.createDefaultDB();
-            DatabaseUtils.markRunningJobAborted();
+            ReleaseUpgradeMgr.initDb(this.encryption, this.dbParams, this.dbMgr);
+            DatabaseUtils.createDefaultDB(this.dbMgr, this.txBroadcastUtil);
+            DatabaseUtils.markRunningJobAborted(this.dbMgr, this.txBroadcastUtil);
 
             this.passwordUtil.initPasswordFromDb(RestConstants.VMIDC_NSX_LOGIN);
             this.passwordUtil.initPasswordFromDb(RestConstants.OSC_DEFAULT_LOGIN);
 
-            JobEngine.getEngine().addJobCompletionListener(new AlertGenerator());
-
-            addShutdownHook();
-            startScheduler();
+            JobEngine.getEngine().addJobCompletionListener(this.alertGenerator);
 
             startRabbitMq();
             startWebsocket();
+
+            addShutdownHook();
+            startScheduler();
 
             Thread timeMonitorThread = ServerUtil.getTimeMonitorThread(new TimeChangeCommand() {
 
@@ -224,10 +252,10 @@ public class Server implements ServerApi {
                     String timeDifferenceString = DurationFormatUtils.formatDuration(Math.abs(timeDifference),
                             "d 'Days' H 'Hours' m 'Minutes' s 'Seconds'");
                     if (timeDifference < 0) {
-                        AlertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
+                        Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
                                 "System Clock Moved Back by " + timeDifferenceString);
                     } else {
-                        AlertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
+                        Server.this.alertGenerator.processSystemFailureEvent(SystemFailureType.SYSTEM_CLOCK,
                                 "System Clock Moved Forward by " + timeDifferenceString);
                     }
                     stopScheduler();
@@ -342,7 +370,7 @@ public class Server implements ServerApi {
         scheduler.scheduleJob(syncDaJob, syncDaJobTrigger);
         scheduler.scheduleJob(syncSgJob, syncSgJobTrigger);
 
-        MonitorDistributedApplianceInstanceJob.scheduleMonitorDaiJob();
+        MonitorDistributedApplianceInstanceJob.scheduleMonitorDaiJob(this.nsxUpdateAgentsService);
 
         this.archiveService.maybeScheduleArchiveJob();
     }
@@ -440,9 +468,6 @@ public class Server implements ServerApi {
         // gracefully closing all RabbitMQ clients before shutting down server
         shutdownRabbitMq();
 
-        // Ensure to close database
-        HibernateUtil.shutdown();
-
         // Gracefully closing all web socket clients before shutting down server
         shutdownWebsocket();
 
@@ -516,21 +541,28 @@ public class Server implements ServerApi {
         return future.getPromise();
     }
 
+    public void startRabbitMq() {
+        Dictionary<String, Object> props = new Hashtable<>();
+        props.put("active", "true");
+        this.rabbitMQRunner = this.rabbitRunnerFactory.getService();
+        this.rabbitMQRegistration = this.context.registerService(RabbitMQRunner.class, this.rabbitMQRunner, props);
+        this.rabbitMQRunner.setDeploymentSpecRunner(this.deploymentSpecRunnerCSO.getService());
+        this.rabbitMQRunner.setsecurityGroupRunner(this.securityGroupRunnerCSO.getService());
+        log.info("Started RabbitMQ Runner");
+    }
+
     public void shutdownRabbitMq() {
+        try {
+            this.rabbitMQRegistration.unregister();
+        } catch (IllegalStateException ise) {
+            // No problem - this means the service was
+            // already unregistered (e.g. by bundle stop)
+        }
+        this.deploymentSpecRunnerCSO.ungetService(this.rabbitMQRunner.getOsDeploymentSpecNotificationRunner());
+        this.securityGroupRunnerCSO.ungetService(this.rabbitMQRunner.getSecurityGroupRunner());
         this.rabbitRunnerFactory.ungetService(this.rabbitMQRunner);
         log.info("Shutdown of RabbitMQ succeeded");
         this.rabbitMQRunner = null;
-    }
-
-    public void shutdownWebsocket() {
-        this.webSocketFactory.ungetService(this.wsRunner);
-        log.info("Shutdown of WebSocket succeeded");
-        this.wsRunner = null;
-    }
-
-    public void startRabbitMq() {
-        this.rabbitMQRunner = this.rabbitRunnerFactory.getService();
-        log.info("Started RabbitMQ Runner");
     }
 
     public void startWebsocket() {
@@ -543,8 +575,10 @@ public class Server implements ServerApi {
         log.info("Started Web Socket Runner");
     }
 
-    public RabbitMQRunner getActiveRabbitMQRunner() {
-        return this.rabbitMQRunner;
+    public void shutdownWebsocket() {
+        this.webSocketFactory.ungetService(this.wsRunner);
+        log.info("Shutdown of WebSocket succeeded");
+        this.wsRunner = null;
     }
 
     @Override

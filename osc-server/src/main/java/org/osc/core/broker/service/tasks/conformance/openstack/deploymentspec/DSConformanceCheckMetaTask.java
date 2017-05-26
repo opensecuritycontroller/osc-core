@@ -38,11 +38,27 @@ import org.osgi.service.component.annotations.Reference;
  * Conforms the DS according to its settings. This task assumes a Lock has been placed on the DS by the job
  * containing this task
  */
+// TODO this task causes circular references in DS, so all @References to it are optional+dynamic
 @Component(service = DSConformanceCheckMetaTask.class)
 public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
 
     @Reference
     private DSUpdateOrDeleteMetaTask dsUpdateOrDeleteMetaTask;
+
+    @Reference
+    private ValidateDSTenantTask validateTenant;
+
+    @Reference
+    private ValidateDSNetworkTask validateNetwork;
+
+    @Reference
+    private OsImageCheckMetaTask osImageCheckMetaTask;
+
+    @Reference
+    private FlavorCheckMetaTask flavorCheckMetaTask;
+
+    @Reference
+    private OsSecurityGroupCheckMetaTask osSecurityGroupCheckMetaTask;
 
     private DeploymentSpec ds;
     private Endpoint endPoint;
@@ -54,6 +70,14 @@ public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
+        task.validateTenant = this.validateTenant;
+        task.validateNetwork = this.validateNetwork;
+        task.osImageCheckMetaTask = this.osImageCheckMetaTask;
+        task.flavorCheckMetaTask = this.flavorCheckMetaTask;
+        task.osSecurityGroupCheckMetaTask = this.osSecurityGroupCheckMetaTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -61,19 +85,19 @@ public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
 
-        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
+        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
         this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
 
         VirtualSystem virtualSystem = this.ds.getVirtualSystem();
 
-        OsImageCheckMetaTask imageCheckTask = new OsImageCheckMetaTask(virtualSystem, this.ds.getRegion(),
+        OsImageCheckMetaTask imageCheckTask = this.osImageCheckMetaTask.create(virtualSystem, this.ds.getRegion(),
                 this.endPoint);
-        FlavorCheckMetaTask flavorCheckTask = new FlavorCheckMetaTask(virtualSystem, this.ds.getRegion(), this.endPoint);
-        OsSecurityGroupCheckMetaTask osSecurityGroupCheckMetaTask = new OsSecurityGroupCheckMetaTask(this.ds);
+        FlavorCheckMetaTask flavorCheckTask = this.flavorCheckMetaTask.create(virtualSystem, this.ds.getRegion(), this.endPoint);
+        OsSecurityGroupCheckMetaTask osSecurityGroupCheckMetaTask = this.osSecurityGroupCheckMetaTask.create(this.ds);
 
-        this.tg.appendTask(new ValidateDSTenantTask(this.ds));
-        this.tg.appendTask(new ValidateDSNetworkTask(this.ds, this.endPoint, NetworkType.MANAGEMENT));
-        this.tg.appendTask(new ValidateDSNetworkTask(this.ds, this.endPoint, NetworkType.INSPECTION));
+        this.tg.appendTask(this.validateTenant.create(this.ds));
+        this.tg.appendTask(this.validateNetwork.create(this.ds, this.endPoint, NetworkType.MANAGEMENT));
+        this.tg.appendTask(this.validateNetwork.create(this.ds, this.endPoint, NetworkType.INSPECTION));
         // if DS is already marked for deletion don't upload the image
         if (!this.ds.getMarkedForDeletion() && !virtualSystem.getMarkedForDeletion()
                 && !virtualSystem.getDistributedAppliance().getMarkedForDeletion()) {

@@ -25,7 +25,9 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = AddSecurityGroupTask.class)
 public class AddSecurityGroupTask extends TransactionalTask {
     //private static final Logger log = Logger.getLogger(AddSecurityGroupTask.class);
 
@@ -33,11 +35,17 @@ public class AddSecurityGroupTask extends TransactionalTask {
     private String sgName;
     private String nsxSgId;
 
-    public AddSecurityGroupTask(String sgName, String nsxSgId, SecurityGroupInterface sgi) {
-        this.sgi = sgi;
-        this.sgName = sgName;
-        this.nsxSgId = nsxSgId;
-        this.name = getName();
+    public AddSecurityGroupTask create(String sgName, String nsxSgId, SecurityGroupInterface sgi) {
+        AddSecurityGroupTask task = new AddSecurityGroupTask();
+
+        task.sgi = sgi;
+        task.sgName = sgName;
+        task.nsxSgId = nsxSgId;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -51,9 +59,9 @@ public class AddSecurityGroupTask extends TransactionalTask {
         SecurityGroup sg = new SecurityGroup(this.sgi.getVirtualSystem().getVirtualizationConnector(), this.nsxSgId);
         sg.setName(this.sgName);
         sg.addSecurityGroupInterface(this.sgi);
-        OSCEntityManager.create(em, sg);
+        OSCEntityManager.create(em, sg, this.txBroadcastUtil);
         this.sgi.addSecurityGroup(sg);
-        OSCEntityManager.update(em, this.sgi);
+        OSCEntityManager.update(em, this.sgi, this.txBroadcastUtil);
     }
 
     @Override

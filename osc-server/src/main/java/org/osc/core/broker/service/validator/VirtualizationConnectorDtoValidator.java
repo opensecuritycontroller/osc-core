@@ -25,14 +25,15 @@ import javax.persistence.EntityManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 
 public class VirtualizationConnectorDtoValidator
@@ -40,18 +41,23 @@ public class VirtualizationConnectorDtoValidator
 
 	private EntityManager em;
 	private static final Logger LOG = Logger.getLogger(VirtualizationConnectorDtoValidator.class);
+    private TransactionalBroadcastUtil txBroadcastUtil;
+    private ApiFactoryService apiFactoryService;
 
-	public VirtualizationConnectorDtoValidator(EntityManager em) {
+	public VirtualizationConnectorDtoValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil, ApiFactoryService apiFactoryService) {
 		this.em = em;
+        this.txBroadcastUtil = txBroadcastUtil;
+        this.apiFactoryService = apiFactoryService;
 	}
 
 	@Override
 	public void validateForCreate(VirtualizationConnectorDto dto) throws Exception {
 		// Initializing Entity Manager
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(
-                VirtualizationConnector.class, this.em);
+                VirtualizationConnector.class, this.em, this.txBroadcastUtil);
 
-        VirtualizationConnectorDtoValidator.checkForNullFields(dto);
+        VirtualizationConnectorDtoValidator.checkForNullFields(dto, this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
+                        dto.getControllerType())));
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);
 
         // TODO: Future. Right now we assume Icehouse and 5.5 regardless of the actual version passed in, need to
@@ -108,7 +114,7 @@ public class VirtualizationConnectorDtoValidator
      *             in case the required fields are null or fields which should
      *             NOT be specified are specified
      */
-    public static void checkForNullFields(VirtualizationConnectorDto dto, boolean skipPasswordNullCheck)
+    public static void checkForNullFields(VirtualizationConnectorDto dto, boolean skipPasswordNullCheck, boolean usesProviderCreds)
             throws Exception {
 
         // build a map of (field,value) pairs to be checked for null/empty
@@ -141,8 +147,7 @@ public class VirtualizationConnectorDtoValidator
                 nullFieldsMap.put("Controller User Name", dto.getControllerUser());
                 nullFieldsMap.put("Controller Password", dto.getControllerPassword());
             } else {
-                if (!SdnControllerApiFactory.usesProviderCreds(ControllerType.fromText(
-                        dto.getControllerType()))) {
+                if (!usesProviderCreds) {
                     notNullFieldsMap.put("Controller IP Address", dto.getControllerIP());
                     notNullFieldsMap.put("Controller User Name", dto.getControllerUser());
                     if (!skipPasswordNullCheck) {
@@ -173,8 +178,8 @@ public class VirtualizationConnectorDtoValidator
         ValidateUtil.validateFieldsAreNull(nullFieldsMap);
     }
 
-    public static void checkForNullFields(VirtualizationConnectorDto dto) throws Exception {
-        checkForNullFields(dto, false);
+    public static void checkForNullFields(VirtualizationConnectorDto dto, boolean usesProviderCreds) throws Exception {
+        checkForNullFields(dto, false, usesProviderCreds);
     }
 
     public static void checkFieldLength(VirtualizationConnectorDto dto) throws Exception {

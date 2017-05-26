@@ -42,7 +42,6 @@ import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.service.validator.RequestValidator;
-import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -67,6 +66,12 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
     @Reference
     ValidateNsxTask validateNsxTask;
 
+    @Reference
+    DeleteDAFromDbTask deleteDAFromDbTask;
+
+    @Reference
+    ForceDeleteDATask forceDeleteDATask;
+
     Job startDeleteDAJob(final DistributedAppliance da, UnlockObjectMetaTask ult) throws Exception {
 
         try {
@@ -88,7 +93,7 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
             }
 
             // Only delete DA if all VS(s) were removed successfully.
-            tg.appendTask(new DeleteDAFromDbTask(da), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
+            tg.appendTask(this.deleteDAFromDbTask.create(da), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
             tg.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             log.info("Start Submitting Delete DA Job");
@@ -100,9 +105,9 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
                         public void completed(Job job) {
                             if (!job.getStatus().isSuccessful()) {
                                 try {
-                                    HibernateUtil.getTransactionControl().required(() ->
-                                        new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class)
-                                        .run(HibernateUtil.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
+                                    DeleteDistributedApplianceService.this.dbConnectionManager.getTransactionControl().required(() ->
+                                        new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class, DeleteDistributedApplianceService.this.txBroadcastUtil)
+                                        .run(DeleteDistributedApplianceService.this.dbConnectionManager.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
                                 } catch (Exception e) {
                                     log.error("A serious error occurred in the Job Listener", e);
                                     throw new RuntimeException("No Transactional resources are available", e);
@@ -134,14 +139,14 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
             ult = LockUtil.tryLockDA(da, da.getApplianceManagerConnector());
             if (request.isForceDelete()) {
                 TaskGraph tg = new TaskGraph();
-                tg.addTask(new ForceDeleteDATask(da));
+                tg.addTask(this.forceDeleteDATask.create(da));
                 tg.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 Job job = JobEngine.getEngine().submit("Force Delete Distributed Appliance '" + da.getName() + "'", tg,
                         LockObjectReference.getObjectReferences(da));
                 response.setJobId(job.getId());
 
             } else {
-                OSCEntityManager.markDeleted(em, da);
+                OSCEntityManager.markDeleted(em, da, this.txBroadcastUtil);
                 UnlockObjectMetaTask forLambda = ult;
                 chain(() -> {
                     try {

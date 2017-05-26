@@ -25,7 +25,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -33,27 +33,39 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This Task is invoked only if SDN Controller supports Port Group
  */
+@Component(service = DeleteInspectionPortTask.class)
 public class DeleteInspectionPortTask extends TransactionalTask {
 
     private static final Logger LOG = Logger.getLogger(DeleteInspectionPortTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private DistributedApplianceInstance dai;
-    private final String region;
+    private String region;
 
 
-    public DeleteInspectionPortTask(String region, DistributedApplianceInstance dai) {
-        this.region = region;
-        this.dai = dai;
+    public DeleteInspectionPortTask create(String region, DistributedApplianceInstance dai) {
+        DeleteInspectionPortTask task = new DeleteInspectionPortTask();
+        task.region = region;
+        task.dai = dai;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
-        try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);) {
+        try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
 
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());

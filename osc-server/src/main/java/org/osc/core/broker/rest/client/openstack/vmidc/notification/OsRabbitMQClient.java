@@ -24,7 +24,6 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.listener.NotificationListener;
-import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.SessionUtil;
@@ -154,7 +153,7 @@ public class OsRabbitMQClient extends RabbitMQClient {
 
     @Override
     protected void generateConnectionFailureAlert() {
-        AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE, new LockObjectReference(
+        StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE, new LockObjectReference(
                 this.vc),
                 "Fail to connect to Openstack Notification Server for Virtualization Connector '" + this.vc.getName()
                         + "'");

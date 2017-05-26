@@ -23,20 +23,32 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceApi;
 import org.osc.sdk.sdn.element.ServiceElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = DeleteServiceTask.class)
 public class DeleteServiceTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(DeleteServiceTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
 
-    public DeleteServiceTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public DeleteServiceTask create(VirtualSystem vs) {
+        DeleteServiceTask task = new DeleteServiceTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -48,7 +60,7 @@ public class DeleteServiceTask extends TransactionalTask {
 
         String sId = this.vs.getNsxServiceId();
 
-        ServiceApi serviceApi = VMwareSdnApiFactory.createServiceApi(this.vs);
+        ServiceApi serviceApi = this.apiFactoryService.createServiceApi(this.vs);
 
         try {
             serviceApi.deleteService(sId);
@@ -62,7 +74,7 @@ public class DeleteServiceTask extends TransactionalTask {
         LOG.debug("Updating nsx svc " + sId + " for VirtualSystem: " + this.vs.getId());
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
         this.vs.setNsxServiceId(null);
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

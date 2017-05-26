@@ -33,14 +33,13 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorRefer
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova.CreatedServerDetails;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
@@ -85,6 +84,10 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     @Reference
     private ApiFactoryService apiFactoryService;
 
+    // target ensures this only binds to active runner published by Server
+    @Reference(target = "(active=true)")
+    private RabbitMQRunner activeRunner;
+
     private DistributedApplianceInstance dai;
     private String availabilityZone;
     private String hypervisorHostName;
@@ -92,9 +95,13 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     public OsSvaServerCreateTask create(DistributedApplianceInstance dai, String hypervisorName, String availabilityZone) {
         OsSvaServerCreateTask task = new OsSvaServerCreateTask();
         task.apiFactoryService = this.apiFactoryService;
+        task.activeRunner = this.activeRunner;
         task.dai = dai;
         task.availabilityZone = availabilityZone;
         task.hypervisorHostName = hypervisorName;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -112,7 +119,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
         try {
             this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
             if (vc.isControllerDefined()){
-                controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
+                controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
             }
 
             String applianceName = this.dai.getName();
@@ -131,7 +138,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
 
             // TODO: sjallapx - Hack to workaround issue SimpleDateFormat parse errors due to JCloud on some partner environments.
             boolean createServerWithNoOSTSecurityGroup = this.dai.getVirtualSystem().getVirtualizationConnector().isControllerDefined()
-                    ? SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem()) : false;
+                    ? this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem()) : false;
             if (createServerWithNoOSTSecurityGroup) {
                 createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
                         imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
@@ -151,7 +158,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                     );
             // Add new server ID to VM notification listener for this DS
 
-            StaticRegistry.server().getActiveRabbitMQRunner().getOsDeploymentSpecNotificationRunner()
+            this.activeRunner.getOsDeploymentSpecNotificationRunner()
                 .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
             if (vc.isControllerDefined()) {
@@ -161,7 +168,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                     DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
                             createdServer.getEgressInspectionMacAddr());
 
-                    if (SdnControllerApiFactory.supportsPortGroup(this.dai.getVirtualSystem())) {
+                    if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                         String domainId = OpenstackUtil.extractDomainId(
                                 ds.getTenantId(),
                                 ds.getTenantName(),
@@ -179,7 +186,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
 
             this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getOsServerId());
 
-            OSCEntityManager.update(em, this.dai);
+            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
 
         } finally {
             nova.close();

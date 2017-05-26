@@ -41,7 +41,7 @@ public class ListRegionService extends ServiceDispatcher<BaseOpenStackRequest, L
         ListResponse<String> response = new ListResponse<String>();
 
         List<String> regions = new ArrayList<String>();
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
         JCloudNova novaApi = new JCloudNova(new Endpoint(vc, request.getTenantName()));

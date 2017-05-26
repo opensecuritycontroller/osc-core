@@ -24,7 +24,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
 import org.osc.core.broker.rest.client.nsx.model.ServiceManager;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -55,6 +54,9 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
         task.apiFactoryService = this.apiFactoryService;
         task.passwordUtil = this.passwordUtil;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -65,7 +67,7 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
         ServiceManagerElement serviceManager = null;
-        ServiceManagerApi serviceManagerApi = VMwareSdnApiFactory.createServiceManagerApi(this.vs);
+        ServiceManagerApi serviceManagerApi = this.apiFactoryService.createServiceManagerApi(this.vs);
 
         String serviceManagerName = this.apiFactoryService.generateServiceManagerName(this.vs);
 
@@ -83,7 +85,7 @@ public class CreateNsxServiceManagerTask extends TransactionalTask {
 
         this.vs.setNsxServiceManagerId(serviceManager.getId());
         this.vs.setNsxVsmUuid(serviceManager.getVsmId());
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     public static String buildRestCallbackUrl() {

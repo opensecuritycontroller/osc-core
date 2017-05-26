@@ -18,11 +18,19 @@ package org.osc.core.broker.service.tasks;
 
 import javax.persistence.EntityManager;
 
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
 public abstract class TransactionalTask extends BaseTask {
+
+    @Reference
+    protected TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    protected DBConnectionManager dbConnectionManager;
 
     public TransactionalTask() {
         super(null);
@@ -30,8 +38,8 @@ public abstract class TransactionalTask extends BaseTask {
 
     @Override
     public void execute() throws Exception {
-        EntityManager em = HibernateUtil.getTransactionalEntityManager();
-        TransactionControl txControl = HibernateUtil.getTransactionControl();
+        EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+        TransactionControl txControl = this.dbConnectionManager.getTransactionControl();
         try {
             txControl.required(() -> {
                     executeTransaction(em);

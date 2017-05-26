@@ -26,15 +26,22 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.element.ServiceProfileElement;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=CreateSecurityGroupInterfaceTask.class)
 public class CreateSecurityGroupInterfaceTask extends TransactionalTask {
     private VirtualSystemPolicy vsp;
     private ServiceProfileElement serviceProfile;
 
-    public CreateSecurityGroupInterfaceTask(VirtualSystemPolicy vsp, ServiceProfileElement nsxServiceProfile) {
+    public CreateSecurityGroupInterfaceTask create(VirtualSystemPolicy vsp, ServiceProfileElement nsxServiceProfile) {
+        CreateSecurityGroupInterfaceTask task = new CreateSecurityGroupInterfaceTask();
         this.vsp = vsp;
         this.serviceProfile = nsxServiceProfile;
         this.name = getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -48,7 +55,7 @@ public class CreateSecurityGroupInterfaceTask extends TransactionalTask {
         securityGroupInterface.setTag(this.serviceProfile.getId());
         securityGroupInterface.setNsxVsmUuid(this.serviceProfile.getVsmId());
 
-        OSCEntityManager.create(em, securityGroupInterface);
+        OSCEntityManager.create(em, securityGroupInterface, this.txBroadcastUtil);
     }
 
     @Override

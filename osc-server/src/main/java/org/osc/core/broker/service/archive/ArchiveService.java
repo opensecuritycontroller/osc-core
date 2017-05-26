@@ -81,6 +81,9 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
     @Reference
     private ArchiveApi archiver;
 
+    @Reference
+    private AlertGenerator alertGenerator;
+
     @Override
     @SuppressFBWarnings(value="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
     public Response exec(final BaseRequest<JobsArchiveDto> request, EntityManager em) throws Exception {
@@ -145,7 +148,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
 
                     } catch (Exception e) {
                         log.error("Error while archiving jobs", e);
-                        AlertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
+                        this.alertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
                                 new LockObjectReference(1L, "Archive Settings", ObjectType.ARCHIVE),
                                 "Failure during archiving operation " + e.getMessage());
                     }
@@ -153,7 +156,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
 
             if (jobsArchive != null) {
                 jobsArchive.setLastTriggerTimestamp(new Date());
-                OSCEntityManager.update(em, jobsArchive);
+                OSCEntityManager.update(em, jobsArchive, this.txBroadcastUtil);
             }
 
         } catch (Exception e) {
@@ -372,7 +375,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
             }
         } catch (Exception e) {
             log.error("Scheduler fail to start/stop Archiving job", e);
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
+            this.alertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
                     new LockObjectReference(1L, "Archive Settings", ObjectType.ARCHIVE),
                     "Failure during archive schedule configuration " + e.getMessage());
         }

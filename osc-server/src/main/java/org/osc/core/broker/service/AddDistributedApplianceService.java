@@ -52,7 +52,10 @@ public class AddDistributedApplianceService
         extends ServiceDispatcher<BaseRequest<DistributedApplianceDto>, AddDistributedApplianceResponse>
         implements AddDistributedApplianceServiceApi {
 
-    private DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
+    DtoValidator<DistributedApplianceDto, DistributedAppliance> validator;
+
+    @Reference
+    private DistributedApplianceDtoValidator validatorFactory;
 
     @Reference
     private ConformService conformService;
@@ -65,12 +68,12 @@ public class AddDistributedApplianceService
             throws Exception {
 
         OSCEntityManager<ApplianceManagerConnector> mcMgr = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, em);
+                ApplianceManagerConnector.class, em, this.txBroadcastUtil);
 
         DistributedApplianceDto daDto = request.getDto();
 
         if (this.validator == null) {
-            this.validator = new DistributedApplianceDtoValidator(em);
+            this.validator = this.validatorFactory.create(em);
         }
 
         this.validator.validateForCreate(daDto);
@@ -84,10 +87,10 @@ public class AddDistributedApplianceService
 
         // creating new entry in the db using entity manager object
         DistributedApplianceEntityMgr.createEntity(em, request.getDto(), a, da, this.encrypter);
-        OSCEntityManager.create(em, da);
+        OSCEntityManager.create(em, da, this.txBroadcastUtil);
 
         for (VirtualSystem vs : vsList) {
-            OSCEntityManager.create(em, vs);
+            OSCEntityManager.create(em, vs, this.txBroadcastUtil);
             // Ensure name field is populated is assigned after DB id had been allocated
             vs.getName();
             da.addVirtualSystem(vs);
@@ -128,7 +131,7 @@ public class AddDistributedApplianceService
                     daDto.getApplianceId(), daDto.getApplianceSoftwareVersionName(), vc.getVirtualizationType(),
                     vc.getVirtualizationSoftwareVersion());
 
-            OSCEntityManager<Domain> oscEm = new OSCEntityManager<Domain>(Domain.class, em);
+            OSCEntityManager<Domain> oscEm = new OSCEntityManager<Domain>(Domain.class, em, this.txBroadcastUtil);
             Domain domain = vsDto.getDomainId() == null ? null : oscEm.findByPrimaryKey(vsDto.getDomainId());
 
             VirtualSystem vs = new VirtualSystem(da);

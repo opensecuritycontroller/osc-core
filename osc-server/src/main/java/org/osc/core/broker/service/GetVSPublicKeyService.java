@@ -35,7 +35,7 @@ public class GetVSPublicKeyService extends ServiceDispatcher<GetVSPublicKeyReque
 
         GetVSPublicKeyResponse response = new GetVSPublicKeyResponse();
 
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
 
         VirtualSystem vs = validate(em, request, emgr);
 

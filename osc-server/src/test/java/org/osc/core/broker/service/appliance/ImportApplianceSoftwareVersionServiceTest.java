@@ -31,6 +31,7 @@ import javax.persistence.EntityManager;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,7 +49,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.api.server.UserContextApi;
@@ -57,7 +57,8 @@ import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.test.InMemDB;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.ServerUtil;
@@ -70,7 +71,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.google.gson.Gson;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ServerUtil.class, FileUtils.class, FileUtil.class, HibernateUtil.class, ManagerApiFactory.class})
+@PrepareForTest({ServerUtil.class, FileUtils.class, FileUtil.class})
 public class ImportApplianceSoftwareVersionServiceTest {
 
     private static final String TEST_TMP_FOLDER = "testTmpFolder";
@@ -111,6 +112,12 @@ public class ImportApplianceSoftwareVersionServiceTest {
     private UserContextApi userContext;
 
     @Mock
+    private DBConnectionManager dbMgr;
+
+    @Mock
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Mock
     private UploadConfig config;
 
     @InjectMocks
@@ -130,9 +137,8 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         this.txControl.setEntityManager(this.em);
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
 
         this.mockMetaDataFile = mock(File.class);
@@ -173,7 +179,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         ApplianceManagerApi applianceMgrPolicyMappingSupported = Mockito.mock(ApplianceManagerApi.class);
 
-        PowerMockito.mockStatic(ManagerApiFactory.class);
         Mockito.when(this.apiFactoryService.createApplianceManagerApi(ManagerType.NSM))
                 .thenReturn(applianceMgrPolicyMappingSupported);
 
@@ -385,6 +390,17 @@ public class ImportApplianceSoftwareVersionServiceTest {
         ServerUtil.isEnoughSpace();
 
         // validate is called
+        Matcher<Boolean> isPolicyMappingSupported = new BaseMatcher<Boolean>() {
+
+            @Override
+            public boolean matches(Object arg0) {
+                return true;
+            }
+
+            @Override
+            public void describeTo(Description arg0) {
+            }
+        };
         verify(this.imageMetaDataValidator).validate(Mockito.argThat(
                 new BaseMatcher<ImageMetadata>() {
 
@@ -402,7 +418,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
                                 gson.toJson(ImportApplianceSoftwareVersionServiceTest.this.imageMetaData));
                     }
 
-                }));
+                }), Mockito.booleanThat(isPolicyMappingSupported));
 
         // asv ID matches
         assertEquals("Appliance Software Version Id mismatch", id, response.getId());

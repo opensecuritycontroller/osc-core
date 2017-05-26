@@ -25,24 +25,35 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-class UpdatePortGroupTask  extends TransactionalTask{
+@Component(service=UpdatePortGroupTask.class)
+public class UpdatePortGroupTask  extends TransactionalTask{
     private static final Logger LOG = Logger.getLogger(UpdatePortGroupTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private SecurityGroup securityGroup;
     private PortGroup portGroup;
 
-    public UpdatePortGroupTask(SecurityGroup sg, PortGroup portGroup) {
-        this.securityGroup = sg;
-        this.portGroup = portGroup;
+    public UpdatePortGroupTask create(SecurityGroup sg, PortGroup portGroup) {
+        UpdatePortGroupTask task = new UpdatePortGroupTask();
+        task.securityGroup = sg;
+        task.portGroup = portGroup;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -66,7 +77,7 @@ class UpdatePortGroupTask  extends TransactionalTask{
         for (NetworkElement elem : protectedPorts) {
             ((NetworkElementImpl) elem).setParentId(domainId);
         }
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(
+        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
                 this.securityGroup.getVirtualizationConnector());
         NetworkElement portGrp = controller.updateNetworkElement(this.portGroup, protectedPorts);
         if (portGrp == null) {

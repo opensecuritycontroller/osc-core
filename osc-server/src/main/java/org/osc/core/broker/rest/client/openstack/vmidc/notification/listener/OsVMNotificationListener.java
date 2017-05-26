@@ -33,6 +33,7 @@ import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache.VmIn
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.RestConstants;
@@ -49,10 +50,14 @@ public class OsVMNotificationListener extends OsNotificationListener {
 
     private final ConformService conformService;
 
+    private final AlertGenerator alertGenerator;
+
     public OsVMNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
-        super(vc, OsNotificationObjectType.VM, objectIdList, entity);
+            List<String> objectIdList, BaseEntity entity, ConformService conformService,
+            AlertGenerator alertGenerator, RabbitMQRunner activeRunner) {
+        super(vc, OsNotificationObjectType.VM, objectIdList, entity, activeRunner);
         this.conformService = conformService;
+        this.alertGenerator = alertGenerator;
         register(vc, objectType);
     }
 
@@ -93,7 +98,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
                     log.error(
                             "Fail to process Openstack VM (" + vmOpenstackId + ") notification - "
                                     + this.vc.getControllerIpAddress(), e);
-                    AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+                    this.alertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                             LockObjectReference.getLockObjectReference(this.entity, new LockObjectReference(this.vc)),
                             "Fail to process Openstack VM (" + vmOpenstackId + ") notification (" + e.getMessage()
                                     + ")");

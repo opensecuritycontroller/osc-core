@@ -45,6 +45,9 @@ public class MgrDeleteMemberDeviceTask extends TransactionalTask {
         task.vs = vs;
         task.device = device;
         task.deviceName = device.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 

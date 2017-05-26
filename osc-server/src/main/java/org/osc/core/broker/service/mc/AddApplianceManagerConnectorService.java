@@ -25,6 +25,7 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -74,7 +75,7 @@ public class AddApplianceManagerConnectorService
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorRequest> request, EntityManager em)
             throws Exception {
-        OSCEntityManager<ApplianceManagerConnector> appMgrEntityMgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
+        OSCEntityManager<ApplianceManagerConnector> appMgrEntityMgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
 
         try {
             validate(request, appMgrEntityMgr);
@@ -87,10 +88,11 @@ public class AddApplianceManagerConnectorService
             }
         }
 
-        ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption);
+        String serviceName = this.apiFactoryService.getServiceName(ManagerType.fromText(request.getDto().getManagerType()));
+        ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption, serviceName);
         appMgrEntityMgr.create(mc);
 
-        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em);
+        SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
         mc.setSslCertificateAttrSet(certificateAttrEntityMgr.storeSSLEntries(mc.getSslCertificateAttrSet(), mc.getId()));
 
         appMgrEntityMgr.update(mc);
@@ -118,8 +120,11 @@ public class AddApplianceManagerConnectorService
     private void validate(DryRunRequest<ApplianceManagerConnectorRequest> request,
                           OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
-        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto());
-        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto());
+        ManagerType managerType = ManagerType.fromText(request.getDto().getManagerType());
+        boolean basicAuth = this.apiFactoryService.isBasicAuth(managerType);
+        boolean keyAuth = this.apiFactoryService.isKeyAuth(managerType);
+        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), basicAuth, keyAuth);
+        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto(), basicAuth);
 
         // check for uniqueness of mc name
         if (emgr.isExisting("name", request.getDto().getName())) {
@@ -134,7 +139,8 @@ public class AddApplianceManagerConnectorService
             throw new VmidcBrokerValidationException("Appliance Manager IP Address: " + request.getDto().getIpAddress() + " already exists.");
         }
 
-        checkManagerConnection(request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption));
+        String serviceName = this.apiFactoryService.getServiceName(ManagerType.fromText(request.getDto().getManagerType()));
+        checkManagerConnection(request, ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption, serviceName));
     }
 
     void checkManagerConnection(DryRunRequest<ApplianceManagerConnectorRequest> request,

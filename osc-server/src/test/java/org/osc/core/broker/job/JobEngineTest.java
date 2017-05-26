@@ -46,6 +46,8 @@ import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.TaskRecord;
 import org.osc.core.broker.service.tasks.BaseTask;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.StaticRegistry;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osgi.service.transaction.control.TransactionControl;
@@ -54,7 +56,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(HibernateUtil.class)
+@PrepareForTest({HibernateUtil.class, StaticRegistry.class})
 public class JobEngineTest {
 
     static class EmptyMetaTask extends EmptyTask implements MetaTask {
@@ -152,6 +154,10 @@ public class JobEngineTest {
 
     @Before
     public void setUp() throws Exception {
+        TransactionalBroadcastUtil broadcastUtil = Mockito.mock(TransactionalBroadcastUtil.class);
+        PowerMockito.mockStatic(StaticRegistry.class);
+        Mockito.when(StaticRegistry.transactionalBroadcastUtil()).thenReturn(broadcastUtil);
+
         this.testEmf = InMemDB.getEntityManagerFactory();
 
         PowerMockito.mockStatic(HibernateUtil.class);
@@ -188,8 +194,9 @@ public class JobEngineTest {
         this.txControls.clear();
     }
 
-    @Test
+    // TODO https://github.com/opensecuritycontroller/osc-core/issues/284
     @Ignore
+    @Test
     public void testTaskDependencyExecutionOrder() throws Exception {
         // Test first level parallel followed by sequential parallel tasks
         this.tg = new TaskGraph();

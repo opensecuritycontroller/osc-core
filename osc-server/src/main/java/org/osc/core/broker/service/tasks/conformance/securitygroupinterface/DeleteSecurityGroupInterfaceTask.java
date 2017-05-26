@@ -26,27 +26,33 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
 /**
  *
  * Deletes Security Group Interface and removes the SG->SGI mappings
  *
  */
-
+@Component(service = DeleteSecurityGroupInterfaceTask.class)
 public class DeleteSecurityGroupInterfaceTask extends TransactionalTask {
     // private static final Logger log = Logger.getLogger(DeleteSecurityGroupInterfaceTask.class);
 
     private SecurityGroupInterface securityGroupInterface;
 
-    public DeleteSecurityGroupInterfaceTask(SecurityGroupInterface securityGroupInterface) {
-        this.securityGroupInterface = securityGroupInterface;
-        this.name = getName();
+    public DeleteSecurityGroupInterfaceTask create(SecurityGroupInterface securityGroupInterface) {
+        DeleteSecurityGroupInterfaceTask task = new DeleteSecurityGroupInterfaceTask();
+        task.securityGroupInterface = securityGroupInterface;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
 
-        this.securityGroupInterface = (SecurityGroupInterface) em.find(SecurityGroupInterface.class,
+        this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
         boolean isVmwareSGI = this.securityGroupInterface.getVirtualSystem()
                 .getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE;
@@ -55,11 +61,11 @@ public class DeleteSecurityGroupInterfaceTask extends TransactionalTask {
             sg.removeSecurityInterface(this.securityGroupInterface);
             // If Security Group has no bindings left to any service profiles, delete the SG and its members.
             if (isVmwareSGI && sg.getSecurityGroupInterfaces().size() == 0) {
-                OSCEntityManager.delete(em, sg);
+                OSCEntityManager.delete(em, sg, this.txBroadcastUtil);
             }
         }
 
-        OSCEntityManager.delete(em, this.securityGroupInterface);
+        OSCEntityManager.delete(em, this.securityGroupInterface, this.txBroadcastUtil);
     }
 
     @Override

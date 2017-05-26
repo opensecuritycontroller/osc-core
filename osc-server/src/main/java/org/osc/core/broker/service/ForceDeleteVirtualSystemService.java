@@ -32,10 +32,14 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteVirtualSystemTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class ForceDeleteVirtualSystemService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
         implements ForceDeleteVirtualSystemServiceApi {
+
+    @Reference
+    ForceDeleteVirtualSystemTask forceDeleteVirtualSystemTask;
 
     @Override
     public BaseJobResponse exec(BaseDeleteRequest request, EntityManager em) throws Exception {
@@ -48,7 +52,7 @@ public class ForceDeleteVirtualSystemService extends ServiceDispatcher<BaseDelet
             DistributedAppliance da = vs.getDistributedAppliance();
             ult = LockUtil.tryLockDA(da, da.getApplianceManagerConnector());
             TaskGraph tg = new TaskGraph();
-            tg.addTask(new ForceDeleteVirtualSystemTask(vs));
+            tg.addTask(this.forceDeleteVirtualSystemTask.create(vs));
             tg.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             Job job = JobEngine.getEngine().submit("Force Delete Virtual System '" + vs.getName() + "'", tg,

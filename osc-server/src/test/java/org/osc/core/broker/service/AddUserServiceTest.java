@@ -39,14 +39,12 @@ import org.osc.core.broker.service.request.AddUserRequest;
 import org.osc.core.broker.service.response.AddUserResponse;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.UserDtoValidator;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(HibernateUtil.class)
 public class AddUserServiceTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -65,6 +63,12 @@ public class AddUserServiceTest {
     @Mock
     private EncryptionApi encryption;
 
+    @Mock
+    private DBConnectionManager dbMgr;
+
+    @Mock
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
     @InjectMocks
     private AddUserService service;
 
@@ -78,9 +82,8 @@ public class AddUserServiceTest {
 
         this.txControl.setEntityManager(this.em);
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
 
         this.invalidUserRequest = new AddUserRequest();

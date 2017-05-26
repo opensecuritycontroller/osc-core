@@ -21,30 +21,42 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-class VmPortHookOrderUpdateTask extends TransactionalTask {
+@Component(service=VmPortHookOrderUpdateTask.class)
+public class VmPortHookOrderUpdateTask extends TransactionalTask {
 
     //private final Logger log = Logger.getLogger(VmPortHookOrderUpdateTask.class);
 
-    private final String vmName;
-    private final String serviceName;
+    private String vmName;
+    private String serviceName;
     private VMPort vmPort;
     private DistributedApplianceInstance dai;
     private SecurityGroupInterface securityGroupInterface;
 
-    public VmPortHookOrderUpdateTask(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    public VmPortHookOrderUpdateTask create(VMPort vmPort, SecurityGroupInterface securityGroupInterface,
             DistributedApplianceInstance daiToRedirectTo) {
-        this.vmPort = vmPort;
-        this.dai = daiToRedirectTo;
-        this.securityGroupInterface = securityGroupInterface;
-        this.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
-        this.vmName = vmPort.getVm().getName();
+        VmPortHookOrderUpdateTask task = new VmPortHookOrderUpdateTask();
+        task.vmPort = vmPort;
+        task.dai = daiToRedirectTo;
+        task.securityGroupInterface = securityGroupInterface;
+        task.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
+        task.vmName = vmPort.getVm().getName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -54,7 +66,7 @@ class VmPortHookOrderUpdateTask extends TransactionalTask {
         this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
 
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.dai);
+        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
         try {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());

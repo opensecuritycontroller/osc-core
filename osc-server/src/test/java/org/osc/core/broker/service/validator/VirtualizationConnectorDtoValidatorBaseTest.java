@@ -24,8 +24,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 /**
  * The base class for the {@link VirtualizationConnectorDtoValidator} unit tests.
@@ -36,6 +39,12 @@ import org.osc.core.broker.service.test.InMemDB;
  * tests on the same class (as it was before) but this runner is not compatible with {@link org.powermock.modules.junit4.PowerMockRunner} now needed for these tests.
  */
 public class VirtualizationConnectorDtoValidatorBaseTest {
+
+    @Mock
+    TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Mock
+    ApiFactoryService apiFactoryService;
 
     private EntityManager em;
 
@@ -52,7 +61,7 @@ public class VirtualizationConnectorDtoValidatorBaseTest {
 
         populateDatabase();
 
-        this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em);
+        this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em, this.txBroadcastUtil, this.apiFactoryService);
 
     }
 

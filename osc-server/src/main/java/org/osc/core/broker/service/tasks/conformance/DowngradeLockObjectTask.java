@@ -21,13 +21,20 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=DowngradeLockObjectTask.class)
 public class DowngradeLockObjectTask extends TransactionalTask {
 
     private LockRequest lockRequest;
 
-    public DowngradeLockObjectTask(LockRequest lockRequest) {
-        this.lockRequest = lockRequest;
+    public DowngradeLockObjectTask create(LockRequest lockRequest) {
+        DowngradeLockObjectTask task = new DowngradeLockObjectTask();
+        task.lockRequest = lockRequest;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override

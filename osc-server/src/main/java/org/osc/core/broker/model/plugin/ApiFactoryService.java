@@ -16,39 +16,57 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.sdk.controller.FlowInfo;
+import org.osc.sdk.controller.FlowPortInfo;
+import org.osc.sdk.controller.Status;
 import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
+import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
+import org.osc.sdk.manager.api.ManagerDomainApi;
+import org.osc.sdk.manager.api.ManagerPolicyApi;
+import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
+import org.osc.sdk.sdn.api.AgentApi;
+import org.osc.sdk.sdn.api.DeploymentSpecApi;
+import org.osc.sdk.sdn.api.SecurityTagApi;
+import org.osc.sdk.sdn.api.ServiceApi;
+import org.osc.sdk.sdn.api.ServiceInstanceApi;
+import org.osc.sdk.sdn.api.ServiceManagerApi;
+import org.osc.sdk.sdn.api.ServiceProfileApi;
 import org.osc.sdk.sdn.api.VMwareSdnApi;
+import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osgi.annotation.versioning.ConsumerType;
 
 @ConsumerType
 public interface ApiFactoryService {
-    /**
-     * Creates an {@code ApplianceManagerApi} instance for the specified manager type.
-     *
-     * @param managerName
-     * @return
-     * @throws Exception
-     */
+    String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
+    String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
+
     ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception;
 
     Boolean syncsPolicyMapping(ManagerType managerType) throws Exception;
+
+    Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception;
 
     Boolean syncsSecurityGroup(ManagerType managerType) throws Exception;
 
@@ -58,6 +76,8 @@ public interface ApiFactoryService {
 
     Boolean providesDeviceStatus(ManagerType managerType) throws Exception;
 
+    Boolean providesDeviceStatus(VirtualSystem virtualSystem) throws Exception;
+
     String getAuthenticationType(ManagerType managerType) throws Exception;
 
     boolean isBasicAuth(ManagerType managerType) throws Exception;
@@ -65,6 +85,8 @@ public interface ApiFactoryService {
     boolean isKeyAuth(ManagerType managerType) throws Exception;
 
     String getExternalServiceName(ManagerType managerType) throws Exception;
+
+    String getExternalServiceName(VirtualSystem virtualSystem) throws Exception;
 
     String getVendorName(ManagerType managerType) throws Exception;
 
@@ -153,5 +175,63 @@ public interface ApiFactoryService {
      */
     <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
             PluginType pluginType, Map<String, Class<?>> requiredProperties);
+
+    Map<String, FlowPortInfo> queryPortInfo(VirtualizationConnector vc, String region,
+            HashMap<String, FlowInfo> portsQuery) throws Exception;
+
+    SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception;
+
+    AgentApi createAgentApi(VirtualSystem vs) throws Exception;
+
+    ManagerSecurityGroupApi createManagerSecurityGroupApi(VirtualSystem vs) throws Exception;
+
+    ManagerPolicyApi createManagerPolicyApi(ApplianceManagerConnector mc) throws Exception;
+
+    ManagerDomainApi createManagerDomainApi(ApplianceManagerConnector mc) throws Exception;
+
+    Boolean syncsSecurityGroup(VirtualSystem vs) throws Exception;
+
+    ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc) throws Exception;
+
+    ServiceProfileApi createServiceProfileApi(VirtualSystem vs) throws Exception;
+
+    SecurityTagApi createSecurityTagApi(VirtualSystem vs) throws Exception;
+
+    ServiceApi createServiceApi(VirtualSystem vs) throws Exception;
+
+    ServiceManagerApi createServiceManagerApi(VirtualSystem vs) throws Exception;
+
+    ServiceInstanceApi createServiceInstanceApi(VirtualSystem vs) throws Exception;
+
+    VendorTemplateApi createVendorTemplateApi(VirtualSystem vs) throws Exception;
+
+    DeploymentSpecApi createDeploymentSpecApi(VirtualSystem vs) throws Exception;
+
+    SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs) throws Exception;
+
+    SdnRedirectionApi createNetworkRedirectionApi(VirtualizationConnector vc) throws Exception;
+
+    SdnRedirectionApi createNetworkRedirectionApi(DistributedApplianceInstance dai) throws Exception;
+
+    SdnRedirectionApi createNetworkRedirectionApi(SecurityGroupMember sgm) throws Exception;
+
+    Status getStatus(VirtualizationConnector vc, String region) throws Exception;
+
+    Boolean supportsOffboxRedirection(VirtualSystem vs) throws Exception;
+
+    Boolean supportsOffboxRedirection(SecurityGroup sg) throws Exception;
+
+    Boolean supportsServiceFunctionChaining(SecurityGroup sg) throws Exception;
+
+    Boolean supportsFailurePolicy(SecurityGroup sg) throws Exception;
+
+    Boolean usesProviderCreds(ControllerType controllerType) throws Exception;
+
+    Boolean providesTrafficPortInfo(ControllerType controllerType) throws Exception;
+
+    Boolean supportsPortGroup(VirtualSystem vs) throws Exception;
+
+    Boolean supportsPortGroup(SecurityGroup sg) throws Exception;
+
 
 }

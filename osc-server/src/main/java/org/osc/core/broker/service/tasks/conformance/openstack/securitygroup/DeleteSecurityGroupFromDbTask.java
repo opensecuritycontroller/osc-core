@@ -26,20 +26,27 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
 /**
  *
  * Deletes Security Group and removes the SG->SGI mappings
  *
  */
+@Component(service = DeleteSecurityGroupFromDbTask.class)
 public class DeleteSecurityGroupFromDbTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(DeleteSecurityGroupFromDbTask.class);
 
     private SecurityGroup sg;
 
-    public DeleteSecurityGroupFromDbTask(SecurityGroup sg) {
-        this.sg = sg;
-        this.name = getName();
+    public DeleteSecurityGroupFromDbTask create(SecurityGroup sg) {
+        DeleteSecurityGroupFromDbTask task = new DeleteSecurityGroupFromDbTask();
+        task.sg = sg;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -54,10 +61,10 @@ public class DeleteSecurityGroupFromDbTask extends TransactionalTask {
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
             sgi.removeSecurity(this.sg);
             this.sg.removeSecurityInterface(sgi);
-            OSCEntityManager.update(em, sgi);
-            OSCEntityManager.update(em, this.sg);
+            OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
+            OSCEntityManager.update(em, this.sg, this.txBroadcastUtil);
         }
-        OSCEntityManager.delete(em, this.sg);
+        OSCEntityManager.delete(em, this.sg, this.txBroadcastUtil);
     }
 
     @Override

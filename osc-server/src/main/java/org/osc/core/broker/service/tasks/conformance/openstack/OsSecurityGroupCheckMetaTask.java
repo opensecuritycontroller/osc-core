@@ -35,27 +35,43 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
+@Component(service=OsSecurityGroupCheckMetaTask.class)
 public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(OsSecurityGroupCheckMetaTask.class);
 
+    @Reference
+    CreateOsSecurityGroupTask createOsSecurityGroupTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private DeploymentSpec ds;
     private TaskGraph tg;
 
-    public OsSecurityGroupCheckMetaTask(DeploymentSpec ds) {
-        this.ds = ds;
-        this.name = getName();
+    public OsSecurityGroupCheckMetaTask create(DeploymentSpec ds) {
+        OsSecurityGroupCheckMetaTask task = new OsSecurityGroupCheckMetaTask();
+        task.ds = ds;
+        task.name = task.getName();
+        task.createOsSecurityGroupTask = this.createOsSecurityGroupTask;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -82,12 +98,12 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
             // The only SDN controller that currently returns true for supportsPortGroup is Nuage.
             boolean skipSecurityGroupCreation = vs.getVirtualizationConnector().isControllerDefined()
-                    ? SdnControllerApiFactory.supportsPortGroup(vs) : false;
+                    ? this.apiFactoryService.supportsPortGroup(vs) : false;
             // If DS or DDS both have no os security group reference, create OS SG
             if (sgReference == null) {
                 //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
                 if (!skipSecurityGroupCreation) {
-                    this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
+                    this.tg.appendTask(this.createOsSecurityGroupTask.create(ds, endPoint));
                 }
             } else {
                 DeploymentSpec existingDs = null;
@@ -102,17 +118,17 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                         if (sg == null) {
                             // remove the ds from the collection, delete the stale os sg reference from the database and create a new OS SG
                             iterator.remove();
-                            OSCEntityManager.delete(em, sgReference);
+                            OSCEntityManager.delete(em, sgReference, this.txBroadcastUtil);
                             //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
                             if (!skipSecurityGroupCreation) {
-                                this.tg.appendTask(new CreateOsSecurityGroupTask(ds, endPoint));
+                                this.tg.appendTask(this.createOsSecurityGroupTask.create(ds, endPoint));
                             }
                         } else {
                             syncSGRules(sg, neutron);
                             sgReference.setSgRefName(sg.getName());
-                            OSCEntityManager.update(em, sgReference);
+                            OSCEntityManager.update(em, sgReference, this.txBroadcastUtil);
                             ds.setOsSecurityGroupReference(sgReference);
-                            OSCEntityManager.update(em, ds);
+                            OSCEntityManager.update(em, ds, this.txBroadcastUtil);
                         }
                     }
                 }

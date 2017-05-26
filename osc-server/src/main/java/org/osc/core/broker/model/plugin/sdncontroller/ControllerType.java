@@ -50,7 +50,7 @@ public class ControllerType {
     }
 
     public static ControllerType fromText(String text) {
-        if (!controllerTypes.contains(text) && !values().contains(text)) {
+        if (!controllerTypes.contains(text)) {
             throw new IllegalArgumentException("No SDN Controller plugin found for '" + text + "'.");
         }
         return new ControllerType(text);
@@ -61,10 +61,13 @@ public class ControllerType {
         controllerTypes.add(type);
     }
 
+    public static void setTypes(Set<String> types) {
+        controllerTypes.clear();
+        controllerTypes.addAll(types);
+    }
+
     public static Set<String> values() {
-        Set<String> values = new TreeSet<>(controllerTypes);
-        values.addAll(SdnControllerApiFactory.getControllerTypes());
-        return values;
+        return new TreeSet<>(controllerTypes);
     }
 
     public String getValue() {

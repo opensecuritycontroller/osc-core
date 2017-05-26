@@ -26,19 +26,25 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.element.ServiceProfileElement;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=UpdateSecurityGroupInterfaceTask.class)
 public class UpdateSecurityGroupInterfaceTask extends TransactionalTask {
     private SecurityGroupInterface securityGroupInterface;
     private VirtualSystemPolicy vsp;
     private ServiceProfileElement serviceProfile;
 
-    public UpdateSecurityGroupInterfaceTask(SecurityGroupInterface securityGroupInterface, VirtualSystemPolicy vsp,
+    public UpdateSecurityGroupInterfaceTask create(SecurityGroupInterface securityGroupInterface, VirtualSystemPolicy vsp,
             ServiceProfileElement serviceProfile) {
+        UpdateSecurityGroupInterfaceTask task = new UpdateSecurityGroupInterfaceTask();
+        task.vsp = vsp;
+        task.securityGroupInterface = securityGroupInterface;
+        task.serviceProfile = serviceProfile;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
 
-        this.vsp = vsp;
-        this.securityGroupInterface = securityGroupInterface;
-        this.serviceProfile = serviceProfile;
-        this.name = getName();
+        return task;
     }
 
     @Override
@@ -49,7 +55,7 @@ public class UpdateSecurityGroupInterfaceTask extends TransactionalTask {
                 this.securityGroupInterface.getId());
 
         this.securityGroupInterface.setName(this.serviceProfile.getName());
-        OSCEntityManager.update(em, this.securityGroupInterface);
+        OSCEntityManager.update(em, this.securityGroupInterface, this.txBroadcastUtil);
     }
 
     @Override

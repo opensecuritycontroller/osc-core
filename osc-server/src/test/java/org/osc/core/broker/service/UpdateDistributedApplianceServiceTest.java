@@ -54,7 +54,8 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.powermock.api.mockito.PowerMockito;
@@ -64,7 +65,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.google.common.collect.Sets;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({HibernateUtil.class, LockUtil.class})
+@PrepareForTest(LockUtil.class)
 public class UpdateDistributedApplianceServiceTest {
     private static long JOB_ID = 12345L;
     private static String NEW_APPLIANCE_SW_VERSION = "NEWVERSION";
@@ -91,6 +92,12 @@ public class UpdateDistributedApplianceServiceTest {
 
     @Mock
     private ApiFactoryService apiFactoryService;
+
+    @Mock
+    private DBConnectionManager dbMgr;
+
+    @Mock
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
     @InjectMocks
     private UpdateDistributedApplianceService service;
@@ -121,9 +128,8 @@ public class UpdateDistributedApplianceServiceTest {
 
         this.txControl.setEntityManager(this.em);
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
         Mockito.when(this.apiFactoryService.createManagerDeviceApi(Mockito.any())).thenReturn(Mockito.mock(ManagerDeviceApi.class));
 

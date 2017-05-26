@@ -25,19 +25,31 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskInput;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.VendorTemplateApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service=RemoveVendorTemplateTask.class)
 public class RemoveVendorTemplateTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(RemoveVendorTemplateTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystemPolicy vsp;
 
-    public RemoveVendorTemplateTask(VirtualSystemPolicy vsp) {
-        this.vsp = vsp;
-        this.name = getName();
+    public RemoveVendorTemplateTask create(VirtualSystemPolicy vsp) {
+        RemoveVendorTemplateTask task = new RemoveVendorTemplateTask();
+        task.vsp = vsp;
+        task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @TaskInput
@@ -50,23 +62,23 @@ public class RemoveVendorTemplateTask extends TransactionalTask {
 
         this.vsp = em.find(VirtualSystemPolicy.class, this.vsp.getId());
 
-        VendorTemplateApi templateApi = VMwareSdnApiFactory.createVendorTemplateApi(this.vsp.getVirtualSystem());
+        VendorTemplateApi templateApi = this.apiFactoryService.createVendorTemplateApi(this.vsp.getVirtualSystem());
         templateApi.deleteVendorTemplate(
                 this.vsp.getVirtualSystem().getNsxServiceId(),
                 this.vsp.getNsxVendorTemplateId(),
                 this.vsp.getPolicy().getId().toString());
 
-        OSCEntityManager.delete(em, this.vsp);
+        OSCEntityManager.delete(em, this.vsp, this.txBroadcastUtil);
 
         // If we've removed the last virtual system policies,
         // we can now delete the policy.
         if (this.vsp.getPolicy().getMarkedForDeletion()) {
             OSCEntityManager<VirtualSystemPolicy> oscEm = new OSCEntityManager<VirtualSystemPolicy>(VirtualSystemPolicy.class,
-                    em);
+                    em, this.txBroadcastUtil);
             List<VirtualSystemPolicy> vsps = oscEm.listByFieldName("policy", this.vsp.getPolicy());
             if (vsps == null || vsps.isEmpty()) {
                 log.info("Deleting policy '" + this.vsp.getPolicy().getName() + "'");
-                OSCEntityManager.delete(em, this.vsp.getPolicy());
+                OSCEntityManager.delete(em, this.vsp.getPolicy(), this.txBroadcastUtil);
             }
         }
     }

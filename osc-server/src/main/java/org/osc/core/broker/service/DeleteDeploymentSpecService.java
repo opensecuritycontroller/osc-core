@@ -45,6 +45,9 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
     @Reference
     private ConformService conformService;
 
+    @Reference
+    private ForceDeleteDSTask forceDeleteDSTask;
+
     private DeploymentSpec ds;
 
     @Override
@@ -61,14 +64,14 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
 
             if (request.isForceDelete()) {
                 TaskGraph tg = new TaskGraph();
-                tg.addTask(new ForceDeleteDSTask(this.ds));
+                tg.addTask(this.forceDeleteDSTask.create(this.ds));
                 tg.appendTask(dsUnlock, TaskGuard.ALL_PREDECESSORS_COMPLETED);
                 Job job = JobEngine.getEngine().submit("Force Delete Deployment Spec '" + this.ds.getName() + "'", tg,
                         LockObjectReference.getObjectReferences(this.ds));
 
                 response.setJobId(job.getId());
             } else {
-                OSCEntityManager.markDeleted(em, this.ds);
+                OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
                 UnlockObjectMetaTask forLambda = dsUnlock;
                 chain(() -> {
                     try {

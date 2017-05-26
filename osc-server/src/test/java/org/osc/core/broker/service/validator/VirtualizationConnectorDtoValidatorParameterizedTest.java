@@ -28,6 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
@@ -57,6 +58,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 		this.exception.expectMessage(this.expectedErrorMessageParam);
 
 		// Act.
+		ControllerType.addType(this.dtoParam.getControllerType());
 		this.dtoValidator.validateForCreate(this.dtoParam);
 	}
 

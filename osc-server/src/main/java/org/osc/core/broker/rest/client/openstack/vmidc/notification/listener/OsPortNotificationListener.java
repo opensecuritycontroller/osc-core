@@ -31,6 +31,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
@@ -45,10 +46,13 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
     private final ConformService conformService;
 
+    private final AlertGenerator alertGenerator;
+
     public OsPortNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
-        super(vc, OsNotificationObjectType.PORT, objectIdList, entity);
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner) {
+        super(vc, OsNotificationObjectType.PORT, objectIdList, entity, activeRunner);
         this.conformService = conformService;
+        this.alertGenerator = alertGenerator;
         register(vc, objectType);
     }
 
@@ -87,7 +91,7 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
     private void handleError(Throwable e) {
         log.error("Failed to trigger Security Group Sync on Port message Received!" + e);
-        AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+        this.alertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                 LockObjectReference.getLockObjectReference(OsPortNotificationListener.this.entity, new LockObjectReference(OsPortNotificationListener.this.vc)),
                 "Fail to process Openstack Port notification (" + e.getMessage() + ")");
     }

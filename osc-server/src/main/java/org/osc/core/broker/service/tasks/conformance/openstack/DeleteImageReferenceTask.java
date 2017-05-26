@@ -27,17 +27,24 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service = DeleteImageReferenceTask.class)
 public class DeleteImageReferenceTask  extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(DeleteImageReferenceTask.class);
 
     private OsImageReference imageReference;
     private VirtualSystem vs;
 
-    public DeleteImageReferenceTask(OsImageReference imageReference, VirtualSystem vs) {
-        this.imageReference = imageReference;
-        this.vs = vs;
-        this.name = getName();
+    public DeleteImageReferenceTask create(OsImageReference imageReference, VirtualSystem vs) {
+        DeleteImageReferenceTask task = new DeleteImageReferenceTask();
+        task.imageReference = imageReference;
+        task.vs = vs;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -48,13 +55,13 @@ public class DeleteImageReferenceTask  extends TransactionalTask {
 
         LOG.info("Deleting image " + this.imageReference.getImageRefId() + " from DB");
 
-        OSCEntityManager.delete(em, this.imageReference);
+        OSCEntityManager.delete(em, this.imageReference, this.txBroadcastUtil);
 
         this.vs.removeOsImageReference(this.imageReference);
 
         LOG.info("Updating virtual system " + this.vs.getName());
 
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

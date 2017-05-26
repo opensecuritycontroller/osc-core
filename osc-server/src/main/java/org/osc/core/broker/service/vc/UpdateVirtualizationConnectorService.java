@@ -30,6 +30,7 @@ import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
@@ -59,7 +60,6 @@ import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
@@ -72,7 +72,9 @@ public class UpdateVirtualizationConnectorService
         implements UpdateVirtualizationConnectorServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
-    private VirtualizationConnectorUtil util = new VirtualizationConnectorUtil();
+
+    @Reference
+    private VirtualizationConnectorUtil util;
 
     @Reference
     private ConformService conformService;
@@ -80,12 +82,15 @@ public class UpdateVirtualizationConnectorService
     @Reference
     private EncryptionApi encryption;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     @Override
     public BaseJobResponse exec(DryRunRequest<VirtualizationConnectorRequest> request, EntityManager em) throws Exception {
 
         BaseDtoValidator.checkForNullId(request.getDto());
 
-        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
+        OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
 
         // retrieve existing entry from db
         VirtualizationConnector vc = vcEntityMgr.findByPrimaryKey(request.getDto().getId());
@@ -110,7 +115,7 @@ public class UpdateVirtualizationConnectorService
             vcUnlock = LockUtil.tryLockVC(vc, LockType.WRITE_LOCK);
 
             updateVirtualizationConnector(request, vc);
-            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em);
+            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet().stream()
                     .map(SslCertificateAttrEntityMgr::createEntity)
                     .collect(toSet()),
@@ -124,14 +129,14 @@ public class UpdateVirtualizationConnectorService
                 List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByVcId(em, vc.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(daiId,
+                        this.txBroadcastUtil.addMessageToMap(daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
                 List<Long> vsIds = VirtualSystemEntityMgr.listByVcId(em, vc.getId());
                 if (vsIds != null) {
                     for (Long vsId : vsIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(vsId, VirtualSystem.class.getSimpleName(),
+                        this.txBroadcastUtil.addMessageToMap(vsId, VirtualSystem.class.getSimpleName(),
                                 EventType.UPDATED);
                     }
                 }
@@ -164,7 +169,8 @@ public class UpdateVirtualizationConnectorService
 
         // check for null/empty values
         VirtualizationConnectorDto dto = request.getDto();
-        VirtualizationConnectorDtoValidator.checkForNullFields(dto, request.isApi());
+        VirtualizationConnectorDtoValidator.checkForNullFields(dto, request.isApi(), this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
+                dto.getControllerType())));
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);
 
         // entry must pre-exist in db

@@ -29,21 +29,20 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.ArgumentMatcher;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(HibernateUtil.class)
+@RunWith(MockitoJUnitRunner.class)
 public class UpdateVsWithImageVersionTaskTest {
     @Rule public ExpectedException exception = ExpectedException.none();
 
@@ -52,6 +51,15 @@ public class UpdateVsWithImageVersionTaskTest {
 
     @Mock(answer=Answers.CALLS_REAL_METHODS)
     TestTransactionControl txControl;
+
+    @Mock
+    DBConnectionManager dbMgr;
+
+    @Mock
+    TransactionalBroadcastUtil txBroadcastUtil;
+
+    @InjectMocks
+    UpdateVsWithImageVersionTask task;
 
     private VirtualSystem vs;
     private ApplianceSoftwareVersion applianceSoftwareVersion;
@@ -64,9 +72,8 @@ public class UpdateVsWithImageVersionTaskTest {
 
         this.txControl.setEntityManager(this.em);
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
         this.vs = new VirtualSystem();
         this.vs.setId(2L);
@@ -83,7 +90,7 @@ public class UpdateVsWithImageVersionTaskTest {
     @Test
     public void testExecuteTransaction_WithNoImageReference_ExpectsNoUpdate() throws Exception {
         //Arrange.
-        UpdateVsWithImageVersionTask task = new UpdateVsWithImageVersionTask(this.vs);
+        UpdateVsWithImageVersionTask task = this.task.create(this.vs);
 
         //Act.
         task.execute();
@@ -97,7 +104,7 @@ public class UpdateVsWithImageVersionTaskTest {
         //Arrange.
         OsImageReference imageReference = new OsImageReference(this.vs, "region", "refId");
         this.vs.addOsImageReference(imageReference);
-        UpdateVsWithImageVersionTask task = new UpdateVsWithImageVersionTask(this.vs);
+        UpdateVsWithImageVersionTask task = this.task.create(this.vs);
 
         //Act.
         task.execute();
@@ -112,7 +119,7 @@ public class UpdateVsWithImageVersionTaskTest {
         OsImageReference imageReference = new OsImageReference(this.vs, "region", "refId");
         this.vs.addOsImageReference(imageReference);
         imageReference.setApplianceVersion(null);
-        UpdateVsWithImageVersionTask task = new UpdateVsWithImageVersionTask(this.vs);
+        UpdateVsWithImageVersionTask task = this.task.create(this.vs);
 
         //Act.
         task.execute();
@@ -140,7 +147,7 @@ public class UpdateVsWithImageVersionTaskTest {
         this.vs.addOsImageReference(imageReference_3);
         this.vs.addOsImageReference(imageReference_4);
 
-        UpdateVsWithImageVersionTask task = new UpdateVsWithImageVersionTask(this.vs);
+        UpdateVsWithImageVersionTask task = this.task.create(this.vs);
 
         //Act.
         task.execute();

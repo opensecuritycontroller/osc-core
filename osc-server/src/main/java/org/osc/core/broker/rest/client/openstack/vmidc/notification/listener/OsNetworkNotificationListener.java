@@ -28,6 +28,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationKeyType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationObjectType;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificationUtil;
+import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.util.db.HibernateUtil;
@@ -38,11 +39,14 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
 
     private final ConformService conformService;
 
-    public OsNetworkNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService) {
+    private final AlertGenerator alertGenerator;
 
-        super(vc, OsNotificationObjectType.NETWORK, objectIdList, entity);
+    public OsNetworkNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner) {
+
+        super(vc, OsNotificationObjectType.NETWORK, objectIdList, entity, activeRunner);
         this.conformService = conformService;
+        this.alertGenerator = alertGenerator;
         register(vc, objectType);
     }
 
@@ -69,7 +73,7 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
                     });
                 } catch (Exception e) {
                     log.error("Failed post notification processing  - " + this.vc.getControllerIpAddress(), e);
-                    AlertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
+                    this.alertGenerator.processSystemFailureEvent(SystemFailureType.OS_NOTIFICATION_FAILURE,
                             LockObjectReference.getLockObjectReference(this.entity, new LockObjectReference(this.vc)),
                             "Fail to process Openstack Network (" + keyValue + ") notification (" + e.getMessage()
                                     + ")");

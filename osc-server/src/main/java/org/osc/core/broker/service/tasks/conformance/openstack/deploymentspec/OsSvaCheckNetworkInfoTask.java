@@ -36,7 +36,9 @@ import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service= OsSvaCheckNetworkInfoTask.class)
 public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
 
     private static final Logger LOG = Logger.getLogger(OsSvaCheckNetworkInfoTask.class);
@@ -44,8 +46,13 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
     private TaskGraph tg;
     private DistributedApplianceInstance dai;
 
-    public OsSvaCheckNetworkInfoTask(DistributedApplianceInstance dai) {
-        this.dai = dai;
+    public OsSvaCheckNetworkInfoTask create(DistributedApplianceInstance dai) {
+        OsSvaCheckNetworkInfoTask task = new OsSvaCheckNetworkInfoTask();
+        task.dai = dai;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -105,7 +112,7 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
                     mgmtSubnetPrefixLength,
                     mgmtSubnet.getGatewayIp()));
 
-            OSCEntityManager.update(em, this.dai);
+            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
         }
     }
 
@@ -142,7 +149,8 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
 
     @Override
     public String getName() {
-        return String.format("Checking the network information for the distributed appliance instance '%s'", this.dai.getName());
+        return String.format("Checking the network information for the distributed appliance instance '%s'",
+                this.dai != null ? this.dai.getName() : "dai is null");
     }
 
     @Override

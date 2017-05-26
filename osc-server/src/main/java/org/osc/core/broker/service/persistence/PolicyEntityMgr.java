@@ -32,12 +32,7 @@ public class PolicyEntityMgr {
     }
 
     public static Policy findById(EntityManager em, Long id) {
-
-        // Initializing Entity Manager
-        OSCEntityManager<Policy> emgr = new OSCEntityManager<Policy>(
-                Policy.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(Policy.class, id);
     }
 
 }

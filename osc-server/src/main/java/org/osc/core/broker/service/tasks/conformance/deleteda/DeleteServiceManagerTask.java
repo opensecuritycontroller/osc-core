@@ -23,19 +23,31 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceManagerApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = DeleteServiceManagerTask.class)
 public class DeleteServiceManagerTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(DeleteServiceManagerTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
 
-    public DeleteServiceManagerTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public DeleteServiceManagerTask create(VirtualSystem vs) {
+        DeleteServiceManagerTask task = new DeleteServiceManagerTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -43,7 +55,7 @@ public class DeleteServiceManagerTask extends TransactionalTask {
         LOG.debug("Start Executing DeleteServiceManager Task for vs " + this.vs.getId());
 
         // delete service mgr
-        ServiceManagerApi serviceManagerApi = VMwareSdnApiFactory.createServiceManagerApi(this.vs);
+        ServiceManagerApi serviceManagerApi = this.apiFactoryService.createServiceManagerApi(this.vs);
         String mgrId = this.vs.getNsxServiceManagerId();
         serviceManagerApi.deleteServiceManager(mgrId);
 
@@ -51,7 +63,7 @@ public class DeleteServiceManagerTask extends TransactionalTask {
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
         this.vs.setNsxServiceManagerId(null);
         this.vs.setNsxVsmUuid(null);
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

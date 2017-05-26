@@ -22,11 +22,13 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This task is responsible for removing all the inspection appliances
@@ -34,7 +36,8 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
  * does not support port group it will also remove orphan inspection hooks
  * in the controller.
  */
-class VmPortAllHooksRemoveTask extends TransactionalTask {
+@Component(service=VmPortAllHooksRemoveTask.class)
+public class VmPortAllHooksRemoveTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(VmPortAllHooksRemoveTask.class);
 
@@ -43,11 +46,20 @@ class VmPortAllHooksRemoveTask extends TransactionalTask {
     private String sgmName;
     private SecurityGroupMemberType sgmType;
 
-    public VmPortAllHooksRemoveTask(SecurityGroupMember sgm, VMPort port) {
-        this.sgm = sgm;
-        this.port = port;
-        this.sgmType = sgm.getType();
-        this.sgmName = sgm.getMemberName();
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    public VmPortAllHooksRemoveTask create(SecurityGroupMember sgm, VMPort port) {
+        VmPortAllHooksRemoveTask task = new VmPortAllHooksRemoveTask();
+        task.sgm = sgm;
+        task.port = port;
+        task.sgmType = sgm.getType();
+        task.sgmName = sgm.getMemberName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -61,13 +73,13 @@ class VmPortAllHooksRemoveTask extends TransactionalTask {
         this.port.removeAllDais();
 
         // If port group is not supported also remove the inspection hooks from the controller.
-        if (!SdnControllerApiFactory.supportsPortGroup(this.sgm.getSecurityGroup())) {
-            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgm)) {
+        if (!this.apiFactoryService.supportsPortGroup(this.sgm.getSecurityGroup())) {
+            try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.sgm)) {
                 controller.removeAllInspectionHooks(new NetworkElementImpl(this.port));
             }
         }
 
-        OSCEntityManager.update(em, this.port);
+        OSCEntityManager.update(em, this.port, this.txBroadcastUtil);
     }
 
     @Override

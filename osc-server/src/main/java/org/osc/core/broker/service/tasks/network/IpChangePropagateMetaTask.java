@@ -30,7 +30,7 @@ import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.FailedInfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -63,7 +63,13 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
     private UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
 
     @Reference
+    private UpdateNsxDeploymentSpecTask updateNsxDeploymentSpecTask;
+
+    @Reference
     private MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     public IpChangePropagateMetaTask create() {
         IpChangePropagateMetaTask task = new IpChangePropagateMetaTask();
@@ -73,6 +79,11 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
         task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
         task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
         task.name = task.getName();
+        task.updateNsxDeploymentSpecTask = this.updateNsxDeploymentSpecTask;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -82,7 +93,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
         log.debug("Start executing IP Change Propagate task");
 
         OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(DistributedAppliance.class,
-                em);
+                em, this.txBroadcastUtil);
 
         this.tg = new TaskGraph();
         for (DistributedAppliance da : emgr.listAll()) {
@@ -106,7 +117,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
                     propagateTaskGraph.addTask(this.updateNsxServiceAttributesTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating Service Deployment Spec OVF Image URL
-                    propagateTaskGraph.addTask(new UpdateNsxDeploymentSpecTask(vs),
+                    propagateTaskGraph.addTask(this.updateNsxDeploymentSpecTask.create(vs),
                             TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
                     // Updating Service Instance Attributes which include vmiDC server IP
                     propagateTaskGraph.addTask(this.updateNsxServiceInstanceAttributesTask.create(vs),
@@ -123,10 +134,10 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
         }
 
         OSCEntityManager<ApplianceManagerConnector> emgrMc = new OSCEntityManager<ApplianceManagerConnector>(
-                ApplianceManagerConnector.class, em);
+                ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         for (ApplianceManagerConnector mc : emgrMc.listAll()) {
             try {
-                if (ManagerApiFactory.isPersistedUrlNotifications(mc)) {
+                if (this.apiFactoryService.isPersistedUrlNotifications(mc)) {
                     TaskGraph propagateTaskGraph = new TaskGraph();
 
                     LockObjectReference or = new LockObjectReference(mc.getId(), mc.getName(),

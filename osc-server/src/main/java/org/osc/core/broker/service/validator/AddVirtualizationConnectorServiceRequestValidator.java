@@ -19,55 +19,58 @@ package org.osc.core.broker.service.validator;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
 import org.osc.core.broker.util.StaticRegistry;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 
 public class AddVirtualizationConnectorServiceRequestValidator
-		implements RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> {
-	private EntityManager em;
+        implements RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> {
+    private EntityManager em;
 
-	private DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> dtoValidator;
+    private DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> dtoValidator;
 
-	private VirtualizationConnectorUtil virtualizationConnectorUtil;
+    private VirtualizationConnectorUtil virtualizationConnectorUtil;
 
-	public void setVirtualizationConnectorUtil(VirtualizationConnectorUtil virtualizationConnectorUtil) {
-		this.virtualizationConnectorUtil = virtualizationConnectorUtil;
-	}
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
-	public AddVirtualizationConnectorServiceRequestValidator(EntityManager em) {
-		this.em = em;
-	}
+    private ApiFactoryService apiFactoryService;
 
-	@Override
-	public void validate(DryRunRequest<VirtualizationConnectorRequest> request) throws Exception {
+    public AddVirtualizationConnectorServiceRequestValidator(EntityManager em,
+            TransactionalBroadcastUtil txBroadcastUtil, VirtualizationConnectorUtil virtualizationConnectorUtil, ApiFactoryService apiFactoryService) {
+        this.em = em;
+        this.txBroadcastUtil = txBroadcastUtil;
+        this.virtualizationConnectorUtil = virtualizationConnectorUtil;
+        this.apiFactoryService = apiFactoryService;
+    }
 
-		if (this.dtoValidator == null) {
-			this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em);
-		}
+    @Override
+    public void validate(DryRunRequest<VirtualizationConnectorRequest> request) throws Exception {
 
-		VirtualizationConnectorDto dto = request.getDto();
-		this.dtoValidator.validateForCreate(dto);
+        if (this.dtoValidator == null) {
+            this.dtoValidator = new VirtualizationConnectorDtoValidator(this.em, this.txBroadcastUtil, this.apiFactoryService);
+        }
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(dto,
-		        StaticRegistry.encryptionApi());
+        VirtualizationConnectorDto dto = request.getDto();
+        this.dtoValidator.validateForCreate(dto);
 
-		if (this.virtualizationConnectorUtil == null) {
-			this.virtualizationConnectorUtil = new VirtualizationConnectorUtil();
-		}
-		if (dto.getType().isVmware()) {
-			this.virtualizationConnectorUtil.checkVmwareConnection(request, vc);
-		} else {
-			this.virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
-		}
-	}
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(dto, StaticRegistry.encryptionApi());
 
-	@Override
-	public VirtualizationConnector validateAndLoad(DryRunRequest<VirtualizationConnectorRequest> request) throws Exception {
-		throw new UnsupportedOperationException();
-	}
+        if (dto.getType().isVmware()) {
+            this.virtualizationConnectorUtil.checkVmwareConnection(request, vc);
+        } else {
+            this.virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
+        }
+    }
+
+    @Override
+    public VirtualizationConnector validateAndLoad(DryRunRequest<VirtualizationConnectorRequest> request)
+            throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 }

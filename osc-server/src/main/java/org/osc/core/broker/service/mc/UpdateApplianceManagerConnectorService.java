@@ -31,6 +31,8 @@ import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -58,7 +60,6 @@ import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
-import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osgi.service.component.annotations.Component;
@@ -80,12 +81,15 @@ public class UpdateApplianceManagerConnectorService
     @Reference
     private EncryptionApi encryption;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     @Override
     public BaseJobResponse exec(DryRunRequest<ApplianceManagerConnectorRequest> request, EntityManager em) throws Exception {
 
         BaseDtoValidator.checkForNullId(request.getDto());
 
-        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
 
         // retrieve existing entry from db
         ApplianceManagerConnector mc = emgr.findByPrimaryKey(request.getDto().getId());
@@ -109,7 +113,7 @@ public class UpdateApplianceManagerConnectorService
             mcUnlock = LockUtil.tryLockMC(mc, LockType.WRITE_LOCK);
 
             updateApplianceManagerConnector(request, mc);
-            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em);
+            SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             mc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(
                     request.getDto().getSslCertificateAttrSet().stream()
                         .map(SslCertificateAttrEntityMgr::createEntity)
@@ -124,7 +128,7 @@ public class UpdateApplianceManagerConnectorService
                 List<Long> daiIds = DistributedApplianceInstanceEntityMgr.listByMcId(em, mc.getId());
                 if (daiIds != null) {
                     for (Long daiId : daiIds) {
-                        TransactionalBroadcastUtil.addMessageToMap(daiId,
+                        this.txBroadcastUtil.addMessageToMap(daiId,
                                 DistributedApplianceInstance.class.getSimpleName(), EventType.UPDATED);
                     }
                 }
@@ -174,9 +178,11 @@ public class UpdateApplianceManagerConnectorService
     private void validate(EntityManager em, DryRunRequest<ApplianceManagerConnectorRequest> request,
                           ApplianceManagerConnector existingMc, OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
+        boolean basicAuth = this.apiFactoryService.isBasicAuth(ManagerType.fromText(request.getDto().getManagerType()));
+
         // check for null/empty values
-        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), request.isApi());
-        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto());
+        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), request.isApi(), basicAuth);
+        ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto(), basicAuth);
 
         // entry must pre-exist in db
         if (existingMc == null) {
@@ -239,7 +245,8 @@ public class UpdateApplianceManagerConnectorService
         String mcDbApiKey = existingMc.getApiKey();
 
         ApplianceManagerConnectorDto dto = request.getDto();
-        ApplianceManagerConnectorEntityMgr.toEntity(existingMc, dto, this.encryption);
+        String serviceName = this.apiFactoryService.getServiceName( ManagerType.fromText(dto.getManagerType()));
+        ApplianceManagerConnectorEntityMgr.toEntity(existingMc, dto, this.encryption, serviceName);
 
         if (request.isApi()) {
             // For API requests if password is not specified, use existing password unaltered

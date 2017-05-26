@@ -26,19 +26,27 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osgi.service.component.annotations.Component;
 
+@Component(service=AddSecurityGroupMemberTask.class)
 public class AddSecurityGroupMemberTask extends TransactionalTask {
     //private static final Logger log = Logger.getLogger(AddSecurityGroupTask.class);
 
     private SecurityGroup securityGroup;
-    private final SecurityGroupMemberType type;
-    private final String address;
+    private SecurityGroupMemberType type;
+    private String address;
 
-    public AddSecurityGroupMemberTask(SecurityGroup securityGroup, SecurityGroupMemberType type, String address) {
-        this.securityGroup = securityGroup;
-        this.type = type;
-        this.address = address;
-        this.name = getName();
+    public AddSecurityGroupMemberTask create(SecurityGroup securityGroup, SecurityGroupMemberType type, String address) {
+        AddSecurityGroupMemberTask task = new AddSecurityGroupMemberTask();
+
+        task.securityGroup = securityGroup;
+        task.type = type;
+        task.address = address;
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -51,7 +59,7 @@ public class AddSecurityGroupMemberTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) {
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
         SecurityGroupMember securityGroupMember = new SecurityGroupMember(this.securityGroup, this.type, this.address);
-        OSCEntityManager.create(em, securityGroupMember);
+        OSCEntityManager.create(em, securityGroupMember, this.txBroadcastUtil);
     }
 
     @Override

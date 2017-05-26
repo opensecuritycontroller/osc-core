@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * This task is responsible for assigning the provided DAI
@@ -28,11 +29,24 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
  * This task is applicable to SGIs whose virtual system refers to an SDN
  * controller that supports port groups.
  */
+@Component(service=AllocateDAIWithSGIMembersTask.class)
 public final class AllocateDAIWithSGIMembersTask extends UpdateDAIToSGIMembersTask {
     private static final Logger LOG = Logger.getLogger(AllocateDAIWithSGIMembersTask.class);
 
-    public AllocateDAIWithSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+    public AllocateDAIWithSGIMembersTask() {
+        super(null, null);
+    }
+
+    private AllocateDAIWithSGIMembersTask (SecurityGroupInterface sgi, DistributedApplianceInstance dai){
         super(sgi,dai);
+    }
+
+    public AllocateDAIWithSGIMembersTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+        AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     /**

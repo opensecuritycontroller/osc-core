@@ -40,7 +40,8 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -66,6 +67,12 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
     @Reference
     private NotificationListenerFactory notificationListenerFactory;
 
+    @Reference
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
+    @Reference
+    private DBConnectionManager dbConnectionManager;
+
     private final Multimap<Long, OsNotificationListener> sgToListenerMap = ArrayListMultimap.create();
     private final HashMap<Long, VirtualizationConnector> sgToVCMap = new HashMap<Long, VirtualizationConnector>();
 
@@ -79,9 +86,9 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         this.registration = ctx.registerService(BroadcastListener.class, this, null);
 
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            HibernateUtil.getTransactionControl().required(() -> {
-                OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
+            EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+            this.dbConnectionManager.getTransactionControl().required(() -> {
+                OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em, this.txBroadcastUtil);
                 for (SecurityGroup sg : sgEmgr.listAll()) {
                     addListener(sg);
                 }
@@ -116,8 +123,8 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
             removeListener(msg.getEntityId());
         } else {
             try {
-                EntityManager em = HibernateUtil.getTransactionalEntityManager();
-                HibernateUtil.getTransactionControl().required(() -> {
+                EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
+                this.dbConnectionManager.getTransactionControl().required(() -> {
                     SecurityGroup sg = SecurityGroupEntityMgr.findById(em, msg.getEntityId());
                     if (sg == null) {
                         log.error("Processing " + msg.getEventType() + " notification for Security Group ("

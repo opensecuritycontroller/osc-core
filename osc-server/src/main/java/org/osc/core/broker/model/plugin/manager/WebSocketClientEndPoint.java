@@ -28,9 +28,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ManagerApi;
 import org.osc.core.broker.service.api.RestConstants;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.MgrChangeNotification;
 
@@ -82,7 +82,7 @@ public class WebSocketClientEndPoint extends Endpoint {
                         log.error("Failed to process notification from Manager: '"
                                 + WebSocketClientEndPoint.this.mc.getName() + "-"
                                 + WebSocketClientEndPoint.this.mc.getIpAddress() + "'");
-                        AlertGenerator.processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
+                        StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
                                 new LockObjectReference(WebSocketClientEndPoint.this.mc),
                                 "Failed to process notification from Manager: '"
                                         + WebSocketClientEndPoint.this.mc.getName() + "-"
@@ -95,7 +95,7 @@ public class WebSocketClientEndPoint extends Endpoint {
 
         } catch (IOException e1) {
             log.error("Failed to subscribe notification from Manager: '" + this.mc.getName() + "'");
-            AlertGenerator.processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
+            StaticRegistry.alertGenerator().processSystemFailureEvent(SystemFailureType.MGR_WEB_SOCKET_NOTIFICATION_FAILURE,
                     "Failed to subscribe notification from Manager: '" + this.mc.getName() + "-"
                             + this.mc.getIpAddress() + "' (" + e1.getMessage() + ")");
         }

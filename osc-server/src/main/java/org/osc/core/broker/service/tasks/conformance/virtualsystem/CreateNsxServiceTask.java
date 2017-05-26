@@ -23,8 +23,7 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.Service;
@@ -44,6 +43,9 @@ public class CreateNsxServiceTask extends TransactionalTask {
     @Reference
     PasswordUtil passwordUtil;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
 
     public CreateNsxServiceTask create(VirtualSystem vs) {
@@ -51,6 +53,9 @@ public class CreateNsxServiceTask extends TransactionalTask {
         task.vs = vs;
         task.name = task.getName();
         task.passwordUtil = this.passwordUtil;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -59,11 +64,11 @@ public class CreateNsxServiceTask extends TransactionalTask {
         LOG.debug("Start executing CreateNsxServiceTask for vs " + this.vs.getId());
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
-        ServiceApi serviceApi = VMwareSdnApiFactory.createServiceApi(this.vs);
+        ServiceApi serviceApi = this.apiFactoryService.createServiceApi(this.vs);
         ServiceElement service = serviceApi.findService(this.vs.getDistributedAppliance().getName());
         String serviceId = service == null ? null : service.getId();
         if (serviceId == null) {
-            String serviceFunctionalityType = ManagerApiFactory.getExternalServiceName(this.vs);
+            String serviceFunctionalityType = this.apiFactoryService.getExternalServiceName(this.vs);
 
             service = new Service(
                     null,
@@ -83,7 +88,7 @@ public class CreateNsxServiceTask extends TransactionalTask {
         }
 
         this.vs.setNsxServiceId(serviceId);
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

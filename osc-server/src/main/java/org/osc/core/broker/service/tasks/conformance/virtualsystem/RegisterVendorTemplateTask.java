@@ -26,13 +26,19 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.Policy;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.VendorTemplateApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = RegisterVendorTemplateTask.class)
 public class RegisterVendorTemplateTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(RegisterVendorTemplateTask.class);
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private VirtualSystem vs;
     private Policy policy;
@@ -41,17 +47,28 @@ public class RegisterVendorTemplateTask extends TransactionalTask {
     @TaskOutput
     public String vendorTemplateId;
 
-    public RegisterVendorTemplateTask(VirtualSystem vs, Policy policy) {
-        this.vs = vs;
-        this.policy = policy;
-        this.name = getName();
+    public RegisterVendorTemplateTask create(VirtualSystem vs, Policy policy) {
+        RegisterVendorTemplateTask task = new RegisterVendorTemplateTask();
+        task.vs = vs;
+        task.policy = policy;
+        task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
-    public RegisterVendorTemplateTask(VirtualSystemPolicy vsp) {
-        this.vsp = vsp;
-        this.vs = vsp.getVirtualSystem();
-        this.policy = vsp.getPolicy();
-        this.name = getName();
+    public RegisterVendorTemplateTask create(VirtualSystemPolicy vsp) {
+        RegisterVendorTemplateTask task = new RegisterVendorTemplateTask();
+        task.vsp = vsp;
+        task.vs = vsp.getVirtualSystem();
+        task.policy = vsp.getPolicy();
+        task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -64,17 +81,17 @@ public class RegisterVendorTemplateTask extends TransactionalTask {
 
             this.vsp = new VirtualSystemPolicy(this.vs);
             this.vsp.setPolicy(this.policy);
-            OSCEntityManager.create(em, this.vsp);
+            OSCEntityManager.create(em, this.vsp, this.txBroadcastUtil);
         } else {
             this.vsp = em.find(VirtualSystemPolicy.class, this.vsp.getId());
         }
 
-        VendorTemplateApi templateApi = VMwareSdnApiFactory.createVendorTemplateApi(this.vsp.getVirtualSystem());
+        VendorTemplateApi templateApi = this.apiFactoryService.createVendorTemplateApi(this.vsp.getVirtualSystem());
         this.vendorTemplateId = templateApi.createVendorTemplate(this.vsp.getVirtualSystem().getNsxServiceId(), this.vsp.getPolicy().getName(), this.vsp.getPolicy().getId().toString());
 
         LOG.debug("Update policyVendorTemplateId: " + this.vendorTemplateId);
         this.vsp.setNsxVendorTemplateId(this.vendorTemplateId);
-        OSCEntityManager.update(em, this.vsp);
+        OSCEntityManager.update(em, this.vsp, this.txBroadcastUtil);
     }
 
     @Override

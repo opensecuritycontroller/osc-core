@@ -24,7 +24,7 @@ import javax.persistence.LockModeType;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -42,6 +42,9 @@ public class UpdateMgrPolicyNotificationTask extends TransactionalTask {
     @Reference
     private PasswordUtil passwordUtil;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private ApplianceManagerConnector mc;
     private String oldBrokerIp;
 
@@ -51,6 +54,9 @@ public class UpdateMgrPolicyNotificationTask extends TransactionalTask {
         task.name = task.getName();
         task.oldBrokerIp = oldBrokerIp;
         task.passwordUtil = this.passwordUtil;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -62,11 +68,11 @@ public class UpdateMgrPolicyNotificationTask extends TransactionalTask {
                 LockModeType.PESSIMISTIC_WRITE);
         ManagerCallbackNotificationApi mgrApi = null;
         try {
-            mgrApi = ManagerApiFactory.createManagerUrlNotificationApi(this.mc);
+            mgrApi = this.apiFactoryService.createManagerUrlNotificationApi(this.mc);
             mgrApi.updatePolicyGroupNotificationRegistration(this.oldBrokerIp, Server.getApiPort(),
                     RestConstants.OSC_DEFAULT_LOGIN, this.passwordUtil.getOscDefaultPass());
             this.mc.setLastKnownNotificationIpAddress(ServerUtil.getServerIP());
-            OSCEntityManager.update(em, this.mc);
+            OSCEntityManager.update(em, this.mc, this.txBroadcastUtil);
         } finally {
             if (mgrApi != null) {
                 mgrApi.close();

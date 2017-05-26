@@ -48,6 +48,9 @@ public class MgrCreateVSSDeviceTask extends TransactionalTask {
         task.apiFactoryService = this.apiFactoryService;
         task.vs = vs;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -63,7 +66,7 @@ public class MgrCreateVSSDeviceTask extends TransactionalTask {
 
             deviceId = mgrApi.createVSSDevice();
             this.vs.setMgrId(deviceId);
-            OSCEntityManager.update(em, this.vs);
+            OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
             log.info("New VSS device (" + deviceId + ") successfully created.");
 
         } catch (Exception e) {
@@ -72,7 +75,7 @@ public class MgrCreateVSSDeviceTask extends TransactionalTask {
             deviceId = mgrApi.findDeviceByName(this.vs.getName());
             if (deviceId != null) {
                 this.vs.setMgrId(deviceId);
-                OSCEntityManager.update(em, this.vs);
+                OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
             } else {
                 throw e;
             }
@@ -84,7 +87,7 @@ public class MgrCreateVSSDeviceTask extends TransactionalTask {
         Set<DistributedApplianceInstance> daiList = this.vs.getDistributedApplianceInstances();
         daiList.forEach(dai -> {
             dai.setMgrDeviceId(null);
-            OSCEntityManager.update(em, dai);
+            OSCEntityManager.update(em, dai, this.txBroadcastUtil);
         });
     }
 

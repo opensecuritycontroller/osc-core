@@ -81,8 +81,8 @@ class SecurityGroupCheckMetaTaskTestData {
 
     public TaskGraph createNoMcPolicyMappingGraph(SecurityGroup sg) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new ValidateSecurityGroupTenantTask(sg));
-        expectedGraph.appendTask(new SecurityGroupUpdateOrDeleteMetaTask(sg));
+        expectedGraph.addTask(new ValidateSecurityGroupTenantTask().create(sg));
+        expectedGraph.appendTask(new SecurityGroupUpdateOrDeleteMetaTask().create(sg));
         return expectedGraph;
     }
 

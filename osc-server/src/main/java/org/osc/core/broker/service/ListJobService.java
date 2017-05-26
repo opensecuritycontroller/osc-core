@@ -41,7 +41,7 @@ public class ListJobService extends ServiceDispatcher<ListJobRequest, ListRespon
         ListResponse<JobRecordDto> response = new ListResponse<JobRecordDto>();
 
         // Initializing Entity Manager
-        OSCEntityManager<JobRecord> emgr = new OSCEntityManager<JobRecord>(JobRecord.class, em);
+        OSCEntityManager<JobRecord> emgr = new OSCEntityManager<JobRecord>(JobRecord.class, em, this.txBroadcastUtil);
         // to do mapping
 
         List<JobRecordDto> dtoList = new ArrayList<JobRecordDto>();

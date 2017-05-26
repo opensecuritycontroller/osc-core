@@ -29,13 +29,15 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionHookElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This metatask is responsible for checking whether a port
@@ -45,15 +47,41 @@ import org.osc.sdk.controller.element.InspectionHookElement;
  * This task is applicable to SGIs whose virtual system refers to an SDN
  * controller that supports port groups.
  */
+@Component(service=CheckPortGroupHookMetaTask.class)
 public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
     private SecurityGroupInterface sgi;
     private TaskGraph tg;
     private static final Logger LOG = Logger.getLogger(CheckPortGroupHookMetaTask.class);
-    private final boolean isDeleteTaskGraph;
+    private boolean isDeleteTaskGraph;
 
-    public CheckPortGroupHookMetaTask(SecurityGroupInterface sgi, boolean isDeleteTg) {
-        this.sgi = sgi;
-        this.isDeleteTaskGraph = isDeleteTg;
+    @Reference
+    AllocateDAIWithSGIMembersTask allocateDai;
+
+    @Reference
+    DeallocateDAIOfSGIMembersTask deallocateDai;
+
+    @Reference
+    CreatePortGroupHookTask createPortGroupHook;
+
+    @Reference
+    RemovePortGroupHookTask removePortGroupHook;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    public CheckPortGroupHookMetaTask create(SecurityGroupInterface sgi, boolean isDeleteTg) {
+        CheckPortGroupHookMetaTask task = new CheckPortGroupHookMetaTask();
+        task.sgi = sgi;
+        task.isDeleteTaskGraph = isDeleteTg;
+        task.allocateDai = this.allocateDai;
+        task.deallocateDai = this.deallocateDai;
+        task.createPortGroupHook = this.createPortGroupHook;
+        task.removePortGroupHook = this.removePortGroupHook;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -74,7 +102,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         InspectionHookElement existingInspHook = null;
 
         if (this.sgi.getNetworkElementId() != null) {
-            try (SdnRedirectionApi redirection = SdnControllerApiFactory.createNetworkRedirectionApi(this.sgi.getVirtualSystem())) {
+            try (SdnRedirectionApi redirection = this.apiFactoryService.createNetworkRedirectionApi(this.sgi.getVirtualSystem())) {
                 existingInspHook = redirection.getInspectionHook(this.sgi.getNetworkElementId());
                 if (existingInspHook == null) {
                     LOG.info(String.format("A inspection hook with the id %s was not found.", this.sgi.getNetworkElementId()));
@@ -86,8 +114,8 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         if (!this.sgi.getMarkedForDeletion() && !this.isDeleteTaskGraph) {
             if (existingInspHook == null) {
                 assignedRedirectedDai = assignedRedirectedDai == null ? getDeployedDAI(sgm, protectedPort, em) : assignedRedirectedDai;
-                this.tg.appendTask(new AllocateDAIWithSGIMembersTask(this.sgi, assignedRedirectedDai));
-                this.tg.appendTask(new CreatePortGroupHookTask(this.sgi, assignedRedirectedDai));
+                this.tg.appendTask(this.allocateDai.create(this.sgi, assignedRedirectedDai));
+                this.tg.appendTask(this.createPortGroupHook.create(this.sgi, assignedRedirectedDai));
             } else {
                 if (assignedRedirectedDai == null) {
                     throw new VmidcBrokerValidationException(
@@ -108,11 +136,11 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
             }
         } else {
             if (existingInspHook != null) {
-                this.tg.appendTask(new RemovePortGroupHookTask(this.sgi));
+                this.tg.appendTask(this.removePortGroupHook.create(this.sgi));
             }
 
             if (assignedRedirectedDai != null) {
-                this.tg.appendTask(new DeallocateDAIOfSGIMembersTask(this.sgi, assignedRedirectedDai));
+                this.tg.appendTask(this.deallocateDai.create(this.sgi, assignedRedirectedDai));
             }
         }
     }
@@ -155,7 +183,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
 
         if (sgm.getType().equals(SecurityGroupMemberType.SUBNET) && sgm.getSubnet().isProtectExternal()
                 && protectedPort.getVm() == null) {
-            if (SdnControllerApiFactory.supportsOffboxRedirection(sgm.getSecurityGroup())) {
+            if (this.apiFactoryService.supportsOffboxRedirection(sgm.getSecurityGroup())) {
                 return OpenstackUtil.findDeployedDAI(
                         em,
                         this.sgi.getVirtualSystem(),
@@ -163,7 +191,8 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
                         tenantId,
                         getMemberRegion(sgm),
                         sgmDomainId,
-                        null);
+                        null,
+                        this.apiFactoryService.supportsOffboxRedirection(this.sgi.getVirtualSystem()));
             } else {
                 throw new VmidcBrokerValidationException(
                         "Protecting External Traffic feature is not supported by your SDN controller. Please make sure your SDN controller supports offboxing");
@@ -180,7 +209,8 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
                 tenantId,
                 getMemberRegion(sgm),
                 sgmDomainId,
-                protectedPort.getVm().getHost());
+                protectedPort.getVm().getHost(),
+                this.apiFactoryService.supportsOffboxRedirection(this.sgi.getVirtualSystem()));
     }
 
     private String getMemberRegion(SecurityGroupMember sgm) throws VmidcBrokerValidationException {

@@ -24,8 +24,9 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.sdk.sdn.api.AgentApi;
 import org.osc.sdk.sdn.element.AgentElement;
@@ -34,6 +35,7 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+// TODO this class is not used
 public class NsxAgentsJob implements Job {
 
     private static final Logger LOG = Logger.getLogger(NsxAgentsJob.class);
@@ -46,15 +48,16 @@ public class NsxAgentsJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
         try {
+            ApiFactoryService apiFactoryService =  (ApiFactoryService) context.getMergedJobDataMap().get(ApiFactoryService.class.getName());
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
 
             HibernateUtil.getTransactionControl().required(() -> {
 
                 OSCEntityManager<DistributedAppliance> emgr = new OSCEntityManager<DistributedAppliance>(
-                        DistributedAppliance.class, em);
+                        DistributedAppliance.class, em, StaticRegistry.transactionalBroadcastUtil());
                 for (DistributedAppliance da : emgr.listAll()) {
                     for (VirtualSystem vs : da.getVirtualSystems()) {
-                        AgentApi agentApi = VMwareSdnApiFactory.createAgentApi(vs);
+                        AgentApi agentApi = apiFactoryService.createAgentApi(vs);
                         List<AgentElement> agents = agentApi.getAgents(vs.getNsxServiceId());
 
                         for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
@@ -70,7 +73,7 @@ public class NsxAgentsJob implements Job {
                             }
                             if (tgtAgent == null) {
                                 vs.removeDistributedApplianceInstance(dai);
-                                OSCEntityManager.delete(em, dai);
+                                OSCEntityManager.delete(em, dai, StaticRegistry.transactionalBroadcastUtil());
                             } else {
                                 dai.setNsxAgentId(tgtAgent.getId());
                                 dai.setNsxHostId(tgtAgent.getHostId());
@@ -80,7 +83,7 @@ public class NsxAgentsJob implements Job {
                                 dai.setMgmtGateway(tgtAgent.getGateway());
                                 dai.setMgmtSubnetPrefixLength(tgtAgent.getSubnetPrefixLength());
 
-                                OSCEntityManager.update(em, dai);
+                                OSCEntityManager.update(em, dai, StaticRegistry.transactionalBroadcastUtil());
                             }
                         }
                     }

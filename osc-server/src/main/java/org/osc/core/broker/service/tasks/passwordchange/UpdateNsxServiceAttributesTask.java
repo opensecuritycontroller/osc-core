@@ -23,8 +23,9 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.RestConstants;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.ServerUtil;
@@ -39,6 +40,10 @@ public class UpdateNsxServiceAttributesTask extends TransactionalTask {
     @Reference
     public PasswordUtil passwordUtil;
 
+    @IgnoreCompare
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
 
     public UpdateNsxServiceAttributesTask create(VirtualSystem vs) {
@@ -46,6 +51,10 @@ public class UpdateNsxServiceAttributesTask extends TransactionalTask {
         task.vs = vs;
         task.name = task.getName();
         task.passwordUtil = this.passwordUtil;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -57,7 +66,7 @@ public class UpdateNsxServiceAttributesTask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         LOG.info("Start executing UpdateNsxServiceAttributesTask");
-        ServiceApi serviceApi = VMwareSdnApiFactory.createServiceApi(this.vs);
+        ServiceApi serviceApi = this.apiFactoryService.createServiceApi(this.vs);
         serviceApi.updateService(
                 this.vs.getNsxServiceId(),
                 this.vs.getDistributedAppliance().getName(),

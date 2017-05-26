@@ -48,6 +48,9 @@ public class MgrUpdateMemberDeviceTask extends TransactionalTask {
         task.apiFactoryService = this.apiFactoryService;
         task.dai = dai;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -67,7 +70,7 @@ public class MgrUpdateMemberDeviceTask extends TransactionalTask {
 
             updateApplianceConfigIfNeeded(this.dai, mgrApi);
 
-            OSCEntityManager.update(em, this.dai);
+            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
 
         } catch (Exception e) {
 
@@ -85,7 +88,7 @@ public class MgrUpdateMemberDeviceTask extends TransactionalTask {
             }
 
             updateApplianceConfigIfNeeded(this.dai, mgrApi);
-            OSCEntityManager.update(em, this.dai);
+            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
         } finally {
             mgrApi.close();
         }

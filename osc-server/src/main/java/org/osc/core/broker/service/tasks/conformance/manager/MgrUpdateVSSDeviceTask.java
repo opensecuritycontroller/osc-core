@@ -48,6 +48,9 @@ public class MgrUpdateVSSDeviceTask extends TransactionalTask {
         task.apiFactoryService = this.apiFactoryService;
         task.vs = vs;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -79,7 +82,7 @@ public class MgrUpdateVSSDeviceTask extends TransactionalTask {
             }
 
             this.vs.setMgrId(deviceId);
-            OSCEntityManager.update(em, this.vs);
+            OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
 
         } finally {
             mgrApi.close();

@@ -38,7 +38,7 @@ public class SyncVirtualizationConnectorService extends ServiceDispatcher<BaseJo
     @Override
     public BaseJobResponse exec(BaseJobRequest request, EntityManager em) throws Exception {
         request.validateId();
-        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
         validate(request, vc);
         Long jobId = this.conformService.startVCSyncJob(vc, em).getId();

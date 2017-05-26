@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -43,6 +43,12 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
     @Reference
     private MgrDeleteMemberDeviceTask mgrDeleteMemberDeviceTask;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private NsxUpdateAgentsService nsxUpdateAgentsService;
+
     private VirtualSystem vs;
 
     public ValidateNsxAgentsTask create(VirtualSystem vs) {
@@ -50,6 +56,9 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
         task.mgrDeleteMemberDeviceTask = this.mgrDeleteMemberDeviceTask;
         task.vs = vs;
         task.name = task.getName();
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -62,7 +71,7 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
             return;
         }
 
-        AgentApi agentApi = VMwareSdnApiFactory.createAgentApi(this.vs);
+        AgentApi agentApi = this.apiFactoryService.createAgentApi(this.vs);
         List<AgentElement> nsxAgents = agentApi.getAgents(this.vs.getNsxServiceId());
 
         // Check DAIs
@@ -88,16 +97,16 @@ public class ValidateNsxAgentsTask extends TransactionalTask {
                     dai.setNsxHostVsmUuid(agent.getHostVsmId());
                     dai.setMgmtGateway(agent.getGateway());
                     dai.setMgmtSubnetPrefixLength(agent.getSubnetPrefixLength());
-                    OSCEntityManager.update(em, dai);
+                    OSCEntityManager.update(em, dai, this.txBroadcastUtil);
                 }
-                NsxUpdateAgentsService.updateNsxAgentInfo(em, dai, agent);
+                this.nsxUpdateAgentsService.updateNsxAgentInfo(em, dai, agent);
             }
         }
 
         // Delete any DAIs deemed invalid
         for (DistributedApplianceInstance dai : daiToBeDeleted) {
             this.vs.removeDistributedApplianceInstance(dai);
-            OSCEntityManager.delete(em, dai);
+            OSCEntityManager.delete(em, dai, this.txBroadcastUtil);
         }
     }
 

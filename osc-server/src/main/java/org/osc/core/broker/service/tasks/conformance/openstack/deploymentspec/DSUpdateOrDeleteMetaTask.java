@@ -65,6 +65,12 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
+    @Reference
+    DeleteOsSecurityGroupTask deleteOSSecurityGroup;
+
+    @Reference
+    DeleteDSFromDbTask deleteDsFromDb;
+
     // optional+dynamic to break circular DS dependency
     // TODO: remove circularity and use mandatory references
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
@@ -87,17 +93,25 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @IgnoreCompare
     private AtomicBoolean initDone = new AtomicBoolean();
 
-    private void delayedInit() {
-        if (this.initDone.compareAndSet(false, true)) {
-            this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
+    @Override
+    protected void delayedInit() {
+        if (this.factory.initDone.compareAndSet(false, true)) {
             // allow for test injection
-            this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO != null
-                    ? this.factory.osSvaCreateMetaTaskCSO.getService() : this.factory.osSvaCreateMetaTask;
-            this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO != null
-                    ? this.factory.osDAIConformanceCheckMetaTaskCSO.getService()
-                    : this.factory.osDAIConformanceCheckMetaTask;
-            this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
+            if (this.factory.osSvaCreateMetaTaskCSO != null) {
+                this.factory.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
+            }
+            if (this.factory.osDAIConformanceCheckMetaTaskCSO != null) {
+                this.factory.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTaskCSO.getService();
+            }
         }
+        this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
+        this.osDAIConformanceCheckMetaTask = this.factory.osDAIConformanceCheckMetaTask;
+        this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
+        this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
+        this.deleteOSSecurityGroup = this.factory.deleteOSSecurityGroup;
+        this.deleteDsFromDb = this.factory.deleteDsFromDb;
+        this.dbConnectionManager = this.factory.dbConnectionManager;
+        this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
 
     @Deactivate
@@ -114,11 +128,12 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
+
         return task;
     }
 
     DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, JCloudNova novaApi) {
-        DSUpdateOrDeleteMetaTask task = create(ds, (Endpoint)null);
+        DSUpdateOrDeleteMetaTask task = create(ds, (Endpoint) null);
         task.novaApi = novaApi;
         return task;
     }
@@ -127,7 +142,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     public void executeTransaction(EntityManager em) throws Exception {
         delayedInit();
         this.tg = new TaskGraph();
-        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em);
+        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em,
+                this.txBroadcastUtil);
         this.ds = emgr.findByPrimaryKey(this.ds.getId());
         VirtualSystem virtualSystem = this.ds.getVirtualSystem();
         if (this.ds.getMarkedForDeletion() || virtualSystem.getMarkedForDeletion()
@@ -137,10 +153,10 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
             }
             if (this.ds.getOsSecurityGroupReference() != null) {
-                this.tg.appendTask(new DeleteOsSecurityGroupTask(this.ds, this.ds.getOsSecurityGroupReference()));
+                this.tg.appendTask(this.deleteOSSecurityGroup.create(this.ds, this.ds.getOsSecurityGroupReference()));
             }
             this.tg.appendTask(this.mgrCheckDevicesMetaTask.create(virtualSystem));
-            this.tg.appendTask(new DeleteDSFromDbTask(this.ds));
+            this.tg.appendTask(this.deleteDsFromDb.create(this.ds));
         } else {
             buildDsUpdateTaskGraph(em);
         }
@@ -159,7 +175,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         try {
             this.novaApi = this.novaApi == null ? new JCloudNova(this.endPoint) : this.novaApi;
 
-            List<AvailabilityZoneDetails> osAvailabilityZones = this.novaApi.getAvailabilityZonesDetail(this.ds.getRegion());
+            List<AvailabilityZoneDetails> osAvailabilityZones = this.novaApi
+                    .getAvailabilityZonesDetail(this.ds.getRegion());
             HostAvailabilityZoneMapping hostAvailabilityZoneMap = JCloudNova.getMapping(osAvailabilityZones);
 
             // Openstack hosts are only the hypervisor compute hosts. Ignore hosts from the availability zone api because
@@ -202,22 +219,22 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         Iterator<HostAggregate> dsHostAggrIter = dsHostAggr.iterator();
         while (dsHostAggrIter.hasNext()) {
             HostAggregate dsHostAggrInstance = dsHostAggrIter.next();
-            org.jclouds.openstack.nova.v2_0.domain.HostAggregate osHostAggr = novaApi.getHostAggregateById(
-                    this.ds.getRegion(), dsHostAggrInstance.getOpenstackId());
+            org.jclouds.openstack.nova.v2_0.domain.HostAggregate osHostAggr = novaApi
+                    .getHostAggregateById(this.ds.getRegion(), dsHostAggrInstance.getOpenstackId());
             if (osHostAggr != null) {
                 hostsToDeployTo.addAll(osHostAggr.getHosts());
                 // Pigiback to update Host Aggr name in case it changed
                 if (!osHostAggr.getName().equals(dsHostAggrInstance.getName())) {
                     dsHostAggrInstance.setName(osHostAggr.getName());
-                    OSCEntityManager.update(em, dsHostAggrInstance);
+                    OSCEntityManager.update(em, dsHostAggrInstance, this.txBroadcastUtil);
                 }
             } else {
                 // Host aggr has been deleted, delete the host aggr from ds
                 log.info(String.format("Host Aggregate %s(%s) has been deleted from openstack. Deleting from DS.",
                         dsHostAggrInstance.getName(), dsHostAggrInstance.getId()));
-                OSCEntityManager.delete(em, dsHostAggrInstance);
+                OSCEntityManager.delete(em, dsHostAggrInstance, this.txBroadcastUtil);
                 dsHostAggrIter.remove();
-                OSCEntityManager.update(em, this.ds);
+                OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
             }
         }
 
@@ -244,7 +261,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             boolean doesHostNeedSva = removeHost(hostsMissingSvas, daiHostName);
             if (doesHostNeedSva && isDAIHostSelectedInDs) {
                 log.info("Conforming DAI/SVA: " + dai.getName());
-                this.tg.addTask(this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())));
+                this.tg.addTask(
+                        this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())));
             } else {
                 // Remove any extra sva/DAI
                 log.info("Removing DAI/SVA: " + dai.getName() + " for host: " + daiHostName);
@@ -262,10 +280,10 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
                     this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostName, availabilityZone));
                 } catch (VmidcException vmidcException) {
-                    this.tg.addTask(new FailedWithObjectInfoTask(String.format(
-                            "Create SVA for host '%s' in Region '%s'", host, this.ds.getRegion()), String.format(
-                            "Host '%s' is not part of any Availability Zone", host), LockObjectReference
-                            .getObjectReferences(this.ds)));
+                    this.tg.addTask(new FailedWithObjectInfoTask(
+                            String.format("Create SVA for host '%s' in Region '%s'", host, this.ds.getRegion()),
+                            String.format("Host '%s' is not part of any Availability Zone", host),
+                            LockObjectReference.getObjectReferences(this.ds)));
                 }
             }
         }
@@ -333,7 +351,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     if (hostsMissingSvas != null && !hostsMissingSvas.isEmpty()) {
                         hostsMissingSvas.remove(dai.getOsHostName());
                     }
-                    this.tg.addTask(this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())));
+                    this.tg.addTask(
+                            this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())));
                 }
             }
 

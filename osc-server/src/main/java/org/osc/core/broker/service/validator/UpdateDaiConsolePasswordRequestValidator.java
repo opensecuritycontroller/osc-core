@@ -28,13 +28,16 @@ import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.UpdateDaiConsolePasswordRequest;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
 
 public class UpdateDaiConsolePasswordRequestValidator implements ListRequestValidator<UpdateDaiConsolePasswordRequest, DistributedApplianceInstance> {
 
     private EntityManager em;
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
-    public UpdateDaiConsolePasswordRequestValidator(EntityManager em) {
+    public UpdateDaiConsolePasswordRequestValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {
         this.em = em;
+        this.txBroadcastUtil = txBroadcastUtil;
     }
 
     @Override
@@ -59,7 +62,7 @@ public class UpdateDaiConsolePasswordRequestValidator implements ListRequestVali
             throw new VmidcBrokerValidationException("Invalid password.");
         }
 
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, this.em);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, this.em, this.txBroadcastUtil);
 
         // This code used to use VirtualSystem.getVsIdFromName(vsName), but the name is already unique!
         //Long vsId = VirtualSystem.getVsIdFromName(vsName);
@@ -75,7 +78,7 @@ public class UpdateDaiConsolePasswordRequestValidator implements ListRequestVali
         if (request.getDaiList() != null && !request.getDaiList().isEmpty()) {
 
             OSCEntityManager<DistributedApplianceInstance> daiEmgr = new OSCEntityManager<>(
-                    DistributedApplianceInstance.class, this.em);
+                    DistributedApplianceInstance.class, this.em, this.txBroadcastUtil);
 
             for (String daiName : request.getDaiList()) {
                 DistributedApplianceInstance dai = daiEmgr.findByFieldName("name", daiName);

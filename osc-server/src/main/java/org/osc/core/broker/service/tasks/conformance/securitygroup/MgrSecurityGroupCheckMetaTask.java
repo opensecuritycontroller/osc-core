@@ -27,28 +27,52 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.element.ManagerSecurityGroupElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service=MgrSecurityGroupCheckMetaTask.class)
 public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
     private static final Logger log = Logger.getLogger(MgrSecurityGroupCheckMetaTask.class);
+
+    @Reference
+    private CreateMgrSecurityGroupTask createMgrSecurityGroupTask;
+
+    @Reference
+    private UpdateMgrSecurityGroupTask updateMgrSecurityGroupTask;
+
+    @Reference
+    private DeleteMgrSecurityGroupTask deleteMgrSecurityGroupTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private VirtualSystem vs;
     private SecurityGroup sg;
     private TaskGraph tg;
 
-    public MgrSecurityGroupCheckMetaTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public MgrSecurityGroupCheckMetaTask create(VirtualSystem vs) {
+        MgrSecurityGroupCheckMetaTask task = new MgrSecurityGroupCheckMetaTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.createMgrSecurityGroupTask = this.createMgrSecurityGroupTask;
+        task.updateMgrSecurityGroupTask = this.updateMgrSecurityGroupTask;
+        task.deleteMgrSecurityGroupTask = this.deleteMgrSecurityGroupTask;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
-    public MgrSecurityGroupCheckMetaTask(VirtualSystem vs, SecurityGroup sg) {
-        this.vs = vs;
-        this.name = getName();
-        this.sg = sg;
+    public MgrSecurityGroupCheckMetaTask create(VirtualSystem vs, SecurityGroup sg) {
+        MgrSecurityGroupCheckMetaTask task = create(vs);
+        task.sg = sg;
+        return task;
     }
 
     @Override
@@ -61,7 +85,7 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         }
 
         this.tg = new TaskGraph();
-        ManagerSecurityGroupApi mgrSgApi = ManagerApiFactory.createManagerSecurityGroupApi(this.vs);
+        ManagerSecurityGroupApi mgrSgApi = this.apiFactoryService.createManagerSecurityGroupApi(this.vs);
 
         if (this.sg == null) {
             // Sync all security groups across the vs'es
@@ -83,12 +107,12 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                     if (!sgi.getMarkedForDeletion()) {
                         if (mepg == null) {
                             // Add new security group to Manager
-                            this.tg.appendTask(new CreateMgrSecurityGroupTask(this.vs, sg));
+                            this.tg.appendTask(this.createMgrSecurityGroupTask.create(this.vs, sg));
                         } else {
-                            this.tg.appendTask(new UpdateMgrSecurityGroupTask(this.vs, sg));
+                            this.tg.appendTask(this.updateMgrSecurityGroupTask.create(this.vs, sg));
                         }
                     } else if (mepg != null) {
-                        this.tg.appendTask(new DeleteMgrSecurityGroupTask(this.vs, mepg));
+                        this.tg.appendTask(this.deleteMgrSecurityGroupTask.create(this.vs, mepg));
                     }
                 }
             }
@@ -99,7 +123,7 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                 SecurityGroup sg = findVmidcSecurityGroupByMgrId(em, mepge);
                 if (sg == null || sg.getSecurityGroupInterfaces().isEmpty()) {
                     // Delete security group from Manager if SG is not in our DB
-                    this.tg.appendTask(new DeleteMgrSecurityGroupTask(this.vs, mepge));
+                    this.tg.appendTask(this.deleteMgrSecurityGroupTask.create(this.vs, mepge));
                 }
             }
         } else {
@@ -107,9 +131,9 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
             ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(this.sg.getMgrId());
             if (mepg == null) {
                 // Add new security group to Manager
-                this.tg.appendTask(new CreateMgrSecurityGroupTask(this.vs, this.sg));
+                this.tg.appendTask(this.createMgrSecurityGroupTask.create(this.vs, this.sg));
             } else {
-                this.tg.appendTask(new UpdateMgrSecurityGroupTask(this.vs, this.sg));
+                this.tg.appendTask(this.updateMgrSecurityGroupTask.create(this.vs, this.sg));
             }
         }
     }

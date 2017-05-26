@@ -24,7 +24,7 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.NsxUpdateProfileContainerServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.SecurityGroupInterfaceEntityMgr;
@@ -35,12 +35,22 @@ import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGr
 import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxServiceProfileContainerCheckMetaTask;
 import org.osc.core.util.NetworkUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 @Component
 public class NsxUpdateProfileContainerService
         extends ServiceDispatcher<NsxUpdateProfileContainerRequest, BaseJobResponse>
         implements NsxUpdateProfileContainerServiceApi {
 
     //private static final Logger log = Logger.getLogger(NsxUpdateProfileContainerService.class);
+
+    @Reference
+    NsxServiceProfileContainerCheckMetaTask nsxCheckMetaTask;
+
+    @Reference
+    MgrSecurityGroupCheckMetaTask mgrCheckMetaTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public BaseJobResponse exec(NsxUpdateProfileContainerRequest request, EntityManager em) throws Exception {
@@ -65,12 +75,12 @@ public class NsxUpdateProfileContainerService
         SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(em, vs,
                 request.serviceProfileId);
 
-        NsxServiceProfileContainerCheckMetaTask syncTask = new NsxServiceProfileContainerCheckMetaTask(sgi,
+        NsxServiceProfileContainerCheckMetaTask syncTask = this.nsxCheckMetaTask.create(sgi,
                 request.containerSet);
         tg.addTask(syncTask);
 
-        if (vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(vs)) {
-            tg.addTask(new MgrSecurityGroupCheckMetaTask(vs), syncTask);
+        if (vs.getMgrId() != null && this.apiFactoryService.syncsSecurityGroup(vs)) {
+            tg.addTask(this.mgrCheckMetaTask.create(vs), syncTask);
         }
 
         Job job = JobEngine.getEngine().submit(

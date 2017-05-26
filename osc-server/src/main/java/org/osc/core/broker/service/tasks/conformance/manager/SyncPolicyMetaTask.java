@@ -29,23 +29,51 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.VirtualSystemPolicyEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.RemoveVendorTemplateTask;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
 import org.osc.sdk.manager.element.ManagerPolicyElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = SyncPolicyMetaTask.class)
 public class SyncPolicyMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(SyncDomainMetaTask.class);
 
+    @Reference
+    CreatePolicyTask createPolicyTask;
+
+    @Reference
+    UpdatePolicyTask updatePolicyTask;
+
+    @Reference
+    DeletePolicyTask deletePolicyTask;
+
+    @Reference
+    RemoveVendorTemplateTask removeVendorTemplateTask;
+
+    @Reference
+    ApiFactoryService apiFactoryService;
+
     private ApplianceManagerConnector mc;
     private TaskGraph tg;
 
-    public SyncPolicyMetaTask(ApplianceManagerConnector mc) {
-        this.mc = mc;
-        this.name = getName();
+    public SyncPolicyMetaTask create(ApplianceManagerConnector mc) {
+        SyncPolicyMetaTask task = new SyncPolicyMetaTask();
+        task.mc = mc;
+        task.name = task.getName();
+        task.createPolicyTask = this.createPolicyTask;
+        task.updatePolicyTask = this.updatePolicyTask;
+        task.deletePolicyTask = this.deletePolicyTask;
+        task.removeVendorTemplateTask = this.removeVendorTemplateTask;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -59,7 +87,7 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
         Set<Domain> domains = this.mc.getDomains();
 
         for (Domain domain : domains) {
-            ManagerPolicyApi mgrApi = ManagerApiFactory.createManagerPolicyApi(this.mc);
+            ManagerPolicyApi mgrApi = this.apiFactoryService.createManagerPolicyApi(this.mc);
             List<? extends ManagerPolicyElement> mgrPolicies = mgrApi.getPolicyList(domain.getMgrId());
             if (mgrPolicies == null) {
                 continue;
@@ -74,11 +102,11 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
                     policy = new Policy(this.mc, domain);
                     policy.setName(mgrPolicy.getName());
                     policy.setMgrPolicyId(mgrPolicy.getId().toString());
-                    this.tg.appendTask(new CreatePolicyTask(this.mc, domain, policy));
+                    this.tg.appendTask(this.createPolicyTask.create(this.mc, domain, policy));
                 } else {
                     if (!policy.getName().equals(mgrPolicy.getName())) {
                         // Update policy attributes
-                        this.tg.appendTask(new UpdatePolicyTask(policy, mgrPolicy.getName()));
+                        this.tg.appendTask(this.updatePolicyTask.create(policy, mgrPolicy.getName()));
                     }
                 }
             }
@@ -93,12 +121,12 @@ public class SyncPolicyMetaTask extends TransactionalMetaTask {
 
                     if (vsPolicies != null) {
                         for (VirtualSystemPolicy vsPolicy : vsPolicies) {
-                            this.tg.appendTask(new RemoveVendorTemplateTask(vsPolicy), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+                            this.tg.appendTask(this.removeVendorTemplateTask.create(vsPolicy), TaskGuard.ALL_PREDECESSORS_COMPLETED);
                         }
                     }
 
                     // Delete policy
-                    this.tg.appendTask(new DeletePolicyTask(policy));
+                    this.tg.appendTask(this.deletePolicyTask.create(policy));
                 }
             }
         }

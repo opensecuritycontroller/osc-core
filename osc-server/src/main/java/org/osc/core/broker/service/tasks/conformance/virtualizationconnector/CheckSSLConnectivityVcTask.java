@@ -16,42 +16,58 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
+import static java.util.stream.Collectors.toSet;
+
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-import javax.persistence.EntityManager;
-import java.util.Set;
-
-import static java.util.stream.Collectors.toSet;
-
+@Component(service=CheckSSLConnectivityVcTask.class)
 public class CheckSSLConnectivityVcTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(CheckSSLConnectivityVcTask.class);
 
     private VirtualizationConnector vc;
 
-    public CheckSSLConnectivityVcTask(VirtualizationConnector vc) {
-        this.vc = vc;
-        this.name = getName();
+    @Reference
+    private EncryptionApi encryptionApi;
+
+    @Reference
+    private VirtualizationConnectorUtil virtualizationConnectorUtil;
+
+    public CheckSSLConnectivityVcTask create(VirtualizationConnector vc) {
+        CheckSSLConnectivityVcTask task = new CheckSSLConnectivityVcTask();
+        task.vc = vc;
+        task.name = task.getName();
+        task.encryptionApi = this.encryptionApi;
+        task.virtualizationConnectorUtil = this.virtualizationConnectorUtil;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.vc = em.find(VirtualizationConnector.class, this.vc.getId());
         log.debug("Start executing CheckSSLConnectivityVcTask Task. VC: '" + this.vc.getName() + "'");
-        VirtualizationConnectorUtil virtualizationConnectorUtil = new VirtualizationConnectorUtil();
         DryRunRequest<VirtualizationConnectorDto> request = createRequest(this.vc);
         if (VirtualizationType.fromText(this.vc.getVirtualizationType().name()).equals(VirtualizationType.VMWARE)) {
-            virtualizationConnectorUtil.checkVmwareConnection(request, this.vc);
+            this.virtualizationConnectorUtil.checkVmwareConnection(request, this.vc);
         } else {
-            virtualizationConnectorUtil.checkOpenstackConnection(request, this.vc);
+            this.virtualizationConnectorUtil.checkOpenstackConnection(request, this.vc);
         }
     }
 
@@ -75,12 +91,12 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
 
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
-        dto.setControllerPassword(StaticRegistry.encryptionApi().decryptAESCTR(vc.getControllerPassword()));
+        dto.setControllerPassword(this.encryptionApi.decryptAESCTR(vc.getControllerPassword()));
         dto.setProviderAttributes(vc.getProviderAttributes());
 
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
-        dto.setProviderPassword(StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword()));
+        dto.setProviderPassword(this.encryptionApi.decryptAESCTR(vc.getProviderPassword()));
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
                 .map(SslCertificateAttrEntityMgr::fromEntity)
                 .collect(toSet()));

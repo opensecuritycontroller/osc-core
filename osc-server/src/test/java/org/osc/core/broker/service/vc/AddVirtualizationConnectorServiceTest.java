@@ -54,7 +54,8 @@ import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.AddVirtualizationConnectorServiceRequestValidator;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
 import org.osc.core.test.util.TestTransactionControl;
 import org.powermock.api.mockito.PowerMockito;
@@ -62,7 +63,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({X509TrustManagerFactory.class, HibernateUtil.class, LockUtil.class })
+@PrepareForTest({X509TrustManagerFactory.class, LockUtil.class })
 public class AddVirtualizationConnectorServiceTest {
 
     @Rule
@@ -88,6 +89,12 @@ public class AddVirtualizationConnectorServiceTest {
     @Mock
     private EncryptionApi encryption;
 
+    @Mock
+    private DBConnectionManager dbmgr;
+
+    @Mock
+    private TransactionalBroadcastUtil txBroadcastUtil;
+
     @InjectMocks()
     private AddVirtualizationConnectorService service;
 
@@ -103,9 +110,8 @@ public class AddVirtualizationConnectorServiceTest {
         EntityManagerFactory entityManagerFactory = InMemDB.getEntityManagerFactory();
         this.em = entityManagerFactory.createEntityManager();
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbmgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbmgr.getTransactionControl()).thenReturn(this.txControl);
 
         this.txControl.setEntityManager(this.em);
 

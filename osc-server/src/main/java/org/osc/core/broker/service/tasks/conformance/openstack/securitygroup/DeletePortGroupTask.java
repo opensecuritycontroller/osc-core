@@ -19,25 +19,38 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-class DeletePortGroupTask extends TransactionalTask {
+@Component(service = DeletePortGroupTask.class)
+public class DeletePortGroupTask extends TransactionalTask {
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private PortGroup portGroup;
     private SecurityGroup securityGroup;
 
-    public DeletePortGroupTask(SecurityGroup securityGroup, PortGroup portGroup){
-        this.securityGroup = securityGroup;
-        this.portGroup = portGroup;
+    public DeletePortGroupTask create (SecurityGroup securityGroup, PortGroup portGroup){
+        DeletePortGroupTask task = new DeletePortGroupTask();
+        task.securityGroup = securityGroup;
+        task.portGroup = portGroup;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.securityGroup = em.find(SecurityGroup.class, this.securityGroup.getId());
 
-        SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(
+        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
                 this.securityGroup.getVirtualizationConnector());
         controller.deleteNetworkElement(this.portGroup);
     }

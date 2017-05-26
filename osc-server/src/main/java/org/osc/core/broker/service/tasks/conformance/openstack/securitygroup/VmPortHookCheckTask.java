@@ -32,8 +32,8 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -46,30 +46,58 @@ import org.osc.sdk.controller.FailurePolicyType;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionHookElement;
 import org.osc.sdk.controller.element.NetworkElement;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * This task just adds/update the hooks. If the SGI is marked for deletion, this task does not do anything.
  */
-class VmPortHookCheckTask extends TransactionalMetaTask {
+@Component(service = VmPortHookCheckTask.class)
+public class VmPortHookCheckTask extends TransactionalMetaTask {
 
     private final Logger log = Logger.getLogger(VmPortHookCheckTask.class);
+
+    @Reference
+    VmPortHookCreateTask vmPortHookCreateTask;
+
+    @Reference
+    VmPortHookTagUpdateTask vmPortHookTagUpdateTask;
+
+    @Reference
+    VmPortHookOrderUpdateTask vmPortHookOrderUpdateTask;
+
+    @Reference
+    VmPortHookFailurePolicyUpdateTask vmPortHookFailurePolicyUpdateTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     private TaskGraph tg;
     private SecurityGroupMember sgm;
     private SecurityGroupInterface securityGroupInterface;
     private VMPort vmPort;
-    private final String serviceName;
-    private final VmDiscoveryCache vdc;
+    private String serviceName;
+    private VmDiscoveryCache vdc;
 
     private VirtualSystem vs;
 
-    public VmPortHookCheckTask(SecurityGroupMember sgm, SecurityGroupInterface bindedSGI, VMPort vmPort,
+    public VmPortHookCheckTask create(SecurityGroupMember sgm, SecurityGroupInterface bindedSGI, VMPort vmPort,
             VmDiscoveryCache vdc) {
-        this.sgm = sgm;
-        this.securityGroupInterface = bindedSGI;
-        this.vmPort = vmPort;
-        this.serviceName = this.securityGroupInterface.getVirtualSystem().getDistributedAppliance().getName();
-        this.vdc = vdc;
+        VmPortHookCheckTask task = new VmPortHookCheckTask();
+        task.sgm = sgm;
+        task.securityGroupInterface = bindedSGI;
+        task.vmPort = vmPort;
+        task.vdc = vdc;
+        task.serviceName = bindedSGI.getVirtualSystem().getDistributedAppliance().getName();
+        task.vmPortHookCreateTask = this.vmPortHookCreateTask;
+        task.vmPortHookTagUpdateTask = this.vmPortHookTagUpdateTask;
+        task.vmPortHookOrderUpdateTask = this.vmPortHookOrderUpdateTask;
+        task.vmPortHookFailurePolicyUpdateTask = this.vmPortHookFailurePolicyUpdateTask;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -108,7 +136,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                 if (this.sgm.getType().equals(SecurityGroupMemberType.SUBNET) && this.sgm.getSubnet().isProtectExternal()
                         && this.vmPort.getVm() == null) {
 
-                    if (SdnControllerApiFactory.supportsOffboxRedirection(this.sgm.getSecurityGroup())) {
+                    if (this.apiFactoryService.supportsOffboxRedirection(this.sgm.getSecurityGroup())) {
                         assignedRedirectedDai = OpenstackUtil.findDeployedDAI(
                                 em,
                                 this.vs,
@@ -116,7 +144,8 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                                 tenantId,
                                 getMemberRegion(this.sgm),
                                 sgmDomainId,
-                                null);
+                                null,
+                                this.apiFactoryService.supportsOffboxRedirection(this.vs));
                     } else {
                         throw new VmidcBrokerValidationException(
                                 "Protecting External Traffic feature is not supported by your SDN controller. Please make sure your SDN controller supports offboxing");
@@ -130,7 +159,8 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                             tenantId,
                             getMemberRegion(this.sgm),
                             sgmDomainId,
-                            this.vmPort.getVm().getHost());
+                            this.vmPort.getVm().getHost(),
+                            this.apiFactoryService.supportsOffboxRedirection(this.vs));
                 }
 
                 if (assignedRedirectedDai != null) {
@@ -138,7 +168,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                     em.refresh(assignedRedirectedDai, LockModeType.PESSIMISTIC_WRITE);
                     this.vmPort.addDai(assignedRedirectedDai);
                     assignedRedirectedDai.addProtectedPort(this.vmPort);
-                    OSCEntityManager.update(em, this.vmPort);
+                    OSCEntityManager.update(em, this.vmPort, this.txBroadcastUtil);
                 } else {
                     throw new VmidcBrokerValidationException(
                             "Couldn't find a relevant Distributed Appliance Instance to protect this Port "
@@ -161,7 +191,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
             this.log.info("Checking Inspection Hook for Security group Member: " + this.sgm.getMemberName());
 
             InspectionHookElement hook;
-            try (SdnRedirectionApi controller = SdnControllerApiFactory.createNetworkRedirectionApi(assignedRedirectedDai)) {
+            try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(assignedRedirectedDai)) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(
                         assignedRedirectedDai.getInspectionOsIngressPortId(),
                         assignedRedirectedDai.getInspectionIngressMacAddress());
@@ -174,20 +204,20 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
 
             // Missing tag indicates missing hook
             if (hook == null || (hook.getTag() == null && this.securityGroupInterface.getTag() != null)) {
-                this.tg.addTask(new VmPortHookCreateTask(this.vmPort, this.securityGroupInterface,
+                this.tg.addTask(this.vmPortHookCreateTask.create(this.vmPort, this.securityGroupInterface,
                         assignedRedirectedDai));
             } else {
                 this.log.info("Found Inspection Hook " + hook);
 
                 // Check tag
                 if (this.securityGroupInterface.getTagValue() != null && !hook.getTag().equals(this.securityGroupInterface.getTagValue())) {
-                    this.tg.appendTask(new VmPortHookTagUpdateTask(this.vmPort, this.securityGroupInterface,
+                    this.tg.appendTask(this.vmPortHookTagUpdateTask.create(this.vmPort, this.securityGroupInterface,
                             assignedRedirectedDai));
                 }
 
                 // Check order
                 if (!hook.getOrder().equals(this.securityGroupInterface.getOrder())) {
-                    this.tg.appendTask(new VmPortHookOrderUpdateTask(this.vmPort, this.securityGroupInterface,
+                    this.tg.appendTask(this.vmPortHookOrderUpdateTask.create(this.vmPort, this.securityGroupInterface,
                             assignedRedirectedDai));
                 }
 
@@ -196,7 +226,7 @@ class VmPortHookCheckTask extends TransactionalMetaTask {
                 if (failurePolicyType != null
                         && org.osc.core.broker.model.entities.virtualization.FailurePolicyType.valueOf(failurePolicyType.name())
                         != this.securityGroupInterface.getFailurePolicyType()) {
-                    this.tg.appendTask(new VmPortHookFailurePolicyUpdateTask(this.vmPort, this.securityGroupInterface,
+                    this.tg.appendTask(this.vmPortHookFailurePolicyUpdateTask.create(this.vmPort, this.securityGroupInterface,
                             assignedRedirectedDai));
                 }
 

@@ -27,7 +27,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.NsxUpdateProfileServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
@@ -50,6 +50,15 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
 
     @Reference
     private MgrSecurityGroupInterfacesCheckMetaTask mgrSecurityGroupInterfacesCheckMetaTask;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
+    @Reference
+    NsxServiceProfileCheckMetaTask nsxServiceProfileCheckMetaTask;
+
+    @Reference
+    MgrSecurityGroupCheckMetaTask mgrSecurityGroupCheckMetaTask;
 
     @Override
     public EmptySuccessResponse exec(NsxUpdateProfileRequest request, EntityManager em) throws Exception {
@@ -84,16 +93,16 @@ public class NsxUpdateProfileService extends ServiceDispatcher<NsxUpdateProfileR
         tg.addTask(new LockObjectTask(lockRequest));
 
         // NSX->ISC sync of security group interfaces to reflect security group/service profile re-assignment
-        tg.appendTask(new NsxServiceProfileCheckMetaTask(vs, serviceProfile));
+        tg.appendTask(this.nsxServiceProfileCheckMetaTask.create(vs, serviceProfile));
 
         // If the appliance manager supports policy mapping then perform OSC->MC sync of security group interfaces
-        if (vs.getMgrId() != null && ManagerApiFactory.syncsPolicyMapping(vs)) {
+        if (vs.getMgrId() != null && this.apiFactoryService.syncsPolicyMapping(vs)) {
             tg.appendTask(this.mgrSecurityGroupInterfacesCheckMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 
         // If the appliance manager supports security group sync then perform OSC->MC sync of security groups
-        if (vs.getMgrId() != null && ManagerApiFactory.syncsSecurityGroup(vs)) {
-            tg.appendTask(new MgrSecurityGroupCheckMetaTask(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        if (vs.getMgrId() != null && this.apiFactoryService.syncsSecurityGroup(vs)) {
+            tg.appendTask(this.mgrSecurityGroupCheckMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
         }
 
         tg.appendTask(ult, TaskGuard.ALL_PREDECESSORS_COMPLETED);

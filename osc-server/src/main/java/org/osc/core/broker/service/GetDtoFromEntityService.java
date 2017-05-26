@@ -35,7 +35,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZone;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -77,15 +77,22 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 
 public class GetDtoFromEntityService<R extends BaseDto> extends
         ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDtoFromEntityServiceApi<R> {
 
-    private EncryptionApi encrypter;
+    private final EncryptionApi encrypter;
+    private final ApiFactoryService apiFactoryService;
 
-    GetDtoFromEntityService(UserContextApi userContext, EncryptionApi encrypter) {
+    GetDtoFromEntityService(UserContextApi userContext, DBConnectionManager dbConnectionManager, TransactionalBroadcastUtil txBroadcastUtil,
+            EncryptionApi encrypter, ApiFactoryService apiFactoryService) {
         this.userContext = userContext;
+        this.dbConnectionManager = dbConnectionManager;
+        this.txBroadcastUtil = txBroadcastUtil;
         this.encrypter = encrypter;
+        this.apiFactoryService = apiFactoryService;
     }
 
     @SuppressWarnings("unchecked")
@@ -121,7 +128,7 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
                 ApplianceManagerConnectorDto.sanitizeManagerConnector(dto);
             }
 
-            dto.setPolicyMappingSupported(ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(entity.getManagerType())));
+            dto.setPolicyMappingSupported(this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(entity.getManagerType())));
 
             res.setDto((R) dto);
         } else if (entityName.equals("Appliance")) {
@@ -150,7 +157,8 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
         } else if (entityName.equals("DistributedApplianceInstance")) {
             DistributedApplianceInstance entity = getEntity(entityId, entityName, DistributedApplianceInstance.class,
                     em);
-            DistributedApplianceInstanceDto dto = DistributedApplianceInstanceEntityMgr.fromEntity(entity);
+            Boolean providesDeviceStatus = this.apiFactoryService.providesDeviceStatus(entity.getVirtualSystem());
+            DistributedApplianceInstanceDto dto = DistributedApplianceInstanceEntityMgr.fromEntity(entity, providesDeviceStatus);
             res.setDto((R) dto);
         } else if (entityName.equals("VirtualSystem")) {
             VirtualSystem entity = getEntity(entityId, entityName, VirtualSystem.class, em);
@@ -194,7 +202,7 @@ public class GetDtoFromEntityService<R extends BaseDto> extends
 
     private <T extends IscEntity> T getEntity(Long entityId, String entityName, Class<T> clazz, EntityManager em)
             throws VmidcBrokerValidationException {
-        OSCEntityManager<T> emgr = new OSCEntityManager<T>(clazz, em);
+        OSCEntityManager<T> emgr = new OSCEntityManager<T>(clazz, em, this.txBroadcastUtil);
         T entity = emgr.findByPrimaryKey(entityId);
         if (entity == null) {
             throw new VmidcBrokerValidationException(entityName + " entry with ID " + entityId + " is not found.");

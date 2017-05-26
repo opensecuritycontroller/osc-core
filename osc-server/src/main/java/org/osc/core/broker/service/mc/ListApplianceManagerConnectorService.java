@@ -22,7 +22,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListApplianceManagerConnectorServiceApi;
@@ -44,12 +44,14 @@ public class ListApplianceManagerConnectorService
     @Reference
     private EncryptionApi encryption;
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public ListResponse<ApplianceManagerConnectorDto> exec(BaseRequest<BaseDto> request, EntityManager em) throws Exception {
         ListResponse<ApplianceManagerConnectorDto> response = new ListResponse<>();
         // Initializing Entity Manager
-        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em);
+        OSCEntityManager<ApplianceManagerConnector> emgr = new OSCEntityManager<>(ApplianceManagerConnector.class, em, this.txBroadcastUtil);
         // to do mapping
         List<ApplianceManagerConnectorDto> mcmList = new ArrayList<>();
 
@@ -61,7 +63,7 @@ public class ListApplianceManagerConnectorService
                 ApplianceManagerConnectorDto.sanitizeManagerConnector(dto);
             }
 
-            boolean isPolicyMappingSupported = ManagerApiFactory.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()));
+            boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()));
 
             dto.setPolicyMappingSupported(isPolicyMappingSupported);
 

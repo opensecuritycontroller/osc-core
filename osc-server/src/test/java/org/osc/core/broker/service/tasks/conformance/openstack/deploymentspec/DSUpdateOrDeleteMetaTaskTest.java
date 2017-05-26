@@ -38,6 +38,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Answers;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -46,18 +47,14 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
 import org.osc.core.broker.service.test.InMemDB;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.core.test.util.TestTransactionControl;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
-@RunWith(PowerMockRunner.class)
-@PowerMockRunnerDelegate(value = Parameterized.class)
-@PrepareForTest({HibernateUtil.class})
+@RunWith(Parameterized.class)
 public class DSUpdateOrDeleteMetaTaskTest {
 
     public EntityManager em;
@@ -67,6 +64,15 @@ public class DSUpdateOrDeleteMetaTaskTest {
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private TestTransactionControl txControl;
+
+    @Mock
+    DBConnectionManager dbMgr;
+
+    @Mock
+    TransactionalBroadcastUtil txBroadcastUtil;
+
+    @InjectMocks
+    DSUpdateOrDeleteMetaTask factoryTask;
 
     private DeploymentSpec ds;
 
@@ -85,9 +91,8 @@ public class DSUpdateOrDeleteMetaTaskTest {
 
         this.txControl.setEntityManager(this.em);
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
         populateDatabase();
 
@@ -144,14 +149,14 @@ public class DSUpdateOrDeleteMetaTaskTest {
     @Test
     public void testExecuteTransaction_WithVariousDeploymentSpecs_ExpectsCorrectTaskGraph() throws Exception {
         // Arrange.
-        DSUpdateOrDeleteMetaTask factoryTask = new DSUpdateOrDeleteMetaTask();
+        this.factoryTask.osSvaCreateMetaTask = new OsSvaCreateMetaTask();
+        this.factoryTask.osDAIConformanceCheckMetaTask = new OsDAIConformanceCheckMetaTask();
+        this.factoryTask.mgrCheckDevicesMetaTask = new MgrCheckDevicesMetaTask();
+        this.factoryTask.deleteSvaServerAndDAIMetaTask = new DeleteSvaServerAndDAIMetaTask();
+        this.factoryTask.deleteOSSecurityGroup = new DeleteOsSecurityGroupTask();
+        this.factoryTask.deleteDsFromDb = new DeleteDSFromDbTask();
 
-        factoryTask.osSvaCreateMetaTask = new OsSvaCreateMetaTask();
-        factoryTask.osDAIConformanceCheckMetaTask = new OsDAIConformanceCheckMetaTask();
-        factoryTask.mgrCheckDevicesMetaTask = new MgrCheckDevicesMetaTask();
-        factoryTask.deleteSvaServerAndDAIMetaTask = new DeleteSvaServerAndDAIMetaTask();
-
-        DSUpdateOrDeleteMetaTask task = factoryTask.create(this.ds, this.novaApiMock);
+        DSUpdateOrDeleteMetaTask task = this.factoryTask.create(this.ds, this.novaApiMock);
 
         // Act.
         task.execute();

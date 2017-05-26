@@ -311,11 +311,7 @@ public class SecurityGroupEntityMgr {
     }
 
     public static SecurityGroup findById(EntityManager em, Long id) {
-
-        // Initializing Entity Manager
-        OSCEntityManager<SecurityGroup> emgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em);
-
-        return emgr.findByPrimaryKey(id);
+        return em.find(SecurityGroup.class, id);
     }
 
     public static List<SecurityGroup> findByNsxServiceProfileIdAndVs(EntityManager em, VirtualSystem vs,

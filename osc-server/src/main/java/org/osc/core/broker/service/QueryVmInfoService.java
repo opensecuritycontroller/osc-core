@@ -17,7 +17,7 @@
 package org.osc.core.broker.service;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 
@@ -27,8 +27,8 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.plugin.sdncontroller.SdnControllerApiFactory;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
@@ -60,6 +60,9 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
 
     @Reference
     EncryptionApi encryption;
+
+    @Reference
+    private ApiFactoryService apiFactoryService;
 
     @Override
     public QueryVmInfoResponse exec(QueryVmInfoRequest request, EntityManager em) throws Exception {
@@ -185,9 +188,9 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
                     neutron = new JCloudNeutron(new Endpoint(vc));
                     nova = new JCloudNova(new Endpoint(vc));
 
-                    if (SdnControllerApiFactory.providesTrafficPortInfo(ControllerType.fromText(vc.getControllerType()))) {
+                    if (this.apiFactoryService.providesTrafficPortInfo(ControllerType.fromText(vc.getControllerType()))) {
                         // Search using SDN controller
-                        HashMap<String, FlowPortInfo> flowPortInfo = SdnControllerApiFactory.queryPortInfo(vc, null, request.flow);
+                        Map<String, FlowPortInfo> flowPortInfo = this.apiFactoryService.queryPortInfo(vc, null, request.flow);
 
                         log.info("SDN Controller Response: " + flowPortInfo);
                         for (String requestId : flowPortInfo.keySet()) {
@@ -299,7 +302,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         }
 
         OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
-                DistributedApplianceInstance.class, em);
+                DistributedApplianceInstance.class, em, this.txBroadcastUtil);
         DistributedApplianceInstance dai = emgr.findByFieldName("name", request.applianceInstanceName);
 
         if (dai == null) {

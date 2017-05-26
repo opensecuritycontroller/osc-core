@@ -23,8 +23,9 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.RestConstants;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.util.ServerUtil;
@@ -39,6 +40,10 @@ public class UpdateNsxServiceInstanceAttributesTask extends TransactionalTask {
     @Reference
     public PasswordUtil passwordUtil;
 
+    @IgnoreCompare
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
 
     public UpdateNsxServiceInstanceAttributesTask create(VirtualSystem vs) {
@@ -46,6 +51,10 @@ public class UpdateNsxServiceInstanceAttributesTask extends TransactionalTask {
         task.vs = vs;
         task.name = task.getName();
         task.passwordUtil = this.passwordUtil;
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 
@@ -56,7 +65,7 @@ public class UpdateNsxServiceInstanceAttributesTask extends TransactionalTask {
 
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
-        ServiceInstanceApi serviceInstanceApi = VMwareSdnApiFactory.createServiceInstanceApi(this.vs);
+        ServiceInstanceApi serviceInstanceApi = this.apiFactoryService.createServiceInstanceApi(this.vs);
 
         serviceInstanceApi.updateServiceInstance(
                 this.vs.getNsxServiceInstanceId(),

@@ -23,19 +23,31 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnApiFactory;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.sdn.api.ServiceInstanceApi;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
+@Component(service = DeleteServiceInstanceTask.class)
 public class DeleteServiceInstanceTask extends TransactionalTask {
     private static final Logger LOG = Logger.getLogger(DeleteServiceInstanceTask.class);
 
+    @Reference
+    private ApiFactoryService apiFactoryService;
+
     private VirtualSystem vs;
 
-    public DeleteServiceInstanceTask(VirtualSystem vs) {
-        this.vs = vs;
-        this.name = getName();
+    public DeleteServiceInstanceTask create(VirtualSystem vs) {
+        DeleteServiceInstanceTask task = new DeleteServiceInstanceTask();
+        task.vs = vs;
+        task.name = task.getName();
+        task.apiFactoryService = this.apiFactoryService;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
+        return task;
     }
 
     @Override
@@ -45,13 +57,13 @@ public class DeleteServiceInstanceTask extends TransactionalTask {
 
         String siId = this.vs.getNsxServiceInstanceId();
         // delete service instance
-        ServiceInstanceApi serviceInstanceApi = VMwareSdnApiFactory.createServiceInstanceApi(this.vs);
+        ServiceInstanceApi serviceInstanceApi = this.apiFactoryService.createServiceInstanceApi(this.vs);
         serviceInstanceApi.deleteServiceInstance(this.vs.getNsxServiceInstanceId(), this.vs.getNsxServiceId());
 
         LOG.debug("Updating nsx si " + siId + " for VirtualSystem: " + this.vs.getId());
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
         this.vs.setNsxServiceInstanceId(null);
-        OSCEntityManager.update(em, this.vs);
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override
