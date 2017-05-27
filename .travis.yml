@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+cache:
+  directories:
+  - $HOME/.m2
+  - $HOME/build/opensecuritycontroller/osc-core/osc-server-bom/Sources/
 sudo: false
 language:
     - java
