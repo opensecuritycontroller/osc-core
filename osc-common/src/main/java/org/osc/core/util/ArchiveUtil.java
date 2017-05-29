@@ -31,6 +31,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Logger;
 import org.osc.core.rest.client.util.LoggingUtil;
+import org.osc.core.util.encryption.SecurityException;
 
 public class ArchiveUtil {
 
@@ -87,7 +88,7 @@ public class ArchiveUtil {
      * @throws IOException
      * TODO: use system unzip instead of java zip stream.
      */
-    public static void unzip(String inputFile, String destination) throws IOException {
+    public static void unzip(String inputFile, String destination) throws IOException, SecurityException {
         FileInputStream fis = new FileInputStream(inputFile);
         ZipEntry entry;
         int entries = 0;

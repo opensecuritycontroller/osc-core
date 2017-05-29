@@ -30,6 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import org.osc.core.util.encryption.SecurityException;
 
 public class FileUtilTest {
 
@@ -142,13 +143,27 @@ public class FileUtilTest {
     }
 
     @Test
-    public void testUploadFile_WithPathTraversalVulnerability_ThrowsIOException() throws IllegalStateException, IOException {
+    public void testUploadFile_WithPathTraversalVulnerability1_ThrowsSecurityException() throws IOException, SecurityException {
         // Arrange.
 
         String dir = System.getProperty("user.dir");
         String filename = "../traversal/file.txt";
 
-        this.exception.expect(IllegalStateException.class);
+        this.exception.expect(SecurityException.class);
+
+        // Act.
+        FileUtil.preventPathTraversal(filename,dir);
+
+    }
+
+    @Test
+    public void testUploadFile_WithPathTraversalVulnerability2_ThrowsSecurityException() throws IOException, SecurityException {
+        // Arrange.
+
+        String dir = System.getProperty("user.dir");
+        String filename = "../\\file.txt";
+
+        this.exception.expect(SecurityException.class);
 
         // Act.
         FileUtil.preventPathTraversal(filename,dir);

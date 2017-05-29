@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.util;
 
+import org.osc.core.util.encryption.SecurityException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -70,16 +72,14 @@ public class FileUtil {
      * @throws IllegalStateException if name is incorrect
      */
     public static String preventPathTraversal(String filename, String intendedDir)
-            throws IOException {
-        File f = new File(filename);
-        File iD = new File(intendedDir);
-        String canPath = f.getCanonicalPath();
-        String canID = iD.getCanonicalPath();
+            throws IOException, SecurityException {
+        String canPath = new File(filename).getCanonicalPath();
+        String canID = new File(intendedDir).getCanonicalPath();
 
         if (canPath.startsWith(canID)) {
             return canPath;
         } else {
-            throw new IllegalStateException("File is not inside extract directory.");
+            throw new SecurityException("File is not inside extract directory.");
         }
     }
 }

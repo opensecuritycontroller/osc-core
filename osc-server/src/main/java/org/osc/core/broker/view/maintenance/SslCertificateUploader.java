@@ -45,6 +45,7 @@ import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
 import org.osc.core.util.FileUtil;
+import org.osc.core.util.encryption.SecurityException;
 
 public class SslCertificateUploader extends CustomComponent implements Receiver, FailedListener, SucceededListener {
     private static final Logger log = Logger.getLogger(SslCertificateUploader.class);
@@ -94,7 +95,11 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
                 ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_COMMON_ERROR) + filename,
                         Notification.Type.ERROR_MESSAGE);
             } catch (IOException | IllegalStateException e) {
-                log.error("Error uloading certifcate: " + filename, e);
+                log.error("Error uploading certifcate: " + filename, e);
+                ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_COMMON_ERROR) + filename,
+                        Notification.Type.ERROR_MESSAGE);
+            } catch (SecurityException e) {
+                log.error("Error uploading certifcate: " + filename, e);
                 ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_COMMON_ERROR) + filename,
                         Notification.Type.ERROR_MESSAGE);
             }
