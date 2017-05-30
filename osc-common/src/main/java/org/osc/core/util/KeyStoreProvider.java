@@ -30,11 +30,13 @@ import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Properties;
+
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import com.google.common.base.Optional;
@@ -65,10 +67,10 @@ public final class KeyStoreProvider {
 				}
 			}
 		}
-		
+
 		return instance;
 	}
-	
+
 	// KEY STORE INJECTION
 	private static KeyStoreFactory factory = null;
 
@@ -80,11 +82,11 @@ public final class KeyStoreProvider {
 		KeyStore createKeyStore() throws KeyStoreProviderException;
 		void persist(KeyStore keyStore) throws KeyStoreProviderException;
 	}
-	
+
 	/**
 	 * Allows to inject the key store that is handled by provider.
 	 * This method has to be called before first .getInstance call
-	 * If no custom key store factory set - default one that loads 
+	 * If no custom key store factory set - default one that loads
 	 * keystore from file is used
 	 * @param factory factory method that creates keystore
 	 */
@@ -97,7 +99,7 @@ public final class KeyStoreProvider {
 		@Override
 		public KeyStore createKeyStore() throws KeyStoreProviderException {
 			KeyStore keystore = null;
-			
+
 			LOG.info("Initializing keystore...");
 			String keystorePassword = getKeyStorePassword();
 
@@ -115,7 +117,7 @@ public final class KeyStoreProvider {
 			} catch (CertificateException ce) {
 				throw new KeyStoreProviderException("Certificates in the keystore could not be loaded.", ce);
 			}
-			
+
 			return keystore;
 		}
 
@@ -133,13 +135,13 @@ public final class KeyStoreProvider {
 				throw new KeyStoreProviderException("Some I/O problem occured while storing keystore", e);
 			}
 		}
-		
+
 	}
-	
+
 	// MEMBERS
 	private static final Logger LOG = Logger.getLogger(KeyStoreProvider.class);
 	private KeyStore keystore = null;
-	
+
 	// INNER TYPES
 	public final class KeyStoreProviderException extends Exception {
 		private static final long serialVersionUID = 6520829096189870519L;
@@ -147,44 +149,44 @@ public final class KeyStoreProvider {
 		public KeyStoreProviderException(String message, Throwable cause) {
 			super(message, cause);
 		}
-		
+
 		public KeyStoreProviderException(String message) {
 			super(message);
 		}
 	}
-	
+
 	private void init() throws KeyStoreProviderException {
 		LOG.info("Initializing keystore...");
 		this.keystore = factory.createKeyStore();
 	}
-	
+
 	private String getKeyStorePassword() throws KeyStoreProviderException {
         try(InputStream is = getClass().getResourceAsStream(SECURITY_PROPS_RESOURCE_PATH)) {
         	LOG.info("Obtaining keystore password ...");
         	Properties properties = new Properties();
         	properties.load(is);
         	String keystorePassword = properties.getProperty(KEYSTORE_PASSWORD_ALIAS);
-        	
+
         	if(StringUtils.isBlank(keystorePassword)) {
         		throw new KeyStoreProviderException("Keystore password not found in security properties file");
         	}
-        	
+
         	return keystorePassword;
         } catch (IOException ioe) {
            	throw new KeyStoreProviderException("Failed to open to the security properties file - properties file was not loaded", ioe);
         }
 	}
-	
+
 	private OutputStream getKeyStoreOutputStream() throws KeyStoreProviderException {
 		File file = new File(KEYSTORE_PATH);
 		try {
 			return new FileOutputStream(file);
 		} catch (FileNotFoundException fnfe) {
 			throw new KeyStoreProviderException("Keystore file not found in resources.", fnfe);
-	  
+
 		}
 	}
-	
+
 	/**
 	 * Puts password in keystore under given alias. Secret password is secured with the entry password.
 	 * The keystore change is persistant.
@@ -196,7 +198,7 @@ public final class KeyStoreProvider {
 	public void putPassword(String alias, String password, String entryPassword) throws KeyStoreProviderException {
 		try {
 			LOG.info(String.format("Putting password with alias %s in keystore ...", alias));
-			
+
 			SecretKeyFactory skFactory = SecretKeyFactory.getInstance(SECRET_KEY_PASSWORD_ALGORITHM);
 			SecretKey secret = skFactory.generateSecret(new PBEKeySpec(password.toCharArray()));
 			this.keystore.setEntry(alias, new KeyStore.SecretKeyEntry(secret),
@@ -212,7 +214,7 @@ public final class KeyStoreProvider {
 			throw new KeyStoreProviderException("Failed to put PBE secret in keystore", e);
 		}
 	}
-	
+
 	/**
 	 * Gets the secret password stored in keystore under given alias.
 	 * @param alias
@@ -223,22 +225,22 @@ public final class KeyStoreProvider {
 	public String getPassword(String alias, String entryPassword) throws KeyStoreProviderException {
 		try {
 			LOG.info(String.format("Getting password with alias %s from keystore ...", alias));
-			
+
 			SecretKeyFactory factory = SecretKeyFactory.getInstance(SECRET_KEY_PASSWORD_ALGORITHM);
-			
+
 			Optional<KeyStore.SecretKeyEntry> ske = Optional.fromNullable((KeyStore.SecretKeyEntry) this.keystore.getEntry(alias, new KeyStore.PasswordProtection(entryPassword.toCharArray())));
-			
+
 			if(!ske.isPresent()) {
 				return null;
 			}
-			
+
 			PBEKeySpec keySpec = (PBEKeySpec)factory.getKeySpec(ske.get().getSecretKey(),PBEKeySpec.class);
 			char[] password = keySpec.getPassword();
-			
+
 			if(ArrayUtils.isEmpty(password)) {
 				throw new KeyStoreProviderException("Recovered password is blank.");
 			}
-			
+
 			return new String(password);
 		} catch (NoSuchAlgorithmException nsae) {
 			throw new KeyStoreProviderException("Algorithm used to create PBE secret cannot be found.", nsae);
@@ -263,7 +265,7 @@ public final class KeyStoreProvider {
 	public void putSecretKey(String alias, SecretKey key, String entryPassword) throws KeyStoreProviderException {
 		try {
 			LOG.info(String.format("Putting secret key with alias %s in keystore ...", alias));
-			
+
 			this.keystore.setEntry(alias, new KeyStore.SecretKeyEntry(key),
 										  new KeyStore.PasswordProtection(entryPassword.toCharArray()));
 			factory.persist(this.keystore);
@@ -273,7 +275,7 @@ public final class KeyStoreProvider {
 			throw new KeyStoreProviderException("Failed to put secret key in keystore", e);
 		}
 	}
-	
+
 	/**
 	 * Gets the secret key stored in keystore under given alias.
 	 * @param alias
@@ -284,15 +286,15 @@ public final class KeyStoreProvider {
 	public SecretKey getSecretKey(String alias, String entryPassword) throws KeyStoreProviderException {
 		try {
 			LOG.info(String.format("Getting secret key with alias %s from keystore ...", alias));
-			
+
 			Optional<KeyStore.SecretKeyEntry> entry = Optional.fromNullable((KeyStore.SecretKeyEntry)this.keystore.getEntry(alias, new KeyStore.PasswordProtection(entryPassword.toCharArray())));
-			
+
 			if (!entry.isPresent()) {
 				return null;
 			}
-			
+
 			return entry.get().getSecretKey();
-			
+
 		} catch (NoSuchAlgorithmException nsae) {
 			throw new KeyStoreProviderException("Algorithm for recovering the secret key cannot be found.", nsae);
 		} catch (UnrecoverableEntryException uee) {
