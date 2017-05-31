@@ -245,11 +245,11 @@ public class ReleaseUpgradeMgr {
     }
 
     private static void upgrade78to79(Statement stmt) throws SQLException, EncryptionException {
-        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN nsx_agent_id, "
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_agent_id, "
                 + "nsx_host_id, nsx_host_name, nsx_host_vsm_uuid, nsx_vm_id;");
-        execSql(stmt, "alter table SECURITY_GROUP DROP COLUMN nsx_agent_id;");
-        execSql(stmt, "alter table SECURITY_GROUP_INTERFACE DROP COLUMN nsx_vsm_uuid;");
-        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN nsx_service_id, "
+        execSql(stmt, "alter table SECURITY_GROUP DROP COLUMN IF EXISTS nsx_agent_id;");
+        execSql(stmt, "alter table SECURITY_GROUP_INTERFACE DROP COLUMN IF EXISTS nsx_vsm_uuid;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_id, "
                 + "nsx_service_instance_id, nsx_service_manager_id, nsx_vsm_uuid;");
 
         execSql(stmt, "drop table VIRTUAL_SYSTEM_POLICY;");
