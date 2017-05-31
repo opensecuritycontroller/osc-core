@@ -2,6 +2,10 @@
 
 -include target/depend.bnd
 
+# We use bnd to package up a fat jar, but we don't want to
+# provide any API.
+-exportcontents:
+
 # include minimal contents for stand-alone jar
 # also avoids refering to jar by name
 -conditionalpackage:\
