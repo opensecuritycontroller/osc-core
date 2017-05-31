@@ -17,7 +17,15 @@
 package org.osc.core.server.control;
 
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.ConnectException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -34,8 +42,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.response.ServerStatusResponse;
+import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.rest.client.VmidcServerRestClient;
 import org.osc.core.util.LogUtil;
 import org.osc.core.util.ServerUtil;
@@ -153,7 +163,7 @@ public class ServerControl {
             String queryOutput = restClient.postResource("query", String.class, sql);
             System.out.println(queryOutput);
         } else {
-            //            System.out.println(ServerDebugApis.query(sql).toString());
+            offlineQuery(sql);
         }
     }
 
@@ -163,8 +173,73 @@ public class ServerControl {
             String queryOutput = restClient.postResource("exec", String.class, sql);
             System.out.println(queryOutput);
         } else {
-            //            System.out.println(ServerDebugApis.exec(sql).toString());
+            offlineExec(sql);
         }
+    }
+
+    private static void offlineQuery(String sql) throws IOException {
+        StringBuilder output = new StringBuilder();
+        output.append("Query: ").append(sql).append("\n");
+
+        DBConnectionParameters params = new DBConnectionParameters();
+
+        try (Connection conn = DriverManager.getConnection(params.getConnectionURL(),
+                params.getLogin(), params.getPassword());
+             Statement statement = conn.createStatement()) {
+            try (ResultSet result = statement.executeQuery(sql)){
+                processResultSetForQuery(output, result);
+            }
+        } catch (Exception ex) {
+            try (PrintWriter pw = new PrintWriter(new StringBuilderWriter(output), true)) {
+                ex.printStackTrace(pw);
+            }
+        }
+
+        System.out.println(output.toString());
+    }
+
+    private static void offlineExec(String sql) throws IOException {
+        StringBuilder output = new StringBuilder();
+        output.append("Exec: ").append(sql).append("\n");
+
+        DBConnectionParameters params = new DBConnectionParameters();
+
+        try (Connection conn = DriverManager.getConnection(params.getConnectionURL(),
+                params.getLogin(), params.getPassword());
+             Statement statement = conn.createStatement()) {
+            boolean isResultSet = statement.execute(sql);
+            if (!isResultSet) {
+                output.append(statement.getUpdateCount()).append(" rows affected.\n");
+            }
+        } catch (Exception ex) {
+            try (PrintWriter pw = new PrintWriter(new StringBuilderWriter(output), true)) {
+                ex.printStackTrace(pw);
+            }
+        }
+        System.out.println(output.toString());
+    }
+
+    private static void processResultSetForQuery(StringBuilder output, ResultSet result) throws SQLException {
+        ResultSetMetaData meta = result.getMetaData();
+        int cols = meta.getColumnCount();
+
+        output.append("Metadata information for columns (name,type,display-size):\n");
+        for (int i = 1; i <= cols; i++) {
+            output.append("Column ").append(i).append(":  ")
+                    .append(meta.getColumnName(i)).append(",").append(meta.getColumnTypeName(i)).append(",").append(meta.getColumnDisplaySize(i))
+                    .append("\n");
+        }
+
+        output.append("\nResult set dump:\n");
+        int cnt = 1;
+        while (result.next()) {
+            output.append("\nRow ").append(cnt).append(" : ");
+            for (int i = 1; i <= cols; i++) {
+                output.append(result.getString(i)).append("\t");
+            }
+            cnt++;
+        }
+        output.append("\n");
     }
 
     private static void reportVersion() {

@@ -8,6 +8,7 @@
     org.osc.core.broker.rest.server.model,\
     org.osc.core.rest.client.*,\
     org.osc.core.util,\
+    org.osc.core.broker.util.db,\
     com.google.gson.*
 
 -includeresource: \
@@ -15,6 +16,7 @@
     @${osc-service-api.dep},\
     @${commons-cli.dep},\
     @${commons-io.dep},\
+    @${commons-lang.dep},\
     @${guava.dep},\
     @${aopalliance-repackaged.dep},\
     @${osgi-resource-locator.dep},\
@@ -37,6 +39,7 @@
     @${hk2-locator.dep},\
     @${hk2-utils.dep},\
     @${hk2-api.dep},\
+    @${h2.dep},\
 	@${gson.dep}
 
 #
