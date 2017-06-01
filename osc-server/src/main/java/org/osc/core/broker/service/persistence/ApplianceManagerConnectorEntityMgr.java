@@ -31,7 +31,6 @@ import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
-import org.osc.core.broker.util.db.HibernateUtil;
 
 public class ApplianceManagerConnectorEntityMgr {
 
@@ -97,31 +96,28 @@ public class ApplianceManagerConnectorEntityMgr {
         return em.createQuery(cq).getResultList();
     }
 
-    public static boolean isManagerTypeUsed(String managerType) {
+    public static boolean isManagerTypeUsed(String managerType, EntityManager em) {
 
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            return HibernateUtil.getTransactionControl().required(() -> {
-                CriteriaBuilder cb = em.getCriteriaBuilder();
-                CriteriaQuery<Long> cq;
-                Root<?> from;
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Long> cq;
+            Root<?> from;
 
-                cq = cb.createQuery(Long.class);
-                from = cq.from(ApplianceManagerConnector.class);
-                cq = cq.select(cb.count(from))
-                        .where(cb.equal(from.get("managerType"), managerType));
+            cq = cb.createQuery(Long.class);
+            from = cq.from(ApplianceManagerConnector.class);
+            cq = cq.select(cb.count(from))
+                    .where(cb.equal(from.get("managerType"), managerType));
 
-                Long count1 = em.createQuery(cq).getSingleResult();
+            Long count1 = em.createQuery(cq).getSingleResult();
 
-                cq = cb.createQuery(Long.class);
-                from = cq.from(Appliance.class);
-                cq = cq.select(cb.count(from))
-                        .where(cb.equal(from.get("managerType"), managerType));
+            cq = cb.createQuery(Long.class);
+            from = cq.from(Appliance.class);
+            cq = cq.select(cb.count(from))
+                    .where(cb.equal(from.get("managerType"), managerType));
 
-                Long count2 = em.createQuery(cq).getSingleResult();
+            Long count2 = em.createQuery(cq).getSingleResult();
 
-                return count1 > 0 || count2 > 0;
-            });
+            return count1 > 0 || count2 > 0;
         } catch (Exception e) {
             return true;
         }

@@ -36,7 +36,6 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
-import org.osc.core.broker.util.db.HibernateUtil;
 
 public class VirtualizationConnectorEntityMgr {
 
@@ -203,23 +202,20 @@ public class VirtualizationConnectorEntityMgr {
         return em.createQuery(query).getResultList();
     }
 
-    public static boolean isControllerTypeUsed(String controllerType) {
+    public static boolean isControllerTypeUsed(String controllerType, EntityManager em) {
 
         Long count = 0L;
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            count = HibernateUtil.getTransactionControl().required(() -> {
-                CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaBuilder cb = em.getCriteriaBuilder();
 
-                CriteriaQuery<Long> query = cb.createQuery(Long.class);
+            CriteriaQuery<Long> query = cb.createQuery(Long.class);
 
-                Root<VirtualizationConnector> root = query.from(VirtualizationConnector.class);
+            Root<VirtualizationConnector> root = query.from(VirtualizationConnector.class);
 
-                query = query.select(cb.count(root))
-                        .where(cb.equal(root.get("controllerType"), controllerType));
+            query = query.select(cb.count(root))
+                    .where(cb.equal(root.get("controllerType"), controllerType));
 
-                return em.createQuery(query).getSingleResult();
-            });
+            count = em.createQuery(query).getSingleResult();
         } catch (Exception e) {
             // Ignore this exception
         }

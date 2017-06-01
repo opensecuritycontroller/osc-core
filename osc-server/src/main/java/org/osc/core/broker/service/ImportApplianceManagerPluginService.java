@@ -110,7 +110,9 @@ public class ImportApplianceManagerPluginService extends ServiceDispatcher<Impor
 
     @Override
     public boolean isManagerTypeUsed(String managerType) {
-        return ApplianceManagerConnectorEntityMgr.isManagerTypeUsed(managerType);
+        return this.dbConnectionManager.getTransactionControl().required(() ->
+            ApplianceManagerConnectorEntityMgr.isManagerTypeUsed(managerType,
+                    this.dbConnectionManager.getTransactionalEntityManager()));
     }
 
 }

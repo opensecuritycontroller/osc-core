@@ -143,9 +143,6 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
             // Unwrap the ScopedWorkException to get the cause from
             // the scoped work (i.e. the executeTransaction() call.
             log.error("Failed to finish processing the job failure event : ", e.getCause());
-        } catch (Exception ex) {
-            // TODO: nbartlex - remove this once EM and TX are injected
-            log.error("Failed to finish processing the job failure event : ", ex);
         }
     }
 

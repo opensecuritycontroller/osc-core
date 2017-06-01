@@ -110,7 +110,9 @@ public class ImportSdnControllerPluginService extends ServiceDispatcher<ImportFi
 
     @Override
     public boolean isControllerTypeUsed(String name) {
-        return VirtualizationConnectorEntityMgr.isControllerTypeUsed(name);
+        return this.dbConnectionManager.getTransactionControl().required(() ->
+             VirtualizationConnectorEntityMgr.isControllerTypeUsed(name,
+                     this.dbConnectionManager.getTransactionalEntityManager()));
     }
 
 }

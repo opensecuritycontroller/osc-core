@@ -31,7 +31,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.transaction.control.TransactionControl;
 
 public class OsNetworkNotificationListener extends OsNotificationListener {
 
@@ -41,12 +41,16 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
 
     private final AlertGenerator alertGenerator;
 
+    private final TransactionControl txControl;
+
     public OsNetworkNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner) {
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
+            TransactionControl txControl) {
 
         super(vc, OsNotificationObjectType.NETWORK, objectIdList, entity, activeRunner);
         this.conformService = conformService;
         this.alertGenerator = alertGenerator;
+        this.txControl = txControl;
         register(vc, objectType);
     }
 
@@ -61,7 +65,7 @@ public class OsNetworkNotificationListener extends OsNotificationListener {
             if (keyValue != null) {
                 log.info(" [Network] : message received - " + message);
                 try {
-                    HibernateUtil.getTransactionControl().required(() -> {
+                    this.txControl.required(() -> {
                         if (this.entity instanceof SecurityGroup) {
                             this.conformService.startSecurityGroupConformanceJob((SecurityGroup) this.entity);
                         }

@@ -30,7 +30,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsNotificati
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osgi.service.transaction.control.TransactionControl;
 
 public class OsHostAggregrateNotificationListener extends OsNotificationListener {
 
@@ -40,11 +40,15 @@ public class OsHostAggregrateNotificationListener extends OsNotificationListener
 
     private final AlertGenerator alertGenerator;
 
+    private final TransactionControl txControl;
+
     public OsHostAggregrateNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRuner) {
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRuner,
+            TransactionControl txControl) {
         super(vc, OsNotificationObjectType.HOST_AGGREGRATE, objectIdList, entity, activeRuner);
         this.conformService = conformService;
         this.alertGenerator = alertGenerator;
+        this.txControl = txControl;
         register(vc, objectType);
     }
 
@@ -60,7 +64,7 @@ public class OsHostAggregrateNotificationListener extends OsNotificationListener
             if (keyValue != null) {
                 log.info(" [Aggregrate] : message received - " + message);
                 try {
-                    HibernateUtil.getTransactionControl().required(() -> {
+                    this.txControl.required(() -> {
                         // Trigger Sync for the related Deployment Spec
                         this.conformService.startDsConformanceJob((DeploymentSpec) this.entity, null);
                         return null;
