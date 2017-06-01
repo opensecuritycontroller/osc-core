@@ -76,8 +76,8 @@ public class AllocateDAIWithSGIMembersTaskTest {
     @Test
     public void testExecute_WhenSGIHasNoAssociatedSG_NoUpdateIsDone() throws Exception {
         // Arrange.
-        SecurityGroupInterface sgi = newSGI(null);
-        DistributedApplianceInstance dai = newDAI();
+        SecurityGroupInterface sgi = registerNewSGI(null);
+        DistributedApplianceInstance dai = registerNewDAI();
 
         AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
 
@@ -92,8 +92,8 @@ public class AllocateDAIWithSGIMembersTaskTest {
     @Test
     public void testExecute_WhenSGIHasNoAssociatedSGMember_NoUpdateIsDone() throws Exception {
         // Arrange.
-        SecurityGroupInterface sgi = newSGI(new SecurityGroup(null, null, null));
-        DistributedApplianceInstance dai = newDAI();
+        SecurityGroupInterface sgi = registerNewSGI(new SecurityGroup(null, null, null));
+        DistributedApplianceInstance dai = registerNewDAI();
 
         AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
 
@@ -111,8 +111,8 @@ public class AllocateDAIWithSGIMembersTaskTest {
         SecurityGroup sg = new SecurityGroup(null, null, null);
         sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L));
 
-        SecurityGroupInterface sgi = newSGI(sg);
-        DistributedApplianceInstance dai = newDAI();
+        SecurityGroupInterface sgi = registerNewSGI(sg);
+        DistributedApplianceInstance dai = registerNewDAI();
 
         AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
 
@@ -129,8 +129,8 @@ public class AllocateDAIWithSGIMembersTaskTest {
         SecurityGroup sg = new SecurityGroup(null, null, null);
         sg.addSecurityGroupMember(newSGMWithPort(Network.class, 1L));
 
-        SecurityGroupInterface sgi = newSGI(sg);
-        DistributedApplianceInstance dai = newDAI();
+        SecurityGroupInterface sgi = registerNewSGI(sg);
+        DistributedApplianceInstance dai = registerNewDAI();
 
         AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
 
@@ -147,8 +147,8 @@ public class AllocateDAIWithSGIMembersTaskTest {
         SecurityGroup sg = new SecurityGroup(null, null, null);
         sg.addSecurityGroupMember(newSGMWithPort(Subnet.class, 1L));
 
-        SecurityGroupInterface sgi = newSGI(sg);
-        DistributedApplianceInstance dai = newDAI();
+        SecurityGroupInterface sgi = registerNewSGI(sg);
+        DistributedApplianceInstance dai = registerNewDAI();
         AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
 
         // Act.
@@ -166,8 +166,8 @@ public class AllocateDAIWithSGIMembersTaskTest {
         sg.addSecurityGroupMember(newSGMWithPort(VM.class, 2L));
         sg.addSecurityGroupMember(newSGMVmWithoutPort(3L));
 
-        SecurityGroupInterface sgi = newSGI(sg);
-        DistributedApplianceInstance dai = newDAI();
+        SecurityGroupInterface sgi = registerNewSGI(sg);
+        DistributedApplianceInstance dai = registerNewDAI();
 
         AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
 
@@ -191,8 +191,8 @@ public class AllocateDAIWithSGIMembersTaskTest {
         this.protectedPorts.add(newVMPort(vm));
         this.protectedPorts.add(newVMPort(vm));
 
-        SecurityGroupInterface sgi = newSGI(sg);
-        DistributedApplianceInstance dai = newDAI();
+        SecurityGroupInterface sgi = registerNewSGI(sg);
+        DistributedApplianceInstance dai = registerNewDAI();
 
         AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
 
@@ -228,7 +228,7 @@ public class AllocateDAIWithSGIMembersTaskTest {
         this.protectedPorts.forEach(port -> Mockito.verify(this.em).merge(port));
     }
 
-    private DistributedApplianceInstance newDAI() {
+    private DistributedApplianceInstance registerNewDAI() {
         DistributedApplianceInstance dai = new DistributedApplianceInstance();
         dai.setName("dai-name");
         dai.setId(1L);
@@ -237,7 +237,7 @@ public class AllocateDAIWithSGIMembersTaskTest {
         return dai;
     }
 
-    private SecurityGroupInterface newSGI(SecurityGroup sg) {
+    private SecurityGroupInterface registerNewSGI(SecurityGroup sg) {
         SecurityGroupInterface sgi = new SecurityGroupInterface();
         sgi.setId(1L);
         if (sg != null) {
@@ -279,6 +279,7 @@ public class AllocateDAIWithSGIMembersTaskTest {
     }
 
     private SecurityGroupMember newSGM(OsProtectionEntity protectionEntity, Long sgmId) {
+        // TODO emanoel: Remove this mock once the SGM is no longer kept in a TreeSet in the SGM.
         SecurityGroupMember sgm = Mockito.spy(new SecurityGroupMember(protectionEntity));
         Mockito.doReturn(-1).when(sgm).compareTo(Mockito.any());
         sgm.setId(sgmId);
