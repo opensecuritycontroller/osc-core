@@ -280,6 +280,7 @@ public class AllocateDAIWithSGIMembersTaskTest {
 
     private SecurityGroupMember newSGM(OsProtectionEntity protectionEntity, Long sgmId) {
         SecurityGroupMember sgm = Mockito.spy(new SecurityGroupMember(protectionEntity));
+        Mockito.doReturn(-1).when(sgm).compareTo(Mockito.any());
         sgm.setId(sgmId);
         return sgm;
     }
