@@ -29,7 +29,7 @@ import org.osgi.service.component.annotations.Component;
  * This task is applicable to SGIs whose virtual system refers to an SDN
  * controller that supports port groups.
  */
-@Component(service=AllocateDAIWithSGIMembersTask.class)
+@Component(service = AllocateDAIWithSGIMembersTask.class)
 public final class AllocateDAIWithSGIMembersTask extends UpdateDAIToSGIMembersTask {
     private static final Logger LOG = Logger.getLogger(AllocateDAIWithSGIMembersTask.class);
 
@@ -37,11 +37,12 @@ public final class AllocateDAIWithSGIMembersTask extends UpdateDAIToSGIMembersTa
         super(null, null);
     }
 
-    private AllocateDAIWithSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
-        super(sgi,dai);
+    private AllocateDAIWithSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai) {
+        super(sgi, dai);
     }
 
-    public AllocateDAIWithSGIMembersTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+    @Override
+    public AllocateDAIWithSGIMembersTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai) {
         AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
@@ -51,7 +52,9 @@ public final class AllocateDAIWithSGIMembersTask extends UpdateDAIToSGIMembersTa
 
     /**
      * This method assigns the provided port with the {@link #getDai()}
-     * @param protectedPort   the port to be attached to the DAI.
+     * 
+     * @param protectedPort
+     *            the port to be attached to the DAI.
      */
     @Override
     public void updatePortProtection(VMPort protectedPort) {
@@ -62,6 +65,7 @@ public final class AllocateDAIWithSGIMembersTask extends UpdateDAIToSGIMembersTa
 
     @Override
     public String getName() {
-        return String.format("Assigning the DAI %s to all the ports in the SGI %s.", getDai().getName(), getSGI().getName());
+        return String.format("Assigning the DAI %s to all the ports in the SGI %s.", getDai().getName(),
+                getSGI().getName());
     }
 }

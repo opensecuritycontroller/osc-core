@@ -43,7 +43,7 @@ public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
     private DistributedApplianceInstance dai;
     private static final Logger LOG = Logger.getLogger(UpdateDAIToSGIMembersTask.class);
 
-    public UpdateDAIToSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+    public UpdateDAIToSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai) {
         this.sgi = sgi;
         this.dai = dai;
     }
@@ -91,7 +91,11 @@ public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
 
     /**
      * This method updates the provided port with the {@link #getDai()}
-     * @param protectedPort   the port to be updated.
+     *
+     * @param protectedPort
+     *            the port to be updated.
      */
     public abstract void updatePortProtection(VMPort protectedPort);
+
+    public abstract UpdateDAIToSGIMembersTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai);
 }
