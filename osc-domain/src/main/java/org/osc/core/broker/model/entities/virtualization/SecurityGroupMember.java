@@ -90,6 +90,7 @@ public class SecurityGroupMember extends BaseEntity implements Comparable<Securi
         this.securityGroup.addSecurityGroupMember(this);
     }
 
+    // This constructor is meant to be used for unit tests only.
     public SecurityGroupMember(OsProtectionEntity entity) {
         this(null, entity);
     }
