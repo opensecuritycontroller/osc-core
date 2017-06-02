@@ -142,7 +142,7 @@ public class ArchiveUtilTest {
     }
 
     @Test
-    public void testUnzip_withValidZip_expectedSuccess() throws IOException {
+    public void testUnzip_withValidZip_expectedSuccess() throws IOException, SecurityException {
         //Arrange
         prepareValidZipFile();
         //Act.

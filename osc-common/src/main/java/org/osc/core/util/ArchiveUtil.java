@@ -115,7 +115,7 @@ public class ArchiveUtil implements ArchiveApi {
                     filename = Paths.get(zipParentDir.toString(), entry.getName()).toString();
                 }
 
-                String name = preventPathTraversal(filename, destination);
+                String name = FileUtil.preventPathTraversal(filename, destination);
                 if (entry.isDirectory()) {
                     new File(name).mkdir();
                     continue;
