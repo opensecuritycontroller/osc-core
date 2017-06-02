@@ -17,5 +17,5 @@
 package org.osc.core.broker.model.entities.appliance;
 
 public enum VirtualizationType {
-    VMWARE, OPENSTACK;
+    OPENSTACK;
 }

@@ -40,7 +40,6 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsDep
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.OsSecurityGroupNotificationRunner;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.ConformService;
-import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
@@ -57,7 +56,6 @@ import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
 import org.osc.core.broker.util.network.NetworkSettingsApi;
 import org.osc.core.rest.client.RestBaseClient;
-import org.osc.core.server.scheduler.MonitorDistributedApplianceInstanceJob;
 import org.osc.core.server.scheduler.SyncDistributedApplianceJob;
 import org.osc.core.server.scheduler.SyncSecurityGroupJob;
 import org.osc.core.server.websocket.WebSocketRunner;
@@ -130,9 +128,6 @@ public class Server implements ServerApi {
 
     @Reference
     private ApiFactoryService apiFactoryService;
-
-    @Reference
-    private NsxUpdateAgentsService nsxUpdateAgentsService;
 
     @Reference
     private PasswordUtil passwordUtil;
@@ -210,18 +205,18 @@ public class Server implements ServerApi {
 
             NetworkSettingsApi api = new NetworkSettingsApi();
             if (api.getNetworkSettings().isDhcp()) {
-                NsxEnv nsxEnv = parseNsxEnvXml();
-                if (nsxEnv != null) {
+                EnvironmentProperties envProp = parseEnvironmentPropertiesXml();
+                if (envProp != null) {
                     try {
-                        log.info("Setting network info: " + nsxEnv.toString());
-                        if (nsxEnv.hostIpAddress != null && !nsxEnv.hostIpAddress.isEmpty()) {
+                        log.info("Setting network info: " + envProp.toString());
+                        if (envProp.hostIpAddress != null && !envProp.hostIpAddress.isEmpty()) {
                             NetworkSettingsDto networkSettingsDto = new NetworkSettingsDto();
                             networkSettingsDto.setDhcp(false);
-                            networkSettingsDto.setHostIpAddress(nsxEnv.hostIpAddress);
-                            networkSettingsDto.setHostSubnetMask(nsxEnv.hostSubnetMask);
-                            networkSettingsDto.setHostDefaultGateway(nsxEnv.hostDefaultGateway);
-                            networkSettingsDto.setHostDnsServer1(nsxEnv.hostDnsServer1);
-                            networkSettingsDto.setHostDnsServer2(nsxEnv.hostDnsServer2);
+                            networkSettingsDto.setHostIpAddress(envProp.hostIpAddress);
+                            networkSettingsDto.setHostSubnetMask(envProp.hostSubnetMask);
+                            networkSettingsDto.setHostDefaultGateway(envProp.hostDefaultGateway);
+                            networkSettingsDto.setHostDnsServer1(envProp.hostDnsServer1);
+                            networkSettingsDto.setHostDnsServer2(envProp.hostDnsServer2);
                             api.setNetworkSettings(networkSettingsDto);
                         }
                     } catch (Exception ex) {
@@ -234,7 +229,6 @@ public class Server implements ServerApi {
             DatabaseUtils.createDefaultDB(this.dbMgr, this.txBroadcastUtil);
             DatabaseUtils.markRunningJobAborted(this.dbMgr, this.txBroadcastUtil);
 
-            this.passwordUtil.initPasswordFromDb(RestConstants.VMIDC_NSX_LOGIN);
             this.passwordUtil.initPasswordFromDb(RestConstants.OSC_DEFAULT_LOGIN);
 
             JobEngine.getEngine().addJobCompletionListener(this.alertGenerator);
@@ -280,7 +274,7 @@ public class Server implements ServerApi {
         }
     }
 
-    public static class NsxEnv {
+    public static class EnvironmentProperties {
         private static final String OVF_ENV_XML_DIR = "/mnt/media";
         private static final String OVF_ENV_XML_FILE = "ovf-env.xml";
 
@@ -296,7 +290,7 @@ public class Server implements ServerApi {
 
         @Override
         public String toString() {
-            return "NsxEnv [dhcp=" + this.dhcp + ", hostIpAddress=" + this.hostIpAddress + ", hostSubnetMask="
+            return "EnvProp [dhcp=" + this.dhcp + ", hostIpAddress=" + this.hostIpAddress + ", hostSubnetMask="
                     + this.hostSubnetMask + ", hostDefaultGateway=" + this.hostDefaultGateway + ", hostDnsServer1="
                     + this.hostDnsServer1 + ", hostDnsServer2=" + this.hostDnsServer2 + ", hostname=" + this.hostname
                     + ", defaultCliPassword=" + this.defaultCliPassword + ", defaultGuiPassword="
@@ -305,8 +299,8 @@ public class Server implements ServerApi {
 
     }
 
-    public static NsxEnv parseNsxEnvXml() throws ParserConfigurationException, SAXException, IOException {
-        File vmwareConf = new File(NsxEnv.OVF_ENV_XML_DIR + File.separator + NsxEnv.OVF_ENV_XML_FILE);
+    public static EnvironmentProperties parseEnvironmentPropertiesXml() throws ParserConfigurationException, SAXException, IOException {
+        File vmwareConf = new File(EnvironmentProperties.OVF_ENV_XML_DIR + File.separator + EnvironmentProperties.OVF_ENV_XML_FILE);
         if (!vmwareConf.exists()) {
             log.info("VMware Virtual Appliance Configuration file missing.");
             return null;
@@ -316,7 +310,7 @@ public class Server implements ServerApi {
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document document = db.parse(vmwareConf);
 
-        NsxEnv env = new NsxEnv();
+        EnvironmentProperties env = new EnvironmentProperties();
         NodeList nodeList = document.getElementsByTagName("Property");
         for (int i = 0, size = nodeList.getLength(); i < size; i++) {
             String key = nodeList.item(i).getAttributes().getNamedItem("oe:key").getTextContent();
@@ -369,8 +363,6 @@ public class Server implements ServerApi {
 
         scheduler.scheduleJob(syncDaJob, syncDaJobTrigger);
         scheduler.scheduleJob(syncSgJob, syncSgJobTrigger);
-
-        MonitorDistributedApplianceInstanceJob.scheduleMonitorDaiJob(this.nsxUpdateAgentsService);
 
         this.archiveService.maybeScheduleArchiveJob();
     }

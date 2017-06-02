@@ -60,9 +60,7 @@ public class AddVirtualizationConnectorServiceRequestValidator
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(dto, StaticRegistry.encryptionApi());
 
-        if (dto.getType().isVmware()) {
-            this.virtualizationConnectorUtil.checkVmwareConnection(request, vc);
-        } else {
+        if (dto.getType().isOpenstack()) {
             this.virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
         }
     }

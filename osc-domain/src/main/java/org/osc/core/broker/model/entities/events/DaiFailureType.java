@@ -20,7 +20,6 @@ public enum DaiFailureType {
 
     DAI_STATUS_CHANGE("DAI Status Change"),
     DAI_TIMEOUT("DAI Timeout"),
-    DAI_NSX_STATUS_UPDATE("DAI NSX status update"),
     DAI_MGR_INITIAL_CONFIG("DAI Manager Initial Config"),
     DAI_MGR_CHECK("DAI Manager Check");
 

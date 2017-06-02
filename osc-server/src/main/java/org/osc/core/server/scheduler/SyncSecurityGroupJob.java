@@ -22,7 +22,6 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.service.ConformService;
@@ -56,9 +55,6 @@ public class SyncSecurityGroupJob implements Job {
             });
 
             for (final SecurityGroup sg : sgs) {
-                if (sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-                    continue;
-                }
                 Thread sgSync = new Thread(new Runnable() {
                     @Override
                     public void run() {

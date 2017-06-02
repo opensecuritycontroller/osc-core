@@ -32,9 +32,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.UserEntityMgr;
 import org.osc.core.broker.service.request.UpdateUserRequest;
 import org.osc.core.broker.service.response.UpdateUserResponse;
-import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateDaiMetaTask;
 import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateMgrMetaTask;
-import org.osc.core.broker.service.tasks.passwordchange.PasswordChangePropagateNsxMetaTask;
 import org.osc.core.broker.service.validator.DtoValidator;
 import org.osc.core.broker.service.validator.UserDtoValidator;
 import org.osc.core.broker.util.PasswordUtil;
@@ -50,13 +48,7 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
     private DtoValidator<UserDto, User> validator;
 
     @Reference
-    private PasswordChangePropagateNsxMetaTask passwordChangePropagateNsxMetaTask;
-
-    @Reference
     private PasswordUtil passwordUtil;
-
-    @Reference
-    private PasswordChangePropagateDaiMetaTask passwordChangePropagateDaiMetaTask;
 
     @Reference
     private PasswordChangePropagateMgrMetaTask passwordChangePropagateMgrMetaTask;
@@ -86,44 +78,9 @@ public class UpdateUserService extends ServiceDispatcher<UpdateUserRequest, Upda
             user.setRole(RoleType.ADMIN);
             response.setJobId(startPasswordPropagateMgrJob());
 
-        } else if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {
-
-            this.passwordUtil.setVmidcNsxPass(this.encrypter.decryptAESCTR(user.getPassword()));
-            user.setRole(RoleType.SYSTEM_NSX);
-            response.setJobId(startPasswordPropagateNsxJob());
         }
 
         return response;
-    }
-
-    private Long startPasswordPropagateNsxJob() throws Exception {
-
-        log.info("Start propagating new password to all NSX managers");
-
-        TaskGraph tg = new TaskGraph();
-
-        tg.addTask(this.passwordChangePropagateNsxMetaTask);
-
-        Job job = JobEngine.getEngine().submit("Update NSX manager(s) " + Server.SHORT_PRODUCT_NAME + " Password", tg,
-                null);
-        log.debug("Done submitting with jobId: " + job.getId());
-        return job.getId();
-
-    }
-
-    private Long startPasswordPropagateDaiJob() throws Exception {
-
-        log.info("Start propagating new password to all DAIs");
-
-        TaskGraph tg = new TaskGraph();
-
-        tg.addTask(this.passwordChangePropagateDaiMetaTask.create());
-
-        Job job = JobEngine.getEngine().submit(
-                "Update " + Server.SHORT_PRODUCT_NAME + " Appliance Instance Agent(s) password", tg, null);
-        log.info("Done submitting with jobId: " + job.getId());
-        return job.getId();
-
     }
 
     private Long startPasswordPropagateMgrJob() throws Exception {

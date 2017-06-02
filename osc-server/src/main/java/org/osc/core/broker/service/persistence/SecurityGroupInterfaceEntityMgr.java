@@ -102,6 +102,25 @@ public class SecurityGroupInterfaceEntityMgr {
         return list.get(0);
     }
 
+    public static List<SecurityGroupInterface> listSecurityGroupInterfaceByPolicy(EntityManager em, Long policyId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        CriteriaQuery<SecurityGroupInterface> query = cb.createQuery(SecurityGroupInterface.class);
+
+        Root<SecurityGroupInterface> root = query.from(SecurityGroupInterface.class);
+
+        query = query.select(root).distinct(true)
+                .where(cb.equal(root.join("policy").get("id"), policyId));
+
+        List<SecurityGroupInterface> list = em.createQuery(query).getResultList();
+
+        if (list == null || list.size() == 0) {
+            return null;
+        }
+
+        return list;
+    }
+
     public static SecurityGroupInterface findById(EntityManager em, Long id) {
         return em.find(SecurityGroupInterface.class, id);
     }

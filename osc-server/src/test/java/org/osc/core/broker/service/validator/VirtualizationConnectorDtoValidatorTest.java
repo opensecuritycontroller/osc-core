@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
-
+//TODO: Hailee
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,7 +32,7 @@ public class VirtualizationConnectorDtoValidatorTest extends VirtualizationConne
     public void testValidate_WhenVcRequest_ReturnsSuccessful() throws Exception {
 
         // Arrange.
-        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto();
+        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.OPENSTACK_NOCONTROLLER_REQUEST.getDto();
         ControllerType.addType(dto.getControllerType());
 
         // Act.
@@ -46,9 +46,9 @@ public class VirtualizationConnectorDtoValidatorTest extends VirtualizationConne
     public void testValidate_WhenVcNameExistsRequest_ThrowsValidationException() throws Exception {
     	// Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
-        this.exception.expectMessage("Virtualization Connector Name: " + VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS_REQUEST.getDto().getName() + " already exists.");
+        this.exception.expectMessage("Virtualization Connector Name: " + VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NOCONTROLLER_REQUEST.getDto().getName() + " already exists.");
 
-        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS_REQUEST.getDto();
+        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NOCONTROLLER_REQUEST.getDto();
         ControllerType.addType(dto.getControllerType());
 
         // Act.
@@ -61,7 +61,7 @@ public class VirtualizationConnectorDtoValidatorTest extends VirtualizationConne
     public void testValidate_WhenControllerIpExists_ThrowsValidationException() throws Exception {
         // Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
-        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS_VMWARE_REQUEST.getDto();
+        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.OPENSTACK_CONTROLLER_IP_ALREADY_EXISTS_REQUEST.getDto();
         ControllerType.addType(dto.getControllerType());
         this.exception.expectMessage("Controller IP Address: " + dto.getControllerIP() + " already exists.");
 
@@ -70,10 +70,10 @@ public class VirtualizationConnectorDtoValidatorTest extends VirtualizationConne
     }
 
     @Test
-    public void testValidate_WhenVmwareProviderIpExists_ThrowsValidationException() throws Exception {
+    public void testValidate_WhenProviderIpExists_ThrowsValidationException() throws Exception {
         // Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
-        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS_VMWARE_REQUEST.getDto();
+        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS_OPENSTACK_REQUEST.getDto();
         ControllerType.addType(dto.getControllerType());
         this.exception.expectMessage("Provider IP Address: " + dto.getProviderIP() + " already exists.");
 

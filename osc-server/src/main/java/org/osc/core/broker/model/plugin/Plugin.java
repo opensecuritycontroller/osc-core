@@ -26,7 +26,6 @@ import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.server.installer.InstallableUnit;
 import org.osc.sdk.controller.api.SdnControllerApi;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
 
 public final class Plugin<T> implements PluginApi {
 
@@ -139,10 +138,6 @@ public final class Plugin<T> implements PluginApi {
 
         if(SdnControllerApi.class.equals(this.pluginClass)) {
             return PluginType.SDN;
-        }
-
-        if(VMwareSdnApi.class.equals(this.pluginClass)) {
-            return PluginType.NSX;
         }
 
         throw new IllegalArgumentException("The plugin class " + this.pluginClass + " is not recognised");

@@ -48,7 +48,7 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
     DistributedApplianceDto dtoParam;
     Class<Throwable> exceptionTypeParam;
     String expectedErrorMessageParam;
-    private VirtualizationConnector vmWareVc;
+    private VirtualizationConnector ostVc;
     private ApplianceManagerConnector mcPolicyMappingNotSupported;
     private Domain invalidDomain;
 
@@ -68,20 +68,6 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
         ManagerType mgrTypePolicyMappingNotSupported = ManagerType.SMC;
         ManagerType.addType(ManagerType.SMC.getValue());
 
-//        Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_NOT_FOUND)).thenReturn(null);
-//        Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_POLICY_MAPPING_NOT_SUPPORTED_MC)).thenReturn(mcPolicyMappingNotSupported);
-//        Mockito.when(this.sessionMock.get(VirtualizationConnector.class, VC_ID_NOT_FOUND)).thenReturn(null);
-//        Mockito.when(this.sessionMock.get(VirtualizationConnector.class, VC_ID_VMWARE)).thenReturn(vmWareVc);
-//        Mockito.when(this.sessionMock.get(Domain.class, DOMAIN_ID_INVALID_NAME)).thenReturn(invalidDomain);
-//
-//        this.sessionStub.stubFindApplianceSoftwareVersion(applianceSwVersionNotFoundDto.getApplianceId(),
-//                SW_VERSION_NOT_FOUND,
-//                vmWareVc.getVirtualizationType(),
-//                vmWareVc.getVirtualizationSoftwareVersion(),
-//                null);
-//
-//        this.sessionStub.stubFindVirtualSystem(DA_ID_EXISTING_VC, VC_ID_OPENSTACK, new VirtualSystem());
-
         ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
 
         Mockito.when(apiFactoryService.syncsPolicyMapping(mgrTypePolicyMappingNotSupported)).thenReturn(false);
@@ -90,16 +76,16 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
     private void populateDatabase() {
         this.em.getTransaction().begin();
 
-        this.vmWareVc = new VirtualizationConnector();
-        this.vmWareVc.setVirtualizationType(VirtualizationType.VMWARE);
-        this.vmWareVc.setVirtualizationSoftwareVersion("softwareVersion");
+        this.ostVc = new VirtualizationConnector();
+        this.ostVc.setVirtualizationType(VirtualizationType.OPENSTACK);
+        this.ostVc.setVirtualizationSoftwareVersion("softwareVersion");
 
-        this.vmWareVc.setName(VC_NAME_VMWARE);
-        this.vmWareVc.setProviderIpAddress("127.0.0.2");
-        this.vmWareVc.setProviderUsername("Natasha");
-        this.vmWareVc.setProviderPassword("********");
+        this.ostVc.setName("ostName");
+        this.ostVc.setProviderIpAddress("127.0.0.2");
+        this.ostVc.setProviderUsername("Natasha");
+        this.ostVc.setProviderPassword("********");
 
-        this.em.persist(this.vmWareVc);
+        this.em.persist(this.ostVc);
 
         this.invalidDomain = new Domain(this.amc);
         this.invalidDomain.setName(StringUtils.rightPad("invalidName", 156, 'e'));
@@ -147,8 +133,6 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
                     vsDto.setVcId(this.vc.getId());
                 } else if (REPLACE_WITH_NULL.equals(vsDto.getVcId())) {
                     vsDto.setVcId(null);
-                } else if (VC_ID_VMWARE.equals(vsDto.getVcId())) {
-                    vsDto.setVcId(this.vmWareVc.getId());
                 } else if (VC_ID_OPENSTACK.equals(vsDto.getVcId())) {
                     vsDto.setVcId(this.vc.getId());
                 }

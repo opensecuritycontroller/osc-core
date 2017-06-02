@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.util.VersionUtil.Version;
@@ -119,10 +118,6 @@ public class ImageMetadata {
 
     public VirtualizationType getVirtualizationType() {
         return VirtualizationType.fromText(this.virtualizationType);
-    }
-
-    public VmwareSoftwareVersion getVmwareVirtualizationVersion() {
-        return VmwareSoftwareVersion.fromText(this.virtualizationVersion);
     }
 
     public OpenstackSoftwareVersion getOpenstackVirtualizationVersion() {

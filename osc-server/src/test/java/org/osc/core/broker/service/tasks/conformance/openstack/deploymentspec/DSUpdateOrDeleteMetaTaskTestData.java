@@ -274,7 +274,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
     private static DeploymentSpec createDeploymentSpec(String baseName, String region) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(baseName + "_vc");
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setProviderIpAddress(baseName + "_providerIp");
         vc.setProviderUsername("Natasha");

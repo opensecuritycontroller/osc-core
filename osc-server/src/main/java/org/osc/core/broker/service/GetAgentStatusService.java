@@ -32,7 +32,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -67,9 +66,6 @@ public class GetAgentStatusService
 
     @Reference
     private AlertGenerator alertGenerator;
-
-    @Reference
-    private NsxUpdateAgentsService nsxUpdateAgentsService;
 
     @Override
     public GetAgentStatusResponse exec(DistributedApplianceInstancesRequest request, EntityManager em) throws Exception {
@@ -187,7 +183,6 @@ public class GetAgentStatusService
                     LockModeType.PESSIMISTIC_WRITE);
 
             updateDaiAgentStatusInfo(em, agentStatus, dai);
-            //  Returns the host name for VMware and Openstack, Virtualization type.
             agentStatus.setVirtualServer(dai.getHostName());
             agentStatus.setPublicIp(dai.getIpAddress());
 
@@ -216,10 +211,6 @@ public class GetAgentStatusService
         if (agentStatus.getAgentDpaInfo() != null && agentStatus.getAgentDpaInfo().netXDpaRuntimeInfo != null) {
             dai.setWorkloadInterfaces(agentStatus.getAgentDpaInfo().netXDpaRuntimeInfo.workloadInterfaces);
             dai.setPackets(agentStatus.getAgentDpaInfo().netXDpaRuntimeInfo.rx);
-        }
-
-        if (dai.getVirtualSystem().getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-            this.nsxUpdateAgentsService.updateNsxAgentInfo(em, dai);
         }
 
         // Update DAI to reflect last successful communication

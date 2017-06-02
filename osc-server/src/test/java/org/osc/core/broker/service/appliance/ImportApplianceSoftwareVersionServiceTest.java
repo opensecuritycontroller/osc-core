@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.appliance;
 
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -50,7 +49,8 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
+import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
+//import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
@@ -140,7 +140,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
         Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
         Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
-
         this.mockMetaDataFile = mock(File.class);
         File mockPayloadFile = mock(File.class);
 
@@ -152,11 +151,11 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         this.imageMetaData = new ImageMetadata();
         this.imageMetaData.setImageName(OVF_IMAGE_NAME);
-        this.imageMetaData.setVirtualizationType(org.osc.core.broker.service.dto.VirtualizationType.VMWARE.toString());
+        this.imageMetaData.setVirtualizationType(org.osc.core.broker.service.dto.VirtualizationType.OPENSTACK.toString());
         this.imageMetaData.setModel(SOFTWARE_MODEL);
         this.imageMetaData.setManagerType(ManagerType.NSM.toString());
         this.imageMetaData.setManagerVersion(MANAGER_VERSION);
-        this.imageMetaData.setVirtualizationVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
+        this.imageMetaData.setVirtualizationVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
         this.imageMetaData.setSoftwareVersion(SOFTWARE_VERSION);
         this.imageMetaData.setImageName(OVF_IMAGE_NAME);
         this.imageMetaData.setMinIscVersion(new Version(9L, 9L, "9-abc"));
@@ -259,7 +258,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         // Causes isImageMissing to return false, which means file is already present.
         this.validAsv.setImageUrl(".");
-//        this.sessionStub.stubSaveEntity(new ApplianceSoftwareVersionMatcher(this.imageMetaData), ASV_ID);
 
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage("Virtualization Software Version already exists");
@@ -298,45 +296,10 @@ public class ImportApplianceSoftwareVersionServiceTest {
            ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
            asv.setApplianceSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
            asv.setImageUrl(OVF_IMAGE_NAME);
-           asv.setVirtualizarionSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
-           asv.setVirtualizationType(VirtualizationType.VMWARE);
+           asv.setVirtualizarionSoftwareVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
+           asv.setVirtualizationType(VirtualizationType.OPENSTACK);
 
            this.em.persist(asv);
-    //
-    //       this.sessionStub.stubFindApplianceByModel(SOFTWARE_MODEL, mockExistingMatchingAppliance);
-    //       this.sessionStub.stubFindApplianceByModel(NON_EXISTING_SOFTWARE_MODEL, null);
-    //
-    //       this.sessionStub.stubSaveEntity(new InstanceOf(Appliance.class), APPLIANCE_ID);
-    //
-    //       // Appliance Software Version Mocking
-    //       this.sessionStub.stubFindApplianceSoftwareVersion(
-    //               APPLIANCE_ID, NON_EXISTING_SOFTWARE_VERSION,
-    //               VirtualizationType.VMWARE,
-    //               VmwareSoftwareVersion.VMWARE_V5_5.toString(),
-    //               null);
-    //
-    //       this.sessionStub.stubFindApplianceSoftwareVersionByImageUrl(NON_EXISTING_OVF_IMAGE_NAME, null);
-    //
-    //       this.sessionStub.stubSaveEntity(new ApplianceSoftwareVersionMatcher(this.imageMetaData), ASV_ID);
-    //
-    //       this.validAsv = new ApplianceSoftwareVersion();
-    //       this.validAsv.setId(ASV_ID);
-    //
-    //       this.sessionStub.stubFindApplianceSoftwareVersion(
-    //               APPLIANCE_ID,
-    //               SOFTWARE_VERSION,
-    //               VirtualizationType.VMWARE,
-    //               VmwareSoftwareVersion.VMWARE_V5_5.toString(),
-    //               this.validAsv);
-    //
-    //       this.sessionStub.stubFindApplianceSoftwareVersionByImageUrl(OVF_IMAGE_NAME, this.validAsv);
-    //
-    //       ApplianceManagerConnector mcPolicyMappingSupported = new ApplianceManagerConnector();
-    //       ManagerType mgrTypePolicyMappingSupported = ManagerType.NSM;
-    //       mcPolicyMappingSupported.setManagerType(mgrTypePolicyMappingSupported.toString());
-    //       Mockito.when(this.sessionMock.get(ApplianceManagerConnector.class, MC_ID_VALID_MC)).thenReturn(mcPolicyMappingSupported);
-    //
-           //Mockito.when(applianceMgrPolicyMappingSupported.isPolicyMappingSupported()).thenReturn(true);
 
            this.em.getTransaction().commit();
         }

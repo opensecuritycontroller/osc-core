@@ -76,21 +76,6 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testValidate_WithValidVmwareRequest_ReturnsSuccess() throws Exception {
-        // Arrange.
-    	doNothing().when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
-        doNothing().when(this.virtualizationConnectorUtil).checkVmwareConnection(any(DryRunRequest.class), any(VirtualizationConnector.class));
-
-    	// Act.
-        this.validator.validate(VirtualizationConnectorServiceData.VMWARE_REQUEST);
-
-        // Assert.
-        verify(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
-
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
     public void testValidate_WithValidOpenStackRequest_ReturnsSuccess() throws Exception {
         // Arrange.
     	doNothing().when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
@@ -113,19 +98,6 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     }
 
     @Test
-    public void testValidate_WithInvalidVmwareRequest_ThrowsValidationException() throws Exception {
-        // Arrange.
-        this.exception.expect(VmidcBrokerValidationException.class);
-        doThrow(VmidcBrokerValidationException.class).when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
-
-        // Act.
-        this.validator.validate(VirtualizationConnectorServiceData.VMWARE_REQUEST);
-
-        // Assert.
-        verify(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto());
-    }
-
-    @Test
     public void testValidate_WithInvalidOpenStackRequest_ThrowsValidationException() throws Exception {
         // Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
@@ -144,7 +116,7 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
         this.exception.expect(UnsupportedOperationException.class);
 
         // Act.
-        this.validator.validateAndLoad(VirtualizationConnectorServiceData.VMWARE_REQUEST);
+        this.validator.validateAndLoad(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST);
     }
 
 }

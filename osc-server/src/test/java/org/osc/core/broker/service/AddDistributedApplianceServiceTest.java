@@ -174,7 +174,7 @@ public class AddDistributedApplianceServiceTest {
        this.em.persist(this.domain);
 
        this.vc = new VirtualizationConnector();
-       this.vc.setVirtualizationType(VirtualizationType.VMWARE);
+       this.vc.setVirtualizationType(VirtualizationType.OPENSTACK);
        this.vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
        this.vc.setName("vcName");
        this.vc.setProviderIpAddress("127.0.0.1");

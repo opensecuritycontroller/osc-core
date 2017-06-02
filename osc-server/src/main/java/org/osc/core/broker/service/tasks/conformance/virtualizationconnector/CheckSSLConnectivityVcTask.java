@@ -64,9 +64,7 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
         this.vc = em.find(VirtualizationConnector.class, this.vc.getId());
         log.debug("Start executing CheckSSLConnectivityVcTask Task. VC: '" + this.vc.getName() + "'");
         DryRunRequest<VirtualizationConnectorDto> request = createRequest(this.vc);
-        if (VirtualizationType.fromText(this.vc.getVirtualizationType().name()).equals(VirtualizationType.VMWARE)) {
-            this.virtualizationConnectorUtil.checkVmwareConnection(request, this.vc);
-        } else {
+        if (VirtualizationType.fromText(this.vc.getVirtualizationType().name()).equals(VirtualizationType.OPENSTACK)) {
             this.virtualizationConnectorUtil.checkOpenstackConnection(request, this.vc);
         }
     }

@@ -434,11 +434,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     }
 
     private void setToolbars(VirtualizationConnectorDto selected) {
-        if (selected.getType().isVmware()) {
-            // Disable for type VMWARE
-            ViewUtil.setButtonsEnabled(false, this.childToolbar);
-        } else {
-            // Enable SubView Buttons if VS is type VMWARE
+        if (selected.getType().isOpenstack()) {
+            // Enable SubView Buttons if VS is type OPENSTACK
             ViewUtil.enableToolBarButtons(true, this.childToolbar, Arrays.asList(ToolbarButtons.ADD.getId()));
         }
     }

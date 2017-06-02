@@ -30,7 +30,6 @@ import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.api.server.EncryptionException;
-import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osc.sdk.controller.Status;
@@ -46,15 +45,6 @@ import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
-import org.osc.sdk.sdn.api.AgentApi;
-import org.osc.sdk.sdn.api.DeploymentSpecApi;
-import org.osc.sdk.sdn.api.SecurityTagApi;
-import org.osc.sdk.sdn.api.ServiceApi;
-import org.osc.sdk.sdn.api.ServiceInstanceApi;
-import org.osc.sdk.sdn.api.ServiceManagerApi;
-import org.osc.sdk.sdn.api.ServiceProfileApi;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
-import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osgi.annotation.versioning.ConsumerType;
 
 @ConsumerType
@@ -134,15 +124,6 @@ public interface ApiFactoryService {
     Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception;
 
     /**
-     * Creates a {@code VMwareSdnApi} instance for the specified {@code VirtualizationConnector} type.
-     *
-     * @param vc
-     * @return
-     * @throws VmidcException
-     */
-    VMwareSdnApi createVMwareSdnApi(VirtualizationConnector vc) throws VmidcException;
-
-    /**
      * Gets the set of currently registered manager types.
      *
      * @return
@@ -181,8 +162,6 @@ public interface ApiFactoryService {
 
     SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception;
 
-    AgentApi createAgentApi(VirtualSystem vs) throws Exception;
-
     ManagerSecurityGroupApi createManagerSecurityGroupApi(VirtualSystem vs) throws Exception;
 
     ManagerPolicyApi createManagerPolicyApi(ApplianceManagerConnector mc) throws Exception;
@@ -192,20 +171,6 @@ public interface ApiFactoryService {
     Boolean syncsSecurityGroup(VirtualSystem vs) throws Exception;
 
     ManagerCallbackNotificationApi createManagerUrlNotificationApi(ApplianceManagerConnector mc) throws Exception;
-
-    ServiceProfileApi createServiceProfileApi(VirtualSystem vs) throws Exception;
-
-    SecurityTagApi createSecurityTagApi(VirtualSystem vs) throws Exception;
-
-    ServiceApi createServiceApi(VirtualSystem vs) throws Exception;
-
-    ServiceManagerApi createServiceManagerApi(VirtualSystem vs) throws Exception;
-
-    ServiceInstanceApi createServiceInstanceApi(VirtualSystem vs) throws Exception;
-
-    VendorTemplateApi createVendorTemplateApi(VirtualSystem vs) throws Exception;
-
-    DeploymentSpecApi createDeploymentSpecApi(VirtualSystem vs) throws Exception;
 
     SdnRedirectionApi createNetworkRedirectionApi(VirtualSystem vs) throws Exception;
 

@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,7 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
 import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
 import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
@@ -37,8 +35,6 @@ import org.osc.core.broker.service.ssl.CertificateResolverModel;
 import org.osc.core.broker.service.ssl.SslCertificatesExtendedException;
 import org.osc.core.rest.client.crypto.SslContextProvider;
 import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
-import org.osc.sdk.sdn.exception.HttpException;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -76,62 +72,6 @@ public class VirtualizationConnectorUtil {
         if (this.initDone.compareAndSet(false, true)) {
             if (this.activeRunnerCSO != null) { // allow test injection
                 this.activeRunner = this.activeRunnerCSO.getService();
-            }
-        }
-    }
-
-    /**
-     * Checks connection for vmware.
-     *
-     * @throws ErrorTypeException
-     *             in case of controller/provider connection issues
-     * @throws Exception
-     *             in case of any other issues
-     */
-    public <T extends VirtualizationConnectorDto> void checkVmwareConnection(DryRunRequest<T> request,
-            VirtualizationConnector vc) throws Exception {
-        if (!request.isSkipAllDryRun()) {
-
-            ErrorTypeException errorTypeException = null;
-            final ArrayList<CertificateResolverModel> certificateResolverModels = new ArrayList<>();
-
-            // Check Connectivity with NSX if rest exception is not to be ignored
-
-            if (this.managerFactory == null) {
-                this.managerFactory = X509TrustManagerFactory.getInstance();
-            }
-
-            if (!request.isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION)) {
-                initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "nsx");
-                try {
-                    VMwareSdnApi vmwareSdnApi = this.apiFactoryService.createVMwareSdnApi(vc);
-                    vmwareSdnApi.checkStatus(new VMwareSdnConnector(vc));
-                } catch (HttpException exception) {
-                    errorTypeException = new ErrorTypeException(exception, ErrorType.CONTROLLER_EXCEPTION);
-                    LOG.warn("Rest Exception encountered when trying to add NSX info to Virtualization Connector, "
-                            + "allowing user to either ignore or correct issue.");
-                }
-            }
-
-            // Check Connectivity with vCenter
-            if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
-                initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "vmware");
-                try {
-                    new VimUtils(request.getDto().getProviderIP(), request.getDto().getProviderUser(),
-                            request.getDto().getProviderPassword());
-                } catch (RemoteException remoteException) {
-                    errorTypeException = new ErrorTypeException(remoteException, ErrorType.PROVIDER_EXCEPTION);
-                    LOG.warn("Exception encountered when trying to add vCenter info to Virtualization Connector, "
-                            + "allowing user to either ignore or correct issue.");
-                }
-            }
-
-            this.managerFactory.clearListener();
-
-            if (certificateResolverModels.size() > 0) {
-                throw new SslCertificatesExtendedException(errorTypeException, certificateResolverModels);
-            } else if (errorTypeException != null) {
-                throw errorTypeException;
             }
         }
     }
