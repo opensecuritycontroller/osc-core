@@ -16,8 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
@@ -38,7 +38,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(HibernateUtil.class)
-public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTaskTest {
+public class DeallocateDAIOfSGIMembersTaskTest extends UpdateDAIToSGIMembersTaskTest {
     @Override
     @Test
     public void testExecute_WhenSGIHasNoAssociatedSG_NoUpdateIsDone() throws Exception {
@@ -52,7 +52,7 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
     }
 
     @Test
-    public void testExecute_WhenSGIHasVMSGMember_AllocatesDAIToVMPort() throws Exception {
+    public void testExecute_WhenSGIHasVMSGMember_DeallocatesDAIOfVMPort() throws Exception {
         // Arrange.
         SecurityGroup sg = new SecurityGroup(null, null, null);
         sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L));
@@ -60,7 +60,9 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
         SecurityGroupInterface sgi = registerNewSGI(sg);
         DistributedApplianceInstance dai = registerNewDAI();
 
-        AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
+        assignDAIToProtectedPorts(dai);
+
+        DeallocateDAIOfSGIMembersTask task = new DeallocateDAIOfSGIMembersTask(sgi, dai);
 
         // Act.
         task.execute();
@@ -70,7 +72,32 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
     }
 
     @Test
-    public void testExecute_WhenSGIHasNetworkSGMember_AllocatesDAIToVMPort() throws Exception {
+    public void testExecute_WhenDaiHasOtherProtectedPorts_ExtraProtectedPortRemains() throws Exception {
+        // Arrange.
+        SecurityGroup sg = new SecurityGroup(null, null, null);
+        sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L));
+
+        SecurityGroupInterface sgi = registerNewSGI(sg);
+        DistributedApplianceInstance dai = registerNewDAI();
+
+        assignDAIToProtectedPorts(dai);
+        VMPort extraPort = newVMPort(new VM("region", UUID.randomUUID().toString(), "name"));
+        dai.addProtectedPort(extraPort);
+
+        DeallocateDAIOfSGIMembersTask task = new DeallocateDAIOfSGIMembersTask(sgi, dai);
+
+        // Act.
+        task.execute();
+
+        // Assert.
+        int expectedRemainingProtectedPortCount = dai.getProtectedPorts().size();
+        assertExpectedProtectedPorts(dai);
+        Assert.assertEquals(String.format("The DAI should have only %s port.", expectedRemainingProtectedPortCount), expectedRemainingProtectedPortCount, dai.getProtectedPorts().size());
+        Assert.assertTrue(String.format("The DAI should have the protected port %s.", extraPort.getOpenstackId()), dai.getProtectedPorts().contains(extraPort));
+    }
+
+    @Test
+    public void testExecute_WhenSGIHasNetworkSGMember_DeallocatesDAIsOfVMPort() throws Exception {
         // Arrange.
         SecurityGroup sg = new SecurityGroup(null, null, null);
         sg.addSecurityGroupMember(newSGMWithPort(Network.class, 1L));
@@ -78,7 +105,9 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
         SecurityGroupInterface sgi = registerNewSGI(sg);
         DistributedApplianceInstance dai = registerNewDAI();
 
-        AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
+        assignDAIToProtectedPorts(dai);
+
+        DeallocateDAIOfSGIMembersTask task = new DeallocateDAIOfSGIMembersTask(sgi, dai);
 
         // Act.
         task.execute();
@@ -88,14 +117,17 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
     }
 
     @Test
-    public void testExecute_WhenSGIHasSubNetSGMember_AllocatesDAIToVMPort() throws Exception {
+    public void testExecute_WhenSGIHasSubNetSGMember_DeallocatesDAIsOfVMPort() throws Exception {
         // Arrange.
         SecurityGroup sg = new SecurityGroup(null, null, null);
         sg.addSecurityGroupMember(newSGMWithPort(Subnet.class, 1L));
 
         SecurityGroupInterface sgi = registerNewSGI(sg);
         DistributedApplianceInstance dai = registerNewDAI();
-        AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
+
+        assignDAIToProtectedPorts(dai);
+
+        DeallocateDAIOfSGIMembersTask task = new DeallocateDAIOfSGIMembersTask(sgi, dai);
 
         // Act.
         task.execute();
@@ -105,7 +137,7 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
     }
 
     @Test
-    public void testExecute_WhenSGIHasMultipleSGMembers_AllocatesDAIToVMPorts() throws Exception {
+    public void testExecute_WhenSGIHasMultipleSGMembers_DeallocatesDAIsOfVMPorts() throws Exception {
         // Arrange.
         SecurityGroup sg = new SecurityGroup(null, null, null);
         sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L));
@@ -115,7 +147,9 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
         SecurityGroupInterface sgi = registerNewSGI(sg);
         DistributedApplianceInstance dai = registerNewDAI();
 
-        AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
+        assignDAIToProtectedPorts(dai);
+
+        DeallocateDAIOfSGIMembersTask task = new DeallocateDAIOfSGIMembersTask(sgi, dai);
 
         // Act.
         task.execute();
@@ -125,7 +159,7 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
     }
 
     @Test
-    public void testExecute_WhenSGIHasSingleSGMemberWithMultiplePorts_AllocatesDAIToVMPorts() throws Exception {
+    public void testExecute_WhenSGIHasSingleSGMemberWithMultiplePorts_DeallocatesDAIsOfVMPorts() throws Exception {
         // Arrange.
         SecurityGroup sg = new SecurityGroup(null, null, null);
         SecurityGroupMember sgm = newSGMVmWithoutPort(1L);
@@ -140,7 +174,9 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
         SecurityGroupInterface sgi = registerNewSGI(sg);
         DistributedApplianceInstance dai = registerNewDAI();
 
-        AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
+        assignDAIToProtectedPorts(dai);
+
+        DeallocateDAIOfSGIMembersTask task = new DeallocateDAIOfSGIMembersTask(sgi, dai);
 
         // Act.
         task.execute();
@@ -150,29 +186,23 @@ public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTask
     }
 
     private void assertExpectedProtectedPorts(DistributedApplianceInstance dai) {
-        List<VMPort> portsMissingDai = this.protectedPorts.stream().filter(port -> !(port.getDais().contains(dai))).collect(Collectors.toList());
+        List<VMPort> portsWithDai = this.protectedPorts.stream().filter(port -> port.getDais().contains(dai)).collect(Collectors.toList());
 
         Assert.assertTrue(
-                String.format("The following ports %s were found without a dai.",
-                        String.join(",", portsMissingDai.stream().map(port -> port.getOsNetworkId()).collect(Collectors.toList()))),
-                portsMissingDai.isEmpty());
-
-        Object[] expectedProtectedPorts = this.protectedPorts
-                .stream()
-                .sorted(Comparator.comparing(VMPort::getOsNetworkId))
-                .toArray(size -> new VMPort[size]);
-
-        VMPort[] actualProtectedPorts = dai.getProtectedPorts()
-                .stream()
-                .sorted(Comparator.comparing(VMPort::getOsNetworkId))
-                .toArray(size -> new VMPort[size]);
-
-        Assert.assertArrayEquals("The expected ports are different than the dai ports.", expectedProtectedPorts , actualProtectedPorts);
+                String.format("The following ports %s should not have an assigned DAI.",
+                        String.join(",", portsWithDai.stream().map(port -> port.getOsNetworkId()).collect(Collectors.toList()))),
+                portsWithDai.isEmpty());
 
         Mockito.verify(this.em,  Mockito.times(this.protectedPorts.size())).merge(dai);
         Mockito.verify(this.em, Mockito.times(this.protectedPorts.size())).merge(Mockito.isA(VMPort.class));
         this.protectedPorts.forEach(port -> Mockito.verify(this.em).merge(port));
+        this.protectedPorts.forEach(port -> Assert.assertTrue(String.format("The dai should not contain the port %s.", port.getOpenstackId()), !dai.getProtectedPorts().contains(port)));
+    }
+
+    private void assignDAIToProtectedPorts(DistributedApplianceInstance dai) {
+        for (VMPort protectedPort : this.protectedPorts) {
+            dai.addProtectedPort(protectedPort);
+            protectedPort.addDai(dai);
+        }
     }
 }
-
-
