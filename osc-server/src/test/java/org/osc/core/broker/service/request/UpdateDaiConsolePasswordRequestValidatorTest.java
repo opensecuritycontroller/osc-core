@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.request;
-
+//TODO Hailee: Commented code
 import java.util.List;
 import java.util.Set;
 
@@ -134,7 +134,7 @@ public class UpdateDaiConsolePasswordRequestValidatorTest {
         this.em.persist(domain);
 
         VirtualizationConnector vc = new VirtualizationConnector();
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        //vc.setVirtualizationType(VirtualizationType.VMWARE);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setName("vcName");
         vc.setProviderIpAddress("127.0.0.1");
@@ -144,7 +144,7 @@ public class UpdateDaiConsolePasswordRequestValidatorTest {
         this.em.persist(vc);
 
         VirtualizationConnector otherVc = new VirtualizationConnector();
-        otherVc.setVirtualizationType(VirtualizationType.VMWARE);
+        //otherVc.setVirtualizationType(VirtualizationType.VMWARE);
         otherVc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         otherVc.setName("otherVcName");
         otherVc.setProviderIpAddress("127.0.0.2");

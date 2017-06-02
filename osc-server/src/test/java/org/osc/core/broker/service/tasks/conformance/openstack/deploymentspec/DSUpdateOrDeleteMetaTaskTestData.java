@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
-
+// TODO Hailee: Commented code
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -274,7 +274,7 @@ public class DSUpdateOrDeleteMetaTaskTestData {
     private static DeploymentSpec createDeploymentSpec(String baseName, String region) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(baseName + "_vc");
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        //vc.setVirtualizationType(VirtualizationType.VMWARE);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setProviderIpAddress(baseName + "_providerIp");
         vc.setProviderUsername("Natasha");

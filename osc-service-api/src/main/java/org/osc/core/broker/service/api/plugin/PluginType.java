@@ -17,5 +17,5 @@
 package org.osc.core.broker.service.api.plugin;
 
 public enum PluginType {
-    MANAGER, SDN, NSX;
+    MANAGER, SDN;
 }

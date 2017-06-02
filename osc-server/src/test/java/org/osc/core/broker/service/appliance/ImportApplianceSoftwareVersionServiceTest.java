@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.appliance;
 
-
+//TODO Hailee: Commented code
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -50,7 +50,7 @@ import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
+//import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
@@ -152,11 +152,11 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         this.imageMetaData = new ImageMetadata();
         this.imageMetaData.setImageName(OVF_IMAGE_NAME);
-        this.imageMetaData.setVirtualizationType(org.osc.core.broker.service.dto.VirtualizationType.VMWARE.toString());
+//        this.imageMetaData.setVirtualizationType(org.osc.core.broker.service.dto.VirtualizationType.VMWARE.toString());
         this.imageMetaData.setModel(SOFTWARE_MODEL);
         this.imageMetaData.setManagerType(ManagerType.NSM.toString());
         this.imageMetaData.setManagerVersion(MANAGER_VERSION);
-        this.imageMetaData.setVirtualizationVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
+//        this.imageMetaData.setVirtualizationVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
         this.imageMetaData.setSoftwareVersion(SOFTWARE_VERSION);
         this.imageMetaData.setImageName(OVF_IMAGE_NAME);
         this.imageMetaData.setMinIscVersion(new Version(9L, 9L, "9-abc"));
@@ -298,8 +298,8 @@ public class ImportApplianceSoftwareVersionServiceTest {
            ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
            asv.setApplianceSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
            asv.setImageUrl(OVF_IMAGE_NAME);
-           asv.setVirtualizarionSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
-           asv.setVirtualizationType(VirtualizationType.VMWARE);
+//           asv.setVirtualizarionSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
+//           asv.setVirtualizationType(VirtualizationType.VMWARE);
 
            this.em.persist(asv);
     //

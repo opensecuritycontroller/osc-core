@@ -76,11 +76,6 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
         }
     }
 
-    @Override
-    public void processNsxFailureEvent(String message) {
-        processSystemFailureEvent(SystemFailureType.NSX_NOTIFICATION, message);
-    }
-
     public void processJobFailureEvent(Job job) {
         processFailureEvent(job, null, null, new LockObjectReference(job), job.getFailureReason());
     }

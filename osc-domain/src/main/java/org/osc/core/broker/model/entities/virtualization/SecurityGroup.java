@@ -58,9 +58,6 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
     @Column(name = "tenant_name")
     private String tenantName;
 
-    @Column(name = "nsx_id")
-    private String nsxId;
-
     @Column(name = "protect_all", nullable = false, columnDefinition = "bit default 1")
     private boolean protectAll = true;
 
@@ -92,11 +89,6 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
         this.virtualizationConnector = virtualizationConnector;
         this.tenantId = tenantId;
         this.tenantName = tenantName;
-    }
-
-    public SecurityGroup(VirtualizationConnector virtualizationConnector, String nsxId) {
-        this.virtualizationConnector = virtualizationConnector;
-        this.nsxId = nsxId;
     }
 
     SecurityGroup() {
@@ -174,10 +166,6 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
         this.protectAll = protectAll;
     }
 
-    public String getNsxId() {
-        return this.nsxId;
-    }
-
     public String getMgrId() {
         return this.mgrId;
     }
@@ -207,7 +195,7 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
     @Override
     public String toString() {
         return "SecurityGroup [name=" + this.name + ", virtualizationConnector=" + this.virtualizationConnector + ", tenantId="
-                + this.tenantId + ", tenantName=" + this.tenantName + ", nsxId=" + this.nsxId + ", protectAll=" + this.protectAll
+                + this.tenantId + ", tenantName=" + this.tenantName + ", protectAll=" + this.protectAll
                 + ", mgrId=" + this.mgrId + ", lastJob=" + this.lastJob + ", securityGroupMembers=" + this.securityGroupMembers
                 + ", securityGroupInterfaces=" + this.securityGroupInterfaces + ", networkElementId="
                         + this.networkElementId + "]";

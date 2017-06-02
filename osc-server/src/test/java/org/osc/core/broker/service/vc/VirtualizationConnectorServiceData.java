@@ -15,8 +15,8 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
-
-import static org.osc.core.broker.model.entities.appliance.VirtualizationType.VMWARE;
+//TODO Hailee: Commented code
+//import static org.osc.core.broker.model.entities.appliance.VirtualizationType.VMWARE;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,25 +46,25 @@ public class VirtualizationConnectorServiceData {
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setProviderUsername("Natasha");
         vc.setProviderPassword("********");
-        vc.setVirtualizationType(VMWARE);
+        //vc.setVirtualizationType(VMWARE);
         return vc;
     }
 
-    public static DryRunRequest<VirtualizationConnectorRequest> VMWARE_NAME_ALREADY_EXISTS_REQUEST = createVmWareRequest(
-            VirtualizationType.VMWARE, VMWARE_NAME_ALREADY_EXISTS, "1.1.1.1", "controller user", "controller password",
-            "2.2.2.2", "provider user", "provider Password", "4.3");
-
-    public static DryRunRequest<VirtualizationConnectorRequest> CONTROLLER_IP_ALREADY_EXISTS_VMWARE_REQUEST = createVmWareRequest(
-            VirtualizationType.VMWARE, "Random VMWare name", CONTROLLER_IP_ALREADY_EXISTS, "controller user",
-            "controller password", "2.2.2.2", "provider user", "provider Password", "4.3");
-
-    public static DryRunRequest<VirtualizationConnectorRequest> PROVIDER_IP_ALREADY_EXISTS_VMWARE_REQUEST = createVmWareRequest(
-            VirtualizationType.VMWARE, "Random VMWare name", "1.1.1.1", "controller user", "controller password",
-            PROVIDER_IP_ALREADY_EXISTS, "provider user", "provider Password", "4.3");
-
-    public static DryRunRequest<VirtualizationConnectorRequest> VMWARE_REQUEST = createVmWareRequest(
-            VirtualizationType.VMWARE, "Random VMWare name", "1.1.1.1", "controller user", "controller password",
-            "2.2.2.2", "provider user", "provider Password", "4.3");
+//    public static DryRunRequest<VirtualizationConnectorRequest> VMWARE_NAME_ALREADY_EXISTS_REQUEST = createVmWareRequest(
+//            VirtualizationType.VMWARE, VMWARE_NAME_ALREADY_EXISTS, "1.1.1.1", "controller user", "controller password",
+//            "2.2.2.2", "provider user", "provider Password", "4.3");
+//
+//    public static DryRunRequest<VirtualizationConnectorRequest> CONTROLLER_IP_ALREADY_EXISTS_VMWARE_REQUEST = createVmWareRequest(
+//            VirtualizationType.VMWARE, "Random VMWare name", CONTROLLER_IP_ALREADY_EXISTS, "controller user",
+//            "controller password", "2.2.2.2", "provider user", "provider Password", "4.3");
+//
+//    public static DryRunRequest<VirtualizationConnectorRequest> PROVIDER_IP_ALREADY_EXISTS_VMWARE_REQUEST = createVmWareRequest(
+//            VirtualizationType.VMWARE, "Random VMWare name", "1.1.1.1", "controller user", "controller password",
+//            PROVIDER_IP_ALREADY_EXISTS, "provider user", "provider Password", "4.3");
+//
+//    public static DryRunRequest<VirtualizationConnectorRequest> VMWARE_REQUEST = createVmWareRequest(
+//            VirtualizationType.VMWARE, "Random VMWare name", "1.1.1.1", "controller user", "controller password",
+//            "2.2.2.2", "provider user", "provider Password", "4.3");
 
     public static DryRunRequest<VirtualizationConnectorRequest> OPENSTACK_NAME_ALREADY_EXISTS_NOCONTROLLER_REQUEST = createOpenStackRequest(
             VirtualizationType.OPENSTACK, OPENSTACK_NAME_ALREADY_EXISTS, null, null, null, "2.2.2.2", "provider user",
@@ -130,11 +130,11 @@ public class VirtualizationConnectorServiceData {
         return dto;
     }
 
-    public static VirtualizationConnectorDto getVCDtoforVmware(){
-
-    	return getVCDto(VirtualizationType.VMWARE, "Random VMWare name", "1.1.1.1", "controller user", "controller password",
-                "2.2.2.2", "provider user", "provider Password", "4.3");
-    }
+//    public static VirtualizationConnectorDto getVCDtoforVmware(){
+//
+//    	return getVCDto(VirtualizationType.VMWARE, "Random VMWare name", "1.1.1.1", "controller user", "controller password",
+//                "2.2.2.2", "provider user", "provider Password", "4.3");
+//    }
 
     public static VirtualizationConnectorDto getVCDtoforOpenStack(){
 
@@ -214,13 +214,13 @@ public class VirtualizationConnectorServiceData {
                 providerUser, providerPassword, version);
     }
 
-	public static DryRunRequest<VirtualizationConnectorDto> getVmwareRequest() {
-
-		DryRunRequest<VirtualizationConnectorDto> request = new DryRunRequest<>();
-		request.setDto(getVCDtoforVmware());
-
-		return request;
-	}
+//	public static DryRunRequest<VirtualizationConnectorDto> getVmwareRequest() {
+//
+//		DryRunRequest<VirtualizationConnectorDto> request = new DryRunRequest<>();
+//		request.setDto(getVCDtoforVmware());
+//
+//		return request;
+//	}
 
 	public static DryRunRequest<VirtualizationConnectorDto> getOpenStackRequestwithSDN() {
 

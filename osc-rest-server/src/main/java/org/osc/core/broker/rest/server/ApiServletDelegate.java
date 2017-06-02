@@ -46,7 +46,6 @@ import org.osc.core.broker.rest.server.api.ServerMgmtApis;
 import org.osc.core.broker.rest.server.api.VirtualSystemApis;
 import org.osc.core.broker.rest.server.api.VirtualizationConnectorApis;
 import org.osc.core.broker.rest.server.api.proprietary.NsmMgrApis;
-import org.osc.core.broker.rest.server.api.proprietary.NsxApis;
 import org.osc.core.broker.rest.server.exception.BadRequestExceptionMapper;
 import org.osc.core.broker.rest.server.exception.InternalServerErrorExceptionMapper;
 import org.osc.core.broker.rest.server.exception.JsonProcessingExceptionMapper;
@@ -89,8 +88,6 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
     @Reference
     private NsmMgrApis nsmMgrApis;
     @Reference
-    private NsxApis nsxApis;
-    @Reference
     private ServerDebugApis serverDebugApis;
     @Reference
     private ServerMgmtApis serverMgmtApis;
@@ -98,9 +95,6 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
     private VirtualSystemApis virtualSystemApis;
     @Reference
     private VirtualizationConnectorApis virtualizationConnectorApis;
-
-    @Reference
-    private NsxAuthFilter nsxAuthFilter;
 
     @Reference
     private OscAuthFilter oscAuthFilter;
@@ -117,7 +111,7 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
         super.register(JacksonJaxbJsonProvider.class);
 
         //Auth Filters
-        super.registerInstances(this.nsxAuthFilter, this.oscAuthFilter, this.localHostAuthFilter);
+        super.registerInstances(this.oscAuthFilter, this.localHostAuthFilter);
 
         //Exception mappers
         super.register(BadRequestExceptionMapper.class);
@@ -133,7 +127,7 @@ public class ApiServletDelegate extends ResourceConfig implements Servlet {
         // agent & server apis
         super.registerInstances(this.alarmApis, this.alertApis, this.applianceApis, this.distributedApplianceApis,
                 this.distributedApplianceInstanceApis, this.jobApis, this.managerApis, this.managerConnectorApis,
-                this.nsmMgrApis, this.nsxApis, this.serverDebugApis, this.serverMgmtApis, this.virtualSystemApis,
+                this.nsmMgrApis, this.serverDebugApis, this.serverMgmtApis, this.virtualSystemApis,
                 this.virtualizationConnectorApis);
 
         this.container = new ServletContainer(this);

@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service;
-
+//TODO Hailee: Commented code
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -25,9 +25,9 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.server.EncryptionException;
-import org.osc.core.broker.service.request.Agent;
-import org.osc.core.broker.service.request.Agent.AllocatedIpAddress;
-import org.osc.core.broker.service.request.Agent.HostInfo;
+//import org.osc.core.broker.service.request.Agent;
+//import org.osc.core.broker.service.request.Agent.AllocatedIpAddress;
+//import org.osc.core.broker.service.request.Agent.HostInfo;
 import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 import org.osc.core.broker.service.response.AgentDpaInfo;
 import org.osc.core.util.EncryptionUtil;
@@ -48,9 +48,9 @@ class AgentRegisterServiceTestData {
     static String WITH_NSX_AGENT_NSX_SERVICE_ID = "WITH_NSX_AGENT_NSX_SERVICE_ID";
 
     static VirtualSystem OPENSTACK_VS = createVirtualSystem(VirtualizationType.OPENSTACK, OPENSTACK_VS_ID, null);
-    static VirtualSystem VMWARE_VS = createVirtualSystem(VirtualizationType.VMWARE, VMWARE_VS_ID, null);
-    static VirtualSystem NO_NSX_AGENT_VS = createVirtualSystem(VirtualizationType.VMWARE, NO_NSX_AGENT_VS_ID, NO_NSX_AGENT_NSX_SERVICE_ID);
-    static VirtualSystem WITH_NSX_AGENT_VS = createVirtualSystem(VirtualizationType.VMWARE, WITH_NSX_AGENT_VS_ID, WITH_NSX_AGENT_NSX_SERVICE_ID);
+//    static VirtualSystem VMWARE_VS = createVirtualSystem(VirtualizationType.VMWARE, VMWARE_VS_ID, null);
+//    static VirtualSystem NO_NSX_AGENT_VS = createVirtualSystem(VirtualizationType.VMWARE, NO_NSX_AGENT_VS_ID, NO_NSX_AGENT_NSX_SERVICE_ID);
+//    static VirtualSystem WITH_NSX_AGENT_VS = createVirtualSystem(VirtualizationType.VMWARE, WITH_NSX_AGENT_VS_ID, WITH_NSX_AGENT_NSX_SERVICE_ID);
 
     static AgentRegisterServiceRequest INVALID_REQUEST = new AgentRegisterServiceRequest();
     static AgentRegisterServiceRequest NULL_DAI_OPENSTACK_REQUEST = createRequest(OPENSTACK_VS_ID, "NULL_DAI_OPENSTACK_IP");
@@ -74,7 +74,7 @@ class AgentRegisterServiceTestData {
 
     static Long WITH_NSX_AGENT_DAI_ID = 405L;
 
-    static Agent NSX_AGENT;
+    //static Agent NSX_AGENT;
 
     static AgentRegisterServiceRequest DAI_INSPECTION_READY_REQUEST;
 
@@ -132,8 +132,8 @@ class AgentRegisterServiceTestData {
                             203L,
                             204L);
 
-            EXISTING_DAI =
-                    createDistributedApplianceInstance(VMWARE_VS, 205L, "EXISTING_DAI_NAME", "EXISTING_DAI_IP");
+//            EXISTING_DAI =
+//                    createDistributedApplianceInstance(VMWARE_VS, 205L, "EXISTING_DAI_NAME", "EXISTING_DAI_IP");
 
             NO_NSX_AGENT_REQUEST =
                     createRequest(
@@ -180,7 +180,7 @@ class AgentRegisterServiceTestData {
                             503L,
                             504L);
 
-            NSX_AGENT = createAgent(WITH_NSX_AGENT_REQUEST.getApplianceIp());
+            //NSX_AGENT = createAgent(WITH_NSX_AGENT_REQUEST.getApplianceIp());
 
             DAI_DISCOVERED_REQUEST =
                     createRequest(
@@ -257,74 +257,76 @@ class AgentRegisterServiceTestData {
                             1003L,
                             1004L);
 
-            AGENT_HEALTH_MISMATCH_DAI =
-                    createDistributedApplianceInstance(
-                            VMWARE_VS,
-                            5005L,
-                            "AGENT_HEALTH_MISMATCH_NAME",
-                            "AGENT_HEALTH_MISMATCH_IP",
-                            "AGENT_HEALTH_MISMATCH_NSX_AGENT_ID",
-                            true,
-                            true);
-
-            AGENT_HEALTH_MISMATCH_DISCOVERED_DAI =
-                    createDistributedApplianceInstance(
-                            VMWARE_VS,
-                            6005L,
-                            "AGENT_HEALTH_MISMATCH_DISCOVERED_NAME",
-                            "AGENT_HEALTH_MISMATCH_DISCOVERED_IP",
-                            "AGENT_HEALTH_MISMATCH_NSX_AGENT_DISCOVERED_ID",
-                            true,
-                            false);
-
-            AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_DAI =
-                    createDistributedApplianceInstance(
-                            VMWARE_VS,
-                            7005L,
-                            "AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_NAME",
-                            "AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_IP",
-                            "AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_NSX_AGENT_ID",
-                            false,
-                            false);
-
-            AGENT_HEALTH_MATCH_DAI =
-                    createDistributedApplianceInstance(
-                            VMWARE_VS,
-                            8005L,
-                            "AGENT_HEALTH_MATCH_NAME",
-                            "AGENT_HEALTH_MATCH_IP",
-                            "AGENT_HEALTH_MATCH_NSX_AGENT_ID",
-                            true,
-                            true);
-
-            NEW_CONSOLE_PASSWORD_DAI =
-                    createDistributedApplianceInstance(
-                            VMWARE_VS,
-                            9005L,
-                            "NEW_CONSOLE_PASSWORD_NAME",
-                            "NEW_CONSOLE_PASSWORD_IP",
-                            null,
-                            null,
-                            null,
-                            "NEW_CONSOLE_PASSWORD_PWD",
-                            false,
-                            false);
-
-            SEC_GROUP_OUT_OF_SYNC_DAI =
-                    createDistributedApplianceInstance(
-                            VMWARE_VS,
-                            10005L,
-                            "SEC_GROUP_OUT_OF_SYNC_NAME",
-                            "SEC_GROUP_OUT_OF_SYNC_IP",
-                            null,
-                            null,
-                            null,
-                            null,
-                            true,
-                            true);
-        } catch(EncryptionException encryptionException) {
-            System.err.println("Failed to initialize test data. Encryption error : " + encryptionException.getStackTrace());
-        }
+//            AGENT_HEALTH_MISMATCH_DAI =
+//                    createDistributedApplianceInstance(
+//                            VMWARE_VS,
+//                            5005L,
+//                            "AGENT_HEALTH_MISMATCH_NAME",
+//                            "AGENT_HEALTH_MISMATCH_IP",
+//                            "AGENT_HEALTH_MISMATCH_NSX_AGENT_ID",
+//                            true,
+//                            true);
+//
+//            AGENT_HEALTH_MISMATCH_DISCOVERED_DAI =
+//                    createDistributedApplianceInstance(
+//                            VMWARE_VS,
+//                            6005L,
+//                            "AGENT_HEALTH_MISMATCH_DISCOVERED_NAME",
+//                            "AGENT_HEALTH_MISMATCH_DISCOVERED_IP",
+//                            "AGENT_HEALTH_MISMATCH_NSX_AGENT_DISCOVERED_ID",
+//                            true,
+//                            false);
+//
+//            AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_DAI =
+//                    createDistributedApplianceInstance(
+//                            VMWARE_VS,
+//                            7005L,
+//                            "AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_NAME",
+//                            "AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_IP",
+//                            "AGENT_HEALTH_MISMATCH_NOT_DISCOVERED_NOT_INSPECTIONREADY_NSX_AGENT_ID",
+//                            false,
+//                            false);
+//
+//            AGENT_HEALTH_MATCH_DAI =
+//                    createDistributedApplianceInstance(
+//                            VMWARE_VS,
+//                            8005L,
+//                            "AGENT_HEALTH_MATCH_NAME",
+//                            "AGENT_HEALTH_MATCH_IP",
+//                            "AGENT_HEALTH_MATCH_NSX_AGENT_ID",
+//                            true,
+//                            true);
+//
+//            NEW_CONSOLE_PASSWORD_DAI =
+//                    createDistributedApplianceInstance(
+//                            VMWARE_VS,
+//                            9005L,
+//                            "NEW_CONSOLE_PASSWORD_NAME",
+//                            "NEW_CONSOLE_PASSWORD_IP",
+//                            null,
+//                            null,
+//                            null,
+//                            "NEW_CONSOLE_PASSWORD_PWD",
+//                            false,
+//                            false);
+//
+//            SEC_GROUP_OUT_OF_SYNC_DAI =
+//                    createDistributedApplianceInstance(
+//                            VMWARE_VS,
+//                            10005L,
+//                            "SEC_GROUP_OUT_OF_SYNC_NAME",
+//                            "SEC_GROUP_OUT_OF_SYNC_IP",
+//                            null,
+//                            null,
+//                            null,
+//                            null,
+//                            true,
+//                            true);
+//        } catch(EncryptionException encryptionException) {
+//            System.err.println("Failed to initialize test data. Encryption error : " + encryptionException.getStackTrace());
+//        }
+    } catch(Exception ex) {
+    }
     }
 
     private static DistributedApplianceInstance createDistributedApplianceInstance(
@@ -362,7 +364,7 @@ class AgentRegisterServiceTestData {
         dai.setName(daiName);
         dai.setIpAddress(daiIp);
         dai.setMgmtGateway("MGMT_GATEWAY");
-        dai.setNsxAgentId(nsxAgentId);
+        //dai.setNsxAgentId(nsxAgentId);
         dai.setDiscovered(isDiscovered);
         dai.setInspectionReady(isInspectionReady);
         dai.setNewConsolePassword(new EncryptionUtil().encryptAESCTR(consolePassword));
@@ -444,28 +446,28 @@ class AgentRegisterServiceTestData {
         vs.setVirtualizationConnector(vc);
         vs.setId(vsId);
         vs.setKeyStore(new byte[3]);
-        vs.setNsxServiceId(nsxServiceId);
+        //vs.setNsxServiceId(nsxServiceId);
 
         return vs;
     }
 
-    private static Agent createAgent(String ipAddress) {
-        AllocatedIpAddress allocatedIp = new AllocatedIpAddress();
-        allocatedIp.ipAddress = ipAddress;
-        allocatedIp.gateway = "GATEWAY";
-        allocatedIp.prefixLength = "LENGTH";
-
-        HostInfo hostInfo = new HostInfo();
-        hostInfo.objectId = "HOST_INFO_OID";
-        hostInfo.name = "HOST_INFO_NAME";
-        hostInfo.vsmUuid = "HOST_INFO_VMUIID";
-
-        Agent agent = new Agent();
-        agent.allocatedIpAddress = allocatedIp;
-        agent.hostInfo = hostInfo;
-        agent.agentId = "AGENT_ID";
-        agent.vmId = "VM_ID";
-
-        return agent;
-    }
+//    private static Agent createAgent(String ipAddress) {
+//        AllocatedIpAddress allocatedIp = new AllocatedIpAddress();
+//        allocatedIp.ipAddress = ipAddress;
+//        allocatedIp.gateway = "GATEWAY";
+//        allocatedIp.prefixLength = "LENGTH";
+//
+//        HostInfo hostInfo = new HostInfo();
+//        hostInfo.objectId = "HOST_INFO_OID";
+//        hostInfo.name = "HOST_INFO_NAME";
+//        hostInfo.vsmUuid = "HOST_INFO_VMUIID";
+//
+//        Agent agent = new Agent();
+//        agent.allocatedIpAddress = allocatedIp;
+//        agent.hostInfo = hostInfo;
+//        agent.agentId = "AGENT_ID";
+//        agent.vmId = "VM_ID";
+//
+//        return agent;
+//    }
 }

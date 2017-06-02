@@ -28,9 +28,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
-import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
@@ -45,29 +43,15 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.GenerateVSSKeysTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
-import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteServiceInstanceTask;
-import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteServiceManagerTask;
-import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteServiceTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteVsFromDbTask;
-import org.osc.core.broker.service.tasks.conformance.deleteda.UnregisterServiceManagerCallbackTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrDeleteVSSDeviceTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteFlavorTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteImageFromGlanceTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroup.MgrSecurityGroupCheckMetaTask;
-import org.osc.core.broker.service.tasks.conformance.securitygroup.NsxSecurityGroupsCheckMetaTask;
-import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.NsxSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.SecurityGroupCleanupCheckMetaTask;
-import org.osc.core.broker.service.tasks.network.UpdateNsxServiceInstanceAttributesTask;
-import org.osc.core.broker.service.tasks.network.UpdateNsxServiceManagerTask;
-import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
 import org.osc.core.broker.util.PasswordUtil;
-import org.osc.core.util.ServerUtil;
-import org.osc.sdk.sdn.api.ServiceApi;
-import org.osc.sdk.sdn.api.ServiceManagerApi;
-import org.osc.sdk.sdn.element.ServiceElement;
-import org.osc.sdk.sdn.element.ServiceManagerElement;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
@@ -77,47 +61,12 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 
-import com.google.common.base.Objects;
-
 @Component(service = VSConformanceCheckMetaTask.class)
 public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     private static final Logger LOG = Logger.getLogger(VSConformanceCheckMetaTask.class);
 
     @Reference
     ApiFactoryService apiFactoryService;
-
-    @Reference
-    CreateNsxServiceManagerTask createNsxServiceManagerTask;
-
-    @Reference
-    UpdateNsxServiceManagerTask updateNsxServiceManagerTask;
-
-    @Reference
-    CreateNsxServiceTask createNsxServiceTask;
-
-    @Reference
-    UpdateNsxServiceAttributesTask updateNsxServiceAttributesTask;
-
-    @Reference
-    NsxDeploymentSpecCheckMetaTask nsxDeploymentSpecCheckMetaTask;
-
-    @Reference
-    UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
-
-    @Reference
-    UnregisterServiceManagerCallbackTask unregisterServiceManagerCallbackTask;
-
-    @Reference
-    DeleteServiceInstanceTask deleteServiceInstanceTask;
-
-    @Reference
-    NsxSecurityGroupInterfacesCheckMetaTask nsxSecurityGroupInterfacesCheckMetaTask;
-
-    @Reference
-    DeleteServiceTask deleteServiceTask;
-
-    @Reference
-    DeleteServiceManagerTask deleteServiceManagerTask;
 
     @Reference
     DeleteImageFromGlanceTask deleteImageFromGlanceTask;
@@ -132,25 +81,10 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     DeleteVsFromDbTask deleteVsFromDbTask;
 
     @Reference
-    RegisterServiceInstanceTask registerServiceInstanceTask;
-
-    @Reference
-    NsxSecurityGroupsCheckMetaTask nsxSecurityGroupsCheckMetaTask;
-
-    @Reference
     GenerateVSSKeysTask generateVSSKeysTask;
 
     @Reference
     MgrSecurityGroupCheckMetaTask mgrSecurityGroupCheckMetaTask;
-
-    @Reference
-    DeleteDefaultServiceProfileTask deleteDefaultServiceProfileTask;
-
-    @Reference
-    RemoveVendorTemplateTask removeVendorTemplateTask;
-
-    @Reference
-    RegisterVendorTemplateTask registerVendorTemplateTask;
 
     @Reference
     PasswordUtil passwordUtil;
@@ -162,13 +96,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
     MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
 
     @Reference
-    ValidateNsxAgentsTask validateNsxAgentsTask;
-
-    @Reference
     MgrDeleteVSSDeviceTask mgrDeleteVSSDeviceTask;
-
-    @Reference
-    UpdateVendorTemplateTask updateVendorTemplateTask;
 
     // optional+dynamic to resolve circular reference
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
@@ -215,34 +143,16 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
         this.dsConformanceCheckMetaTask = this.factory.dsConformanceCheckMetaTask;
         this.apiFactoryService = this.factory.apiFactoryService;
-        this.createNsxServiceManagerTask = this.factory.createNsxServiceManagerTask;
-        this.createNsxServiceTask = this.factory.createNsxServiceTask;
-        this.updateNsxServiceManagerTask = this.factory.updateNsxServiceManagerTask;
-        this.updateNsxServiceAttributesTask = this.factory.updateNsxServiceAttributesTask;
-        this.nsxDeploymentSpecCheckMetaTask = this.factory.nsxDeploymentSpecCheckMetaTask;
-        this.updateNsxServiceInstanceAttributesTask = this.factory.updateNsxServiceInstanceAttributesTask;
-        this.validateNsxAgentsTask = this.factory.validateNsxAgentsTask;
         this.mgrDeleteVSSDeviceTask = this.factory.mgrDeleteVSSDeviceTask;
         this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
-        this.unregisterServiceManagerCallbackTask = this.factory.unregisterServiceManagerCallbackTask;
-        this.deleteServiceInstanceTask = this.factory.deleteServiceInstanceTask;
-        this.nsxSecurityGroupInterfacesCheckMetaTask = this.factory.nsxSecurityGroupInterfacesCheckMetaTask;
-        this.deleteServiceTask = this.factory.deleteServiceTask;
-        this.deleteServiceManagerTask = this.factory.deleteServiceManagerTask;
         this.deleteImageFromGlanceTask = this.factory.deleteImageFromGlanceTask;
         this.securityGroupCleanupCheckMetaTask = this.factory.securityGroupCleanupCheckMetaTask;
         this.deleteFlavorTask = this.factory.deleteFlavorTask;
         this.deleteVsFromDbTask = this.factory.deleteVsFromDbTask;
-        this.registerServiceInstanceTask = this.factory.registerServiceInstanceTask;
-        this.nsxSecurityGroupsCheckMetaTask = this.factory.nsxSecurityGroupsCheckMetaTask;
         this.generateVSSKeysTask = this.factory.generateVSSKeysTask;
         this.mgrSecurityGroupCheckMetaTask = this.factory.mgrSecurityGroupCheckMetaTask;
-        this.deleteDefaultServiceProfileTask = this.factory.deleteDefaultServiceProfileTask;
-        this.removeVendorTemplateTask = this.factory.removeVendorTemplateTask;
-        this.registerVendorTemplateTask = this.factory.registerVendorTemplateTask;
         this.passwordUtil = this.factory.passwordUtil;
         this.encryption = this.factory.encryption;
-        this.updateVendorTemplateTask = this.factory.updateVendorTemplateTask;
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
@@ -276,27 +186,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         VirtualizationConnector vc = this.vs.getVirtualizationConnector();
         UnlockObjectTask vcUnlockTask = LockUtil.lockVC(vc, LockType.READ_LOCK);
 
-        if (vc.getVirtualizationType() == VirtualizationType.VMWARE) {
-            if (this.vs.getNsxServiceManagerId() != null) {
-                tg.appendTask(this.unregisterServiceManagerCallbackTask.create(this.vs));
-            }
-
-            if (this.vs.getNsxServiceInstanceId() != null) {
-                tg.appendTask(this.deleteServiceInstanceTask.create(this.vs));
-            }
-
-            if (this.vs.getNsxServiceId() != null) {
-                tg.appendTask(this.nsxSecurityGroupInterfacesCheckMetaTask.create(this.vs));
-                tg.appendTask(this.deleteServiceTask.create(this.vs));
-            }
-
-            if (this.vs.getNsxServiceManagerId() != null) {
-                tg.appendTask(this.deleteServiceManagerTask.create(this.vs));
-            }
-
-            tg.appendTask(this.validateNsxAgentsTask.create(this.vs));
-
-        } else if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
+        if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
             for (DeploymentSpec ds : this.vs.getDeploymentSpecs()) {
                 Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
                 tg.appendTask(this.dsConformanceCheckMetaTask.create(ds, endPoint));
@@ -321,53 +211,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
         TaskGraph tg = new TaskGraph();
         VirtualizationConnector vc = this.vs.getVirtualizationConnector();
         UnlockObjectTask vcUnlockTask = LockUtil.lockVC(vc, LockType.READ_LOCK);
-        if (vc.getVirtualizationType() == VirtualizationType.VMWARE) {
-
-            // Sync service manager
-            if (this.vs.getNsxServiceManagerId() == null) {
-                tg.addTask(this.createNsxServiceManagerTask.create(this.vs));
-            } else {
-                if (isNsxServiceManagerOutOfSync(this.vs)) {
-                    tg.addTask(this.updateNsxServiceManagerTask.create(this.vs));
-                }
-            }
-
-            boolean updateNsxServiceAttributesScheduled = false;
-
-            if (this.vs.getNsxServiceId() == null) {
-                tg.appendTask(this.createNsxServiceTask.create(this.vs));
-            } else {
-                // Ensure NSX service attributes has correct IP and password.
-                if (isNsxServiceOutOfSync(this.vs)) {
-                    updateNsxServiceAttributesScheduled = true;
-                    tg.addTask(this.updateNsxServiceAttributesTask.create(this.vs));
-                }
-            }
-
-            DistributedAppliance distributedAppliance = this.vs.getDistributedAppliance();
-
-            tg.appendTask(this.nsxDeploymentSpecCheckMetaTask.create(this.vs, updateNsxServiceAttributesScheduled));
-
-            if (this.vs.getNsxServiceInstanceId() == null) {
-                tg.appendTask(this.registerServiceInstanceTask.create(this.vs));
-            } else {
-                // Ensure NSX service instance attributes has correct attributes.
-                tg.addTask(this.updateNsxServiceInstanceAttributesTask.create(this.vs));
-            }
-
-            syncNsxPolicies(this.vs, tg, distributedAppliance);
-
-            // Sync NSX security group interfaces
-            if (this.vs.getNsxServiceId() != null) {
-                tg.appendTask(this.nsxSecurityGroupInterfacesCheckMetaTask.create(this.vs),
-                        TaskGuard.ALL_PREDECESSORS_COMPLETED);
-                tg.appendTask(this.nsxSecurityGroupsCheckMetaTask.create(this.vs),
-                        TaskGuard.ALL_PREDECESSORS_COMPLETED);
-            }
-
-            tg.appendTask(this.validateNsxAgentsTask.create(this.vs), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-
-        } else if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
+        if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
 
             // Conformance of Deployment Specs
             for (DeploymentSpec ds : this.vs.getDeploymentSpecs()) {
@@ -403,104 +247,6 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
         tg.appendTask(vcUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
         return tg;
-    }
-
-    private boolean isNsxServiceManagerOutOfSync(VirtualSystem vs) throws Exception {
-        ServiceManagerApi serviceManagerApi = this.apiFactoryService.createServiceManagerApi(vs);
-        ServiceManagerElement serviceManager = serviceManagerApi.getServiceManager(vs.getNsxServiceManagerId());
-
-        // Check name
-        if (!serviceManager.getName().equals(this.apiFactoryService.generateServiceManagerName(vs))) {
-            LOG.info("Service Manager name is out of sync");
-            return true;
-        }
-
-        // Check callback URL (Containing ISC IP)
-        String restUrl = CreateNsxServiceManagerTask.buildRestCallbackUrl();
-        String smurl = serviceManager.getCallbackUrl();
-        if (!Objects.equal(smurl, restUrl)) {
-            LOG.info("Nsx Service Manager image url (" + serviceManager.getCallbackUrl() + ") is out of sync ("
-                    + restUrl + ")");
-            return true;
-        }
-
-        // Check password
-        if (!Objects.equal(serviceManager.getOscPassword(), this.passwordUtil.getVmidcNsxPass())) {
-            LOG.info("Nsx Service Manager password is out of sync");
-            return true;
-        }
-
-        return false;
-    }
-
-    private boolean isNsxServiceOutOfSync(VirtualSystem vs) throws Exception {
-        ServiceApi serviceApi = this.apiFactoryService.createServiceApi(vs);
-        ServiceElement service = serviceApi.getService(vs.getNsxServiceId());
-
-        // Check name
-        if (!service.getName().equals(vs.getDistributedAppliance().getName())) {
-            LOG.info("NSX service out of sync: service name.");
-            return true;
-        }
-
-        // Check IP
-        if (!service.getOscIpAddress().equals(ServerUtil.getServerIP())) {
-            LOG.info("NSX service out of sync: OSC ip addres.");
-            return true;
-        }
-
-        // Check password
-        if (!service.getOscPassword().equals(this.encryption.encryptAESCTR(this.passwordUtil.getOscDefaultPass()))) {
-            LOG.info("NSX service out of sync: OSC password.");
-            return true;
-        }
-
-        return false;
-    }
-
-    private void syncNsxPolicies(VirtualSystem vs, TaskGraph tg, DistributedAppliance distributedAppliance)
-            throws Exception {
-        // Sync policies
-        Set<Policy> policies = vs.getDomain().getPolicies();
-
-        for (Policy policy : policies) {
-
-            VirtualSystemPolicy vsp = findVirtualSystemPolicy(vs, policy);
-
-            if (policy.getMarkedForDeletion()) {
-                // If vendor template exist for this policy, generate remove task
-                if (vsp != null) {
-                    tg.appendTask(this.deleteDefaultServiceProfileTask.create(vsp));
-                    tg.appendTask(this.removeVendorTemplateTask.create(vsp));
-                }
-            } else {
-                // Check if vendor template already exist. If so no-op,
-                // otherwise, create one.
-                if (vsp == null || vsp.getNsxVendorTemplateId() == null) {
-                    RegisterVendorTemplateTask regVndTemplateTask = null;
-                    if (vsp == null) {
-                        regVndTemplateTask = this.registerVendorTemplateTask.create(vs, policy);
-                    } else {
-                        regVndTemplateTask = this.registerVendorTemplateTask.create(vsp);
-                    }
-                    tg.appendTask(regVndTemplateTask);
-                } else {
-                    if (vs.getNsxServiceId() != null) {
-                        // Update for vendor template name change
-                        tg.appendTask(this.updateVendorTemplateTask.create(vsp, vsp.getPolicy().getName()));
-                    }
-                }
-            }
-        }
-    }
-
-    private VirtualSystemPolicy findVirtualSystemPolicy(VirtualSystem vs, Policy policy) {
-        for (VirtualSystemPolicy vsp : vs.getVirtualSystemPolicies()) {
-            if (vsp.getPolicy().equals(policy)) {
-                return vsp;
-            }
-        }
-        return null;
     }
 
     @Override

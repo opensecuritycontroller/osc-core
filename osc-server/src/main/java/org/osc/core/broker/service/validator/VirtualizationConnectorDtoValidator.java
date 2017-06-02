@@ -28,7 +28,6 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
-import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -64,8 +63,6 @@ public class VirtualizationConnectorDtoValidator
         // fix this later.
         if (dto.getType().isOpenstack()) {
             dto.setSoftwareVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
-        } else if (dto.getType().isVmware()) {
-            dto.setSoftwareVersion(VmwareSoftwareVersion.VMWARE_V5_5.toString());
         }
 
         // check for uniqueness of vc name
@@ -75,11 +72,10 @@ public class VirtualizationConnectorDtoValidator
                     "Virtualization Connector Name: " + dto.getName() + " already exists.");
         }
 
-        // check for valid IP address format
-        if (!dto.getType().isOpenstack()) {
+        // check for uniqueness of controller IP
+        if (dto.isControllerDefined() && !this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
+                dto.getControllerType()))) {
             ValidateUtil.checkForValidIpAddressFormat(dto.getControllerIP());
-
-            // check for uniqueness of vc nsx IP
             if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
 
                 throw new VmidcBrokerValidationException(
@@ -89,7 +85,7 @@ public class VirtualizationConnectorDtoValidator
 
         VirtualizationConnectorDtoValidator.checkFieldFormat(dto);
 
-        // check for uniqueness of vc vCenter IP
+        // check for uniqueness of provider IP
         if (emgr.isExisting("providerIpAddress", dto.getProviderIP())) {
 
             throw new VmidcBrokerValidationException(
@@ -126,21 +122,7 @@ public class VirtualizationConnectorDtoValidator
         notNullFieldsMap.put("Type", dto.getType());
         ValidateUtil.checkForNullFields(notNullFieldsMap);
 
-        if (dto.getType().isVmware()) {
-            notNullFieldsMap.put("Controller IP Address", dto.getControllerIP());
-            notNullFieldsMap.put("Controller User Name", dto.getControllerUser());
-            if (!skipPasswordNullCheck) {
-                notNullFieldsMap.put("Controller Password", dto.getControllerPassword());
-            }
-            nullFieldsMap.put("Rabbit MQ User",
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER));
-            nullFieldsMap.put("Rabbit MQ Password",
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD));
-            nullFieldsMap.put("Rabbit MQ Port",
-                    dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT));
-            nullFieldsMap.put("Admin Tenant", dto.getAdminTenantName());
-
-        } else if (dto.getType().isOpenstack()) {
+        if (dto.getType().isOpenstack()) {
             notNullFieldsMap.put("Admin Tenant Name", dto.getAdminTenantName());
             if (!dto.isControllerDefined()) {
                 nullFieldsMap.put("Controller IP Address", dto.getControllerIP());

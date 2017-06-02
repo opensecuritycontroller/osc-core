@@ -56,9 +56,6 @@ public class SyncSecurityGroupJob implements Job {
             });
 
             for (final SecurityGroup sg : sgs) {
-                if (sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-                    continue;
-                }
                 Thread sgSync = new Thread(new Runnable() {
                     @Override
                     public void run() {

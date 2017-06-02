@@ -125,7 +125,7 @@ public class SdnControllerPluginsLayout extends FormLayout {
         PluginApi plugin = event.getPlugin();
 
         PluginType pluginType = plugin.getType();
-        if(pluginType != PluginType.SDN && pluginType != PluginType.NSX) {
+        if(pluginType != PluginType.SDN) {
             return;
         }
 

@@ -42,20 +42,10 @@ public class PasswordUtil implements PasswordUtilApi {
     @Reference
     TransactionalBroadcastUtil txBroadcastUtil;
 
-    private String vmidcNsxPass = "";
     private String oscDefaultPass = "";
-
-    public void setVmidcNsxPass(String vmidcNsxPass) {
-        this.vmidcNsxPass = vmidcNsxPass;
-    }
 
     public void setOscDefaultPass(String oscDefaultPass) {
         this.oscDefaultPass = oscDefaultPass;
-    }
-
-    @Override
-    public String getVmidcNsxPass() {
-        return this.vmidcNsxPass;
     }
 
     @Override
@@ -73,9 +63,7 @@ public class PasswordUtil implements PasswordUtilApi {
                 OSCEntityManager<User> emgr = new OSCEntityManager<User>(User.class, em, this.txBroadcastUtil);
                 return  emgr.findByFieldName("loginName", loginName);
             });
-            if (user.getLoginName().equals(RestConstants.VMIDC_NSX_LOGIN)) {
-                setVmidcNsxPass(user.getPassword());
-            } else if (user.getLoginName().equals(RestConstants.OSC_DEFAULT_LOGIN)) {
+            if (user.getLoginName().equals(RestConstants.OSC_DEFAULT_LOGIN)) {
                 setOscDefaultPass(user.getPassword());
             }
 
@@ -87,12 +75,6 @@ public class PasswordUtil implements PasswordUtilApi {
     @Override
     public void authenticateLocalRequest(ContainerRequestContext request) {
         this.authenticator.authenticateLocalRequest(request);
-    }
-
-    @Override
-    public void authenticateNsxRequest(ContainerRequestContext request) {
-        this.authenticator.authenticate(request, RestConstants.VMIDC_NSX_LOGIN, getVmidcNsxPass());
-
     }
 
     @Override

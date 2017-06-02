@@ -28,7 +28,6 @@ import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -38,7 +37,6 @@ import org.osc.core.broker.service.tasks.conformance.LockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
-import org.osc.core.broker.service.tasks.passwordchange.UpdateNsxServiceAttributesTask;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -51,19 +49,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
 
     @Reference
-    private UpdateNsxServiceManagerTask updateNsxServiceManagerTask;
-
-    @Reference
     private MCConformanceCheckMetaTask mcConformanceCheckMetaTask;
-
-    @Reference
-    private UpdateNsxServiceAttributesTask updateNsxServiceAttributesTask;
-
-    @Reference
-    private UpdateNsxServiceInstanceAttributesTask updateNsxServiceInstanceAttributesTask;
-
-    @Reference
-    private UpdateNsxDeploymentSpecTask updateNsxDeploymentSpecTask;
 
     @Reference
     private MgrCheckDevicesMetaTask mgrCheckDevicesMetaTask;
@@ -73,13 +59,9 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
 
     public IpChangePropagateMetaTask create() {
         IpChangePropagateMetaTask task = new IpChangePropagateMetaTask();
-        task.updateNsxServiceManagerTask = this.updateNsxServiceManagerTask;
         task.mcConformanceCheckMetaTask = this.mcConformanceCheckMetaTask;
-        task.updateNsxServiceAttributesTask = this.updateNsxServiceAttributesTask;
-        task.updateNsxServiceInstanceAttributesTask = this.updateNsxServiceInstanceAttributesTask;
         task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
         task.name = task.getName();
-        task.updateNsxDeploymentSpecTask = this.updateNsxDeploymentSpecTask;
         task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
@@ -108,22 +90,6 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
             propagateTaskGraph.addTask(lockTask);
 
             for (VirtualSystem vs : da.getVirtualSystems()) {
-
-                if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-                    // Updating Service Manager callback URL
-                    propagateTaskGraph.addTask(this.updateNsxServiceManagerTask.create(vs),
-                            TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
-                    // Updating Service Attribute which include vmiDC server IP
-                    propagateTaskGraph.addTask(this.updateNsxServiceAttributesTask.create(vs),
-                            TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
-                    // Updating Service Deployment Spec OVF Image URL
-                    propagateTaskGraph.addTask(this.updateNsxDeploymentSpecTask.create(vs),
-                            TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
-                    // Updating Service Instance Attributes which include vmiDC server IP
-                    propagateTaskGraph.addTask(this.updateNsxServiceInstanceAttributesTask.create(vs),
-                            TaskGuard.ALL_PREDECESSORS_SUCCEEDED, lockTask);
-                }
-
                 // Updating Mgr VSS with the updated iSC server IP
                 propagateTaskGraph.addTask(this.mgrCheckDevicesMetaTask.create(vs), TaskGuard.ALL_PREDECESSORS_COMPLETED,
                         lockTask);
@@ -166,7 +132,7 @@ public class IpChangePropagateMetaTask extends TransactionalMetaTask {
     @Override
     public String getName() {
         return "Updating " + Server.SHORT_PRODUCT_NAME
-                + " IP for Appliance Instance(s), Security Manager(s) and NSX Manager(s)";
+                + " IP for Security Manager(s)";
     }
 
     @Override

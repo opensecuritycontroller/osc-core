@@ -316,8 +316,6 @@
 											file="${basedir}/../../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" />
 										<copy tofile="${basedir}/mgr_plugins/NsmMgrPlugin.bar"
 											file="${basedir}/../../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" />
-										<copy tofile="${basedir}/sdn_ctrl_plugins/VMwareNsxPlugin.bar"
-											file="${basedir}/../../vmware-nsx-plugin/target/VMwareNsxPlugin.bar" />
 										<copy tofile="${basedir}/mgr_plugins/SampleMgrPlugin.bar"
 											file="${basedir}/../../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" />
 										<copy tofile="${basedir}/sdn_ctrl_plugins/NscSdnControllerPlugin.bar"

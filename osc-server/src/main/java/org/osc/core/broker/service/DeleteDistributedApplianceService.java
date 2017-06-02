@@ -37,7 +37,6 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteDATask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTask;
-import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
@@ -64,9 +63,6 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
     VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
 
     @Reference
-    ValidateNsxTask validateNsxTask;
-
-    @Reference
     DeleteDAFromDbTask deleteDAFromDbTask;
 
     @Reference
@@ -84,9 +80,6 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
 
             for (VirtualSystem vs : da.getVirtualSystems()) {
                 TaskGraph vsDeleteTaskGraph = new TaskGraph();
-                if (vs.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-                    vsDeleteTaskGraph.addTask(this.validateNsxTask.create(vs));
-                }
                 vsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(vs));
 
                 tg.addTaskGraph(vsDeleteTaskGraph);

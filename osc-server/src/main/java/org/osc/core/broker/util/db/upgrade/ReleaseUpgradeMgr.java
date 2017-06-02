@@ -235,6 +235,8 @@ public class ReleaseUpgradeMgr {
                 upgrade77to78(stmt);
             case 78:
                 upgrade78to79(stmt);
+            case 79:
+                upgrade79to80(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -244,6 +246,25 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+
+    private static void upgrade79to80(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS nsx_agent_id, "
+                + "nsx_host_id, nsx_host_name, nsx_host_vsm_uuid, nsx_vm_id;");
+        execSql(stmt, "alter table SECURITY_GROUP DROP COLUMN IF EXISTS nsx_agent_id;");
+        execSql(stmt, "alter table SECURITY_GROUP_INTERFACE DROP COLUMN IF EXISTS nsx_vsm_uuid;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM DROP COLUMN IF EXISTS nsx_service_id, "
+                + "nsx_service_instance_id, nsx_service_manager_id, nsx_vsm_uuid;");
+
+        execSql(stmt, "drop table VIRTUAL_SYSTEM_POLICY;");
+        execSql(stmt, "alter table SECURITY_GROUP_INTERFACE drop column if exists virtual_system_policy_fk;");
+
+        execSql(stmt, "drop table VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
+        execSql(stmt, "alter table VIRTUAL_SYSTEM drop column if exists nsx_deployment_spec_id;");
+        
+        execSql(stmt, "DROP table IF EXISTS VIRTUAL_SYSTEM_MGR_FILE;");
+
+        execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_NSX';");
     }
 
     private static void upgrade78to79(Statement stmt) throws SQLException {

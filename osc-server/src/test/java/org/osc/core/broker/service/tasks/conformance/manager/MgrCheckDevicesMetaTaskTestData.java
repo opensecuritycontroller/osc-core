@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.manager;
-
+//TODO Hailee: Commented code
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,7 +114,7 @@ public class MgrCheckDevicesMetaTaskTestData {
     private static VirtualSystem createBaseVirtualSystem(Long vsId) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName("vc_name");
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        //vc.setVirtualizationType(VirtualizationType.VMWARE);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setName("vcName");
         vc.setProviderIpAddress("127.0.0.1");

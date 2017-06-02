@@ -37,14 +37,11 @@ import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.service.api.MCChangeNotificationServiceApi;
 import org.osc.core.broker.service.api.ManagerApi;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
-import org.osc.core.broker.service.api.TagVmServiceApi;
-import org.osc.core.broker.service.api.UnTagVmServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.request.MCChangeNotificationRequest;
 import org.osc.core.broker.service.request.QueryVmInfoRequest;
-import org.osc.core.broker.service.request.TagVmRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.sdk.manager.element.MgrChangeNotification;
@@ -79,12 +76,6 @@ public class ManagerApis implements ManagerApi {
 
     @Reference
     private QueryVmInfoServiceApi queryVmInfoService;
-
-    @Reference
-    private TagVmServiceApi tagVmService;
-
-    @Reference
-    private UnTagVmServiceApi untagVmService;
 
     @Reference
     private MCChangeNotificationServiceApi mCChangeNotificationService;
@@ -123,26 +114,6 @@ public class ManagerApis implements ManagerApi {
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.getResponse(this.queryVmInfoService, queryVmInfo);
-    }
-
-    @Path("/tagVm")
-    @POST
-    public Response tagVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
-
-        log.info("Tag VM info request: " + tagVmRequest);
-        this.userContext.setUser(OscAuthFilter.getUsername(headers));
-
-        return this.apiUtil.getResponse(this.tagVmService, tagVmRequest);
-    }
-
-    @Path("/untagVm")
-    @POST
-    public Response unquarantineVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
-
-        log.info("UnTag VM info request: " + tagVmRequest);
-        this.userContext.setUser(OscAuthFilter.getUsername(headers));
-
-        return this.apiUtil.getResponse(this.untagVmService, tagVmRequest);
     }
 
     public Response triggerMcSync(String username, String ipAddress, Notification notification) {

@@ -233,12 +233,6 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
 
         ValidateUtil.checkMarkedForDeletion(this.securityGroup, this.securityGroup.getName());
 
-        if (this.securityGroup.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE) {
-            throw new ActionNotSupportedException(
-                    "Invalid Action. Binding of Security Group for Vmware Virtualization Connectors needs to done "
-                            + "through NSX.");
-        }
-
         List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
         if (services == null) {
             services = new ArrayList<VirtualSystemPolicyBindingDto>();

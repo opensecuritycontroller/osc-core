@@ -54,15 +54,9 @@ public class DeleteSecurityGroupInterfaceTask extends TransactionalTask {
 
         this.securityGroupInterface = em.find(SecurityGroupInterface.class,
                 this.securityGroupInterface.getId());
-        boolean isVmwareSGI = this.securityGroupInterface.getVirtualSystem()
-                .getVirtualizationConnector().getVirtualizationType() == VirtualizationType.VMWARE;
 
         for (SecurityGroup sg : this.securityGroupInterface.getSecurityGroups()) {
             sg.removeSecurityInterface(this.securityGroupInterface);
-            // If Security Group has no bindings left to any service profiles, delete the SG and its members.
-            if (isVmwareSGI && sg.getSecurityGroupInterfaces().size() == 0) {
-                OSCEntityManager.delete(em, sg, this.txBroadcastUtil);
-            }
         }
 
         OSCEntityManager.delete(em, this.securityGroupInterface, this.txBroadcastUtil);

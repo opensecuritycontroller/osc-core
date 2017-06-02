@@ -18,7 +18,6 @@ package org.osc.core.broker.service.dto;
 
 
 public enum VirtualizationType {
-    VMWARE("VMWARE"),
     OPENSTACK("OPENSTACK");
 
     private final String text;
@@ -38,10 +37,6 @@ public enum VirtualizationType {
 
     private String getText() {
         return this.text;
-    }
-
-    public boolean isVmware() {
-        return this.equals(VirtualizationType.VMWARE);
     }
 
     public boolean isOpenstack() {

@@ -28,57 +28,57 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 public class VirtualizationConnectorDtoValidatorTest extends VirtualizationConnectorDtoValidatorBaseTest{
 
-    @Test
-    public void testValidate_WhenVcRequest_ReturnsSuccessful() throws Exception {
+//    @Test
+//    public void testValidate_WhenVcRequest_ReturnsSuccessful() throws Exception {
+//
+//        // Arrange.
+//        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto();
+//        ControllerType.addType(dto.getControllerType());
+//
+//        // Act.
+//        this.dtoValidator.validateForCreate(dto);
+//
+//        //Assert
+//        Assert.assertTrue(true);
+//    }
 
-        // Arrange.
-        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.VMWARE_REQUEST.getDto();
-        ControllerType.addType(dto.getControllerType());
-
-        // Act.
-        this.dtoValidator.validateForCreate(dto);
-
-        //Assert
-        Assert.assertTrue(true);
-    }
-
-    @Test
-    public void testValidate_WhenVcNameExistsRequest_ThrowsValidationException() throws Exception {
-    	// Arrange.
-        this.exception.expect(VmidcBrokerValidationException.class);
-        this.exception.expectMessage("Virtualization Connector Name: " + VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS_REQUEST.getDto().getName() + " already exists.");
-
-        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS_REQUEST.getDto();
-        ControllerType.addType(dto.getControllerType());
-
-        // Act.
-        this.dtoValidator.validateForCreate(dto);
-
-
-    }
-
-    @Test
-    public void testValidate_WhenControllerIpExists_ThrowsValidationException() throws Exception {
-        // Arrange.
-        this.exception.expect(VmidcBrokerValidationException.class);
-        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS_VMWARE_REQUEST.getDto();
-        ControllerType.addType(dto.getControllerType());
-        this.exception.expectMessage("Controller IP Address: " + dto.getControllerIP() + " already exists.");
-
-        // Act.
-        this.dtoValidator.validateForCreate(dto);
-    }
-
-    @Test
-    public void testValidate_WhenVmwareProviderIpExists_ThrowsValidationException() throws Exception {
-        // Arrange.
-        this.exception.expect(VmidcBrokerValidationException.class);
-        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS_VMWARE_REQUEST.getDto();
-        ControllerType.addType(dto.getControllerType());
-        this.exception.expectMessage("Provider IP Address: " + dto.getProviderIP() + " already exists.");
-
-        // Act.
-        this.dtoValidator.validateForCreate(dto);
-    }
+//    @Test
+//    public void testValidate_WhenVcNameExistsRequest_ThrowsValidationException() throws Exception {
+//    	// Arrange.
+//        this.exception.expect(VmidcBrokerValidationException.class);
+//        this.exception.expectMessage("Virtualization Connector Name: " + VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS_REQUEST.getDto().getName() + " already exists.");
+//
+//        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.VMWARE_NAME_ALREADY_EXISTS_REQUEST.getDto();
+//        ControllerType.addType(dto.getControllerType());
+//
+//        // Act.
+//        this.dtoValidator.validateForCreate(dto);
+//
+//
+//    }
+//
+//    @Test
+//    public void testValidate_WhenControllerIpExists_ThrowsValidationException() throws Exception {
+//        // Arrange.
+//        this.exception.expect(VmidcBrokerValidationException.class);
+//        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.CONTROLLER_IP_ALREADY_EXISTS_VMWARE_REQUEST.getDto();
+//        ControllerType.addType(dto.getControllerType());
+//        this.exception.expectMessage("Controller IP Address: " + dto.getControllerIP() + " already exists.");
+//
+//        // Act.
+//        this.dtoValidator.validateForCreate(dto);
+//    }
+//
+//    @Test
+//    public void testValidate_WhenVmwareProviderIpExists_ThrowsValidationException() throws Exception {
+//        // Arrange.
+//        this.exception.expect(VmidcBrokerValidationException.class);
+//        VirtualizationConnectorRequest dto = VirtualizationConnectorServiceData.PROVIDER_IP_ALREADY_EXISTS_VMWARE_REQUEST.getDto();
+//        ControllerType.addType(dto.getControllerType());
+//        this.exception.expectMessage("Provider IP Address: " + dto.getProviderIP() + " already exists.");
+//
+//        // Act.
+//        this.dtoValidator.validateForCreate(dto);
+//    }
 
 }

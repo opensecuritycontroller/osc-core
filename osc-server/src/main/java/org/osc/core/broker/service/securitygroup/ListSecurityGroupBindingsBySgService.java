@@ -85,7 +85,7 @@ public class ListSecurityGroupBindingsBySgService
         }
 
         // Other available Bindings
-        if (sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
+        if (sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK) {
             FailurePolicyType failurePolicyType =
                     this.apiFactoryService.supportsFailurePolicy(sg) ? FailurePolicyType.FAIL_OPEN : FailurePolicyType.NA;
 
@@ -133,7 +133,7 @@ public class ListSecurityGroupBindingsBySgService
         }
 
         if (sg.getVirtualizationConnector().getControllerType().equals(ControllerType.NONE.getValue())
-                && sg.getVirtualizationConnector().getVirtualizationType() != VirtualizationType.VMWARE) {
+                && sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK) {
             throw new ActionNotSupportedException(
                     "Invalid Action. Controller is not defined for this Virtualization Connector.");
         }

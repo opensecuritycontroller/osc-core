@@ -41,8 +41,8 @@ public class FileUtilTest {
 
     private File homeDirectory;
     private File regularFile;
-    private final int numberOfFilesInDirectory = 5;
-    private final String sampleConfigFile = "server.port=8666\nnsxExtraAutomation=true\nh2db.connection.url.extraArgs=AUTO_SERVER=TRUE;\ndevMode=true\nserver.reboots=0";
+    private final int numberOfFilesInDirectory = 4;
+    private final String sampleConfigFile = "server.port=8666\nh2db.connection.url.extraArgs=AUTO_SERVER=TRUE;\ndevMode=true\nserver.reboots=0";
     private final String CONFIG_FILE = "vmidcServerMocked.conf";
 
     @Before
@@ -116,8 +116,7 @@ public class FileUtilTest {
         Properties prop = FileUtil.loadProperties(this.regularFile.getAbsolutePath());
 
         // Assert.
-        Assert.assertEquals("Different size of loaded properties file", 5, prop.size());
-        Assert.assertEquals("Improper value obtained from properties", "true", prop.getProperty("nsxExtraAutomation"));
+        Assert.assertEquals("Different size of loaded properties file", 4, prop.size());
         Assert.assertEquals("Improper value obtained from properties", "8666", prop.getProperty("server.port"));
         Assert.assertEquals("Improper value obtained from properties", "true", prop.getProperty("devMode"));
         Assert.assertEquals("Improper value obtained from properties", "0", prop.getProperty("server.reboots"));

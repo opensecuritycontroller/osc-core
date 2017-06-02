@@ -17,5 +17,4 @@
 package org.osc.core.broker.service.api;
 
 public interface AlertGeneratorApi {
-    void processNsxFailureEvent(String message);
 }

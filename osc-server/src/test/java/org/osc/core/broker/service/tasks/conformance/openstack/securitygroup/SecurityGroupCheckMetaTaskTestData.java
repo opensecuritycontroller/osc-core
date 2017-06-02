@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
-
+//TODO Hailee: Commented code
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +26,7 @@ import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
+//import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
@@ -53,12 +53,12 @@ class SecurityGroupCheckMetaTaskTestData {
     public List<SecurityGroup> TEST_SECURITY_GROUPS = new ArrayList<SecurityGroup>();
 
 
-    public SecurityGroup NO_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(NO_MC_POLICY_MAPPING_SUPPORTED,
-                this.MC_POLICY_MAPPING_NOT_SUPPORTED_VS);
-    public SecurityGroup SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(SINGLE_MC_POLICY_MAPPING_SUPPORTED,
-                this.MC_POLICY_MAPPING_SUPPORTED_VS);
-    public SecurityGroup MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(MULTIPLE_MC_POLICY_MAPPING_SUPPORTED,
-                this.MC_POLICY_MAPPING_SUPPORTED_VS);
+//    public SecurityGroup NO_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(NO_MC_POLICY_MAPPING_SUPPORTED,
+//                this.MC_POLICY_MAPPING_NOT_SUPPORTED_VS);
+//    public SecurityGroup SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(SINGLE_MC_POLICY_MAPPING_SUPPORTED,
+//                this.MC_POLICY_MAPPING_SUPPORTED_VS);
+//    public SecurityGroup MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(MULTIPLE_MC_POLICY_MAPPING_SUPPORTED,
+//                this.MC_POLICY_MAPPING_SUPPORTED_VS);
 
     {
         VirtualSystem vs = this.MC_POLICY_MAPPING_SUPPORTED_VS_2;
@@ -69,14 +69,14 @@ class SecurityGroupCheckMetaTaskTestData {
         policy.setName(baseName + "_policy");
         policy.setMgrPolicyId(baseName + "_mgrPolicy");
 
-        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
-        vsp.setPolicy(policy);
+//        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
+//        vsp.setPolicy(policy);
 
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
-        sgi.setName(baseName + "_sgi");
+//        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
+//        sgi.setName(baseName + "_sgi");
 
-        this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG);
+//        this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG.addSecurityGroupInterface(sgi);
+//        sgi.addSecurityGroup(this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG);
     }
 
     public TaskGraph createNoMcPolicyMappingGraph(SecurityGroup sg) {
@@ -103,36 +103,36 @@ class SecurityGroupCheckMetaTaskTestData {
         return expectedGraph;
     }
 
-    private SecurityGroup createSecurityGroup(String baseName,
-            VirtualSystem vs) {
-
-        Policy policy = new Policy(
-                vs.getDistributedAppliance().getApplianceManagerConnector(),
-                vs.getDomain());
-        policy.setName(baseName + "_policy");
-        policy.setMgrPolicyId(baseName + "_mgrPolicy");
-
-        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
-        vsp.setPolicy(policy);
-
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
-        sgi.setName(baseName + "_sgi");
-
-
-        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null);
-        sg.setName(baseName + "_sg");
-        sg.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(sg);
-
-        this.TEST_SECURITY_GROUPS.add(sg);
-        return sg;
-    }
+//    private SecurityGroup createSecurityGroup(String baseName,
+//            VirtualSystem vs) {
+//
+//        Policy policy = new Policy(
+//                vs.getDistributedAppliance().getApplianceManagerConnector(),
+//                vs.getDomain());
+//        policy.setName(baseName + "_policy");
+//        policy.setMgrPolicyId(baseName + "_mgrPolicy");
+//
+//        VirtualSystemPolicy vsp = new VirtualSystemPolicy(vs);
+//        vsp.setPolicy(policy);
+//
+//        SecurityGroupInterface sgi = new SecurityGroupInterface(vsp, baseName + "_tag");
+//        sgi.setName(baseName + "_sgi");
+//
+//
+//        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null);
+//        sg.setName(baseName + "_sg");
+//        sg.addSecurityGroupInterface(sgi);
+//        sgi.addSecurityGroup(sg);
+//
+//        this.TEST_SECURITY_GROUPS.add(sg);
+//        return sg;
+//    }
 
     private VirtualSystem createVirtualSystem(String baseName,
             ManagerType mgrType) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(baseName + "_vc");
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        //vc.setVirtualizationType(VirtualizationType.VMWARE);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setProviderIpAddress(baseName + "_providerIp");
         vc.setProviderUsername("Natasha");

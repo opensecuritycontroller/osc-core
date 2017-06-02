@@ -425,12 +425,8 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
             ViewUtil.enableToolBarButtons(selectedVs.isMarkForDeletion(), this.childToolbar,
                     Arrays.asList(ToolbarButtons.DELETE_CHILD.getId()));
 
-            if (selectedVs.getVirtualizationType().isVmware()) {
-                // Enable SubView Buttons if VS is type VMWARE
-                ViewUtil.enableToolBarButtons(false, this.childToolbar,
-                        Arrays.asList(ToolbarButtons.DEPLOYMENTS.getId()));
-            } else {
-                // Disable SubView Buttons if VS is type VMWARE
+            if (selectedVs.getVirtualizationType().isOpenstack()) {
+                // Enable SubView Buttons if VS is type OPENSTACK
                 ViewUtil.enableToolBarButtons(true, this.childToolbar,
                         Arrays.asList(ToolbarButtons.DEPLOYMENTS.getId()));
             }

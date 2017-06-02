@@ -78,14 +78,6 @@ public class DatabaseUtils {
             user.setRole(RoleType.ADMIN);
             OSCEntityManager.create(em, user, txBroadcastUtil);
         }
-        User nsxUser = userEmgr.findByFieldName("loginName", RestConstants.VMIDC_NSX_LOGIN);
-        if (nsxUser == null) {
-            User user = new User();
-            user.setLoginName(RestConstants.VMIDC_NSX_LOGIN);
-            user.setPassword(StaticRegistry.encryptionApi().encryptAESCTR(DEFAULT_PASSWORD));
-            user.setRole(RoleType.SYSTEM_NSX);
-            OSCEntityManager.create(em, user, txBroadcastUtil);
-        }
     }
 
     private static void createDefaultAlarms(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil) {

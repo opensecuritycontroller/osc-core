@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service;
-
+//TODO Hailee: Commented code
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
@@ -49,7 +49,7 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteDATask;
 import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformanceCheckMetaTask;
-import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
+//import org.osc.core.broker.service.tasks.conformance.virtualsystem.ValidateNsxTask;
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
@@ -107,8 +107,8 @@ public class DeleteDistributedApplianceServiceTest {
     @InjectMocks
     private VSConformanceCheckMetaTask vsConformanceCheckMetaTask;
 
-    @InjectMocks
-    private ValidateNsxTask validateNsxTask;
+//    @InjectMocks
+//    private ValidateNsxTask validateNsxTask;
 
     @InjectMocks
     private DeleteDistributedApplianceService deleteDistributedApplianceService;
@@ -124,7 +124,7 @@ public class DeleteDistributedApplianceServiceTest {
 
         // @InjectMocks does not inject these fields
         this.deleteDistributedApplianceService.vsConformanceCheckMetaTask = this.vsConformanceCheckMetaTask;
-        this.deleteDistributedApplianceService.validateNsxTask = this.validateNsxTask;
+//        this.deleteDistributedApplianceService.validateNsxTask = this.validateNsxTask;
         this.deleteDistributedApplianceService.forceDeleteDATask = new ForceDeleteDATask();
         this.deleteDistributedApplianceService.deleteDAFromDbTask = new DeleteDAFromDbTask();
 
@@ -143,7 +143,7 @@ public class DeleteDistributedApplianceServiceTest {
         openStackVirtualSystem.setVirtualizationConnector(openStackVirtualizationConnector);
         openStackVirtualSystem.setId(101L);
         VirtualizationConnector vmWareVirtualizationConnector = new VirtualizationConnector();
-        vmWareVirtualizationConnector.setVirtualizationType(VirtualizationType.VMWARE);
+//        vmWareVirtualizationConnector.setVirtualizationType(VirtualizationType.VMWARE);
         VirtualSystem vmWareVirtualSystem = new VirtualSystem();
         vmWareVirtualSystem.setVirtualizationConnector(vmWareVirtualizationConnector);
         vmWareVirtualSystem.setId(102L);
@@ -178,7 +178,7 @@ public class DeleteDistributedApplianceServiceTest {
 
         TaskGraph taskGraphWithDeleteTaskAndVsTasks = new TaskGraph();
         TaskGraph vmWareVsDeleteTaskGraph = new TaskGraph();
-        vmWareVsDeleteTaskGraph.addTask(this.validateNsxTask.create(vmWareVirtualSystem));
+//        vmWareVsDeleteTaskGraph.addTask(this.validateNsxTask.create(vmWareVirtualSystem));
 
         vmWareVsDeleteTaskGraph.appendTask(this.vsConformanceCheckMetaTask.create(vmWareVirtualSystem));
         taskGraphWithDeleteTaskAndVsTasks.addTaskGraph(vmWareVsDeleteTaskGraph);

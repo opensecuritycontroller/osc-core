@@ -38,7 +38,6 @@ public class VirtualizationConnectorDto extends BaseDto {
     @ApiModelProperty(required = true)
     private VirtualizationType type;
 
-    // Virtualization Type VmWare
     @ApiModelProperty(value = "The Ip of the SDN controller, required if controller is going to be defined")
     private String controllerIP = "";
 
@@ -221,8 +220,7 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     @ApiModelProperty(hidden = true)
     public boolean isControllerDefined() {
-        return (getControllerType() != null && !getControllerType().equals("NONE"))
-                || getType().isVmware();
+        return (getControllerType() != null && !getControllerType().equals("NONE"));
     }
 
     @Override

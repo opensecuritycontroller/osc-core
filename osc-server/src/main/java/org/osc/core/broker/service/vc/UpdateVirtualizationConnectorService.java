@@ -185,13 +185,12 @@ public class UpdateVirtualizationConnectorService
                     "Virtualization Connector Name: " + dto.getName() + " already exists.");
         }
 
-        if (!dto.getType().isOpenstack()) {
-
-            // check for valid IP address format
+        // check for uniqueness of controller IP
+        if (dto.isControllerDefined() && !this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
+                dto.getControllerType()))) {
             ValidateUtil.checkForValidIpAddressFormat(dto.getControllerIP());
+            if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
 
-            // check for uniqueness of vc nsx IP
-            if (emgr.isDuplicate("controllerIpAddress", dto.getControllerIP(), dto.getId())) {
                 throw new VmidcBrokerValidationException(
                         "Controller IP Address: " + dto.getControllerIP() + " already exists.");
             }
@@ -199,7 +198,7 @@ public class UpdateVirtualizationConnectorService
 
         VirtualizationConnectorDtoValidator.checkFieldFormat(dto);
 
-        // check for uniqueness of vc vCenter IP
+        // check for uniqueness of Provider IP
         if (emgr.isDuplicate("providerIpAddress", dto.getProviderIP(), dto.getId())) {
             throw new VmidcBrokerValidationException(
                     "Provider IP Address: " + dto.getProviderIP() + " already exists.");
@@ -234,9 +233,7 @@ public class UpdateVirtualizationConnectorService
         // Transforms the existing vc based on the update request
         updateVirtualizationConnector(request, existingVc);
 
-		if (dto.getType().isVmware()) {
-            this.util.checkVmwareConnection(request, existingVc);
-		} else {
+		if (dto.getType().isOpenstack()) {
             this.util.checkOpenstackConnection(request, existingVc);
 		}
     }

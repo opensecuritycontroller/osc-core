@@ -15,7 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
-
+//TODO Hailee: Commented code
 import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.*;
 
 import java.util.ArrayList;
@@ -91,7 +91,7 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
         this.em.getTransaction().begin();
 
         this.vmWareVc = new VirtualizationConnector();
-        this.vmWareVc.setVirtualizationType(VirtualizationType.VMWARE);
+        //this.vmWareVc.setVirtualizationType(VirtualizationType.VMWARE);
         this.vmWareVc.setVirtualizationSoftwareVersion("softwareVersion");
 
         this.vmWareVc.setName(VC_NAME_VMWARE);

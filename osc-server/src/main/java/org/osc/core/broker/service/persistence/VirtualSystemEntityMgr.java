@@ -63,48 +63,6 @@ public class VirtualSystemEntityMgr {
         return em.find(VirtualSystem.class, id);
     }
 
-    public static VirtualSystem findByNsxServiceInstanceIdAndVsmUuid(EntityManager em, String serviceVsmUuid,
-            String serviceInstanceId) {
-
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-
-        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
-
-        Root<VirtualSystem> root = query.from(VirtualSystem.class);
-
-        query = query.select(root)
-                .where(cb.equal(root.get("nsxVsmUuid"), serviceVsmUuid),
-                        cb.equal(root.get("nsxServiceInstanceId"), serviceInstanceId));
-
-        List<VirtualSystem> list = em.createQuery(query).setMaxResults(1).getResultList();
-
-        if (list == null || list.size() == 0) {
-            return null;
-        }
-
-        return list.get(0);
-    }
-
-    public static VirtualSystem findByNsxServiceId(EntityManager em, String nsxServiceId) {
-
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-
-        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
-
-        Root<VirtualSystem> root = query.from(VirtualSystem.class);
-
-        query = query.select(root)
-                .where(cb.equal(root.get("nsxServiceId"), nsxServiceId));
-
-        List<VirtualSystem> list = em.createQuery(query).setMaxResults(1).getResultList();
-
-        if (list == null || list.size() == 0) {
-            return null;
-        }
-
-        return list.get(0);
-    }
-
     public static VirtualSystem findByDAAndVC(EntityManager em, Long daId, Long vcId) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -192,25 +150,6 @@ public class VirtualSystemEntityMgr {
         }
 
         return list;
-    }
-
-    public static VirtualSystem findByNsxServiceProfileIdAndNsxIp(EntityManager em, String serviceProfileId,
-            String nsxIpAddress) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-
-        CriteriaQuery<VirtualSystem> query = cb.createQuery(VirtualSystem.class);
-
-        Root<VirtualSystem> root = query.from(VirtualSystem.class);
-
-        query = query.select(root)
-                .where(cb.equal(root.join("securityGroupInterfaces").get("tag"), serviceProfileId),
-                        cb.equal(root.join("virtualizationConnector").get("controllerIpAddress"), nsxIpAddress));
-
-        try {
-            return em.createQuery(query).getSingleResult();
-        } catch (NoResultException nre) {
-            return null;
-        }
     }
 
     /**
