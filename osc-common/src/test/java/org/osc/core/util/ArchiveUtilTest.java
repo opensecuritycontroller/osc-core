@@ -19,6 +19,7 @@ package org.osc.core.util;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
+import org.osc.core.util.encryption.SecurityException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -130,7 +131,7 @@ public class ArchiveUtilTest {
     }
 
     @Test
-    public void testUnzip_withValidZip_expectedSuccess() throws IOException {
+    public void testUnzip_withValidZip_expectedSuccess() throws IOException, SecurityException {
         //Arrange
         prepareValidZipFile();
         //Act.
