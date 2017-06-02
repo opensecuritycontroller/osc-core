@@ -30,6 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import org.osc.core.util.encryption.SecurityException;
 
 public class FileUtilTest {
 
@@ -139,6 +140,34 @@ public class FileUtilTest {
 
         // Assert.
         Assert.assertEquals("Different size of loaded properties file", 0, prop.size());
+    }
+
+    @Test
+    public void testUploadFile_WithPathTraversalVulnerability1_ThrowsSecurityException() throws IOException, SecurityException {
+        // Arrange.
+
+        String dir = System.getProperty("user.dir");
+        String filename = "../traversal/file.txt";
+
+        this.exception.expect(SecurityException.class);
+
+        // Act.
+        FileUtil.preventPathTraversal(filename,dir);
+
+    }
+
+    @Test
+    public void testUploadFile_WithPathTraversalVulnerability2_ThrowsSecurityException() throws IOException, SecurityException {
+        // Arrange.
+
+        String dir = System.getProperty("user.dir");
+        String filename = "../\\file.txt";
+
+        this.exception.expect(SecurityException.class);
+
+        // Act.
+        FileUtil.preventPathTraversal(filename,dir);
+
     }
 
     private void populateTemporaryFolder() throws IOException {

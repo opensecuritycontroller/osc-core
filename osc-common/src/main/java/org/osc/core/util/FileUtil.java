@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.util;
 
+import org.osc.core.util.encryption.SecurityException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -61,4 +63,23 @@ public class FileUtil {
         return prop;
     }
 
+    /**
+     * Returns the files included within the zip file
+     *
+     * @param filename the zip file
+     * @param intendedDir the zip potential location
+     * @return name of the file
+     * @throws IllegalStateException if name is incorrect
+     */
+    public static String preventPathTraversal(String filename, String intendedDir)
+            throws IOException, SecurityException {
+        String canPath = new File(filename).getCanonicalPath();
+        String canID = new File(intendedDir).getCanonicalPath();
+
+        if (canPath.startsWith(canID)) {
+            return canPath;
+        } else {
+            throw new SecurityException("File is not inside extract directory.");
+        }
+    }
 }
