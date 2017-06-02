@@ -1,5 +1,5 @@
 ##
-## Copyright (C) 2014  McAfee Inc.
+##  Copyright (C) 2017 Intel Corporation.
 ##
 ## Makefile to create, partition, encrypt, format and mount a raw
 ##  disk image used for the vmiDC project.
