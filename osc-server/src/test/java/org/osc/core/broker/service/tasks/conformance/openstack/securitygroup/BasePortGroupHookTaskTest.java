@@ -63,6 +63,8 @@ public class BasePortGroupHookTaskTest {
         PowerMockito.mockStatic(HibernateUtil.class);
         when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
         when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+
+        PowerMockito.spy(SdnControllerApiFactory.class);
     }
 
     protected void testExecute_WhenSGHasNoNetworkElementId_ThrowsValidationException(boolean create) throws Exception {
@@ -86,7 +88,6 @@ public class BasePortGroupHookTaskTest {
         SecurityGroupInterface sgi = registerNewSGI(newSecurityGroup(), 2L);
         DistributedApplianceInstance dai = registerNewDAI();
 
-        PowerMockito.spy(SdnControllerApiFactory.class);
         PowerMockito.doThrow(new IllegalStateException()).when(SdnControllerApiFactory.class, "createNetworkRedirectionApi", sgi.getVirtualSystem());
 
         this.exception.expect(IllegalStateException.class);
@@ -98,9 +99,7 @@ public class BasePortGroupHookTaskTest {
     }
 
     protected void registerNetworkRedirectionApi(SdnRedirectionApi redirectionApi, VirtualSystem vs) throws Exception {
-        PowerMockito.spy(SdnControllerApiFactory.class);
         PowerMockito.doReturn(redirectionApi).when(SdnControllerApiFactory.class, "createNetworkRedirectionApi", vs);
-
     }
 
     protected SecurityGroup newSecurityGroup() {

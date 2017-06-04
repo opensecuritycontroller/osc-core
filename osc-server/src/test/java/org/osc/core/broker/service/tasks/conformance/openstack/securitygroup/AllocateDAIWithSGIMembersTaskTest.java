@@ -39,16 +39,14 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(HibernateUtil.class)
 public class AllocateDAIWithSGIMembersTaskTest extends UpdateDAIToSGIMembersTaskTest {
-    @Override
     @Test
     public void testExecute_WhenSGIHasNoAssociatedSG_NoUpdateIsDone() throws Exception {
-        super.testExecute_WhenSGIHasNoAssociatedSG_NoUpdateIsDone();
+        super.testExecute_WhenSGIHasNoAssociatedSG_NoUpdateIsDone(true);
     }
 
-    @Override
     @Test
     public void testExecute_WhenSGIHasNoAssociatedSGMember_NoUpdateIsDone() throws Exception {
-        super.testExecute_WhenSGIHasNoAssociatedSGMember_NoUpdateIsDone();
+        super.testExecute_WhenSGIHasNoAssociatedSGMember_NoUpdateIsDone(true);
     }
 
     @Test
