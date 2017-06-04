@@ -65,7 +65,7 @@ public class UpdateDAIToSGIMembersTaskTest {
         this.protectedPorts = new ArrayList<>();
     }
 
-    public void testExecute_WhenSGIHasNoAssociatedSG_NoUpdateIsDone(boolean allocate) throws Exception {
+    protected void testExecute_WhenSGIHasNoAssociatedSG_NoUpdateIsDone(boolean allocate) throws Exception {
         // Arrange.
         SecurityGroupInterface sgi = registerNewSGI(null);
         DistributedApplianceInstance dai = registerNewDAI();
@@ -80,7 +80,7 @@ public class UpdateDAIToSGIMembersTaskTest {
         Assert.assertTrue("The dai should not have associated protected ports.", dai.getProtectedPorts().isEmpty());
     }
 
-    public void testExecute_WhenSGIHasNoAssociatedSGMember_NoUpdateIsDone(boolean allocate) throws Exception {
+    protected void testExecute_WhenSGIHasNoAssociatedSGMember_NoUpdateIsDone(boolean allocate) throws Exception {
         // Arrange.
         SecurityGroupInterface sgi = registerNewSGI(new SecurityGroup(null, null, null));
         DistributedApplianceInstance dai = registerNewDAI();
