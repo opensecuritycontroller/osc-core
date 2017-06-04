@@ -65,12 +65,12 @@ public class UpdateDAIToSGIMembersTaskTest {
         this.protectedPorts = new ArrayList<>();
     }
 
-    public void testExecute_WhenSGIHasNoAssociatedSG_NoUpdateIsDone() throws Exception {
+    protected void testExecute_WhenSGIHasNoAssociatedSG_NoUpdateIsDone(boolean allocate) throws Exception {
         // Arrange.
         SecurityGroupInterface sgi = registerNewSGI(null);
         DistributedApplianceInstance dai = registerNewDAI();
 
-        AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
+        UpdateDAIToSGIMembersTask task = allocate ? new AllocateDAIWithSGIMembersTask(sgi, dai) : new DeallocateDAIOfSGIMembersTask(sgi, dai);
 
         // Act.
         task.executeTransaction(this.em);
@@ -80,12 +80,12 @@ public class UpdateDAIToSGIMembersTaskTest {
         Assert.assertTrue("The dai should not have associated protected ports.", dai.getProtectedPorts().isEmpty());
     }
 
-    public void testExecute_WhenSGIHasNoAssociatedSGMember_NoUpdateIsDone() throws Exception {
+    protected void testExecute_WhenSGIHasNoAssociatedSGMember_NoUpdateIsDone(boolean allocate) throws Exception {
         // Arrange.
         SecurityGroupInterface sgi = registerNewSGI(new SecurityGroup(null, null, null));
         DistributedApplianceInstance dai = registerNewDAI();
 
-        AllocateDAIWithSGIMembersTask task = new AllocateDAIWithSGIMembersTask(sgi, dai);
+        UpdateDAIToSGIMembersTask task = allocate ? new AllocateDAIWithSGIMembersTask(sgi, dai) : new DeallocateDAIOfSGIMembersTask(sgi, dai);
 
         // Act.
         task.execute();
