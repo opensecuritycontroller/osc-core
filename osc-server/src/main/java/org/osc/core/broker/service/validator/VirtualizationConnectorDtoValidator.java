@@ -55,8 +55,9 @@ public class VirtualizationConnectorDtoValidator
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(
                 VirtualizationConnector.class, this.em, this.txBroadcastUtil);
 
-        VirtualizationConnectorDtoValidator.checkForNullFields(dto, this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
-                        dto.getControllerType())));
+        boolean usesProviderCreds = dto.isControllerDefined() && this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
+                dto.getControllerType()));
+        VirtualizationConnectorDtoValidator.checkForNullFields(dto, usesProviderCreds);
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);
 
         // TODO: Future. Right now we assume Icehouse and 5.5 regardless of the actual version passed in, need to

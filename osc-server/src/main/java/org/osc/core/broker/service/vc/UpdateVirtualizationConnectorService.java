@@ -169,8 +169,9 @@ public class UpdateVirtualizationConnectorService
 
         // check for null/empty values
         VirtualizationConnectorDto dto = request.getDto();
-        VirtualizationConnectorDtoValidator.checkForNullFields(dto, request.isApi(), this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
-                dto.getControllerType())));
+        boolean usesProviderCreds = dto.isControllerDefined() && this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
+                dto.getControllerType()));
+        VirtualizationConnectorDtoValidator.checkForNullFields(dto, request.isApi(), usesProviderCreds);
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);
 
         // entry must pre-exist in db
