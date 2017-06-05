@@ -53,12 +53,15 @@ public class JCloudUtil {
     // TODO: Future. Openstack. Externalize the timeout values
     private static final Properties OVERRIDES = new Properties();
 
+    private static Module customSSLModule = null;
+
     static {
         OVERRIDES.setProperty(Constants.PROPERTY_REQUEST_TIMEOUT, String.valueOf(RestBaseClient.DEFAULT_READ_TIMEOUT));
         OVERRIDES.setProperty(Constants.PROPERTY_CONNECTION_TIMEOUT, String.valueOf(RestBaseClient.DEFAULT_CONNECTION_TIMEOUT));
         OVERRIDES.setProperty(Constants.PROPERTY_LOGGER_WIRE_LOG_SENSITIVE_INFO, String.valueOf(false));
         OVERRIDES.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, String.valueOf(true));
         OVERRIDES.setProperty(Constants.PROPERTY_USER_THREADS, String.valueOf(10));
+        OVERRIDES.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, String.valueOf(false));
     }
 
     static <A extends Closeable> A buildApi(Class<A> api, String serviceName, Endpoint endPoint) {
@@ -109,14 +112,15 @@ public class JCloudUtil {
     }
 
     private static ContextBuilder configureSSLContext(ContextBuilder contextBuilder, final SSLContext sslContext) {
-        Module customSSLModule = new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(new TypeLiteral<Supplier<SSLContext>>() {
-                }).toInstance(() -> sslContext);
-            }
-        };
-        contextBuilder.modules(ImmutableSet.of(customSSLModule));
+        if(JCloudUtil.customSSLModule == null) {
+            JCloudUtil.customSSLModule = new AbstractModule() {
+                @Override
+                protected void configure() {
+                    bind(new TypeLiteral<Supplier<SSLContext>>() {}).toInstance(() -> sslContext);
+                }
+            };
+        }
+        contextBuilder.modules(ImmutableSet.of(JCloudUtil.customSSLModule));
         return contextBuilder;
     }
 
@@ -127,7 +131,7 @@ public class JCloudUtil {
      * @throws VmidcBrokerInvalidRequestException in case we get an exception while allocating the floating ip
      */
     public static synchronized FloatingIP allocateFloatingIp(JCloudNova jCloudNova, String zone, String poolName,
-                                                             String serverId) throws VmidcBrokerInvalidRequestException {
+            String serverId) throws VmidcBrokerInvalidRequestException {
         boolean newIPAllocated = false;
         NovaApi novaApi = jCloudNova.getNovaApi();
         FloatingIPApi floatingIpApi = getFloatingIpApi(zone, novaApi);
