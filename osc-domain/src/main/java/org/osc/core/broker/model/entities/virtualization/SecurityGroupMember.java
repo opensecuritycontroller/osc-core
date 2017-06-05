@@ -41,7 +41,7 @@ public class SecurityGroupMember extends BaseEntity implements Comparable<Securi
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "security_group_fk", nullable = false,
-            foreignKey = @ForeignKey(name = "FK_SGM_SG"))
+    foreignKey = @ForeignKey(name = "FK_SGM_SG"))
     private SecurityGroup securityGroup;
 
     @Column(name = "member_type", nullable = false)
@@ -76,7 +76,10 @@ public class SecurityGroupMember extends BaseEntity implements Comparable<Securi
         } else {
             throw new IllegalArgumentException("Protected Entity can only be a VM, a Network or a Subnet in openstack");
         }
-        this.securityGroup.addSecurityGroupMember(this);
+
+        if (this.securityGroup != null) {
+            this.securityGroup.addSecurityGroupMember(this);
+        }
     }
 
     public SecurityGroupMember(SecurityGroup securityGroup, SecurityGroupMemberType type, String address) {
@@ -85,6 +88,10 @@ public class SecurityGroupMember extends BaseEntity implements Comparable<Securi
         this.address = address;
         this.type = type;
         this.securityGroup.addSecurityGroupMember(this);
+    }
+
+    public SecurityGroupMember(OsProtectionEntity entity) {
+        this(null, entity);
     }
 
     SecurityGroupMember() {
