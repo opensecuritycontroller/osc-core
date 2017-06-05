@@ -10,16 +10,10 @@
 -includeresource: \
     @${antisamy.dep},\
     @${esapi.dep},\
-    @${httpclient.dep},\
     @${quartz.dep},\
-    @${sac.dep},\
-    @${yavijava.dep}
+    @${sac.dep}
 
 Export-Package:\
-    com.vmware.vim25,\
-    com.vmware.vim25.mo,\
-    com.vmware.vim25.mo.util,\
-    com.vmware.vim25.ws,\
     org.owasp.esapi,\
     org.quartz,\
     org.quartz.impl
@@ -27,9 +21,7 @@ Export-Package:\
 # Customise the imported packages to get a well-behaved bundle
 Import-Package:\
     ${exclude-esapi},\
-    ${exclude-httpclient},\
     ${exclude-quartz},\
-    ${exclude-yavijava},\
     ${import-jta},\
     *
 # ESAPI pulls in some unnecessary (and non osgi) dependencies
@@ -46,10 +38,6 @@ exclude-esapi:\
   !org.apache.xml.serialize,\
   !org.cyberneko.html.*
 
-# There is no need for httpclient to be substitutable
-exclude-httpclient:\
-    !org.apache.http.*
-
 # The server uses a RAM store for Quartz, so no JDBC pooling is needed
 # Also no commonj or JBoss integration is used (or exported)
 exclude-quartz:\
@@ -60,12 +48,6 @@ exclude-quartz:\
     !org.quartz.jobs,\
     !org.terracotta.toolkit.*,\
     !weblogic.jdbc.*
-
-# The vmware code includes shell integration which is not exported,
-# and also should not be substitutable
-exclude-yavijava:\
-    !bsh,\
-    !com.vmware.*
 
 # Hibernate puts JTA 1.2 on our classpath, but quartz is still happy with 1.1
 # and 1.1 is used in the server

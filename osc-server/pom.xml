@@ -155,11 +155,6 @@
 			<artifactId>joda-time</artifactId>
 			<version>2.9.7</version>
 		</dependency>
-		<dependency>
-			<groupId>com.toastcoders</groupId>
-			<artifactId>yavijava</artifactId>
-			<version>6.0.04</version>
-		</dependency>
 
 		<!-- WebSocket Dependencies -->
 		<dependency>
