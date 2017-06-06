@@ -42,7 +42,7 @@ public abstract class BasePortGroupHookTask extends TransactionalTask {
     private DefaultNetworkPort egressPort;
     private PortGroup portGroup;
 
-    public BasePortGroupHookTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
+    public BasePortGroupHookTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai) {
         this.sgi = sgi;
         this.dai = dai;
     }
@@ -55,17 +55,17 @@ public abstract class BasePortGroupHookTask extends TransactionalTask {
         String portGroupId = this.sgi.getSecurityGroup().getNetworkElementId();
 
         if (portGroupId == null) {
-            throw new VmidcBrokerValidationException(String.format("The security group %s does not have a network element set.", this.sgi.getSecurityGroup().getName()));
+            throw new VmidcBrokerValidationException(
+                    String.format("The security group %s does not have a network element set.",
+                            this.sgi.getSecurityGroup().getName()));
         }
 
         this.portGroup = new PortGroup();
         this.portGroup.setPortGroupId(portGroupId);
 
-        this.ingressPort = new DefaultNetworkPort(
-                this.dai.getInspectionOsIngressPortId(),
+        this.ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                 this.dai.getInspectionIngressMacAddress());
-        this.egressPort = new DefaultNetworkPort(
-                this.dai.getInspectionOsEgressPortId(),
+        this.egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                 this.dai.getInspectionEgressMacAddress());
     }
 
@@ -93,4 +93,6 @@ public abstract class BasePortGroupHookTask extends TransactionalTask {
     protected PortGroup getPortGroup() {
         return this.portGroup;
     }
+
+    protected abstract BasePortGroupHookTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai);
 }
