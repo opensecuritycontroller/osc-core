@@ -23,6 +23,7 @@ import javax.xml.bind.DatatypeConverter;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.StringWriter;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -73,7 +74,7 @@ public class CertificateBasicInfoModel {
     }
 
     public String getAlias() {
-        return alias;
+        return this.alias;
     }
 
     public void setAlias(String alias) {
@@ -81,7 +82,7 @@ public class CertificateBasicInfoModel {
     }
 
     public String getSha1Fingerprint() {
-        return sha1Fingerprint;
+        return this.sha1Fingerprint;
     }
 
     public void setSha1Fingerprint(String sha1Fingerprint) {
@@ -89,7 +90,7 @@ public class CertificateBasicInfoModel {
     }
 
     public Date getValidFrom() {
-        return validFrom;
+        return this.validFrom;
     }
 
     public void setValidFrom(Date validFrom) {
@@ -97,7 +98,7 @@ public class CertificateBasicInfoModel {
     }
 
     public Date getValidTo() {
-        return validTo;
+        return this.validTo;
     }
 
     public void setValidTo(Date validTo) {
@@ -105,7 +106,7 @@ public class CertificateBasicInfoModel {
     }
 
     public String getAlgorithmType() {
-        return algorithmType;
+        return this.algorithmType;
     }
 
     public void setAlgorithmType(String algorithmType) {
@@ -113,7 +114,7 @@ public class CertificateBasicInfoModel {
     }
 
     public X509Certificate getCertificate() {
-        return certificate;
+        return this.certificate;
     }
 
     public String getCertificateContent() {
@@ -125,7 +126,7 @@ public class CertificateBasicInfoModel {
     }
 
     public String getIssuer() {
-        return issuer;
+        return this.issuer;
     }
 
     public void setIssuer(String issuer) {
@@ -133,23 +134,22 @@ public class CertificateBasicInfoModel {
     }
   
     public boolean isConnected() {
-        return isConnected;
+        return this.isConnected;
     }
 
     public void setConnected(boolean connected) {
-        isConnected = connected;
+        this.isConnected = connected;
     }
 
-    private String certificateToString(X509Certificate certificate) {
+    private String certificateToString(X509Certificate cert) {
+        StringWriter sw = new StringWriter();
         try {
-            StringBuilder cert = new StringBuilder();
-            cert.append("-----BEGIN CERTIFICATE----- ");
-            cert.append(DatatypeConverter.printBase64Binary(certificate.getEncoded()));
-            cert.append(" -----END CERTIFICATE-----");
-            return cert.toString();
+            sw.write("-----BEGIN CERTIFICATE-----\n");
+            sw.write(DatatypeConverter.printBase64Binary(cert.getEncoded()).replaceAll("(.{64})", "$1\n"));
+            sw.write("\n-----END CERTIFICATE-----");
         } catch (CertificateEncodingException e) {
             LOG.error("Cannot encode certificate", e);
-            return "";
         }
+        return sw.toString();
     }
 }
