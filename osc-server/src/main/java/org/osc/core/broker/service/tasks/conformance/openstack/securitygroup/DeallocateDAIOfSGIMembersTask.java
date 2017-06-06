@@ -29,20 +29,21 @@ import org.osgi.service.component.annotations.Component;
  * This task is applicable to SGIs whose virtual system refers to an SDN
  * controller that supports port groups.
  */
-@Component(service=DeallocateDAIOfSGIMembersTask.class)
+@Component(service = DeallocateDAIOfSGIMembersTask.class)
 public class DeallocateDAIOfSGIMembersTask extends UpdateDAIToSGIMembersTask {
     private static final Logger LOG = Logger.getLogger(AllocateDAIWithSGIMembersTask.class);
 
-    public DeallocateDAIOfSGIMembersTask(){
+    public DeallocateDAIOfSGIMembersTask() {
         super(null, null);
     }
 
-    private DeallocateDAIOfSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
-        super(sgi,dai);
+    private DeallocateDAIOfSGIMembersTask(SecurityGroupInterface sgi, DistributedApplianceInstance dai) {
+        super(sgi, dai);
     }
 
-    public DeallocateDAIOfSGIMembersTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai){
-        DeallocateDAIOfSGIMembersTask task = new DeallocateDAIOfSGIMembersTask(sgi,dai);
+    @Override
+    public DeallocateDAIOfSGIMembersTask create(SecurityGroupInterface sgi, DistributedApplianceInstance dai) {
+        DeallocateDAIOfSGIMembersTask task = new DeallocateDAIOfSGIMembersTask(sgi, dai);
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -51,17 +52,21 @@ public class DeallocateDAIOfSGIMembersTask extends UpdateDAIToSGIMembersTask {
 
     /**
      * This method detaches the provided port from the {@link #getDai()}
-     * @param protectedPort   the port to be detached from the DAI.
+     * 
+     * @param protectedPort
+     *            the port to be detached from the DAI.
      */
     @Override
     public void updatePortProtection(VMPort protectedPort) {
         protectedPort.removeDai(getDai());
         getDai().removeProtectedPort(protectedPort);
-        LOG.info(String.format("The DAI %s was unassigned from the port %s.", getDai().getName(), protectedPort.getId()));
+        LOG.info(String.format("The DAI %s was unassigned from the port %s.", getDai().getName(),
+                protectedPort.getId()));
     }
 
     @Override
     public String getName() {
-        return String.format("Detaching the DAI %s from all the ports in the SGI %s.", getDai().getName(), getSGI().getName());
+        return String.format("Detaching the DAI %s from all the ports in the SGI %s.", getDai().getName(),
+                getSGI().getName());
     }
 }
