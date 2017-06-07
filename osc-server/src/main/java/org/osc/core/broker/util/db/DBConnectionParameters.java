@@ -44,8 +44,7 @@ public class DBConnectionParameters {
 	// CUSTOM USER SETTINGS
 	private String customConnectionURL;
 
-	@Reference
-	private FileApi fileApi;
+	private FileApi fileApi = new FileUtil();
 
 	public DBConnectionParameters() throws IOException {
 		Properties properties = this.fileApi.loadProperties(Server.CONFIG_PROPERTIES_FILE);
