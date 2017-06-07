@@ -46,6 +46,7 @@ public class DeleteInspectionPortTask extends TransactionalTask {
 
 
     public DeleteInspectionPortTask(String region, DistributedApplianceInstance dai) {
+        // TODO emanoel: This does not seem to be used anywhere, remove it on master.
         this.region = region;
         this.dai = dai;
     }
