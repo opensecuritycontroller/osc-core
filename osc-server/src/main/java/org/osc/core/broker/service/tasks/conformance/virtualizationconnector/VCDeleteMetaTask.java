@@ -61,12 +61,13 @@ public class VCDeleteMetaTask extends TransactionalTask {
             sslCertificateAttrEntityMgr.removeCertificateList(connector.getSslCertificateAttrSet());
             vcEntityMgr.delete(this.vc.getId());
         } catch (Exception ex) {
-            // If we experience any failure, unlock VC.
+            throw ex;
+        } finally{
+        	 // Unlock VC.
             if (vcUnlockTask != null) {
                 log.info("Releasing lock for VC '" + this.vc.getName() + "'");
                 LockManager.getLockManager().releaseLock(new LockRequest(vcUnlockTask));
             }
-            throw ex;
         }
     }
 
