@@ -19,11 +19,16 @@ package org.osc.core.broker.service.api.server;
 import org.osc.core.broker.service.exceptions.SecurityException;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Properties;
 
-public interface ArchiveApi {
+public interface FileApi {
 
-    File archive(String inputDir, String outputFile) throws IOException;
+    File[] getFileListFromDirectory(String directory) throws FileNotFoundException;
 
-    void unzip(String inputFile, String destination) throws IOException, SecurityException;
+    Properties loadProperties(String propertiesFilePath) throws IOException;
+
+    String preventPathTraversal(String filename, String intendedDir) throws IOException, SecurityException;
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.util.encryption;
+package org.osc.core.broker.service.exceptions;
 
 public class SecurityException extends Exception {
     private static final long serialVersionUID = -4101275336253509877L;

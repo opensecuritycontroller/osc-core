@@ -25,12 +25,14 @@ import javax.xml.bind.DatatypeConverter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BackupFileServiceApi;
+import org.osc.core.broker.service.api.server.FileApi;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
 import org.osc.core.server.Server;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
+import org.osgi.service.component.annotations.Reference;
 
 abstract class BackupFileService<I extends Request, O extends Response> extends ServiceDispatcher<I, O>
     implements BackupFileServiceApi<I, O> {
@@ -44,6 +46,9 @@ abstract class BackupFileService<I extends Request, O extends Response> extends 
     protected static final int DB_PASSWORD_MAX_LENGTH = 160;
 
     protected static final Logger log = Logger.getLogger(BackupService.class);
+
+    @Reference
+    private FileApi fileApi;
 
     @Override
     public boolean isValidBackupFilename(String filename) {
@@ -62,7 +67,7 @@ abstract class BackupFileService<I extends Request, O extends Response> extends 
     }
 
     protected Properties getProperties() throws IOException {
-    	return FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
+    	return this.fileApi.loadProperties(Server.CONFIG_PROPERTIES_FILE);
     }
 
     protected EncryptionParameters getEncryptionParameters() throws Exception {

@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.util;
 
-import org.osc.core.util.encryption.SecurityException;
+import org.osc.core.broker.service.api.server.FileApi;
+import org.osc.core.broker.service.exceptions.SecurityException;
+import org.osgi.service.component.annotations.Component;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,7 +26,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
-public class FileUtil {
+@Component
+public class FileUtil implements FileApi{
 
     /**
      * Returns file list from given directory
@@ -32,7 +35,7 @@ public class FileUtil {
      * @param directory Directory where plugins are held
      * @return File[] File array loaded from specified directory
      */
-    public static File[] getFileListFromDirectory(String directory) throws FileNotFoundException {
+    public File[] getFileListFromDirectory(String directory) throws FileNotFoundException {
 
         if (directory == null) {
             throw new FileNotFoundException("Cannot obtain list of files from directory - null given");
@@ -55,7 +58,7 @@ public class FileUtil {
      * @return Properties object
      * @throws IOException
      */
-    public static Properties loadProperties(String propertiesFilePath) throws IOException {
+    public Properties loadProperties(String propertiesFilePath) throws IOException {
         Properties prop = new Properties();
         try (FileInputStream fileInputStream = new FileInputStream(propertiesFilePath)) {
             prop.load(fileInputStream);
@@ -71,7 +74,7 @@ public class FileUtil {
      * @return name of the file
      * @throws IllegalStateException if name is incorrect
      */
-    public static String preventPathTraversal(String filename, String intendedDir)
+    public String preventPathTraversal(String filename, String intendedDir)
             throws IOException, SecurityException {
         String canPath = new File(filename).getCanonicalPath();
         String canID = new File(intendedDir).getCanonicalPath();
