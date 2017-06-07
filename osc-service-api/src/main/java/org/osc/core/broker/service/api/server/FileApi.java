@@ -26,6 +26,10 @@ import java.util.Properties;
 
 public interface FileApi {
 
+    default void get(){
+        //todo
+    }
+
     File[] getFileListFromDirectory(String directory) throws FileNotFoundException;
 
     Properties loadProperties(String propertiesFilePath) throws IOException;

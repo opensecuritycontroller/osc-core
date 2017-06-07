@@ -47,8 +47,7 @@ public class NetworkSettingsApi {
 
     private static final Logger log = Logger.getLogger(NetworkSettingsApi.class);
 
-    @Reference
-    private FileApi fileApi;
+    private FileUtil fileUtil = new FileUtil();
 
     public void setNetworkSettings(NetworkSettingsDto networkSettingsDto) {
 
@@ -81,7 +80,7 @@ public class NetworkSettingsApi {
         Properties networkInterfaceConfig = new Properties();
 
         try {
-            networkInterfaceConfig = this.fileApi.loadProperties(this.DEFAULT_INTERFACE_CONFIG_FILE);
+            networkInterfaceConfig = this.fileUtil.loadProperties(this.DEFAULT_INTERFACE_CONFIG_FILE);
         } catch (IOException e) {
             log.error("Failed to load network settings", e);
         }
@@ -97,7 +96,7 @@ public class NetworkSettingsApi {
 
             Properties networkConfig = new Properties();
             try {
-                networkConfig = this.fileApi.loadProperties(this.NETWORK_CONFIG_FILE);
+                networkConfig = this.fileUtil.loadProperties(this.NETWORK_CONFIG_FILE);
             } catch (IOException e) {
                 log.error("Failed to load network settings", e);
             }
