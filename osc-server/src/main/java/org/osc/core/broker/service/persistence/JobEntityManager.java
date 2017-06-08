@@ -36,12 +36,16 @@ import org.osc.core.broker.service.dto.JobRecordDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.exceptions.VmidcException;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 @Component
 public class JobEntityManager implements JobEntityManagerApi {
+
+    @Reference
+    DBConnectionManager dbMgr;
 
     public static void fromEntity(JobRecord job, JobRecordDto dto) {
         // transform from entity to dto
@@ -70,11 +74,11 @@ public class JobEntityManager implements JobEntityManagerApi {
         return objects;
     }
 
-    public static Long getTaskCount(Long jobId) throws InterruptedException, VmidcException {
+    public Long getTaskCount(Long jobId) throws InterruptedException, VmidcException {
 
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            return HibernateUtil.getTransactionControl().required(() -> {
+            EntityManager em = this.dbMgr.getTransactionalEntityManager();
+            return this.dbMgr.getTransactionControl().required(() -> {
 
                 String hql = "SELECT count(*) FROM TaskRecord WHERE job_fk = :jobId";
 
@@ -87,11 +91,11 @@ public class JobEntityManager implements JobEntityManagerApi {
         }
     }
 
-    public static Long getCompletedTaskCount(Long jobId) throws InterruptedException, VmidcException {
+    public Long getCompletedTaskCount(Long jobId) throws InterruptedException, VmidcException {
 
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
-            return HibernateUtil.getTransactionControl().required(() -> {
+            EntityManager em = this.dbMgr.getTransactionalEntityManager();
+            return this.dbMgr.getTransactionControl().required(() -> {
 
                 String hql = "SELECT count(*) FROM TaskRecord WHERE job_fk = :jobId AND state = 'COMPLETED'";
 

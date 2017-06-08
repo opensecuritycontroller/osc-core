@@ -40,7 +40,7 @@ import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.broker.util.SessionUtil;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class OsVMNotificationListener extends OsNotificationListener {
@@ -52,12 +52,15 @@ public class OsVMNotificationListener extends OsNotificationListener {
 
     private final AlertGenerator alertGenerator;
 
+    private final DBConnectionManager dbMgr;
+
     public OsVMNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
             List<String> objectIdList, BaseEntity entity, ConformService conformService,
-            AlertGenerator alertGenerator, RabbitMQRunner activeRunner) {
+            AlertGenerator alertGenerator, RabbitMQRunner activeRunner, DBConnectionManager dbMgr) {
         super(vc, OsNotificationObjectType.VM, objectIdList, entity, activeRunner);
         this.conformService = conformService;
         this.alertGenerator = alertGenerator;
+        this.dbMgr = dbMgr;
         register(vc, objectType);
     }
 
@@ -77,7 +80,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
 
                 log.info(" [Instance] : message received - " + message);
                 try {
-                    HibernateUtil.getTransactionControl().required(() -> {
+                    this.dbMgr.getTransactionControl().required(() -> {
                         if (this.entity instanceof SecurityGroup) {
 
                             if (!eventType.contains(OsNotificationEventState.POWER_OFF.toString())) {
@@ -125,9 +128,9 @@ public class OsVMNotificationListener extends OsNotificationListener {
 
             try {
                 // open a new Hibernate Session
-                EntityManager em = HibernateUtil.getTransactionalEntityManager();
+                EntityManager em = this.dbMgr.getTransactionalEntityManager();
                 // begin transaction
-                HibernateUtil.getTransactionControl().required(() -> {
+                this.dbMgr.getTransactionControl().required(() -> {
                     // load this entity from database to avoid any lazy loading issues
                     SecurityGroup sg = SecurityGroupEntityMgr.findById(em, securityGroup.getId());
 
@@ -195,9 +198,9 @@ public class OsVMNotificationListener extends OsNotificationListener {
                 return false;
             }
 
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            EntityManager em = this.dbMgr.getTransactionalEntityManager();
 
-            return HibernateUtil.getTransactionControl().required(() -> {
+            return this.dbMgr.getTransactionControl().required(() -> {
                 VM vm = VMEntityManager.findByOpenstackId(em, vmOpenstackId);
 
                 if (vm == null) {

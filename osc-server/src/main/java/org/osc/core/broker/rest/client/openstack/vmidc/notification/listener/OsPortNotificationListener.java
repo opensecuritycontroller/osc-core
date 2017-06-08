@@ -37,7 +37,7 @@ import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.persistence.SubnetEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class OsPortNotificationListener extends OsNotificationListener {
@@ -48,11 +48,15 @@ public class OsPortNotificationListener extends OsNotificationListener {
 
     private final AlertGenerator alertGenerator;
 
+    private final DBConnectionManager dbMgr;
+
     public OsPortNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner) {
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
+            DBConnectionManager dbMgr) {
         super(vc, OsNotificationObjectType.PORT, objectIdList, entity, activeRunner);
         this.conformService = conformService;
         this.alertGenerator = alertGenerator;
+        this.dbMgr = dbMgr;
         register(vc, objectType);
     }
 
@@ -77,8 +81,8 @@ public class OsPortNotificationListener extends OsNotificationListener {
     }
 
     private void doTranscationalAction(final String eventType, final String message) throws Exception {
-        EntityManager em = HibernateUtil.getTransactionalEntityManager();
-        HibernateUtil.getTransactionControl().required(() -> {
+        EntityManager em = this.dbMgr.getTransactionalEntityManager();
+        this.dbMgr.getTransactionControl().required(() -> {
             if (eventType.contains(OsNotificationEventState.DELETE.toString())
                     || eventType.contains(OsNotificationEventState.INTERFACE_DELETE.toString())) {
                 handleSGPortDeletionMessages(em, message);

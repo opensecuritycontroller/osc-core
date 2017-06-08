@@ -26,6 +26,7 @@ import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.Rabbi
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -44,6 +45,9 @@ public class NotificationListenerFactory {
 
     @Reference
     private AlertGenerator alertGenerator;
+
+    @Reference
+    private DBConnectionManager dbMgr;
 
     // target ensures this only binds to active runner published by Server
     @Reference(target = "(active=true)", cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
@@ -70,19 +74,19 @@ public class NotificationListenerFactory {
         switch (objectType) {
         case PORT:
             return new OsPortNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.activeRunner);
+                    this.alertGenerator, this.activeRunner, this.dbMgr);
         case VM:
             return new OsVMNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.activeRunner);
+                    this.alertGenerator, this.activeRunner, this.dbMgr);
         case HOST_AGGREGRATE:
             return new OsHostAggregrateNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.activeRunner);
+                    this.alertGenerator, this.activeRunner, this.dbMgr.getTransactionControl());
         case TENANT:
             return new OsTenantNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.activeRunner);
+                    this.alertGenerator, this.activeRunner, this.dbMgr);
         case NETWORK:
             return new OsNetworkNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
-                    this.alertGenerator, this.activeRunner);
+                    this.alertGenerator, this.activeRunner, this.dbMgr.getTransactionControl());
         default:
             break;
         }

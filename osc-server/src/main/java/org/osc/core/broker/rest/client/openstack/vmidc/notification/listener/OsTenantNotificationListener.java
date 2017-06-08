@@ -35,7 +35,7 @@ import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.alert.AlertGenerator;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
 public class OsTenantNotificationListener extends OsNotificationListener {
@@ -46,11 +46,15 @@ public class OsTenantNotificationListener extends OsNotificationListener {
 
     private final AlertGenerator alertGenerator;
 
+    private final DBConnectionManager dbMgr;
+
     public OsTenantNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
-            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner) {
+            List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
+            DBConnectionManager dbMgr) {
         super(vc, OsNotificationObjectType.TENANT, objectIdList, entity, activeRunner);
         this.conformService = conformService;
         this.alertGenerator = alertGenerator;
+        this.dbMgr = dbMgr;
         register(vc, objectType);
     }
 
@@ -63,9 +67,9 @@ public class OsTenantNotificationListener extends OsNotificationListener {
             if (keyValue != null) {
                 log.info(" [Identity] : message received - " + message);
                 try {
-                    EntityManager em = HibernateUtil.getTransactionalEntityManager();
+                    EntityManager em = this.dbMgr.getTransactionalEntityManager();
 
-                    HibernateUtil.getTransactionControl().required(() -> {
+                    this.dbMgr.getTransactionControl().required(() -> {
                         if (this.entity instanceof SecurityGroup) {
                             handleSGMessages(em, keyValue);
                         } else if (this.entity instanceof DeploymentSpec) {

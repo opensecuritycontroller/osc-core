@@ -34,7 +34,7 @@ import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.broadcast.EventType;
 import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
-import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -68,6 +68,9 @@ public class RabbitMQRunner implements BroadcastListener {
     @Reference
     AlertGenerator alertGenerator;
 
+    @Reference
+    DBConnectionManager dbMgr;
+
     private ServiceRegistration<BroadcastListener> registration;
 
     @Activate
@@ -76,9 +79,9 @@ public class RabbitMQRunner implements BroadcastListener {
         // to activate another instance of this component, only people getting the runner!
         this.registration = ctx.registerService(BroadcastListener.class, this, null);
         try {
-            EntityManager em = HibernateUtil.getTransactionalEntityManager();
+            EntityManager em = this.dbMgr.getTransactionalEntityManager();
             List<VirtualizationConnector> vcList =
-                    HibernateUtil.getTransactionControl().required(() ->
+                    this.dbMgr.getTransactionControl().required(() ->
                     VirtualizationConnectorEntityMgr.listByType(em,
                             VirtualizationType.OPENSTACK));
 
@@ -113,8 +116,8 @@ public class RabbitMQRunner implements BroadcastListener {
         try {
             if (msg.getReceiver().equals("VirtualizationConnector")) {
                 if (msg.getEventType() != EventType.DELETED) {
-                    EntityManager em = HibernateUtil.getTransactionalEntityManager();
-                    vc = HibernateUtil.getTransactionControl().required(() ->
+                    EntityManager em = this.dbMgr.getTransactionalEntityManager();
+                    vc = this.dbMgr.getTransactionControl().required(() ->
                         VirtualizationConnectorEntityMgr.findById(em, msg.getEntityId()));
                 } else {
                     vc = new VirtualizationConnector();

@@ -60,8 +60,6 @@ import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrS
 import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.CheckSSLConnectivityVcTask;
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
-import org.osc.core.broker.util.StaticRegistry;
-import org.osc.core.broker.util.db.HibernateUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
@@ -396,11 +394,11 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
                 @Override
                 public void completed(Job job) {
-                    ConformService.updateDSJob(null, ds, job);
+                    ConformService.this.updateDSJob(null, ds, job);
                 }
             });
 
-            ConformService.updateDSJob(em, ds, job);
+            updateDSJob(em, ds, job);
 
             log.info("Done submitting with jobId: " + job.getId());
             return job;
@@ -412,24 +410,25 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         }
     }
 
-    public static void updateDSJob(EntityManager em, final DeploymentSpec ds, Job job) {
+    private void updateDSJob(EntityManager em, final DeploymentSpec ds, Job job) {
 
-        // TODO: nbartlex - it would be more sensible to inject the transactional entitymanager
-        // and make this decision using if(txControl.activeTransaction()) {...}
+        // TODO: It would be more sensible to make this decision
+        // using if(txControl.activeTransaction()) {...}
+
         if (em != null) {
             ds.setLastJob(em.find(JobRecord.class, job.getId()));
-            OSCEntityManager.update(em, ds, StaticRegistry.transactionalBroadcastUtil());
+            OSCEntityManager.update(em, ds, this.txBroadcastUtil);
 
         } else {
 
             try {
-                EntityManager txEm = HibernateUtil.getTransactionalEntityManager();
-                TransactionControl txControl = HibernateUtil.getTransactionControl();
+                EntityManager txEm = this.dbConnectionManager.getTransactionalEntityManager();
+                TransactionControl txControl = this.dbConnectionManager.getTransactionControl();
                 txControl.required(() -> {
                     DeploymentSpec ds1 = DeploymentSpecEntityMgr.findById(txEm, ds.getId());
                     if (ds1 != null) {
                         ds1.setLastJob(txEm.find(JobRecord.class, job.getId()));
-                        OSCEntityManager.update(txEm, ds1, StaticRegistry.transactionalBroadcastUtil());
+                        OSCEntityManager.update(txEm, ds1, this.txBroadcastUtil);
                     }
                     return null;
                 });
@@ -437,10 +436,6 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 // Unwrap the ScopedWorkException to get the cause from
                 // the scoped work (i.e. the executeTransaction() call.
                 log.error("Fail to update DS job status.", e.getCause());
-            } catch (Exception e) {
-                // TODO: nbartlex - remove when EM and TX are injected
-                log.error("Fail to update DS job status.", e);
-                throw new RuntimeException("There was a problem with the DsConformance Job", e);
             }
         }
     }
@@ -485,7 +480,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             Job job = JobEngine.getEngine().submit(jobName + " '" + sg.getName() + "'", tg,
                     LockObjectReference.getObjectReferences(sg), getSecurityGroupJobCompletionListener(sg));
 
-            ConformService.updateSGJob(em, sg, job);
+            updateSGJob(em, sg, job);
 
             return job;
         } catch (Exception e) {
@@ -516,7 +511,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             Job job = JobEngine.getEngine().submit(jobName + " '" + sg.getName() + "'", tg,
                     LockObjectReference.getObjectReferences(sg), getSecurityGroupJobCompletionListener(sg));
 
-            ConformService.updateSGJob(em, sg, job);
+            updateSGJob(em, sg, job);
 
             return job;
         } catch (Exception e) {
@@ -526,29 +521,28 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
         }
     }
 
-    private static JobCompletionListener getSecurityGroupJobCompletionListener(final SecurityGroup sg) {
+    private JobCompletionListener getSecurityGroupJobCompletionListener(final SecurityGroup sg) {
         return new JobCompletionListener() {
             @Override
             public void completed(Job job) {
-                ConformService.updateSGJob(null, sg, job);
+                ConformService.this.updateSGJob(null, sg, job);
             }
         };
     }
 
-    public static void updateSGJob(EntityManager em, final SecurityGroup sg, Job job) {
+    public void updateSGJob(EntityManager em, final SecurityGroup sg, Job job) {
 
-        // TODO: nbartlex - it would be more sensible to inject the transactional entitymanager
-        // and make this decision using if(txControl.activeTransaction()) {...}
-        // (work item A7)
+        // TODO: It would be more sensible to make this decision
+        // using if(txControl.activeTransaction()) {...}
 
         if (em != null) {
             sg.setLastJob(em.find(JobRecord.class, job.getId()));
-            OSCEntityManager.update(em, sg, StaticRegistry.transactionalBroadcastUtil());
+            OSCEntityManager.update(em, sg, this.txBroadcastUtil);
         } else {
 
             try {
-                EntityManager txEm = HibernateUtil.getTransactionalEntityManager();
-                TransactionControl txControl = HibernateUtil.getTransactionControl();
+                EntityManager txEm = this.dbConnectionManager.getTransactionalEntityManager();
+                TransactionControl txControl = this.dbConnectionManager.getTransactionControl();
                 txControl.required(() -> {
                     SecurityGroup securityGroupEntity = SecurityGroupEntityMgr.findById(txEm, sg.getId());
                     if (securityGroupEntity != null) {
@@ -556,7 +550,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                         securityGroupEntity = txEm.find(SecurityGroup.class, sg.getId());
 
                         securityGroupEntity.setLastJob(txEm.find(JobRecord.class, job.getId()));
-                        OSCEntityManager.update(txEm, securityGroupEntity, StaticRegistry.transactionalBroadcastUtil());
+                        OSCEntityManager.update(txEm, securityGroupEntity, this.txBroadcastUtil);
                     }
                     return null;
                 });
@@ -564,10 +558,6 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 // Unwrap the ScopedWorkException to get the cause from
                 // the scoped work (i.e. the executeTransaction() call.
                 log.error("Fail to update SG job status.", e.getCause());
-            } catch (Exception e) {
-                // TODO: nbartlex - remove when EM and TX are injected
-                log.error("Fail to update SG job status.", e);
-                throw new RuntimeException("There was a problem with the SGConformance Job", e);
             }
         }
     }
