@@ -42,15 +42,10 @@ import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.FlowVmInfo;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.VmInfo;
 import org.osc.core.broker.util.ValidateUtil;
-import org.osc.core.broker.util.VimUtils;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import com.vmware.vim25.mo.HostSystem;
-import com.vmware.vim25.mo.VirtualMachine;
-
 @Component
 public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse>
         implements QueryVmInfoServiceApi {
@@ -73,54 +68,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
 
         QueryVmInfoResponse response = new QueryVmInfoResponse();
 
-        if (vc.getVirtualizationType() == VirtualizationType.VMWARE) {
-
-            if (request.macAddress != null && !request.macAddress.isEmpty()) {
-                throw new VmidcBrokerValidationException("MAC address based query are not supported for VMware.");
-            }
-
-            VimUtils vmi = new VimUtils(vc.getProviderIpAddress(), vc.getProviderUsername(),
-                    this.encryption.decryptAESCTR(vc.getProviderPassword()));
-
-            if (request.ipAddress != null && !request.ipAddress.isEmpty()) {
-                for (String ipAddress : request.ipAddress) {
-                    VirtualMachine vm = vmi.findVmByIp(ipAddress);
-
-                    VmInfo vmInfo = null;
-                    if (vm != null) {
-                        vmInfo = newVmInfo(vm, vmi);
-                    }
-                    response.vmInfo.put(ipAddress, vmInfo);
-                }
-            }
-
-            if (request.vmUuid != null && !request.vmUuid.isEmpty()) {
-                for (String vmUuid : request.vmUuid) {
-                    VmInfo vmInfo = null;
-                    VirtualMachine vm = vmi.findVmByInstanceUuid(vmUuid);
-
-                    if (vm != null) {
-                        vmInfo = newVmInfo(vm, vmi);
-                    }
-                    response.vmInfo.put(vmUuid, vmInfo);
-                }
-            }
-
-            if (request.flow != null && !request.flow.isEmpty()) {
-                for (String requestId : request.flow.keySet()) {
-                    FlowInfo flowInfo = request.flow.get(requestId);
-
-                    FlowVmInfo flowVmInfo = new FlowVmInfo();
-                    flowVmInfo.requestId = requestId;
-                    flowVmInfo.flow = flowInfo;
-                    flowVmInfo.sourceVmInfo = findVmByMacOrIp(vmi, flowInfo.sourceMacAddress, flowInfo.sourceIpAddress);
-                    flowVmInfo.destinationVmInfo = findVmByMacOrIp(vmi, flowInfo.destinationMacAddress,
-                            flowInfo.destinationIpAddress);
-                    response.flowVmInfo.put(requestId, flowVmInfo);
-                }
-            }
-
-        } else if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
+        if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
 
             if (request.ipAddress != null && !request.ipAddress.isEmpty()) {
                 JCloudNeutron neutron = null;
@@ -239,17 +187,6 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         return response;
     }
 
-    private VmInfo findVmByMacOrIp(VimUtils vmi, String macAddress, String ipAddress) {
-        if (macAddress != null) {
-            // TODO: Future. Lookup VMware VM by MAC address
-        }
-        VirtualMachine vm = vmi.findVmByIp(ipAddress);
-        if (vm != null) {
-            return newVmInfo(vm, vmi);
-        }
-        return null;
-    }
-
     private VmInfo findVmByPortId(JCloudNova nova, JCloudNeutron neutron, DistributedApplianceInstance dai,
             String portId) throws IOException, VmidcBrokerValidationException {
         String region = dai.getDeploymentSpec().getRegion();
@@ -340,18 +277,6 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         String vmId = neutron.getVmIdByMacAddress(region, macAddress);
         Server server = nova.getServer(region, vmId);
         return newVmInfo(server);
-    }
-
-    private VmInfo newVmInfo(VirtualMachine vm, VimUtils vmu) {
-        VmInfo vmi = new VmInfo();
-        vmi.vmName = vm.getName();
-        vmi.vmId = vm.getMOR().getVal();
-        vmi.vmUuid = vm.getConfig().getInstanceUuid();
-        vmi.vmIpAddress = vm.getGuest().getIpAddress();
-        HostSystem host = vmu.getVmHost(vm);
-        vmi.hostName = host.getName();
-        vmi.hostId = host.getMOR().get_value();
-        return vmi;
     }
 
     private VmInfo newVmInfo(VM vm) {

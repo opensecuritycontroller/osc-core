@@ -109,8 +109,6 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
             String virtualizationVersion = "";
             if (virtualizationType.isOpenstack()) {
                 virtualizationVersion = imageMetadata.getOpenstackVirtualizationVersion().toString();
-            } else if (virtualizationType.isVmware()) {
-                virtualizationVersion = imageMetadata.getVmwareVirtualizationVersion().toString();
             }
 
             String softwareVersion = imageMetadata.getSoftwareVersion();
@@ -231,26 +229,15 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
         boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(imageMetadata.getManagerType());
         this.imageMetadataValidator.validate(imageMetadata, isPolicyMappingSupported);
 
-        boolean isImageFileMissing = true;
-        boolean checkOvfExists = imageMetadata.getVirtualizationType().isVmware();
+		boolean isImageFileMissing = true;
 
-        for (File tmpFolderFile : tmpFolderList) {
-            String fileName = FilenameUtils.getName(tmpFolderFile.getName());
-            if (fileName.equals(imageMetadata.getImageName())) {
-                if (checkOvfExists) {
-                    String extension = FilenameUtils.getExtension(tmpFolderFile.getName());
-                    if (extension.equals("ovf")) {
-                        isImageFileMissing = false;
-                        break;
-                    } else {
-                        break;
-                    }
-                } else {
-                    isImageFileMissing = false;
-                    break;
-                }
-            }
-        }
+		for (File tmpFolderFile : tmpFolderList) {
+			String fileName = FilenameUtils.getName(tmpFolderFile.getName());
+			if (fileName.equals(imageMetadata.getImageName())) {
+				isImageFileMissing = false;
+				break;
+			}
+		}
 
         if (isImageFileMissing) {
             log.error("Image file: " + imageMetadata.getImageName() + " missing in archive");

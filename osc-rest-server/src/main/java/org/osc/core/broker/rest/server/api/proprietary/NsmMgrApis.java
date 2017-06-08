@@ -34,11 +34,8 @@ import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.rest.server.api.ManagerApis;
 import org.osc.core.broker.rest.server.model.Notification;
 import org.osc.core.broker.service.api.QueryVmInfoServiceApi;
-import org.osc.core.broker.service.api.TagVmServiceApi;
-import org.osc.core.broker.service.api.UnTagVmServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.request.QueryVmInfoRequest;
-import org.osc.core.broker.service.request.TagVmRequest;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -61,12 +58,6 @@ public class NsmMgrApis {
     private QueryVmInfoServiceApi queryVmInfoService;
 
     @Reference
-    private TagVmServiceApi tagVmService;
-
-    @Reference
-    private UnTagVmServiceApi untagVmService;
-
-    @Reference
     private UserContextApi userContext;
 
     @Path("/notification")
@@ -85,26 +76,6 @@ public class NsmMgrApis {
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         return this.apiUtil.getResponse(this.queryVmInfoService, queryVmInfo);
-    }
-
-    @Path("/tagVm")
-    @POST
-    public Response tagVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
-
-        log.info("Tag VM info request: " + tagVmRequest);
-        this.userContext.setUser(OscAuthFilter.getUsername(headers));
-
-        return this.apiUtil.getResponse(this.tagVmService, tagVmRequest);
-    }
-
-    @Path("/untagVm")
-    @POST
-    public Response unquarantineVm(@Context HttpHeaders headers, TagVmRequest tagVmRequest) {
-
-        log.info("UnTag VM info request: " + tagVmRequest);
-        this.userContext.setUser(OscAuthFilter.getUsername(headers));
-
-        return this.apiUtil.getResponse(this.untagVmService, tagVmRequest);
     }
 
 }

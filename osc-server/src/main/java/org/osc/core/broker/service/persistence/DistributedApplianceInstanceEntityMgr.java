@@ -58,7 +58,6 @@ public class DistributedApplianceInstanceEntityMgr {
         dto.setApplianceManagerConnectorName(dai.getVirtualSystem().getDistributedAppliance()
                 .getApplianceManagerConnector().getName());
         dto.setVirtualConnectorName(dai.getVirtualSystem().getVirtualizationConnector().getName());
-        dto.setHostname(dai.getHostName());
 
         dto.setOsVmId(dai.getOsServerId());
         dto.setOsHostname(dai.getOsHostName());
@@ -87,25 +86,6 @@ public class DistributedApplianceInstanceEntityMgr {
         }
 
         return true;
-    }
-
-    public static DistributedApplianceInstance findByNsxAgentIdAndNsxIp(EntityManager em, String nsxAgentId,
-            String nsxIpAddress) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-
-        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
-
-        Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
-
-        query = query.select(from).where(
-                cb.equal(from.get("nsxAgentId"), nsxAgentId),
-                cb.equal(from.join("virtualSystem").join("virtualizationConnector").get("controllerIpAddress"), nsxIpAddress));
-
-        try {
-            return em.createQuery(query).getSingleResult();
-        } catch (NoResultException nre) {
-            return null;
-        }
     }
 
     public static DistributedApplianceInstance findByOsHostNameAndOsTenantId(EntityManager em, String osHostName,

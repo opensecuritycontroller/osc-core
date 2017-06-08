@@ -117,7 +117,7 @@ public class AgentRegisterServiceRequestValidatorTest {
         this.em.persist(domain);
 
         VirtualizationConnector vc = new VirtualizationConnector();
-        vc.setVirtualizationType(VirtualizationType.VMWARE);
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setName("vcName");
         vc.setProviderIpAddress("127.0.0.1");

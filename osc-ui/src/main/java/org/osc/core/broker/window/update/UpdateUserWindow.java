@@ -17,7 +17,6 @@
 package org.osc.core.broker.window.update;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.UpdateUserServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.UserDto;
@@ -45,7 +44,6 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private static final Logger log = Logger.getLogger(UpdateUserWindow.class);
 
     public static final String ROLE_ADMIN = "ADMIN";
-    public static final String ROLE_SYSTEM_NSX = "SYSTEM_NSX";
 
     // form fields
     private TextField firstName = null;
@@ -95,11 +93,6 @@ public class UpdateUserWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         }
         if (this.currentUser.getItemProperty("lastName").getValue() != null) {
             this.lastName.setValue(this.currentUser.getItemProperty("lastName").getValue().toString());
-        }
-        if (this.loginName.getValue().equals(RestConstants.VMIDC_NSX_LOGIN)) {
-            this.role.setEnabled(false);
-            this.role.addItem(ROLE_SYSTEM_NSX);
-            this.role.select(ROLE_SYSTEM_NSX);
         }
         this.role.setValue(this.currentUser.getItemProperty("role").getValue().toString());
 

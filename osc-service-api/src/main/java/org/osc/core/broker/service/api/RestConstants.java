@@ -19,6 +19,5 @@ package org.osc.core.broker.service.api;
 public interface RestConstants {
     // login names
     String VMIDC_AGENT_LOGIN = "agent";
-    String VMIDC_NSX_LOGIN = "nsx";
     String OSC_DEFAULT_LOGIN = "admin";
 }

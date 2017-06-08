@@ -16,16 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.appliance;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -34,8 +30,6 @@ import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.MapKeyEnumerated;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -80,35 +74,11 @@ public class VirtualSystem extends BaseEntity {
     @Lob
     private byte[] keyStore = null;
 
-    @Column(name = "nsx_service_manager_id")
-    private String nsxServiceManagerId;
-
-    @Column(name = "nsx_service_id")
-    private String nsxServiceId;
-
-    @Column(name = "nsx_service_instance_id")
-    private String nsxServiceInstanceId;
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID",
-    joinColumns = @JoinColumn(name = "virtual_system_fk"),
-    foreignKey = @ForeignKey(name = "FK_VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID"))
-    @MapKeyColumn(name="host_version")
-    @MapKeyEnumerated(EnumType.STRING)
-    @Column(name = "nsx_deployment_spec_id")
-    private Map<VmwareSoftwareVersion, String> nsxDeploymentSpecIds = new HashMap<>();
-
-    @Column(name = "nsx_vsm_uuid")
-    private String nsxVsmUuid;
-
     @OneToMany(mappedBy = "virtualSystem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<SecurityGroupInterface> securityGroupInterfaces = new HashSet<SecurityGroupInterface>();
 
     @OneToMany(mappedBy = "virtualSystem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<DistributedApplianceInstance> distributedApplianceInstances = new HashSet<DistributedApplianceInstance>();
-
-    @OneToMany(mappedBy = "virtualSystem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<VirtualSystemPolicy> virtualSystemPolicies = new HashSet<VirtualSystemPolicy>();
 
     @OneToMany(mappedBy = "virtualSystem", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<DeploymentSpec> deploymentSpecs = new HashSet<DeploymentSpec>();
@@ -150,38 +120,6 @@ public class VirtualSystem extends BaseEntity {
         this.keyStore = keyStore;
     }
 
-    public Map<VmwareSoftwareVersion, String> getNsxDeploymentSpecIds() {
-        return this.nsxDeploymentSpecIds;
-    }
-
-    public void setNsxDeploymentSpecIds(Map<VmwareSoftwareVersion, String> nsxDeploymentSpecId) {
-        this.nsxDeploymentSpecIds = nsxDeploymentSpecId;
-    }
-
-    public String getNsxServiceManagerId() {
-        return this.nsxServiceManagerId;
-    }
-
-    public void setNsxServiceManagerId(String nsxServiceManagerId) {
-        this.nsxServiceManagerId = nsxServiceManagerId;
-    }
-
-    public String getNsxServiceId() {
-        return this.nsxServiceId;
-    }
-
-    public void setNsxServiceId(String nsxServiceId) {
-        this.nsxServiceId = nsxServiceId;
-    }
-
-    public String getNsxServiceInstanceId() {
-        return this.nsxServiceInstanceId;
-    }
-
-    public void setNsxServiceInstanceId(String nsxServiceInstanceId) {
-        this.nsxServiceInstanceId = nsxServiceInstanceId;
-    }
-
     public DistributedAppliance getDistributedAppliance() {
         return this.distributedAppliance;
     }
@@ -219,19 +157,6 @@ public class VirtualSystem extends BaseEntity {
         this.distributedApplianceInstances.remove(distributedApplianceInstance);
     }
 
-    public Set<VirtualSystemPolicy> getVirtualSystemPolicies() {
-        return this.virtualSystemPolicies;
-    }
-
-    public void addVirtualSystemPolicy(VirtualSystemPolicy virtualSystemPolicy) {
-        this.virtualSystemPolicies.add(virtualSystemPolicy);
-        virtualSystemPolicy.setVirtualSystem(this);
-    }
-
-    public void removeVirtualSystemPolicy(VirtualSystemPolicy virtualSystemPolicy) {
-        this.virtualSystemPolicies.remove(virtualSystemPolicy);
-    }
-
     public Domain getDomain() {
         return this.domain;
     }
@@ -254,14 +179,6 @@ public class VirtualSystem extends BaseEntity {
 
     public void setSecurityGroupInterfaces(Set<SecurityGroupInterface> securityGroupInterfaces) {
         this.securityGroupInterfaces = securityGroupInterfaces;
-    }
-
-    public String getNsxVsmUuid() {
-        return this.nsxVsmUuid;
-    }
-
-    public void setNsxVsmUuid(String nsxVsmUuid) {
-        this.nsxVsmUuid = nsxVsmUuid;
     }
 
     public String getName() {
@@ -335,10 +252,7 @@ public class VirtualSystem extends BaseEntity {
         return "VirtualSystem [distributedAppliance=" + this.distributedAppliance.getName()
         + ", virtualizationConnector=" + this.virtualizationConnector.getName()
         + ", applianceSoftwareVersion=" + this.applianceSoftwareVersion
-        + ", nsxServiceManagerId=" + this.nsxServiceManagerId
-        + ", nsxServiceId=" + this.nsxServiceId + ", nsxServiceInstanceId="
-        + this.nsxServiceInstanceId + ", nsxDeploymentSpecId="
-        + this.nsxDeploymentSpecIds + ", domain=" + this.domain.getName()
+        + ", domain=" + this.domain.getName()
         + ", mgrId=" + this.mgrId + ", getId()=" + getId() + "]";
     }
 

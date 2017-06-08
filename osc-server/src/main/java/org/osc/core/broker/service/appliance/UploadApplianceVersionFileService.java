@@ -106,7 +106,7 @@ public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadR
         String extension = FilenameUtils.getExtension(fileName);
 
         if (!(extension.equals("zip") || extension.equals("bar"))) {
-        	// in the future we can support files that are not zip file as long as parallel to NSX will be able to work with them
+        	// in the future we can support files that are not zip file
             throw new VmidcBrokerValidationException("Invalid request, not a valid file - valid file types are '.bar' and '.zip'");
         }
 

@@ -118,10 +118,11 @@
 			<artifactId>quartz</artifactId>
 			<version>2.2.3</version>
 		</dependency>
+		<!-- Keeping httpclient due to the commons.logging and commons.codec dependency needed by commons.config -->
 		<dependency>
-			<groupId>com.toastcoders</groupId>
-			<artifactId>yavijava</artifactId>
-			<version>6.0.04</version>
+		    <groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpclient</artifactId>
+		    <version>4.3.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.owasp.esapi</groupId>

@@ -25,27 +25,16 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
-import org.osc.core.broker.service.NsxUpdateAgentsService;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.Scheduler;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.quartz.impl.StdSchedulerFactory;
 
 public class MonitorDistributedApplianceInstanceJob implements Job {
 
-    private static final int SCHEDULED_MONITOR_DAI_INTERVAL = 5; //5 minutes
     private static final long AGENT_UPDATE_THRESHOLD = 240000; //4 minutes
 
     private static final Logger log = Logger.getLogger(MonitorDistributedApplianceInstanceJob.class);
@@ -54,37 +43,10 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
 
     }
 
-    public static void scheduleMonitorDaiJob(NsxUpdateAgentsService nsxUpdateAgentsService) {
-
-        try {
-            Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
-
-            JobDataMap jobDataMap = new JobDataMap();
-            jobDataMap.put(NsxUpdateAgentsService.class.getName(), nsxUpdateAgentsService);
-
-            JobDetail monitorDaiJob = JobBuilder.newJob(MonitorDistributedApplianceInstanceJob.class).build();
-
-            Trigger monitorDaiJobTrigger = TriggerBuilder
-                    .newTrigger()
-                    .startNow()
-                    .withSchedule(
-                            SimpleScheduleBuilder.simpleSchedule()
-                            .withIntervalInMinutes(SCHEDULED_MONITOR_DAI_INTERVAL).repeatForever()).build();
-
-            scheduler.scheduleJob(monitorDaiJob, monitorDaiJobTrigger);
-
-            log.info("Monitor DAI job scheduled to run every " + SCHEDULED_MONITOR_DAI_INTERVAL + " minutes");
-
-        } catch (Exception e) {
-            log.error("Scheduler failed to start monitor DAI job", e);
-        }
-    }
-
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
         try {
-            NsxUpdateAgentsService nsxUpdateAgentsService = (NsxUpdateAgentsService) context.getMergedJobDataMap().get(NsxUpdateAgentsService.class.getName());
             EntityManager em = HibernateUtil.getTransactionalEntityManager();
             HibernateUtil.getTransactionControl().required(() -> {
                 OSCEntityManager<DistributedApplianceInstance> emgr = new OSCEntityManager<DistributedApplianceInstance>(
@@ -106,11 +68,6 @@ public class MonitorDistributedApplianceInstanceJob implements Job {
                                 "Health status information for Appliance Instance '" + dai.getName()
                                 + "' not timely reported and is out of date");
 
-                        // In case of NSX, update
-                        if (dai.getVirtualSystem().getVirtualizationConnector()
-                                .getVirtualizationType() == VirtualizationType.VMWARE) {
-                            nsxUpdateAgentsService.updateNsxAgentInfo(em, dai, "UNKNOWN");
-                        }
                         dai.setDiscovered(null);
                         dai.setInspectionReady(null);
                     }

@@ -79,7 +79,6 @@
 		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${fullVersion}/NsmMgrPlugin.bar" />
 		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${fullVersion}/SmcMgrPlugin.bar" />
 		<copy file="${basedir}/../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" tofile="Build${fullVersion}/NscSdnControllerPlugin.bar" />
-		<copy file="${basedir}/../vmware-nsx-plugin/target/VMwareNsxPlugin.bar" tofile="Build${fullVersion}/VMwareNsxPlugin.bar" />
 	</target>
 
 	<target name="checkImagesTocopy">

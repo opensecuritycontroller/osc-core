@@ -47,7 +47,6 @@ import org.osc.core.broker.model.plugin.manager.ApplianceManagerConnectorElement
 import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.manager.VirtualSystemElementImpl;
 import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
 import org.osc.core.broker.model.plugin.sdncontroller.VirtualizationConnectorElementImpl;
 import org.osc.core.broker.service.api.plugin.PluginEvent;
 import org.osc.core.broker.service.api.plugin.PluginEvent.Type;
@@ -79,15 +78,6 @@ import org.osc.sdk.manager.api.ManagerSecurityGroupApi;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
-import org.osc.sdk.sdn.api.AgentApi;
-import org.osc.sdk.sdn.api.DeploymentSpecApi;
-import org.osc.sdk.sdn.api.SecurityTagApi;
-import org.osc.sdk.sdn.api.ServiceApi;
-import org.osc.sdk.sdn.api.ServiceInstanceApi;
-import org.osc.sdk.sdn.api.ServiceManagerApi;
-import org.osc.sdk.sdn.api.ServiceProfileApi;
-import org.osc.sdk.sdn.api.VMwareSdnApi;
-import org.osc.sdk.sdn.api.VendorTemplateApi;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
@@ -118,8 +108,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     private Map<String, ApplianceManagerApi> managerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<ApplianceManagerApi>> managerRefs = new ConcurrentHashMap<>();
-    private Map<String, VMwareSdnApi> vmwareSdnApis = new ConcurrentHashMap<>();
-    private Map<String, ComponentServiceObjects<VMwareSdnApi>> vmwareSdnRefs = new ConcurrentHashMap<>();
     private Map<String, SdnControllerApi> sdnControllerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<SdnControllerApi>> sdnControllerRefs = new ConcurrentHashMap<>();
 
@@ -182,8 +170,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
                 newPluginTracker(customizer, ApplianceManagerApi.class, PluginType.MANAGER,
                         REQUIRED_MANAGER_PLUGIN_PROPERTIES),
                 newPluginTracker(customizer, SdnControllerApi.class, PluginType.SDN,
-                        REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES),
-                newPluginTracker(customizer, VMwareSdnApi.class, PluginType.NSX, null));
+                        REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES));
         return trackers;
     }
 
@@ -277,15 +264,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     void removeSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
         removeApi(serviceObjs, this.sdnControllerRefs, null);
         ControllerType.setTypes(getControllerTypes());
-    }
-
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    void addVMwareSdnApi(ComponentServiceObjects<VMwareSdnApi> serviceObjs) {
-        addApi(serviceObjs, this.vmwareSdnRefs);
-    }
-
-    void removeVMwareSdnApi(ComponentServiceObjects<VMwareSdnApi> serviceObjs) {
-        removeApi(serviceObjs, this.vmwareSdnRefs, this.vmwareSdnApis);
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -477,23 +455,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     // Controller Types ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public VMwareSdnApi createVMwareSdnApi(VirtualizationConnector vc) throws VmidcException {
-        final String name = vc.getControllerType();
-        VMwareSdnApi api = this.vmwareSdnApis.get(name);
-
-        if (api == null) {
-            ComponentServiceObjects<VMwareSdnApi> serviceObjs = this.vmwareSdnRefs.get(name);
-            if (serviceObjs == null) {
-                throw new VmidcException(String.format("NSX plugin not found for controller type: %s", name));
-            }
-            api = serviceObjs.getService();
-            this.vmwareSdnApis.put(name, api);
-        }
-
-        return api;
-    }
-
-    @Override
     public SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception {
         final String name = controllerType.getValue();
         SdnControllerApi api = this.sdnControllerApis.get(name);
@@ -527,7 +488,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     public Set<String> getControllerTypes() {
         Set<String> controllerTypes = new TreeSet<>();
         controllerTypes.addAll(this.sdnControllerRefs.keySet());
-        controllerTypes.addAll(this.vmwareSdnRefs.keySet());
         return controllerTypes;
     }
 
@@ -618,12 +578,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     }
 
     @Override
-    public AgentApi createAgentApi(VirtualSystem vs) throws Exception {
-        return createVMwareSdnApi(vs.getVirtualizationConnector())
-        .createAgentApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
-    }
-
-    @Override
     public ManagerSecurityGroupApi createManagerSecurityGroupApi(VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
         .createManagerSecurityGroupApi(getApplianceManagerConnectorElement(vs),
@@ -653,48 +607,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
             throws Exception {
         return createApplianceManagerApi(mc.getManagerType())
                 .createManagerCallbackNotificationApi(getApplianceManagerConnectorElement(mc));
-    }
-
-    @Override
-    public ServiceProfileApi createServiceProfileApi(VirtualSystem vs) throws Exception {
-        return createVMwareSdnApi(vs.getVirtualizationConnector())
-        .createServiceProfileApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
-    }
-
-    @Override
-    public SecurityTagApi createSecurityTagApi(VirtualSystem vs) throws Exception {
-        return createVMwareSdnApi(vs.getVirtualizationConnector())
-                .createSecurityTagApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
-    }
-
-    @Override
-    public ServiceApi createServiceApi(VirtualSystem vs) throws Exception {
-        return createVMwareSdnApi(vs.getVirtualizationConnector())
-                .createServiceApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
-    }
-
-    @Override
-    public ServiceManagerApi createServiceManagerApi(VirtualSystem vs) throws Exception {
-        return createVMwareSdnApi(vs.getVirtualizationConnector())
-                .createServiceManagerApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
-    }
-
-    @Override
-    public ServiceInstanceApi createServiceInstanceApi(VirtualSystem vs) throws Exception {
-        return createVMwareSdnApi(vs.getVirtualizationConnector())
-                .createServiceInstanceApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
-    }
-
-    @Override
-    public VendorTemplateApi createVendorTemplateApi(VirtualSystem vs) throws Exception {
-        return createVMwareSdnApi(vs.getVirtualizationConnector())
-                .createVendorTemplateApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
-    }
-
-    @Override
-    public DeploymentSpecApi createDeploymentSpecApi(VirtualSystem vs) throws Exception {
-        return createVMwareSdnApi(vs.getVirtualizationConnector())
-                .createDeploymentSpecApi(new VMwareSdnConnector(vs.getVirtualizationConnector()));
     }
 
     @Override

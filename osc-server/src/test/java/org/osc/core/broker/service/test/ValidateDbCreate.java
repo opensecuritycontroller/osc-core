@@ -104,9 +104,6 @@ public class ValidateDbCreate {
         VirtualSystem virtualSystem = new VirtualSystem(distributedAppliance);
         virtualSystem.setDomain(domain);
         virtualSystem.setApplianceSoftwareVersion(applianceSwVer);
-        virtualSystem.setNsxServiceId("nsx-service-4");
-        virtualSystem.setNsxServiceInstanceId("nsx-service-inst-5");
-        virtualSystem.setNsxServiceManagerId("nsx-servicemgr-4");
         virtualSystem.setVirtualizationConnector(virtualizationCon);
 
         OSCEntityManager.create(em, virtualSystem, this.txBroadcastUtil);
@@ -161,7 +158,7 @@ public class ValidateDbCreate {
     private VirtualizationConnector addVirtualizationConnectorEntity(EntityManager em) {
         VirtualizationConnector virtualizationCon = new VirtualizationConnector();
 
-        virtualizationCon.setName("vmware-1");
+        virtualizationCon.setName("openstack-1");
         virtualizationCon.setControllerIpAddress("172.3.4.5");
         virtualizationCon.setControllerPassword("abc123");
         virtualizationCon.setControllerUsername("user1");
@@ -169,7 +166,7 @@ public class ValidateDbCreate {
         virtualizationCon.setProviderUsername("nsmuser");
         virtualizationCon.setProviderPassword("abc2");
         virtualizationCon.setVirtualizationSoftwareVersion("12.3");
-        virtualizationCon.setVirtualizationType(VirtualizationType.VMWARE);
+        virtualizationCon.setVirtualizationType(VirtualizationType.OPENSTACK);
 
         OSCEntityManager.create(em, virtualizationCon, this.txBroadcastUtil);
 
@@ -203,7 +200,7 @@ public class ValidateDbCreate {
         applianceSwVer.setApplianceSoftwareVersion("sw_1.0");
         applianceSwVer.setImageUrl("http://imageUrl");
         applianceSwVer.setVirtualizarionSoftwareVersion("vir_1.0");
-        applianceSwVer.setVirtualizationType(VirtualizationType.VMWARE);
+        applianceSwVer.setVirtualizationType(VirtualizationType.OPENSTACK);
 
         OSCEntityManager.create(em, applianceSwVer, this.txBroadcastUtil);
 

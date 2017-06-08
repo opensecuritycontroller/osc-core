@@ -6,20 +6,15 @@
 -include target/depend.bnd
 
 # The following list of non-OSGi dependencies includes 
-# OWASP ESAPI, Quartz, httpclient, yavijava and SAC
+# OWASP ESAPI, Quartz, httpclient and SAC
 -includeresource: \
     @${antisamy.dep},\
     @${esapi.dep},\
     @${httpclient.dep},\
     @${quartz.dep},\
-    @${sac.dep},\
-    @${yavijava.dep}
+    @${sac.dep}
 
 Export-Package:\
-    com.vmware.vim25,\
-    com.vmware.vim25.mo,\
-    com.vmware.vim25.mo.util,\
-    com.vmware.vim25.ws,\
     org.owasp.esapi,\
     org.quartz,\
     org.quartz.impl
@@ -29,7 +24,6 @@ Import-Package:\
     ${exclude-esapi},\
     ${exclude-httpclient},\
     ${exclude-quartz},\
-    ${exclude-yavijava},\
     ${import-jta},\
     *
 # ESAPI pulls in some unnecessary (and non osgi) dependencies
@@ -44,7 +38,8 @@ exclude-esapi:\
   !org.apache.commons.httpclient.*,\
   !org.apache.xerces.*,\
   !org.apache.xml.serialize,\
-  !org.cyberneko.html.*
+  !org.cyberneko.html.*,\
+  !bsh
 
 # There is no need for httpclient to be substitutable
 exclude-httpclient:\
@@ -60,12 +55,6 @@ exclude-quartz:\
     !org.quartz.jobs,\
     !org.terracotta.toolkit.*,\
     !weblogic.jdbc.*
-
-# The vmware code includes shell integration which is not exported,
-# and also should not be substitutable
-exclude-yavijava:\
-    !bsh,\
-    !com.vmware.*
 
 # Hibernate puts JTA 1.2 on our classpath, but quartz is still happy with 1.1
 # and 1.1 is used in the server

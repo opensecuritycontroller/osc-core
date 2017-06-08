@@ -35,10 +35,10 @@ import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
+//import org.osc.core.broker.model.entities.appliance.VirtualSystemPolicy;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.tasks.conformance.virtualsystem.RemoveVendorTemplateTask;
+//import org.osc.core.broker.service.tasks.conformance.virtualsystem.RemoveVendorTemplateTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.manager.api.ManagerPolicyApi;
@@ -94,23 +94,15 @@ public class SyncPolicyMetaTaskTest {
        // These tests proably shouldn't be parameterised, but instead have
        // a proper database setup phase at the start of each.
 
-
-       VirtualSystemPolicy policy = null;
-       if("POLICY_WITH_VS_POLICY_MC_mc".equals(this.mc.getName())) {
-           policy = VS_POLICY;
-       } else if ("DOMAIN_WITH_MULTIPLE_POLICIES_MC_mc".equals(this.mc.getName())) {
-           policy = VS_POLICY_1;
-       }
-
-       if(policy != null) {
-           this.em.persist(policy.getVirtualSystem().getVirtualizationConnector());
-           this.em.persist(policy.getVirtualSystem().getApplianceSoftwareVersion()
-                   .getAppliance());
-           this.em.persist(policy.getVirtualSystem().getApplianceSoftwareVersion());
-           this.em.persist(policy.getVirtualSystem().getDistributedAppliance());
-           this.em.persist(policy.getVirtualSystem());
-           this.em.persist(policy);
-       }
+//       if(policy != null) {
+//           this.em.persist(policy.getVirtualSystem().getVirtualizationConnector());
+//           this.em.persist(policy.getVirtualSystem().getApplianceSoftwareVersion()
+//                   .getAppliance());
+//           this.em.persist(policy.getVirtualSystem().getApplianceSoftwareVersion());
+//           this.em.persist(policy.getVirtualSystem().getDistributedAppliance());
+//           this.em.persist(policy.getVirtualSystem());
+//           this.em.persist(policy);
+//       }
 
 
        this.em.getTransaction().commit();
@@ -123,7 +115,6 @@ public class SyncPolicyMetaTaskTest {
         task.createPolicyTask = new CreatePolicyTask();
         task.deletePolicyTask = new DeletePolicyTask();
         task.updatePolicyTask = new UpdatePolicyTask();
-        task.removeVendorTemplateTask = new RemoveVendorTemplateTask();
         task.apiFactoryService = this.apiFactoryService;
 
         task = task.create(this.mc);
@@ -143,7 +134,6 @@ public class SyncPolicyMetaTaskTest {
             {MGR_POLICY_WITHOUT_POLICY_MC, createPolicyGraph(MGR_POLICY_WITHOUT_POLICY_MC)},
             {MGR_POLICY_WITH_POLICY_MC, updatePolicyGraph(MGR_POLICY_WITH_POLICY_MC)},
             {POLICY_WITHOUT_MGR_POLICY_MC, deletePolicyGraph(POLICY_WITHOUT_MGR_POLICY_MC)},
-            {POLICY_WITH_VS_POLICY_MC, removeVendorTemplateAndDeletePolicyGraph(POLICY_WITH_VS_POLICY_MC)},
             // TODO hailee: Looks like the test below is still failing inconsistently.
             //{DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC,
             //   deleteOrphanAndVSPoliciesGraph(DOMAINS_WITH_ORPHAN_AND_OUT_OF_SYNC_POLICIES_MC)},
