@@ -18,6 +18,7 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.UUID;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
@@ -80,6 +81,11 @@ public class PortGroupCheckMetaTaskTestData {
 
                 return portGroup.getElementId().equals(getElementId()) && portGroup.getParentId().equals(getParentId());
             }
+
+            @Override
+            public int hashCode() {
+                return new HashCodeBuilder().append(getElementId()).append(getParentId()).toHashCode();
+            }
         };
 
         portGroup.setPortGroupId(id);
@@ -87,25 +93,4 @@ public class PortGroupCheckMetaTaskTestData {
 
         return portGroup;
     }
-
-    /*    private static class PortGroupMatcher extends ArgumentMatcher<Object> {
-        private String id;
-        private String parentId;
-
-        public PortGroupMatcher(String id, String parentId) {
-            this.id = id;
-            this.parentId = id;
-        }
-
-        @Override
-        public boolean matches(Object object) {
-            if (object == null || !(object instanceof PortGroup)) {
-                return false;
-            }
-
-            PortGroup portGroup = (PortGroup) object;
-
-            return portGroup.getElementId().equals(this.id) && portGroup.getParentId().equals(this.parentId);
-        }
-    }*/
 }

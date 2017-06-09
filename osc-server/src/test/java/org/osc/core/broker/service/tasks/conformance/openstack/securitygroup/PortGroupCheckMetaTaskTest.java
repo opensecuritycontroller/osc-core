@@ -42,7 +42,6 @@ import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.HibernateUtil;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.core.test.util.TestTransactionControl;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -88,9 +87,8 @@ public class PortGroupCheckMetaTaskTest {
 
         this.txControl.setEntityManager(this.em);
 
-        PowerMockito.mockStatic(HibernateUtil.class);
-        Mockito.when(HibernateUtil.getTransactionalEntityManager()).thenReturn(this.em);
-        Mockito.when(HibernateUtil.getTransactionControl()).thenReturn(this.txControl);
+        Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
+        Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
         populateDatabase();
     }
