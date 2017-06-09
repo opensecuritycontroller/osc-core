@@ -125,7 +125,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
 
                 // If the existing inspection hook has ingress or egress port IDs
                 // different than the found assigned DAI then update the inspection hook.
-                // TODO emanoel: Update is curretly not support by the Nuage plugin. Skipping the code below.
+                // TODO emanoel: Update is currently not supported by the Nuage plugin. Skipping the code below.
                 /*if (!existingInspHook.getInspectionPort().getIngressPort().getElementId()
                         .equals(assignedRedirectedDai.getInspectionOsIngressPortId()) ||
                         !existingInspHook.getInspectionPort().getEgressPort().getElementId()
