@@ -49,6 +49,7 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.common.manager.ManagerType;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -227,7 +228,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         DryRunRequest<ApplianceManagerConnectorRequest> addRequest = new DryRunRequest<>();
         addRequest.setDto(new ApplianceManagerConnectorRequest());
         addRequest.getDto().setName(this.name.getValue().trim());
-        addRequest.getDto().setManagerType(((String) this.type.getValue()).trim());
+        addRequest.getDto().setManagerType(ManagerType.fromText(((String) this.type.getValue()).trim()));
         addRequest.getDto().setIpAddress(this.ip.getValue().trim());
         addRequest.getDto().setUsername(this.user.getValue().trim());
         addRequest.getDto().setPassword(this.pw.getValue().trim());

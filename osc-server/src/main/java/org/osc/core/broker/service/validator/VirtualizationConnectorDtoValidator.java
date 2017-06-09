@@ -26,37 +26,35 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
-import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.common.virtualization.OpenstackSoftwareVersion;
 
 public class VirtualizationConnectorDtoValidator
-		implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
+implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
 
-	private EntityManager em;
-	private static final Logger LOG = Logger.getLogger(VirtualizationConnectorDtoValidator.class);
+    private EntityManager em;
+    private static final Logger LOG = Logger.getLogger(VirtualizationConnectorDtoValidator.class);
     private TransactionalBroadcastUtil txBroadcastUtil;
     private ApiFactoryService apiFactoryService;
 
-	public VirtualizationConnectorDtoValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil, ApiFactoryService apiFactoryService) {
-		this.em = em;
+    public VirtualizationConnectorDtoValidator(EntityManager em, TransactionalBroadcastUtil txBroadcastUtil, ApiFactoryService apiFactoryService) {
+        this.em = em;
         this.txBroadcastUtil = txBroadcastUtil;
         this.apiFactoryService = apiFactoryService;
-	}
+    }
 
-	@Override
-	public void validateForCreate(VirtualizationConnectorDto dto) throws Exception {
-		// Initializing Entity Manager
+    @Override
+    public void validateForCreate(VirtualizationConnectorDto dto) throws Exception {
+        // Initializing Entity Manager
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(
                 VirtualizationConnector.class, this.em, this.txBroadcastUtil);
 
-        boolean usesProviderCreds = dto.isControllerDefined() && this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
-                dto.getControllerType()));
+        boolean usesProviderCreds = dto.isControllerDefined() && this.apiFactoryService.usesProviderCreds(dto.getControllerType());
         VirtualizationConnectorDtoValidator.checkForNullFields(dto, usesProviderCreds);
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);
 
@@ -74,8 +72,7 @@ public class VirtualizationConnectorDtoValidator
         }
 
         // check for uniqueness of controller IP
-        if (dto.isControllerDefined() && !this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
-                dto.getControllerType()))) {
+        if (dto.isControllerDefined() && !this.apiFactoryService.usesProviderCreds(dto.getControllerType())) {
             ValidateUtil.checkForValidIpAddressFormat(dto.getControllerIP());
             if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
 
@@ -94,12 +91,12 @@ public class VirtualizationConnectorDtoValidator
         }
 
 
-	}
+    }
 
-	@Override
-	public VirtualizationConnector validateForUpdate(VirtualizationConnectorDto dto) throws Exception {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public VirtualizationConnector validateForUpdate(VirtualizationConnectorDto dto) throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Based on the type of DTO makes sure the required fields are not null and the fields which should

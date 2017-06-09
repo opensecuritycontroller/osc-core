@@ -33,7 +33,6 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
-import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
@@ -49,6 +48,8 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.common.controller.ControllerType;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -460,7 +461,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         if (this.virtualizationType.getValue().equals(VirtualizationType.OPENSTACK.toString())) {
             request.getDto().setSoftwareVersion(OPENSTACK_ICEHOUSE);
             request.getDto()
-            .setControllerType(BaseVCWindow.this.controllerType.getValue().toString());
+            .setControllerType(ControllerType.fromText(BaseVCWindow.this.controllerType.getValue().toString()));
         }
         return request;
     }

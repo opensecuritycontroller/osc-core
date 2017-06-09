@@ -18,6 +18,8 @@ package org.osc.core.broker.job;
 
 import java.util.Set;
 
+import org.osc.core.common.job.TaskGuard;
+
 /**
  *         TaskGraph contains a tree {@link Graph} of {@link Task}s which will
  *         execute in accordance to dependency order. Tasks added with

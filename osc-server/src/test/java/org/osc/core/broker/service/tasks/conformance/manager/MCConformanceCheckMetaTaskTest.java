@@ -35,7 +35,7 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.common.manager.ManagerType;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;

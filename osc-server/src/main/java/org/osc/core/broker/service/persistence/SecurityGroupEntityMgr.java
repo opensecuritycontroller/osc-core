@@ -31,13 +31,13 @@ import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class SecurityGroupEntityMgr {
 
@@ -93,7 +93,7 @@ public class SecurityGroupEntityMgr {
             Root<SecurityGroupMember> vmRoot = vmNumberCriteria.from(SecurityGroupMember.class);
             vmNumberCriteria = vmNumberCriteria.select(cb.count(vmRoot))
                     .where(cb.equal(vmRoot.join("securityGroup").get("id"), dto.getId()),
-                           cb.equal(vmRoot.get("type"), SecurityGroupMemberType.VM));
+                            cb.equal(vmRoot.get("type"), SecurityGroupMemberType.VM));
 
             CriteriaQuery<Long> nwNumberCriteria = cb.createQuery(Long.class);
 
@@ -141,7 +141,7 @@ public class SecurityGroupEntityMgr {
         Root<SecurityGroup> root = query.from(SecurityGroup.class);
         query = query.select(root)
                 .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId),
-                       cb.equal(root.get("mgrId"), mgrId))
+                        cb.equal(root.get("mgrId"), mgrId))
                 .orderBy(cb.asc(root.get("name")));
 
         try {
@@ -161,7 +161,7 @@ public class SecurityGroupEntityMgr {
         Root<SecurityGroup> root = query.from(SecurityGroup.class);
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.join("virtualizationConnector").get("id"), vcId),
-                       cb.isEmpty(root.get("securityGroupInterfaces")))
+                        cb.isEmpty(root.get("securityGroupInterfaces")))
                 .orderBy(cb.asc(root.get("name")));
 
         return em.createQuery(query).getResultList();

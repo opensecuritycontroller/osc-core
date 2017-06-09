@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
-import org.osc.core.broker.service.dto.VirtualizationType;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class ListEncapsulationTypeByVersionTypeAndModelRequest implements Request {
 

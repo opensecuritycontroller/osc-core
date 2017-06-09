@@ -48,6 +48,11 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.common.job.JobState;
+import org.osc.core.common.job.JobStatus;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.job.TaskState;
+import org.osc.core.common.job.TaskStatus;
 import org.osc.sdk.manager.element.JobElement;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
@@ -114,8 +119,8 @@ public class Job implements Runnable, JobElement {
     }
 
     @Override
-    public JobStatus getStatus() {
-        return this.status;
+    public JobStatusElementImpl getStatus() {
+        return new JobStatusElementImpl(this.status);
     }
 
     void setStatus(JobStatus status) {
@@ -134,7 +139,7 @@ public class Job implements Runnable, JobElement {
             // Use a new transaction to persist this update come what may
             txControl.requiresNew(() -> {
                 this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
-                this.jobRecord.setStatus(getEntityStatus());
+                this.jobRecord.setStatus(this.status);
                 OSCEntityManager.update(em, this.jobRecord, StaticRegistry.transactionalBroadcastUtil());
                 return null;
             });
@@ -146,10 +151,6 @@ public class Job implements Runnable, JobElement {
             // TODO:nbartlex remove when EM and TX are injected in A7
             log.error("Fail to update JobRecord " + this, e);
         }
-    }
-
-    private org.osc.core.broker.model.entities.job.JobStatus getEntityStatus() {
-        return toEntityType(org.osc.core.broker.model.entities.job.JobStatus.class, this.status);
     }
 
     public Date getCompletedTimestamp() {
@@ -203,7 +204,7 @@ public class Job implements Runnable, JobElement {
                 }
 
                 // if one task fails whole job is set to fail
-                if (!completedTask.getStatus().isSuccessful()) {
+                if (!completedTask.getStatus().getStatus().isSuccessful()) {
                     setFailureReason(VmidcMessages.getString(VmidcMessages_.JOB_TASK_FAILURE));
                     setStatus(JobStatus.FAILED);
                 }
@@ -226,8 +227,8 @@ public class Job implements Runnable, JobElement {
                      * it is completed, Nothing to do. If is pending a thread,
                      * nothing to do
                      */
-                    if (successorTaskNode.getState().isRunning() || successorTaskNode.getState().isTerminalState()
-                            || successorTaskNode.getState().equals(TaskState.QUEUED)) {
+                    if (successorTaskNode.getState().getState().isRunning() || successorTaskNode.getState().getState().isTerminalState()
+                            || successorTaskNode.getState().getState().equals(TaskState.QUEUED)) {
                         continue;
                     }
 
@@ -316,7 +317,7 @@ public class Job implements Runnable, JobElement {
     private boolean checkAllPredecessorsCompleted(TaskNode taskNode) {
         // Check if task's predecessor all completed.
         for (TaskNode predecessorTaskNode : taskNode.getPredecessors()) {
-            if (!predecessorTaskNode.getState().isTerminalState()) {
+            if (!predecessorTaskNode.getState().getState().isTerminalState()) {
                 return false;
             }
         }
@@ -336,7 +337,7 @@ public class Job implements Runnable, JobElement {
     private boolean checkAllPredecessorsCompletedSuccessfully(TaskNode taskNode) {
         boolean isAllPredecessorsSuccessful = true;
         for (TaskNode predecessorTaskNode : taskNode.getPredecessors()) {
-            if (!predecessorTaskNode.getStatus().isSuccessful()) {
+            if (!predecessorTaskNode.getStatus().getStatus().isSuccessful()) {
                 isAllPredecessorsSuccessful = false;
                 break;
             }
@@ -347,7 +348,7 @@ public class Job implements Runnable, JobElement {
     private boolean checkAllAncestorsCompletedSuccessfully(TaskNode taskNode) {
         boolean isAllAncestorsSuccessful = true;
         for (TaskNode ancestorTaskNode : taskNode.getAncestors()) {
-            if (!ancestorTaskNode.getStatus().isSuccessful()) {
+            if (!ancestorTaskNode.getStatus().getStatus().isSuccessful()) {
                 isAllAncestorsSuccessful = false;
                 break;
             }
@@ -360,8 +361,8 @@ public class Job implements Runnable, JobElement {
     }
 
     @Override
-    public JobState getState() {
-        return this.state;
+    public JobStateElementImpl getState() {
+        return new JobStateElementImpl(this.state);
     }
 
     void setState(JobState state) {
@@ -396,7 +397,7 @@ public class Job implements Runnable, JobElement {
             txControl.requiresNew(() -> {
                 this.jobRecord = em.find(JobRecord.class, this.jobRecord.getId());
 
-                this.jobRecord.setState(getEntityState());
+                this.jobRecord.setState(this.state);
                 this.jobRecord.setQueuedTimestamp(getQueuedTimestamp());
                 this.jobRecord.setStartedTimestamp(getStartedTimestamp());
                 this.jobRecord.setCompletedTimestamp(getCompletedTimestamp());
@@ -412,10 +413,6 @@ public class Job implements Runnable, JobElement {
             // TODO: nbartlex - remove when EM and TX are injected
             log.error("Fail to update JobRecord " + this, e);
         }
-    }
-
-    private org.osc.core.broker.model.entities.job.JobState getEntityState() {
-        return toEntityType(org.osc.core.broker.model.entities.job.JobState.class, this.state);
     }
 
     public Date getStartedTimestamp() {
@@ -482,7 +479,7 @@ public class Job implements Runnable, JobElement {
     public void abort(String reason) {
         log.info("Abort job " + getId());
 
-        if (getState().isTerminalState()) {
+        if (this.state.isTerminalState()) {
             log.info("Job " + getId() + " already completed.");
             return;
         }
@@ -494,12 +491,12 @@ public class Job implements Runnable, JobElement {
 
         // Mark all tasks running jobs completed/aborted
         for (TaskNode taskNode : this.taskGraph.getGraph().topologicalSort()) {
-            if (taskNode.future != null && taskNode.getState().isRunning()) {
+            if (taskNode.future != null && taskNode.getState().getState().isRunning()) {
                 taskNode.future.cancel(true);
                 taskNode.setStatus(TaskStatus.ABORTED);
                 taskNode.setState(TaskState.COMPLETED);
             } else {
-                if (!taskNode.getState().isTerminalState()) {
+                if (!taskNode.getState().getState().isTerminalState()) {
                     taskNode.setStatus(TaskStatus.SKIPPED);
                     taskNode.setState(TaskState.COMPLETED);
                 }
@@ -585,8 +582,8 @@ public class Job implements Runnable, JobElement {
                     jobRecord = new JobRecord();
                     jobRecord.setSubmittedBy(contextUser);
                     jobRecord.setName(getName());
-                    jobRecord.setState(getEntityState());
-                    jobRecord.setStatus(getEntityStatus());
+                    jobRecord.setState(this.state);
+                    jobRecord.setStatus(this.status);
 
                     jobRecord.setCreatedBy(contextUser);
                     jobRecord.setCreatedTimestamp(new Date());
@@ -644,12 +641,9 @@ public class Job implements Runnable, JobElement {
 
             taskRecord.setName(taskNode.getSafeTaskName());
             taskRecord.setDependencyOrder(i++);
-            taskRecord.setTaskGaurd(
-                    toEntityType(org.osc.core.broker.model.entities.job.TaskGuard.class, taskNode.getTaskGaurd()));
-            taskRecord.setState(
-                    toEntityType(org.osc.core.broker.model.entities.job.TaskState.class, taskNode.getState()));
-            taskRecord.setStatus(
-                    toEntityType(org.osc.core.broker.model.entities.job.TaskStatus.class, taskNode.getStatus()));
+            taskRecord.setTaskGaurd(taskNode.getTaskGaurd());
+            taskRecord.setState(taskNode.getState().getState());
+            taskRecord.setStatus(taskNode.getStatus().getStatus());
 
             if (taskRecord.getId() == null) {
                 if (taskNode.getTask().getObjects() != null) {

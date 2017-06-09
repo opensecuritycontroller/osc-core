@@ -31,7 +31,6 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -62,14 +61,15 @@ import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
+import org.osc.core.common.controller.ControllerType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class UpdateVirtualizationConnectorService
-        extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseJobResponse>
-        implements UpdateVirtualizationConnectorServiceApi {
+extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseJobResponse>
+implements UpdateVirtualizationConnectorServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
 
@@ -119,7 +119,7 @@ public class UpdateVirtualizationConnectorService
             vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet().stream()
                     .map(SslCertificateAttrEntityMgr::createEntity)
                     .collect(toSet()),
-                request.getDto().getId(), persistentSslCertificatesSet));
+                    request.getDto().getId(), persistentSslCertificatesSet));
             vcEntityMgr.update(vc);
 
             // Broadcast notifications to UI if VC name has changed, so that Appliance Instances view and Virtual System
@@ -151,7 +151,7 @@ public class UpdateVirtualizationConnectorService
 
     private DryRunRequest<VirtualizationConnectorRequest> internalSSLCertificatesFetch(
             DryRunRequest<VirtualizationConnectorRequest> request, SslCertificatesExtendedException sslCertificatesException)
-            throws Exception {
+                    throws Exception {
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
 
         int i = 1;
@@ -165,12 +165,11 @@ public class UpdateVirtualizationConnectorService
     }
 
     void validate(EntityManager em, DryRunRequest<VirtualizationConnectorRequest> request,
-                  VirtualizationConnector existingVc, OSCEntityManager<VirtualizationConnector> emgr) throws Exception {
+            VirtualizationConnector existingVc, OSCEntityManager<VirtualizationConnector> emgr) throws Exception {
 
         // check for null/empty values
         VirtualizationConnectorDto dto = request.getDto();
-        boolean usesProviderCreds = dto.isControllerDefined() && this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
-                dto.getControllerType()));
+        boolean usesProviderCreds = dto.isControllerDefined() && this.apiFactoryService.usesProviderCreds(dto.getControllerType());
         VirtualizationConnectorDtoValidator.checkForNullFields(dto, request.isApi(), usesProviderCreds);
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);
 
@@ -187,8 +186,7 @@ public class UpdateVirtualizationConnectorService
         }
 
         // check for uniqueness of controller IP
-        if (dto.isControllerDefined() && !this.apiFactoryService.usesProviderCreds(ControllerType.fromText(
-                dto.getControllerType()))) {
+        if (dto.isControllerDefined() && !this.apiFactoryService.usesProviderCreds(dto.getControllerType())) {
             ValidateUtil.checkForValidIpAddressFormat(dto.getControllerIP());
             if (emgr.isExisting("controllerIpAddress", dto.getControllerIP())) {
 
@@ -223,7 +221,7 @@ public class UpdateVirtualizationConnectorService
 
         // If controller type is changed, only NONE->new-type is allowed unconditionally.
         // For all other cases (current-type->NONE, current-type->new-type), there should not be any virtual systems using it.
-        if (!existingVc.getControllerType().equals(dto.getControllerType())
+        if (!existingVc.getControllerType().equals(dto.getControllerType().getValue())
                 && !existingVc.getControllerType().equals(ControllerType.NONE.getValue())
                 && (existingVc.getVirtualSystems().size() > 0 || existingVc.getSecurityGroups().size() > 0)) {
             throw new VmidcBrokerInvalidRequestException(
@@ -234,9 +232,9 @@ public class UpdateVirtualizationConnectorService
         // Transforms the existing vc based on the update request
         updateVirtualizationConnector(request, existingVc);
 
-		if (dto.getType().isOpenstack()) {
+        if (dto.getType().isOpenstack()) {
             this.util.checkOpenstackConnection(request, existingVc);
-		}
+        }
     }
 
     /**
@@ -244,7 +242,7 @@ public class UpdateVirtualizationConnectorService
      * no password specified, it uses the password from the DB.
      */
     private void updateVirtualizationConnector(DryRunRequest<VirtualizationConnectorRequest> request,
-                                               VirtualizationConnector existingVc) throws EncryptionException {
+            VirtualizationConnector existingVc) throws EncryptionException {
         // cache existing DB passwords
         String providerDbPassword = existingVc.getProviderPassword();
         String controllerDbPassword = existingVc.getControllerPassword();

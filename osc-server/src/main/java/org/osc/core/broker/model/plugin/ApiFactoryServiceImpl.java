@@ -44,9 +44,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.manager.ApplianceManagerConnectorElementImpl;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.model.plugin.manager.VirtualSystemElementImpl;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.model.plugin.sdncontroller.VirtualizationConnectorElementImpl;
 import org.osc.core.broker.service.api.plugin.PluginEvent;
 import org.osc.core.broker.service.api.plugin.PluginEvent.Type;
@@ -57,8 +55,10 @@ import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.util.ServerUtil;
+import org.osc.core.common.controller.ControllerType;
+import org.osc.core.common.manager.ManagerType;
 import org.osc.core.server.installer.InstallableManager;
-import org.osc.core.util.ServerUtil;
 import org.osc.sdk.controller.Constants;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
@@ -580,8 +580,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     @Override
     public ManagerSecurityGroupApi createManagerSecurityGroupApi(VirtualSystem vs) throws Exception {
         return createApplianceManagerApi(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
-        .createManagerSecurityGroupApi(getApplianceManagerConnectorElement(vs),
-                new VirtualSystemElementImpl(vs));
+                .createManagerSecurityGroupApi(getApplianceManagerConnectorElement(vs),
+                        new VirtualSystemElementImpl(vs));
     }
 
     @Override

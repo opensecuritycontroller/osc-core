@@ -22,7 +22,7 @@ import org.osc.core.broker.service.api.GetNATSettingsServiceApi;
 import org.osc.core.broker.service.dto.NATSettingsDto;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
-import org.osc.core.util.ServerUtil;
+import org.osc.core.broker.util.ServerUtil;
 import org.osgi.service.component.annotations.Component;
 
 @Component

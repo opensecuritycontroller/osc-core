@@ -49,6 +49,8 @@ import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.job.TaskStatus;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osgi.service.transaction.control.TransactionControl;
 import org.powermock.api.mockito.PowerMockito;
@@ -169,18 +171,18 @@ public class JobEngineTest {
                 createEm);
 
         Answer<TransactionControl> createTxControl = i -> this.txControls
-                        .computeIfAbsent(Thread.currentThread(),
-                                k -> {
-                                    TestTransactionControl testTxControl = Mockito.mock(TestTransactionControl.class,
-                                        Mockito.withSettings().defaultAnswer(Answers.CALLS_REAL_METHODS.get()));
-                                    try {
-                                        testTxControl.setEntityManager(createEm.answer(i));
-                                    } catch (Throwable t) {
-                                        t.printStackTrace();
-                                        Assert.fail(t.getMessage());
-                                    }
-                                    return testTxControl;
-                                });
+                .computeIfAbsent(Thread.currentThread(),
+                        k -> {
+                            TestTransactionControl testTxControl = Mockito.mock(TestTransactionControl.class,
+                                    Mockito.withSettings().defaultAnswer(Answers.CALLS_REAL_METHODS.get()));
+                            try {
+                                testTxControl.setEntityManager(createEm.answer(i));
+                            } catch (Throwable t) {
+                                t.printStackTrace();
+                                Assert.fail(t.getMessage());
+                            }
+                            return testTxControl;
+                        });
         Mockito.when(HibernateUtil.getTransactionControl()).then(createTxControl);
 
         this.je = JobEngine.getEngine();
@@ -263,8 +265,8 @@ public class JobEngineTest {
                 Assert.assertNotNull(taskNode);
 
                 assertEquals(ts.getName(), taskNode.getTask().getName());
-                assertEquals(ts.getState().name(), taskNode.getState().name());
-                assertEquals(ts.getStatus().name(), taskNode.getStatus().name());
+                assertEquals(ts.getState().name(), taskNode.getState().getState().name());
+                assertEquals(ts.getStatus().name(), taskNode.getStatus().getStatus().name());
                 assertEquals(ts.getTaskGaurd().name(), taskNode.getTaskGaurd().name());
                 assertEquals(ts.getFailReason(), taskNode.getFailReason() != null ? taskNode.getFailReason()
                         .getMessage() : null);
@@ -455,13 +457,13 @@ public class JobEngineTest {
         this.job = this.je.submit("Job-skipped-task", this.tg, true);
         this.job.waitForCompletion();
 
-        assertEquals(this.job.getTaskGraph().getTaskNode(A).getStatus(), TaskStatus.FAILED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(B).getStatus(), TaskStatus.PASSED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(C).getStatus(), TaskStatus.PASSED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(D).getStatus(), TaskStatus.SKIPPED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(E).getStatus(), TaskStatus.SKIPPED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(F).getStatus(), TaskStatus.PASSED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(G).getStatus(), TaskStatus.SKIPPED);
+        assertEquals(this.job.getTaskGraph().getTaskNode(A).getStatus().getStatus(), TaskStatus.FAILED);
+        assertEquals(this.job.getTaskGraph().getTaskNode(B).getStatus().getStatus(), TaskStatus.PASSED);
+        assertEquals(this.job.getTaskGraph().getTaskNode(C).getStatus().getStatus(), TaskStatus.PASSED);
+        assertEquals(this.job.getTaskGraph().getTaskNode(D).getStatus().getStatus(), TaskStatus.SKIPPED);
+        assertEquals(this.job.getTaskGraph().getTaskNode(E).getStatus().getStatus(), TaskStatus.SKIPPED);
+        assertEquals(this.job.getTaskGraph().getTaskNode(F).getStatus().getStatus(), TaskStatus.PASSED);
+        assertEquals(this.job.getTaskGraph().getTaskNode(G).getStatus().getStatus(), TaskStatus.SKIPPED);
     }
 
     class JobCompletionResponder implements JobCompletionListener {

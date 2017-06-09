@@ -47,7 +47,6 @@ import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceAp
 import org.osc.core.broker.service.dto.BaseDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
-import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.ActionNotSupportedException;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseJobRequest;
@@ -64,6 +63,7 @@ import org.osc.core.broker.view.vc.securitygroup.AddSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.BindSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.UpdateSecurityGroupWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -287,7 +287,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
         }
         if (event.getButton().getId().equals(ToolbarButtons.ADD_CHILD.getId())) {
             VirtualizationConnectorDto vc = getParentItem().getBean();
-            if (vc.getControllerType().equals(BaseVCWindow.NO_CONTROLLER)) {
+            if (vc.getControllerType().getValue().equals(BaseVCWindow.NO_CONTROLLER)) {
                 ViewUtil.iscNotification("Creation of Security Groups is not allowed in the absence of SDN Controller.",
                         Notification.Type.ERROR_MESSAGE);
             } else {

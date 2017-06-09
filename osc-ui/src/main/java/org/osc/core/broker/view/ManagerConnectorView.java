@@ -161,8 +161,8 @@ public class ManagerConnectorView extends CRUDBaseView<ApplianceManagerConnector
                     return ViewUtil.generateMgrLink(
                             managerConnectorDto.getIpAddress(),
                             ManagerConnectorView.this.pluginService.createApplianceManagerApi(
-                                    managerConnectorDto.getManagerType())
-                                .getManagerUrl(managerConnectorDto.getIpAddress()));
+                                    managerConnectorDto.getManagerType().getValue())
+                            .getManagerUrl(managerConnectorDto.getIpAddress()));
                 } catch (Exception e) {
                     return ViewUtil.generateMgrLink("http://", managerConnectorDto.getIpAddress(), "", "");
                 }

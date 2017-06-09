@@ -31,9 +31,6 @@
     @${jersey-client.dep},\
     @${jersey-common.dep},\
     @${jersey-guava.dep},\
-    @${jersey-entity-filtering.dep},\
-    @${jersey-container-servlet-core.dep},\
-    @${jersey-server.dep},\
     @${jackson-annotations.dep},\
     @${jackson-core.dep},\
     @${jackson-databind.dep},\

@@ -21,7 +21,6 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -35,12 +34,13 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.ForceDeleteDSTask;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
-        implements DeleteDeploymentSpecServiceApi {
+implements DeleteDeploymentSpecServiceApi {
 
     @Reference
     private ConformService conformService;
@@ -101,7 +101,7 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
 
         if (vs == null) {
             throw new VmidcBrokerValidationException("Virtual System with Id: " + request.getParentId()
-                    + "  is not found.");
+            + "  is not found.");
         }
 
         this.ds = em.find(DeploymentSpec.class, request.getId());
@@ -111,7 +111,7 @@ public class DeleteDeploymentSpecService extends ServiceDispatcher<BaseDeleteReq
             // del req does not have name, only ID
 
             throw new VmidcBrokerValidationException("Deployment Specification entry with ID " + request.getId()
-                    + " is not found.");
+            + " is not found.");
         }
 
         // TODO: Future if DS/DDS is in use send Alert/Warning to the user...

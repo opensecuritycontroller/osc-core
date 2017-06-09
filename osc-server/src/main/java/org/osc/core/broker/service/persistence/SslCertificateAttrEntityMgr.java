@@ -29,7 +29,7 @@ import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
 
 public class SslCertificateAttrEntityMgr extends OSCEntityManager<SslCertificateAttr> {
 

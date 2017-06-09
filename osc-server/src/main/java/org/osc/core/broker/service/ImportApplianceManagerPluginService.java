@@ -34,8 +34,8 @@ import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
-import org.osc.core.util.FileUtil;
-import org.osc.core.util.ServerUtil;
+import org.osc.core.broker.util.FileUtil;
+import org.osc.core.broker.util.ServerUtil;
 import org.osgi.service.component.annotations.Component;
 
 @Component

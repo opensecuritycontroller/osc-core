@@ -23,7 +23,6 @@ import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -40,6 +39,7 @@ import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.service.validator.RequestValidator;
+import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -50,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = { DeleteDistributedApplianceServiceApi.class, DeleteDistributedApplianceService.class })
 public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
-        implements DeleteDistributedApplianceServiceApi {
+implements DeleteDistributedApplianceServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteDistributedApplianceService.class);
     private RequestValidator<BaseDeleteRequest, DistributedAppliance> validator;
@@ -93,20 +93,20 @@ public class DeleteDistributedApplianceService extends ServiceDispatcher<BaseDel
             job = JobEngine.getEngine().submit("Delete Distributed Appliance '" + da.getName() + "'", tg,
                     LockObjectReference.getObjectReferences(da), new JobCompletionListener() {
 
-                        @Override
-                        public void completed(Job job) {
-                            if (!job.getStatus().isSuccessful()) {
-                                try {
-                                    DeleteDistributedApplianceService.this.dbConnectionManager.getTransactionControl().required(() ->
-                                        new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class, DeleteDistributedApplianceService.this.txBroadcastUtil)
-                                        .run(DeleteDistributedApplianceService.this.dbConnectionManager.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
-                                } catch (Exception e) {
-                                    log.error("A serious error occurred in the Job Listener", e);
-                                    throw new RuntimeException("No Transactional resources are available", e);
-                                }
-                            }
+                @Override
+                public void completed(Job job) {
+                    if (!job.getStatus().getStatus().isSuccessful()) {
+                        try {
+                            DeleteDistributedApplianceService.this.dbConnectionManager.getTransactionControl().required(() ->
+                            new CompleteJobTransaction<DistributedAppliance>(DistributedAppliance.class, DeleteDistributedApplianceService.this.txBroadcastUtil)
+                            .run(DeleteDistributedApplianceService.this.dbConnectionManager.getTransactionalEntityManager(), new CompleteJobTransactionInput(da.getId(), job.getId())));
+                        } catch (Exception e) {
+                            log.error("A serious error occurred in the Job Listener", e);
+                            throw new RuntimeException("No Transactional resources are available", e);
                         }
-                    });
+                    }
+                }
+            });
             log.info("Done submitting with jobId: " + job.getId());
 
             return job;

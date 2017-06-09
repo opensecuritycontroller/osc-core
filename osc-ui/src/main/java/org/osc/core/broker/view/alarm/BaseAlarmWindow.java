@@ -27,6 +27,9 @@ import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.common.alarm.AlarmAction;
+import org.osc.core.common.alarm.EventType;
+import org.osc.core.common.alarm.Severity;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -37,18 +40,6 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextField;
 
 public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel> {
-
-    protected static final String EVENT_JOB_FAILURE = "Job Failure";
-    protected static final String EVENT_SYSTEM_FAILURE = "System Failure";
-    protected static final String EVENT_DAI_FAILURE = "DAI Failure";
-
-    protected static final String SEVERITY_HIGH = "High";
-    protected static final String SEVERITY_MEDIUM = "Medium";
-    protected static final String SEVERITY_LOW = ("Low");
-
-    protected static final String ALARM_ACTION_NONE = "None";
-    protected static final String ALARM_ACTION_EMAIL = "Email";
-
     private static final long serialVersionUID = 1L;
 
     private static final Logger log = Logger.getLogger(BaseAlarmWindow.class);
@@ -81,7 +72,7 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
             this.eventType.validate();
             this.severity.validate();
             this.alarmAction.validate();
-            if (this.alarmAction.getValue().equals(ALARM_ACTION_EMAIL)) {
+            if (this.alarmAction.getValue().equals(AlarmAction.EMAIL.toString())) {
                 this.email.validate();
                 BaseDtoResponse<EmailSettingsDto> emailSettingsResponse = this.getEmailSettingsService.dispatch(new Request() {
                 });
@@ -106,10 +97,10 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
         this.eventType = new ComboBox("Event Type");
         this.eventType.setTextInputAllowed(false);
         this.eventType.setNullSelectionAllowed(false);
-        this.eventType.addItem(EVENT_JOB_FAILURE);
-        this.eventType.addItem(EVENT_SYSTEM_FAILURE);
-        this.eventType.addItem(EVENT_DAI_FAILURE);
-        this.eventType.select(EVENT_JOB_FAILURE);
+        this.eventType.addItem(EventType.JOB_FAILURE.toString());
+        this.eventType.addItem(EventType.SYSTEM_FAILURE.toString());
+        this.eventType.addItem(EventType.DAI_FAILURE.toString());
+        this.eventType.select(EventType.JOB_FAILURE.toString());
 
         this.regexMatch = new TextField("Regex Match");
         this.regexMatch.setValue(".*");
@@ -119,17 +110,17 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
         this.severity = new ComboBox("Severity");
         this.severity.setTextInputAllowed(false);
         this.severity.setNullSelectionAllowed(false);
-        this.severity.addItem(SEVERITY_HIGH);
-        this.severity.addItem(SEVERITY_MEDIUM);
-        this.severity.addItem(SEVERITY_LOW);
-        this.severity.select(SEVERITY_LOW);
+        this.severity.addItem(Severity.HIGH.toString());
+        this.severity.addItem(Severity.MEDIUM.toString());
+        this.severity.addItem(Severity.LOW.toString());
+        this.severity.select(Severity.LOW.toString());
 
         this.alarmAction = new ComboBox("Alarm Action");
         this.alarmAction.setTextInputAllowed(false);
         this.alarmAction.setNullSelectionAllowed(false);
-        this.alarmAction.addItem(ALARM_ACTION_NONE);
-        this.alarmAction.addItem(ALARM_ACTION_EMAIL);
-        this.alarmAction.select(ALARM_ACTION_NONE);
+        this.alarmAction.addItem(AlarmAction.NONE.toString());
+        this.alarmAction.addItem(AlarmAction.EMAIL.toString());
+        this.alarmAction.select(AlarmAction.NONE.toString());
         this.alarmAction.addValueChangeListener(this.actionChangedListener);
 
         this.email = new TextField("Send email to");
@@ -168,7 +159,7 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
 
             @Override
             public void valueChange(ValueChangeEvent event) {
-                if (BaseAlarmWindow.this.alarmAction.getValue().equals(ALARM_ACTION_EMAIL)) {
+                if (BaseAlarmWindow.this.alarmAction.getValue().equals(AlarmAction.EMAIL.toString())) {
                     BaseAlarmWindow.this.email.setVisible(true);
                 } else {
                     BaseAlarmWindow.this.email.setVisible(false);

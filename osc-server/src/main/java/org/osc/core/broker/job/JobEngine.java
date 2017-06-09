@@ -35,6 +35,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.common.job.JobState;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -79,11 +80,11 @@ public final class JobEngine {
 
         this.jobExecutor = new ThreadPoolExecutor(jobThreadPoolSize, jobThreadPoolSize, 60, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat("isc-job-pool-%d")
-                        .build(), new RejectedExecutionHandlerImpl());
+                .build(), new RejectedExecutionHandlerImpl());
 
         this.taskExecutor = new ThreadPoolExecutor(taskThreadPoolSize, taskThreadPoolSize, 60, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat("isc-task-pool-%d")
-                        .build(), new RejectedExecutionHandlerImpl());
+                .build(), new RejectedExecutionHandlerImpl());
 
         jobEngine.initialized = true;
     }
@@ -172,13 +173,13 @@ public final class JobEngine {
 
     public Job submit(String name, TaskGraph taskGraph, Set<LockObjectReference> objects,
             JobCompletionListener jobCompletionListener, TaskChangeListener taskChangeListener, boolean persistent)
-            throws Exception {
+                    throws Exception {
         return initJob(name, taskGraph, objects, jobCompletionListener, taskChangeListener, persistent);
     }
 
     private synchronized Job initJob(String name, TaskGraph taskGraph, Set<LockObjectReference> objects,
             JobCompletionListener jobCompletionListener, TaskChangeListener taskChangeListener, boolean persistent)
-            throws Exception {
+                    throws Exception {
         if (!this.isShutdown) {
             Job job = new Job(name, taskGraph, objects, this.taskExecutor);
             if (persistent) {
@@ -257,7 +258,7 @@ public final class JobEngine {
         while (it.hasNext()) {
             Job job = it.next();
             if (job.getId().equals(jobId)) {
-                if (!job.getState().isTerminalState()) {
+                if (!job.getState().getState().isTerminalState()) {
                     job.abort(reason);
                 }
                 return;

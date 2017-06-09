@@ -16,8 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import static org.osc.core.broker.model.entities.job.JobState.COMPLETED;
-import static org.osc.core.broker.model.entities.job.JobStatus.FAILED;
+import static org.osc.core.common.job.JobState.COMPLETED;
+import static org.osc.core.common.job.JobStatus.FAILED;
 
 import java.util.HashSet;
 import java.util.List;

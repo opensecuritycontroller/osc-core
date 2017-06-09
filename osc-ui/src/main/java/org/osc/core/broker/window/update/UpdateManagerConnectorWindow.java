@@ -47,6 +47,7 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.common.manager.ManagerType;
 
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.ui.Button.ClickEvent;
@@ -210,7 +211,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         updateRequest.setDto(new ApplianceManagerConnectorRequest());
         updateRequest.getDto().setId(this.currentMCObject.getBean().getId());
         updateRequest.getDto().setName(this.name.getValue().trim());
-        updateRequest.getDto().setManagerType(this.type.getValue().trim());
+        updateRequest.getDto().setManagerType(ManagerType.fromText(this.type.getValue().trim()));
         updateRequest.getDto().setIpAddress(this.ip.getValue().trim());
         updateRequest.getDto().setUsername(this.user.getValue().trim());
         updateRequest.getDto().setPassword(this.pw.getValue().trim());
@@ -230,17 +231,17 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
 
         // updating bean in the table container
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "name")
-                .setValue(this.name.getValue().trim());
+        .setValue(this.name.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "managerType")
-                .setValue(this.type.getValue().trim());
+        .setValue(this.type.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "ipAddress")
-                .setValue(this.ip.getValue().trim());
+        .setValue(this.ip.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "username")
-                .setValue(this.user.getValue().trim());
+        .setValue(this.user.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "password")
-                .setValue(this.pw.getValue().trim());
+        .setValue(this.pw.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "apiKey")
-                .setValue(this.apiKey.getValue().trim());
+        .setValue(this.apiKey.getValue().trim());
 
         close();
 

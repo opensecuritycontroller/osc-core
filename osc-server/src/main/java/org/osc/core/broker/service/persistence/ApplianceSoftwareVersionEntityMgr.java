@@ -30,11 +30,11 @@ import javax.persistence.criteria.Root;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.common.manager.ManagerType;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class ApplianceSoftwareVersionEntityMgr {
 
@@ -70,12 +70,11 @@ public class ApplianceSoftwareVersionEntityMgr {
     }
 
     public static void fromEntity(ApplianceSoftwareVersion av, ApplianceSoftwareVersionDto dto) {
-
         // transform from entity to dto
         dto.setId(av.getId());
         dto.setParentId(av.getAppliance().getId());
         dto.setSwVersion(av.getApplianceSoftwareVersion());
-        dto.setVirtualizationType(org.osc.core.broker.service.dto.VirtualizationType.valueOf(
+        dto.setVirtualizationType(VirtualizationType.valueOf(
                 av.getVirtualizationType().name()));
         dto.setVirtualizationVersion(av.getVirtualizarionSoftwareVersion());
         dto.setImageUrl(av.getImageUrl());
@@ -97,10 +96,10 @@ public class ApplianceSoftwareVersionEntityMgr {
 
         query = query.select(root)
                 .where(cb.equal(root.join("appliance").get("id"), applianceId),
-                       cb.equal(cb.upper(root.get("applianceSoftwareVersion")), av.toUpperCase()),
-                       cb.equal(root.get("virtualizationType"), vt),
-                       cb.equal(cb.upper(root.get("virtualizationSoftwareVersion")), vv.toUpperCase())
-                   );
+                        cb.equal(cb.upper(root.get("applianceSoftwareVersion")), av.toUpperCase()),
+                        cb.equal(root.get("virtualizationType"), vt),
+                        cb.equal(cb.upper(root.get("virtualizationSoftwareVersion")), vv.toUpperCase())
+                        );
 
         try {
             return em.createQuery(query).getSingleResult();
@@ -138,10 +137,10 @@ public class ApplianceSoftwareVersionEntityMgr {
 
         query = query.select(root)
                 .where(cb.equal(root.join("appliance").get("id"), applianceId),
-                       cb.equal(cb.upper(root.get("applianceSoftwareVersion")), applianceSoftwareVersion.toUpperCase()),
-                       cb.equal(root.get("virtualizationType"), virtualizationType),
-                       cb.equal(cb.upper(root.get("virtualizationSoftwareVersion")), virtualizationSoftwareVersion.toUpperCase())
-                   );
+                        cb.equal(cb.upper(root.get("applianceSoftwareVersion")), applianceSoftwareVersion.toUpperCase()),
+                        cb.equal(root.get("virtualizationType"), virtualizationType),
+                        cb.equal(cb.upper(root.get("virtualizationSoftwareVersion")), virtualizationSoftwareVersion.toUpperCase())
+                        );
 
         List<ApplianceSoftwareVersion> items = em.createQuery(query).setMaxResults(1).getResultList();
 

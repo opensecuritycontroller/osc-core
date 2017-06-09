@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.job;
 
-import static org.osc.core.broker.job.Job.toEntityType;
-
 import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,6 +34,9 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.SessionUtil;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.job.TaskState;
+import org.osc.core.common.job.TaskStatus;
 import org.osc.sdk.manager.element.TaskElement;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
@@ -139,9 +140,7 @@ public class TaskNode implements Runnable, TaskElement {
                 this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
                         LockModeType.PESSIMISTIC_WRITE);
 
-                this.taskRecord.setState(
-                        toEntityType(org.osc.core.broker.model.entities.job.TaskState.class,
-                                getState()));
+                this.taskRecord.setState(this.state);
                 this.taskRecord.setCompletedTimestamp(safeDate(getCompletedTimestamp()));
                 this.taskRecord.setQueuedTimestamp(safeDate(getQueuedTimestamp()));
                 this.taskRecord.setStartedTimestamp(safeDate(getStartedTimestamp()));
@@ -226,9 +225,7 @@ public class TaskNode implements Runnable, TaskElement {
                 this.taskRecord = em.find(TaskRecord.class, this.taskRecord.getId(),
                         LockModeType.PESSIMISTIC_WRITE);
 
-                this.taskRecord.setStatus(
-                        toEntityType(org.osc.core.broker.model.entities.job.TaskStatus.class,
-                                getStatus()));
+                this.taskRecord.setStatus(this.status);
                 if (this.failReason != null) {
                     if (this.failReason.getMessage() != null) {
                         this.taskRecord.setFailReason(this.failReason.getMessage());
@@ -250,13 +247,13 @@ public class TaskNode implements Runnable, TaskElement {
     }
 
     @Override
-    public TaskStatus getStatus() {
-        return this.status;
+    public TaskStatusElementImpl getStatus() {
+        return new TaskStatusElementImpl(this.status);
     }
 
     @Override
-    public TaskState getState() {
-        return this.state;
+    public TaskStateElementImpl getState() {
+        return new TaskStateElementImpl(this.state);
     }
 
     public DateTime getCompletedTimestamp() {

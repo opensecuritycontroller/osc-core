@@ -30,10 +30,10 @@ import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.request.BackupRequest;
 import org.osc.core.broker.service.response.BackupResponse;
+import org.osc.core.broker.util.crypto.AESCTREncryption;
+import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.util.crypto.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.broker.util.db.DBConnectionParameters;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
-import org.osc.core.util.encryption.AESCTREncryption;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 

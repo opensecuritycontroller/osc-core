@@ -18,10 +18,10 @@ package org.osc.core.broker.service.appliance;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.image.ImageMetadata;
-import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.util.VersionUtil;
-import org.osc.core.util.VersionUtil.Version;
+import org.osc.core.broker.util.VersionUtil;
+import org.osc.core.broker.util.VersionUtil.Version;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class ImageMetadataValidator {
 

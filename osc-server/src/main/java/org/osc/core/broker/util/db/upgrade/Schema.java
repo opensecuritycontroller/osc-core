@@ -24,11 +24,11 @@ import java.sql.Statement;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.archive.FreqType;
-import org.osc.core.broker.model.entities.archive.ThresholdType;
+import org.osc.core.common.job.FreqType;
+import org.osc.core.common.job.ThresholdType;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.util.crypto.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.broker.util.db.DBConnectionManager;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 

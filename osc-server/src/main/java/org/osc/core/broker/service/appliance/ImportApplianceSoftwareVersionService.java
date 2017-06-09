@@ -35,7 +35,6 @@ import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
-import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
@@ -43,8 +42,9 @@ import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
-import org.osc.core.util.FileUtil;
-import org.osc.core.util.ServerUtil;
+import org.osc.core.broker.util.FileUtil;
+import org.osc.core.broker.util.ServerUtil;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -54,9 +54,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 @Component(configurationPid="org.osc.core.broker.upload",
-  configurationPolicy=ConfigurationPolicy.REQUIRE)
+configurationPolicy=ConfigurationPolicy.REQUIRE)
 public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
-        implements ImportApplianceSoftwareVersionServiceApi {
+implements ImportApplianceSoftwareVersionServiceApi {
 
     private static final Logger log = Logger.getLogger(ImportApplianceSoftwareVersionService.class);
 
@@ -118,10 +118,12 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
              * If it comes back not null there could still a valid case where the
              * record exists in DB but image does not in the file system.
              */
-            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(em,
-                    appliance.getId(), softwareVersion,
-                    org.osc.core.broker.model.entities.appliance.VirtualizationType.valueOf(
-                            virtualizationType.name()), virtualizationVersion);
+            ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(
+                    em,
+                    appliance.getId(),
+                    softwareVersion,
+                    virtualizationType,
+                    virtualizationVersion);
 
             boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(imageMetadata.getManagerType());
             if (av == null) {
@@ -229,15 +231,15 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
         boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(imageMetadata.getManagerType());
         this.imageMetadataValidator.validate(imageMetadata, isPolicyMappingSupported);
 
-		boolean isImageFileMissing = true;
+        boolean isImageFileMissing = true;
 
-		for (File tmpFolderFile : tmpFolderList) {
-			String fileName = FilenameUtils.getName(tmpFolderFile.getName());
-			if (fileName.equals(imageMetadata.getImageName())) {
-				isImageFileMissing = false;
-				break;
-			}
-		}
+        for (File tmpFolderFile : tmpFolderList) {
+            String fileName = FilenameUtils.getName(tmpFolderFile.getName());
+            if (fileName.equals(imageMetadata.getImageName())) {
+                isImageFileMissing = false;
+                break;
+            }
+        }
 
         if (isImageFileMissing) {
             log.error("Image file: " + imageMetadata.getImageName() + " missing in archive");

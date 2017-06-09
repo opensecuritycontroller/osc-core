@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.sdk.controller.TagEncapsulationType;
 
 import io.swagger.annotations.ApiModel;

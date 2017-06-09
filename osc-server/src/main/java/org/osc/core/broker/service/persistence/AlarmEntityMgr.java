@@ -17,10 +17,10 @@
 package org.osc.core.broker.service.persistence;
 
 import org.osc.core.broker.model.entities.events.Alarm;
-import org.osc.core.broker.model.entities.events.AlarmAction;
-import org.osc.core.broker.model.entities.events.EventType;
-import org.osc.core.broker.model.entities.events.Severity;
 import org.osc.core.broker.service.dto.AlarmDto;
+import org.osc.core.common.alarm.AlarmAction;
+import org.osc.core.common.alarm.EventType;
+import org.osc.core.common.alarm.Severity;
 
 public class AlarmEntityMgr {
 

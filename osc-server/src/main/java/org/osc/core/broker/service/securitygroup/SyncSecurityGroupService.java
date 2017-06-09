@@ -19,7 +19,6 @@ package org.osc.core.broker.service.securitygroup;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.Job;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
@@ -34,12 +33,13 @@ import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, BaseJobResponse>
-        implements SyncSecurityGroupServiceApi {
+implements SyncSecurityGroupServiceApi {
 
     @Reference
     private ConformService conformService;
@@ -54,7 +54,7 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
     }
 
     private SecurityGroup validateAndLoad(BaseIdRequest request, EntityManager em) throws Exception,
-            VmidcBrokerValidationException {
+    VmidcBrokerValidationException {
         BaseIdRequestValidator.checkForNullIdAndParentNullId(request);
 
         SecurityGroup securityGroup = SecurityGroupEntityMgr.findById(em, request.getId());
@@ -72,7 +72,7 @@ public class SyncSecurityGroupService extends ServiceDispatcher<BaseIdRequest, B
 
         if (vc == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector with Id: " + request.getParentId()
-                    + "  is not found.");
+            + "  is not found.");
         }
 
         // For service calls makes sure the VC's match

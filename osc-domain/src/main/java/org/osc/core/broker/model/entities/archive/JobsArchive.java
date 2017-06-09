@@ -25,6 +25,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.common.job.FreqType;
+import org.osc.core.common.job.ThresholdType;
 
 /**
  * JobsArchive Model
@@ -35,73 +37,73 @@ import org.osc.core.broker.model.entities.BaseEntity;
 @Table(name = "JOBS_ARCHIVE")
 public class JobsArchive extends BaseEntity {
 
-	public JobsArchive() {
-		super();
-	}
+    public JobsArchive() {
+        super();
+    }
 
-	@Column(name = "frequency", nullable = false)
-	@Enumerated(EnumType.STRING)
-	private FreqType frequency = FreqType.WEEKLY; //default value
+    @Column(name = "frequency", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private FreqType frequency = FreqType.WEEKLY; //default value
 
-	@Column(name = "auto_schedule", nullable = false)
-	private Boolean autoSchedule = false; //default value
+    @Column(name = "auto_schedule", nullable = false)
+    private Boolean autoSchedule = false; //default value
 
-	@Column(name = "threshold_unit", nullable = false)
-	@Enumerated(EnumType.STRING)
-	private ThresholdType thresholdUnit = ThresholdType.YEARS; //default value
+    @Column(name = "threshold_unit", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ThresholdType thresholdUnit = ThresholdType.YEARS; //default value
 
-	@Column(name = "threshold_value", nullable = false)
-	private Integer thresholdValue = 1;
+    @Column(name = "threshold_value", nullable = false)
+    private Integer thresholdValue = 1;
 
-	@Column(name = "last_trigger_timestamp")
-	private Date lastTriggerTimestamp;
+    @Column(name = "last_trigger_timestamp")
+    private Date lastTriggerTimestamp;
 
-	public FreqType getFrequency() {
-		return frequency;
-	}
+    public FreqType getFrequency() {
+        return this.frequency;
+    }
 
-	public void setFrequency(FreqType frequency) {
-		this.frequency = frequency;
-	}
+    public void setFrequency(FreqType frequency) {
+        this.frequency = frequency;
+    }
 
-	public Boolean getAutoSchedule() {
-		return autoSchedule;
-	}
+    public Boolean getAutoSchedule() {
+        return this.autoSchedule;
+    }
 
-	public void setAutoSchedule(Boolean autoSchedule) {
-		this.autoSchedule = autoSchedule;
-	}
+    public void setAutoSchedule(Boolean autoSchedule) {
+        this.autoSchedule = autoSchedule;
+    }
 
-	public ThresholdType getThresholdUnit() {
-		return thresholdUnit;
-	}
+    public ThresholdType getThresholdUnit() {
+        return this.thresholdUnit;
+    }
 
-	public void setThresholdUnit(ThresholdType thresholdUnit) {
-		this.thresholdUnit = thresholdUnit;
-	}
+    public void setThresholdUnit(ThresholdType thresholdUnit) {
+        this.thresholdUnit = thresholdUnit;
+    }
 
-	public Integer getThresholdValue() {
-		return thresholdValue;
-	}
+    public Integer getThresholdValue() {
+        return this.thresholdValue;
+    }
 
-	public void setThresholdValue(Integer thresholdValue) {
-		this.thresholdValue = thresholdValue;
-	}
+    public void setThresholdValue(Integer thresholdValue) {
+        this.thresholdValue = thresholdValue;
+    }
 
-	public Date getLastTriggerTimestamp() {
-		return lastTriggerTimestamp;
-	}
+    public Date getLastTriggerTimestamp() {
+        return this.lastTriggerTimestamp;
+    }
 
-	public void setLastTriggerTimestamp(Date lastTriggerTimestamp) {
-		this.lastTriggerTimestamp = lastTriggerTimestamp;
-	}
+    public void setLastTriggerTimestamp(Date lastTriggerTimestamp) {
+        this.lastTriggerTimestamp = lastTriggerTimestamp;
+    }
 
-	@Override
-	public String toString() {
-		return "JobsArchive [frequency=" + frequency + ", autoSchedule="
-				+ autoSchedule + ", thresholdUnit=" + thresholdUnit
-				+ ", thresholdValue=" + thresholdValue
-				+ ", lastTriggerTimepstamp=" + lastTriggerTimestamp
-				+ ", getId()=" + getId() + "]";
-	}
+    @Override
+    public String toString() {
+        return "JobsArchive [frequency=" + this.frequency + ", autoSchedule="
+                + this.autoSchedule + ", thresholdUnit=" + this.thresholdUnit
+                + ", thresholdValue=" + this.thresholdValue
+                + ", lastTriggerTimepstamp=" + this.lastTriggerTimestamp
+                + ", getId()=" + getId() + "]";
+    }
 }

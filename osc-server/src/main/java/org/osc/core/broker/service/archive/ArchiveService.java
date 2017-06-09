@@ -38,7 +38,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
 import org.osc.core.broker.model.entities.archive.JobsArchive;
-import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.alert.AlertGenerator;
@@ -51,6 +50,7 @@ import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.service.response.Response;
+import org.osc.core.common.job.ThresholdType;
 import org.osc.core.server.scheduler.ArchiveScheduledJob;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -64,14 +64,12 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * Archive service which performs job archive to CSV files.
  */
 @Component
 public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto>, Response>
-        implements ArchiveServiceApi {
+implements ArchiveServiceApi {
 
     private static final Logger log = Logger.getLogger(ArchiveService.class);
 
@@ -85,7 +83,6 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
     private AlertGenerator alertGenerator;
 
     @Override
-    @SuppressFBWarnings(value="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE")
     public Response exec(final BaseRequest<JobsArchiveDto> request, EntityManager em) throws Exception {
         try {
             JobsArchive jobsArchive = null;
@@ -100,58 +97,58 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
                 request.getDto().setThresholdValue(jobsArchive.getThresholdValue());
             }
 
-                    try {
-                        // calculate threshold date
-                        Period period = getPeriod(request);
-                        Timestamp sqlTimeString = Timestamp.valueOf(calculateThresholdDate(period, "yyyy-MM-dd HH:mm:ss"));
-                        String archiveFileName = calculateThresholdDate(period, "yyyy-MM-dd_HH-mm-ss");
+            try {
+                // calculate threshold date
+                Period period = getPeriod(request);
+                Timestamp sqlTimeString = Timestamp.valueOf(calculateThresholdDate(period, "yyyy-MM-dd HH:mm:ss"));
+                String archiveFileName = calculateThresholdDate(period, "yyyy-MM-dd_HH-mm-ss");
 
-                        String dir = "archive/" + archiveFileName + "/";
-                        FileUtils.forceMkdir(new File(dir));
+                String dir = "archive/" + archiveFileName + "/";
+                FileUtils.forceMkdir(new File(dir));
 
 
-                        //prepare callable statements to export files as .csv
-                        List<Query> cStatements = Arrays.asList(
-                                getCallableStatementForJob(em, sqlTimeString, dir),
-                                getCallableStatementJobObject(em, sqlTimeString, dir),
-                                getCallableStatementTask(em, sqlTimeString, dir),
-                                getCallableStatementTaskPredecessor(em, sqlTimeString, dir),
-                                getCallableStatementTaskSuccessor(em, sqlTimeString, dir),
-                                getCallableStatementTaskChild(em, sqlTimeString, dir),
-                                getCallableStatementTaskObject(em, sqlTimeString, dir),
-                                getCallableStatementReleaseInfo(em, sqlTimeString, dir),
-                                getCallableStatementAlert(em, sqlTimeString, dir)
+                //prepare callable statements to export files as .csv
+                List<Query> cStatements = Arrays.asList(
+                        getCallableStatementForJob(em, sqlTimeString, dir),
+                        getCallableStatementJobObject(em, sqlTimeString, dir),
+                        getCallableStatementTask(em, sqlTimeString, dir),
+                        getCallableStatementTaskPredecessor(em, sqlTimeString, dir),
+                        getCallableStatementTaskSuccessor(em, sqlTimeString, dir),
+                        getCallableStatementTaskChild(em, sqlTimeString, dir),
+                        getCallableStatementTaskObject(em, sqlTimeString, dir),
+                        getCallableStatementReleaseInfo(em, sqlTimeString, dir),
+                        getCallableStatementAlert(em, sqlTimeString, dir)
                         );
 
-                        //prepare statements to clear tables
-                        List<Query> pStatements = Arrays.asList(
-                                getPreparedStatementDeleteTaskObject(em, sqlTimeString),
-                                getPreparedStatementDeleteTaskSuccessor(em, sqlTimeString),
-                                getPreparedStatementDeleteTaskPredecessor(em, sqlTimeString),
-                                getPreparedStatementDeleteTaskChild(em, sqlTimeString),
-                                getPreparedStatementDeleteTask(em, sqlTimeString),
-                                getPreparedStatementDeleteJobObject(em, sqlTimeString),
-                                getPreparedStatementDeleteJob(em, sqlTimeString),
-                                getPreparedStatementDeleteAlert(em, sqlTimeString)
+                //prepare statements to clear tables
+                List<Query> pStatements = Arrays.asList(
+                        getPreparedStatementDeleteTaskObject(em, sqlTimeString),
+                        getPreparedStatementDeleteTaskSuccessor(em, sqlTimeString),
+                        getPreparedStatementDeleteTaskPredecessor(em, sqlTimeString),
+                        getPreparedStatementDeleteTaskChild(em, sqlTimeString),
+                        getPreparedStatementDeleteTask(em, sqlTimeString),
+                        getPreparedStatementDeleteJobObject(em, sqlTimeString),
+                        getPreparedStatementDeleteJob(em, sqlTimeString),
+                        getPreparedStatementDeleteAlert(em, sqlTimeString)
                         );
 
-                        //Execute callable and then prepared statements
-                        for (Query spq : cStatements) {
-                            archive(spq);
-                        }
-                        for (Query q : pStatements) {
-                            delete(q);
-                        }
+                //Execute callable and then prepared statements
+                for (Query spq : cStatements) {
+                    archive(spq);
+                }
+                for (Query q : pStatements) {
+                    delete(q);
+                }
 
-                        this.archiver.archive(dir, "archive/osc-archive-" + archiveFileName + ".zip");
-                        FileUtils.deleteDirectory(new File(dir));
+                this.archiver.archive(dir, "archive/osc-archive-" + archiveFileName + ".zip");
+                FileUtils.deleteDirectory(new File(dir));
 
-                    } catch (Exception e) {
-                        log.error("Error while archiving jobs", e);
-                        this.alertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
-                                new LockObjectReference(1L, "Archive Settings", ObjectType.ARCHIVE),
-                                "Failure during archiving operation " + e.getMessage());
-                    }
+            } catch (Exception e) {
+                log.error("Error while archiving jobs", e);
+                this.alertGenerator.processSystemFailureEvent(SystemFailureType.ARCHIVE_FAILURE,
+                        new LockObjectReference(1L, "Archive Settings", ObjectType.ARCHIVE),
+                        "Failure during archiving operation " + e.getMessage());
+            }
 
 
             if (jobsArchive != null) {
@@ -360,7 +357,7 @@ public class ArchiveService extends ServiceDispatcher<BaseRequest<JobsArchiveDto
                         .startAt(DateUtils.addMinutes(new Date(), ARCHIVE_STARTUP_DELAY_IN_MIN))
                         .withSchedule(
                                 SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(24).repeatForever()
-                                        .withMisfireHandlingInstructionFireNow()).build();
+                                .withMisfireHandlingInstructionFireNow()).build();
 
                 scheduler.scheduleJob(archiveJob, archiveTrigger);
 

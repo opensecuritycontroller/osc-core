@@ -20,10 +20,10 @@ import java.util.UUID;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class PortGroupCheckMetaTaskTestData {
     public static SecurityGroup SG_WITHOUT_NET_ELEMENT_ID = createSG("SG_WITHOUT_NET_ELEMENT_ID", null);

@@ -24,7 +24,7 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.GetVSPublicKeyRequest;
 import org.osc.core.broker.service.response.GetVSPublicKeyResponse;
-import org.osc.core.util.PKIUtil;
+import org.osc.core.broker.util.crypto.PKIUtil;
 
 
 public class GetVSPublicKeyService extends ServiceDispatcher<GetVSPublicKeyRequest, GetVSPublicKeyResponse>

@@ -20,7 +20,6 @@ import java.util.Date;
 
 import javax.persistence.EntityManager;
 
-import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AcknowledgeAlertServiceApi;
@@ -32,11 +31,12 @@ import org.osc.core.broker.service.request.AlertRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
 import org.osc.core.broker.service.validator.AlertDtoValidator;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
+import org.osc.core.common.job.AcknowledgementStatus;
 import org.osgi.service.component.annotations.Component;
 
 @Component
 public class AcknowledgeAlertService extends ServiceDispatcher<AlertRequest, EmptySuccessResponse>
-        implements AcknowledgeAlertServiceApi {
+implements AcknowledgeAlertServiceApi {
 
     @Override
     public EmptySuccessResponse exec(AlertRequest request, EntityManager em) throws Exception {

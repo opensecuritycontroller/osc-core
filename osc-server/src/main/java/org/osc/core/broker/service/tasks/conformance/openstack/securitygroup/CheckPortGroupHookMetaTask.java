@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -174,7 +173,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
                 sgm.getSecurityGroup().getVirtualizationConnector(),
                 OpenstackUtil.getPorts(sgm));
 
-        if (StringUtils.isBlank(sgmDomainId)) {
+        if (sgmDomainId == null || sgmDomainId.isEmpty()) {
             throw new VmidcBrokerValidationException(String.format("No router/domain was found attached to any of the networks of "
                     + "the member %s of the security group %s.", sgm.getMemberName(), sgm.getSecurityGroup().getName()));
         }

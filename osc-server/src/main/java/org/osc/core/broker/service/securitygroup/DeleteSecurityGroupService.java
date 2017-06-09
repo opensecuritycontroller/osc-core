@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -38,12 +37,13 @@ import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.ForceDeleteSecurityGroupTask;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
+import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
-        implements DeleteSecurityGroupServiceApi {
+implements DeleteSecurityGroupServiceApi {
 
     private static final Logger log = Logger.getLogger(DeleteSecurityGroupService.class);
 
@@ -80,7 +80,7 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
                 chain(() -> {
                     try {
                         Job job = this.conformService.startSecurityGroupConformanceJob(em, securityGroup,
-                            forLambda, false);
+                                forLambda, false);
                         response.setJobId(job.getId());
                         return response;
                     } catch (Exception e) {
@@ -104,7 +104,7 @@ public class DeleteSecurityGroupService extends ServiceDispatcher<BaseDeleteRequ
 
         if (vc == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector with Id: " + request.getParentId()
-                    + "  is not found.");
+            + "  is not found.");
         }
 
         SecurityGroup securityGroup = em.find(SecurityGroup.class, request.getId());

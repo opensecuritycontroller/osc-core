@@ -24,7 +24,7 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.StaticRegistry;
-import org.osc.core.rest.client.crypto.SslContextProvider;
+import org.osc.core.broker.util.crypto.SslContextProvider;
 
 public class Endpoint {
 

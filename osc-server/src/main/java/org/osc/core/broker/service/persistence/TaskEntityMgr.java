@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import static org.osc.core.broker.model.entities.job.TaskState.COMPLETED;
+import static org.osc.core.common.job.TaskState.COMPLETED;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -67,8 +67,8 @@ public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
 
         // Set the child tasks in the Dto
         taskDto.setChildren(tr.getChildren().stream()
-                    .map(TaskEntityMgr::fromEntity)
-                    .collect(Collectors.toList()));
+                .map(TaskEntityMgr::fromEntity)
+                .collect(Collectors.toList()));
 
         // Set the Task Guard in the Dto
         taskDto.setTaskGuard(tr.getTaskGaurd().name());
@@ -130,7 +130,7 @@ public class TaskEntityMgr extends OSCEntityManager<TaskRecord> {
         }
 
         query = query.multiselect(root.get("failReason"), cb.count(root))
-            .where(restriction);
+                .where(restriction);
 
         List<?> results = em
                 .createQuery(query)
