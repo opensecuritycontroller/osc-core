@@ -53,6 +53,7 @@ public class DeleteInspectionPortTask extends TransactionalTask {
 
     public DeleteInspectionPortTask create(String region, DistributedApplianceInstance dai) {
         DeleteInspectionPortTask task = new DeleteInspectionPortTask();
+        // TODO emanoel: This does not seem to be used anywhere, remove it on master.
         task.region = region;
         task.dai = dai;
         task.apiFactoryService = this.apiFactoryService;
