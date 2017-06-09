@@ -45,14 +45,14 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
                 .build();
     }
 
-    private ErrorCodeDto getErrorCodeDto(Exception e) {
+    private ErrorCodeDto getErrorCodeDto(JsonProcessingException e) {
         if(e instanceof InvalidFormatException) {
             return new ErrorCodeDto(ErrorCodeDto.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE, Arrays.asList(
                     "Value " + ((InvalidFormatException) e).getValue() + " is invalid"
             ));
         }
         return new ErrorCodeDto(ErrorCodeDto.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE, Arrays.asList(
-                "Parse exception. Invalid request."
+                String.format("Parse exception. Invalid request: %s", e)
         ));
     }
 
