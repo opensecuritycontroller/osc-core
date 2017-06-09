@@ -28,6 +28,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
+import org.osc.core.broker.service.api.server.FileApi;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
@@ -37,6 +38,7 @@ import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.ServerUtil;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class ImportApplianceManagerPluginService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
@@ -46,6 +48,9 @@ public class ImportApplianceManagerPluginService extends ServiceDispatcher<Impor
 
     private File barFile = null;
     private String deploymentName;
+
+    @Reference
+    private FileApi fileApi;
 
     @Override
     public BaseResponse exec(ImportFileRequest request, EntityManager em) throws Exception {
@@ -80,7 +85,7 @@ public class ImportApplianceManagerPluginService extends ServiceDispatcher<Impor
             throw new VmidcException(VmidcMessages.getString("upload.plugin.manager.nospace"));
         }
 
-		File[] tmpFolderList = FileUtil.getFileListFromDirectory(tmpUploadFolder.getPath());
+		File[] tmpFolderList = this.fileApi.getFileListFromDirectory(tmpUploadFolder.getPath());
         for (File tmpFolderFile : tmpFolderList) {
             String fileName = FilenameUtils.getName(tmpFolderFile.getName());
             if (FilenameUtils.getExtension(fileName).equals("bar")) {

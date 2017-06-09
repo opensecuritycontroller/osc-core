@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api.server;
+package org.osc.core.broker.service.exceptions;
 
-import org.osc.core.broker.service.exceptions.SecurityException;
+public class SecurityException extends Exception {
+    private static final long serialVersionUID = -4101275336253509877L;
 
-import java.io.File;
-import java.io.IOException;
+    SecurityException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-public interface ArchiveApi {
-
-    File archive(String inputDir, String outputFile) throws IOException;
-
-    void unzip(String inputFile, String destination) throws IOException, SecurityException;
+    public SecurityException(String message) {
+        super(message);
+    }
 }

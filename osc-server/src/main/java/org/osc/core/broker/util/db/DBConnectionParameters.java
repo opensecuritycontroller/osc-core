@@ -19,11 +19,13 @@ package org.osc.core.broker.util.db;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.osc.core.broker.service.api.server.FileApi;
 import org.osc.core.server.Server;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.KeyStoreProvider;
 import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service=DBConnectionParameters.class)
 public class DBConnectionParameters {
@@ -42,8 +44,10 @@ public class DBConnectionParameters {
 	// CUSTOM USER SETTINGS
 	private String customConnectionURL;
 
+	private FileUtil fileUtil = new FileUtil();
+
 	public DBConnectionParameters() throws IOException {
-		Properties properties = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
+		Properties properties = this.fileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
 		this.url = properties.getProperty("db.connection.url", "");
 		this.extraArgs = properties.getProperty("db.connection.url.extraArgs", "");
 		this.login = properties.getProperty("db.connection.login", "");

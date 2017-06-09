@@ -32,6 +32,7 @@ import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
+import org.osc.core.broker.service.api.server.FileApi;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
@@ -62,6 +63,9 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
 
     @Reference
     private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private FileApi fileApi;
 
     private ImageMetadataValidator imageMetadataValidator;
 
@@ -188,7 +192,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
 
             File imageFolder = new File(this.uploadPath);
 
-            File[] tmpFolderList = FileUtil.getFileListFromDirectory(tmpUploadFolder.getPath());
+            File[] tmpFolderList = this.fileApi.getFileListFromDirectory(tmpUploadFolder.getPath());
             for (File tmpFolderFile : tmpFolderList) {
                 if (tmpFolderFile.getName().equals(ImageMetadata.META_FILE_NAME)) {
                     continue;
@@ -216,7 +220,7 @@ public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<Imp
             throw new VmidcException(VmidcMessages.getString(VmidcMessages_.UPLOAD_APPLIANCE_NOSPACE));
         }
 
-        File[] tmpFolderList = FileUtil.getFileListFromDirectory(tmpUploadFolder.getPath());
+        File[] tmpFolderList = this.fileApi.getFileListFromDirectory(tmpUploadFolder.getPath());
 
         File metaDataFile = loadMetadataFile(tmpFolderList);
 

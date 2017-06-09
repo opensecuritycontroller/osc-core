@@ -45,6 +45,7 @@ import org.osc.core.broker.service.api.ArchiveServiceApi;
 import org.osc.core.broker.service.api.GetJobsArchiveServiceApi;
 import org.osc.core.broker.service.api.RestConstants;
 import org.osc.core.broker.service.api.server.EncryptionApi;
+import org.osc.core.broker.service.api.server.FileApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
@@ -172,6 +173,9 @@ public class Server implements ServerApi {
     private Thread thread;
     private BundleContext context;
     private ServiceRegistration<RabbitMQRunner> rabbitMQRegistration;
+
+    @Reference
+    private FileApi fileApi;
 
     @Activate
     void activate(BundleContext context) {
@@ -384,7 +388,7 @@ public class Server implements ServerApi {
     void loadServerProps() {
         Properties prop;
         try {
-            prop = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
+            prop = this.fileApi.loadProperties(Server.CONFIG_PROPERTIES_FILE);
         } catch (IOException e) {
             log.error("Failed to write to the properties file - properties file was not loaded", e);
             return;
@@ -408,7 +412,7 @@ public class Server implements ServerApi {
     public String loadServerProp(String propName, String defaultValue) {
         Properties properties = new Properties();
         try {
-            properties = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
+            properties = this.fileApi.loadProperties(Server.CONFIG_PROPERTIES_FILE);
         } catch (IOException e) {
             log.error("Failed to open to the properties file - properties file was not loaded", e);
         }
@@ -421,7 +425,7 @@ public class Server implements ServerApi {
         Properties prop;
 
         try {
-            prop = FileUtil.loadProperties(Server.CONFIG_PROPERTIES_FILE);
+            prop = this.fileApi.loadProperties(Server.CONFIG_PROPERTIES_FILE);
         } catch (IOException e) {
             log.error("Failed to open to the properties file - properties file was not loaded", e);
             return;

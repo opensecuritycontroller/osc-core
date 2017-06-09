@@ -24,6 +24,8 @@ import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.server.FileApi;
+import org.osc.core.broker.service.exceptions.SecurityException;
 import org.osc.core.broker.service.ssl.X509TrustManagerApi;
 import org.osc.core.broker.view.common.StyleConstants;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -44,6 +46,7 @@ import com.vaadin.ui.Upload.StartedListener;
 import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
+import org.osgi.service.component.annotations.Reference;
 
 public class SslCertificateUploader extends CustomComponent implements Receiver, FailedListener, SucceededListener {
     private static final Logger log = Logger.getLogger(SslCertificateUploader.class);
@@ -56,6 +59,9 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
     private final VerticalLayout verLayout = new VerticalLayout();
     private UploadNotifier uploadNotifier = null;
     private X509TrustManagerApi x509TrustManager;
+
+    @Reference
+    private FileApi fileApi;
 
     public SslCertificateUploader(X509TrustManagerApi x509TrustManager) {
         this.x509TrustManager = x509TrustManager;
@@ -85,10 +91,19 @@ public class SslCertificateUploader extends CustomComponent implements Receiver,
             log.info("Start uploading certificate: " + filename);
 
             try {
+                this.fileApi.preventPathTraversal(filename,UPLOAD_DIR);
                 this.file = new File(UPLOAD_DIR + filename);
                 return new FileOutputStream(this.file);
             } catch (final java.io.FileNotFoundException e) {
                 log.error("Error opening certificate: " + filename, e);
+                ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_COMMON_ERROR) + filename,
+                        Notification.Type.ERROR_MESSAGE);
+            } catch (IOException | IllegalStateException e) {
+                log.error("Error uploading certifcate: " + filename, e);
+                ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_COMMON_ERROR) + filename,
+                        Notification.Type.ERROR_MESSAGE);
+            } catch (SecurityException e) {
+                log.error("Error uploading certifcate: " + filename, e);
                 ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_COMMON_ERROR) + filename,
                         Notification.Type.ERROR_MESSAGE);
             }

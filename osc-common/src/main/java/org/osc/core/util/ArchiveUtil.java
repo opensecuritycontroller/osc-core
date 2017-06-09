@@ -29,7 +29,9 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.server.ArchiveApi;
+import org.osc.core.broker.service.api.server.FileApi;
 import org.osc.core.broker.service.api.server.LoggingApi;
+import org.osc.core.broker.service.exceptions.SecurityException;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -38,6 +40,9 @@ public class ArchiveUtil implements ArchiveApi {
 
     @Reference
     private LoggingApi logging;
+
+    @Reference
+    private FileApi fileApi;
 
     private static final Logger log = Logger.getLogger(ArchiveUtil.class);
     static final int BUFFER_SIZE = 1024;
@@ -64,7 +69,7 @@ public class ArchiveUtil implements ArchiveApi {
      * @throws IOException
      */
     private static void addToArchive(File inputDir, ZipOutputStream zos) throws IOException {
-        File[] fileList = FileUtil.getFileListFromDirectory(inputDir.getPath());
+        File[] fileList = new FileUtil().getFileListFromDirectory(inputDir.getPath());
         byte[] buffer = new byte[BUFFER_SIZE];
 
         for (File element : fileList) {
@@ -93,7 +98,7 @@ public class ArchiveUtil implements ArchiveApi {
      * @throws IOException
      */
     @Override
-    public void unzip(String inputFile, String destination) throws IOException {
+    public void unzip(String inputFile, String destination) throws IOException, SecurityException {
         // TODO: barteks - use system unzip instead of java zip stream.
         FileInputStream fis = new FileInputStream(inputFile);
         ZipEntry entry;
@@ -115,7 +120,7 @@ public class ArchiveUtil implements ArchiveApi {
                     filename = Paths.get(zipParentDir.toString(), entry.getName()).toString();
                 }
 
-                String name = preventPathTraversal(filename, destination);
+                String name = this.fileApi.preventPathTraversal(filename, destination);
                 if (entry.isDirectory()) {
                     new File(name).mkdir();
                     continue;

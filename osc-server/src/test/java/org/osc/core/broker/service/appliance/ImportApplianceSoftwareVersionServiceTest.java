@@ -129,6 +129,9 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
     private File mockMetaDataFile;
 
+    @Mock
+    FileUtil fileUtil;
+
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -146,8 +149,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         when(this.mockMetaDataFile.getName()).thenReturn(META_JSON_FILE_NAME);
         when(mockPayloadFile.getName()).thenReturn(OVF_IMAGE_NAME);
 
-        PowerMockito.mockStatic(FileUtil.class);
-        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] { this.mockMetaDataFile, mockPayloadFile});
+        PowerMockito.when(this.fileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] { this.mockMetaDataFile, mockPayloadFile});
 
         this.imageMetaData = new ImageMetadata();
         this.imageMetaData.setImageName(OVF_IMAGE_NAME);
@@ -324,7 +326,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
     @Test
     public void testDispatch_ImportApplianceMissingMetaDataFile_ExpectsErrorResponse() throws Exception {
         // Arrange. Make sure input is missing all files
-        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[]{});
+        PowerMockito.when(this.fileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[]{});
 
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage("Missing metadata file");
@@ -336,7 +338,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
     @Test
     public void testDispatch_ImportApplianceMissingPayloadFile_ExpectsErrorResponse() throws Exception {
         // Arrange. Make sure input is missing a file
-        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] { this.mockMetaDataFile });
+        Mockito.when(this.fileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] { this.mockMetaDataFile });
         Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
             .thenReturn(new Gson().toJson(this.imageMetaData));
 

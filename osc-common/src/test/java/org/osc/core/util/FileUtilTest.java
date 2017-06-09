@@ -23,6 +23,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.osc.core.broker.service.exceptions.SecurityException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,6 +34,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.Properties;
+
+import static org.mockito.Matchers.any;
 
 public class FileUtilTest {
 
@@ -39,6 +45,8 @@ public class FileUtilTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
+    FileUtil fileUtil;
+
     private File homeDirectory;
     private File regularFile;
     private final int numberOfFilesInDirectory = 4;
@@ -46,7 +54,8 @@ public class FileUtilTest {
     private final String CONFIG_FILE = "vmidcServerMocked.conf";
 
     @Before
-    public void init() throws IOException {
+    public void init() throws IOException, SecurityException {
+        this.fileUtil = Mockito.spy(FileUtil.class);
         homeDirectory = testFolder.newFolder("fakeHomeDir");
 
         if (!homeDirectory.exists()) {
@@ -79,7 +88,7 @@ public class FileUtilTest {
         exception.expectMessage("Cannot obtain list of files from directory - null given");
 
         // Act.
-        FileUtil.getFileListFromDirectory(null);
+        this.fileUtil.getFileListFromDirectory(null);
     }
 
     @Test
@@ -89,7 +98,7 @@ public class FileUtilTest {
         populateTemporaryFolder();
 
         // Act.
-        File[] fileList = FileUtil.getFileListFromDirectory(homeDirectory.getAbsolutePath());
+        File[] fileList = this.fileUtil.getFileListFromDirectory(homeDirectory.getAbsolutePath());
 
         // Assert.
         Assert.assertEquals("File list should contain all files", numberOfFilesInDirectory, fileList.length);
@@ -101,7 +110,7 @@ public class FileUtilTest {
     @Test
     public void testGetFileListFromDirectory_WithInvalidPath_ReturnsEmptyList() throws IOException {
         // Act.
-        File[] fileList = FileUtil.getFileListFromDirectory("testInvalidDir");
+        File[] fileList = this.fileUtil.getFileListFromDirectory("testInvalidDir");
 
         // Assert.
         Assert.assertEquals("File list should contain empty list", 0, fileList.length);
@@ -113,7 +122,7 @@ public class FileUtilTest {
         Files.write(this.regularFile.toPath(), sampleConfigFile.getBytes(), StandardOpenOption.APPEND);
 
         // Act.
-        Properties prop = FileUtil.loadProperties(this.regularFile.getAbsolutePath());
+        Properties prop = this.fileUtil.loadProperties(this.regularFile.getAbsolutePath());
 
         // Assert.
         Assert.assertEquals("Different size of loaded properties file", 4, prop.size());
@@ -135,10 +144,38 @@ public class FileUtilTest {
         exception.expect(FileNotFoundException.class);
 
         // Act.
-        Properties prop = FileUtil.loadProperties(regularFile.getAbsolutePath());
+        Properties prop = this.fileUtil.loadProperties(regularFile.getAbsolutePath());
 
         // Assert.
         Assert.assertEquals("Different size of loaded properties file", 0, prop.size());
+    }
+
+    @Test
+    public void testUploadFile_WithPathTraversalVulnerability1_ThrowsSecurityException() throws IOException, SecurityException {
+        // Arrange.
+
+        String dir = System.getProperty("user.dir");
+        String filename = "../traversal/file.txt";
+
+        this.exception.expect(SecurityException.class);
+
+        // Act.
+        this.fileUtil.preventPathTraversal(filename,dir);
+
+    }
+
+    @Test
+    public void testUploadFile_WithPathTraversalVulnerability2_ThrowsSecurityException() throws IOException, SecurityException {
+        // Arrange.
+
+        String dir = System.getProperty("user.dir");
+        String filename = "../\\file.txt";
+
+        this.exception.expect(SecurityException.class);
+
+        // Act.
+        this.fileUtil.preventPathTraversal(filename,dir);
+
     }
 
     private void populateTemporaryFolder() throws IOException {

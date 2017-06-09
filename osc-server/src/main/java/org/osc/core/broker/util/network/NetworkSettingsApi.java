@@ -24,11 +24,12 @@ import java.util.Properties;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.server.FileApi;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
 import org.osc.core.util.FileUtil;
 import org.osc.core.util.NetworkUtil;
 import org.osc.core.util.ServerUtil;
-
+import org.osgi.service.component.annotations.Reference;
 
 
 public class NetworkSettingsApi {
@@ -45,6 +46,8 @@ public class NetworkSettingsApi {
     final String BASH_SCRIPT = "./scripts/networkSettings.sh";
 
     private static final Logger log = Logger.getLogger(NetworkSettingsApi.class);
+
+    private FileUtil fileUtil = new FileUtil();
 
     public void setNetworkSettings(NetworkSettingsDto networkSettingsDto) {
 
@@ -77,7 +80,7 @@ public class NetworkSettingsApi {
         Properties networkInterfaceConfig = new Properties();
 
         try {
-            networkInterfaceConfig = FileUtil.loadProperties(this.DEFAULT_INTERFACE_CONFIG_FILE);
+            networkInterfaceConfig = this.fileUtil.loadProperties(this.DEFAULT_INTERFACE_CONFIG_FILE);
         } catch (IOException e) {
             log.error("Failed to load network settings", e);
         }
@@ -93,7 +96,7 @@ public class NetworkSettingsApi {
 
             Properties networkConfig = new Properties();
             try {
-                networkConfig = FileUtil.loadProperties(this.NETWORK_CONFIG_FILE);
+                networkConfig = this.fileUtil.loadProperties(this.NETWORK_CONFIG_FILE);
             } catch (IOException e) {
                 log.error("Failed to load network settings", e);
             }

@@ -29,14 +29,23 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.service.api.server.LoggingApi;
+import org.osc.core.broker.service.exceptions.SecurityException;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ArchiveUtilTest {
@@ -47,10 +56,17 @@ public class ArchiveUtilTest {
     @InjectMocks
     ArchiveUtil archiveUtil;
 
+    @Mock
+    FileUtil fileUtil;
 
     private static String PATH = System.getProperty("user.dir");
     private static String FILE_ABSOLUTE = null;
     private static String SEPARATOR = File.separator;
+
+    @Before
+    public void init() throws IOException, SecurityException {
+        Mockito.doCallRealMethod().when(this.fileUtil).preventPathTraversal(any(),any());
+    }
 
     static{
         String system = System.getProperty("os.name");
@@ -142,7 +158,7 @@ public class ArchiveUtilTest {
     }
 
     @Test
-    public void testUnzip_withValidZip_expectedSuccess() throws IOException {
+    public void testUnzip_withValidZip_expectedSuccess() throws IOException, SecurityException {
         //Arrange
         prepareValidZipFile();
         //Act.
