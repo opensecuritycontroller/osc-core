@@ -18,7 +18,12 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
@@ -51,14 +56,15 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ HibernateUtil.class, SdnControllerApiFactory.class, OpenstackUtil.class })
 public class DeleteInspectionPortTaskTest {
-    @Mock protected EntityManager em;
-    @Mock protected EntityTransaction tx;
+    @Mock
+    protected EntityManager em;
+    @Mock
+    protected EntityTransaction tx;
 
-    @Mock(answer=Answers.CALLS_REAL_METHODS)
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
     TestTransactionControl txControl;
 
     @Rule
@@ -84,7 +90,8 @@ public class DeleteInspectionPortTaskTest {
         // Arrange.
         DistributedApplianceInstance dai = registerNewDAI(1L);
 
-        PowerMockito.doThrow(new IllegalStateException()).when(SdnControllerApiFactory.class, "createNetworkRedirectionApi", dai);
+        PowerMockito.doThrow(new IllegalStateException()).when(SdnControllerApiFactory.class,
+                "createNetworkRedirectionApi", dai);
 
         DeleteInspectionPortTask task = new DeleteInspectionPortTask("region", dai);
 
@@ -163,12 +170,13 @@ public class DeleteInspectionPortTaskTest {
         name = task.getName();
 
         // Assert.
-        Assert.assertEquals("The task name is different than the expected.",
+        Assert.assertEquals("The task name is different than expected.",
                 String.format("Deleting Inspection Port of Server '%s' using SDN Controller plugin", dai.getName()),
                 name);
     }
 
-    private SdnRedirectionApi mockRemoveInspectionPort(DistributedApplianceInstance dai, String domainId, Exception e) throws Exception {
+    private SdnRedirectionApi mockRemoveInspectionPort(DistributedApplianceInstance dai, String domainId, Exception e)
+            throws Exception {
         SdnRedirectionApi redirectionApi = mock(SdnRedirectionApi.class);
         if (e != null) {
             doThrow(e).when(redirectionApi).removeInspectionPort(argThat(new InspectionPortMatcher(dai, domainId)));
@@ -179,7 +187,8 @@ public class DeleteInspectionPortTaskTest {
         return redirectionApi;
     }
 
-    protected void registerNetworkRedirectionApi(SdnRedirectionApi redirectionApi, DistributedApplianceInstance dai) throws Exception {
+    protected void registerNetworkRedirectionApi(SdnRedirectionApi redirectionApi, DistributedApplianceInstance dai)
+            throws Exception {
         PowerMockito.doReturn(redirectionApi).when(SdnControllerApiFactory.class, "createNetworkRedirectionApi", dai);
     }
 
@@ -208,10 +217,8 @@ public class DeleteInspectionPortTaskTest {
     }
 
     private void registerDomain(String domainId, DistributedApplianceInstance dai) throws Exception {
-        PowerMockito.doReturn(domainId).
-        when(OpenstackUtil.class, "extractDomainId",
-                eq(dai.getDeploymentSpec().getTenantId()),
-                eq(dai.getDeploymentSpec().getTenantName()),
+        PowerMockito.doReturn(domainId).when(OpenstackUtil.class, "extractDomainId",
+                eq(dai.getDeploymentSpec().getTenantId()), eq(dai.getDeploymentSpec().getTenantName()),
                 eq(dai.getDeploymentSpec().getVirtualSystem().getVirtualizationConnector()),
                 argThat(new NetworkElementsMatcher(dai)));
     }
@@ -244,6 +251,7 @@ public class DeleteInspectionPortTaskTest {
     private class InspectionPortMatcher extends ArgumentMatcher<InspectionPortElement> {
         private DistributedApplianceInstance dai;
         private String domainId;
+
         public InspectionPortMatcher(DistributedApplianceInstance dai, String domainId) {
             this.dai = dai;
             this.domainId = domainId;
@@ -257,18 +265,17 @@ public class DeleteInspectionPortTaskTest {
 
             InspectionPortElement inspectionPort = (InspectionPortElement) object;
 
-            return inspectionPortMatchesDAI(inspectionPort.getIngressPort(), this.dai, true) &&
-                    inspectionPortMatchesDAI(inspectionPort.getEgressPort(), this.dai, false) &&
-                    this.domainId.equals(inspectionPort.getIngressPort().getParentId()) &&
-                    this.domainId.equals(inspectionPort.getEgressPort().getParentId());
+            return inspectionPortMatchesDAI(inspectionPort.getIngressPort(), this.dai, true)
+                    && inspectionPortMatchesDAI(inspectionPort.getEgressPort(), this.dai, false)
+                    && this.domainId.equals(inspectionPort.getIngressPort().getParentId())
+                    && this.domainId.equals(inspectionPort.getEgressPort().getParentId());
         }
     }
 
     private boolean inspectionPortMatchesDAI(NetworkElement port, DistributedApplianceInstance dai, boolean ingress) {
         String macAddress = ingress ? dai.getInspectionIngressMacAddress() : dai.getInspectionEgressMacAddress();
         String portId = ingress ? dai.getInspectionOsIngressPortId() : dai.getInspectionOsEgressPortId();
-        return port.getMacAddresses().size() == 1 &&
-                port.getMacAddresses().get(0).equals(macAddress) &&
-                port.getElementId().equals(portId);
+        return port.getMacAddresses().size() == 1 && port.getMacAddresses().get(0).equals(macAddress)
+                && port.getElementId().equals(portId);
     }
 }
