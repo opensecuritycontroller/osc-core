@@ -49,6 +49,9 @@ public class PortGroupCheckMetaTask extends TransactionalMetaTask {
 
     public PortGroupCheckMetaTask create(SecurityGroup sg, boolean deleteTg, String domainId) {
         PortGroupCheckMetaTask task = new PortGroupCheckMetaTask();
+        task.createPortGroupTask = this.createPortGroupTask;
+        task.updatePortGroupTask = this.updatePortGroupTask;
+        task.deletePortGroupTask = this.deletePortGroupTask;
         task.securityGroup = sg;
         task.deleteTg = deleteTg;
         task.domainId = domainId;
