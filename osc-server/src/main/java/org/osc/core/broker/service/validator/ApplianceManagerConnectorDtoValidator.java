@@ -35,7 +35,7 @@ public class ApplianceManagerConnectorDtoValidator {
      *             NOT be specified are specified
      */
     public static void checkForNullFields(ApplianceManagerConnectorDto dto, boolean skipPasswordNullCheck,
-            boolean isBasicAuth, boolean isKeyAuth) throws Exception {
+            boolean isBasicAuth) throws Exception {
 
         // build a map of (field,value) pairs to be checked for null/empty
         // values
@@ -46,22 +46,24 @@ public class ApplianceManagerConnectorDtoValidator {
         notNullFieldsMap.put("Type", dto.getManagerType());
         notNullFieldsMap.put("IP Address", dto.getIpAddress());
 
-        if (isKeyAuth && !skipPasswordNullCheck) {
-            notNullFieldsMap.put("API Key", dto.getApiKey());
-        } else if (isBasicAuth) {
+         if (isBasicAuth) {
+            notNullFieldsMap.put("User Name", dto.getUsername());
             if (!skipPasswordNullCheck) {
                 notNullFieldsMap.put("Password", dto.getPassword());
             }
-            notNullFieldsMap.put("User Name", dto.getUsername());
 
             nullFieldsMap.put("API Key", dto.getApiKey());
+        } else {
+            // Key auth
+            if (!skipPasswordNullCheck) {
+                notNullFieldsMap.put("API Key", dto.getApiKey());
+            }
+            nullFieldsMap.put("User Name", dto.getUsername());
+            nullFieldsMap.put("Password", dto.getPassword());
         }
+
         ValidateUtil.checkForNullFields(notNullFieldsMap);
         ValidateUtil.validateFieldsAreNull(nullFieldsMap);
-    }
-
-    public static void checkForNullFields(ApplianceManagerConnectorDto dto, boolean isBasicAuth, boolean isKeyAuth) throws Exception {
-        checkForNullFields(dto, false, isBasicAuth, isKeyAuth);
     }
 
     public static void checkFieldLength(ApplianceManagerConnectorDto dto, boolean isBasicAuth) throws Exception {

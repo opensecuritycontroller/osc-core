@@ -122,8 +122,7 @@ public class AddApplianceManagerConnectorService
 
         ManagerType managerType = ManagerType.fromText(request.getDto().getManagerType());
         boolean basicAuth = this.apiFactoryService.isBasicAuth(managerType);
-        boolean keyAuth = this.apiFactoryService.isKeyAuth(managerType);
-        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), basicAuth, keyAuth);
+        ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), false, basicAuth);
         ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto(), basicAuth);
 
         // check for uniqueness of mc name
