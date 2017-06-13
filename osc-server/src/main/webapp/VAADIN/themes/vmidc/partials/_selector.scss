@@ -1,0 +1,21 @@
+.vmidc {
+        
+        .selector-wrapper-title {
+            font-size: 14px;
+            padding: 5px 0px;
+        }
+        
+        .link-button:focus:after {
+            box-shadow: none;
+        }
+        
+        .selector-button-layout{
+            padding:60px 25px;
+            
+            .selector-button {
+                margin:5px;
+                font-size: 14px;            
+            }
+        }
+    
+}

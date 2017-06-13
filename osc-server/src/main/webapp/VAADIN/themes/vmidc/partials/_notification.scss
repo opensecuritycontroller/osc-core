@@ -1,0 +1,15 @@
+.vmidc {
+
+    .v-Notification {
+       font-size: $notification-font-size;
+    }
+    
+    // Make error and warning text smaller
+    .v-Notification.error.v-Notification-error * {
+       font-size: $notification-font-size;
+    }
+    
+    .v-Notification.warning.v-Notification-warning * {
+       font-size: $notification-font-size;
+    }
+}

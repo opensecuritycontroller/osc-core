@@ -1,0 +1,136 @@
+<!-- 
+    Copyright (c) Intel Corporation
+    Copyright (c) 2017
+   
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+   
+       http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License. 
+-->
+<project name="vmidcDeployMgr" default="build" basedir="." xmlns:if="ant:if" xmlns:unless="ant:unless">
+	<description>a vmidc deploy tool</description>
+
+	<property name="image-format" value="vmdk_only" />
+	<target name="ovf" depends="build,ovfOnly,ovfCopy" description="build all and generate vmidc ovf" />
+
+	<target name="build" depends="deleteJavaJre">
+		<echo>Ant version: ${ant.version}</echo>
+		<echo>Ant Java/JVM version: ${ant.java.version}</echo>
+		<echo>Java/JVM detail version: ${java.version}</echo>
+		<exec executable="mvn">
+			<arg value="-version" />
+		</exec>
+		<exec executable="mvn" failonerror="true">
+			<arg value="clean" />
+			<arg value="install" />
+			<arg value="-Dmaven.test.skip=true" />
+			<arg value="-Pall" if:true="${all}" />
+		</exec>
+	</target>
+
+	<target name="ovfOnly" depends="prodVersion" description="Runs ovfBuild and cleans up on error">
+		<waitfor maxwait="20" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+			<not>
+				<available file="/tmp/build_marker" />
+			</not>
+		</waitfor>
+		<touch file="/tmp/build_marker" />
+		<exec executable="schroot" resultproperty="ovf.result" dir="osc-server-bom/">
+			<arg value="-c" />
+			<arg value="centos" />
+			<arg value="--" />
+			<arg value="ant" />
+			<arg value="-Dimage-format=${image-format}" />
+			<arg value="-Dbranchname=${branchname}" />
+			<arg value="-DbuildNumber=${fullVersion}" />
+			<arg value="-DproductVersion=${releaseVersion}" />
+		</exec>
+		<delete file="/tmp/build_marker" />
+	</target>
+
+	<target name="ovfCopy" depends="prodVersion,createBuildDir,copyServerUpgradeBundle,copyPlugins,copyImages" description="Copy result files to build dir">
+		<copy file="osc-server-bom/OSC.ovf" tofile="Build${fullVersion}/OSC-${fullVersion}.ovf" />
+		<replace file="Build${fullVersion}/OSC-${fullVersion}.ovf" token="$OSC_VERSION" value="${releaseVersion}" />
+		<zip destfile="Build${fullVersion}/OSC-${releaseVersion}_Build${fullVersion}.zip">
+			<fileset dir="Build${fullVersion}" includes="**/*.vmdk **/*.ovf **/serverUpgradeBundle-*.zip" />
+		</zip>
+	</target>
+
+	<target name="createBuildDir">
+		<delete includeemptydirs="true">
+			<fileset dir="." includes="Build*/**" />
+		</delete>
+		<mkdir dir="Build${fullVersion}" />
+	</target>
+
+	<target name="copyServerUpgradeBundle">
+		<copy file="target/serverUpgradeBundle.zip" tofile="Build${fullVersion}/serverUpgradeBundle-${fullVersion}.zip" />
+	</target>
+		
+	<target name="copyPlugins" if="${all}">
+		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${fullVersion}/SampleMgrPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${fullVersion}/NsmMgrPlugin.bar" />
+		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${fullVersion}/SmcMgrPlugin.bar" />
+		<copy file="${basedir}/../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" tofile="Build${fullVersion}/NscSdnControllerPlugin.bar" />
+	</target>
+
+	<target name="checkImagesTocopy">
+		<condition property="isvmdkImage">
+			<OR>
+				<equals arg1="vmdk_only" arg2="${image-format}" />
+				<equals arg1="qcow2-vmdk" arg2="${image-format}" />
+			</OR>
+		</condition>
+		<condition property="isqcow2Image">
+			<OR>
+				<equals arg1="qcow2-only" arg2="${image-format}" />
+				<equals arg1="qcow2-vmdk" arg2="${image-format}" />
+			</OR>
+		</condition>
+		<condition property="israwImage">
+			<equals arg1="raw-only" arg2="${image-format}" />
+		</condition>
+	</target>
+
+	<target name="checkFileExist">
+		<available file="${basedir}/osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz" property="isJavaJreExist"/>
+	</target>
+
+
+	<target name="copyImages" depends="vmdkImageCopy,qcow2ImageCopy,rawImageCopy" description="Checks image format and copy respective files" />
+	<target name="vmdkImageCopy" depends="checkImagesTocopy" if="isvmdkImage">
+		<move file="osc-server-bom/OSC_disk-0.vmdk" tofile="Build${fullVersion}/OSC_disk-0.vmdk" />
+	</target>
+	<target name="qcow2ImageCopy" depends="checkImagesTocopy" if="isqcow2Image">
+		<move file="osc-server-bom/OSC_disk-0.qcow2" tofile="Build${fullVersion}/OSC_disk-0.qcow2" />
+	</target>
+	<target name="rawImageCopy" depends="checkImagesTocopy" if="israwImage">
+		<move file="osc-server-bom/OSC_disk-0-raw.img" tofile="Build${fullVersion}/OSC_disk-0-raw.img" />
+	</target>
+
+	<target name="deleteJavaJre" depends="checkFileExist" if="isJavaJreExist">
+		<delete file="${basedir}/osc-server-bom/Sources/jre-8u112-linux-x64.tar.gz" />
+	</target>
+
+    <target name="prodVersion">
+            <!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
+            <exec outputproperty="fullVersion" dir="." executable="sh">
+			<arg value="-c" />
+                <arg value="git describe --long | tr -d v" />
+		</exec>
+            <!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, etc -->
+            <exec outputproperty="releaseVersion" dir="." executable="sh">
+                <arg value="-c" />
+                <arg value="git describe --abbrev=0 | tr -d v" />
+		</exec>
+            <echo>Full Version: ${fullVersion}</echo>
+            <echo>Version: ${releaseVersion}</echo>
+	</target>
+</project>

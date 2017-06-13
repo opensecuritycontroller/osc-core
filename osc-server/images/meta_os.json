@@ -1,0 +1,27 @@
+{
+	"metaDataVersion": "1.1",
+	"model": "IPS-VM100-VSS",
+	"managerType": "NSM",
+	"managerVersion": "8.2",
+	"virtualizationType": "OPENSTACK",
+	"virtualizationVersion": "Icehouse",
+	"softwareVersion": "8.1.7.27",
+	"imageName": "sensorsw_vm100-vss_81727-disk1.qcow",
+	"minIscVersion": {
+		"major": 2,
+		"minor": 5,
+		"build": 3651,
+		"versionStr": ""
+	},
+	"minCpus": 4,
+	"memoryInMb": 6144,
+	"diskSizeInGb": 50,
+	"encapsulationTypes": ["VLAN"],
+	"imageProperties": {
+		"hw_disk_bus": "ide"
+	},
+	"configProperties": {
+		"applianceModel": "IPS-VM100-VSS",
+		"applianceSoftwareVersion": "8.1.7.27"
+	}
+}

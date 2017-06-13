@@ -1,0 +1,3 @@
+#!/bin/sh
+inst_hook initqueue-settled 99 "$moddir/centos_rc.sh"
+

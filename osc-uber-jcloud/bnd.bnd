@@ -1,0 +1,49 @@
+#
+# Create bundle to allow jcloud to be extracted from uber-bundle
+#
+-include target/depend.bnd
+
+-nouses:	true
+
+Include-Resource:\
+  @${jersey-bundle.dep},\
+  @${jsr250-api.dep},\
+  @${jsr311-api.dep},\
+  @${jclouds-compute.dep},\
+  @${jclouds-core.dep},\
+  @${jclouds-scriptbuilder.dep},\
+  @${openstack-glance.dep},\
+  @${openstack-keystone.dep},\
+  @${openstack-neutron.dep},\
+  @${openstack-nova.dep}
+
+Import-Package:\
+  !com.sun.grizzly.*,\
+  !com.sun.net.httpserver,\
+  !com.sun.syndication.*,\
+  !com.sun.xml.bind.v2.*,\
+  !com.sun.xml.fastinfoset.stax,\
+  !javax.ejb,\
+  !javax.enterprise.*,\
+  !javax.interceptor,\
+  !javax.persistence,\
+  !javax.servlet.jsp.*,\
+  !org.codehaus.jackson.*,\
+  !org.codehaus.jettison.*,\
+  !org.jdom.*,\
+  !org.objectweb.asm,\
+  *
+
+# exporting javax.ws.rs with version=1.1.0 (instead of 1.1.1)
+#  is workaround to stop jackson binding to wrong version
+#  as it imports version="[1.1.1,2.0)"
+-exportcontents:\
+  com.sun.jersey.api.*;version=1.12,\
+  com.sun.jersey.client.*;version=1.12,\
+  com.sun.jersey.core.*;version=1.12,\
+  com.sun.jersey.spi.*;version=1.12,\
+  javax.ws.rs.*;version=1.1.0,\
+  org.jclouds.*;version=2.0.0
+
+
+# end
