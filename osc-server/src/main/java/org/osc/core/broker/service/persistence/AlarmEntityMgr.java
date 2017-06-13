@@ -18,9 +18,6 @@ package org.osc.core.broker.service.persistence;
 
 import org.osc.core.broker.model.entities.events.Alarm;
 import org.osc.core.broker.service.dto.AlarmDto;
-import org.osc.core.common.alarm.AlarmAction;
-import org.osc.core.common.alarm.EventType;
-import org.osc.core.common.alarm.Severity;
 
 public class AlarmEntityMgr {
 
@@ -31,27 +28,25 @@ public class AlarmEntityMgr {
     }
 
     public static void toEntity(Alarm alarm, AlarmDto dto) {
-
         // transform from dto to entity
         alarm.setId(dto.getId());
         alarm.setEnable(dto.isEnabledAlarm());
         alarm.setName(dto.getName());
-        alarm.setEventType(EventType.fromText(dto.getEventType()));
+        alarm.setEventType(dto.getEventType());
         alarm.setRegexMatch(dto.getRegexMatch());
-        alarm.setSeverity(Severity.fromText(dto.getSeverity()));
-        alarm.setAlarmAction(AlarmAction.fromText(dto.getAlarmAction()));
+        alarm.setSeverity(dto.getSeverity());
+        alarm.setAlarmAction(dto.getAlarmAction());
         alarm.setReceipientEmail(dto.getReceipientEmail());
     }
 
     public static void fromEntity(Alarm alarm, AlarmDto dto) {
-
         dto.setId(alarm.getId());
         dto.setEnabledAlarm(alarm.isEnabled());
         dto.setName(alarm.getName());
-        dto.setEventType(alarm.getEventType().toString());
+        dto.setEventType(alarm.getEventType());
         dto.setRegexMatch(alarm.getRegexMatch());
-        dto.setSeverity(alarm.getSeverity().toString());
-        dto.setAlarmAction(alarm.getAlarmAction().toString());
+        dto.setSeverity(alarm.getSeverity());
+        dto.setAlarmAction(alarm.getAlarmAction());
         dto.setReceipientEmail(alarm.getReceipientEmail());
     }
 }
