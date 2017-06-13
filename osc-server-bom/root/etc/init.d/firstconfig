@@ -1,0 +1,181 @@
+#!/bin/bash
+#
+# firstconfig  configuration on first start
+#
+# chkconfig: - 06 99
+# description: configs system on OVF deploy
+#
+
+# Source function library
+. /etc/rc.d/init.d/functions
+
+
+start() {
+  if [ -f /etc/firstconfig ]; then
+    exit 0
+  fi
+
+  [ -d /mnt/media ] || /bin/mkdir -m 755 /mnt/media
+  /bin/mount /dev/cdrom /mnt/media || exit 0
+
+  if ! [ -f /mnt/media/ovf-env.xml ]; then
+    /bin/umount /mnt/media
+    exit 0
+  fi
+
+  /bin/sed -ne '/<Property.*sbm_/s!.*key="\(.*\)" oe:value="\(.*\)"/>.*!\1="\2"!p' /mnt/media/ovf-env.xml > /etc/firstconfig
+  . /etc/firstconfig
+
+  echo $"Configuring OVF...."
+
+  if [ "x$sbm_hostname" != "x" ]; then
+    echo -e "\n" >> /etc/sysconfig/network
+    action $"  Setting hostname to $sbm_hostname" \
+      /bin/sed -i  \
+        -e $"/HOSTNAME/d" -e $"\$aHOSTNAME=$sbm_hostname" \
+        -e $"/^\s*$/d" \
+        /etc/sysconfig/network
+
+    /bin/hostname $"$sbm_hostname"
+  fi
+
+  if [ "x$sbm_gateway_0" != "x" ]; then
+    echo -e "\n" >> /etc/sysconfig/network
+    action $"  Setting gateway to $sbm_gateway_0" \
+      /bin/sed -i \
+        -e $"/GATEWAY/d" \
+        -e $"\$aGATEWAY=$sbm_gateway_0" \
+        -e $"/^\s*$/d" \
+        /etc/sysconfig/network
+  fi
+
+  MACADDR=`/bin/cat /sys/class/net/eth0/address`
+  if [ "x$sbm_ip_0" != "x" ]; then
+    echo -e "\n" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+    action $"  Setting eth0 IP to $sbm_ip_0" \
+      /bin/sed -ri \
+        -e $"/(BOOTPROTO|IPADDR|NETMASK|HWADDR)/d" \
+        -e $"\$aBOOTPROTO=static\\nIPADDR=$sbm_ip_0\\nNETMASK=$sbm_netmask_0\\nHWADDR=$MACADDR" \
+        -e $"/^\s*$/d" \
+        /etc/sysconfig/network-scripts/ifcfg-eth0
+
+  else
+    echo -e "\n" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+    action $"  Setting eth0 IP to use dhcp" \
+      /bin/sed -ri \
+        -e $"/(BOOTPROTO|IPADDR|NETMASK|HWADDR)/d" \
+        -e $"\$aBOOTPROTO=dhcp\\nHWADDR=$MACADDR" \
+        -e $"/^\s*$/d" \
+        /etc/sysconfig/network-scripts/ifcfg-eth0
+  fi
+
+  echo -e "\n" >> /etc/resolv.conf
+  if [ "x$sbm_domain_0" != "x" ]; then
+    action $"  Setting domain search to $sbm_domain_0" \
+      /bin/sed -i \
+        -e $"/^\s*search/d" -e $"\$asearch $sbm_domain_0" \
+        -e $"/^#/d" \
+        -e $"/^\s*$/d" \
+        /etc/resolv.conf
+  else
+    action $"  Removing domain search"
+      /bin/sed -i \
+        -e $"/^\s*search/d" \
+        -e $"/^#/d" \
+        -e $"/^\s*$/d" \
+        /etc/resolv.conf
+  fi
+
+  echo -e "\n" >> /etc/resolv.conf
+  if [ "x$sbm_dns1_0" != "x" ]; then
+    append=""
+    set -- $sbm_dns1_0
+    while (( "$#" )); do
+      append="${append}nameserver $1\n"
+      shift
+    done
+
+    action $"  Setting DNS server to $sbm_dns1_0" \
+      /bin/sed -i \
+        -e "/nameserver/d" -e $"\$a${append}" \
+        -e $"/^#/d" \
+        -e $"/^\s*$/d" \
+        /etc/resolv.conf
+  else
+    action $"Removing DNS servers" \
+      /bin/sed -i \
+        -e $"/nameserver/d"
+        -e $"/^#/d" \
+        -e $"/^\s*$/d" \
+        /etc/resolv.conf
+  fi
+
+  if [ "x$sbm_ntp_0" != "x" ]; then
+    append0=""
+    append1=""
+    set -- $sbm_ntp_0
+    while (( "$#" )); do
+      append0="${append0}server $1\n"
+      append1="${append1}$1\n"
+      shift
+    done
+
+    echo -e "\n" >> /etc/ntp.conf
+    action $"  Setting NTP servers to $sbm_ntp_0" \
+      /bin/sed -i \
+        -e $"/\s*server/d" \
+        -e $"\$a${append0}" \
+        -e $"/^\s*$/d" \
+        /etc/ntp.conf
+
+    echo -e "\n" > /etc/ntp/step-tickers
+    action $"  Setting step tickers $sbm_ntp_0" \
+      /bin/sed -i \
+        -e $"\$a${append1}" \
+        -e $"/^\s*$/d" \
+        /etc/ntp/step-tickers
+
+    action $"  Enabling NTP" chkconfig --level 2345 ntpd on
+    action $"  Enabling ntpdate" chkconfig --level 2345 ntpdate on
+  else
+    action $"  Disabling NTP" chkconfig --level 2345 ntpd off
+    action $"  Disabling ntpdate" chkconfig --level 2345 ntpdate off
+    if vmware-checkvm > /dev/null 2> /dev/null; then
+      action $"  Enabling timesync" /usr/bin/vmware-toolbox-cmd -q timesync enable
+    fi
+  fi
+
+  if [ "x$sbm_isSSHEnabled" == "xFalse" ]; then
+    action $"  Disabling SSH" chkconfig --level 2345 sshd off
+  else
+    action $"  Enabling SSH" chkconfig --level 2345 sshd on
+  fi
+
+  umount /mnt/media
+
+ # Still need these two
+ #  sbm_cli_en_passwd_0=vmidcserver
+ #  sbm_gui_passwd_0=abc12345
+}
+
+stop() {
+  echo 
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  *)
+    echo $"Usage: firstconfig {start|stop|restart}"
+    ;;
+esac
+
+exit 0

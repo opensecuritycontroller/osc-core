@@ -1,0 +1,33 @@
+# Added to support the ServiceDispatcher type
+
+-dsannotations-options: inherit
+
+# osc-common isn't really a proper bundle, it's designed to
+# be pulled in to this bundle to make a complete osc-server.
+-privatepackage:\
+    ${include-osc-common}
+
+# This is just a list of the packages in osc-common
+include-osc-common:\
+    org.osc.core.broker.model.virtualization,\
+    org.osc.core.rest.client.*,\
+    org.osc.core.util.*
+    
+    
+# We need to customise some imports a little to avoid some overly strict version ranges
+Import-Package:\
+    ${import-guava},\
+    ${import-jta},\
+    *
+
+# Match jclouds guava import range to reduce the risk of pain.
+# JClouds has a poor API which leaks guava details, so we need 
+# to wire to the same guava as they do. Hence the wider range
+import-guava:\
+    com.google.common.*;version="[16.0.1,20)"
+
+# Hibernate puts JTA 1.2 on our classpath, but everyting is still happy with 1.1
+# and 1.1 is used in the server
+import-jta:\
+    javax.transaction;version="[1.1,2)",\
+    javax.transaction.xa;version="[1.1,2)"

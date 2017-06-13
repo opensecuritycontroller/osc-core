@@ -1,0 +1,7 @@
+UUID=053f2742-c607-4a40-a05c-c39cdeeb97f6 /             ext4     defaults         1 1
+UUID=de505a44-50b7-4757-87e5-a1a547de8dd4 /boot         ext4     defaults,nosuid  1 2
+/proc                                     /proc         proc     defaults,nosuid  0 0
+/sys                                      /sys          sysfs    defaults,nosuid  0 0
+/dev/mapper/swap                          swap          swap     defaults         0 0
+tmpfs                                     /dev/shm      tmpfs    defaults,nosuid  0 0
+devpts                                    /dev/pts      devpts   gid=5,node=620   0 0
