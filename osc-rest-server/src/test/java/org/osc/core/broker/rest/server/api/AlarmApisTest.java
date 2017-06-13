@@ -44,6 +44,9 @@ import org.osc.core.broker.service.api.UpdateAlarmServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.response.ListResponse;
+import org.osc.core.common.alarm.AlarmAction;
+import org.osc.core.common.alarm.EventType;
+import org.osc.core.common.alarm.Severity;
 
 public class AlarmApisTest extends BaseJerseyTest {
 
@@ -223,17 +226,13 @@ public class AlarmApisTest extends BaseJerseyTest {
      * Returns alarmDto instance fulfilled with proper data
      */
     private AlarmDto getAlarmDto() {
-        final String AlarmAction_NONE = "None";
-        final String EventType_JOB_FAILURE = "Job Failure";
-        final String Severity_LOW = "Low";
-
         AlarmDto alarm = new AlarmDto();
         alarm.setName("testAlarm");
-        alarm.setAlarmAction(AlarmAction_NONE);
+        alarm.setAlarmAction(AlarmAction.NONE);
         alarm.setEnabledAlarm(false);
-        alarm.setEventType(EventType_JOB_FAILURE);
+        alarm.setEventType(EventType.JOB_FAILURE);
         alarm.setRegexMatch("\\d");
-        alarm.setSeverity(Severity_LOW);
+        alarm.setSeverity(Severity.LOW);
         alarm.setId(1L);
 
         return alarm;
