@@ -74,8 +74,9 @@ import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.CustomTable;		
+import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Table.ColumnGenerator;
 
 @Component(service={VirtualizationConnectorView.class}, scope=ServiceScope.PROTOTYPE)
 public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConnectorDto, SecurityGroupDto> {
