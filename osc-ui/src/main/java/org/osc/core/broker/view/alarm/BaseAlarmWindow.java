@@ -97,10 +97,10 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
         this.eventType = new ComboBox("Event Type");
         this.eventType.setTextInputAllowed(false);
         this.eventType.setNullSelectionAllowed(false);
-        this.eventType.addItem(EventType.JOB_FAILURE.toString());
-        this.eventType.addItem(EventType.SYSTEM_FAILURE.toString());
-        this.eventType.addItem(EventType.DAI_FAILURE.toString());
-        this.eventType.select(EventType.JOB_FAILURE.toString());
+        this.eventType.addItem(EventType.JOB_FAILURE);
+        this.eventType.addItem(EventType.SYSTEM_FAILURE);
+        this.eventType.addItem(EventType.DAI_FAILURE);
+        this.eventType.select(EventType.JOB_FAILURE);
 
         this.regexMatch = new TextField("Regex Match");
         this.regexMatch.setValue(".*");
@@ -110,17 +110,17 @@ public abstract class BaseAlarmWindow extends CRUDBaseWindow<OkCancelButtonModel
         this.severity = new ComboBox("Severity");
         this.severity.setTextInputAllowed(false);
         this.severity.setNullSelectionAllowed(false);
-        this.severity.addItem(Severity.HIGH.toString());
-        this.severity.addItem(Severity.MEDIUM.toString());
-        this.severity.addItem(Severity.LOW.toString());
-        this.severity.select(Severity.LOW.toString());
+        this.severity.addItem(Severity.HIGH);
+        this.severity.addItem(Severity.MEDIUM);
+        this.severity.addItem(Severity.LOW);
+        this.severity.select(Severity.LOW);
 
         this.alarmAction = new ComboBox("Alarm Action");
         this.alarmAction.setTextInputAllowed(false);
         this.alarmAction.setNullSelectionAllowed(false);
-        this.alarmAction.addItem(AlarmAction.NONE.toString());
-        this.alarmAction.addItem(AlarmAction.EMAIL.toString());
-        this.alarmAction.select(AlarmAction.NONE.toString());
+        this.alarmAction.addItem(AlarmAction.NONE);
+        this.alarmAction.addItem(AlarmAction.EMAIL);
+        this.alarmAction.select(AlarmAction.NONE);
         this.alarmAction.addValueChangeListener(this.actionChangedListener);
 
         this.email = new TextField("Send email to");
