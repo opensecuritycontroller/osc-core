@@ -62,14 +62,14 @@ public class UpdateAlarmWindow extends BaseAlarmWindow {
         this.enabled.setValue((Boolean) this.currentAlarm.getItemProperty("enabledAlarm").getValue());
         this.alarmName.setValue(this.currentAlarm.getItemProperty("name").getValue().toString());
         this.eventType.setValue(this.currentAlarm.getItemProperty("eventType").getValue());
-        if (this.eventType.getValue().equals(EventType.JOB_FAILURE.toString())
+        if (this.eventType.getValue().equals(EventType.JOB_FAILURE)
                 && this.currentAlarm.getItemProperty("regexMatch").getValue() != null) {
             this.regexMatch.setValue(this.currentAlarm.getItemProperty("regexMatch").getValue().toString());
         }
         this.severity.setValue(this.currentAlarm.getItemProperty("severity").getValue());
 
         this.alarmAction.setValue(this.currentAlarm.getItemProperty("alarmAction").getValue());
-        if (this.alarmAction.getValue().equals(AlarmAction.EMAIL.toString())) {
+        if (this.alarmAction.getValue().equals(AlarmAction.EMAIL)) {
             this.email.setValue(this.currentAlarm.getItemProperty("receipientEmail").getValue().toString());
         }
     }

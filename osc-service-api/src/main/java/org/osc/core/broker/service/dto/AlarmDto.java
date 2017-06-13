@@ -20,6 +20,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.osc.core.common.alarm.AlarmAction;
+import org.osc.core.common.alarm.EventType;
+import org.osc.core.common.alarm.Severity;
+
 import io.swagger.annotations.ApiModelProperty;
 
 @XmlRootElement(name = "alarm")
@@ -33,16 +37,16 @@ public class AlarmDto extends BaseDto {
     private String name;
 
     @ApiModelProperty(required = true)
-    private String eventType;
+    private EventType eventType;
 
     @ApiModelProperty(required = true)
     private String regexMatch;
 
     @ApiModelProperty(required = true)
-    private String severity;
+    private Severity severity;
 
     @ApiModelProperty(required = true)
-    private String alarmAction;
+    private AlarmAction alarmAction;
 
     @ApiModelProperty(value = "If Alarm action is email, then this field is required.")
     private String receipientEmail;
@@ -63,11 +67,11 @@ public class AlarmDto extends BaseDto {
         this.name = name;
     }
 
-    public String getEventType() {
+    public EventType getEventType() {
         return this.eventType;
     }
 
-    public void setEventType(String eventType) {
+    public void setEventType(EventType eventType) {
         this.eventType = eventType;
     }
 
@@ -79,19 +83,19 @@ public class AlarmDto extends BaseDto {
         this.regexMatch = regexMatch;
     }
 
-    public String getSeverity() {
+    public Severity getSeverity() {
         return this.severity;
     }
 
-    public void setSeverity(String severity) {
+    public void setSeverity(Severity severity) {
         this.severity = severity;
     }
 
-    public String getAlarmAction() {
+    public AlarmAction getAlarmAction() {
         return this.alarmAction;
     }
 
-    public void setAlarmAction(String alarmAction) {
+    public void setAlarmAction(AlarmAction alarmAction) {
         this.alarmAction = alarmAction;
     }
 
