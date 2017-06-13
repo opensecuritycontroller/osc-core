@@ -25,7 +25,7 @@ import org.osgi.service.component.annotations.Component;
 @Component
 @SuppressWarnings("deprecation") // DESDecryption is used only to support legacy upgrade purposes
 public class EncryptionUtil implements EncryptionApi {
-    public static final String SECURITY_PROPS_RESOURCE_PATH = "/org/osc/core/util/security.properties";
+    public static final String SECURITY_PROPS_RESOURCE_PATH = "/org/osc/broker/util/crypto/security.properties";
     /**
      * Encrypts plain text with AES-GCM authenticated encryption (details in RFC5084)
      * @param plainText text to be encrypted
