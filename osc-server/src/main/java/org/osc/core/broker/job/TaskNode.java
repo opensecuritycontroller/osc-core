@@ -38,6 +38,8 @@ import org.osc.core.common.job.TaskGuard;
 import org.osc.core.common.job.TaskState;
 import org.osc.core.common.job.TaskStatus;
 import org.osc.sdk.manager.element.TaskElement;
+import org.osc.sdk.manager.element.TaskStateElement;
+import org.osc.sdk.manager.element.TaskStatusElement;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
@@ -247,12 +249,12 @@ public class TaskNode implements Runnable, TaskElement {
     }
 
     @Override
-    public TaskStatusElementImpl getStatus() {
+    public TaskStatusElement getStatus() {
         return new TaskStatusElementImpl(this.status);
     }
 
     @Override
-    public TaskStateElementImpl getState() {
+    public TaskStateElement getState() {
         return new TaskStateElementImpl(this.state);
     }
 

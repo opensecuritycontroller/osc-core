@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.server.installer.InstallableListener;
@@ -212,7 +213,7 @@ public class PluginTracker<T> {
         String name = unit.getName();
         String type = unit.getType();
 
-        if (type == null || type.isEmpty()) {
+        if (StringUtils.isBlank(type)) {
             throw new IllegalArgumentException("The provided installable unit must have a valid type.");
         }
 
