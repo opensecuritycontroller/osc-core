@@ -35,11 +35,11 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.rest.client.ClientResponseNotOkException;
 import org.osc.core.broker.service.api.ManagerApi;
 import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.util.StaticRegistry;
-import org.osc.core.rest.client.crypto.SslContextProvider;
-import org.osc.core.rest.client.exception.ClientResponseNotOkException;
+import org.osc.core.broker.util.crypto.SslContextProvider;
 import org.osc.sdk.manager.api.ManagerWebSocketNotificationApi;
 
 public class WebSocketClient {

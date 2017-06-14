@@ -27,10 +27,10 @@ import javax.persistence.criteria.Root;
 
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
+import org.osc.core.common.manager.ManagerType;
 
 public class ApplianceManagerConnectorEntityMgr {
 
@@ -49,7 +49,7 @@ public class ApplianceManagerConnectorEntityMgr {
         // Transform from dto to entity
         mc.setId(dto.getId());
         mc.setName(dto.getName());
-        mc.setManagerType(dto.getManagerType());
+        mc.setManagerType(dto.getManagerType().getValue());
         mc.setServiceType(serviceName);
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
@@ -67,7 +67,7 @@ public class ApplianceManagerConnectorEntityMgr {
         // transform from entity to dto
         dto.setId(mc.getId());
         dto.setName(mc.getName());
-        dto.setManagerType(mc.getManagerType());
+        dto.setManagerType(ManagerType.fromText(mc.getManagerType()));
         dto.setIpAddress(mc.getIpAddress());
         dto.setUsername(mc.getUsername());
         dto.setPassword(encryption.decryptAESCTR(mc.getPassword()));

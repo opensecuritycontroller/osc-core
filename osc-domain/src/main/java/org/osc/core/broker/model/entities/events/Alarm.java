@@ -23,6 +23,9 @@ import javax.persistence.Enumerated;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.common.alarm.AlarmAction;
+import org.osc.core.common.alarm.EventType;
+import org.osc.core.common.alarm.Severity;
 
 @SuppressWarnings("serial")
 @Entity
@@ -58,7 +61,7 @@ public class Alarm extends BaseEntity {
     }
 
     public Boolean isEnabled() {
-        return enabled;
+        return this.enabled;
     }
 
     public void setEnable(boolean enabled) {
@@ -66,7 +69,7 @@ public class Alarm extends BaseEntity {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void setName(String name) {
@@ -74,7 +77,7 @@ public class Alarm extends BaseEntity {
     }
 
     public EventType getEventType() {
-        return eventType;
+        return this.eventType;
     }
 
     public void setEventType(EventType eventType) {
@@ -82,7 +85,7 @@ public class Alarm extends BaseEntity {
     }
 
     public String getRegexMatch() {
-        return regexMatch;
+        return this.regexMatch;
     }
 
     public void setRegexMatch(String regexMatch) {
@@ -90,7 +93,7 @@ public class Alarm extends BaseEntity {
     }
 
     public Severity getSeverity() {
-        return severity;
+        return this.severity;
     }
 
     public void setSeverity(Severity severity) {
@@ -98,7 +101,7 @@ public class Alarm extends BaseEntity {
     }
 
     public AlarmAction getAlarmAction() {
-        return alarmAction;
+        return this.alarmAction;
     }
 
     public void setAlarmAction(AlarmAction alarmAction) {
@@ -106,7 +109,7 @@ public class Alarm extends BaseEntity {
     }
 
     public String getReceipientEmail() {
-        return receipientEmail;
+        return this.receipientEmail;
     }
 
     public void setReceipientEmail(String receipientEmail) {
@@ -115,8 +118,8 @@ public class Alarm extends BaseEntity {
 
     @Override
     public String toString() {
-        return "Alarm [enabled=" + enabled + ", name=" + name + ", eventType=" + eventType + ", regexMatch="
-                + regexMatch + ", severity=" + severity + ", alarmAction=" + alarmAction + ", receipientEmail="
-                + receipientEmail + ", getId()=" + getId() + "]";
+        return "Alarm [enabled=" + this.enabled + ", name=" + this.name + ", eventType=" + this.eventType + ", regexMatch="
+                + this.regexMatch + ", severity=" + this.severity + ", alarmAction=" + this.alarmAction + ", receipientEmail="
+                + this.receipientEmail + ", getId()=" + getId() + "]";
     }
 }

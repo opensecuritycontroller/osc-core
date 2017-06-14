@@ -37,6 +37,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.job.TaskState;
+import org.osc.core.common.job.TaskStatus;
 
 @Entity
 @Table(name = "TASK")
@@ -49,7 +52,7 @@ public class TaskRecord extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "job_fk", nullable = false,
-            foreignKey = @ForeignKey(name = "FK_TASK_JOB"))
+    foreignKey = @ForeignKey(name = "FK_TASK_JOB"))
     private JobRecord job;
 
     @Column(name = "fail_reason", length = 1024)

@@ -16,12 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
-import org.osc.core.broker.model.entities.BaseEntity;
-import org.osc.core.broker.model.entities.SslCertificateAttr;
-import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
-import org.osc.core.broker.model.entities.job.JobRecord;
-import org.osc.core.broker.model.entities.job.LastJobContainer;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
@@ -39,10 +37,13 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+
+import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.SslCertificateAttr;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
+import org.osc.core.broker.model.entities.job.JobRecord;
+import org.osc.core.broker.model.entities.job.LastJobContainer;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 @Entity
 @Table(name = "VIRTUALIZATION_CONNECTOR")
@@ -103,8 +104,8 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name="SSL_CERTIFICATE_ATTR_VIRTUALIZATION_CONNECTOR",
-            joinColumns={@JoinColumn(name="VIRTUALIZATION_CONNECTOR_ID")},
-            inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
+    joinColumns={@JoinColumn(name="VIRTUALIZATION_CONNECTOR_ID")},
+    inverseJoinColumns={@JoinColumn(name="SSL_CERTIFICATE_ATTR_ID")})
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
 
     @OneToOne(fetch = FetchType.LAZY)

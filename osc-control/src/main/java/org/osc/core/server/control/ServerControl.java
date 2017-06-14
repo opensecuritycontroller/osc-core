@@ -44,13 +44,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.log4j.Logger;
+import org.osc.core.broker.rest.client.VmidcServerRestClient;
 import org.osc.core.broker.service.response.ServerStatusResponse;
+import org.osc.core.broker.util.ServerUtil;
+import org.osc.core.broker.util.VersionUtil;
+import org.osc.core.broker.util.ServerUtil.ServerServiceChecker;
 import org.osc.core.broker.util.db.DBConnectionParameters;
-import org.osc.core.rest.client.VmidcServerRestClient;
-import org.osc.core.util.LogUtil;
-import org.osc.core.util.ServerUtil;
-import org.osc.core.util.ServerUtil.ServerServiceChecker;
-import org.osc.core.util.VersionUtil;
+import org.osc.core.broker.util.log.LogUtil;
 
 public class ServerControl {
     private static final Logger log = Logger.getLogger(ServerControl.class);

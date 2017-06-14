@@ -22,11 +22,11 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.model.entities.events.AlarmAction;
-import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osc.core.common.alarm.AlarmAction;
+import org.osc.core.common.alarm.EventType;
 
 public class AlarmDtoValidator {
 
@@ -41,7 +41,7 @@ public class AlarmDtoValidator {
         map.put("eventType", dto.getEventType());
         map.put("severity", dto.getSeverity());
         map.put("alarmAction", dto.getAlarmAction());
-        if (AlarmAction.fromText(dto.getAlarmAction()) == AlarmAction.EMAIL) {
+        if (dto.getAlarmAction().equals(AlarmAction.EMAIL)) {
             map.put("email", dto.getReceipientEmail());
         }
 
@@ -64,7 +64,7 @@ public class AlarmDtoValidator {
     public static void checkRegexSyntax(AlarmDto dto) throws Exception {
 
         try {
-            if (EventType.fromText(dto.getEventType()) == EventType.JOB_FAILURE) {
+            if (dto.getEventType().equals(EventType.JOB_FAILURE)) {
                 Pattern.compile(dto.getRegexMatch());
             }
         } catch (PatternSyntaxException ex) {

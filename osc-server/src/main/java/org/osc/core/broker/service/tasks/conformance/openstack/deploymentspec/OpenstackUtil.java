@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jclouds.openstack.neutron.v2.domain.Port;
 import org.jclouds.openstack.nova.v2_0.domain.InterfaceAttachment;
@@ -313,7 +312,7 @@ public class OpenstackUtil {
             VirtualizationConnector vc,
             String tenantId,
             String domainId) throws Exception  {
-        if (StringUtils.isBlank(domainId)) {
+        if (domainId == null || domainId.isEmpty()) {
             // No domain identifier provided, nothing to filter.
             return dais;
         }
@@ -333,7 +332,7 @@ public class OpenstackUtil {
     }
 
     private static Collection<DistributedApplianceInstance> filterDAIsByHost(Collection<DistributedApplianceInstance> dais, String host) {
-        if (StringUtils.isBlank(host)) {
+        if (host == null || host.isEmpty()) {
             return dais;
         }
 

@@ -19,6 +19,7 @@ package org.osc.core.broker.view.securityinterface;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.service.api.AddSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
@@ -31,7 +32,6 @@ import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
-import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
 import org.osc.core.broker.service.request.BaseIdRequest;

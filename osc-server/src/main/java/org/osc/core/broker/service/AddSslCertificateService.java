@@ -28,7 +28,7 @@ import org.osc.core.broker.service.api.AddSslCertificateServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.request.AddSslEntryRequest;
 import org.osc.core.broker.service.response.EmptySuccessResponse;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
 import org.osgi.service.component.annotations.Component;
 
 @Component

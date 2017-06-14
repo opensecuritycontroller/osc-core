@@ -17,13 +17,13 @@
 package org.osc.core.broker.service.persistence;
 
 import org.osc.core.broker.model.entities.ObjectType;
-import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.model.entities.events.Alert;
-import org.osc.core.broker.model.entities.events.EventType;
-import org.osc.core.broker.model.entities.events.Severity;
 import org.osc.core.broker.service.dto.AlertDto;
 import org.osc.core.broker.service.dto.job.LockObjectDto;
 import org.osc.core.broker.service.dto.job.ObjectTypeDto;
+import org.osc.core.common.alarm.EventType;
+import org.osc.core.common.alarm.Severity;
+import org.osc.core.common.job.AcknowledgementStatus;
 
 public class AlertEntityMgr {
 

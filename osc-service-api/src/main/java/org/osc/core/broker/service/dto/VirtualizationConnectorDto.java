@@ -25,6 +25,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.osc.core.common.controller.ControllerType;
+import org.osc.core.common.virtualization.VirtualizationType;
+
 import io.swagger.annotations.ApiModelProperty;
 
 // Virtualization Connector Data Transfer Object associated with VC entity
@@ -61,7 +64,7 @@ public class VirtualizationConnectorDto extends BaseDto {
     private String softwareVersion = "";
 
     @ApiModelProperty(value = "The SDN controller type", allowableValues = "NONE, NSC")
-    private String controllerType;
+    private ControllerType controllerType;
 
     @ApiModelProperty(
             value = "The Provider Attributes are all required if Provider is OpenStack except rabbitMQIP if the RabbitMQ endpoint is the same as the OpenStack keystone. "
@@ -90,11 +93,11 @@ public class VirtualizationConnectorDto extends BaseDto {
      *
      * @return controller type
      */
-    public String getControllerType() {
+    public ControllerType getControllerType() {
         return this.controllerType;
     }
 
-    public void setControllerType(String controllerType) {
+    public void setControllerType(ControllerType controllerType) {
         this.controllerType = controllerType;
     }
 
@@ -220,7 +223,7 @@ public class VirtualizationConnectorDto extends BaseDto {
 
     @ApiModelProperty(hidden = true)
     public boolean isControllerDefined() {
-        return (getControllerType() != null && !getControllerType().equals("NONE"));
+        return (getControllerType() != null && !getControllerType().equals(ControllerType.NONE));
     }
 
     @Override

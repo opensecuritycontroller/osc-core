@@ -33,7 +33,6 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
-import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
@@ -49,6 +48,8 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
+import org.osc.core.common.controller.ControllerType;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -70,8 +71,6 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     public static final String ATTRIBUTE_KEY_RABBITMQ_USER = "rabbitUser";
     public static final String ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD = "rabbitMQPassword";
     public static final String ATTRIBUTE_KEY_RABBITMQ_PORT = "rabbitMQPort";
-
-    public static final String NO_CONTROLLER = "NONE";
 
     public static final String OPENSTACK_ICEHOUSE = "Icehouse";
 
@@ -149,8 +148,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.virtualizationType.validate();
 
             if (this.virtualizationType.getValue().toString().equals(VirtualizationType.OPENSTACK.toString())) {
-                String controllerType = BaseVCWindow.this.controllerType.getValue().toString();
-                if (!NO_CONTROLLER.equals(controllerType) && !this.pluginService.usesProviderCreds(controllerType)) {
+                ControllerType controllerType = (ControllerType) BaseVCWindow.this.controllerType.getValue();
+                if (!ControllerType.NONE.equals(controllerType) && !this.pluginService.usesProviderCreds(controllerType.getValue())) {
                     this.controllerIP.validate();
                     this.validator.checkValidIpAddress(this.controllerIP.getValue());
                     this.controllerUser.validate();
@@ -261,9 +260,12 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.controllerType.setTextInputAllowed(false);
         this.controllerType.setNullSelectionAllowed(false);
 
-        this.controllerType.addItem(NO_CONTROLLER);
+        this.controllerType.addItem(ControllerType.NONE);
+        // TODO emanoel: We should consider changing the contract of this interface
+        // This will likely require deeper changes as strings are being used in other parts
+        // of the code and stored in the db.
         for (String ct : this.pluginService.getControllerTypes()) {
-            this.controllerType.addItem(ct);
+            this.controllerType.addItem(ControllerType.fromText(ct));
         }
 
         this.controllerType.setVisible(true);
@@ -295,10 +297,10 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
             @Override
             public void valueChange(ValueChangeEvent event) {
-                updateControllerFields(BaseVCWindow.this.controllerType.getValue().toString());
+                updateControllerFields((ControllerType) BaseVCWindow.this.controllerType.getValue());
             }
         });
-        this.controllerType.select(NO_CONTROLLER);
+        this.controllerType.select(ControllerType.NONE);
 
         return this.controllerPanel;
     }
@@ -460,7 +462,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         if (this.virtualizationType.getValue().equals(VirtualizationType.OPENSTACK.toString())) {
             request.getDto().setSoftwareVersion(OPENSTACK_ICEHOUSE);
             request.getDto()
-            .setControllerType(BaseVCWindow.this.controllerType.getValue().toString());
+            .setControllerType(ControllerType.fromText(BaseVCWindow.this.controllerType.getValue().toString()));
         }
         return request;
     }
@@ -483,8 +485,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.controllerPanel.setCaption(SDN_CONTROLLER_CAPTION);
             this.providerPanel.setCaption(OPENSTACK_CAPTION);
             this.controllerType.setVisible(true);
-            this.controllerType.setValue(NO_CONTROLLER);
-            updateControllerFields(NO_CONTROLLER);
+            this.controllerType.setValue(ControllerType.NONE);
+            updateControllerFields(ControllerType.NONE);
             this.adminTenantName.setVisible(true);
             this.advancedSettings.setVisible(true);
             this.advancedSettings.setCaption(SHOW_ADVANCED_SETTINGS_CAPTION);
@@ -502,12 +504,12 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.adminTenantName.setRequiredError(this.providerPanel.getCaption() + " Admin Tenant Name cannot be empty");
     }
 
-    private void updateControllerFields(String type) {
+    private void updateControllerFields(ControllerType type) {
         boolean enableFields = false;
 
-        if (!NO_CONTROLLER.equals(type)) {
+        if (!type.equals(ControllerType.NONE)) {
             try {
-                enableFields = !this.pluginService.usesProviderCreds(type);
+                enableFields = !this.pluginService.usesProviderCreds(type.toString());
             } catch (Exception e) {
                 log.error("Fail to get controller plugin instance", e);
             }

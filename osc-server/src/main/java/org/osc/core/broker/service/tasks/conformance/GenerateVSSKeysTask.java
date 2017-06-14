@@ -25,7 +25,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
-import org.osc.core.util.PKIUtil;
+import org.osc.core.broker.util.crypto.PKIUtil;
 import org.osgi.service.component.annotations.Component;
 
 @Component(service = GenerateVSSKeysTask.class)

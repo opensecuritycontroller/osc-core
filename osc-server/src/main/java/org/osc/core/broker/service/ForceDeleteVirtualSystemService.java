@@ -21,7 +21,6 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
@@ -31,12 +30,13 @@ import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.ForceDeleteVirtualSystemTask;
+import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class ForceDeleteVirtualSystemService extends ServiceDispatcher<BaseDeleteRequest, BaseJobResponse>
-        implements ForceDeleteVirtualSystemServiceApi {
+implements ForceDeleteVirtualSystemServiceApi {
 
     @Reference
     ForceDeleteVirtualSystemTask forceDeleteVirtualSystemTask;
@@ -82,12 +82,12 @@ public class ForceDeleteVirtualSystemService extends ServiceDispatcher<BaseDelet
 
         if (!vs.getMarkedForDeletion() && request.isForceDelete()) {
             throw new VmidcBrokerValidationException("Virtual System '" + vs.getName() + "' (" + request.getId()
-                    + ") is not marked for deletion and force delete operation is applicable only for entries marked for deletion.");
+            + ") is not marked for deletion and force delete operation is applicable only for entries marked for deletion.");
         }
 
         if (vs.getDistributedAppliance().getVirtualSystems().size() <= 1) {
             throw new VmidcBrokerValidationException("Virtual System '" + vs.getName() + "' (" + request.getId()
-                    + ") is the only one in its DA. Deleting it will leave DA in invalid state. Please delete owning DA instead.");
+            + ") is the only one in its DA. Deleting it will leave DA in invalid state. Please delete owning DA instead.");
         }
 
         return vs;

@@ -16,17 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import static org.osc.core.broker.model.entities.appliance.VirtualizationType.OPENSTACK;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.sdncontroller.ControllerType;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
-import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
+import org.osc.core.common.controller.ControllerType;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class VirtualizationConnectorServiceData {
 
@@ -45,7 +43,7 @@ public class VirtualizationConnectorServiceData {
         vc.setVirtualizationSoftwareVersion("vcSoftwareVersion");
         vc.setProviderUsername("Natasha");
         vc.setProviderPassword("********");
-        vc.setVirtualizationType(OPENSTACK);
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
         return vc;
     }
 
@@ -144,16 +142,16 @@ public class VirtualizationConnectorServiceData {
 
         vcDto.setAdminTenantName(tenantName);
 
-         Map<String, String> providerAttributes = new HashMap<>();
-         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, rabbitMquser);
-         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, rabbitMqpassword);
-         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, rabbitMqport);
-         vcDto.setProviderAttributes(providerAttributes);
+        Map<String, String> providerAttributes = new HashMap<>();
+        providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, rabbitMquser);
+        providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD, rabbitMqpassword);
+        providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT, rabbitMqport);
+        vcDto.setProviderAttributes(providerAttributes);
 
-         if (controllerTypeStr != null && (!controllerTypeStr.isEmpty())) {
-             ControllerType.addType(controllerTypeStr);
-             vcDto.setControllerType(controllerTypeStr);
-         }
+        if (controllerTypeStr != null && (!controllerTypeStr.isEmpty())) {
+            ControllerType.addType(controllerTypeStr);
+            vcDto.setControllerType(ControllerType.fromText(controllerTypeStr));
+        }
     }
 
     private static DryRunRequest<VirtualizationConnectorRequest> createOpenStackRequest(

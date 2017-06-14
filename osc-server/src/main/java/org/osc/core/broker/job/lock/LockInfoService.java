@@ -17,7 +17,7 @@
 package org.osc.core.broker.job.lock;
 
 import org.osc.core.broker.service.api.LockInfoServiceApi;
-import org.osc.core.rest.client.util.LoggingUtil;
+import org.osc.core.broker.util.log.LoggingUtil;
 import org.osgi.service.component.annotations.Component;
 
 @Component

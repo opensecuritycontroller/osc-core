@@ -11,8 +11,12 @@
 -conditionalpackage:\
     org.osc.core.broker.rest.server.model,\
     org.osc.core.rest.client.*,\
-    org.osc.core.util,\
+    org.osc.core.broker.util,\
+    org.osc.core.broker.util.log,\
+    org.osc.core.broker.util.crypto,\
+    org.osc.core.broker.rest.client,\
     org.osc.core.broker.util.db,\
+    org.osc.core.broker.service.common,\
     com.google.gson.*
 
 -includeresource: \
@@ -31,9 +35,6 @@
     @${jersey-client.dep},\
     @${jersey-common.dep},\
     @${jersey-guava.dep},\
-    @${jersey-entity-filtering.dep},\
-    @${jersey-container-servlet-core.dep},\
-    @${jersey-server.dep},\
     @${jackson-annotations.dep},\
     @${jackson-core.dep},\
     @${jackson-databind.dep},\

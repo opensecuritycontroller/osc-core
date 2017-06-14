@@ -2,18 +2,6 @@
 
 -dsannotations-options: inherit
 
-# osc-common isn't really a proper bundle, it's designed to
-# be pulled in to this bundle to make a complete osc-server.
--privatepackage:\
-    ${include-osc-common}
-
-# This is just a list of the packages in osc-common
-include-osc-common:\
-    org.osc.core.broker.model.virtualization,\
-    org.osc.core.rest.client.*,\
-    org.osc.core.util.*
-    
-    
 # We need to customise some imports a little to avoid some overly strict version ranges
 Import-Package:\
     ${import-guava},\

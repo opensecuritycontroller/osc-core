@@ -33,9 +33,10 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
-import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.common.controller.ControllerType;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class VirtualizationConnectorEntityMgr {
 
@@ -52,11 +53,9 @@ public class VirtualizationConnectorEntityMgr {
         // transform from dto to entity
         vc.setId(dto.getId());
         vc.setName(dto.getName());
-        vc.setVirtualizationType(
-                org.osc.core.broker.model.entities.appliance.VirtualizationType.valueOf(
-                        dto.getType().name()));
+        vc.setVirtualizationType(dto.getType());
 
-        String controllerType = dto.getControllerType();
+        String controllerType = dto.getControllerType() != null ? dto.getControllerType().getValue() : null;
         if(controllerType != null) {
             vc.setControllerType(controllerType);
         }
@@ -91,7 +90,7 @@ public class VirtualizationConnectorEntityMgr {
         dto.setName(vc.getName());
         dto.setType(VirtualizationType.valueOf(vc.getVirtualizationType().name()));
 
-        dto.setControllerType(vc.getControllerType());
+        dto.setControllerType(ControllerType.fromText(vc.getControllerType()));
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
         dto.setControllerPassword(encryption.decryptAESCTR(vc.getControllerPassword()));
@@ -159,7 +158,7 @@ public class VirtualizationConnectorEntityMgr {
         Root<?> root = query.from(DistributedAppliance.class);
 
         query = query.select(cb.count(root))
-            .where(cb.equal(root.join("virtualSystems").get("virtualizationConnector"), vc));
+                .where(cb.equal(root.join("virtualSystems").get("virtualizationConnector"), vc));
 
         Long daCount = em.createQuery(query).getSingleResult();
 
@@ -173,7 +172,7 @@ public class VirtualizationConnectorEntityMgr {
         root = query.from(SecurityGroup.class);
 
         query = query.select(cb.count(root))
-            .where(cb.equal(root.get("virtualizationConnector"), vc));
+                .where(cb.equal(root.get("virtualizationConnector"), vc));
 
         Long sgCount = em.createQuery(query).getSingleResult();
 
@@ -197,7 +196,7 @@ public class VirtualizationConnectorEntityMgr {
         Root<VirtualizationConnector> root = query.from(VirtualizationConnector.class);
 
         query = query.select(root)
-            .where(cb.equal(root.get("virtualizationType"), type));
+                .where(cb.equal(root.get("virtualizationType"), type));
 
         return em.createQuery(query).getResultList();
     }

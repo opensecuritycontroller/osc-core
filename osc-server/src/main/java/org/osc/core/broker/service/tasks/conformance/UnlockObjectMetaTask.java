@@ -22,9 +22,9 @@ import java.util.Set;
 
 import org.osc.core.broker.job.MetaTask;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
+import org.osc.core.common.job.TaskGuard;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

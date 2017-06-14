@@ -25,9 +25,9 @@ import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.dto.NetworkSettingsDto;
-import org.osc.core.util.FileUtil;
-import org.osc.core.util.NetworkUtil;
-import org.osc.core.util.ServerUtil;
+import org.osc.core.broker.util.FileUtil;
+import org.osc.core.broker.util.NetworkUtil;
+import org.osc.core.broker.util.ServerUtil;
 
 
 

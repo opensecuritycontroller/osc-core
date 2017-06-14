@@ -26,6 +26,9 @@ import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.ObjectType;
+import org.osc.core.common.alarm.EventType;
+import org.osc.core.common.alarm.Severity;
+import org.osc.core.common.job.AcknowledgementStatus;
 
 @SuppressWarnings("serial")
 @Entity

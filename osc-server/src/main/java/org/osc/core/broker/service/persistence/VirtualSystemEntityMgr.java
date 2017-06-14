@@ -29,7 +29,7 @@ import javax.persistence.criteria.Root;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
-import org.osc.core.broker.service.dto.VirtualizationType;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.sdk.controller.TagEncapsulationType;
 
 public class VirtualSystemEntityMgr {

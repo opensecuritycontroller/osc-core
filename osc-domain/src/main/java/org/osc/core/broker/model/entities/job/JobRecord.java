@@ -30,6 +30,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.common.job.JobState;
+import org.osc.core.common.job.JobStatus;
 
 @Entity
 @Table(name = "JOB")
@@ -146,7 +148,7 @@ public class JobRecord extends BaseEntity {
     @Override
     public String toString() {
         return "JobRecord [state=" + this.state + ", status=" + this.status + ", getId()=" + getId() + ", getName()=" + getName()
-                + "]";
+        + "]";
     }
 
 }

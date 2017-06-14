@@ -19,10 +19,10 @@ package org.osc.core.broker.util.db;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.osc.core.broker.util.FileUtil;
+import org.osc.core.broker.util.crypto.KeyStoreProvider;
+import org.osc.core.broker.util.crypto.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.server.Server;
-import org.osc.core.util.FileUtil;
-import org.osc.core.util.KeyStoreProvider;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 import org.osgi.service.component.annotations.Component;
 
 @Component(service=DBConnectionParameters.class)

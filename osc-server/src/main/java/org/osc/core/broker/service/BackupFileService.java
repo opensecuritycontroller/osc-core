@@ -27,10 +27,10 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.BackupFileServiceApi;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
+import org.osc.core.broker.util.FileUtil;
+import org.osc.core.broker.util.crypto.KeyStoreProvider;
+import org.osc.core.broker.util.crypto.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.server.Server;
-import org.osc.core.util.FileUtil;
-import org.osc.core.util.KeyStoreProvider;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
 
 abstract class BackupFileService<I extends Request, O extends Response> extends ServiceDispatcher<I, O>
     implements BackupFileServiceApi<I, O> {

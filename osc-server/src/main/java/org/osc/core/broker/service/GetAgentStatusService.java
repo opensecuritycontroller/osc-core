@@ -45,7 +45,7 @@ import org.osc.core.broker.service.response.AgentDpaInfo;
 import org.osc.core.broker.service.response.AgentStatusResponse;
 import org.osc.core.broker.service.response.GetAgentStatusResponse;
 import org.osc.core.broker.service.validator.DistributedApplianceInstancesRequestValidator;
-import org.osc.core.util.VersionUtil;
+import org.osc.core.broker.util.VersionUtil;
 import org.osc.sdk.manager.api.ManagerDeviceMemberApi;
 import org.osc.sdk.manager.element.DistributedApplianceInstanceElement;
 import org.osc.sdk.manager.element.ManagerDeviceMemberStatusElement;

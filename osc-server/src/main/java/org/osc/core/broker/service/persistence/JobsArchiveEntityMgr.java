@@ -16,15 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import org.osc.core.broker.model.entities.archive.FreqType;
 import org.osc.core.broker.model.entities.archive.JobsArchive;
-import org.osc.core.broker.model.entities.archive.ThresholdType;
 import org.osc.core.broker.service.dto.JobsArchiveDto;
+import org.osc.core.common.job.FreqType;
+import org.osc.core.common.job.ThresholdType;
 
 public class JobsArchiveEntityMgr {
 
     public static JobsArchive createEntity(JobsArchiveDto dto) {
-    	JobsArchive jobsArchive = new JobsArchive();
+        JobsArchive jobsArchive = new JobsArchive();
         toEntity(jobsArchive, dto);
         return jobsArchive;
     }

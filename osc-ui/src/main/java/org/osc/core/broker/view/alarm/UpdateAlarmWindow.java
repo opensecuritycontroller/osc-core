@@ -23,6 +23,8 @@ import org.osc.core.broker.service.dto.AlarmDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.view.util.ViewUtil;
+import org.osc.core.common.alarm.AlarmAction;
+import org.osc.core.common.alarm.EventType;
 
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.ui.Notification;
@@ -60,14 +62,14 @@ public class UpdateAlarmWindow extends BaseAlarmWindow {
         this.enabled.setValue((Boolean) this.currentAlarm.getItemProperty("enabledAlarm").getValue());
         this.alarmName.setValue(this.currentAlarm.getItemProperty("name").getValue().toString());
         this.eventType.setValue(this.currentAlarm.getItemProperty("eventType").getValue());
-        if (this.eventType.getValue().equals(EVENT_JOB_FAILURE)
+        if (this.eventType.getValue().equals(EventType.JOB_FAILURE)
                 && this.currentAlarm.getItemProperty("regexMatch").getValue() != null) {
             this.regexMatch.setValue(this.currentAlarm.getItemProperty("regexMatch").getValue().toString());
         }
         this.severity.setValue(this.currentAlarm.getItemProperty("severity").getValue());
 
         this.alarmAction.setValue(this.currentAlarm.getItemProperty("alarmAction").getValue());
-        if (this.alarmAction.getValue().equals(ALARM_ACTION_EMAIL)) {
+        if (this.alarmAction.getValue().equals(AlarmAction.EMAIL)) {
             this.email.setValue(this.currentAlarm.getItemProperty("receipientEmail").getValue().toString());
         }
     }
@@ -90,19 +92,19 @@ public class UpdateAlarmWindow extends BaseAlarmWindow {
 
                 // updating bean in the table container
                 this.alarmView.getParentContainer().getContainerProperty(request.getDto().getId(), "name")
-                        .setValue(this.alarmName.getValue().trim());
+                .setValue(this.alarmName.getValue().trim());
                 this.alarmView.getParentContainer().getContainerProperty(request.getDto().getId(), "eventType")
-                        .setValue(this.eventType.getValue().toString().trim());
+                .setValue(this.eventType.getValue().toString().trim());
                 this.alarmView.getParentContainer().getContainerProperty(request.getDto().getId(), "regexMatch")
-                        .setValue(this.regexMatch.getValue().trim());
+                .setValue(this.regexMatch.getValue().trim());
                 this.alarmView.getParentContainer().getContainerProperty(request.getDto().getId(), "severity")
-                        .setValue(this.severity.getValue().toString().trim());
+                .setValue(this.severity.getValue().toString().trim());
                 this.alarmView.getParentContainer().getContainerProperty(request.getDto().getId(), "alarmAction")
-                        .setValue(this.alarmAction.getValue().toString().trim());
+                .setValue(this.alarmAction.getValue().toString().trim());
                 this.alarmView.getParentContainer().getContainerProperty(request.getDto().getId(), "receipientEmail")
-                        .setValue(this.email.getValue().trim());
+                .setValue(this.email.getValue().trim());
                 this.alarmView.getParentContainer().getContainerProperty(request.getDto().getId(), "enabledAlarm")
-                        .setValue(this.enabled.getValue());
+                .setValue(this.enabled.getValue());
 
                 close();
             }

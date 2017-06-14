@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.mockito.Mockito;
+import org.osc.core.common.job.TaskGuard;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.job.TaskGuard;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;

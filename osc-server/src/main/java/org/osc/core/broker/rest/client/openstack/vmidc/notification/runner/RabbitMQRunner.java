@@ -32,9 +32,9 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.broadcast.BroadcastListener;
 import org.osc.core.broker.service.broadcast.BroadcastMessage;
 import org.osc.core.broker.service.broadcast.EventType;
-import org.osc.core.broker.service.dto.VirtualizationType;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -50,16 +50,16 @@ import org.osgi.service.transaction.control.ScopedWorkException;
  *
  */
 @Component(scope=ServiceScope.PROTOTYPE,
-    service=RabbitMQRunner.class)
+service=RabbitMQRunner.class)
 public class RabbitMQRunner implements BroadcastListener {
 
     private static final Logger log = Logger.getLogger(RabbitMQRunner.class);
     private static HashMap<Long, Thread> vcToRabbitMQRunnerThreadMap = new HashMap<>();
     private static HashMap<Long, OsRabbitMQClient> vcToRabbitMQClientMap = new HashMap<>();
 
-//    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
+    //    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private OsSecurityGroupNotificationRunner securityGroupRunner;
-//    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
+    //    @Reference(scope=ReferenceScope.PROTOTYPE_REQUIRED)
     private OsDeploymentSpecNotificationRunner deploymentSpecRunner;
 
     @Reference
@@ -118,7 +118,7 @@ public class RabbitMQRunner implements BroadcastListener {
                 if (msg.getEventType() != EventType.DELETED) {
                     EntityManager em = this.dbMgr.getTransactionalEntityManager();
                     vc = this.dbMgr.getTransactionControl().required(() ->
-                        VirtualizationConnectorEntityMgr.findById(em, msg.getEntityId()));
+                    VirtualizationConnectorEntityMgr.findById(em, msg.getEntityId()));
                 } else {
                     vc = new VirtualizationConnector();
                     vc.setId(msg.getEntityId());
@@ -141,7 +141,7 @@ public class RabbitMQRunner implements BroadcastListener {
 
     private void updateVCNotificationThreadMap(VirtualizationConnector vc, EventType event) throws Exception {
         if (event == EventType.ADDED) {
-            if (vc.getVirtualizationType() != org.osc.core.broker.model.entities.appliance.VirtualizationType.OPENSTACK) {
+            if (vc.getVirtualizationType() != VirtualizationType.OPENSTACK) {
                 return;
             }
 
@@ -269,9 +269,9 @@ public class RabbitMQRunner implements BroadcastListener {
     }
 
     /**
-    * This method will gracefully terminate all open RabbitMQ connections
-    * Used before server shutdown
-    */
+     * This method will gracefully terminate all open RabbitMQ connections
+     * Used before server shutdown
+     */
     @Deactivate
     void shutdown() {
         try {

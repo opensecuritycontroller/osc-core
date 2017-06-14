@@ -9,6 +9,7 @@
 
 -runrequires: \
 	osgi.identity;filter:='(osgi.identity=osc-server)',\
+	osgi.identity;filter:='(osgi.identity=osc-common)',\
 	osgi.identity;filter:='(osgi.identity=osc-installer)',\
 	osgi.identity;filter:='(osgi.identity=osc-installer-simple)',\
 	osgi.identity;filter:='(osgi.identity=osc-resolver)',\

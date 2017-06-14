@@ -32,7 +32,6 @@ import org.osc.core.broker.model.entities.SslCertificateAttr;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -61,14 +60,14 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
 import org.osc.core.broker.service.validator.BaseDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class UpdateApplianceManagerConnectorService
-        extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorRequest>, BaseJobResponse>
-        implements UpdateApplianceManagerConnectorServiceApi {
+extends ServiceDispatcher<DryRunRequest<ApplianceManagerConnectorRequest>, BaseJobResponse>
+implements UpdateApplianceManagerConnectorServiceApi {
 
     static final Logger log = Logger.getLogger(UpdateApplianceManagerConnectorService.class);
 
@@ -116,8 +115,8 @@ public class UpdateApplianceManagerConnectorService
             SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             mc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(
                     request.getDto().getSslCertificateAttrSet().stream()
-                        .map(SslCertificateAttrEntityMgr::createEntity)
-                        .collect(toSet()),
+                    .map(SslCertificateAttrEntityMgr::createEntity)
+                    .collect(toSet()),
                     request.getDto().getId(), persistentSslCertificatesSet));
             emgr.update(mc);
 
@@ -161,7 +160,7 @@ public class UpdateApplianceManagerConnectorService
 
     private DryRunRequest<ApplianceManagerConnectorRequest> internalSSLCertificatesFetch(
             DryRunRequest<ApplianceManagerConnectorRequest> request, SslCertificatesExtendedException sslCertificatesException)
-            throws Exception {
+                    throws Exception {
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
 
         int i = 1;
@@ -176,9 +175,9 @@ public class UpdateApplianceManagerConnectorService
     }
 
     private void validate(EntityManager em, DryRunRequest<ApplianceManagerConnectorRequest> request,
-                          ApplianceManagerConnector existingMc, OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
+            ApplianceManagerConnector existingMc, OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
-        boolean basicAuth = this.apiFactoryService.isBasicAuth(ManagerType.fromText(request.getDto().getManagerType()));
+        boolean basicAuth = this.apiFactoryService.isBasicAuth(request.getDto().getManagerType());
 
         // check for null/empty values
         ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), request.isApi(), basicAuth);
@@ -209,7 +208,7 @@ public class UpdateApplianceManagerConnectorService
         }
 
         // cannot change type once created
-        if (!request.getDto().getManagerType()
+        if (!request.getDto().getManagerType().getValue()
                 .equals(existingMc.getManagerType())) {
 
             throw new VmidcBrokerInvalidRequestException("Cannot change type of Appliance Manager Connector.");
@@ -245,7 +244,7 @@ public class UpdateApplianceManagerConnectorService
         String mcDbApiKey = existingMc.getApiKey();
 
         ApplianceManagerConnectorDto dto = request.getDto();
-        String serviceName = this.apiFactoryService.getServiceName(ManagerType.fromText(dto.getManagerType()));
+        String serviceName = this.apiFactoryService.getServiceName(dto.getManagerType());
         ApplianceManagerConnectorEntityMgr.toEntity(existingMc, dto, this.encryption, serviceName);
 
         if (request.isApi()) {

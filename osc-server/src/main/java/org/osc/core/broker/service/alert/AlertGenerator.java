@@ -23,16 +23,12 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
-import org.osc.core.broker.job.JobStatus;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockObjectReference.ObjectType;
-import org.osc.core.broker.model.entities.events.AcknowledgementStatus;
 import org.osc.core.broker.model.entities.events.Alarm;
-import org.osc.core.broker.model.entities.events.AlarmAction;
 import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.model.entities.events.DaiFailureType;
 import org.osc.core.broker.model.entities.events.EmailSettings;
-import org.osc.core.broker.model.entities.events.EventType;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.service.api.AlertGeneratorApi;
 import org.osc.core.broker.service.dto.AlertDto;
@@ -48,6 +44,10 @@ import org.osc.core.broker.util.EmailUtil;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.common.alarm.AlarmAction;
+import org.osc.core.common.alarm.EventType;
+import org.osc.core.common.job.AcknowledgementStatus;
+import org.osc.core.common.job.JobStatus;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.transaction.control.ScopedWorkException;
@@ -71,7 +71,7 @@ public class AlertGenerator implements JobCompletionListener, AlertGeneratorApi 
     public void completed(Job job) {
 
         //No need to do anything if the job completion status is not "FAILED"
-        if (job.getStatus().equals(JobStatus.FAILED)) {
+        if (job.getStatus().getStatus().equals(JobStatus.FAILED)) {
             processJobFailureEvent(job);
         }
     }

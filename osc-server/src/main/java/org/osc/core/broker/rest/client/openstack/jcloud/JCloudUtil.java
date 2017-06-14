@@ -36,8 +36,8 @@ import org.jclouds.openstack.nova.v2_0.NovaApiMetadata;
 import org.jclouds.openstack.nova.v2_0.domain.FloatingIP;
 import org.jclouds.openstack.nova.v2_0.extensions.FloatingIPApi;
 import org.jclouds.rest.ResourceNotFoundException;
+import org.osc.core.broker.rest.client.RestBaseClient;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
-import org.osc.core.rest.client.RestBaseClient;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;

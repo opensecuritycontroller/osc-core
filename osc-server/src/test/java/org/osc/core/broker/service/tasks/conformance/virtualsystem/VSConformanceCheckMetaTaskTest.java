@@ -45,9 +45,9 @@ import org.osc.core.broker.service.tasks.conformance.openstack.DeleteImageFromGl
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.SecurityGroupCleanupCheckMetaTask;
 import org.osc.core.broker.util.PasswordUtil;
+import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.test.util.TaskGraphHelper;
-import org.osc.core.util.ServerUtil;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;

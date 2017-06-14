@@ -36,8 +36,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
-import org.osc.core.util.KeyStoreProvider;
-import org.osc.core.util.KeyStoreProvider.KeyStoreProviderException;
+import org.osc.core.broker.util.crypto.KeyStoreProvider;
+import org.osc.core.broker.util.crypto.KeyStoreProvider.KeyStoreProviderException;
 
 public class BackupFileServiceTest {
 

@@ -36,18 +36,19 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 @Entity
 @Table(name = "APPLIANCE_SOFTWARE_VERSION", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "appliance_fk", "appliance_software_version", "virtualization_type",
-                "virtualization_software_version" }), @UniqueConstraint(columnNames = { "image_url" }) })
+        "virtualization_software_version" }), @UniqueConstraint(columnNames = { "image_url" }) })
 public class ApplianceSoftwareVersion extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "appliance_fk", nullable = false,
-        foreignKey = @ForeignKey(name = "FK_AV_APPLIANCE"))
+    foreignKey = @ForeignKey(name = "FK_AV_APPLIANCE"))
     // name our own index
     private Appliance appliance;
 
@@ -83,8 +84,8 @@ public class ApplianceSoftwareVersion extends BaseEntity {
     @Column(name = "encapsulation_type")
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "APPLIANCE_SOFTWARE_VERSION_ENCAPSULATION_TYPE_ATTR",
-            joinColumns = @JoinColumn(name = "appliance_software_version_fk"),
-            foreignKey = @ForeignKey(name = "FK_ASV_ASV_ENCAPSULATION"))
+    joinColumns = @JoinColumn(name = "appliance_software_version_fk"),
+    foreignKey = @ForeignKey(name = "FK_ASV_ASV_ENCAPSULATION"))
     private List<TagEncapsulationType> encapsulationTypes = new ArrayList<TagEncapsulationType>();
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -106,7 +107,7 @@ public class ApplianceSoftwareVersion extends BaseEntity {
     }
 
     public ApplianceSoftwareVersion() { // default constructor is required for
-                                        // Hibernate dynamic query
+        // Hibernate dynamic query
         super();
     }
 

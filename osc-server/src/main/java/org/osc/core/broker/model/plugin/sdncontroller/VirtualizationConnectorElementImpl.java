@@ -22,8 +22,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.rest.client.crypto.SslContextProvider;
-import org.osc.core.rest.client.crypto.X509TrustManagerFactory;
+import org.osc.core.broker.util.crypto.SslContextProvider;
+import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
 import org.osc.sdk.controller.element.VirtualizationConnectorElement;
 
 public class VirtualizationConnectorElementImpl implements VirtualizationConnectorElement {

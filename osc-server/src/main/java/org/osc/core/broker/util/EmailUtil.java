@@ -32,7 +32,6 @@ import org.apache.commons.lang.StringUtils;
 import org.osc.core.broker.model.entities.events.Alert;
 import org.osc.core.broker.service.dto.EmailSettingsDto;
 import org.osc.core.broker.service.validator.EmailSettingsDtoValidator;
-import org.osc.core.util.ServerUtil;
 
 public class EmailUtil {
 

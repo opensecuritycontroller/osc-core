@@ -45,11 +45,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
-import org.osc.core.broker.model.virtualization.OpenstackSoftwareVersion;
 //import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -57,12 +54,15 @@ import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.test.InMemDB;
+import org.osc.core.broker.util.FileUtil;
+import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.broker.util.VersionUtil.Version;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.common.manager.ManagerType;
+import org.osc.core.common.virtualization.OpenstackSoftwareVersion;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.test.util.TestTransactionControl;
-import org.osc.core.util.FileUtil;
-import org.osc.core.util.ServerUtil;
-import org.osc.core.util.VersionUtil.Version;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -151,7 +151,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         this.imageMetaData = new ImageMetadata();
         this.imageMetaData.setImageName(OVF_IMAGE_NAME);
-        this.imageMetaData.setVirtualizationType(org.osc.core.broker.service.dto.VirtualizationType.OPENSTACK.toString());
+        this.imageMetaData.setVirtualizationType(VirtualizationType.OPENSTACK.toString());
         this.imageMetaData.setModel(SOFTWARE_MODEL);
         this.imageMetaData.setManagerType(ManagerType.NSM.toString());
         this.imageMetaData.setManagerVersion(MANAGER_VERSION);
@@ -179,7 +179,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         ApplianceManagerApi applianceMgrPolicyMappingSupported = Mockito.mock(ApplianceManagerApi.class);
 
         Mockito.when(this.apiFactoryService.createApplianceManagerApi(ManagerType.NSM))
-                .thenReturn(applianceMgrPolicyMappingSupported);
+        .thenReturn(applianceMgrPolicyMappingSupported);
 
         Mockito.when(this.config.upload_path()).thenReturn(TEST_UPLOAD_FOLDER);
         this.service.start(this.config);
@@ -195,7 +195,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         // Arrange.
         this.imageMetaData.setModel(NON_EXISTING_SOFTWARE_MODEL);
         Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
-            .thenReturn(new Gson().toJson(this.imageMetaData));
+        .thenReturn(new Gson().toJson(this.imageMetaData));
 
         // Act.
         BaseResponse response = this.service.dispatch(new ImportFileRequest(TEST_TMP_FOLDER));
@@ -205,7 +205,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
                 "Select a from Appliance a where a.model = '" + NON_EXISTING_SOFTWARE_MODEL + "'",
                 Appliance.class).getSingleResult();
         Assert.assertNotNull(appliance);
-//        verify(this.sessionMock).save(argThat(new ApplianceMatcher(NON_EXISTING_SOFTWARE_MODEL)));
+        //        verify(this.sessionMock).save(argThat(new ApplianceMatcher(NON_EXISTING_SOFTWARE_MODEL)));
         verifySuccessfulImport(response, appliance.getId());
     }
 
@@ -214,7 +214,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         // Arrange.
         this.imageMetaData.setModel(SOFTWARE_MODEL);
         Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
-            .thenReturn(new Gson().toJson(this.imageMetaData));
+        .thenReturn(new Gson().toJson(this.imageMetaData));
 
         // Act.
         BaseResponse response = this.service.dispatch(new ImportFileRequest(TEST_TMP_FOLDER));
@@ -232,7 +232,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         // Arrange.
         this.imageMetaData.setModel(NON_EXISTING_SOFTWARE_MODEL);
         Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
-            .thenReturn(new Gson().toJson(this.imageMetaData));
+        .thenReturn(new Gson().toJson(this.imageMetaData));
 
         // Act.
         BaseResponse response = this.service.dispatch(new ImportFileRequest(TEST_TMP_FOLDER));
@@ -254,7 +254,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         // Arrange.
         this.imageMetaData.setModel(NON_EXISTING_SOFTWARE_MODEL);
         Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
-            .thenReturn(new Gson().toJson(this.imageMetaData));
+        .thenReturn(new Gson().toJson(this.imageMetaData));
 
         // Causes isImageMissing to return false, which means file is already present.
         this.validAsv.setImageUrl(".");
@@ -274,7 +274,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         this.imageMetaData.setModel(NON_EXISTING_SOFTWARE_MODEL);
         this.imageMetaData.setSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
         Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
-            .thenReturn(new Gson().toJson(this.imageMetaData));
+        .thenReturn(new Gson().toJson(this.imageMetaData));
 
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage(" Cannot add an image with the same name.");
@@ -284,25 +284,25 @@ public class ImportApplianceSoftwareVersionServiceTest {
     }
 
     private void createExistingAppliance() {
-           this.em.getTransaction().begin();
+        this.em.getTransaction().begin();
 
-           Appliance app = new Appliance();
-           app.setManagerSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
-           app.setManagerType(ManagerType.NSM.getValue());
-           app.setModel(SOFTWARE_MODEL);
+        Appliance app = new Appliance();
+        app.setManagerSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
+        app.setManagerType(ManagerType.NSM.getValue());
+        app.setModel(SOFTWARE_MODEL);
 
-           this.em.persist(app);
+        this.em.persist(app);
 
-           ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
-           asv.setApplianceSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
-           asv.setImageUrl(OVF_IMAGE_NAME);
-           asv.setVirtualizarionSoftwareVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
-           asv.setVirtualizationType(VirtualizationType.OPENSTACK);
+        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
+        asv.setApplianceSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
+        asv.setImageUrl(OVF_IMAGE_NAME);
+        asv.setVirtualizarionSoftwareVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
+        asv.setVirtualizationType(VirtualizationType.OPENSTACK);
 
-           this.em.persist(asv);
+        this.em.persist(asv);
 
-           this.em.getTransaction().commit();
-        }
+        this.em.getTransaction().commit();
+    }
 
     @Test
     public void testDispatch_ImportApplianceWithLowDiskSpace_ExpectsErrorResponse() throws Exception {
@@ -338,7 +338,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         // Arrange. Make sure input is missing a file
         PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] { this.mockMetaDataFile });
         Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
-            .thenReturn(new Gson().toJson(this.imageMetaData));
+        .thenReturn(new Gson().toJson(this.imageMetaData));
 
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage("missing in archive");
@@ -390,17 +390,17 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         verifyStatic();
         FileUtils.deleteDirectory(Mockito.argThat(new BaseMatcher<File>() {
-                @Override
-                public boolean matches(Object arg0) {
-                    return TEST_TMP_FOLDER.equals(((File) arg0).getPath());
-                }
+            @Override
+            public boolean matches(Object arg0) {
+                return TEST_TMP_FOLDER.equals(((File) arg0).getPath());
+            }
 
-                @Override
-                public void describeTo(Description arg0) {
-                    arg0.appendText("Did not delete " + TEST_TMP_FOLDER);
-                }
+            @Override
+            public void describeTo(Description arg0) {
+                arg0.appendText("Did not delete " + TEST_TMP_FOLDER);
+            }
 
-            }));
+        }));
     }
 
 }

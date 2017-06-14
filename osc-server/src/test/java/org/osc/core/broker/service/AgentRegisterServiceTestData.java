@@ -19,13 +19,13 @@ package org.osc.core.broker.service;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.appliance.VirtualizationType;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.model.plugin.manager.ManagerType;
+import org.osc.core.common.manager.ManagerType;
 import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 import org.osc.core.broker.service.response.AgentDpaInfo;
-import org.osc.core.util.VersionUtil;
+import org.osc.core.broker.util.VersionUtil;
 
 class AgentRegisterServiceTestData {
     static String DAI_TEMPORARY_NAME = "Temporary";
