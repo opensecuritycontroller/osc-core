@@ -49,6 +49,7 @@ import org.apache.log4j.Logger;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.logging.LoggingFeature;
+import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.util.NetworkUtil;
@@ -481,10 +482,10 @@ public abstract class RestBaseClient {
         }
         if (status != null && (status == Response.Status.UNAUTHORIZED.getStatusCode() ||
                 status == Response.Status.FORBIDDEN.getStatusCode())) {
-            exceptionMessage = VmidcCommonMessages.getString(VmidcMessages_.EXCEPTION_AUTH);
+            exceptionMessage = VmidcMessages.getString(VmidcMessages_.EXCEPTION_AUTH);
         } else if (ex.getCause() instanceof SocketTimeoutException || ex.getCause() instanceof ConnectException
                 || ex.getCause() instanceof NoRouteToHostException) {
-            exceptionMessage = VmidcCommonMessages.getString(VmidcMessages_.EXCEPTION_NETWORK_CONNECTIVITY,
+            exceptionMessage = VmidcMessages.getString(VmidcMessages_.EXCEPTION_NETWORK_CONNECTIVITY,
                     this.host, ex.getCause().getMessage());
         } else {
             String msg = ex.getMessage();
@@ -494,7 +495,7 @@ public abstract class RestBaseClient {
             //            } else {
             //                msg = ex.getMessage();
             //            }
-            exceptionMessage = VmidcCommonMessages.getString(VmidcMessages_.EXCEPTION_RESOURCE_FAILURE, method,
+            exceptionMessage = VmidcMessages.getString(VmidcMessages_.EXCEPTION_RESOURCE_FAILURE, method,
                     resourcePath, msg, status, response);
         }
         // If exception is an client handler exception, get the actual cause of the exception and pass that in.
