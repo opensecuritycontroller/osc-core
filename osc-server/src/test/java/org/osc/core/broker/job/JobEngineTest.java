@@ -265,8 +265,8 @@ public class JobEngineTest {
                 Assert.assertNotNull(taskNode);
 
                 assertEquals(ts.getName(), taskNode.getTask().getName());
-                assertEquals(ts.getState().name(), taskNode.getState().getState().name());
-                assertEquals(ts.getStatus().name(), taskNode.getStatus().getStatus().name());
+                assertEquals(ts.getState().name(), ((TaskStateElementImpl)taskNode.getState()).getState().name());
+                assertEquals(ts.getStatus().name(), ((TaskStatusElementImpl)taskNode.getStatus()).getStatus().name());
                 assertEquals(ts.getTaskGaurd().name(), taskNode.getTaskGaurd().name());
                 assertEquals(ts.getFailReason(), taskNode.getFailReason() != null ? taskNode.getFailReason()
                         .getMessage() : null);
@@ -457,13 +457,13 @@ public class JobEngineTest {
         this.job = this.je.submit("Job-skipped-task", this.tg, true);
         this.job.waitForCompletion();
 
-        assertEquals(this.job.getTaskGraph().getTaskNode(A).getStatus().getStatus(), TaskStatus.FAILED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(B).getStatus().getStatus(), TaskStatus.PASSED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(C).getStatus().getStatus(), TaskStatus.PASSED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(D).getStatus().getStatus(), TaskStatus.SKIPPED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(E).getStatus().getStatus(), TaskStatus.SKIPPED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(F).getStatus().getStatus(), TaskStatus.PASSED);
-        assertEquals(this.job.getTaskGraph().getTaskNode(G).getStatus().getStatus(), TaskStatus.SKIPPED);
+        assertEquals(((TaskStatusElementImpl)this.job.getTaskGraph().getTaskNode(A).getStatus()).getStatus(), TaskStatus.FAILED);
+        assertEquals(((TaskStatusElementImpl)this.job.getTaskGraph().getTaskNode(B).getStatus()).getStatus(), TaskStatus.PASSED);
+        assertEquals(((TaskStatusElementImpl)this.job.getTaskGraph().getTaskNode(C).getStatus()).getStatus(), TaskStatus.PASSED);
+        assertEquals(((TaskStatusElementImpl)this.job.getTaskGraph().getTaskNode(D).getStatus()).getStatus(), TaskStatus.SKIPPED);
+        assertEquals(((TaskStatusElementImpl)this.job.getTaskGraph().getTaskNode(E).getStatus()).getStatus(), TaskStatus.SKIPPED);
+        assertEquals(((TaskStatusElementImpl)this.job.getTaskGraph().getTaskNode(F).getStatus()).getStatus(), TaskStatus.PASSED);
+        assertEquals(((TaskStatusElementImpl)this.job.getTaskGraph().getTaskNode(G).getStatus()).getStatus(), TaskStatus.SKIPPED);
     }
 
     class JobCompletionResponder implements JobCompletionListener {

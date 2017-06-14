@@ -204,7 +204,7 @@ public class Job implements Runnable, JobElement {
                 }
 
                 // if one task fails whole job is set to fail
-                if (!completedTask.getStatus().getStatus().isSuccessful()) {
+                if (!((TaskStatusElementImpl)completedTask.getStatus()).getStatus().isSuccessful()) {
                     setFailureReason(VmidcMessages.getString(VmidcMessages_.JOB_TASK_FAILURE));
                     setStatus(JobStatus.FAILED);
                 }
@@ -227,8 +227,8 @@ public class Job implements Runnable, JobElement {
                      * it is completed, Nothing to do. If is pending a thread,
                      * nothing to do
                      */
-                    if (successorTaskNode.getState().getState().isRunning() || successorTaskNode.getState().getState().isTerminalState()
-                            || successorTaskNode.getState().getState().equals(TaskState.QUEUED)) {
+                    if (((TaskStateElementImpl)successorTaskNode.getState()).getState().isRunning() || ((TaskStateElementImpl)successorTaskNode.getState()).getState().isTerminalState()
+                            || ((TaskStateElementImpl)successorTaskNode.getState()).getState().equals(TaskState.QUEUED)) {
                         continue;
                     }
 
@@ -317,7 +317,7 @@ public class Job implements Runnable, JobElement {
     private boolean checkAllPredecessorsCompleted(TaskNode taskNode) {
         // Check if task's predecessor all completed.
         for (TaskNode predecessorTaskNode : taskNode.getPredecessors()) {
-            if (!predecessorTaskNode.getState().getState().isTerminalState()) {
+            if (!((TaskStateElementImpl)predecessorTaskNode.getState()).getState().isTerminalState()) {
                 return false;
             }
         }
@@ -337,7 +337,7 @@ public class Job implements Runnable, JobElement {
     private boolean checkAllPredecessorsCompletedSuccessfully(TaskNode taskNode) {
         boolean isAllPredecessorsSuccessful = true;
         for (TaskNode predecessorTaskNode : taskNode.getPredecessors()) {
-            if (!predecessorTaskNode.getStatus().getStatus().isSuccessful()) {
+            if (!((TaskStatusElementImpl)predecessorTaskNode.getStatus()).getStatus().isSuccessful()) {
                 isAllPredecessorsSuccessful = false;
                 break;
             }
@@ -348,7 +348,7 @@ public class Job implements Runnable, JobElement {
     private boolean checkAllAncestorsCompletedSuccessfully(TaskNode taskNode) {
         boolean isAllAncestorsSuccessful = true;
         for (TaskNode ancestorTaskNode : taskNode.getAncestors()) {
-            if (!ancestorTaskNode.getStatus().getStatus().isSuccessful()) {
+            if (!((TaskStatusElementImpl)ancestorTaskNode.getStatus()).getStatus().isSuccessful()) {
                 isAllAncestorsSuccessful = false;
                 break;
             }
@@ -491,12 +491,12 @@ public class Job implements Runnable, JobElement {
 
         // Mark all tasks running jobs completed/aborted
         for (TaskNode taskNode : this.taskGraph.getGraph().topologicalSort()) {
-            if (taskNode.future != null && taskNode.getState().getState().isRunning()) {
+            if (taskNode.future != null && ((TaskStateElementImpl)taskNode.getState()).getState().isRunning()) {
                 taskNode.future.cancel(true);
                 taskNode.setStatus(TaskStatus.ABORTED);
                 taskNode.setState(TaskState.COMPLETED);
             } else {
-                if (!taskNode.getState().getState().isTerminalState()) {
+                if (!((TaskStateElementImpl)taskNode.getState()).getState().isTerminalState()) {
                     taskNode.setStatus(TaskStatus.SKIPPED);
                     taskNode.setState(TaskState.COMPLETED);
                 }
@@ -642,8 +642,8 @@ public class Job implements Runnable, JobElement {
             taskRecord.setName(taskNode.getSafeTaskName());
             taskRecord.setDependencyOrder(i++);
             taskRecord.setTaskGaurd(taskNode.getTaskGaurd());
-            taskRecord.setState(taskNode.getState().getState());
-            taskRecord.setStatus(taskNode.getStatus().getStatus());
+            taskRecord.setState(((TaskStateElementImpl)taskNode.getState()).getState());
+            taskRecord.setStatus(((TaskStatusElementImpl)taskNode.getStatus()).getStatus());
 
             if (taskRecord.getId() == null) {
                 if (taskNode.getTask().getObjects() != null) {
