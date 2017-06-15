@@ -1,6 +1,6 @@
-# OSC Uber
+# Uber jcloud
 
-This project creates an "uber" OSGi bundle containing non-OSGi compliant dependencies.
+This project creates an "uber" OSGi bundle containing non-OSGi compliant dependencies required for jcloud.
    > Note: OSGi compliant dependencies should not be added here.
 
 ### Dependencies
