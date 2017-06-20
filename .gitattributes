@@ -1,0 +1,19 @@
+# Files with default ending character (default w.r.t Operating system) 
+*.java text=auto
+*.bnd text=auto
+*.xml text=auto
+
+
+# Files with linux line ending character (w.r.t target OS which is linux) 
+*.sh text=lf
+*.mk text=lf
+*.repo text=lf
+*.properties text=lf
+*.cfg text=lf
+*.MF text=lf
+*.py text=lf
+*.ini text=lf
+*.txt text=lf
+*.html text=lf
+*.json text=lf
+*.js text=lf
