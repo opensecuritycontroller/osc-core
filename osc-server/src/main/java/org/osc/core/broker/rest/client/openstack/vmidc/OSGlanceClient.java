@@ -20,7 +20,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.client.RestBaseClient;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 
 public class OSGlanceClient extends RestBaseClient {
     private static final String OPENSTACK_REST_URL_BASE = "/v2";

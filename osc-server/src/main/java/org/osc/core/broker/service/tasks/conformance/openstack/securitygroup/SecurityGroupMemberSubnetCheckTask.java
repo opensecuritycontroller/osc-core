@@ -23,8 +23,8 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -74,30 +74,20 @@ public class SecurityGroupMemberSubnetCheckTask extends TransactionalMetaTask {
 
         SecurityGroup sg = this.sgm.getSecurityGroup();
 
-        JCloudNeutron neutron = null;
+        Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
+        org.openstack4j.model.network.Subnet subnet = neutron.getSubnetById(this.subnet.getRegion(), this.subnet.getOpenstackId());
 
-        try {
-            neutron = new JCloudNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
-            org.jclouds.openstack.neutron.v2.domain.Subnet subnet = neutron.getSubnetById(this.subnet.getRegion(),
-                    this.subnet.getOpenstackId());
-
-            if (subnet == null || this.sgm.getMarkedForDeletion()) {
-                if (isControllerDefined) {
-                    this.tg.addTask(this.securityGroupMemberAllHooksRemoveTask.create(this.sgm));
-                }
-                this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
-            } else {
-                this.tg.addTask(this.securityGroupMemberSubnetUpdateTask.create(this.sgm, this.subnet.getName()));
-                if (isControllerDefined) {
-                	this.tg.appendTask(this.securityGroupMemberHookCheckTask.create(this.sgm, this.vdc));
-                }
+        if (subnet == null || this.sgm.getMarkedForDeletion()) {
+            if (isControllerDefined) {
+                this.tg.addTask(this.securityGroupMemberAllHooksRemoveTask.create(this.sgm));
             }
-        } finally {
-            if (neutron != null) {
-                neutron.close();
+            this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
+        } else {
+            this.tg.addTask(this.securityGroupMemberSubnetUpdateTask.create(this.sgm, this.subnet.getName()));
+            if (isControllerDefined) {
+                this.tg.appendTask(this.securityGroupMemberHookCheckTask.create(this.sgm, this.vdc));
             }
         }
-
     }
 
     @Override

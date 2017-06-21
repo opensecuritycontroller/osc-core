@@ -81,6 +81,11 @@ public class VirtualizationConnectorElementImpl implements VirtualizationConnect
     }
 
     @Override
+    public String getProviderAdminDomainId() {
+        return this.virtualizationConnector.getAdminDomainId();
+    }
+
+    @Override
     public boolean isProviderHttps() {
         return this.virtualizationConnector.isProviderHttps();
     }

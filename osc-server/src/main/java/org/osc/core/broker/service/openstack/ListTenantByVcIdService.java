@@ -16,15 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.dto.openstack.OsTenantDto;
@@ -39,29 +38,16 @@ public class ListTenantByVcIdService extends ServiceDispatcher<BaseIdRequest, Li
 
     @Override
     public ListResponse<OsTenantDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
-        ListResponse<OsTenantDto> response = new ListResponse<>();
 
         // Initializing Entity Manager
-        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(VirtualizationConnector.class, em, this.txBroadcastUtil);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
-        JCloudKeyStone keystoneApi = new JCloudKeyStone(new Endpoint(vc));
-        try {
-            List<OsTenantDto> tenantList = new ArrayList<>();
+        Openstack4jKeystone keystoneApi = new Openstack4jKeystone(new Endpoint(vc));
 
-            for (Tenant tenant : keystoneApi.listTenants()) {
-                tenantList.add(new OsTenantDto(tenant.getName(), tenant.getId()));
-            }
-
-            response.setList(tenantList);
-        } finally {
-            if (keystoneApi != null) {
-                keystoneApi.close();
-            }
-        }
-
-        return response;
-
+        List<OsTenantDto> tenantDtoList = keystoneApi.listProjects().stream()
+                .map(tenant -> new OsTenantDto(tenant.getName(), tenant.getId())).collect(Collectors.toList());
+        return new ListResponse<>(tenantDtoList);
     }
 }

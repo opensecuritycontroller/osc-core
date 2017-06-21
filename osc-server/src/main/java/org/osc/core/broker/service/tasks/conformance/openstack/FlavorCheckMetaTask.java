@@ -23,14 +23,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.nova.v2_0.domain.Flavor;
+import org.openstack4j.model.compute.Flavor;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
@@ -85,37 +85,33 @@ public class FlavorCheckMetaTask extends TransactionalMetaTask {
                 applianceSoftwareVersion.getApplianceSoftwareVersion(), vs.getName(),
                 applianceSoftwareVersion.getImageUrl());
 
-        JCloudNova nova = new JCloudNova(this.osEndPoint);
-        try {
-            Set<OsFlavorReference> flavorReferences = vs.getOsFlavorReference();
+        Openstack4JNova nova = new Openstack4JNova(this.osEndPoint);
+        Set<OsFlavorReference> flavorReferences = vs.getOsFlavorReference();
+        boolean createFlavor = true;
 
-            boolean createFlavor = true;
-
-            for (Iterator<OsFlavorReference> iterator = flavorReferences.iterator(); iterator.hasNext();) {
-                OsFlavorReference flavorReference = iterator.next();
-                if (flavorReference.getRegion().equals(this.region)) {
-                    Flavor flavor = nova.getFlavorById(flavorReference.getRegion(), flavorReference.getFlavorRefId());
-                    if (flavor == null) {
-                        iterator.remove();
-                        OSCEntityManager.delete(em, flavorReference, this.txBroadcastUtil);
-                    } else if(!flavor.getName().equals(expectedFlavorName)) {
-                        // Assume flavor name is changed, means the version is upgraded since flavor name contains version
-                        // information. Delete existing flavor and create new flavor.
-                        this.tg.addTask(this.deleteFlavor.create(this.region, flavorReference, this.osEndPoint));
-                    } else {
-                        createFlavor = false;
-                    }
+        for (Iterator<OsFlavorReference> iterator = flavorReferences.iterator(); iterator.hasNext();) {
+            OsFlavorReference flavorReference = iterator.next();
+            if (flavorReference.getRegion().equals(this.region)) {
+                Flavor flavor = nova.getFlavorById(flavorReference.getRegion(), flavorReference.getFlavorRefId());
+                if (flavor == null) {
+                    iterator.remove();
+                    OSCEntityManager.delete(em, flavorReference, this.txBroadcastUtil);
+                } else if(!flavor.getName().equals(expectedFlavorName)) {
+                    // Assume flavor name is changed, means the version is upgraded since flavor name contains version
+                    // information. Delete existing flavor and create new flavor.
+                    this.tg.addTask(this.deleteFlavor.create(this.region, flavorReference, this.osEndPoint));
+                } else {
+                    createFlavor = false;
                 }
             }
-            if (createFlavor) {
-                this.tg.appendTask(this.createFlavorTask.create(vs, this.region, expectedFlavorName, applianceSoftwareVersion,
-                        this.osEndPoint));
-            }
-
-            OSCEntityManager.update(em, vs, this.txBroadcastUtil);
-        } finally {
-            nova.close();
         }
+        if (createFlavor) {
+            this.tg.appendTask(this.createFlavorTask.create(vs, this.region, expectedFlavorName, applianceSoftwareVersion,
+                    this.osEndPoint));
+        }
+
+        OSCEntityManager.update(em, vs, this.txBroadcastUtil);
+
     }
 
     @Override

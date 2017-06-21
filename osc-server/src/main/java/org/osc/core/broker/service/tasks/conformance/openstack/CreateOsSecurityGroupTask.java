@@ -16,25 +16,23 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.neutron.v2.domain.Rule;
-import org.jclouds.openstack.neutron.v2.domain.RuleDirection;
-import org.jclouds.openstack.neutron.v2.domain.RuleEthertype;
-import org.jclouds.openstack.neutron.v2.domain.SecurityGroup;
+import org.openstack4j.api.Builders;
+import org.openstack4j.model.network.SecurityGroup;
+import org.openstack4j.model.network.SecurityGroupRule;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
+
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 @Component(service=CreateOsSecurityGroupTask.class)
 public class CreateOsSecurityGroupTask extends TransactionalTask {
@@ -61,27 +59,22 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
 
         this.ds = em.find(DeploymentSpec.class, this.ds.getId());
 
-        JCloudNeutron neutron = new JCloudNeutron(this.osEndPoint);
-        try {
-            this.log.info("Creating Openstack Security Group " + this.sgName + " in tenant " + this.ds.getTenantName()
-                    + " for region " + this.ds.getRegion());
+        Openstack4JNeutron neutron = new Openstack4JNeutron(this.osEndPoint);
+        this.log.info("Creating Openstack Security Group " + this.sgName + " in tenant " + this.ds.getTenantName()
+                + " for region " + this.ds.getRegion());
 
-            SecurityGroup securityGroup = neutron.createSecurityGroup(this.sgName, this.ds.getRegion());
-            neutron.addSecurityGroupRules(securityGroup, this.ds.getRegion(), createSecurityGroupRules());
-            OsSecurityGroupReference sgRef = new OsSecurityGroupReference(securityGroup.getId(), this.sgName, this.ds);
-            this.ds.setOsSecurityGroupReference(sgRef);
+        SecurityGroup securityGroup = neutron.createSecurityGroup(this.sgName, this.ds.getRegion());
+        neutron.addSecurityGroupRules(securityGroup, this.ds.getRegion(), createSecurityGroupRules());
+        OsSecurityGroupReference sgRef = new OsSecurityGroupReference(securityGroup.getId(), this.sgName, this.ds);
+        this.ds.setOsSecurityGroupReference(sgRef);
 
-            OSCEntityManager.create(em, sgRef, this.txBroadcastUtil);
-
-        } finally {
-            neutron.close();
-        }
+        OSCEntityManager.create(em, sgRef, this.txBroadcastUtil);
     }
 
-    private List<Rule> createSecurityGroupRules() {
-        List<Rule> expectedList = new ArrayList<>();
-        expectedList.add(Rule.createBuilder(RuleDirection.INGRESS, "").ethertype(RuleEthertype.IPV4).protocol(null).build());
-        expectedList.add(Rule.createBuilder(RuleDirection.INGRESS, "").ethertype(RuleEthertype.IPV6).protocol(null).build());
+    private List<SecurityGroupRule> createSecurityGroupRules() {
+        List<SecurityGroupRule> expectedList = new ArrayList<>();
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype("IPv4").direction("ingress").build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype("IPv6").direction("ingress").build());
         return expectedList;
     }
 

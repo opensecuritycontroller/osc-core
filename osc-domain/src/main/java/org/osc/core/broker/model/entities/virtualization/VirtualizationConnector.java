@@ -115,6 +115,9 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     @Column(name = "admin_tenant_name")
     private String adminTenantName;
 
+    @Column(name = "admin_domain_id")
+    private String adminDomainId;
+
     public VirtualizationConnector() {
         super();
     }
@@ -140,6 +143,7 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
         this.securityGroups = originalVc.securityGroups;
         this.providerAttributes = originalVc.providerAttributes;
         this.adminTenantName = originalVc.adminTenantName;
+        this.adminDomainId = originalVc.adminDomainId;
         this.lastJob = originalVc.lastJob;
     }
 
@@ -237,6 +241,14 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
 
     public void setAdminTenantName(String adminTenantName) {
         this.adminTenantName = adminTenantName;
+    }
+
+    public String getAdminDomainId() {
+        return this.adminDomainId;
+    }
+
+    public void setAdminDomainId(String adminDomainId) {
+        this.adminDomainId = adminDomainId;
     }
 
     public Set<SslCertificateAttr> getSslCertificateAttrSet() {

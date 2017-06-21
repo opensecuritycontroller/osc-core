@@ -21,11 +21,10 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.neutron.v2.domain.Network;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
@@ -83,30 +82,26 @@ public class ValidateDSNetworkTask extends TransactionalTask {
 
             this.log.info("Validating the DS " + this.networkType + " network " + networkName + " exists.");
 
-            JCloudNeutron neutron = new JCloudNeutron(this.endPoint);
+            Openstack4JNeutron neutron = new Openstack4JNeutron(this.endPoint);
 
-            try {
-                Network neutronNetwork = neutron.getNetworkById(this.ds.getRegion(), networkId);
-                if (neutronNetwork == null) {
-                    this.log.info("DS " + this.networkType + " network " + networkName
-                            + " Deleted from openstack. Marking DS for deletion.");
-                    // network was deleted, mark ds for deleting as well
-                    OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
-                } else {
-                    // Sync the network name if needed
-                    if (!neutronNetwork.getName().equals(networkName)) {
-                        this.log.info("DS " + this.networkType + " network name updated from " + networkName + " to "
-                                + neutronNetwork.getName());
-                        if (this.networkType == NetworkType.MANAGEMENT) {
-                            this.ds.setManagementNetworkName(neutronNetwork.getName());
-                        } else {
-                            this.ds.setInspectionNetworkName(neutronNetwork.getName());
-                        }
-                        OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
+            org.openstack4j.model.network.Network neutronNetwork = neutron.getNetworkById(this.ds.getRegion(), networkId);
+            if (neutronNetwork == null) {
+                this.log.info("DS " + this.networkType + " network " + networkName
+                        + " Deleted from openstack. Marking DS for deletion.");
+                // network was deleted, mark ds for deleting as well
+                OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
+            } else {
+                // Sync the network name if needed
+                if (!neutronNetwork.getName().equals(networkName)) {
+                    this.log.info("DS " + this.networkType + " network name updated from " + networkName + " to "
+                            + neutronNetwork.getName());
+                    if (this.networkType == NetworkType.MANAGEMENT) {
+                        this.ds.setManagementNetworkName(neutronNetwork.getName());
+                    } else {
+                        this.ds.setInspectionNetworkName(neutronNetwork.getName());
                     }
+                    OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
                 }
-            } finally {
-                neutron.close();
             }
         }
     }

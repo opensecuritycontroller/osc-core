@@ -16,15 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.dto.openstack.HostDto;
@@ -39,30 +39,13 @@ public class ListHostService extends ServiceDispatcher<BaseOpenStackRequest, Lis
 
     @Override
     public ListResponse<HostDto> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
-        ListResponse<HostDto> response = new ListResponse<>();
 
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
-        JCloudNova novaApi = null;
-        try {
-            novaApi = new JCloudNova(new Endpoint(vc, request.getTenantName()));
-
-            List<HostDto> hostList = new ArrayList<>();
-            for (String host : novaApi.getComputeHosts(request.getRegion())) {
-                hostList.add(new HostDto(host, host));
-            }
-
-            response.setList(hostList);
-
-        } finally {
-            if (novaApi != null) {
-                novaApi.close();
-            }
-        }
-
-        return response;
-
+        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()));
+        List<HostDto> hostList = novaApi.getComputeHosts(request.getRegion())
+                .stream().map(host -> new HostDto(host, host)).collect(Collectors.toList());
+        return new ListResponse<>(hostList);
     }
-
 }

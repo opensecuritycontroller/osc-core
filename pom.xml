@@ -25,7 +25,6 @@
     <description>OSC Parent Project</description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jclouds.version>2.0.0</jclouds.version>
         <powermock.version>1.6.5</powermock.version>
     </properties>
 
@@ -106,15 +105,15 @@
                 <module>osc-server</module>
                 <module>osc-ui</module>
                 <module>osc-ui-widgetset</module>
-                
+
                 <module>osc-uber</module>
-                <module>osc-uber-jcloud</module>
+                <module>osc-uber-openstack4j</module>
                 <module>osc-control</module>
-                
+
                 <module>osc-installer</module>
                 <module>osc-installer-test</module>
                 <module>osc-installer-simple</module>
-                
+
                 <module>osc-resolver</module>
                 <module>osc-export</module>
             </modules>
@@ -141,15 +140,15 @@
                 <module>osc-server</module>
                 <module>osc-ui</module>
                 <module>osc-ui-widgetset</module>
-                
+
+                <module>osc-uber-openstack4j</module>
                 <module>osc-uber</module>
-                <module>osc-uber-jcloud</module>
                 <module>osc-control</module>
-                
+
                 <module>osc-installer</module>
                 <module>osc-installer-test</module>
                 <module>osc-installer-simple</module>
-                
+
                 <module>osc-resolver</module>
                 <module>osc-export</module>
             </modules>

@@ -14,16 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import org.openstack4j.api.OSClient;
 
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 81;
+/**
+ * Designed to be a base class for all openstack4j API wrappers in the code.
+ */
+public abstract class BaseOpenstack4jApi {
 
-    Connection getSQLConnection() throws SQLException;
+    protected Endpoint endPoint;
+    private KeystoneProvider keystoneProvider;
+
+    BaseOpenstack4jApi(Endpoint endPoint) {
+        this.endPoint = endPoint;
+        this.keystoneProvider = KeystoneProvider.getInstance(endPoint);
+    }
+
+    public OSClient.OSClientV3 getOs() {
+        return this.keystoneProvider.getAvailableSession();
+    }
 }

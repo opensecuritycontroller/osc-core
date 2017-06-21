@@ -11,7 +11,6 @@
 
 /* Import and include this mixin into your project theme to include the addon themes */
 @mixin addons {
-	@include stepper;
-	@include stepper;
+    @include stepper;
+    @include stepper;
 }
-

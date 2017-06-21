@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.v2_0.domain.Resource;
+import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -40,8 +40,8 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -201,38 +201,30 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 List<String> excludedMembers = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(em,
                         this.sg.getVirtualizationConnector().getId());
 
-                JCloudNova nova = new JCloudNova(
-                        new Endpoint(this.sg.getVirtualizationConnector(), this.sg.getTenantName()));
-                try {
-                    Set<String> regions = nova.listRegions();
-                    for (String region : regions) {
-                        List<Resource> servers = nova.listServers(region);
-                        for (Resource server : servers) {
-                            if (!excludedMembers.contains(server.getId())) {
-                                try {
-                                    this.addSecurityGroupService.addSecurityGroupMember(em, this.sg,
-                                            new SecurityGroupMemberItemDto(region, server.getName(), server.getId(),
-                                                    SecurityGroupMemberType.VM.toString(), false));
-                                    // Once the VM is part of the security group, dont try to add it again.
-                                    excludedMembers.add(server.getId());
-                                } catch (SecurityGroupMemberPartOfAnotherSecurityGroupException e) {
-                                    this.log.warn(String.format(
-                                            "Member '%s' belonging to Security Group '%s' with protect all results in a conflict",
-                                            e.getMemberName(), this.sg.getName()), e);
-                                    this.tg.addTask(new FailedWithObjectInfoTask(
-                                            String.format("Validating Security Group Member '%s'", e.getMemberName()),
-                                            e, LockObjectReference.getObjectReferences(this.sg)));
-                                }
+                Endpoint endPoint = new Endpoint(this.sg.getVirtualizationConnector(), this.sg.getTenantName());
+                Openstack4JNova nova = new Openstack4JNova(endPoint);
+                Set<String> regions = nova.listRegions();
+                for (String region : regions) {
+                    List<? extends Server> servers = nova.listServers(region);
+                    for (Server server : servers) {
+                        if (!excludedMembers.contains(server.getId())) {
+                            try {
+                                this.addSecurityGroupService.addSecurityGroupMember(em, this.sg,
+                                        new SecurityGroupMemberItemDto(region, server.getName(), server.getId(),
+                                                SecurityGroupMemberType.VM.toString(), false));
+                                // Once the VM is part of the security group, dont try to add it again.
+                                excludedMembers.add(server.getId());
+                            } catch (SecurityGroupMemberPartOfAnotherSecurityGroupException e) {
+                                this.log.warn(String.format(
+                                        "Member '%s' belonging to Security Group '%s' with protect all results in a conflict",
+                                        e.getMemberName(), this.sg.getName()), e);
+                                this.tg.addTask(new FailedWithObjectInfoTask(
+                                        String.format("Validating Security Group Member '%s'", e.getMemberName()),
+                                        e, LockObjectReference.getObjectReferences(this.sg)));
                             }
                         }
                     }
-
-                } finally {
-                    if (nova != null) {
-                        nova.close();
-                    }
                 }
-
             }
             buildTaskGraph(em, false, null);
         }
