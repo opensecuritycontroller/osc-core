@@ -21,16 +21,16 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.jclouds.openstack.neutron.v2.domain.Network;
-import org.jclouds.openstack.neutron.v2.domain.Subnet;
-import org.jclouds.openstack.v2_0.domain.Resource;
+import org.openstack4j.model.compute.Server;
+import org.openstack4j.model.network.Network;
+import org.openstack4j.model.network.Subnet;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
@@ -82,58 +82,34 @@ public class ListOpenstackMembersService
 
         if (SecurityGroupMemberType.fromText(request.getType()) == SecurityGroupMemberType.VM) {
 
-            List<String> existingSvaOsIds = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(em,
-                    vc.getId());
+            List<String> existingSvaOsIds = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(em, vc.getId());
             existingMemberIds.addAll(existingSvaOsIds);
 
-            JCloudNova nova = null;
-            try {
-                nova = new JCloudNova(new Endpoint(vc, request.getTenantName()));
-
-                for (Resource vmResource : nova.listServers(region)) {
-                    if (!existingMemberIds.contains(vmResource.getId())) {
-                        openstackMemberList.add(new SecurityGroupMemberItemDto(region, vmResource.getName(), vmResource
-                                .getId(), SecurityGroupMemberType.VM.toString(), false));
-                    }
-                }
-
-            } finally {
-                if (nova != null) {
-                    nova.close();
+            Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, request.getTenantName()));
+            for (Server vmResource : nova.listServers(region)) {
+                if (!existingMemberIds.contains(vmResource.getId())) {
+                    openstackMemberList.add(new SecurityGroupMemberItemDto(region, vmResource.getName(), vmResource
+                            .getId(), SecurityGroupMemberType.VM.toString(), false));
                 }
             }
-        } else if (SecurityGroupMemberType.fromText(request.getType()) == SecurityGroupMemberType.NETWORK) {
-            JCloudNeutron neutronApi = new JCloudNeutron(new Endpoint(vc, request.getTenantName()));
-            try {
-                List<Network> tenantNetworks = neutronApi.listNetworkByTenant(request.getRegion(),
-                        request.getTenantId());
-                for (Network tenantNetwork : tenantNetworks) {
-                    if (!existingMemberIds.contains(tenantNetwork.getId())) {
-                        openstackMemberList.add(new SecurityGroupMemberItemDto(region, tenantNetwork.getName(),
-                                tenantNetwork.getId(), SecurityGroupMemberType.NETWORK.toString(), false));
-                    }
-                }
 
-            } finally {
-                if (neutronApi != null) {
-                    neutronApi.close();
+        } else if (SecurityGroupMemberType.fromText(request.getType()) == SecurityGroupMemberType.NETWORK) {
+            Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getTenantName()));
+            List<Network> tenantNetworks = neutronApi.listNetworkByTenant(request.getRegion(), request.getTenantId());
+            for (Network tenantNetwork : tenantNetworks) {
+                if (!existingMemberIds.contains(tenantNetwork.getId())) {
+                    openstackMemberList.add(new SecurityGroupMemberItemDto(region, tenantNetwork.getName(),
+                            tenantNetwork.getId(), SecurityGroupMemberType.NETWORK.toString(), false));
                 }
             }
         } else if (SecurityGroupMemberType.fromText(request.getType()) == SecurityGroupMemberType.SUBNET) {
-            JCloudNeutron neutronApi = new JCloudNeutron(new Endpoint(vc, request.getTenantName()));
-            try {
-                List<Subnet> tenantSubnets = neutronApi.listSubnetByTenant(request.getRegion(), request.getTenantId());
-                for (Subnet subnet : tenantSubnets) {
-                    if (!existingMemberIds.contains(subnet.getId())) {
-                        openstackMemberList.add(new SecurityGroupMemberItemDto(request.getRegion(),
-                                createSubnetNetworkName(subnet, request.getRegion(), neutronApi), subnet.getId(),
-                                SecurityGroupMemberType.SUBNET.toString(), false, subnet.getNetworkId()));
-                    }
-                }
-
-            } finally {
-                if (neutronApi != null) {
-                    neutronApi.close();
+            Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getTenantName()));
+            List<Subnet> tenantSubnets = neutronApi.listSubnetByTenant(request.getRegion(), request.getTenantId());
+            for (Subnet subnet : tenantSubnets) {
+                if (!existingMemberIds.contains(subnet.getId())) {
+                    openstackMemberList.add(new SecurityGroupMemberItemDto(request.getRegion(),
+                            createSubnetNetworkName(subnet, request.getRegion(), neutronApi), subnet.getId(),
+                            SecurityGroupMemberType.SUBNET.toString(), false, subnet.getNetworkId()));
                 }
             }
         }
@@ -157,7 +133,7 @@ public class ListOpenstackMembersService
         }
     }
 
-    private String createSubnetNetworkName(Subnet subnet, String region, JCloudNeutron neutronApi) {
+    private String createSubnetNetworkName(Subnet subnet, String region, Openstack4JNeutron neutronApi) {
         Network subnetNetwork = neutronApi.getNetworkById(region, subnet.getNetworkId());
         return subnet.getName() + " (" + subnetNetwork.getName() + ")";
     }

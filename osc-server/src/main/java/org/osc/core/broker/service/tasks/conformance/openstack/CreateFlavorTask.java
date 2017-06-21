@@ -25,8 +25,8 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
@@ -63,21 +63,17 @@ public class CreateFlavorTask extends TransactionalTask {
         this.vs = vsEntityMgr.findByPrimaryKey(this.vs.getId());
         this.applianceSoftwareVersion = asvEntiyMgr.findByPrimaryKey(this.applianceSoftwareVersion.getId());
 
-        JCloudNova nova = new JCloudNova(this.osEndPoint);
-        try {
-            this.log.info("Creating flavor " + this.flavorName + " in region + " + this.region);
-            String newFlavorId = this.vs.getName() +  "_" + this.region;
+        Openstack4JNova nova = new Openstack4JNova(this.osEndPoint);
+        this.log.info("Creating flavor " + this.flavorName + " in region + " + this.region);
+        String newFlavorId = this.vs.getName() +  "_" + this.region;
 
-            String flavorId = nova.createFlavor(this.region, newFlavorId, this.flavorName,
-                    this.applianceSoftwareVersion.getDiskSizeInGb(), this.applianceSoftwareVersion.getMemoryInMb(),
-                    this.applianceSoftwareVersion.getMinCpus());
+        String flavorId = nova.createFlavor(this.region, newFlavorId, this.flavorName,
+                this.applianceSoftwareVersion.getDiskSizeInGb(), this.applianceSoftwareVersion.getMemoryInMb(),
+                this.applianceSoftwareVersion.getMinCpus());
 
-            this.vs.addOsFlavorReference(new OsFlavorReference(this.vs, this.region, flavorId));
+        this.vs.addOsFlavorReference(new OsFlavorReference(this.vs, this.region, flavorId));
 
-            OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
-        } finally {
-            nova.close();
-        }
+        OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 
     @Override

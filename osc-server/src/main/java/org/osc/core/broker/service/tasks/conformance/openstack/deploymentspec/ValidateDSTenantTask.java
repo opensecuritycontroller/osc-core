@@ -16,20 +16,19 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
+import org.openstack4j.model.identity.v3.Project;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
+
+import javax.persistence.EntityManager;
+import java.util.Set;
 
 /**
  * Validates the DS tenant exists and syncs the name if needed
@@ -52,33 +51,26 @@ public class ValidateDSTenantTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
+        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<>(DeploymentSpec.class, em, this.txBroadcastUtil);
         this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
 
         if (!this.ds.getMarkedForDeletion()) {
             VirtualizationConnector vc = this.ds.getVirtualSystem().getVirtualizationConnector();
             this.log.info("Validating the DS tenant " + this.ds.getTenantName() + " exists.");
-            JCloudKeyStone keystone = new JCloudKeyStone(new Endpoint(vc));
 
-            try {
-                Tenant tenant = keystone.getTenantById(this.ds.getTenantId());
-                if (tenant == null) {
-                    this.log.info("DS tenant " + this.ds.getTenantName()
-                            + " Deleted from openstack. Marking DS for deletion.");
-                    // Tenant was deleted, mark ds for deleting as well
-                    OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
-                } else {
-                    // Sync the tenant name if needed
-                    if (!tenant.getName().equals(this.ds.getTenantName())) {
-                        this.log.info("DS tenant name updated from " + this.ds.getTenantName() + " to "
-                                + tenant.getName());
-                        this.ds.setTenantName(tenant.getName());
-                        OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
-                    }
+            Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc));
+            Project tenant = keystone.getProjectById(this.ds.getTenantId());
+            if (tenant == null) {
+                this.log.info("DS tenant " + this.ds.getTenantName() + " Deleted from openstack. Marking DS for deletion.");
+                // Tenant was deleted, mark ds for deleting as well
+                OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
+            } else {
+                // Sync the tenant name if needed
+                if (!tenant.getName().equals(this.ds.getTenantName())) {
+                    this.log.info("DS tenant name updated from " + this.ds.getTenantName() + " to " + tenant.getName());
+                    this.ds.setTenantName(tenant.getName());
+                    OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
                 }
-
-            } finally {
-                keystone.close();
             }
         }
     }
@@ -87,7 +79,7 @@ public class ValidateDSTenantTask extends TransactionalTask {
     public String getName() {
         return String.format("Validating Deployment Specification '%s' for tenant '%s'", this.ds.getName(),
                 this.ds.getTenantName());
-    };
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {

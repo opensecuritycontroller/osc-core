@@ -20,8 +20,8 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jGlance;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
@@ -50,15 +50,9 @@ public class DeleteImageFromGlanceTask  extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.imageReference = em.find(OsImageReference.class, this.imageReference.getId());
-
         this.log.info("Deleting image " + this.imageReference.getImageRefId() + " from region " + this.region);
-
-        JCloudGlance glance = new JCloudGlance(this.osEndPoint);
-        try {
-            glance.deleteImageById(this.region, this.imageReference.getImageRefId());
-        } finally {
-            glance.close();
-        }
+        Openstack4jGlance glance = new Openstack4jGlance(this.osEndPoint);
+        glance.deleteImageById(this.region, this.imageReference.getImageRefId());
         OSCEntityManager.delete(em, this.imageReference, this.txBroadcastUtil);
     }
 

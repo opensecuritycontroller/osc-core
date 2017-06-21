@@ -22,13 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jclouds.openstack.nova.v2_0.domain.FixedIP;
-import org.jclouds.openstack.nova.v2_0.domain.InterfaceAttachment;
-import org.jclouds.openstack.nova.v2_0.domain.Server;
-import org.jclouds.openstack.nova.v2_0.domain.ServerExtendedAttributes;
+import org.openstack4j.model.compute.InterfaceAttachment;
+import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.sdk.controller.element.NetworkElement;
 
@@ -92,15 +90,15 @@ public class VmDiscoveryCache {
     }
 
     private Map<String, VmInfo> vmIdToVmMap = Maps.newConcurrentMap();
-    private Map<String, PortInfo> osPortIdToPortMap = new HashMap<String, PortInfo>();
-    private Map<String, PortInfo> macAddressToPortMap = new HashMap<String, PortInfo>();
+    private Map<String, PortInfo> osPortIdToPortMap = new HashMap<>();
+    private Map<String, PortInfo> macAddressToPortMap = new HashMap<>();
 
-    private JCloudNova jcNovaApi;
+    private Openstack4JNova jcNovaApi;
 
     public VmDiscoveryCache(VirtualizationConnector vc, String tenant) throws IOException, EncryptionException {
         this.vc = vc;
         this.tenant = tenant;
-        this.jcNovaApi = new JCloudNova(new Endpoint(vc, tenant));
+        this.jcNovaApi = new Openstack4JNova(new Endpoint(vc, tenant));
     }
 
     public VmInfo discover(String region, String vmId) throws Exception {
@@ -122,28 +120,23 @@ public class VmDiscoveryCache {
 
         vmInfo.tenantId = vm.getTenantId();
         vmInfo.name = vm.getName();
-        ServerExtendedAttributes serverExtendedAttributes = vm.getExtendedAttributes().get();
-        if (serverExtendedAttributes != null) {
-            vmInfo.host = serverExtendedAttributes.getHypervisorHostName();
-        }
-        List<InterfaceAttachment> interfaces = this.jcNovaApi.getVmAttachedNetworks(region, vmId);
+        vmInfo.host = vm.getHypervisorHostname();
+        List<? extends InterfaceAttachment> interfaces = this.jcNovaApi.getVmAttachedNetworks(region, vmId);
         for (InterfaceAttachment infs : interfaces) {
-            if (infs.getMacAddress() == null) {
+            if (infs.getMacAddr() == null) {
                 continue;
             }
 
             PortInfo portInfo = new PortInfo();
             portInfo.vm = vmInfo;
-            portInfo.macAddress = infs.getMacAddress();
-            portInfo.osNetworkId = infs.getNetworkId();
+            portInfo.macAddress = infs.getMacAddr();
+            portInfo.osNetworkId = infs.getNetId();
             portInfo.osPortId = infs.getPortId();
 
             // add IP addresses for give port
-            for (FixedIP ip : infs.getFixedIps()) {
-                portInfo.portIPs.add(ip.getIpAddress());
-            }
+            infs.getFixedIps().forEach(ip -> portInfo.portIPs.add(ip.getIpAddress()));
 
-            vmInfo.macAddressToPortMap.put(infs.getMacAddress(), portInfo);
+            vmInfo.macAddressToPortMap.put(infs.getMacAddr(), portInfo);
 
             this.osPortIdToPortMap.put(portInfo.osPortId, portInfo);
             this.macAddressToPortMap.put(portInfo.macAddress, portInfo);
@@ -162,24 +155,8 @@ public class VmDiscoveryCache {
         this.vmIdToVmMap.clear();
     }
 
-    public void close() throws IOException {
-        if (this.jcNovaApi != null) {
-            this.jcNovaApi.close();
-        }
-    }
-
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        close();
     }
-
-    public PortInfo getPortByOsPortId(String portId) {
-        return this.osPortIdToPortMap.get(portId);
-    }
-
-    public PortInfo getPortByMacAddress(String macAddress) {
-        return this.macAddressToPortMap.get(macAddress);
-    }
-
 }

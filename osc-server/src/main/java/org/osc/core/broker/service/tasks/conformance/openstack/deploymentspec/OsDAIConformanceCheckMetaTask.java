@@ -25,7 +25,7 @@ import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.nova.v2_0.domain.Server;
+import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -34,8 +34,8 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -44,7 +44,6 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
-import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.controller.exception.NetworkPortNotFoundException;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
@@ -156,74 +155,66 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
         Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
-        JCloudNova nova = null;
+        Openstack4JNova nova = new Openstack4JNova(endPoint);
 
-        try {
-            nova = new JCloudNova(endPoint);
+        Server sva = null;
+        if (this.dai.getOsServerId() != null) {
+            sva = nova.getServer(ds.getRegion(), this.dai.getOsServerId());
+        }
 
-            Server sva = null;
-            if (this.dai.getOsServerId() != null) {
-                sva = nova.getServer(ds.getRegion(), this.dai.getOsServerId());
+        // Attempt to lookup SVA by name
+        if (sva == null) {
+            log.info("SVA missing for Dai: " + this.dai);
+            Server namedSva = nova.getServerByName(ds.getRegion(), this.dai.getName());
+            /*
+             * If we found VM with this name and we have not previously with the ID we had in DB,
+             * that means that all are OS attributes are staled and should be re-discovered
+             */
+            if (namedSva != null) {
+                log.info("Missing SVA found by name, deleting stale SVA to redeploy: " + this.dai.getName());
+                this.tg.addTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
             }
 
-            // Attempt to lookup SVA by name
-            if (sva == null) {
-                log.info("SVA missing for Dai: " + this.dai);
-                Server namedSva = nova.getServerByName(ds.getRegion(), this.dai.getName());
-                /*
-                 * If we found VM with this name and we have not previously with the ID we had in DB,
-                 * that means that all are OS attributes are staled and should be re-discovered
-                 */
-                if (namedSva != null) {
-                    log.info("Missing SVA found by name, deleting stale SVA to redeploy: " + this.dai.getName());
-                    this.tg.addTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
-                }
-
-                // Make sure host exists in openstack cluster
-                if (this.doesOSHostExist) {
-                    log.info("Re-Creating missing SVA for Dai: " + this.dai.getName());
-                    this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
-                } else {
-                    log.info("Host removed from openstack: " + this.dai.getOsHostName() + "Removing Dai: "
-                            + this.dai.getName());
-                    this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
-                }
+            // Make sure host exists in openstack cluster
+            if (this.doesOSHostExist) {
+                log.info("Re-Creating missing SVA for Dai: " + this.dai.getName());
+                this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
             } else {
-                ApplianceSoftwareVersion currentSoftwareVersion = ds.getVirtualSystem().getApplianceSoftwareVersion();
-                boolean doesSvaVersionMatchVsVersion = false;
-                for (OsImageReference imageRef : ds.getVirtualSystem().getOsImageReference()) {
-                    if (imageRef.getImageRefId().equals(sva.getImage().getId())
-                            && imageRef.getApplianceVersion().equals(currentSoftwareVersion)) {
-                        doesSvaVersionMatchVsVersion = true;
-                        break;
-                    }
-                }
-
-                if (doesSvaVersionMatchVsVersion) {
-                    this.tg.appendTask(this.osSvaEnsureActiveTask.create(this.dai));
-                    if (!StringUtils.isEmpty(ds.getFloatingIpPoolName())) {
-                        // Check if floating ip is assigned to SVA
-                        this.tg.appendTask(this.osSvaCheckFloatingIpTask.create(this.dai));
-
-                        // TODO: Future. Check if OS SG is assigned to DAI
-
-                    }
-                    this.tg.addTask(this.osSvaStateCheckTask.create(this.dai));
-                } else {
-                    this.tg.appendTask(this.osDAIUpgradeMetaTask.create(this.dai, currentSoftwareVersion));
-                }
-
-                if (vc.isControllerDefined()) {
-                    if (!isPortRegistered()) {
-                        this.tg.appendTask(this.onboardDAITask.create(this.dai));
-                    }
-                }
-
+                log.info("Host removed from openstack: " + this.dai.getOsHostName() + "Removing Dai: "
+                        + this.dai.getName());
+                this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
             }
-        } finally {
-            if (nova != null) {
-                nova.close();
+        } else {
+            ApplianceSoftwareVersion currentSoftwareVersion = ds.getVirtualSystem().getApplianceSoftwareVersion();
+            boolean doesSvaVersionMatchVsVersion = false;
+            for (OsImageReference imageRef : ds.getVirtualSystem().getOsImageReference()) {
+                if (imageRef.getImageRefId().equals(sva.getImage().getId())
+                        && imageRef.getApplianceVersion().equals(currentSoftwareVersion)) {
+                    doesSvaVersionMatchVsVersion = true;
+                    break;
+                }
             }
+
+            if (doesSvaVersionMatchVsVersion) {
+                this.tg.appendTask(this.osSvaEnsureActiveTask.create(this.dai));
+                if (!StringUtils.isEmpty(ds.getFloatingIpPoolName())) {
+                    // Check if floating ip is assigned to SVA
+                    this.tg.appendTask(this.osSvaCheckFloatingIpTask.create(this.dai));
+
+                    // TODO: Future. Check if OS SG is assigned to DAI
+
+                }
+                this.tg.addTask(this.osSvaStateCheckTask.create(this.dai));
+            } else {
+                this.tg.appendTask(this.osDAIUpgradeMetaTask.create(this.dai, currentSoftwareVersion));
+            }
+
+            if (vc.isControllerDefined()) {
+                if (!isPortRegistered()) {
+                    this.tg.appendTask(this.onboardDAITask.create(this.dai));
+                }
+            }
+
         }
     }
 
@@ -239,8 +230,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
             if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
                 String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
-                        ds.getVirtualSystem().getVirtualizationConnector(),
-                        new ArrayList<NetworkElement>(Arrays.asList(ingressPort)));
+                        ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<>(Arrays.asList(ingressPort)));
                 if (domainId != null) {
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);

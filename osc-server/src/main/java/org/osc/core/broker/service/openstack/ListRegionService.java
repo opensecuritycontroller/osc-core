@@ -16,15 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -32,30 +27,23 @@ import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 
+import javax.persistence.EntityManager;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 public class ListRegionService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>>
         implements ListRegionServiceApi {
 
     @Override
     public ListResponse<String> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
-        ListResponse<String> response = new ListResponse<String>();
 
-        List<String> regions = new ArrayList<String>();
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
-        JCloudNova novaApi = new JCloudNova(new Endpoint(vc, request.getTenantName()));
-        try {
-            for (String region : novaApi.listRegions()) {
-                regions.add(region);
-            }
-            response.setList(regions);
-        } finally {
-            if (novaApi != null) {
-                novaApi.close();
-            }
-        }
-        return response;
+        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()));
+        List<String> strings = novaApi.listRegions().stream().collect(Collectors.toList());
+        return new ListResponse<>(strings);
     }
 
 }

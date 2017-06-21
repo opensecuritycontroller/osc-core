@@ -16,25 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.neutron.v2.domain.Port;
-import org.jclouds.openstack.nova.v2_0.domain.InterfaceAttachment;
-import org.jclouds.openstack.nova.v2_0.domain.PortState;
-import org.jclouds.openstack.nova.v2_0.domain.Server;
-import org.jclouds.openstack.nova.v2_0.domain.Server.Status;
-import org.jclouds.openstack.nova.v2_0.domain.ServerExtendedAttributes;
-import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZoneDetails;
+import org.openstack4j.model.compute.InterfaceAttachment;
+import org.openstack4j.model.compute.PortState;
+import org.openstack4j.model.compute.Server;
+import org.openstack4j.model.compute.ext.AvailabilityZone;
+import org.openstack4j.model.network.Port;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.Job.JobCompletionListener;
 import org.osc.core.broker.job.JobEngine;
@@ -51,10 +38,10 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.HostAvailabilityZoneMapping;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.HostAvailabilityZoneMapping;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -65,6 +52,16 @@ import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.element.NetworkElement;
+
+import javax.persistence.EntityManager;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class OpenstackUtil {
 
@@ -85,24 +82,23 @@ public class OpenstackUtil {
      */
     public static String extractDomainId(String tenantId, String tenantName, VirtualizationConnector vc,
             List<NetworkElement> protectedPorts) throws IOException, EncryptionException {
-        String domainId=null;
-        Port port = null;
-        try (
-                JCloudNeutron neutron = new JCloudNeutron(new Endpoint(vc, tenantName));
-                JCloudNova nova = new JCloudNova(new Endpoint(vc, tenantName))) {
-            Set<String> regions = nova.listRegions();
-            outerloop:
-                for (String region : regions) {
-                    for (NetworkElement elem : protectedPorts) {
-                        port = neutron.getPortById(region, elem.getElementId());
-                        if (port != null) {
-                            domainId = neutron.getNetworkPortRouterDeviceId(tenantId, region, port);
-                            if (domainId !=null) {
-                                break outerloop;
-                            }
-                        }
+        String domainId = null;
+        Port port;
+        Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc, tenantName));
+        Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, tenantName));
+        Set<String> regions = nova.listRegions();
+
+        outerloop:
+        for (String region : regions) {
+            for (NetworkElement elem : protectedPorts) {
+                port = neutron.getPortById(region, elem.getElementId());
+                if (port != null) {
+                    domainId = neutron.getNetworkPortRouterDeviceId(tenantId, region, port);
+                    if (domainId != null) {
+                        break outerloop;
                     }
                 }
+            }
         }
         return domainId;
     }
@@ -128,53 +124,52 @@ public class OpenstackUtil {
     public static void ensureVmActive(VirtualizationConnector vc, String tenant, String region, String vmId)
             throws Exception {
 
-        try (JCloudNova nova = new JCloudNova(new Endpoint(vc, tenant))) {
-            Server server = null;
-            int i = MAX_DISCOVERY_RETRIES;
-            while (i > 0) {
-                server = nova.getServer(region, vmId);
-                if (server == null) {
-                    throw new VmidcException("VM with id: '" + vmId + "' does not exist");
-                }
-                if (server.getStatus() == Status.ACTIVE) {
-                    break;
-                } else if (isVmStatusTerminal(server.getStatus())) {
-                    throw new VmidcException("VM is in bad state (" + server.getStatus() + ")");
-                }
-
-                LOG.info("Retry VM discovery (" + i + "/" + MAX_DISCOVERY_RETRIES + ") of VM '" + vmId + "' Status: "
-                        + server.getStatus());
-                Thread.sleep(SLEEP_DISCOVERY_RETRIES);
-                i--;
+        Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, tenant));
+        Server server = null;
+        int i = MAX_DISCOVERY_RETRIES;
+        while (i > 0) {
+            server = nova.getServer(region, vmId);
+            if (server == null) {
+                throw new VmidcException("VM with id: '" + vmId + "' does not exist");
             }
-            if (server.getStatus() != Status.ACTIVE) {
-                throw new VmidcException("VM with id: '" + vmId + "' is not in ready state (" + server.getStatus()
-                + ")");
+            if (server.getStatus() == Server.Status.ACTIVE) {
+                break;
+            } else if (isVmStatusTerminal(server.getStatus())) {
+                throw new VmidcException("VM is in bad state (" + server.getStatus() + ")");
             }
 
-            i = MAX_DISCOVERY_RETRIES;
-            int activePorts = 0;
-            while (i > 0) {
-                List<InterfaceAttachment> interfaces = nova.getVmAttachedNetworks(region, vmId);
+            LOG.info("Retry VM discovery (" + i + "/" + MAX_DISCOVERY_RETRIES + ") of VM '" + vmId + "' Status: "
+                    + server.getStatus());
+            Thread.sleep(SLEEP_DISCOVERY_RETRIES);
+            i--;
+        }
+        if (server.getStatus() != Server.Status.ACTIVE) {
+            throw new VmidcException("VM with id: '" + vmId + "' is not in ready state (" + server.getStatus()
+            + ")");
+        }
 
-                activePorts = 0;
-                for (InterfaceAttachment infs : interfaces) {
-                    if (infs.getPortState().equals(PortState.ACTIVE) && infs.getFixedIps() != null) {
-                        activePorts += infs.getFixedIps().size();
-                    }
+        i = MAX_DISCOVERY_RETRIES;
+        int activePorts = 0;
+        while (i > 0) {
+            List<? extends InterfaceAttachment> interfaces = nova.getVmAttachedNetworks(region, vmId);
+
+            activePorts = 0;
+            for (InterfaceAttachment infs : interfaces) {
+                if (infs.getPortState().equals(PortState.ACTIVE) && infs.getFixedIps() != null) {
+                    activePorts += infs.getFixedIps().size();
                 }
-                if (activePorts >= 2) {
-                    LOG.info("VM network discovery (interfaces: " + interfaces + ")");
-                    break;
-                }
-                LOG.info("Retry VM network discovery (" + i + "/" + MAX_DISCOVERY_RETRIES + ") of VM '"
-                        + server.getName() + "' (interfaces: " + interfaces + ")");
-                Thread.sleep(SLEEP_DISCOVERY_RETRIES);
-                i--;
             }
-            if (activePorts < 2) {
-                throw new VmidcException("VM '" + server.getName() + "' network is not ready.");
+            if (activePorts >= 2) {
+                LOG.info("VM network discovery (interfaces: " + interfaces + ")");
+                break;
             }
+            LOG.info("Retry VM network discovery (" + i + "/" + MAX_DISCOVERY_RETRIES + ") of VM '"
+                    + server.getName() + "' (interfaces: " + interfaces + ")");
+            Thread.sleep(SLEEP_DISCOVERY_RETRIES);
+            i--;
+        }
+        if (activePorts < 2) {
+            throw new VmidcException("VM '" + server.getName() + "' network is not ready.");
         }
     }
 
@@ -189,7 +184,7 @@ public class OpenstackUtil {
      * If found, we try finding the least loaded (based on port assignment).
      *
      *
-     * @param session  the database session
+     * @param em  the database session
      * @param region  the OpenStack region of the deployment
      * @param tenantId  the OpenStack tenant of the deployment.
      *            If empty string, the search will target shared deployment sepcs. This parameter cannot be null.
@@ -354,24 +349,22 @@ public class OpenstackUtil {
     }
 
     private static ArrayList<DistributedApplianceInstance> getDAIsByHostAZ(DeploymentSpec ds, VirtualSystem vs, String region, String host) throws Exception {
-        ArrayList<DistributedApplianceInstance> dais = new ArrayList<DistributedApplianceInstance>();
+        ArrayList<DistributedApplianceInstance> dais = new ArrayList<>();
+        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vs.getVirtualizationConnector()));
+        // First figure out current host/AZ map.
+        List<? extends AvailabilityZone> osAvailabilityZones = novaApi.getAvailabilityZonesDetail(region);
+        HostAvailabilityZoneMapping hostAvailabilityZoneMap = Openstack4JNova.getMapping(osAvailabilityZones);
 
-        try (JCloudNova novaApi = new JCloudNova(new Endpoint(vs.getVirtualizationConnector()))){
-            // First figure out current host/AZ map.
-            List<AvailabilityZoneDetails> osAvailabilityZones = novaApi.getAvailabilityZonesDetail(region);
-            HostAvailabilityZoneMapping hostAvailabilityZoneMap = JCloudNova.getMapping(osAvailabilityZones);
+        // Get AZ for host in question
+        if (host != null) {
+            String az = hostAvailabilityZoneMap.getHostAvailibilityZone(host);
 
-            // Get AZ for host in question
-            if (host != null) {
-                String az = hostAvailabilityZoneMap.getHostAvailibilityZone(host);
-
-                // Search for DAI in exclusive DSs of the same region and tenant
-                for (DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
-                    // TODO: Future. Optimize by using DB query
-                    String daiAz = hostAvailabilityZoneMap.getHostAvailibilityZone(dai.getHostName());
-                    if (daiAz != null && daiAz.equals(az)) {
-                        dais.add(dai);
-                    }
+            // Search for DAI in exclusive DSs of the same region and tenant
+            for (DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
+                // TODO: Future. Optimize by using DB query
+                String daiAz = hostAvailabilityZoneMap.getHostAvailibilityZone(dai.getHostName());
+                if (daiAz != null && daiAz.equals(az)) {
+                    dais.add(dai);
                 }
             }
         }
@@ -388,17 +381,16 @@ public class OpenstackUtil {
         return hostname.split("\\.")[0];
     }
 
-    private static boolean isVmStatusTerminal(Status status) {
-        return status == Status.SUSPENDED || status == Status.PAUSED || status == Status.UNKNOWN
-                || status == Status.ERROR;
+    private static boolean isVmStatusTerminal(Server.Status status) {
+        return status == Server.Status.SUSPENDED || status == Server.Status.PAUSED || status == Server.Status.UNKNOWN
+                || status == Server.Status.ERROR;
     }
 
     public static String getHostAvailibilityZone(DeploymentSpec ds, String region, String hostname) throws Exception {
-        try (JCloudNova novaApi = new JCloudNova(new Endpoint(ds))){
-            List<AvailabilityZoneDetails> osAvailabilityZones = novaApi.getAvailabilityZonesDetail(region);
-            HostAvailabilityZoneMapping hostAvailabilityZoneMap = JCloudNova.getMapping(osAvailabilityZones);
-            return hostAvailabilityZoneMap.getHostAvailibilityZone(hostname);
-        }
+        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(ds));
+        List<? extends AvailabilityZone> osAvailabilityZones = novaApi.getAvailabilityZonesDetail(region);
+        HostAvailabilityZoneMapping hostAvailabilityZoneMap = Openstack4JNova.getMapping(osAvailabilityZones);
+        return hostAvailabilityZoneMap.getHostAvailibilityZone(hostname);
     }
 
     /**
@@ -459,7 +451,7 @@ public class OpenstackUtil {
     }
 
     /**
-     * @param session
+     * @param em
      *            Hibernate session object
      * @param region
      *            Region this entity belongs to
@@ -474,35 +466,26 @@ public class OpenstackUtil {
     public static void discoverVmForPort(EntityManager em, String region, SecurityGroup sg, Port osPort, VMPort vmPort)
             throws IOException, EncryptionException {
 
-        JCloudNova nova = null;
-        try {
-            nova = new JCloudNova(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
-            Server osVm = nova.getServer(region, osPort.getDeviceId());
-            if (null == osVm) {
-                OSCEntityManager.delete(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
-                //TODO sridhar handle stale VM delete ?
-                return;
+        Openstack4JNova nova = new Openstack4JNova(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
+        Server osVm = nova.getServer(region, osPort.getDeviceId());
+        if (null == osVm) {
+            OSCEntityManager.delete(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
+            //TODO sridhar handle stale VM delete ?
+            return;
 
-            }
-            VM vm = VMEntityManager.findByOpenstackId(em, osPort.getDeviceId());
-            if (vm == null) {
-                vm = new VM(region, osPort.getDeviceId(), osVm.getName());
-                OSCEntityManager.create(em, vm, StaticRegistry.transactionalBroadcastUtil());
-            }
-            vmPort.setVm(vm);
-            // Update vm host if needed
-            ServerExtendedAttributes serverExtendedAttributes = osVm.getExtendedAttributes().get();
-            if (serverExtendedAttributes != null && serverExtendedAttributes.getHypervisorHostName() != null) {
-                if (!serverExtendedAttributes.getHypervisorHostName().equals(vm.getHost())) {
-                    vm.setHost(serverExtendedAttributes.getHypervisorHostName());
-                    OSCEntityManager.update(em, vm, StaticRegistry.transactionalBroadcastUtil());
-                }
-            }
-            OSCEntityManager.update(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
-        } finally {
-            if (nova != null) {
-                nova.close();
-            }
         }
+        VM vm = VMEntityManager.findByOpenstackId(em, osPort.getDeviceId());
+        if (vm == null) {
+            vm = new VM(region, osPort.getDeviceId(), osVm.getName());
+            OSCEntityManager.create(em, vm, StaticRegistry.transactionalBroadcastUtil());
+        }
+        vmPort.setVm(vm);
+        // Update vm host if needed
+        String hypervisorHostname = osVm.getHypervisorHostname();
+        if (hypervisorHostname != null && !hypervisorHostname.equals(vm.getHost())) {
+            vm.setHost(hypervisorHostname);
+            OSCEntityManager.update(em, vm, StaticRegistry.transactionalBroadcastUtil());
+        }
+        OSCEntityManager.update(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
     }
 }

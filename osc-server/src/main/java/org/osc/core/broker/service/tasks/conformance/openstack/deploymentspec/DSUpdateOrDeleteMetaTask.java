@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZoneDetails;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -37,10 +36,10 @@ import org.osc.core.broker.model.entities.virtualization.openstack.AvailabilityZ
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.Host;
 import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.HostAvailabilityZoneMapping;
-import org.osc.core.broker.rest.client.openstack.jcloud.HostAvailabilityZoneMapping.HostAzInfo;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.HostAvailabilityZoneMapping;
+import org.osc.core.broker.rest.client.openstack.openstack4j.HostAvailabilityZoneMapping.HostAzInfo;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -87,7 +86,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     private DeploymentSpec ds;
     private Endpoint endPoint;
     private TaskGraph tg;
-    private JCloudNova novaApi;
+    private Openstack4JNova novaApi;
     @IgnoreCompare
     private DSUpdateOrDeleteMetaTask factory;
     @IgnoreCompare
@@ -132,7 +131,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         return task;
     }
 
-    DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, JCloudNova novaApi) {
+    DSUpdateOrDeleteMetaTask create(DeploymentSpec ds, Openstack4JNova novaApi) {
         DSUpdateOrDeleteMetaTask task = create(ds, (Endpoint) null);
         task.novaApi = novaApi;
         return task;
@@ -172,55 +171,50 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             selectedHosts.add(host.getName());
         }
 
-        try {
-            this.novaApi = this.novaApi == null ? new JCloudNova(this.endPoint) : this.novaApi;
+        this.novaApi = this.novaApi == null ? new Openstack4JNova(this.endPoint) : this.novaApi;
 
-            List<AvailabilityZoneDetails> osAvailabilityZones = this.novaApi
-                    .getAvailabilityZonesDetail(this.ds.getRegion());
-            HostAvailabilityZoneMapping hostAvailabilityZoneMap = JCloudNova.getMapping(osAvailabilityZones);
+        List<? extends org.openstack4j.model.compute.ext.AvailabilityZone> osAvailabilityZones =
+                this.novaApi.getAvailabilityZonesDetail(this.ds.getRegion());
+        HostAvailabilityZoneMapping hostAvailabilityZoneMap = Openstack4JNova.getMapping(osAvailabilityZones);
 
-            // Openstack hosts are only the hypervisor compute hosts. Ignore hosts from the availability zone api because
-            // that would include controller hosts as well.
-            Collection<String> osHostSet = this.novaApi.getComputeHosts(this.ds.getRegion());
+        // Openstack hosts are only the hypervisor compute hosts. Ignore hosts from the availability zone api because
+        // that would include controller hosts as well.
+        Collection<String> osHostSet = this.novaApi.getComputeHosts(this.ds.getRegion());
 
-            if (DeploymentSpecEntityMgr.isDeploymentSpecAllHostInRegion(this.ds)) {
-                log.info("Deploying based on region:" + this.ds.getRegion());
-                // Deploy to region, one SVA per host in region
+        if (DeploymentSpecEntityMgr.isDeploymentSpecAllHostInRegion(this.ds)) {
+            log.info("Deploying based on region:" + this.ds.getRegion());
+            // Deploy to region, one SVA per host in region
 
-                conformToHostsSelection(osHostSet, hostAvailabilityZoneMap, osHostSet);
+            conformToHostsSelection(osHostSet, hostAvailabilityZoneMap, osHostSet);
 
-            } else if (selectedHosts.isEmpty() && !selectedAvailabilityZones.isEmpty()) {
-                log.info("Deploying based on availabilityZones");
+        } else if (selectedHosts.isEmpty() && !selectedAvailabilityZones.isEmpty()) {
+            log.info("Deploying based on availabilityZones");
 
-                conformToAzSelection(em, selectedAvailabilityZones, osAvailabilityZones, osHostSet);
+            conformToAzSelection(em, selectedAvailabilityZones, osAvailabilityZones, osHostSet);
 
-            } else if ((!selectedHosts.isEmpty())) {
-                log.info("Deploying based on hosts");
-                // Deploy to selected hosts
-                conformToHostsSelection(selectedHosts, hostAvailabilityZoneMap, osHostSet);
-            } else if (!selectedHostAggr.isEmpty()) {
-                log.info("Deploying based on host Aggregate selection");
-                // Get selected host set from host aggregates
-                Set<String> hostsToDeployTo = getHostsFromHostAggregateSelection(em, this.novaApi, selectedHostAggr);
+        } else if ((!selectedHosts.isEmpty())) {
+            log.info("Deploying based on hosts");
+            // Deploy to selected hosts
+            conformToHostsSelection(selectedHosts, hostAvailabilityZoneMap, osHostSet);
+        } else if (!selectedHostAggr.isEmpty()) {
+            log.info("Deploying based on host Aggregate selection");
+            // Get selected host set from host aggregates
+            Set<String> hostsToDeployTo = getHostsFromHostAggregateSelection(em, this.novaApi, selectedHostAggr);
 
-                // deploy to selected hosts
-                conformToHostsSelection(hostsToDeployTo, hostAvailabilityZoneMap, osHostSet);
-            }
-        } finally {
-            if (this.novaApi != null) {
-                this.novaApi.close();
-            }
+            // deploy to selected hosts
+            conformToHostsSelection(hostsToDeployTo, hostAvailabilityZoneMap, osHostSet);
         }
     }
 
-    private Set<String> getHostsFromHostAggregateSelection(EntityManager em, JCloudNova novaApi,
+    private Set<String> getHostsFromHostAggregateSelection(EntityManager em, Openstack4JNova novaApi,
             Set<HostAggregate> dsHostAggr) throws IOException {
         Set<String> hostsToDeployTo = new HashSet<>();
         Iterator<HostAggregate> dsHostAggrIter = dsHostAggr.iterator();
         while (dsHostAggrIter.hasNext()) {
             HostAggregate dsHostAggrInstance = dsHostAggrIter.next();
-            org.jclouds.openstack.nova.v2_0.domain.HostAggregate osHostAggr = novaApi
-                    .getHostAggregateById(this.ds.getRegion(), dsHostAggrInstance.getOpenstackId());
+            org.openstack4j.model.compute.HostAggregate osHostAggr = novaApi.getHostAggregateById(this.ds.getRegion(),
+                    dsHostAggrInstance.getOpenstackId());
+
             if (osHostAggr != null) {
                 hostsToDeployTo.addAll(osHostAggr.getHosts());
                 // Pigiback to update Host Aggr name in case it changed
@@ -322,8 +316,9 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     }
 
     private void conformToAzSelection(EntityManager em, Set<AvailabilityZone> selectedAvailabilityZones,
-            List<AvailabilityZoneDetails> allAvailabilityZones, Collection<String> osHostSet) throws Exception {
-        HostAvailabilityZoneMapping azHostMap = JCloudNova.getMapping(allAvailabilityZones);
+          List<? extends org.openstack4j.model.compute.ext.AvailabilityZone> allAvailabilityZones,
+                                      Collection<String> osHostSet) throws Exception {
+        HostAvailabilityZoneMapping azHostMap = Openstack4JNova.getMapping(allAvailabilityZones);
         Set<String> dsAzDeletedFromOpenstack = new HashSet<>();
         // Assume all AZ's as unconformed initially. Current selected az's are conformed first
         Set<String> unConformedAzs = azHostMap.getAvailabilityZones();
@@ -348,7 +343,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             // For existing DAI in this zone, conform them
             if (daisInZone != null) {
                 for (DistributedApplianceInstance dai : daisInZone) {
-                    if (hostsMissingSvas != null && !hostsMissingSvas.isEmpty()) {
+                    if (!hostsMissingSvas.isEmpty()) {
                         hostsMissingSvas.remove(dai.getOsHostName());
                     }
                     this.tg.addTask(
@@ -356,7 +351,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 }
             }
 
-            if (hostsMissingSvas != null && !hostsMissingSvas.isEmpty()) {
+            if (!hostsMissingSvas.isEmpty()) {
                 // If any hosts are missing the SVA/DAI, create them
                 for (String hostMissingSva : hostsMissingSvas) {
                     log.info("Creating new SVA for host:" + hostMissingSva);

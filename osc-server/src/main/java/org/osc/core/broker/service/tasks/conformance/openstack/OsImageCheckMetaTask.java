@@ -21,15 +21,14 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.glance.v1_0.domain.Image.Status;
-import org.jclouds.openstack.glance.v1_0.domain.ImageDetails;
+import org.openstack4j.model.image.v2.Image;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jGlance;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
@@ -58,7 +57,7 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
     private String region;
     private Endpoint osEndPoint;
     private TaskGraph tg;
-    private JCloudGlance glance;
+    private Openstack4jGlance glance;
 
     public OsImageCheckMetaTask() {}
 
@@ -75,7 +74,7 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
     }
 
     // package private constructor for testing purposes
-    OsImageCheckMetaTask(VirtualSystem vs, String region, Endpoint osEndPoint, JCloudGlance glance) {
+    OsImageCheckMetaTask(VirtualSystem vs, String region, Endpoint osEndPoint, Openstack4jGlance glance) {
         this.vs = vs;
         this.vcName = vs.getVirtualizationConnector().getName();
         this.osEndPoint = osEndPoint;
@@ -99,35 +98,31 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
                 applianceSoftwareVersion.getImageUrl());
 
         if (this.glance == null) {
-            this.glance = new JCloudGlance(this.osEndPoint);
+            this.glance = new Openstack4jGlance(this.osEndPoint);
         }
 
-        try {
-            Set<OsImageReference> imageReferences = this.vs.getOsImageReference();
-            boolean uploadImage = true;
+        Set<OsImageReference> imageReferences = this.vs.getOsImageReference();
+        boolean uploadImage = true;
 
-            for (OsImageReference imageReference : imageReferences) {
-                if (imageReference.getRegion().equals(this.region)) {
-                    ImageDetails image = this.glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
-                    if (image == null || image != null && image.getStatus() != Status.ACTIVE) {
-                        this.tg.appendTask(this.deleteImageReferenceTask.create(imageReference, this.vs));
-                    } else if (!image.getName().equals(expectedGlanceImageName)) {
-                        // Assume image name is changed, means the version is upgraded since image name contains version
-                        // information. Delete existing image and create new image.
-                        this.tg.appendTask(this.deleteImageFromGlanceTask.create(this.region, imageReference, this.osEndPoint));
-                    } else {
-                        uploadImage = false;
-                    }
+        for (OsImageReference imageReference : imageReferences) {
+            if (imageReference.getRegion().equals(this.region)) {
+                Image image = this.glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
+                if (image == null || image.getStatus() != Image.ImageStatus.ACTIVE) {
+                    this.tg.appendTask(this.deleteImageReferenceTask.create(imageReference, this.vs));
+                } else if (!image.getName().equals(expectedGlanceImageName)) {
+                    // Assume image name is changed, means the version is upgraded since image name contains version
+                    // information. Delete existing image and create new image.
+                    this.tg.appendTask(this.deleteImageFromGlanceTask.create(this.region, imageReference, this.osEndPoint));
+                } else {
+                    uploadImage = false;
                 }
             }
-            if (uploadImage) {
-                this.tg.appendTask(this.uploadImageToGlanceTask.create(this.vs, this.region, expectedGlanceImageName,
-                        applianceSoftwareVersion, this.osEndPoint), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-            } else if (!imageReferences.isEmpty()){
-                this.tg.appendTask(this.updateVsWithImageVersionTask.create(this.vs));
-            }
-        } finally {
-            this.glance.close();
+        }
+        if (uploadImage) {
+            this.tg.appendTask(this.uploadImageToGlanceTask.create(this.vs, this.region, expectedGlanceImageName,
+                    applianceSoftwareVersion, this.osEndPoint), TaskGuard.ALL_PREDECESSORS_COMPLETED);
+        } else if (!imageReferences.isEmpty()){
+            this.tg.appendTask(this.updateVsWithImageVersionTask.create(this.vs));
         }
     }
 

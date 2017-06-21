@@ -20,11 +20,11 @@
 	<parent>
 		<groupId>org.osc.core</groupId>
 		<artifactId>osc-root</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0</version>
 		<relativePath>..</relativePath>
 	</parent>
-	<artifactId>osc-uber-jcloud</artifactId>
-	<name>org.osc.core:osc-uber-jcloud</name>
+	<artifactId>osc-uber-openstack4j</artifactId>
+	<name>org.osc.core:osc-uber-openstack4j</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -92,57 +92,71 @@
 			</plugin>
 
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e 
+				settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>biz.aQute.bnd</groupId>
+										<artifactId>bnd-maven-plugin</artifactId>
+										<versionRange>[3.0,)</versionRange>
+										<goals>
+											<goal>
+												bnd-process
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-bundle</artifactId>
-			<version>1.12</version>
+			<groupId>org.pacesys</groupId>
+			<artifactId>openstack4j</artifactId>
+			<version>3.0.4</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.pacesys.openstack4j.connectors</groupId>
+					<artifactId>openstack4j-resteasy</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-databind</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>javax.annotation</groupId>
-			<artifactId>jsr250-api</artifactId>
-			<version>1.0</version>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.8.5</version>
 		</dependency>
 		<dependency>
-			<groupId>javax.ws.rs</groupId>
-			<artifactId>jsr311-api</artifactId>
-			<version>1.1.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds</groupId>
-			<artifactId>jclouds-compute</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds</groupId>
-			<artifactId>jclouds-core</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds</groupId>
-			<artifactId>jclouds-scriptbuilder</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds.labs</groupId>
-			<artifactId>openstack-neutron</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds.labs</groupId>
-			<artifactId>openstack-glance</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds.api</groupId>
-			<artifactId>openstack-keystone</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds.api</groupId>
-			<artifactId>openstack-nova</artifactId>
-			<version>2.0.0</version>
+			<groupId>org.pacesys.openstack4j.connectors</groupId>
+			<artifactId>openstack4j-jersey2</artifactId>
+			<version>3.0.4</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-databind</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
+	<version>1.0.0</version>
 </project>

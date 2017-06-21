@@ -212,43 +212,32 @@
 			<version>2.2.3</version>
 		</dependency>
 
-		<!-- jclouds OpenStack dependencies -->
 		<dependency>
-			<groupId>org.apache.jclouds.api</groupId>
-			<artifactId>openstack-keystone</artifactId>
-			<version>${jclouds.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds.api</groupId>
-			<artifactId>openstack-nova</artifactId>
-			<version>${jclouds.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds.labs</groupId>
-			<artifactId>openstack-glance</artifactId>
-			<version>${jclouds.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jclouds.labs</groupId>
-			<artifactId>openstack-neutron</artifactId>
-			<version>${jclouds.version}</version>
-		</dependency>
-		<!--TODO: bsulich exclusion will be deleted when replacing jcloud with openstack4j-->
-		<dependency>
-			<groupId>org.apache.jclouds</groupId>
-			<artifactId>jclouds-core</artifactId>
-			<version>${jclouds.version}</version>
+			<groupId>org.pacesys</groupId>
+			<artifactId>openstack4j</artifactId>
+			<version>3.0.4</version>
 			<exclusions>
 				<exclusion>
-					<groupId>javax.ws.rs</groupId>
-					<artifactId>jsr311-api</artifactId>
+					<groupId>org.pacesys.openstack4j.connectors</groupId>
+					<artifactId>openstack4j-resteasy</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-databind</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<!-- Enable Logging for jclouds https://jclouds.apache.org/reference/logging/ 
-			<dependency> <groupId>org.apache.jclouds.driver</groupId> <artifactId>jclouds-slf4j</artifactId> 
-			<version>${jclouds.version}</version> </dependency> <dependency> <groupId>ch.qos.logback</groupId> 
-			<artifactId>logback-classic</artifactId> <version>1.0.13</version> </dependency> -->
+		<dependency>
+			<groupId>org.pacesys.openstack4j.connectors</groupId>
+			<artifactId>openstack4j-jersey2</artifactId>
+			<version>3.0.4</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-databind</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<!-- Rabbitmq Client -->
 		<dependency>
@@ -289,7 +278,12 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
         </dependency>
-	</dependencies>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.5</version>
+        </dependency>
+    </dependencies>
 	<build>
 		<plugins>
 			<plugin>
