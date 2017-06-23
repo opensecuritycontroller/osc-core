@@ -28,6 +28,7 @@ import org.openstack4j.model.network.Network;
 import org.openstack4j.model.network.Port;
 import org.openstack4j.model.network.SecurityGroup;
 import org.openstack4j.model.network.SecurityGroupRule;
+import org.openstack4j.model.network.State;
 import org.openstack4j.model.network.Subnet;
 import org.openstack4j.model.network.builder.NetFloatingIPBuilder;
 import org.openstack4j.model.network.builder.NetSecurityGroupBuilder;
@@ -106,7 +107,9 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
         for (Port port : portList) {
             String deviceOwner = port.getDeviceOwner();
-            if (deviceOwner != null && deviceOwner.startsWith(QUERY_PARAM_COMPUTE_DEVICE_OWNER)) {
+            if (deviceOwner != null
+                    && deviceOwner.startsWith(QUERY_PARAM_COMPUTE_DEVICE_OWNER)
+                    && port.getState() == State.ACTIVE ) {
                 computePorts.add(port);
             }
         }
@@ -121,7 +124,9 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         List<? extends Port> osPorts = listPorts(region, tenantId, networkId);
         for (Port port : osPorts) {
             String deviceOwner = port.getDeviceOwner();
-            if (deviceOwner != null && deviceOwner.startsWith(QUERY_PARAM_ROUTER_DEVICE_OWNER)) {
+            if (deviceOwner != null
+                    && deviceOwner.startsWith(QUERY_PARAM_ROUTER_DEVICE_OWNER)
+                    && port.getState() == State.ACTIVE ) {
                 routerPortDeviceId = port.getDeviceId();
             }
         }
@@ -137,7 +142,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
         for (Port port : osPorts) {
             String deviceOwner = port.getDeviceOwner();
-            if (deviceOwner != null && deviceOwner.startsWith(classifier)) {
+            if (deviceOwner != null && deviceOwner.startsWith(classifier) && port.getState() == State.ACTIVE ) {
                 for (IP ip : port.getFixedIps()) {
                     if (ip.getSubnetId().equals(subnetId)) {
                         subnetPorts.add(port);
