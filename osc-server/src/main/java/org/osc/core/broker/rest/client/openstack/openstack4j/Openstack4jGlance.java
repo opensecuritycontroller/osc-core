@@ -41,31 +41,29 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
         super(endPoint);
     }
 
-    public String uploadImage(String region, String imageName, File imageFile, Map<String, String> imageProperties) throws IOException, VmidcBrokerValidationException {
+    public String uploadImage(String region, String imageName, File imageFile, Map<String, String> imageProperties)
+            throws IOException, VmidcBrokerValidationException {
         log.info("Uploading Image " + imageName + " to region " + region);
         getOs().useRegion(region);
-        String imageId;
-        String fileExtension = FilenameUtils.getExtension(imageFile.getName());
 
-        log.info("Image properties: " + imageProperties);
-        //if (imageProperties != null) {
-        //:TODO image properties
-        //for (Map.Entry<String, String> entry : imageProperties.entrySet()) {
-        //entry.getKey(), entry.getValue();
-        //}
-        //}
+        String fileExtension = FilenameUtils.getExtension(imageFile.getName());
 
         ImageBuilder imageBuilder = Builders.imageV2()
                 .name(imageName)
                 .containerFormat(ContainerFormat.BARE)
-                .visibility(Image.ImageVisibility.PRIVATE) //:TODO check if it's equivalent for isPublic(false) in jcloud
+                .visibility(Image.ImageVisibility.PRIVATE)
                 .diskFormat(getDiskFormat(fileExtension));
+
+        if (imageProperties != null) {
+            imageProperties.forEach(imageBuilder::additionalProperty);
+        }
+
         Image createdImage = getOs().imagesV2().create(imageBuilder.build());
-        imageId = createdImage.getId();
+        String imageId = createdImage.getId();
 
         Payload<File> payload = Payloads.create(imageFile);
 
-        ActionResponse actionResponse = getOs().imagesV2().upload(createdImage.getId(), payload, createdImage);
+        ActionResponse actionResponse = getOs().imagesV2().upload(imageId, payload, createdImage);
         if (actionResponse.isSuccess()) {
             log.info("Image uploaded with Id: " + imageId);
         } else {
@@ -77,7 +75,7 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
     }
 
     /**
-     * Only the name, id and Status values of the image are retrived from openstack.
+     * Only the name, id and Status values of the image are retrieved from openstack.
      */
     public Image getImageById(String region, String id) throws Exception {
         getOs().useRegion(region);
