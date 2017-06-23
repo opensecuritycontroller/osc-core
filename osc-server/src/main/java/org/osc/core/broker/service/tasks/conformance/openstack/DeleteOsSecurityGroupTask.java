@@ -73,15 +73,13 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
             if (osSg != null) {
                 while (!success) {
                     try {
-                        success = neutron.deleteSecurityGroupById(this.ds.getRegion(),
-                                this.sgReference.getSgRefId());
+                        success = neutron.deleteSecurityGroupById(this.ds.getRegion(), this.sgReference.getSgRefId());
                     } catch (IllegalStateException ex) {
-                        this.log.info(" Openstack Security Group id:" + this.sgReference.getSgRefId() + " in use.");
+                        this.log.info("Failed to remove openstack Security Group: " + ex.getMessage());
                         Thread.sleep(SLEEP_RETRIES);
                     } finally {
                         if (--count <= 0) {
-                            throw (new Exception("Unable to delete the Openstack Security Group id: "
-                                    + this.sgReference.getSgRefId()));
+                            throw new Exception("Unable to delete the Openstack Security Group id: " + this.sgReference.getSgRefId());
                         }
                     }
                 }
@@ -101,6 +99,6 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
         return String.format("Deleting Openstack Security Group with id '%s' from tenant '%s' in region '%s'",
                 this.sgReference.getSgRefId(), this.ds.getTenantName(), this.ds.getRegion());
 
-    };
+    }
 
 }

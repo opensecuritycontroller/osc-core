@@ -16,25 +16,31 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.apache.log4j.Logger;
-
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+import org.apache.log4j.Logger;
+import org.openstack4j.api.exceptions.ClientResponseException;
+import org.openstack4j.api.exceptions.ServerResponseException;
 import org.openstack4j.model.common.ActionResponse;
 import org.openstack4j.model.network.IP;
+import org.openstack4j.model.network.NetFloatingIP;
 import org.openstack4j.model.network.Network;
 import org.openstack4j.model.network.Port;
 import org.openstack4j.model.network.SecurityGroup;
 import org.openstack4j.model.network.SecurityGroupRule;
 import org.openstack4j.model.network.Subnet;
+import org.openstack4j.model.network.builder.NetFloatingIPBuilder;
 import org.openstack4j.model.network.builder.NetSecurityGroupBuilder;
 import org.openstack4j.model.network.options.PortListOptions;
+import org.openstack4j.openstack.networking.domain.NeutronFloatingIP;
 import org.openstack4j.openstack.networking.domain.NeutronSecurityGroup;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
@@ -42,6 +48,10 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
     private static final String QUERY_PARAM_COMPUTE_DEVICE_OWNER = "compute:";
     private static final String QUERY_PARAM_ROUTER_DEVICE_OWNER = "network:router_interface";
+
+    private static final int OPENSTACK_CONFLICT_STATUS = 409;
+
+    private enum FloatingIpStatus {ACTIVE, DOWN, ERROR}
 
     public Openstack4JNeutron(Endpoint endPoint) {
         super(endPoint);
@@ -72,6 +82,15 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         Network network = getOs().networking().network().get(id);
         getOs().removeRegion();
         return network;
+    }
+
+    public Network getNetworkByName(String region, String name) throws Exception {
+        getOs().useRegion(region);
+        Network foundNetwork = getOs().networking().network().list()
+                .stream().filter(network -> network.getName().equals(name)).findFirst()
+                .orElseThrow(() -> new Exception("Cannot find network by name: " + name));
+        getOs().removeRegion();
+        return foundNetwork;
     }
 
     public Subnet getSubnetById(String region, String id) {
@@ -110,7 +129,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     }
 
     public List<Port> listPortsBySubnet(String region, String tenantId, String networkId, String subnetId,
-            boolean routerPortsOnly) {
+                                        boolean routerPortsOnly) {
         List<? extends Port> osPorts = listPorts(region, tenantId, networkId);
         List<Port> subnetPorts = new ArrayList<>();
 
@@ -157,7 +176,6 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
      *
      * @param region region
      * @param portId non-null port id
-     *
      * @return true if successfully deleted
      */
     public boolean deletePortById(String region, String portId) {
@@ -165,7 +183,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         getOs().useRegion(region);
 
         Port port = getOs().networking().port().get(portId);
-        if(port != null){
+        if (port != null) {
             ActionResponse delete = getOs().networking().port().delete(portId);
             success = delete.isSuccess();
         }
@@ -180,7 +198,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         return securityGroup;
     }
 
-    private Optional<? extends SecurityGroup> getSecurityGroupByName(String region, String sgName){
+    private Optional<? extends SecurityGroup> getSecurityGroupByName(String region, String sgName) {
         getOs().useRegion(region);
         List<? extends SecurityGroup> list = getOs().networking().securitygroup().list();
         Optional<? extends SecurityGroup> first = list.stream().filter(o -> o.getName().equals(sgName)).findFirst();
@@ -202,7 +220,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     public SecurityGroup createSecurityGroup(String sgName, String region) throws Exception {
         Optional<? extends SecurityGroup> securityGroupByName = getSecurityGroupByName(region, sgName);
         SecurityGroup securityGroup;
-        if(securityGroupByName.isPresent()){
+        if (securityGroupByName.isPresent()) {
             securityGroup = securityGroupByName.get();
             log.info("Found security group with name: " + sgName + "and using it");
         } else {
@@ -223,15 +241,25 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     public void addSecurityGroupRules(SecurityGroup sg, String region, Collection<SecurityGroupRule> rules) {
         getOs().useRegion(region);
         for (SecurityGroupRule rule : rules) {
-            getOs().networking().securityrule().create(rule.toBuilder().securityGroupId(sg.getId()).build());
+            try {
+                getOs().networking().securityrule().create(rule.toBuilder().securityGroupId(sg.getId()).build());
+            } catch (ServerResponseException e) {
+                if (e.getStatusCode().getCode() == OPENSTACK_CONFLICT_STATUS) {
+                    log.info("Rule already exists for Openstack Security Group name " + sg.getName());
+                } else {
+                    log.error(e);
+                }
+            }
         }
         getOs().removeRegion();
-        //log.info("Rule already exists for Openstack Security Group name " + sg.getName());
     }
 
-    public boolean deleteSecurityGroupById(String region, String sgRefId) {
+    public boolean deleteSecurityGroupById(String region, String sgRefId) throws IllegalStateException {
         getOs().useRegion(region);
         ActionResponse actionResponse = getOs().networking().securitygroup().delete(sgRefId);
+        if (actionResponse.getCode() == OPENSTACK_CONFLICT_STATUS) {
+            throw new IllegalStateException(actionResponse.getFault());
+        }
         getOs().removeRegion();
         return actionResponse.isSuccess();
     }
@@ -242,5 +270,90 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
             return port.getDeviceId();
         }
         return null;
+    }
+
+    // Floating IP API
+    public List<String> getFloatingIpPools(String region, String tenantId) throws Exception {
+        getOs().useRegion(region);
+
+        Map<String, String> filter = Maps.newHashMap();
+        filter.put("tenant_id", tenantId);
+        filter.put("router:external", Boolean.TRUE.toString());
+
+        List<String> list = getOs().networking().network().list(filter)
+                .stream()
+                .map(Network::getName)
+                .collect(Collectors.toList());
+        getOs().removeRegion();
+        return list;
+    }
+
+    public NetFloatingIP getFloatingIp(String region, String id) {
+        if (id == null) {
+            return null;
+        }
+
+        getOs().useRegion(region);
+        NetFloatingIP netFloatingIP = getOs().networking().floatingip().get(id);
+        getOs().removeRegion();
+        return netFloatingIP;
+    }
+
+    public void associateMgmtPortWithFloatingIp(String region, String netFloatingIpId, String portId) {
+        getOs().useRegion(region);
+        getOs().networking().floatingip().associateToPort(netFloatingIpId, portId);
+        getOs().removeRegion();
+    }
+
+    /**
+     * A synchronous way to allocate floating ip(within ourselfs). Since this is a static method, we would lock on
+     * the class objects which prevents multiple threads from making the floating ip call at the same time.
+     */
+    public NetFloatingIP createFloatingIp(String region, String networkId, String serverId, String portId) {
+        getOs().useRegion(region);
+
+        NetFloatingIPBuilder builder = new NeutronFloatingIP.FloatingIPConcreteBuilder();
+        builder.floatingNetworkId(networkId);
+        builder.portId(portId);
+
+        NetFloatingIP netFloatingIP;
+        try {
+            netFloatingIP = getOs().networking().floatingip().create(builder.build());
+        } catch (ClientResponseException e) {
+            // Try to remove unused floating IP's assigned to the project
+            if (e.getStatusCode().getCode() == OPENSTACK_CONFLICT_STATUS) {
+                releaseUnusedFloatingIps(region);
+                log.info("Retrying creating floating ip to solve the problem: " + e.getMessage());
+                netFloatingIP = getOs().networking().floatingip().create(builder.build());
+            } else {
+                throw e;
+            }
+        }
+
+        log.info("Allocated Floating ip: " + netFloatingIP.getId() + " To server with Id: " + serverId);
+        getOs().removeRegion();
+        return netFloatingIP;
+    }
+
+    private void releaseUnusedFloatingIps(String region) {
+        log.info("Trying to release unused floating ips assigned to the project");
+        getOs().useRegion(region);
+
+        Map<String, String> filter = Maps.newHashMap();
+        filter.put("status", FloatingIpStatus.DOWN.toString());
+
+        List<? extends NetFloatingIP> list = getOs().networking().floatingip().list(filter);
+        list.forEach(floatingIp -> getOs().networking().floatingip().delete(floatingIp.getId()));
+        getOs().removeRegion();
+    }
+
+    public synchronized void deleteFloatingIp(String region, String floatingIpId) {
+        getOs().useRegion(region);
+        log.info("Deleting Floating ip with id: " + floatingIpId);
+        ActionResponse actionResponse = getOs().networking().floatingip().delete(floatingIpId);
+        if (!actionResponse.isSuccess()) {
+            log.warn("Deleting floating ip with id: " + floatingIpId + " failed with message: " + actionResponse.getFault());
+        }
+        getOs().removeRegion();
     }
 }

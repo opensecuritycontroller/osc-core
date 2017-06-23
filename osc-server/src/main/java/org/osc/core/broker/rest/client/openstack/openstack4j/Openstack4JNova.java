@@ -21,7 +21,6 @@ import org.openstack4j.api.Builders;
 import org.openstack4j.model.common.ActionResponse;
 import org.openstack4j.model.compute.Action;
 import org.openstack4j.model.compute.Flavor;
-import org.openstack4j.model.compute.FloatingIP;
 import org.openstack4j.model.compute.HostAggregate;
 import org.openstack4j.model.compute.InterfaceAttachment;
 import org.openstack4j.model.compute.Server;
@@ -30,7 +29,6 @@ import org.openstack4j.model.compute.ext.AvailabilityZone;
 import org.openstack4j.model.compute.ext.Hypervisor;
 import org.openstack4j.model.identity.v3.Region;
 import org.openstack4j.model.network.Port;
-import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement.BootstrapFileElement;
 
@@ -167,9 +165,9 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         return server;
     }
 
-    public List<? extends org.openstack4j.model.compute.Server> listServers(String region) {
+    public List<? extends Server> listServers(String region) {
         getOs().useRegion(region);
-        List<? extends org.openstack4j.model.compute.Server> list = getOs().compute().servers().list();
+        List<? extends Server> list = getOs().compute().servers().list();
         getOs().removeRegion();
         return list;
     }
@@ -182,11 +180,9 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
     }
 
     public Server getServerByName(String region, String name) {
-        String regExName = "^" + name + "$";
-
         getOs().useRegion(region);
         List<? extends Server> servers = getOs().compute().servers().list(false);
-        Optional<? extends Server> firstFound = servers.stream().filter(o -> o.getName().matches(regExName)).findFirst();
+        Optional<? extends Server> firstFound = servers.stream().filter(o -> o.getName().equals(name)).findFirst();
         getOs().removeRegion();
         return (firstFound.isPresent()) ? firstFound.get() : null;
     }
@@ -196,89 +192,6 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         ActionResponse actionResponse = getOs().compute().servers().delete(serverId);
         getOs().removeRegion();
         return actionResponse.isSuccess();
-    }
-
-    // Floating IP API
-    public List<String> getFloatingIpPools(String region) throws Exception {
-        getOs().useRegion(region);
-        List<String> poolNames = getOs().compute().floatingIps().getPoolNames();
-        getOs().removeRegion();
-        return poolNames;
-    }
-
-    public FloatingIP getFloatingIp(String region, String id) {
-        if (id == null) {
-            return null;
-        }
-
-        getOs().useRegion(region);
-        Optional<? extends FloatingIP> first = getOs().compute().floatingIps().list().stream().filter(o -> o.getId().equals(id)).findFirst();
-        getOs().removeRegion();
-
-        return (first.isPresent()) ? first.get() : null;
-    }
-
-    public void allocateFloatingIpToServer(String region, String serverId, FloatingIP floatingIp) {
-        getOs().useRegion(region);
-        Server server = getOs().compute().servers().get(serverId);
-        getOs().compute().floatingIps().addFloatingIP(server, floatingIp.getFloatingIpAddress());
-        getOs().removeRegion();
-    }
-
-    /**
-     * A synchronous way to allocate floating ip(within ourselfs). Since this is a static method, we would lock on
-     * the JCloudUtil class objects which prevents multiple threads from making the floating ip call at the same time.
-     * null
-     *
-     * @throws VmidcBrokerInvalidRequestException in case we get an exception while allocating the floating ip
-     */
-    public FloatingIP allocateFloatingIp(String region, String poolName, String serverId) throws VmidcBrokerInvalidRequestException {
-        getOs().useRegion(region);
-
-        boolean newIPAllocated = false;
-        // Find first ip not allocated, add that to this server
-        Optional<? extends FloatingIP> foundFloatingIp = getOs().compute().floatingIps().list().stream()
-                .filter(floatingIp -> floatingIp.getFixedIpAddress() == null && poolName.equals(floatingIp.getPool()))
-                .findFirst();
-
-        FloatingIP ip;
-        if (foundFloatingIp.isPresent()) {
-            ip = foundFloatingIp.get();
-        } else {
-            // If ip is still null, allocate new ip from the pool
-            FloatingIP floatingIp = getOs().compute().floatingIps().allocateIP(poolName);
-            if (floatingIp != null) {
-                ip = floatingIp;
-                newIPAllocated = true;
-            } else {
-                throw new IllegalStateException("Ip pool exhausted");
-            }
-        }
-        Server server = getOs().compute().servers().get(serverId);
-        if (server == null) {
-            throw new VmidcBrokerInvalidRequestException("Server with id: " + serverId + " not found");
-        }
-        getOs().compute().floatingIps().addFloatingIP(server, ip.getFixedIpAddress(), ip.getFloatingIpAddress());
-
-        if (newIPAllocated) {
-            log.info("Deleting Floating IP as we could not able to assosiate it with our SVA " + ip);
-            ActionResponse actionResponse = getOs().compute().floatingIps().removeFloatingIP(server, ip.getFloatingIpAddress());
-            log.info("Is floating IP successfully removed:" + actionResponse.isSuccess());
-        }
-
-        log.info("Allocated Floating ip: " + ip + " To server with Id: " + serverId);
-        getOs().removeRegion();
-        return ip;
-    }
-
-    public synchronized void deleteFloatingIp(String region, String ip, String serverId) {
-        getOs().useRegion(region);
-        log.info("Deleting Floating ip: " + ip + " with serverId: " + serverId);
-        ActionResponse actionResponse = getOs().compute().floatingIps().removeFloatingIP(serverId, ip);
-        if (!actionResponse.isSuccess()) {
-            log.warn("IP : " + ip + " in server id: " + serverId + " not found.");
-        }
-        getOs().removeRegion();
     }
 
     // Flavor APIS
@@ -302,7 +215,7 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         getOs().useRegion(region);
         ActionResponse actionResponse = getOs().compute().flavors().delete(id);
         if (!actionResponse.isSuccess()) {
-            log.warn("Image Id: " + id + " not found.");
+            log.warn("Image Id: " + id + " error: " + actionResponse.getFault());
         }
         getOs().removeRegion();
     }
