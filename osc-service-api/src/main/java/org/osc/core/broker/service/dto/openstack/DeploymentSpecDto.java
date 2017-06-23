@@ -77,7 +77,7 @@ public class DeploymentSpecDto extends BaseDto {
     private String inspectionNetworkId;
 
     @ApiModelProperty(
-            value = "The floating ip pool from which floating ips will be allocated in case of NAT'ed environemnts",
+            value = "The floating ip pool from which floating ips will be allocated in case of NAT'ed environments",
             readOnly = true)
     private String floatingIpPoolName;
 
@@ -102,7 +102,7 @@ public class DeploymentSpecDto extends BaseDto {
             readOnly = true)
     private boolean isShared;
 
-    @ApiModelProperty(value = "Indicates whether the deployment specifcation is marked for deletion",
+    @ApiModelProperty(value = "Indicates whether the deployment specification is marked for deletion",
             required = true,
             readOnly = true)
     private boolean markForDeletion = false;

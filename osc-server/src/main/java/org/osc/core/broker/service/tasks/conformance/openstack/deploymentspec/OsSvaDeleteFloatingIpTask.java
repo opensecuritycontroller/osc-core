@@ -16,23 +16,22 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
-import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service=OsSvaDeleteFloatingIpTask.class)
+import javax.persistence.EntityManager;
+import java.util.Set;
+
+@Component(service = OsSvaDeleteFloatingIpTask.class)
 public class OsSvaDeleteFloatingIpTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(OsSvaDeleteFloatingIpTask.class);
@@ -51,15 +50,15 @@ public class OsSvaDeleteFloatingIpTask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
-        if (this.dai.getIpAddress() == null || this.dai.getFloatingIpId() == null) {
+        if (this.dai.getFloatingIpId() == null) {
             return;
         }
         DeploymentSpec ds = this.dai.getDeploymentSpec();
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
 
         Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
-        Openstack4JNova nova = new Openstack4JNova(endPoint);
-        nova.deleteFloatingIp(ds.getRegion(), this.dai.getIpAddress(), this.dai.getOsServerId());
+        Openstack4JNeutron nova = new Openstack4JNeutron(endPoint);
+        nova.deleteFloatingIp(ds.getRegion(), this.dai.getFloatingIpId());
 
         this.log.info("Dai: " + this.dai + " Ip Address set to: null");
         this.dai.setIpAddress(null);

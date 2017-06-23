@@ -19,7 +19,7 @@ package org.osc.core.broker.service.openstack;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
-import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -39,8 +39,8 @@ public class ListFloatingIpPoolsService extends ServiceDispatcher<BaseOpenStackR
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
-        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()));
-        List<String> osFloatingIpPoolsList = novaApi.getFloatingIpPools(request.getRegion());
+        Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc, request.getTenantName()));
+        List<String> osFloatingIpPoolsList = neutron.getFloatingIpPools(request.getRegion(), request.getTenantId());
         return new ListResponse<>(osFloatingIpPoolsList);
     }
 
