@@ -266,7 +266,6 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         return new HostAvailabilityZoneMapping(availabilityZones);
     }
 
-    // TODO check if it's ok - different approach than jcloud
     public Set<String> getComputeHosts(String region) throws Exception {
         getOs().useRegion(region);
         List<? extends Hypervisor> list = getOs().compute().hypervisors().list();
