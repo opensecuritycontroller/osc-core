@@ -45,7 +45,10 @@ public class ListHostService extends ServiceDispatcher<BaseOpenStackRequest, Lis
 
         Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()));
         List<HostDto> hostList = novaApi.getComputeHosts(request.getRegion())
-                .stream().map(host -> new HostDto(host, host)).collect(Collectors.toList());
+                .stream()
+                .map(HostDto::new)
+                .collect(Collectors.toList());
+
         return new ListResponse<>(hostList);
     }
 }
