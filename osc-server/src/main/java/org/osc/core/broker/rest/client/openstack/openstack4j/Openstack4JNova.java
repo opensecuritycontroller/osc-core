@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
+import com.google.common.collect.Maps;
 import org.apache.log4j.Logger;
 import org.openstack4j.api.Builders;
 import org.openstack4j.model.common.ActionResponse;
@@ -35,7 +36,7 @@ import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement.Bootstra
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -181,10 +182,12 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
 
     public Server getServerByName(String region, String name) {
         getOs().useRegion(region);
-        List<? extends Server> servers = getOs().compute().servers().list(false);
-        Optional<? extends Server> firstFound = servers.stream().filter(o -> o.getName().equals(name)).findFirst();
+        Map<String, String> filter = Maps.newHashMap();
+        filter.put("name", "^" + name + "$");
+
+        List<? extends Server> servers = getOs().compute().servers().list(filter);
         getOs().removeRegion();
-        return (firstFound.isPresent()) ? firstFound.get() : null;
+        return (servers.size() == 1) ? servers.get(0) : null;
     }
 
     public boolean terminateInstance(String region, String serverId) {
