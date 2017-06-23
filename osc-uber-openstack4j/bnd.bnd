@@ -4,7 +4,6 @@
 -include target/depend.bnd
 
 -nouses:	true
-#  TODO: bsulich imported guava should be removed and updated in container to 17, now jcloud use 16, openstack4j 17
 Include-Resource:\
     @${btf.dep},\
     @${json-patch.dep},\
