@@ -109,7 +109,7 @@ public class DeletePortGroupTaskTest {
 	}
 
 	@Test
-	public void testExecute_WhenDeleteNetworkElementSucceeds_() throws Exception {
+	public void testExecute_WhenDeleteNetworkElementSucceeds_ExecutionFinishes() throws Exception {
 		// Arrange.
 		SecurityGroup sg = createSG("SG", 1L, null);
 		PortGroup portGroup = createPortGroup(sg.getNetworkElementId(), sg.getName());
