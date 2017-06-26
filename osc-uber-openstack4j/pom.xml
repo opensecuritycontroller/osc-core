@@ -158,5 +158,4 @@
 			</exclusions>
 		</dependency>
 	</dependencies>
-	<version>1.0.0</version>
 </project>
