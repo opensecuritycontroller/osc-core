@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,8 +62,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import org.junit.Assert;
-
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ HibernateUtil.class, SdnControllerApiFactory.class, OpenstackUtil.class })
 public class UpdatePortGroupTaskTest {
@@ -82,7 +81,7 @@ public class UpdatePortGroupTaskTest {
 
 	@Captor
 	private ArgumentCaptor<List<NetworkElement>> domainIdNetworkElementCaptor;
-	
+
 	@Captor
 	private ArgumentCaptor<PortGroup> portGroupCaptor;
 
@@ -105,16 +104,17 @@ public class UpdatePortGroupTaskTest {
 	}
 
 	@Test
-	public void testExecute_NoPortGroupUpdateNeededWithMatchingElementIdSucceeds_ExecutionFinishes() throws Exception {
+	public void testExecute_NoPortGroupUpdateNeededWithMatchingElementId_ExecutionFinishes() throws Exception {
 
 		// Arrange.
 		SecurityGroup sg = createSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L, "openstackId"));
 		PortGroup portGroup = createPortGroup("openstackId");
 
-		ostGetPorts(sg);
+		ostRegisterPorts(sg);
 
-		registerDomain(UUID.randomUUID().toString(), sg);
+		String domainId = UUID.randomUUID().toString();
+		registerDomain(domainId, sg);
 
 		NetworkElement ne = createNetworkElement("openstackId");
 
@@ -131,16 +131,17 @@ public class UpdatePortGroupTaskTest {
 	}
 
 	@Test
-	public void testExecute_UpdatePortGroupNeededWithDifferentElementIdSucceeds_ExecutionFinishes() throws Exception {
+	public void testExecute_UpdatePortGroupNeededWithDifferentElementId_ExecutionFinishes() throws Exception {
 
 		// Arrange.
 		SecurityGroup sg = createSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L, "openstackId"));
 		PortGroup portGroup = createPortGroup("different_openstackId");
 
-		ostGetPorts(sg);
+		List<NetworkElement> neList = ostRegisterPorts(sg);
 
-		registerDomain(UUID.randomUUID().toString(), sg);
+		String domainId = UUID.randomUUID().toString();
+		registerDomain(domainId, sg);
 
 		NetworkElement ne = createNetworkElement("openstackId");
 
@@ -155,19 +156,26 @@ public class UpdatePortGroupTaskTest {
 		// Assert.
 		verify(this.em, Mockito.times(1)).merge(sg);
 		Assert.assertEquals(ne.getElementId(), sg.getNetworkElementId());
+		assertNetworkElementsParentIdWithDomainId(neList, domainId);
 	}
-	
+
 	@Test
-	public void testExecute_UpdatePortGroupWithOneSGMAndNoPortFails_ThrowsTheUnhandledException() throws Exception {
+	public void testExecute_WhenDomainIsNotFound_ThrowsException() throws Exception {
 
 		// Arrange.
 		SecurityGroup sg = createSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
-		sg.addSecurityGroupMember(newSGMVmWithoutPort(1L));
+		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L, "openstackId"));
 		PortGroup portGroup = createPortGroup("openstackId");
 
+		ostRegisterPorts(sg);
+
+		// domain id null
+		String domainId = null;
+		registerDomain(domainId, sg);
+
 		this.exception.expect(Exception.class);
-		this.exception
-				.expectMessage(String.format("Failed to retrieve domainId for given tenant: '%s' and Security Group: '%s",
+		this.exception.expectMessage(
+				String.format("Failed to retrieve domainId for given tenant: '%s' and Security Group: '%s",
 						sg.getTenantName(), sg.getName()));
 
 		UpdatePortGroupTask task = new UpdatePortGroupTask(sg, portGroup);
@@ -180,19 +188,25 @@ public class UpdatePortGroupTaskTest {
 	}
 
 	@Test
-	public void testExecute_WhenDomainIdNull_ThrowsTheUnhandledException() throws Exception {
+	public void testExecute_WhenPortGpIsNotFound_ThrowsException() throws Exception {
 
 		// Arrange.
 		SecurityGroup sg = createSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
-		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L, "openstackId"));
+		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L, ""));
 		PortGroup portGroup = createPortGroup("openstackId");
 
-		ostGetPorts(sg);
+		ostRegisterPorts(sg);
 
-		// domain id null
-		registerDomain(null, sg);
+		String domainId = UUID.randomUUID().toString();
+		registerDomain(domainId, sg);
+
+		// network element/portGp null
+		NetworkElement ne = null;
+		SdnRedirectionApi redirectionApi = mockRegisterNetworkElement(portGroup, ne);
+		registerNetworkRedirectionApi(redirectionApi, sg.getVirtualizationConnector());
 
 		this.exception.expect(Exception.class);
+		this.exception.expectMessage(String.format("Failed to update Port Group : '%s'", portGroup.getElementId()));
 
 		UpdatePortGroupTask task = new UpdatePortGroupTask(sg, portGroup);
 
@@ -202,8 +216,9 @@ public class UpdatePortGroupTaskTest {
 		// Assert.
 		verify(this.em, Mockito.never()).merge(any());
 	}
-	
-	private SecurityGroupMember newSGMWithPort(Class<? extends OsProtectionEntity> entityType, Long sgmId, String openstackId) {
+
+	private SecurityGroupMember newSGMWithPort(Class<? extends OsProtectionEntity> entityType, Long sgmId,
+			String openstackId) {
 		VMPort port = null;
 		OsProtectionEntity protectionEntity;
 
@@ -224,13 +239,6 @@ public class UpdatePortGroupTaskTest {
 		return newSGM(protectionEntity, sgmId);
 	}
 
-	private SecurityGroupMember newSGMVmWithoutPort(Long sgmId) {
-		OsProtectionEntity protectionEntity;
-		protectionEntity = new VM("region", UUID.randomUUID().toString(), "name");
-
-		return newSGM(protectionEntity, sgmId);
-	}
-
 	private SecurityGroupMember newSGM(OsProtectionEntity protectionEntity, Long sgmId) {
 		// TODO emanoel: Remove this mock once the SGM is no longer kept in a
 		// TreeSet in the SGM.
@@ -240,10 +248,10 @@ public class UpdatePortGroupTaskTest {
 
 		return sgm;
 	}
-	
+
 	private VMPort newVMPort(VM vm, String openstackId) {
-		return new VMPort(vm, "mac-address" + UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-				openstackId, null);
+		return new VMPort(vm, "mac-address" + UUID.randomUUID().toString(), UUID.randomUUID().toString(), openstackId,
+				null);
 	}
 
 	private SecurityGroup createSecurityGroup(Long vcId, String tenantId, String tenantName, Long sgId, String sgName) {
@@ -257,9 +265,12 @@ public class UpdatePortGroupTaskTest {
 		return sg;
 	}
 
-	private void ostGetPorts(SecurityGroup sg) throws Exception {
-		PowerMockito.doReturn(this.vmProtectedPorts.stream().map(NetworkElementImpl::new).collect(Collectors.toList()))
-				.when(OpenstackUtil.class, "getPorts", sg.getSecurityGroupMembers().iterator().next());
+	private List<NetworkElement> ostRegisterPorts(SecurityGroup sg) throws Exception {
+		List<NetworkElement> neList = this.vmProtectedPorts.stream().map(NetworkElementImpl::new)
+				.collect(Collectors.toList());
+		PowerMockito.doReturn(neList).when(OpenstackUtil.class, "getPorts",
+				sg.getSecurityGroupMembers().iterator().next());
+		return neList;
 	}
 
 	private void registerNetworkRedirectionApi(SdnRedirectionApi redirectionApi, VirtualizationConnector vc)
@@ -270,7 +281,8 @@ public class UpdatePortGroupTaskTest {
 
 	private SdnRedirectionApi mockRegisterNetworkElement(PortGroup portGroup, NetworkElement ne) throws Exception {
 		SdnRedirectionApi redirectionApi = mock(SdnRedirectionApi.class);
-		when(redirectionApi.updateNetworkElement(portGroupCaptor.capture(), networkElementCaptor.capture())).thenReturn(ne);
+		when(redirectionApi.updateNetworkElement(portGroupCaptor.capture(), networkElementCaptor.capture()))
+				.thenReturn(ne);
 
 		return redirectionApi;
 	}
@@ -289,12 +301,18 @@ public class UpdatePortGroupTaskTest {
 
 		return ne;
 	}
-	
+
 	private static PortGroup createPortGroup(String id) {
 		PortGroup portGroup = new PortGroup();
 		portGroup.setPortGroupId(id);
 
 		return portGroup;
+	}
+
+	private void assertNetworkElementsParentIdWithDomainId(List<NetworkElement> neList, String domainId) {
+		for (NetworkElement ne : neList) {
+			Assert.assertEquals(ne.getParentId(), domainId);
+		}
 	}
 
 }

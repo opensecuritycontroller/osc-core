@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,8 +60,6 @@ import org.osc.sdk.controller.element.NetworkElement;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import org.junit.Assert;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ HibernateUtil.class, SdnControllerApiFactory.class, OpenstackUtil.class })
@@ -101,17 +100,18 @@ public class CreatePortGroupTaskTest {
 	}
 
 	@Test
-	public void testExecute_CreatePortGroupWithOneSGMSucceeds_ExecutionFinishes() throws Exception {
+	public void testExecute_SGWithOneSGM_ExecutionFinishes() throws Exception {
 
 		// Arrange.
 		SecurityGroup sg = createSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L));
 
-		ostGetPorts(sg);
+		List<NetworkElement> neList = ostRegisterPorts(sg);
 
-		registerDomain(UUID.randomUUID().toString(), sg);
+		String domainId = UUID.randomUUID().toString();
+		registerDomain(domainId, sg);
 
-		NetworkElement ne = createNetworkElement(sg);
+		NetworkElement ne = createNetworkElement();
 
 		SdnRedirectionApi redirectionApi = mockRegisterNetworkElement(ne);
 		registerNetworkRedirectionApi(redirectionApi, sg.getVirtualizationConnector());
@@ -124,21 +124,23 @@ public class CreatePortGroupTaskTest {
 		// Assert.
 		verify(this.em, Mockito.times(1)).merge(sg);
 		Assert.assertEquals(ne.getElementId(), sg.getNetworkElementId());
+		assertNetworkElementsParentIdWithDomainId(neList, domainId);
 	}
 
 	@Test
-	public void testExecute_CreatePortGroupWithMultipleSGMSucceeds_ExecutionFinishes() throws Exception {
+	public void testExecute_SGWithMultipleSGM_ExecutionFinishes() throws Exception {
 
 		// Arrange.
 		SecurityGroup sg = createSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L));
 		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 2L));
 
-		ostGetPorts(sg);
+		List<NetworkElement> neList = ostRegisterPorts(sg);
 
-		registerDomain(UUID.randomUUID().toString(), sg);
+		String domainId = UUID.randomUUID().toString();
+		registerDomain(domainId, sg);
 
-		NetworkElement ne = createNetworkElement(sg);
+		NetworkElement ne = createNetworkElement();
 
 		SdnRedirectionApi redirectionApi = mockRegisterNetworkElement(ne);
 		registerNetworkRedirectionApi(redirectionApi, sg.getVirtualizationConnector());
@@ -151,14 +153,20 @@ public class CreatePortGroupTaskTest {
 		// Assert.
 		verify(this.em, Mockito.times(1)).merge(sg);
 		Assert.assertEquals(ne.getElementId(), sg.getNetworkElementId());
+		assertNetworkElementsParentIdWithDomainId(neList, domainId);
 	}
 
 	@Test
-	public void testExecute_CreatePortGroupWithOneSGMAndNoPortFails_ThrowsTheUnhandledException() throws Exception {
+	public void testExecute_WhenDomainIsNotFound_ThrowsException() throws Exception {
 
 		// Arrange.
 		SecurityGroup sg = createSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
-		sg.addSecurityGroupMember(newSGMVmWithoutPort(1L));
+		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L));
+
+		ostRegisterPorts(sg);
+
+		// domain id null
+		registerDomain(null, sg);
 
 		this.exception.expect(Exception.class);
 		this.exception
@@ -175,36 +183,13 @@ public class CreatePortGroupTaskTest {
 	}
 
 	@Test
-	public void testExecute_WhenDomainIdNull_ThrowsTheUnhandledException() throws Exception {
+	public void testExecute_WhenPortGpIsNotFound_ThrowsException() throws Exception {
 
 		// Arrange.
 		SecurityGroup sg = createSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L));
 
-		ostGetPorts(sg);
-
-		// domain id null
-		registerDomain(null, sg);
-
-		this.exception.expect(Exception.class);
-
-		CreatePortGroupTask task = new CreatePortGroupTask(sg);
-
-		// Act.
-		task.execute();
-
-		// Assert.
-		verify(this.em, Mockito.never()).merge(any());
-	}
-
-	@Test
-	public void testExecute_WhenPortGpNull_ThrowsTheUnhandledException() throws Exception {
-
-		// Arrange.
-		SecurityGroup sg = createSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
-		sg.addSecurityGroupMember(newSGMWithPort(VM.class, 1L));
-
-		ostGetPorts(sg);
+		ostRegisterPorts(sg);
 
 		registerDomain(UUID.randomUUID().toString(), sg);
 
@@ -214,6 +199,7 @@ public class CreatePortGroupTaskTest {
 		registerNetworkRedirectionApi(redirectionApi, sg.getVirtualizationConnector());
 
 		this.exception.expect(Exception.class);
+		this.exception.expectMessage(String.format("RegisterNetworkElement failed to return PortGroup"));
 
 		CreatePortGroupTask task = new CreatePortGroupTask(sg);
 
@@ -245,13 +231,6 @@ public class CreatePortGroupTaskTest {
 		return newSGM(protectionEntity, sgmId);
 	}
 
-	private SecurityGroupMember newSGMVmWithoutPort(Long sgmId) {
-		OsProtectionEntity protectionEntity;
-		protectionEntity = new VM("region", UUID.randomUUID().toString(), "name");
-
-		return newSGM(protectionEntity, sgmId);
-	}
-
 	private SecurityGroupMember newSGM(OsProtectionEntity protectionEntity, Long sgmId) {
 		// TODO emanoel: Remove this mock once the SGM is no longer kept in a
 		// TreeSet in the SGM.
@@ -278,9 +257,12 @@ public class CreatePortGroupTaskTest {
 		return sg;
 	}
 
-	private void ostGetPorts(SecurityGroup sg) throws Exception {
-		PowerMockito.doReturn(this.vmProtectedPorts.stream().map(NetworkElementImpl::new).collect(Collectors.toList()))
-				.when(OpenstackUtil.class, "getPorts", sg.getSecurityGroupMembers().iterator().next());
+	private List<NetworkElement> ostRegisterPorts(SecurityGroup sg) throws Exception {
+		List<NetworkElement> neList = this.vmProtectedPorts.stream().map(NetworkElementImpl::new)
+				.collect(Collectors.toList());
+		PowerMockito.doReturn(neList).when(OpenstackUtil.class, "getPorts",
+				sg.getSecurityGroupMembers().iterator().next());
+		return neList;
 	}
 
 	private void registerNetworkRedirectionApi(SdnRedirectionApi redirectionApi, VirtualizationConnector vc)
@@ -301,7 +283,7 @@ public class CreatePortGroupTaskTest {
 				eq(sg.getTenantName()), eq(sg.getVirtualizationConnector()), domainIdNetworkElementCaptor.capture());
 	}
 
-	private NetworkElement createNetworkElement(SecurityGroup sg) throws Exception {
+	private NetworkElement createNetworkElement() throws Exception {
 		VMPort port = null;
 		OsProtectionEntity protectionEntity;
 		protectionEntity = new VM("region", UUID.randomUUID().toString(), "name");
@@ -309,6 +291,12 @@ public class CreatePortGroupTaskTest {
 		NetworkElementImpl ne = new NetworkElementImpl(port);
 
 		return ne;
+	}
+
+	private void assertNetworkElementsParentIdWithDomainId(List<NetworkElement> neList, String domainId) {
+		for (NetworkElement ne : neList) {
+			Assert.assertEquals(ne.getParentId(), domainId);
+		}
 	}
 
 }
