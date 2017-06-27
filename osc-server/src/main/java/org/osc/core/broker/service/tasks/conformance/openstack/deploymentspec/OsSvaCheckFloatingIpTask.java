@@ -59,37 +59,39 @@ public class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         Endpoint endPoint = new Endpoint(ds);
-        Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint);
         String infoTaskName = String.format("Adding floating IP to SVA for Distributed Appliance Instance '%s'",
                 this.dai.getName());
 
-        // Check if floating ip is assigned to SVA
-        NetFloatingIP floatingIp = neutron.getFloatingIp(ds.getRegion(), this.dai.getFloatingIpId());
-        if (floatingIp != null) {
-            // Floating ip is assigned to instance
-            if (StringUtils.isNotBlank(floatingIp.getFixedIpAddress())) {
-                //Floating ip instance is different than dai management port
-                if (!floatingIp.getPortId().equals(this.dai.getMgmtOsPortId())) {
-                    this.log.info("Original Floating ip: " + floatingIp.getFloatingIpAddress() + " has been reassigned to another server for" + " DAI: " + this.dai.getName());
-                    throw new IllegalStateException("No Floating Ip assigned to instance. Please assign the original Floating ip: " + floatingIp.getFloatingIpAddress() + " to this instance to fix the issue.");
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
+            // Check if floating ip is assigned to SVA
+            NetFloatingIP floatingIp = neutron.getFloatingIp(ds.getRegion(), this.dai.getFloatingIpId());
+            if (floatingIp != null) {
+                // Floating ip is assigned to instance
+                if (StringUtils.isNotBlank(floatingIp.getFixedIpAddress())) {
+                    //Floating ip instance is different than dai management port
+                    if (!floatingIp.getPortId().equals(this.dai.getMgmtOsPortId())) {
+                        this.log.info("Original Floating ip: " + floatingIp.getFloatingIpAddress() + " has been reassigned to another server for" + " DAI: " + this.dai.getName());
+                        throw new IllegalStateException("No Floating Ip assigned to instance. Please assign the original Floating ip: " + floatingIp.getFloatingIpAddress() + " to this instance to fix the issue.");
+                    }
+                } else {
+                    // Floating Ip was associated with this DAI before, assign the ip back to it if its free
+                    neutron.associateMgmtPortWithFloatingIp(ds.getRegion(), floatingIp.getId(), this.dai.getMgmtOsPortId());
                 }
+                this.tg.addTask(new InfoTask(infoTaskName, LockObjectReference.getObjectReferences(this.dai)));
             } else {
-                // Floating Ip was associated with this DAI before, assign the ip back to it if its free
-                neutron.associateMgmtPortWithFloatingIp(ds.getRegion(), floatingIp.getId(), this.dai.getMgmtOsPortId());
-            }
-            this.tg.addTask(new InfoTask(infoTaskName, LockObjectReference.getObjectReferences(this.dai)));
-        } else {
-            Network floatingPoolNetwork = neutron.getNetworkByName(ds.getRegion(), ds.getFloatingIpPoolName());
-            // Floating ip is invalid or has never been assigned to this sva for some reason, try adding it now.
-            NetFloatingIP allocatedFloatingIp = neutron.createFloatingIp(ds.getRegion(),
-                    floatingPoolNetwork.getId(), this.dai.getOsServerId(), this.dai.getMgmtOsPortId());
-            this.dai.setIpAddress(allocatedFloatingIp.getFloatingIpAddress());
-            this.dai.setFloatingIpId(allocatedFloatingIp.getId());
-            this.log.info("Dai: " + this.dai + " Ip Address set to: " + allocatedFloatingIp);
-            this.tg.addTask(new InfoTask(infoTaskName, LockObjectReference.getObjectReferences(this.dai)));
+                Network floatingPoolNetwork = neutron.getNetworkByName(ds.getRegion(), ds.getFloatingIpPoolName());
+                // Floating ip is invalid or has never been assigned to this sva for some reason, try adding it now.
+                NetFloatingIP allocatedFloatingIp = neutron.createFloatingIp(ds.getRegion(),
+                        floatingPoolNetwork.getId(), this.dai.getOsServerId(), this.dai.getMgmtOsPortId());
+                this.dai.setIpAddress(allocatedFloatingIp.getFloatingIpAddress());
+                this.dai.setFloatingIpId(allocatedFloatingIp.getId());
+                this.log.info("Dai: " + this.dai + " Ip Address set to: " + allocatedFloatingIp);
+                this.tg.addTask(new InfoTask(infoTaskName, LockObjectReference.getObjectReferences(this.dai)));
 
-            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
+                OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
+            }
         }
+
     }
 
     @Override

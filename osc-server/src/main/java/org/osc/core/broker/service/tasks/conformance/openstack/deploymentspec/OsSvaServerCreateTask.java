@@ -16,12 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
+import com.google.common.collect.ImmutableMap;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -49,7 +44,10 @@ import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import com.google.common.collect.ImmutableMap;
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Creates SVA for given dai
@@ -115,7 +113,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
         VirtualizationConnector vc = vs.getVirtualizationConnector();
         Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
         SdnRedirectionApi controller = null;
-        Openstack4JNova nova = new Openstack4JNova(endPoint);
+
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
         if (vc.isControllerDefined()) {
             controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
@@ -141,10 +139,13 @@ public class OsSvaServerCreateTask extends TransactionalTask {
 
         String sgRefName = createServerWithNoOSTSecurityGroup ? null : sgReference.getSgRefName();
 
-        createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
-                imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
-                ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),
-                sgRefName);
+        try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
+            createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
+                    imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
+                    ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),
+                    sgRefName);
+        }
+
 
         this.dai.updateDaiOpenstackSvaInfo(createdServer.getServerId(),
                 createdServer.getIngressInspectionMacAddr(),
@@ -204,7 +205,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     }
 
     private ApplianceBootstrapInformationElement generateBootstrapInfo(final VirtualSystem vs,
-            final String applianceName) throws Exception {
+                                                                       final String applianceName) throws Exception {
 
         ManagerDeviceApi deviceApi = this.apiFactoryService.createManagerDeviceApi(vs);
         Map<String, String> bootstrapProperties = vs.getApplianceSoftwareVersion().getConfigProperties();

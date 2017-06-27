@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import javax.persistence.EntityManager;
-
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
@@ -28,6 +26,8 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import javax.persistence.EntityManager;
 
 @Component(service = SecurityGroupMemberNetworkCheckTask.class)
 public class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
@@ -48,6 +48,7 @@ public class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
     private SecurityGroupMember sgm;
     private Network network;
     private VmDiscoveryCache vdc;
+
     /**
      * Checks the security group member and updates the associated flows
      */
@@ -77,18 +78,19 @@ public class SecurityGroupMemberNetworkCheckTask extends TransactionalMetaTask {
         SecurityGroup sg = this.sgm.getSecurityGroup();
 
         Endpoint endPoint = new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName());
-        Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint);
-        org.openstack4j.model.network.Network neutronNetwork = neutron.getNetworkById(this.network.getRegion(),
-                this.network.getOpenstackId());
-        if (neutronNetwork == null || this.sgm.getMarkedForDeletion()) {
-            if (isControllerDefined) {
-                this.tg.addTask(this.securityGroupMemberAllHooksRemoveTask.create(this.sgm));
-            }
-            this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
-        } else {
-            this.tg.addTask(this.securityGroupMemberNetworkUpdateTask.create(this.sgm, neutronNetwork.getName()));
-            if (isControllerDefined) {
-                this.tg.appendTask(this.securityGroupMemberHookCheckTask.create(this.sgm, this.vdc));
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
+            org.openstack4j.model.network.Network neutronNetwork = neutron.getNetworkById(this.network.getRegion(),
+                    this.network.getOpenstackId());
+            if (neutronNetwork == null || this.sgm.getMarkedForDeletion()) {
+                if (isControllerDefined) {
+                    this.tg.addTask(this.securityGroupMemberAllHooksRemoveTask.create(this.sgm));
+                }
+                this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
+            } else {
+                this.tg.addTask(this.securityGroupMemberNetworkUpdateTask.create(this.sgm, neutronNetwork.getName()));
+                if (isControllerDefined) {
+                    this.tg.appendTask(this.securityGroupMemberHookCheckTask.create(this.sgm, this.vdc));
+                }
             }
         }
     }

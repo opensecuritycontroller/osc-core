@@ -33,6 +33,7 @@ import org.openstack4j.model.network.Port;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement.BootstrapFileElement;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +46,7 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
     private static final Logger log = Logger.getLogger(Openstack4JNova.class);
 
     private Set<String> regions;
+    private static final String OPENSTACK_NAME_PROPERTY = "name";
 
     public static final class CreatedServerDetails {
 
@@ -138,7 +140,6 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
 
             log.info("Server '" + svaName + "' Created with Id: " + server.getId());
 
-            getOs().removeRegion();
             return new CreatedServerDetails(server.getId(), ingressInspectionPort.getId(),
                     ingressInspectionPort.getMacAddress(), egressInspectionPort.getId(),
                     egressInspectionPort.getMacAddress());
@@ -161,39 +162,32 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
 
     public Server getServer(String region, String serverId) {
         getOs().useRegion(region);
-        Server server = getOs().compute().servers().get(serverId);
-        getOs().removeRegion();
-        return server;
+        return getOs().compute().servers().get(serverId);
     }
 
     public List<? extends Server> listServers(String region) {
         getOs().useRegion(region);
-        List<? extends Server> list = getOs().compute().servers().list();
-        getOs().removeRegion();
-        return list;
+        return getOs().compute().servers().list();
     }
 
     public boolean startServer(String region, String serverId) {
         getOs().useRegion(region);
         ActionResponse action = getOs().compute().servers().action(serverId, Action.START);
-        getOs().removeRegion();
         return action.isSuccess();
     }
 
     public Server getServerByName(String region, String name) {
         getOs().useRegion(region);
         Map<String, String> filter = Maps.newHashMap();
-        filter.put("name", "^" + name + "$");
+        filter.put(OPENSTACK_NAME_PROPERTY, "^" + name + "$");
 
         List<? extends Server> servers = getOs().compute().servers().list(filter);
-        getOs().removeRegion();
         return (servers.size() == 1) ? servers.get(0) : null;
     }
 
     public boolean terminateInstance(String region, String serverId) {
         getOs().useRegion(region);
         ActionResponse actionResponse = getOs().compute().servers().delete(serverId);
-        getOs().removeRegion();
         return actionResponse.isSuccess();
     }
 
@@ -203,15 +197,12 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         Flavor flavor = getOs().compute().flavors().create(
                 Builders.flavor().disk(diskInGb).ram(ramInMB).vcpus(cpus).name(flavorName).id(id).build()
         );
-        getOs().removeRegion();
         return flavor.getId();
     }
 
     public Flavor getFlavorById(String region, String id) {
         getOs().useRegion(region);
-        Flavor flavor = getOs().compute().flavors().get(id);
-        getOs().removeRegion();
-        return flavor;
+        return getOs().compute().flavors().get(id);
     }
 
     public void deleteFlavorById(String region, String id) {
@@ -220,45 +211,34 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         if (!actionResponse.isSuccess()) {
             log.warn("Image Id: " + id + " error: " + actionResponse.getFault());
         }
-        getOs().removeRegion();
     }
 
     // Host Aggregates
     public List<? extends HostAggregate> listHostAggregates(String region) {
         getOs().useRegion(region);
-        List<? extends HostAggregate> list = getOs().compute().hostAggregates().list();
-        getOs().removeRegion();
-        return list;
+        return getOs().compute().hostAggregates().list();
     }
 
     public HostAggregate getHostAggregateById(String region, String id) {
         getOs().useRegion(region);
-        HostAggregate hostAggregate = getOs().compute().hostAggregates().get(id);
-        getOs().removeRegion();
-        return hostAggregate;
+        return getOs().compute().hostAggregates().get(id);
     }
 
     // Interface Attachment
     public List<? extends InterfaceAttachment> getVmAttachedNetworks(String region, String serverId) {
         getOs().useRegion(region);
-        List<? extends InterfaceAttachment> list = getOs().compute().servers().interfaces().list(serverId);
-        getOs().removeRegion();
-        return list;
+        return getOs().compute().servers().interfaces().list(serverId);
     }
 
     // Availability Zone
     public List<? extends AvailabilityZone> listAvailabilityZones(String region) {
         getOs().useRegion(region);
-        List<? extends AvailabilityZone> list = getOs().compute().zones().list();
-        getOs().removeRegion();
-        return list;
+        return getOs().compute().zones().list();
     }
 
     public List<? extends AvailabilityZone> getAvailabilityZonesDetail(String region) throws Exception {
         getOs().useRegion(region);
-        List<? extends AvailabilityZone> list = getOs().compute().zones().list(true);
-        getOs().removeRegion();
-        return list;
+        return getOs().compute().zones().list(true);
     }
 
     public static HostAvailabilityZoneMapping getMapping(List<? extends AvailabilityZone> availabilityZones)
@@ -269,9 +249,13 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
     public Set<String> getComputeHosts(String region) throws Exception {
         getOs().useRegion(region);
         List<? extends Hypervisor> list = getOs().compute().hypervisors().list();
-        Set<String> strings = list.stream().map(Hypervisor::getHypervisorHostname).collect(Collectors.toSet());
-        getOs().removeRegion();
-        return strings;
+        return list.stream().map(Hypervisor::getHypervisorHostname).collect(Collectors.toSet());
     }
 
+    @Override
+    public void close() throws IOException {
+        if (getOs() != null) {
+            getOs().removeRegion();
+        }
+    }
 }

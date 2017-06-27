@@ -16,12 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
 import org.openstack4j.model.compute.ext.AvailabilityZone;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -36,6 +30,11 @@ import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 
+import javax.persistence.EntityManager;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 public class ListAvailabilityZonesService
         extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<AvailabilityZoneDto>>
@@ -48,13 +47,14 @@ public class ListAvailabilityZonesService
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
-        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()));
-        for (String region : novaApi.listRegions()) {
-            for (AvailabilityZone az : novaApi.listAvailabilityZones(region)) {
-                AvailabilityZoneDto azDto = new AvailabilityZoneDto();
-                azDto.setRegion(region);
-                azDto.setZone(az.getZoneName());
-                azList.add(azDto);
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()))) {
+            for (String region : novaApi.listRegions()) {
+                for (AvailabilityZone az : novaApi.listAvailabilityZones(region)) {
+                    AvailabilityZoneDto azDto = new AvailabilityZoneDto();
+                    azDto.setRegion(region);
+                    azDto.setZone(az.getZoneName());
+                    azList.add(azDto);
+                }
             }
         }
         return new ListResponse<>(azList);

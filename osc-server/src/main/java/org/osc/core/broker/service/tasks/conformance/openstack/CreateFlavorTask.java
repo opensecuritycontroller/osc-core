@@ -16,10 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -30,6 +26,9 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
+
+import javax.persistence.EntityManager;
+import java.util.Set;
 
 @Component(service = CreateFlavorTask.class)
 public class CreateFlavorTask extends TransactionalTask {
@@ -63,15 +62,16 @@ public class CreateFlavorTask extends TransactionalTask {
         this.vs = vsEntityMgr.findByPrimaryKey(this.vs.getId());
         this.applianceSoftwareVersion = asvEntiyMgr.findByPrimaryKey(this.applianceSoftwareVersion.getId());
 
-        Openstack4JNova nova = new Openstack4JNova(this.osEndPoint);
         this.log.info("Creating flavor " + this.flavorName + " in region + " + this.region);
-        String newFlavorId = this.vs.getName() +  "_" + this.region;
+        String newFlavorId = this.vs.getName() + "_" + this.region;
 
-        String flavorId = nova.createFlavor(this.region, newFlavorId, this.flavorName,
-                this.applianceSoftwareVersion.getDiskSizeInGb(), this.applianceSoftwareVersion.getMemoryInMb(),
-                this.applianceSoftwareVersion.getMinCpus());
+        try (Openstack4JNova nova = new Openstack4JNova(this.osEndPoint)) {
+            String flavorId = nova.createFlavor(this.region, newFlavorId, this.flavorName,
+                    this.applianceSoftwareVersion.getDiskSizeInGb(), this.applianceSoftwareVersion.getMemoryInMb(),
+                    this.applianceSoftwareVersion.getMinCpus());
+            this.vs.addOsFlavorReference(new OsFlavorReference(this.vs, this.region, flavorId));
+        }
 
-        this.vs.addOsFlavorReference(new OsFlavorReference(this.vs, this.region, flavorId));
 
         OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
@@ -79,7 +79,7 @@ public class CreateFlavorTask extends TransactionalTask {
     @Override
     public String getName() {
         return String.format("Creating flavor '%s' in region '%s'", this.flavorName, this.region);
-    };
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {

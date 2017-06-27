@@ -61,60 +61,60 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         Endpoint endPoint = new Endpoint(ds);
-        Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint);
-        Network mgmtNetwork = neutron.getNetworkById(ds.getRegion(), ds.getManagementNetworkId());
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
+            Network mgmtNetwork = neutron.getNetworkById(ds.getRegion(), ds.getManagementNetworkId());
 
-        if (mgmtNetwork.getSubnets() == null || mgmtNetwork.getSubnets().isEmpty()) {
-            throw new IllegalStateException(String.format(
-                    "The network %s does not contain a subnet.",
-                    ds.getManagementNetworkId()));
+            if (mgmtNetwork.getSubnets() == null || mgmtNetwork.getSubnets().isEmpty()) {
+                throw new IllegalStateException(String.format(
+                        "The network %s does not contain a subnet.",
+                        ds.getManagementNetworkId()));
+            }
+
+            if (mgmtNetwork.getSubnets().size() > 1) {
+                throw new IllegalStateException(String.format(
+                        "The management network %s should have only one subnet, but it has %s.",
+                        ds.getManagementNetworkId(),
+                        mgmtNetwork.getSubnets().size()));
+            }
+
+            // Assumed the network contains only a single subnet.
+            String mgmtSubnetId = (String) mgmtNetwork.getSubnets().toArray()[0];
+            Subnet mgmtSubnet = neutron.getSubnetById(ds.getRegion(), mgmtSubnetId);
+
+            if (mgmtSubnet == null) {
+                throw new IllegalStateException(String.format(
+                        "A subnet was not found with the identifier %s.",
+                        mgmtSubnetId));
+            }
+
+
+            // Use the appliance IP address as management IP,
+            // if none is set then use the first IP address assigned to the to the appliance inspection port.
+            String mgmtIpAddress = this.dai.getIpAddress();
+
+            if (StringUtils.isBlank(mgmtIpAddress)) {
+                mgmtIpAddress = getMgmtIpAddress(ds, mgmtNetwork, mgmtSubnet, this.dai, neutron);
+                this.dai.setIpAddress(mgmtIpAddress);
+                LOG.info("Retrieved mgmt IP address" + mgmtIpAddress);
+            } else if (this.dai.getMgmtOsPortId() == null) {
+                Port mgmtPort = getMgmtPort(ds, mgmtNetwork, mgmtSubnet, this.dai, neutron);
+                this.dai.setMgmtOsPortId(mgmtPort.getId());
+            }
+            String mgmtSubnetPrefixLength = mgmtSubnet.getCidr().split("/")[1];
+
+            this.dai.setMgmtGateway(mgmtSubnet.getGateway());
+            this.dai.setMgmtSubnetPrefixLength(mgmtSubnetPrefixLength);
+            this.dai.setMgmtIpAddress(mgmtIpAddress);
+
+            LOG.info(String.format(
+                    "Updating the DAI %s, with mgmtIpAddress %s, mgmtSubnetPrefixLength %s, mgmtGateway %s.",
+                    this.dai.getId(),
+                    mgmtIpAddress,
+                    mgmtSubnetPrefixLength,
+                    mgmtSubnet.getGateway()));
+
+            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
         }
-
-        if (mgmtNetwork.getSubnets().size() > 1) {
-            throw new IllegalStateException(String.format(
-                    "The management network %s should have only one subnet, but it has %s.",
-                    ds.getManagementNetworkId(),
-                    mgmtNetwork.getSubnets().size()));
-        }
-
-        // Assumed the network contains only a single subnet.
-        String mgmtSubnetId = (String) mgmtNetwork.getSubnets().toArray()[0];
-        Subnet mgmtSubnet = neutron.getSubnetById(ds.getRegion(), mgmtSubnetId);
-
-        if (mgmtSubnet == null) {
-            throw new IllegalStateException(String.format(
-                    "A subnet was not found with the identifier %s.",
-                    mgmtSubnetId));
-        }
-
-
-        // Use the appliance IP address as management IP,
-        // if none is set then use the first IP address assigned to the to the appliance inspection port.
-        String mgmtIpAddress = this.dai.getIpAddress();
-
-        if (StringUtils.isBlank(mgmtIpAddress)) {
-            mgmtIpAddress = getMgmtIpAddress(ds, mgmtNetwork, mgmtSubnet, this.dai, neutron);
-            this.dai.setIpAddress(mgmtIpAddress);
-            LOG.info("Retrieved mgmt IP address" + mgmtIpAddress);
-        } else if (this.dai.getMgmtOsPortId() == null) {
-            Port mgmtPort = getMgmtPort(ds, mgmtNetwork, mgmtSubnet, this.dai, neutron);
-            this.dai.setMgmtOsPortId(mgmtPort.getId());
-        }
-
-        String mgmtSubnetPrefixLength = mgmtSubnet.getCidr().split("/")[1];
-
-        this.dai.setMgmtGateway(mgmtSubnet.getGateway());
-        this.dai.setMgmtSubnetPrefixLength(mgmtSubnetPrefixLength);
-        this.dai.setMgmtIpAddress(mgmtIpAddress);
-
-        LOG.info(String.format(
-                "Updating the DAI %s, with mgmtIpAddress %s, mgmtSubnetPrefixLength %s, mgmtGateway %s.",
-                this.dai.getId(),
-                mgmtIpAddress,
-                mgmtSubnetPrefixLength,
-                mgmtSubnet.getGateway()));
-
-        OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
     }
 
     private Port getMgmtPort(DeploymentSpec ds, Network mgmgNetwork, Subnet mgmtSubnet, DistributedApplianceInstance dai, Openstack4JNeutron neutron) {

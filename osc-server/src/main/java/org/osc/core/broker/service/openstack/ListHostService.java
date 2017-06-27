@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
-
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
@@ -33,6 +28,10 @@ import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 
+import javax.persistence.EntityManager;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 public class ListHostService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<HostDto>>
         implements ListHostServiceApi {
@@ -42,13 +41,14 @@ public class ListHostService extends ServiceDispatcher<BaseOpenStackRequest, Lis
 
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
-
-        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()));
-        List<HostDto> hostList = novaApi.getComputeHosts(request.getRegion())
-                .stream()
-                .map(HostDto::new)
-                .collect(Collectors.toList());
-
-        return new ListResponse<>(hostList);
+        ListResponse<HostDto> hostDtoListResponse = new ListResponse<>();
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()))) {
+            List<HostDto> hostList = novaApi.getComputeHosts(request.getRegion())
+                    .stream()
+                    .map(HostDto::new)
+                    .collect(Collectors.toList());
+            hostDtoListResponse.setList(hostList);
+        }
+        return hostDtoListResponse;
     }
 }

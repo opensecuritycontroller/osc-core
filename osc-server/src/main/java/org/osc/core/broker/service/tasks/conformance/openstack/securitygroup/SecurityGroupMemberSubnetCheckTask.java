@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import javax.persistence.EntityManager;
-
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
@@ -28,6 +26,8 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import javax.persistence.EntityManager;
 
 @Component(service = SecurityGroupMemberSubnetCheckTask.class)
 public class SecurityGroupMemberSubnetCheckTask extends TransactionalMetaTask {
@@ -74,18 +74,21 @@ public class SecurityGroupMemberSubnetCheckTask extends TransactionalMetaTask {
 
         SecurityGroup sg = this.sgm.getSecurityGroup();
 
-        Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
-        org.openstack4j.model.network.Subnet subnet = neutron.getSubnetById(this.subnet.getRegion(), this.subnet.getOpenstackId());
+        Endpoint endPoint = new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName());
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
+            org.openstack4j.model.network.Subnet subnet = neutron.getSubnetById(this.subnet.getRegion(),
+                    this.subnet.getOpenstackId());
 
-        if (subnet == null || this.sgm.getMarkedForDeletion()) {
-            if (isControllerDefined) {
-                this.tg.addTask(this.securityGroupMemberAllHooksRemoveTask.create(this.sgm));
-            }
-            this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
-        } else {
-            this.tg.addTask(this.securityGroupMemberSubnetUpdateTask.create(this.sgm, this.subnet.getName()));
-            if (isControllerDefined) {
-                this.tg.appendTask(this.securityGroupMemberHookCheckTask.create(this.sgm, this.vdc));
+            if (subnet == null || this.sgm.getMarkedForDeletion()) {
+                if (isControllerDefined) {
+                    this.tg.addTask(this.securityGroupMemberAllHooksRemoveTask.create(this.sgm));
+                }
+                this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
+            } else {
+                this.tg.addTask(this.securityGroupMemberSubnetUpdateTask.create(this.sgm, this.subnet.getName()));
+                if (isControllerDefined) {
+                    this.tg.appendTask(this.securityGroupMemberHookCheckTask.create(this.sgm, this.vdc));
+                }
             }
         }
     }

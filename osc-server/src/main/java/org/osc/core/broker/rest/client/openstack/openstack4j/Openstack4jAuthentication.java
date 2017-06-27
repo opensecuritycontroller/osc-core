@@ -18,6 +18,8 @@ package org.osc.core.broker.rest.client.openstack.openstack4j;
 
 import org.openstack4j.model.identity.v3.Token;
 
+import java.io.IOException;
+
 public class Openstack4jAuthentication extends BaseOpenstack4jApi {
 
     public Openstack4jAuthentication(Endpoint endPoint) {
@@ -26,5 +28,10 @@ public class Openstack4jAuthentication extends BaseOpenstack4jApi {
 
     public Token getTenantToken() {
         return this.getOs().getToken();
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }

@@ -16,10 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -33,6 +29,9 @@ import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntit
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import javax.persistence.EntityManager;
+import java.util.Set;
 
 @Component(service = DeleteSvaServerTask.class)
 public class DeleteSvaServerTask extends TransactionalTask {
@@ -49,10 +48,8 @@ public class DeleteSvaServerTask extends TransactionalTask {
     /**
      * Deletes the SVA associated with the DAI from openstack
      *
-     * @param region
-     *            the region the sva belongs to
-     * @param dai
-     *            distributed appliance instance
+     * @param region the region the sva belongs to
+     * @param dai    distributed appliance instance
      */
     public DeleteSvaServerTask create(String region, DistributedApplianceInstance dai) {
         DeleteSvaServerTask task = new DeleteSvaServerTask();
@@ -70,58 +67,59 @@ public class DeleteSvaServerTask extends TransactionalTask {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
 
         Endpoint osEndPoint = new Endpoint(this.dai.getDeploymentSpec());
-        Openstack4JNova nova = new Openstack4JNova(osEndPoint);
-        Openstack4JNeutron neutron = new Openstack4JNeutron(osEndPoint);
+        try (Openstack4JNova nova = new Openstack4JNova(osEndPoint);
+             Openstack4JNeutron neutron = new Openstack4JNeutron(osEndPoint)) {
+            Server sva = null;
+            String serverId = this.dai.getOsServerId();
 
-        Server sva = null;
-        String serverId = this.dai.getOsServerId();
-
-        if (serverId != null) {
-            sva = nova.getServer(this.region, this.dai.getOsServerId());
-        }
-
-        if (sva == null) {
-            sva = nova.getServerByName(this.region, this.dai.getName());
-        }
-
-        if (sva != null) {
-            serverId = sva.getId();
-        }
-
-        this.activeRunner.getOsDeploymentSpecNotificationRunner()
-            .removeIdFromListener(this.dai.getDeploymentSpec().getId(), serverId);
-
-        this.log.info("Deleting Server " + serverId + " from region " + this.region);
-        boolean serverDeleted = serverId == null ? true : nova.terminateInstance(this.region, serverId);
-        boolean ingressPortDeleted = true;
-        boolean egressPortDeleted = true;
-
-        String ingressPortId = this.dai.getInspectionOsIngressPortId();
-        String egressPortId = this.dai.getInspectionOsEgressPortId();
-
-        if (ingressPortId != null) {
-            this.log.info("Deleting Ingress port " + ingressPortId + " from region " + this.region);
-            ingressPortDeleted = neutron.deletePortById(this.region, ingressPortId);
-        }
-        if (!this.dai.isSingleNicInspection() && egressPortId != null) {
-            this.log.info("Deleting Egress port " + egressPortId + " from region " + this.region);
-            egressPortDeleted = neutron.deletePortById(this.region, egressPortId);
-        }
-
-        if (!serverDeleted) {
-            // Check if server still exists, if it does, fail!
-            if (nova.getServer(this.region, serverId) != null) {
-                throw new VmidcException("Server: " + serverId + " deletion failed!");
+            if (serverId != null) {
+                sva = nova.getServer(this.region, this.dai.getOsServerId());
             }
-            this.log.warn("Server: " + serverId + " deletion failed from region: " + this.region
-                    + ". Assume already deleted.");
+
+            if (sva == null) {
+                sva = nova.getServerByName(this.region, this.dai.getName());
+            }
+
+            if (sva != null) {
+                serverId = sva.getId();
+            }
+
+            this.activeRunner.getOsDeploymentSpecNotificationRunner()
+                    .removeIdFromListener(this.dai.getDeploymentSpec().getId(), serverId);
+
+            this.log.info("Deleting Server " + serverId + " from region " + this.region);
+            boolean serverDeleted = serverId == null || nova.terminateInstance(this.region, serverId);
+            boolean ingressPortDeleted = true;
+            boolean egressPortDeleted = true;
+
+            String ingressPortId = this.dai.getInspectionOsIngressPortId();
+            String egressPortId = this.dai.getInspectionOsEgressPortId();
+
+            if (ingressPortId != null) {
+                this.log.info("Deleting Ingress port " + ingressPortId + " from region " + this.region);
+                ingressPortDeleted = neutron.deletePortById(this.region, ingressPortId);
+            }
+            if (!this.dai.isSingleNicInspection() && egressPortId != null) {
+                this.log.info("Deleting Egress port " + egressPortId + " from region " + this.region);
+                egressPortDeleted = neutron.deletePortById(this.region, egressPortId);
+            }
+
+            if (!serverDeleted) {
+                // Check if server still exists, if it does, fail!
+                if (nova.getServer(this.region, serverId) != null) {
+                    throw new VmidcException("Server: " + serverId + " deletion failed!");
+                }
+                this.log.warn("Server: " + serverId + " deletion failed from region: " + this.region
+                        + ". Assume already deleted.");
+            }
+
+            if (!ingressPortDeleted || !egressPortDeleted) {
+                this.log.info("Deleting ports failed. Ingress port deleted: " + ingressPortDeleted + " Egress port deleted:"
+                        + egressPortDeleted);
+                throw new VmidcException("Server: " + serverId + " port deletion failed!");
+            }
         }
 
-        if(!ingressPortDeleted || !egressPortDeleted) {
-            this.log.info("Deleting ports failed. Ingress port deleted: " + ingressPortDeleted + " Egress port deleted:"
-                    + egressPortDeleted);
-            throw new VmidcException("Server: " + serverId + " port deletion failed!");
-        }
 
         this.dai.resetAllDiscoveredAttributes();
     }

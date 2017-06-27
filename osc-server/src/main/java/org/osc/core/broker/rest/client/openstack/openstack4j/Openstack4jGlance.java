@@ -70,7 +70,6 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
             log.info("Failed to upload image: " + actionResponse.getFault());
         }
 
-        getOs().removeRegion();
         return imageId;
     }
 
@@ -79,15 +78,12 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
      */
     public Image getImageById(String region, String id) throws Exception {
         getOs().useRegion(region);
-        Image image = getOs().imagesV2().get(id);
-        getOs().removeRegion();
-        return image;
+        return getOs().imagesV2().get(id);
     }
 
     public boolean deleteImageById(String region, String id) {
         getOs().useRegion(region);
         ActionResponse actionResponse = getOs().imagesV2().delete(id);
-        getOs().removeRegion();
         if (!actionResponse.isSuccess()) {
             log.warn("Image Id: " + id + " cannot be removed: " + actionResponse.getFault());
         }
@@ -103,6 +99,13 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
                 throw new VmidcBrokerValidationException("Unsupported Disk Image format: '" + fileExtension + "'.");
             }
             return diskFormat;
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (getOs() != null) {
+            getOs().removeRegion();
         }
     }
 }

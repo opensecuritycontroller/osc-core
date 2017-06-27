@@ -71,8 +71,10 @@ public class OpenstackUtil {
     private static final int MAX_DISCOVERY_RETRIES = 40;
 
     // TODO Sridhar: pass in just the IDs of the protectedports and remove break outerloop
+
     /**
      * Extract domainId for the given list of protected ports, which all belong to the same domain
+     *
      * @param tenantId
      * @param tenantName
      * @param vc
@@ -81,21 +83,23 @@ public class OpenstackUtil {
      * @throws IOException
      */
     public static String extractDomainId(String tenantId, String tenantName, VirtualizationConnector vc,
-            List<NetworkElement> protectedPorts) throws IOException, EncryptionException {
+                                         List<NetworkElement> protectedPorts) throws IOException, EncryptionException {
         String domainId = null;
         Port port;
-        Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc, tenantName));
-        Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, tenantName));
-        Set<String> regions = nova.listRegions();
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc, tenantName));
+             Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, tenantName))) {
 
-        outerloop:
-        for (String region : regions) {
-            for (NetworkElement elem : protectedPorts) {
-                port = neutron.getPortById(region, elem.getElementId());
-                if (port != null) {
-                    domainId = neutron.getNetworkPortRouterDeviceId(tenantId, region, port);
-                    if (domainId != null) {
-                        break outerloop;
+            Set<String> regions = nova.listRegions();
+
+            outerloop:
+            for (String region : regions) {
+                for (NetworkElement elem : protectedPorts) {
+                    port = neutron.getPortById(region, elem.getElementId());
+                    if (port != null) {
+                        domainId = neutron.getNetworkPortRouterDeviceId(tenantId, region, port);
+                        if (domainId != null) {
+                            break outerloop;
+                        }
                     }
                 }
             }
@@ -119,57 +123,57 @@ public class OpenstackUtil {
 
     /**
      * Waits until the VM state becomes active. If the VM enters a terminal state, throws a VmidcException
-     *
      */
     public static void ensureVmActive(VirtualizationConnector vc, String tenant, String region, String vmId)
             throws Exception {
 
-        Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, tenant));
-        Server server = null;
-        int i = MAX_DISCOVERY_RETRIES;
-        while (i > 0) {
-            server = nova.getServer(region, vmId);
-            if (server == null) {
-                throw new VmidcException("VM with id: '" + vmId + "' does not exist");
-            }
-            if (server.getStatus() == Server.Status.ACTIVE) {
-                break;
-            } else if (isVmStatusTerminal(server.getStatus())) {
-                throw new VmidcException("VM is in bad state (" + server.getStatus() + ")");
-            }
-
-            LOG.info("Retry VM discovery (" + i + "/" + MAX_DISCOVERY_RETRIES + ") of VM '" + vmId + "' Status: "
-                    + server.getStatus());
-            Thread.sleep(SLEEP_DISCOVERY_RETRIES);
-            i--;
-        }
-        if (server.getStatus() != Server.Status.ACTIVE) {
-            throw new VmidcException("VM with id: '" + vmId + "' is not in ready state (" + server.getStatus()
-            + ")");
-        }
-
-        i = MAX_DISCOVERY_RETRIES;
-        int activePorts = 0;
-        while (i > 0) {
-            List<? extends InterfaceAttachment> interfaces = nova.getVmAttachedNetworks(region, vmId);
-
-            activePorts = 0;
-            for (InterfaceAttachment infs : interfaces) {
-                if (infs.getPortState().equals(PortState.ACTIVE) && infs.getFixedIps() != null) {
-                    activePorts += infs.getFixedIps().size();
+        try (Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, tenant))) {
+            Server server = null;
+            int i = MAX_DISCOVERY_RETRIES;
+            while (i > 0) {
+                server = nova.getServer(region, vmId);
+                if (server == null) {
+                    throw new VmidcException("VM with id: '" + vmId + "' does not exist");
                 }
+                if (server.getStatus() == Server.Status.ACTIVE) {
+                    break;
+                } else if (isVmStatusTerminal(server.getStatus())) {
+                    throw new VmidcException("VM is in bad state (" + server.getStatus() + ")");
+                }
+
+                LOG.info("Retry VM discovery (" + i + "/" + MAX_DISCOVERY_RETRIES + ") of VM '" + vmId + "' Status: "
+                        + server.getStatus());
+                Thread.sleep(SLEEP_DISCOVERY_RETRIES);
+                i--;
             }
-            if (activePorts >= 2) {
-                LOG.info("VM network discovery (interfaces: " + interfaces + ")");
-                break;
+            if (server.getStatus() != Server.Status.ACTIVE) {
+                throw new VmidcException("VM with id: '" + vmId + "' is not in ready state (" + server.getStatus()
+                        + ")");
             }
-            LOG.info("Retry VM network discovery (" + i + "/" + MAX_DISCOVERY_RETRIES + ") of VM '"
-                    + server.getName() + "' (interfaces: " + interfaces + ")");
-            Thread.sleep(SLEEP_DISCOVERY_RETRIES);
-            i--;
-        }
-        if (activePorts < 2) {
-            throw new VmidcException("VM '" + server.getName() + "' network is not ready.");
+
+            i = MAX_DISCOVERY_RETRIES;
+            int activePorts = 0;
+            while (i > 0) {
+                List<? extends InterfaceAttachment> interfaces = nova.getVmAttachedNetworks(region, vmId);
+
+                activePorts = 0;
+                for (InterfaceAttachment infs : interfaces) {
+                    if (infs.getPortState().equals(PortState.ACTIVE) && infs.getFixedIps() != null) {
+                        activePorts += infs.getFixedIps().size();
+                    }
+                }
+                if (activePorts >= 2) {
+                    LOG.info("VM network discovery (interfaces: " + interfaces + ")");
+                    break;
+                }
+                LOG.info("Retry VM network discovery (" + i + "/" + MAX_DISCOVERY_RETRIES + ") of VM '"
+                        + server.getName() + "' (interfaces: " + interfaces + ")");
+                Thread.sleep(SLEEP_DISCOVERY_RETRIES);
+                i--;
+            }
+            if (activePorts < 2) {
+                throw new VmidcException("VM '" + server.getName() + "' network is not ready.");
+            }
         }
     }
 
@@ -183,15 +187,13 @@ public class OpenstackUtil {
      * We'll try to locate DAIs running on hosts deployed on the same availability zone as requested host.
      * If found, we try finding the least loaded (based on port assignment).
      *
-     *
-     * @param em  the database session
-     * @param region  the OpenStack region of the deployment
-     * @param tenantId  the OpenStack tenant of the deployment.
-     *            If empty string, the search will target shared deployment sepcs. This parameter cannot be null.
-     * @param host the host of the DAI
-     * @param vs  the virtual system of the deployment specs.
+     * @param em       the database session
+     * @param region   the OpenStack region of the deployment
+     * @param tenantId the OpenStack tenant of the deployment.
+     *                 If empty string, the search will target shared deployment sepcs. This parameter cannot be null.
+     * @param host     the host of the DAI
+     * @param vs       the virtual system of the deployment specs.
      * @return a deployed SVA/DAI
-     *
      * @throws VmidcBrokerValidationException if there are no valid DAI/SVA's available with the provided criteria.
      */
     public static DistributedApplianceInstance findDeployedDAI(
@@ -227,9 +229,9 @@ public class OpenstackUtil {
         if (!supportsOffboxRedirection) {
             return findLeastLoadedDAI(selectedDs.getDistributedApplianceInstances(), sg, host, domainId);
         } else {
-            try  {
+            try {
                 dai = findLeastLoadedDAI(selectedDs.getDistributedApplianceInstances(), sg, host, domainId);
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 if (host == null) {
                     // The host is not defined, availability zone is not applicable. Stop here.
                     throw ex;
@@ -252,17 +254,17 @@ public class OpenstackUtil {
 
         Set<VMPort> ports;
         switch (sgm.getType()) {
-        case VM:
-            ports = sgm.getVm().getPorts();
-            break;
-        case NETWORK:
-            ports = sgm.getNetwork().getPorts();
-            break;
-        case SUBNET:
-            ports = sgm.getSubnet().getPorts();
-            break;
-        default:
-            throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
+            case VM:
+                ports = sgm.getVm().getPorts();
+                break;
+            case NETWORK:
+                ports = sgm.getNetwork().getPorts();
+                break;
+            case SUBNET:
+                ports = sgm.getSubnet().getPorts();
+                break;
+            default:
+                throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
         }
 
         return ports.stream()
@@ -306,7 +308,7 @@ public class OpenstackUtil {
             Collection<DistributedApplianceInstance> dais,
             VirtualizationConnector vc,
             String tenantId,
-            String domainId) throws Exception  {
+            String domainId) throws Exception {
         if (domainId == null || domainId.isEmpty()) {
             // No domain identifier provided, nothing to filter.
             return dais;
@@ -350,21 +352,22 @@ public class OpenstackUtil {
 
     private static ArrayList<DistributedApplianceInstance> getDAIsByHostAZ(DeploymentSpec ds, VirtualSystem vs, String region, String host) throws Exception {
         ArrayList<DistributedApplianceInstance> dais = new ArrayList<>();
-        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vs.getVirtualizationConnector()));
-        // First figure out current host/AZ map.
-        List<? extends AvailabilityZone> osAvailabilityZones = novaApi.getAvailabilityZonesDetail(region);
-        HostAvailabilityZoneMapping hostAvailabilityZoneMap = Openstack4JNova.getMapping(osAvailabilityZones);
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vs.getVirtualizationConnector()))) {
+            // First figure out current host/AZ map.
+            List<? extends AvailabilityZone> osAvailabilityZones = novaApi.getAvailabilityZonesDetail(region);
+            HostAvailabilityZoneMapping hostAvailabilityZoneMap = Openstack4JNova.getMapping(osAvailabilityZones);
 
-        // Get AZ for host in question
-        if (host != null) {
-            String az = hostAvailabilityZoneMap.getHostAvailibilityZone(host);
+            // Get AZ for host in question
+            if (host != null) {
+                String az = hostAvailabilityZoneMap.getHostAvailibilityZone(host);
 
-            // Search for DAI in exclusive DSs of the same region and tenant
-            for (DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
-                // TODO: Future. Optimize by using DB query
-                String daiAz = hostAvailabilityZoneMap.getHostAvailibilityZone(dai.getHostName());
-                if (daiAz != null && daiAz.equals(az)) {
-                    dais.add(dai);
+                // Search for DAI in exclusive DSs of the same region and tenant
+                for (DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
+                    // TODO: Future. Optimize by using DB query
+                    String daiAz = hostAvailabilityZoneMap.getHostAvailibilityZone(dai.getHostName());
+                    if (daiAz != null && daiAz.equals(az)) {
+                        dais.add(dai);
+                    }
                 }
             }
         }
@@ -387,24 +390,23 @@ public class OpenstackUtil {
     }
 
     public static String getHostAvailibilityZone(DeploymentSpec ds, String region, String hostname) throws Exception {
-        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(ds));
-        List<? extends AvailabilityZone> osAvailabilityZones = novaApi.getAvailabilityZonesDetail(region);
-        HostAvailabilityZoneMapping hostAvailabilityZoneMap = Openstack4JNova.getMapping(osAvailabilityZones);
-        return hostAvailabilityZoneMap.getHostAvailibilityZone(hostname);
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(ds))) {
+            List<? extends AvailabilityZone> osAvailabilityZones = novaApi.getAvailabilityZonesDetail(region);
+            HostAvailabilityZoneMapping hostAvailabilityZoneMap = Openstack4JNova.getMapping(osAvailabilityZones);
+            return hostAvailabilityZoneMap.getHostAvailibilityZone(hostname);
+        }
     }
 
     /**
      * For any security groups protected by the DAI, schedules security group sync jobs to be run at the end of the job
      * containing the task.
      *
-     * @param dai
-     *            the dai which is protecting the security groups
-     * @param task
-     *            the current task. This is used to determine the current job so we can schedule the SG sync at the
-     *            end of the current job.
+     * @param dai  the dai which is protecting the security groups
+     * @param task the current task. This is used to determine the current job so we can schedule the SG sync at the
+     *             end of the current job.
      */
     public static void scheduleSecurityGroupJobsRelatedToDai(EntityManager em, DistributedApplianceInstance dai,
-            Task task, ConformService conformService) {
+                                                             Task task, ConformService conformService) {
         // Check if existing SG members
         Set<SecurityGroup> sgs = SecurityGroupEntityMgr.listByDai(em, dai);
 
@@ -451,40 +453,36 @@ public class OpenstackUtil {
     }
 
     /**
-     * @param em
-     *            Hibernate session object
-     * @param region
-     *            Region this entity belongs to
-     * @param sg
-     *            Security Group in context
-     * @param osPort
-     *            Open stack port
-     * @param vmPort
-     *            VM port
+     * @param em     Hibernate session object
+     * @param region Region this entity belongs to
+     * @param sg     Security Group in context
+     * @param osPort Open stack port
+     * @param vmPort VM port
      * @throws IOException
      */
     public static void discoverVmForPort(EntityManager em, String region, SecurityGroup sg, Port osPort, VMPort vmPort)
             throws IOException, EncryptionException {
 
-        Openstack4JNova nova = new Openstack4JNova(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
-        Server osVm = nova.getServer(region, osPort.getDeviceId());
-        if (null == osVm) {
-            OSCEntityManager.delete(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
-            //TODO sridhar handle stale VM delete ?
-            return;
+        try (Openstack4JNova nova = new Openstack4JNova(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()))) {
+            Server osVm = nova.getServer(region, osPort.getDeviceId());
+            if (null == osVm) {
+                OSCEntityManager.delete(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
+                //TODO sridhar handle stale VM delete ?
+                return;
 
-        }
-        VM vm = VMEntityManager.findByOpenstackId(em, osPort.getDeviceId());
-        if (vm == null) {
-            vm = new VM(region, osPort.getDeviceId(), osVm.getName());
-            OSCEntityManager.create(em, vm, StaticRegistry.transactionalBroadcastUtil());
-        }
-        vmPort.setVm(vm);
-        // Update vm host if needed
-        String hypervisorHostname = osVm.getHypervisorHostname();
-        if (hypervisorHostname != null && !hypervisorHostname.equals(vm.getHost())) {
-            vm.setHost(hypervisorHostname);
-            OSCEntityManager.update(em, vm, StaticRegistry.transactionalBroadcastUtil());
+            }
+            VM vm = VMEntityManager.findByOpenstackId(em, osPort.getDeviceId());
+            if (vm == null) {
+                vm = new VM(region, osPort.getDeviceId(), osVm.getName());
+                OSCEntityManager.create(em, vm, StaticRegistry.transactionalBroadcastUtil());
+            }
+            vmPort.setVm(vm);
+            // Update vm host if needed
+            String hypervisorHostname = osVm.getHypervisorHostname();
+            if (hypervisorHostname != null && !hypervisorHostname.equals(vm.getHost())) {
+                vm.setHost(hypervisorHostname);
+                OSCEntityManager.update(em, vm, StaticRegistry.transactionalBroadcastUtil());
+            }
         }
         OSCEntityManager.update(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
     }

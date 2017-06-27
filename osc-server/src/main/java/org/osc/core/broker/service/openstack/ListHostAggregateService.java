@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
-
 import org.openstack4j.model.compute.HostAggregate;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -34,6 +29,10 @@ import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 
+import javax.persistence.EntityManager;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 public class ListHostAggregateService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<HostAggregateDto>>
         implements ListHostAggregateServiceApi {
@@ -44,10 +43,13 @@ public class ListHostAggregateService extends ServiceDispatcher<BaseOpenStackReq
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
-        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()));
-        List<? extends HostAggregate> hostAggregatesList = novaApi.listHostAggregates(request.getRegion());
-        List<HostAggregateDto> hostAggrDtoList = hostAggregatesList.stream().map(this::toHostAggregateDto).collect(Collectors.toList());
-        return new ListResponse<>(hostAggrDtoList);
+        ListResponse<HostAggregateDto> hostAggregateDtoListResponse = new ListResponse<>();
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()))) {
+            List<? extends HostAggregate> hostAggregatesList = novaApi.listHostAggregates(request.getRegion());
+            List<HostAggregateDto> hostAggrDtoList = hostAggregatesList.stream().map(this::toHostAggregateDto).collect(Collectors.toList());
+            hostAggregateDtoListResponse.setList(hostAggrDtoList);
+        }
+        return hostAggregateDtoListResponse;
     }
 
     private HostAggregateDto toHostAggregateDto(HostAggregate ha) {
