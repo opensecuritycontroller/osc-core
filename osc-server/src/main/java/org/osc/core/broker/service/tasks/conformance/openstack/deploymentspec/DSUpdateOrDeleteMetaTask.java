@@ -16,17 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -55,6 +44,16 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+
+import javax.persistence.EntityManager;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component(service = DSUpdateOrDeleteMetaTask.class)
 public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
@@ -141,8 +140,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     public void executeTransaction(EntityManager em) throws Exception {
         delayedInit();
         this.tg = new TaskGraph();
-        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em,
-                this.txBroadcastUtil);
+        OSCEntityManager<DeploymentSpec> emgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
         this.ds = emgr.findByPrimaryKey(this.ds.getId());
         VirtualSystem virtualSystem = this.ds.getVirtualSystem();
         if (this.ds.getMarkedForDeletion() || virtualSystem.getMarkedForDeletion()
@@ -207,7 +205,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     }
 
     private Set<String> getHostsFromHostAggregateSelection(EntityManager em, Openstack4JNova novaApi,
-            Set<HostAggregate> dsHostAggr) throws IOException {
+                                                           Set<HostAggregate> dsHostAggr) throws IOException {
         Set<String> hostsToDeployTo = new HashSet<>();
         Iterator<HostAggregate> dsHostAggrIter = dsHostAggr.iterator();
         while (dsHostAggrIter.hasNext()) {
@@ -236,7 +234,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     }
 
     private void conformToHostsSelection(Collection<String> selectedHosts,
-            HostAvailabilityZoneMapping hostAvailabilityZoneMap, Collection<String> osHostSet) {
+                                         HostAvailabilityZoneMapping hostAvailabilityZoneMap, Collection<String> osHostSet) {
         List<String> hostsMissingSvas = new ArrayList<>();
 
         // TODO: Future. If instance count is decreased, remove least loaded dai's first
@@ -286,10 +284,9 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     /**
      * Checks if the hostname provided exists in the collection of hosts provided. Openstack returns FQDN of host name
      * for some API calls and just the hostname for other API calls. Direct match of the hostname is not possible.
-     *
+     * <p>
      * This function matches the hostname even if FQDN's are provided or if FQDN is provided and we need to match it
      * against hostname
-     *
      */
     private boolean searchHosts(Collection<String> collectionToSearch, String hostName, boolean remove) {
         Iterator<String> collectionToSearchIterator = collectionToSearch.iterator();
@@ -316,7 +313,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     }
 
     private void conformToAzSelection(EntityManager em, Set<AvailabilityZone> selectedAvailabilityZones,
-          List<? extends org.openstack4j.model.compute.ext.AvailabilityZone> allAvailabilityZones,
+                                      List<? extends org.openstack4j.model.compute.ext.AvailabilityZone> allAvailabilityZones,
                                       Collection<String> osHostSet) throws Exception {
         HostAvailabilityZoneMapping azHostMap = Openstack4JNova.getMapping(allAvailabilityZones);
         Set<String> dsAzDeletedFromOpenstack = new HashSet<>();

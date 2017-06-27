@@ -34,10 +34,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-@Component(service=CreateOsSecurityGroupTask.class)
+@Component(service = CreateOsSecurityGroupTask.class)
 public class CreateOsSecurityGroupTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(CreateOsSecurityGroupTask.class);
+    private final static String INGRESS = "INGRESS";
+    private final static String IPV4 = "IPv4";
+    private final static String IPV6 = "IPv6";
 
     private DeploymentSpec ds;
     private String sgName;
@@ -59,29 +62,28 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
 
         this.ds = em.find(DeploymentSpec.class, this.ds.getId());
 
-        Openstack4JNeutron neutron = new Openstack4JNeutron(this.osEndPoint);
         this.log.info("Creating Openstack Security Group " + this.sgName + " in tenant " + this.ds.getTenantName()
                 + " for region " + this.ds.getRegion());
-
-        SecurityGroup securityGroup = neutron.createSecurityGroup(this.sgName, this.ds.getRegion());
-        neutron.addSecurityGroupRules(securityGroup, this.ds.getRegion(), createSecurityGroupRules());
-        OsSecurityGroupReference sgRef = new OsSecurityGroupReference(securityGroup.getId(), this.sgName, this.ds);
-        this.ds.setOsSecurityGroupReference(sgRef);
-
-        OSCEntityManager.create(em, sgRef, this.txBroadcastUtil);
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(this.osEndPoint)) {
+            SecurityGroup securityGroup = neutron.createSecurityGroup(this.sgName, this.ds.getRegion());
+            neutron.addSecurityGroupRules(securityGroup, this.ds.getRegion(), createSecurityGroupRules());
+            OsSecurityGroupReference sgRef = new OsSecurityGroupReference(securityGroup.getId(), this.sgName, this.ds);
+            this.ds.setOsSecurityGroupReference(sgRef);
+            OSCEntityManager.create(em, sgRef, this.txBroadcastUtil);
+        }
     }
 
     private List<SecurityGroupRule> createSecurityGroupRules() {
         List<SecurityGroupRule> expectedList = new ArrayList<>();
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype("IPv4").direction("ingress").build());
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype("IPv6").direction("ingress").build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV4).direction(INGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV6).direction(INGRESS).build());
         return expectedList;
     }
 
     @Override
     public String getName() {
         return String.format("Creating Openstack Security Group '%s' in tenant '%s' for region '%s'", this.sgName, this.ds.getTenantName(), this.ds.getRegion());
-    };
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {

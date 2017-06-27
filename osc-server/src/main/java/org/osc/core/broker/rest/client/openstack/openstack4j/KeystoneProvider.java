@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
+import org.apache.log4j.Logger;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.api.client.IOSClientBuilder;
 import org.openstack4j.api.types.Facing;
@@ -29,6 +30,10 @@ import java.net.URISyntaxException;
 
 public class KeystoneProvider {
 
+    private static final Logger log = Logger.getLogger(KeystoneProvider.class);
+
+    private static final String KEYSTONE_VERSION = "v3";
+
     private static KeystoneProvider instance = null;
     private static OSClient.OSClientV3 os;
     private Endpoint endpoint;
@@ -41,16 +46,16 @@ public class KeystoneProvider {
     }
 
     public static KeystoneProvider getInstance(Endpoint endPoint) {
-        if(instance == null || !instance.endpoint.equals(endPoint)) {
+        if (instance == null || !instance.endpoint.equals(endPoint)) {
             instance = new KeystoneProvider(endPoint);
         }
         return instance;
     }
 
-    OSClient.OSClientV3 getAvailableSession(){
+    OSClient.OSClientV3 getAvailableSession() {
         OSClient.OSClientV3 localOs;
         Config config = Config.newConfig().withSSLContext(this.endpoint.getSslContext()).withHostnameVerifier((hostname, session) -> true);
-        if(os == null || instance.endpoint.getToken() == null){
+        if (os == null || instance.endpoint.getToken() == null) {
             String endpointURL;
             try {
                 endpointURL = prepareEndpointURL(this.endpoint);
@@ -59,7 +64,7 @@ public class KeystoneProvider {
             }
 
             // LOGGER
-            OSFactory.enableHttpLoggingFilter(true);
+            OSFactory.enableHttpLoggingFilter(log.isDebugEnabled() || log.isInfoEnabled());
 
             Identifier domainIdentifier = Identifier.byId(this.endpoint.getDomainId());
 
@@ -81,7 +86,7 @@ public class KeystoneProvider {
 
     private String prepareEndpointURL(Endpoint endPoint) throws URISyntaxException, MalformedURLException {
         String schema = endPoint.isHttps() ? "https" : "http";
-        URI uri = new URI(schema, null, endPoint.getEndPointIP(), 5000, "/v3", null, null);
+        URI uri = new URI(schema, null, endPoint.getEndPointIP(), 5000, "/" + KEYSTONE_VERSION, null, null);
         return uri.toURL().toString();
     }
 

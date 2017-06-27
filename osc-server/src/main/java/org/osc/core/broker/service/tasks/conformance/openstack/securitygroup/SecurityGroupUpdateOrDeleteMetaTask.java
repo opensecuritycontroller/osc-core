@@ -16,15 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.Task;
@@ -65,6 +56,14 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Validates the Security Group members and syncs them if needed
@@ -202,25 +201,26 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                         this.sg.getVirtualizationConnector().getId());
 
                 Endpoint endPoint = new Endpoint(this.sg.getVirtualizationConnector(), this.sg.getTenantName());
-                Openstack4JNova nova = new Openstack4JNova(endPoint);
-                Set<String> regions = nova.listRegions();
-                for (String region : regions) {
-                    List<? extends Server> servers = nova.listServers(region);
-                    for (Server server : servers) {
-                        if (!excludedMembers.contains(server.getId())) {
-                            try {
-                                this.addSecurityGroupService.addSecurityGroupMember(em, this.sg,
-                                        new SecurityGroupMemberItemDto(region, server.getName(), server.getId(),
-                                                SecurityGroupMemberType.VM.toString(), false));
-                                // Once the VM is part of the security group, dont try to add it again.
-                                excludedMembers.add(server.getId());
-                            } catch (SecurityGroupMemberPartOfAnotherSecurityGroupException e) {
-                                this.log.warn(String.format(
-                                        "Member '%s' belonging to Security Group '%s' with protect all results in a conflict",
-                                        e.getMemberName(), this.sg.getName()), e);
-                                this.tg.addTask(new FailedWithObjectInfoTask(
-                                        String.format("Validating Security Group Member '%s'", e.getMemberName()),
-                                        e, LockObjectReference.getObjectReferences(this.sg)));
+                try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
+                    Set<String> regions = nova.listRegions();
+                    for (String region : regions) {
+                        List<? extends Server> servers = nova.listServers(region);
+                        for (Server server : servers) {
+                            if (!excludedMembers.contains(server.getId())) {
+                                try {
+                                    this.addSecurityGroupService.addSecurityGroupMember(em, this.sg,
+                                            new SecurityGroupMemberItemDto(region, server.getName(), server.getId(),
+                                                    SecurityGroupMemberType.VM.toString(), false));
+                                    // Once the VM is part of the security group, dont try to add it again.
+                                    excludedMembers.add(server.getId());
+                                } catch (SecurityGroupMemberPartOfAnotherSecurityGroupException e) {
+                                    this.log.warn(String.format(
+                                            "Member '%s' belonging to Security Group '%s' with protect all results in a conflict",
+                                            e.getMemberName(), this.sg.getName()), e);
+                                    this.tg.addTask(new FailedWithObjectInfoTask(
+                                            String.format("Validating Security Group Member '%s'", e.getMemberName()),
+                                            e, LockObjectReference.getObjectReferences(this.sg)));
+                                }
                             }
                         }
                     }

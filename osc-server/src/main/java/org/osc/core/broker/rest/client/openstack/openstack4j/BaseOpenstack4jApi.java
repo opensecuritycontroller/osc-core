@@ -18,10 +18,12 @@ package org.osc.core.broker.rest.client.openstack.openstack4j;
 
 import org.openstack4j.api.OSClient;
 
+import java.io.Closeable;
+
 /**
  * Designed to be a base class for all openstack4j API wrappers in the code.
  */
-public abstract class BaseOpenstack4jApi {
+public abstract class BaseOpenstack4jApi implements Closeable {
 
     protected Endpoint endPoint;
     private KeystoneProvider keystoneProvider;

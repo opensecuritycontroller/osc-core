@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.openstack4j.model.network.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
@@ -28,6 +26,8 @@ import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
+
+import javax.persistence.EntityManager;
 
 @Component(service = DeleteOsSecurityGroupTask.class)
 public class DeleteOsSecurityGroupTask extends TransactionalTask {
@@ -66,20 +66,21 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
                     this.sgReference.getId());
 
             Endpoint endPoint = new Endpoint(this.ds);
-            Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint);
-            boolean success = false;
-            // check if the security group exist on Openstack
-            SecurityGroup osSg = neutron.getSecurityGroupById(this.ds.getRegion(), this.sgReference.getSgRefId());
-            if (osSg != null) {
-                while (!success) {
-                    try {
-                        success = neutron.deleteSecurityGroupById(this.ds.getRegion(), this.sgReference.getSgRefId());
-                    } catch (IllegalStateException ex) {
-                        this.log.info("Failed to remove openstack Security Group: " + ex.getMessage());
-                        Thread.sleep(SLEEP_RETRIES);
-                    } finally {
-                        if (--count <= 0) {
-                            throw new Exception("Unable to delete the Openstack Security Group id: " + this.sgReference.getSgRefId());
+            try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
+                boolean success = false;
+                // check if the security group exist on Openstack
+                SecurityGroup osSg = neutron.getSecurityGroupById(this.ds.getRegion(), this.sgReference.getSgRefId());
+                if (osSg != null) {
+                    while (!success) {
+                        try {
+                            success = neutron.deleteSecurityGroupById(this.ds.getRegion(), this.sgReference.getSgRefId());
+                        } catch (IllegalStateException ex) {
+                            this.log.info("Failed to remove openstack Security Group: " + ex.getMessage());
+                            Thread.sleep(SLEEP_RETRIES);
+                        } finally {
+                            if (--count <= 0) {
+                                throw new Exception("Unable to delete the Openstack Security Group id: " + this.sgReference.getSgRefId());
+                            }
                         }
                     }
                 }

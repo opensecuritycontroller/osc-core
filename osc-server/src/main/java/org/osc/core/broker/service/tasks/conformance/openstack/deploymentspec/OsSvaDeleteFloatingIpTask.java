@@ -57,8 +57,9 @@ public class OsSvaDeleteFloatingIpTask extends TransactionalTask {
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
 
         Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
-        Openstack4JNeutron nova = new Openstack4JNeutron(endPoint);
-        nova.deleteFloatingIp(ds.getRegion(), this.dai.getFloatingIpId());
+        try (Openstack4JNeutron nova = new Openstack4JNeutron(endPoint)) {
+            nova.deleteFloatingIp(ds.getRegion(), this.dai.getFloatingIpId());
+        }
 
         this.log.info("Dai: " + this.dai + " Ip Address set to: null");
         this.dai.setIpAddress(null);

@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import java.io.IOException;
-import java.util.Map;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -46,9 +41,14 @@ import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import javax.persistence.EntityManager;
+import java.io.IOException;
+import java.util.Map;
+
 @Component
 public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse>
-implements QueryVmInfoServiceApi {
+        implements QueryVmInfoServiceApi {
 
     private static final Logger log =
             Logger.getLogger(QueryVmInfoService.class);
@@ -71,80 +71,83 @@ implements QueryVmInfoServiceApi {
         if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
 
             if (request.ipAddress != null && !request.ipAddress.isEmpty()) {
-                Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc));
-                Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc));
+                try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc));
+                     Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc))) {
+                    for (String ipAddress : request.ipAddress) {
+                        VM vm = VMPortEntityManager.findByIpAddress(em, dai, ipAddress);
+                        VmInfo vmInfo;
+                        if (vm != null) {
+                            vmInfo = newVmInfo(vm);
+                            vmInfo.vmIpAddress = ipAddress;
+                        } else {
+                            vmInfo = findVmByIpAddress(nova, neutron, dai, ipAddress);
+                        }
 
-                for (String ipAddress : request.ipAddress) {
-                    VM vm = VMPortEntityManager.findByIpAddress(em, dai, ipAddress);
-                    VmInfo vmInfo;
-                    if (vm != null) {
-                        vmInfo = newVmInfo(vm);
-                        vmInfo.vmIpAddress = ipAddress;
-                    } else {
-                        vmInfo = findVmByIpAddress(nova, neutron, dai, ipAddress);
+                        response.vmInfo.put(ipAddress, vmInfo);
                     }
-
-                    response.vmInfo.put(ipAddress, vmInfo);
                 }
+
             }
             if (request.macAddress != null && !request.macAddress.isEmpty()) {
-                Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc));
-                Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc));
-
-                for (String macAddress : request.macAddress) {
-                    VM vm = VMPortEntityManager.findByMacAddress(em, macAddress);
-                    VmInfo vmInfo;
-                    if (vm != null) {
-                        vmInfo = newVmInfo(vm);
-                        vmInfo.vmMacAddress = macAddress;
-                    } else {
-                        vmInfo = findVmByMacAddress(nova, neutron, dai, macAddress);
+                try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc));
+                     Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc))) {
+                    for (String macAddress : request.macAddress) {
+                        VM vm = VMPortEntityManager.findByMacAddress(em, macAddress);
+                        VmInfo vmInfo;
+                        if (vm != null) {
+                            vmInfo = newVmInfo(vm);
+                            vmInfo.vmMacAddress = macAddress;
+                        } else {
+                            vmInfo = findVmByMacAddress(nova, neutron, dai, macAddress);
+                        }
+                        response.vmInfo.put(macAddress, vmInfo);
                     }
-                    response.vmInfo.put(macAddress, vmInfo);
                 }
+
             }
 
             if (request.flow != null && !request.flow.isEmpty()) {
-                Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc));
-                Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc));
+                try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc));
+                     Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc))) {
+                    if (this.apiFactoryService.providesTrafficPortInfo(ControllerType.fromText(vc.getControllerType()))) {
+                        // Search using SDN controller
+                        Map<String, FlowPortInfo> flowPortInfo = this.apiFactoryService.queryPortInfo(vc, null, request.flow);
 
-                if (this.apiFactoryService.providesTrafficPortInfo(ControllerType.fromText(vc.getControllerType()))) {
-                    // Search using SDN controller
-                    Map<String, FlowPortInfo> flowPortInfo = this.apiFactoryService.queryPortInfo(vc, null, request.flow);
+                        log.info("SDN Controller Response: " + flowPortInfo);
+                        for (String requestId : flowPortInfo.keySet()) {
+                            FlowPortInfo portInfo = flowPortInfo.get(requestId);
 
-                    log.info("SDN Controller Response: " + flowPortInfo);
-                    for (String requestId : flowPortInfo.keySet()) {
-                        FlowPortInfo portInfo = flowPortInfo.get(requestId);
+                            FlowVmInfo flowVmInfo = new FlowVmInfo();
+                            flowVmInfo.flow = portInfo.flow;
+                            flowVmInfo.requestId = requestId;
 
-                        FlowVmInfo flowVmInfo = new FlowVmInfo();
-                        flowVmInfo.flow = portInfo.flow;
-                        flowVmInfo.requestId = requestId;
-
-                        if (portInfo.sourcePortId != null) {
-                            flowVmInfo.sourceVmInfo = findVmByPortId(nova, neutron, dai, portInfo.sourcePortId);
+                            if (portInfo.sourcePortId != null) {
+                                flowVmInfo.sourceVmInfo = findVmByPortId(nova, neutron, dai, portInfo.sourcePortId);
+                            }
+                            if (portInfo.destinationPortId != null) {
+                                flowVmInfo.destinationVmInfo = findVmByPortId(nova, neutron, dai,
+                                        portInfo.destinationPortId);
+                            }
+                            response.flowVmInfo.put(requestId, flowVmInfo);
                         }
-                        if (portInfo.destinationPortId != null) {
-                            flowVmInfo.destinationVmInfo = findVmByPortId(nova, neutron, dai,
-                                    portInfo.destinationPortId);
+                    } else {
+                        // Search using DB or openstack
+                        for (String requestId : request.flow.keySet()) {
+                            FlowInfo flowInfo = request.flow.get(requestId);
+
+                            FlowVmInfo flowVmInfo = new FlowVmInfo();
+                            flowVmInfo.requestId = requestId;
+                            flowVmInfo.flow = flowInfo;
+                            flowVmInfo.sourceVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
+                                    flowInfo.sourceMacAddress, flowInfo.sourceIpAddress);
+                            flowVmInfo.destinationVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
+                                    flowInfo.destinationMacAddress, flowInfo.destinationIpAddress);
+
+                            response.flowVmInfo.put(requestId, flowVmInfo);
                         }
-                        response.flowVmInfo.put(requestId, flowVmInfo);
-                    }
-                } else {
-                    // Search using DB or openstack
-                    for (String requestId : request.flow.keySet()) {
-                        FlowInfo flowInfo = request.flow.get(requestId);
-
-                        FlowVmInfo flowVmInfo = new FlowVmInfo();
-                        flowVmInfo.requestId = requestId;
-                        flowVmInfo.flow = flowInfo;
-                        flowVmInfo.sourceVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
-                                flowInfo.sourceMacAddress, flowInfo.sourceIpAddress);
-                        flowVmInfo.destinationVmInfo = findVmByMacOrIp(em, nova, neutron, dai,
-                                flowInfo.destinationMacAddress, flowInfo.destinationIpAddress);
-
-                        response.flowVmInfo.put(requestId, flowVmInfo);
                     }
                 }
+
             }
         }
 
@@ -152,10 +155,10 @@ implements QueryVmInfoServiceApi {
     }
 
     private VmInfo findVmByPortId(Openstack4JNova nova, Openstack4JNeutron neutron, DistributedApplianceInstance dai,
-            String portId) throws IOException, VmidcBrokerValidationException {
+                                  String portId) throws IOException, VmidcBrokerValidationException {
         String region = dai.getDeploymentSpec().getRegion();
         String vmId = neutron.getVmIdByPortId(region, portId);
-        if(vmId == null) {
+        if (vmId == null) {
             throw new VmidcBrokerValidationException("Unable to find Server attached to the port " + portId);
         }
         Server vm = nova.getServer(region, vmId);
@@ -164,7 +167,7 @@ implements QueryVmInfoServiceApi {
 
     private VmInfo findVmByMacOrIp(EntityManager em, Openstack4JNova nova, Openstack4JNeutron neutron,
                                    DistributedApplianceInstance dai, String macAddress, String ipAddress) throws IOException {
-        VmInfo vmInfo = null;
+        VmInfo vmInfo;
         if (macAddress != null) {
             VM vm = VMPortEntityManager.findByMacAddress(em, macAddress);
             if (vm != null) {

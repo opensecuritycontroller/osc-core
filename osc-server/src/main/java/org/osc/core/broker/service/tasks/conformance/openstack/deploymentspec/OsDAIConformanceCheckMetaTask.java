@@ -16,13 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.persistence.EntityManager;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
@@ -51,6 +44,12 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Makes sure the DAI has a corresponding SVA on the specified end point. If the SVA does not exist
@@ -155,67 +154,70 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
         Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
-        Openstack4JNova nova = new Openstack4JNova(endPoint);
 
-        Server sva = null;
-        if (this.dai.getOsServerId() != null) {
-            sva = nova.getServer(ds.getRegion(), this.dai.getOsServerId());
-        }
+        try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
 
-        // Attempt to lookup SVA by name
-        if (sva == null) {
-            log.info("SVA missing for Dai: " + this.dai);
-            Server namedSva = nova.getServerByName(ds.getRegion(), this.dai.getName());
+            Server sva = null;
+            if (this.dai.getOsServerId() != null) {
+                sva = nova.getServer(ds.getRegion(), this.dai.getOsServerId());
+            }
+
+            // Attempt to lookup SVA by name
+            if (sva == null) {
+                log.info("SVA missing for Dai: " + this.dai);
+                Server namedSva = nova.getServerByName(ds.getRegion(), this.dai.getName());
             /*
              * If we found VM with this name and we have not previously with the ID we had in DB,
              * that means that all are OS attributes are staled and should be re-discovered
              */
-            if (namedSva != null) {
-                log.info("Missing SVA found by name, deleting stale SVA to redeploy: " + this.dai.getName());
-                this.tg.addTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
-            }
+                if (namedSva != null) {
+                    log.info("Missing SVA found by name, deleting stale SVA to redeploy: " + this.dai.getName());
+                    this.tg.addTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
+                }
 
-            // Make sure host exists in openstack cluster
-            if (this.doesOSHostExist) {
-                log.info("Re-Creating missing SVA for Dai: " + this.dai.getName());
-                this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
+                // Make sure host exists in openstack cluster
+                if (this.doesOSHostExist) {
+                    log.info("Re-Creating missing SVA for Dai: " + this.dai.getName());
+                    this.tg.appendTask(this.osSvaCreateMetaTask.create(this.dai));
+                } else {
+                    log.info("Host removed from openstack: " + this.dai.getOsHostName() + "Removing Dai: "
+                            + this.dai.getName());
+                    this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
+                }
             } else {
-                log.info("Host removed from openstack: " + this.dai.getOsHostName() + "Removing Dai: "
-                        + this.dai.getName());
-                this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
-            }
-        } else {
-            ApplianceSoftwareVersion currentSoftwareVersion = ds.getVirtualSystem().getApplianceSoftwareVersion();
-            boolean doesSvaVersionMatchVsVersion = false;
-            for (OsImageReference imageRef : ds.getVirtualSystem().getOsImageReference()) {
-                if (imageRef.getImageRefId().equals(sva.getImage().getId())
-                        && imageRef.getApplianceVersion().equals(currentSoftwareVersion)) {
-                    doesSvaVersionMatchVsVersion = true;
-                    break;
+                ApplianceSoftwareVersion currentSoftwareVersion = ds.getVirtualSystem().getApplianceSoftwareVersion();
+                boolean doesSvaVersionMatchVsVersion = false;
+                for (OsImageReference imageRef : ds.getVirtualSystem().getOsImageReference()) {
+                    if (imageRef.getImageRefId().equals(sva.getImage().getId())
+                            && imageRef.getApplianceVersion().equals(currentSoftwareVersion)) {
+                        doesSvaVersionMatchVsVersion = true;
+                        break;
+                    }
                 }
-            }
 
-            if (doesSvaVersionMatchVsVersion) {
-                this.tg.appendTask(this.osSvaEnsureActiveTask.create(this.dai));
-                if (!StringUtils.isEmpty(ds.getFloatingIpPoolName())) {
-                    // Check if floating ip is assigned to SVA
-                    this.tg.appendTask(this.osSvaCheckFloatingIpTask.create(this.dai));
+                if (doesSvaVersionMatchVsVersion) {
+                    this.tg.appendTask(this.osSvaEnsureActiveTask.create(this.dai));
+                    if (!StringUtils.isEmpty(ds.getFloatingIpPoolName())) {
+                        // Check if floating ip is assigned to SVA
+                        this.tg.appendTask(this.osSvaCheckFloatingIpTask.create(this.dai));
 
-                    // TODO: Future. Check if OS SG is assigned to DAI
+                        // TODO: Future. Check if OS SG is assigned to DAI
 
+                    }
+                    this.tg.addTask(this.osSvaStateCheckTask.create(this.dai));
+                } else {
+                    this.tg.appendTask(this.osDAIUpgradeMetaTask.create(this.dai, currentSoftwareVersion));
                 }
-                this.tg.addTask(this.osSvaStateCheckTask.create(this.dai));
-            } else {
-                this.tg.appendTask(this.osDAIUpgradeMetaTask.create(this.dai, currentSoftwareVersion));
-            }
 
-            if (vc.isControllerDefined()) {
-                if (!isPortRegistered()) {
-                    this.tg.appendTask(this.onboardDAITask.create(this.dai));
+                if (vc.isControllerDefined()) {
+                    if (!isPortRegistered()) {
+                        this.tg.appendTask(this.onboardDAITask.create(this.dai));
+                    }
                 }
-            }
 
+            }
         }
+
     }
 
     private boolean isPortRegistered() throws NetworkPortNotFoundException, Exception {

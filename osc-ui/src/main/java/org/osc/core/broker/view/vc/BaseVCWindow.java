@@ -130,7 +130,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private final EncryptionApi encrypter;
 
     public BaseVCWindow(PluginService pluginService, ValidationApi validator,
-            X509TrustManagerApi trustManager, EncryptionApi encrypter) {
+                        X509TrustManagerApi trustManager, EncryptionApi encrypter) {
         super();
         this.pluginService = pluginService;
         this.validator = validator;
@@ -225,7 +225,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.providerIP.setImmediate(true);
         this.adminDomainId = new TextField("Admin Domain Id");
         this.adminDomainId.setImmediate(true);
-        this.adminTenantName = new TextField("Admin Project Name");
+        this.adminTenantName = new TextField("Admin Tenant Name");
         this.adminTenantName.setImmediate(true);
         this.providerUser = new TextField("User Name");
         this.providerUser.setImmediate(true);
@@ -236,7 +236,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.adminDomainId.setRequired(true);
         this.adminDomainId.setRequiredError(this.providerPanel.getCaption() + " Admin Domain Id cannot be empty");
         this.adminTenantName.setRequired(true);
-        this.adminTenantName.setRequiredError(this.providerPanel.getCaption() + " Admin Project Name cannot be empty");
+        this.adminTenantName.setRequiredError(this.providerPanel.getCaption() + " Admin Tenant Name cannot be empty");
         this.providerIP.setRequired(true);
         this.providerIP.setRequiredError(this.providerPanel.getCaption() + " IP cannot be empty");
         this.providerUser.setRequired(true);
@@ -390,7 +390,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         return VirtualizationType.fromText(this.virtualizationType.getValue().toString()) == VirtualizationType.OPENSTACK;
     }
 
-    void sslAwareHandleException(final Exception originalException){
+    void sslAwareHandleException(final Exception originalException) {
         if (!(originalException instanceof SslCertificatesExtendedException)) {
             handleException(originalException);
             return;
@@ -402,14 +402,15 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             ViewUtil.addWindow(new AddSSLCertificateWindow(certificateResolverModels, new AddSSLCertificateWindow.SSLCertificateWindowInterface() {
                 @Override
                 public void submitFormAction(ArrayList<CertificateResolverModel> certificateResolverModels) {
-                    if(certificateResolverModels != null) {
+                    if (certificateResolverModels != null) {
                         BaseVCWindow.this.sslCertificateAttrs.addAll(
                                 certificateResolverModels.stream().map(
                                         crm -> new SslCertificateAttrDto(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()
-                                                )
-                                );
+                                )
+                        );
                     }
                 }
+
                 @Override
                 public void cancelFormAction() {
                     handleException(originalException);
@@ -422,7 +423,6 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
     /**
      * Create and submits the add connector request.
-     *
      */
 
     protected DryRunRequest<VirtualizationConnectorRequest> createRequest() throws Exception {
@@ -462,7 +462,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         if (this.virtualizationType.getValue().equals(VirtualizationType.OPENSTACK.toString())) {
             request.getDto().setSoftwareVersion(OPENSTACK_ICEHOUSE);
             request.getDto()
-            .setControllerType(ControllerType.fromText(BaseVCWindow.this.controllerType.getValue().toString()));
+                    .setControllerType(ControllerType.fromText(BaseVCWindow.this.controllerType.getValue().toString()));
         }
         return request;
     }
@@ -503,7 +503,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.providerUser.setRequiredError(this.providerPanel.getCaption() + " User Name cannot be empty");
         this.providerPW.setRequiredError(this.providerPanel.getCaption() + " Password cannot be empty");
         this.adminDomainId.setRequiredError(this.providerPanel.getCaption() + " Admin Domain Id cannot be empty");
-        this.adminTenantName.setRequiredError(this.providerPanel.getCaption() + " Admin Project Name cannot be empty");
+        this.adminTenantName.setRequiredError(this.providerPanel.getCaption() + " Admin Tenant Name cannot be empty");
     }
 
     private void updateControllerFields(ControllerType type) {

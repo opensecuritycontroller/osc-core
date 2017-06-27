@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import java.io.File;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -34,6 +29,10 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+
+import javax.persistence.EntityManager;
+import java.io.File;
+import java.util.Set;
 
 @Component(service = UploadImageToGlanceTask.class,
         configurationPid = "org.osc.core.broker.upload",
@@ -75,11 +74,12 @@ public class UploadImageToGlanceTask extends TransactionalTask {
 
         this.vs = emgr.findByPrimaryKey(this.vs.getId());
 
-        Openstack4jGlance glance = new Openstack4jGlance(this.osEndPoint);
         this.log.info("Uploading image " + this.glanceImageName + " to region + " + this.region);
         File imageFile = new File(this.uploadPath + this.applianceSoftwareVersion.getImageUrl());
-        String imageId = glance.uploadImage(this.region, this.glanceImageName, imageFile, this.applianceSoftwareVersion.getImageProperties());
-        this.vs.addOsImageReference(new OsImageReference(this.vs, this.region, imageId));
+        try (Openstack4jGlance glance = new Openstack4jGlance(this.osEndPoint)) {
+            String imageId = glance.uploadImage(this.region, this.glanceImageName, imageFile, this.applianceSoftwareVersion.getImageProperties());
+            this.vs.addOsImageReference(new OsImageReference(this.vs, this.region, imageId));
+        }
         OSCEntityManager.update(em, this.vs, this.txBroadcastUtil);
     }
 

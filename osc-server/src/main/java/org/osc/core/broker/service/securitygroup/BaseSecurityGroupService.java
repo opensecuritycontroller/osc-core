@@ -90,13 +90,15 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
             throw new VmidcBrokerValidationException("Project: '" + dto.getTenantName() + "' does not exist.");
         }
 
-        Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, project.getName()));
-        return new ArrayList<>(novaApi.listRegions());
+        ArrayList<String> regionsList;
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, project.getName()))) {
+            regionsList = new ArrayList<>(novaApi.listRegions());
+        }
+        return regionsList;
     }
 
     /**
      * Validates the member to check for null fields and also check the region specified exists
-     *
      */
     protected void validate(SecurityGroupMemberItemDto memberItem, List<String> regions) throws VmidcBrokerInvalidEntryException,
             VmidcBrokerValidationException {
@@ -105,9 +107,9 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
             throw new VmidcBrokerValidationException(String.format("Region: '%s' does not exist for member '%s'",
                     memberItem.getRegion(), memberItem.getName()));
         }
-        if (memberItem.isProtectExternal()){
+        if (memberItem.isProtectExternal()) {
             if (memberItem.getType().equals(SecurityGroupMemberType.VM.toString()) ||
-                    memberItem.getType().equals(SecurityGroupMemberType.NETWORK.toString())){
+                    memberItem.getType().equals(SecurityGroupMemberType.NETWORK.toString())) {
                 throw new VmidcBrokerValidationException(String.format("Protect External: Not allowed for type '%s' member '%s'",
                         memberItem.getType(), memberItem.getName()));
             }
@@ -115,7 +117,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
     }
 
     public void addSecurityGroupMember(EntityManager em, SecurityGroup securityGroup,
-            SecurityGroupMemberItemDto securityGroupMemberDto) throws VmidcBrokerValidationException {
+                                       SecurityGroupMemberItemDto securityGroupMemberDto) throws VmidcBrokerValidationException {
         String openstackId = securityGroupMemberDto.getOpenstackId();
         SecurityGroupMemberType type = SecurityGroupMemberType.fromText(securityGroupMemberDto.getType());
         OsProtectionEntity entity;

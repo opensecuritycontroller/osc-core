@@ -44,7 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-@Component(service=OsSecurityGroupCheckMetaTask.class)
+@Component(service = OsSecurityGroupCheckMetaTask.class)
 public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(OsSecurityGroupCheckMetaTask.class);
@@ -54,6 +54,11 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
     @Reference
     private ApiFactoryService apiFactoryService;
+
+    private final static String INGRESS = "INGRESS";
+    private final static String EGRESS = "EGRESS";
+    private final static String IPV4 = "IPv4";
+    private final static String IPV6 = "IPv6";
 
     private DeploymentSpec ds;
     private TaskGraph tg;
@@ -78,7 +83,6 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         log.info("Checking if VS" + vs.getName() + " has the corresponding Openstack Security Group");
 
         Endpoint endPoint = new Endpoint(ds);
-        Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint);
         // Check if the VS have ds or dds with os security group reference
         OsSecurityGroupReference sgReference = null;
         List<DeploymentSpec> dss = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(
@@ -101,28 +105,30 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
             }
         } else {
             DeploymentSpec existingDs;
-            for (Iterator<DeploymentSpec> iterator = sgReference.getDeploymentSpecs().iterator(); iterator
-                    .hasNext();) {
-                existingDs = iterator.next();
-                // For a given tenant, region and VS there will be only one SG
-                if (existingDs.getRegion().equals(this.ds.getRegion())
-                        && existingDs.getTenantName().equals(this.ds.getTenantName())
-                        && existingDs.getVirtualSystem().getName().equals(this.ds.getVirtualSystem().getName())) {
-                    SecurityGroup sg = neutron.getSecurityGroupById(ds.getRegion(), sgReference.getSgRefId());
-                    if (sg == null) {
-                        // remove the ds from the collection, delete the stale os sg reference from the database and create a new OS SG
-                        iterator.remove();
-                        OSCEntityManager.delete(em, sgReference, this.txBroadcastUtil);
-                        //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
-                        if (!skipSecurityGroupCreation) {
-                            this.tg.appendTask(this.createOsSecurityGroupTask.create(ds, endPoint));
+            try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
+                for (Iterator<DeploymentSpec> iterator = sgReference.getDeploymentSpecs().iterator(); iterator
+                        .hasNext(); ) {
+                    existingDs = iterator.next();
+                    // For a given tenant, region and VS there will be only one SG
+                    if (existingDs.getRegion().equals(this.ds.getRegion())
+                            && existingDs.getTenantName().equals(this.ds.getTenantName())
+                            && existingDs.getVirtualSystem().getName().equals(this.ds.getVirtualSystem().getName())) {
+                        SecurityGroup sg = neutron.getSecurityGroupById(ds.getRegion(), sgReference.getSgRefId());
+                        if (sg == null) {
+                            // remove the ds from the collection, delete the stale os sg reference from the database and create a new OS SG
+                            iterator.remove();
+                            OSCEntityManager.delete(em, sgReference, this.txBroadcastUtil);
+                            //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
+                            if (!skipSecurityGroupCreation) {
+                                this.tg.appendTask(this.createOsSecurityGroupTask.create(ds, endPoint));
+                            }
+                        } else {
+                            syncSGRules(sg, neutron);
+                            sgReference.setSgRefName(sg.getName());
+                            OSCEntityManager.update(em, sgReference, this.txBroadcastUtil);
+                            ds.setOsSecurityGroupReference(sgReference);
+                            OSCEntityManager.update(em, ds, this.txBroadcastUtil);
                         }
-                    } else {
-                        syncSGRules(sg, neutron);
-                        sgReference.setSgRefName(sg.getName());
-                        OSCEntityManager.update(em, sgReference, this.txBroadcastUtil);
-                        ds.setOsSecurityGroupReference(sgReference);
-                        OSCEntityManager.update(em, ds, this.txBroadcastUtil);
                     }
                 }
             }
@@ -133,10 +139,10 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         final List<? extends SecurityGroupRule> rules = sg.getRules();
 
         List<SecurityGroupRule> expectedList = new ArrayList<>();
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype("IPv4").direction("ingress").build());
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype("IPv4").direction("egress").build());
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype("IPv6").direction("ingress").build());
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype("IPv6").direction("egress").build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV4).direction(INGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV4).direction(EGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV6).direction(INGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV6).direction(EGRESS).build());
         ImmutableList.<SecurityGroupRule>builder().addAll(expectedList);
 
         // Filter the missing rules from the expected SG rules

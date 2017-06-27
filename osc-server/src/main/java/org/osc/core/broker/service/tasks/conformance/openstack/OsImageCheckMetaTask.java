@@ -16,10 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
+import com.google.common.base.Joiner;
 import org.apache.log4j.Logger;
 import org.openstack4j.model.image.v2.Image;
 import org.osc.core.broker.job.TaskGraph;
@@ -34,9 +31,10 @@ import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import com.google.common.base.Joiner;
+import javax.persistence.EntityManager;
+import java.util.Set;
 
-@Component(service=OsImageCheckMetaTask.class)
+@Component(service = OsImageCheckMetaTask.class)
 public class OsImageCheckMetaTask extends TransactionalMetaTask {
     private static final Logger LOG = Logger.getLogger(OsImageCheckMetaTask.class);
 
@@ -59,7 +57,8 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
     private TaskGraph tg;
     private Openstack4jGlance glance;
 
-    public OsImageCheckMetaTask() {}
+    public OsImageCheckMetaTask() {
+    }
 
     public OsImageCheckMetaTask create(VirtualSystem vs, String region, Endpoint osEndPoint) {
         OsImageCheckMetaTask task = new OsImageCheckMetaTask(vs, region, osEndPoint, null);
@@ -104,24 +103,28 @@ public class OsImageCheckMetaTask extends TransactionalMetaTask {
         Set<OsImageReference> imageReferences = this.vs.getOsImageReference();
         boolean uploadImage = true;
 
-        for (OsImageReference imageReference : imageReferences) {
-            if (imageReference.getRegion().equals(this.region)) {
-                Image image = this.glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
-                if (image == null || image.getStatus() != Image.ImageStatus.ACTIVE) {
-                    this.tg.appendTask(this.deleteImageReferenceTask.create(imageReference, this.vs));
-                } else if (!image.getName().equals(expectedGlanceImageName)) {
-                    // Assume image name is changed, means the version is upgraded since image name contains version
-                    // information. Delete existing image and create new image.
-                    this.tg.appendTask(this.deleteImageFromGlanceTask.create(this.region, imageReference, this.osEndPoint));
-                } else {
-                    uploadImage = false;
+        try {
+            for (OsImageReference imageReference : imageReferences) {
+                if (imageReference.getRegion().equals(this.region)) {
+                    Image image = this.glance.getImageById(imageReference.getRegion(), imageReference.getImageRefId());
+                    if (image == null || image.getStatus() != Image.ImageStatus.ACTIVE) {
+                        this.tg.appendTask(this.deleteImageReferenceTask.create(imageReference, this.vs));
+                    } else if (!image.getName().equals(expectedGlanceImageName)) {
+                        // Assume image name is changed, means the version is upgraded since image name contains version
+                        // information. Delete existing image and create new image.
+                        this.tg.appendTask(this.deleteImageFromGlanceTask.create(this.region, imageReference, this.osEndPoint));
+                    } else {
+                        uploadImage = false;
+                    }
                 }
             }
+        } finally {
+            this.glance.close();
         }
         if (uploadImage) {
             this.tg.appendTask(this.uploadImageToGlanceTask.create(this.vs, this.region, expectedGlanceImageName,
                     applianceSoftwareVersion, this.osEndPoint), TaskGuard.ALL_PREDECESSORS_COMPLETED);
-        } else if (!imageReferences.isEmpty()){
+        } else if (!imageReferences.isEmpty()) {
             this.tg.appendTask(this.updateVsWithImageVersionTask.create(this.vs));
         }
     }

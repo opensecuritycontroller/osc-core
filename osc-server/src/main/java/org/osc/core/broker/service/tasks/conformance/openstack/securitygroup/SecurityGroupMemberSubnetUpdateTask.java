@@ -16,12 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.openstack4j.model.network.IP;
 import org.openstack4j.model.network.Port;
@@ -44,7 +38,12 @@ import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service=SecurityGroupMemberSubnetUpdateTask.class)
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+@Component(service = SecurityGroupMemberSubnetUpdateTask.class)
 public class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
 
     private final Logger log = Logger.getLogger(SecurityGroupMemberSubnetUpdateTask.class);
@@ -78,78 +77,76 @@ public class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
 
         SecurityGroup sg = this.sgm.getSecurityGroup();
 
-        Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
-
-        List<Port> osPorts = neutron.listPortsBySubnet(subnet.getRegion(), sg.getTenantId(), subnet.getNetworkId(),
-                    subnet.getOpenstackId(), subnet.isProtectExternal());
-
         List<String> existingOsPortIds = new ArrayList<>();
-
-        for (Port osPort : osPorts) {
-            existingOsPortIds.add(osPort.getId());
-            // Check to see if the port belongs to one of our DAI. Only if the port does not belong to the DAI
-            // Add it to our DB for it to be protected later, so we prevent self inspection loop
-            DistributedApplianceInstance daiForPort = DistributedApplianceInstanceEntityMgr.getByOSServerId(
-                    em, osPort.getDeviceId());
-            if (daiForPort == null) {
-                VMPort vmPort = VMPortEntityManager.findByOpenstackId(em, osPort.getId());
-                if (vmPort == null) {
-                    // get list of IP address from port
-                    List<String> ipAddresses = new ArrayList<>();
-                    for (IP ip : osPort.getFixedIps()) {
-                        ipAddresses.add(ip.getIpAddress());
-                    }
-                    vmPort = new VMPort(subnet, osPort.getMacAddress(), subnet.getOpenstackId(), osPort.getId(),
-                            ipAddresses);
-                    OSCEntityManager.create(em, vmPort, this.txBroadcastUtil);
-                    this.log.info("Creating port for Subnet '" + subnet.getName() + "' with Port:" + vmPort);
-                } else {
-                    //Port exists check if it belongs to a VM
-                    if (vmPort.getVm() != null) {
-                        Iterator<SecurityGroupMember> iterator = vmPort.getVm().getSecurityGroupMembers()
-                                .iterator();
-                        if (iterator.hasNext()) {
-                            SecurityGroup otherSecurityGroup = iterator.next().getSecurityGroup();
-                            if (!otherSecurityGroup.equals(sg)) {
-                                String errMessage = String
-                                        .format("VM Port with MAC '%s' (VM '%s') belonging to subnet member '%s' is already being protected by Security Group '%s'",
-                                                vmPort.getMacAddresses(), vmPort.getVm().getName(), subnet.getName(),
-                                                otherSecurityGroup.getName());
-                                this.tg.addTask(new FailedWithObjectInfoTask(String.format(
-                                        "Validating port with mac '%s' information", vmPort.getMacAddresses()),
-                                        errMessage, LockObjectReference.getObjectReferences(sg)));
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()))) {
+            List<Port> osPorts = neutron.listPortsBySubnet(subnet.getRegion(), sg.getTenantId(), subnet.getNetworkId(),
+                    subnet.getOpenstackId(), subnet.isProtectExternal());
+            for (Port osPort : osPorts) {
+                existingOsPortIds.add(osPort.getId());
+                // Check to see if the port belongs to one of our DAI. Only if the port does not belong to the DAI
+                // Add it to our DB for it to be protected later, so we prevent self inspection loop
+                DistributedApplianceInstance daiForPort = DistributedApplianceInstanceEntityMgr.getByOSServerId(
+                        em, osPort.getDeviceId());
+                if (daiForPort == null) {
+                    VMPort vmPort = VMPortEntityManager.findByOpenstackId(em, osPort.getId());
+                    if (vmPort == null) {
+                        // get list of IP address from port
+                        List<String> ipAddresses = new ArrayList<>();
+                        for (IP ip : osPort.getFixedIps()) {
+                            ipAddresses.add(ip.getIpAddress());
+                        }
+                        vmPort = new VMPort(subnet, osPort.getMacAddress(), subnet.getOpenstackId(), osPort.getId(),
+                                ipAddresses);
+                        OSCEntityManager.create(em, vmPort, this.txBroadcastUtil);
+                        this.log.info("Creating port for Subnet '" + subnet.getName() + "' with Port:" + vmPort);
+                    } else {
+                        //Port exists check if it belongs to a VM
+                        if (vmPort.getVm() != null) {
+                            Iterator<SecurityGroupMember> iterator = vmPort.getVm().getSecurityGroupMembers()
+                                    .iterator();
+                            if (iterator.hasNext()) {
+                                SecurityGroup otherSecurityGroup = iterator.next().getSecurityGroup();
+                                if (!otherSecurityGroup.equals(sg)) {
+                                    String errMessage = String
+                                            .format("VM Port with MAC '%s' (VM '%s') belonging to subnet member '%s' is already being protected by Security Group '%s'",
+                                                    vmPort.getMacAddresses(), vmPort.getVm().getName(), subnet.getName(),
+                                                    otherSecurityGroup.getName());
+                                    this.tg.addTask(new FailedWithObjectInfoTask(String.format(
+                                            "Validating port with mac '%s' information", vmPort.getMacAddresses()),
+                                            errMessage, LockObjectReference.getObjectReferences(sg)));
+                                }
                             }
                         }
-                    }
-                    // Port exists check if it belongs to a Network
-                    if (vmPort.getNetwork() != null) {
-                        Iterator<SecurityGroupMember> iterator = vmPort.getNetwork().getSecurityGroupMembers()
-                                .iterator();
-                        if (iterator.hasNext()) {
-                            SecurityGroup otherSecurityGroup = iterator.next().getSecurityGroup();
-                            if (!otherSecurityGroup.equals(sg)) {
-                                String errMessage = String
-                                        .format("VM Port with MAC '%s' (Network '%s') belonging to subnet member '%s' is already being protected by Security Group '%s'",
-                                                vmPort.getMacAddresses(), vmPort.getNetwork().getName(),
-                                                subnet.getName(), otherSecurityGroup.getName());
-                                this.tg.addTask(new FailedWithObjectInfoTask(String.format(
-                                        "Validating port with mac '%s' information", vmPort.getMacAddresses()),
-                                        errMessage, LockObjectReference.getObjectReferences(sg)));
+                        // Port exists check if it belongs to a Network
+                        if (vmPort.getNetwork() != null) {
+                            Iterator<SecurityGroupMember> iterator = vmPort.getNetwork().getSecurityGroupMembers()
+                                    .iterator();
+                            if (iterator.hasNext()) {
+                                SecurityGroup otherSecurityGroup = iterator.next().getSecurityGroup();
+                                if (!otherSecurityGroup.equals(sg)) {
+                                    String errMessage = String
+                                            .format("VM Port with MAC '%s' (Network '%s') belonging to subnet member '%s' is already being protected by Security Group '%s'",
+                                                    vmPort.getMacAddresses(), vmPort.getNetwork().getName(),
+                                                    subnet.getName(), otherSecurityGroup.getName());
+                                    this.tg.addTask(new FailedWithObjectInfoTask(String.format(
+                                            "Validating port with mac '%s' information", vmPort.getMacAddresses()),
+                                            errMessage, LockObjectReference.getObjectReferences(sg)));
+                                }
                             }
                         }
+                        // Port belongs to this Subnet. It it was mark deleted by Protect External flag and user reverted it then revert mark deletion flag and remove it from staled port list
+                        if (vmPort.getMarkedForDeletion()) {
+                            OSCEntityManager.unMarkDeleted(em, vmPort, this.txBroadcastUtil);
+                            existingOsPortIds.remove(osPort.getId());
+                        }
                     }
-                    // Port belongs to this Subnet. It it was mark deleted by Protect External flag and user reverted it then revert mark deletion flag and remove it from staled port list
-                    if (vmPort.getMarkedForDeletion()) {
-                        OSCEntityManager.unMarkDeleted(em, vmPort, this.txBroadcastUtil);
-                        existingOsPortIds.remove(osPort.getId());
+                    if (!subnet.isProtectExternal()) {
+                        OpenstackUtil.discoverVmForPort(em, subnet.getRegion(), sg, osPort, vmPort);
                     }
-                }
-                if (!subnet.isProtectExternal()) {
-                    OpenstackUtil.discoverVmForPort(em, subnet.getRegion(), sg, osPort, vmPort);
                 }
             }
-
         }
+
         // Any ports not listed from openstack but are in our database are stale and need to be removed(after hooks
         // are removed) so marking them as deleted
         this.tg.appendTask(this.markStalePortsAsDeletedTask.create(subnet, existingOsPortIds),

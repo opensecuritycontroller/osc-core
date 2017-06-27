@@ -36,6 +36,7 @@ import org.openstack4j.model.network.options.PortListOptions;
 import org.openstack4j.openstack.networking.domain.NeutronFloatingIP;
 import org.openstack4j.openstack.networking.domain.NeutronSecurityGroup;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -49,6 +50,9 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
     private static final String QUERY_PARAM_COMPUTE_DEVICE_OWNER = "compute:";
     private static final String QUERY_PARAM_ROUTER_DEVICE_OWNER = "network:router_interface";
+    private static final String QUERY_PARAM_TENANT_ID = "tenant_id";
+    private static final String QUERY_PARAM_EXTERNAL_ROUTER = "router:external";
+    private static final String QUERY_PARAM_STATUS = "status";
 
     private static final int OPENSTACK_CONFLICT_STATUS = 409;
 
@@ -66,7 +70,6 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         List<? extends Network> list = getOs().networking().network().list().stream()
                 .filter(subnet -> (tenantId.equals(subnet.getTenantId()) && !subnet.isShared())
                         || subnet.isShared()).collect(Collectors.toList());
-        getOs().removeRegion();
         return ImmutableList.<Network>builder().addAll(list).build();
     }
 
@@ -74,31 +77,24 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         getOs().useRegion(region);
         List<? extends Subnet> list = getOs().networking().subnet().list()
                 .stream().filter(subnet -> tenantId.equals(subnet.getTenantId())).collect(Collectors.toList());
-        getOs().removeRegion();
         return ImmutableList.<Subnet>builder().addAll(list).build();
     }
 
     public Network getNetworkById(String region, String id) {
         getOs().useRegion(region);
-        Network network = getOs().networking().network().get(id);
-        getOs().removeRegion();
-        return network;
+        return getOs().networking().network().get(id);
     }
 
     public Network getNetworkByName(String region, String name) throws Exception {
         getOs().useRegion(region);
-        Network foundNetwork = getOs().networking().network().list()
+        return getOs().networking().network().list()
                 .stream().filter(network -> network.getName().equals(name)).findFirst()
                 .orElseThrow(() -> new Exception("Cannot find network by name: " + name));
-        getOs().removeRegion();
-        return foundNetwork;
     }
 
     public Subnet getSubnetById(String region, String id) {
         getOs().useRegion(region);
-        Subnet subnet = getOs().networking().subnet().get(id);
-        getOs().removeRegion();
-        return subnet;
+        return getOs().networking().subnet().get(id);
     }
 
     public List<Port> listComputePortsByNetwork(String region, String tenantId, String networkId) {
@@ -156,23 +152,18 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
     private List<? extends Port> listPorts(String region, String tenantId, String networkId) {
         getOs().useRegion(region);
-        List<? extends Port> list = getOs().networking().port().list(PortListOptions.create().networkId(networkId).tenantId(tenantId));
-        getOs().removeRegion();
-        return list;
+        return getOs().networking().port().list(PortListOptions.create().networkId(networkId).tenantId(tenantId));
     }
 
     private Port getPortByMacAddress(String region, String macAddress) {
         getOs().useRegion(region);
         List<? extends Port> portList = getOs().networking().port().list(PortListOptions.create().macAddress(macAddress));
-        getOs().removeRegion();
         return (portList == null || portList.isEmpty()) ? null : portList.get(0);
     }
 
     public Port getPortById(String region, String portId) {
         getOs().useRegion(region);
-        Port port = getOs().networking().port().get(portId);
-        getOs().removeRegion();
-        return port;
+        return getOs().networking().port().get(portId);
     }
 
     /**
@@ -192,29 +183,23 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
             ActionResponse delete = getOs().networking().port().delete(portId);
             success = delete.isSuccess();
         }
-        getOs().removeRegion();
         return success;
     }
 
     public SecurityGroup getSecurityGroupById(String region, String id) {
         getOs().useRegion(region);
-        SecurityGroup securityGroup = getOs().networking().securitygroup().get(id);
-        getOs().removeRegion();
-        return securityGroup;
+        return getOs().networking().securitygroup().get(id);
     }
 
     private Optional<? extends SecurityGroup> getSecurityGroupByName(String region, String sgName) {
         getOs().useRegion(region);
         List<? extends SecurityGroup> list = getOs().networking().securitygroup().list();
-        Optional<? extends SecurityGroup> first = list.stream().filter(o -> o.getName().equals(sgName)).findFirst();
-        getOs().removeRegion();
-        return first;
+        return list.stream().filter(o -> o.getName().equals(sgName)).findFirst();
     }
 
     public String getVmIdByPortId(String region, String portId) {
         getOs().useRegion(region);
         Port port = getOs().networking().port().get(portId);
-        getOs().removeRegion();
         return getVmIdByPort(port);
     }
 
@@ -237,7 +222,6 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
                     .description("OSC default Openstack Security Group for virtual system " + sgName)
                     .name(sgName);
             securityGroup = getOs().networking().securitygroup().create(securityGroupBuilder.build());
-            getOs().removeRegion();
         }
 
         return securityGroup;
@@ -256,7 +240,6 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
                 }
             }
         }
-        getOs().removeRegion();
     }
 
     public boolean deleteSecurityGroupById(String region, String sgRefId) throws IllegalStateException {
@@ -265,7 +248,6 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         if (actionResponse.getCode() == OPENSTACK_CONFLICT_STATUS) {
             throw new IllegalStateException(actionResponse.getFault());
         }
-        getOs().removeRegion();
         return actionResponse.isSuccess();
     }
 
@@ -282,15 +264,13 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         getOs().useRegion(region);
 
         Map<String, String> filter = Maps.newHashMap();
-        filter.put("tenant_id", tenantId);
-        filter.put("router:external", Boolean.TRUE.toString());
+        filter.put(QUERY_PARAM_TENANT_ID, tenantId);
+        filter.put(QUERY_PARAM_EXTERNAL_ROUTER, Boolean.TRUE.toString());
 
-        List<String> list = getOs().networking().network().list(filter)
+        return getOs().networking().network().list(filter)
                 .stream()
                 .map(Network::getName)
                 .collect(Collectors.toList());
-        getOs().removeRegion();
-        return list;
     }
 
     public NetFloatingIP getFloatingIp(String region, String id) {
@@ -299,22 +279,19 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         }
 
         getOs().useRegion(region);
-        NetFloatingIP netFloatingIP = getOs().networking().floatingip().get(id);
-        getOs().removeRegion();
-        return netFloatingIP;
+        return getOs().networking().floatingip().get(id);
     }
 
-    public void associateMgmtPortWithFloatingIp(String region, String netFloatingIpId, String portId) {
+    public synchronized void associateMgmtPortWithFloatingIp(String region, String netFloatingIpId, String portId) {
         getOs().useRegion(region);
         getOs().networking().floatingip().associateToPort(netFloatingIpId, portId);
-        getOs().removeRegion();
     }
 
     /**
      * A synchronous way to allocate floating ip(within ourselfs). Since this is a static method, we would lock on
      * the class objects which prevents multiple threads from making the floating ip call at the same time.
      */
-    public NetFloatingIP createFloatingIp(String region, String networkId, String serverId, String portId) {
+    public synchronized NetFloatingIP createFloatingIp(String region, String networkId, String serverId, String portId) {
         getOs().useRegion(region);
 
         NetFloatingIPBuilder builder = new NeutronFloatingIP.FloatingIPConcreteBuilder();
@@ -336,20 +313,18 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         }
 
         log.info("Allocated Floating ip: " + netFloatingIP.getId() + " To server with Id: " + serverId);
-        getOs().removeRegion();
         return netFloatingIP;
     }
 
-    private void releaseUnusedFloatingIps(String region) {
+    private synchronized void releaseUnusedFloatingIps(String region) {
         log.info("Trying to release unused floating ips assigned to the project");
         getOs().useRegion(region);
 
         Map<String, String> filter = Maps.newHashMap();
-        filter.put("status", FloatingIpStatus.DOWN.toString());
+        filter.put(QUERY_PARAM_STATUS, FloatingIpStatus.DOWN.toString());
 
         List<? extends NetFloatingIP> list = getOs().networking().floatingip().list(filter);
         list.forEach(floatingIp -> getOs().networking().floatingip().delete(floatingIp.getId()));
-        getOs().removeRegion();
     }
 
     public synchronized void deleteFloatingIp(String region, String floatingIpId) {
@@ -359,6 +334,12 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         if (!actionResponse.isSuccess()) {
             log.warn("Deleting floating ip with id: " + floatingIpId + " failed with message: " + actionResponse.getFault());
         }
-        getOs().removeRegion();
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (getOs() != null) {
+            getOs().removeRegion();
+        }
     }
 }
