@@ -199,7 +199,7 @@
                                     <regexMessage>The project version is ${project.version} but it must be ${releaseVersion}.</regexMessage>
                                 </requireProperty>
                             </rules>
-                            <fail>true</fail>
+                            <fail>false</fail>
                         </configuration>
                     </execution>
                 </executions>
