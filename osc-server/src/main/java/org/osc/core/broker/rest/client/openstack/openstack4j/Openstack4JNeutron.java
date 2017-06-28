@@ -19,7 +19,6 @@ package org.osc.core.broker.rest.client.openstack.openstack4j;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import org.apache.log4j.Logger;
-import org.openstack4j.api.exceptions.ClientResponseException;
 import org.openstack4j.api.exceptions.ServerResponseException;
 import org.openstack4j.model.common.ActionResponse;
 import org.openstack4j.model.network.IP;
@@ -52,7 +51,6 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     private static final String QUERY_PARAM_ROUTER_DEVICE_OWNER = "network:router_interface";
     private static final String QUERY_PARAM_TENANT_ID = "tenant_id";
     private static final String QUERY_PARAM_EXTERNAL_ROUTER = "router:external";
-    private static final String QUERY_PARAM_STATUS = "status";
 
     private static final int OPENSTACK_CONFLICT_STATUS = 409;
 
@@ -298,33 +296,9 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         builder.floatingNetworkId(networkId);
         builder.portId(portId);
 
-        NetFloatingIP netFloatingIP;
-        try {
-            netFloatingIP = getOs().networking().floatingip().create(builder.build());
-        } catch (ClientResponseException e) {
-            // Try to remove unused floating IP's assigned to the project
-            if (e.getStatusCode().getCode() == OPENSTACK_CONFLICT_STATUS) {
-                releaseUnusedFloatingIps(region);
-                log.info("Retrying creating floating ip to solve the problem: " + e.getMessage());
-                netFloatingIP = getOs().networking().floatingip().create(builder.build());
-            } else {
-                throw e;
-            }
-        }
-
+        NetFloatingIP netFloatingIP = getOs().networking().floatingip().create(builder.build());
         log.info("Allocated Floating ip: " + netFloatingIP.getId() + " To server with Id: " + serverId);
         return netFloatingIP;
-    }
-
-    private synchronized void releaseUnusedFloatingIps(String region) {
-        log.info("Trying to release unused floating ips assigned to the project");
-        getOs().useRegion(region);
-
-        Map<String, String> filter = Maps.newHashMap();
-        filter.put(QUERY_PARAM_STATUS, FloatingIpStatus.DOWN.toString());
-
-        List<? extends NetFloatingIP> list = getOs().networking().floatingip().list(filter);
-        list.forEach(floatingIp -> getOs().networking().floatingip().delete(floatingIp.getId()));
     }
 
     public synchronized void deleteFloatingIp(String region, String floatingIpId) {
