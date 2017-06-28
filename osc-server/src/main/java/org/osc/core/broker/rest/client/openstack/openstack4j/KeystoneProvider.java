@@ -22,43 +22,43 @@ import org.openstack4j.api.client.IOSClientBuilder;
 import org.openstack4j.api.types.Facing;
 import org.openstack4j.core.transport.Config;
 import org.openstack4j.model.common.Identifier;
+import org.openstack4j.model.identity.v3.Token;
 import org.openstack4j.openstack.OSFactory;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 
-public class KeystoneProvider {
+public final class KeystoneProvider {
 
     private static final Logger log = Logger.getLogger(KeystoneProvider.class);
 
     private static final String KEYSTONE_VERSION = "v3";
 
     private static KeystoneProvider instance = null;
-    private static OSClient.OSClientV3 os;
-    private Endpoint endpoint;
+    private static HashMap<Endpoint, Token> connectionsMap = new HashMap<>();
 
-    protected KeystoneProvider() {
+    private KeystoneProvider() {
     }
 
-    private KeystoneProvider(Endpoint endpoint) {
-        this.endpoint = endpoint;
-    }
-
-    public static KeystoneProvider getInstance(Endpoint endPoint) {
-        if (instance == null || !instance.endpoint.equals(endPoint)) {
-            instance = new KeystoneProvider(endPoint);
+    public static KeystoneProvider getInstance() {
+        if (instance == null) {
+            instance = new KeystoneProvider();
         }
         return instance;
     }
 
-    OSClient.OSClientV3 getAvailableSession() {
+    OSClient.OSClientV3 getAvailableSession(Endpoint endpoint) {
+
         OSClient.OSClientV3 localOs;
-        Config config = Config.newConfig().withSSLContext(this.endpoint.getSslContext()).withHostnameVerifier((hostname, session) -> true);
-        if (os == null || instance.endpoint.getToken() == null) {
+        Config config = Config.newConfig().withSSLContext(endpoint.getSslContext()).withHostnameVerifier((hostname, session) -> true);
+        if (connectionsMap.containsKey(endpoint)) {
+            localOs = OSFactory.clientFromToken(connectionsMap.get(endpoint), Facing.ADMIN, config);
+        } else {
             String endpointURL;
             try {
-                endpointURL = prepareEndpointURL(this.endpoint);
+                endpointURL = prepareEndpointURL(endpoint);
             } catch (URISyntaxException | MalformedURLException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
@@ -66,21 +66,18 @@ public class KeystoneProvider {
             // LOGGER
             OSFactory.enableHttpLoggingFilter(log.isDebugEnabled() || log.isInfoEnabled());
 
-            Identifier domainIdentifier = Identifier.byId(this.endpoint.getDomainId());
+            Identifier domainIdentifier = Identifier.byId(endpoint.getDomainId());
 
             IOSClientBuilder.V3 keystoneV3Builder = OSFactory.builderV3().perspective(Facing.ADMIN)
                     .endpoint(endpointURL)
-                    .credentials(this.endpoint.getUser(), this.endpoint.getPassword(), domainIdentifier)
-                    .scopeToProject(Identifier.byName(this.endpoint.getTenant()), domainIdentifier)
+                    .credentials(endpoint.getUser(), endpoint.getPassword(), domainIdentifier)
+                    .scopeToProject(Identifier.byName(endpoint.getTenant()), domainIdentifier)
                     .withConfig(config);
 
             localOs = keystoneV3Builder.authenticate();
-            instance.endpoint.setToken(localOs.getToken());
-        } else {
-            localOs = OSFactory.clientFromToken(instance.endpoint.getToken(), Facing.ADMIN, config);
+            connectionsMap.put(endpoint, localOs.getToken());
         }
 
-        os = localOs;
         return localOs;
     }
 
@@ -88,6 +85,10 @@ public class KeystoneProvider {
         String schema = endPoint.isHttps() ? "https" : "http";
         URI uri = new URI(schema, null, endPoint.getEndPointIP(), 5000, "/" + KEYSTONE_VERSION, null, null);
         return uri.toURL().toString();
+    }
+
+    public void cleanConnection(Endpoint endpoint) {
+        connectionsMap.remove(endpoint);
     }
 
 }
