@@ -16,21 +16,24 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.KeystoneProvider;
 import org.osc.core.broker.service.LockUtil;
+import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service=VCDeleteMetaTask.class)
+import javax.persistence.EntityManager;
+
+@Component(service = VCDeleteMetaTask.class)
 public class VCDeleteMetaTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(VCDeleteMetaTask.class);
 
@@ -57,18 +60,25 @@ public class VCDeleteMetaTask extends TransactionalTask {
             OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
             VirtualizationConnector connector = vcEntityMgr.findByPrimaryKey(this.vc.getId());
 
+            cleanKeystoneProviderConnection(connector);
+
             SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             sslCertificateAttrEntityMgr.removeCertificateList(connector.getSslCertificateAttrSet());
             vcEntityMgr.delete(this.vc.getId());
         } catch (Exception ex) {
             throw ex;
-        } finally{
-        	 // Unlock VC.
+        } finally {
+            // Unlock VC.
             if (vcUnlockTask != null) {
                 log.info("Releasing lock for VC '" + this.vc.getName() + "'");
                 LockManager.getLockManager().releaseLock(new LockRequest(vcUnlockTask));
             }
         }
+    }
+
+    private void cleanKeystoneProviderConnection(VirtualizationConnector vc) throws EncryptionException {
+        Endpoint endpoint = new Endpoint(vc);
+        KeystoneProvider.getInstance().cleanConnection(endpoint);
     }
 
     @Override

@@ -30,10 +30,10 @@ public abstract class BaseOpenstack4jApi implements Closeable {
 
     BaseOpenstack4jApi(Endpoint endPoint) {
         this.endPoint = endPoint;
-        this.keystoneProvider = KeystoneProvider.getInstance(endPoint);
+        this.keystoneProvider = KeystoneProvider.getInstance();
     }
 
     public OSClient.OSClientV3 getOs() {
-        return this.keystoneProvider.getAvailableSession();
+        return this.keystoneProvider.getAvailableSession(this.endPoint);
     }
 }
