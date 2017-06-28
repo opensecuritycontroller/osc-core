@@ -124,8 +124,6 @@
         <profile>
             <id>all</id>
             <modules>
-                <module>osc-uber-openstack4j</module>
-
                 <module>../sdn-controller-api</module>
                 <module>../security-mgr-api</module>
 
@@ -135,6 +133,7 @@
                 <module>../security-mgr-sample-plugin</module>
 
                 <module>osc-tools</module>
+                <module>osc-uber-openstack4j</module>
                 <module>osc-common</module>
                 <module>osc-domain</module>
                 <module>osc-service-api</module>
