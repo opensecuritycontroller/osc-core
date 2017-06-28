@@ -14,16 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import org.openstack4j.model.identity.v3.Token;
 
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 81;
+import java.io.IOException;
 
-    Connection getSQLConnection() throws SQLException;
+public class Openstack4jAuthentication extends BaseOpenstack4jApi {
+
+    public Openstack4jAuthentication(Endpoint endPoint) {
+        super(endPoint);
+    }
+
+    public Token getTenantToken() {
+        return this.getOs().getToken();
+    }
+
+    @Override
+    public void close() throws IOException {
+
+    }
 }

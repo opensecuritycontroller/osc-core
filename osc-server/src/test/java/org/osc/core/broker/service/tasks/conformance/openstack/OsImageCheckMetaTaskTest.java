@@ -23,8 +23,6 @@ import java.util.Collection;
 
 import javax.persistence.EntityManager;
 
-import org.jclouds.openstack.glance.v1_0.domain.Image.Status;
-import org.jclouds.openstack.glance.v1_0.domain.ImageDetails;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,11 +31,12 @@ import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.openstack4j.model.image.v2.Image;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudGlance;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jGlance;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -48,7 +47,7 @@ import com.google.common.base.Joiner;
 @PowerMockRunnerDelegate(value = Parameterized.class)
 public class OsImageCheckMetaTaskTest {
     @Mock private EntityManager em;
-    @Mock private JCloudGlance glanceMock;
+    @Mock private Openstack4jGlance glanceMock;
 
     private VirtualSystem vs;
     private String region;
@@ -107,12 +106,12 @@ public class OsImageCheckMetaTaskTest {
     }
 
     private void registerImage(boolean isActive, boolean hasExpectedName, String region, String refId) throws Exception {
-        ImageDetails imageMock = Mockito.mock(ImageDetails.class);
+        Image imageMock = Mockito.mock(Image.class);
         Mockito.doReturn(imageMock).when(this.glanceMock).getImageById(region, refId);
         if(isActive) {
-            Mockito.doReturn(Status.ACTIVE).when(imageMock).getStatus();
+            Mockito.doReturn(Image.ImageStatus.ACTIVE).when(imageMock).getStatus();
         } else {
-            Mockito.doReturn(Status.DELETED).when(imageMock).getStatus();
+            Mockito.doReturn(Image.ImageStatus.DELETED).when(imageMock).getStatus();
         }
         if(!hasExpectedName) {
             Mockito.doReturn("unexpected name").when(imageMock).getName();

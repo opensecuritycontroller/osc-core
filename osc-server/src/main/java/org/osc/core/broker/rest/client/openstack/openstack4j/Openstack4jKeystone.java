@@ -14,16 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import org.openstack4j.model.identity.v3.Project;
 
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 81;
+import java.io.IOException;
+import java.util.Comparator;
+import java.util.List;
 
-    Connection getSQLConnection() throws SQLException;
+public class Openstack4jKeystone extends BaseOpenstack4jApi {
+
+    public Openstack4jKeystone(Endpoint endPoint) {
+        super(endPoint);
+    }
+
+    public List<? extends Project> listProjects() {
+        List<? extends Project> tenantsList = this.getOs().identity().projects().list();
+        tenantsList.sort(Comparator.comparing(Project::getName));
+        return tenantsList;
+    }
+
+    public Project getProjectById(String projectId) {
+        return this.getOs().identity().projects().get(projectId);
+    }
+
+    @Override
+    public void close() throws IOException {
+
+    }
 }

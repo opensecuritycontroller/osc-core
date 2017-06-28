@@ -16,16 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securitygroup;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
+import org.openstack4j.model.identity.v3.Project;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
@@ -35,9 +28,9 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsProtectionE
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
@@ -56,6 +49,12 @@ import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPa
 import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.service.validator.SecurityGroupMemberItemDtoValidator;
 import org.osc.core.common.controller.ControllerType;
+
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public abstract class BaseSecurityGroupService<I extends Request, O extends Response> extends ServiceDispatcher<I, O> {
 
@@ -84,32 +83,22 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                     "Creation of Security Groups is not allowed in the absence of SDN Controller.");
         }
 
-        JCloudKeyStone keystone = null;
-        JCloudNova novaApi = null;
-        try {
-            keystone = new JCloudKeyStone(new Endpoint(vc));
-            Tenant tenant = keystone.getTenantById(dto.getTenantId());
+        Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc));
+        Project project = keystone.getProjectById(dto.getTenantId());
 
-            if (tenant == null) {
-                throw new VmidcBrokerValidationException("Tenant: '" + dto.getTenantName() + "' does not exist.");
-            }
-
-            novaApi = new JCloudNova(new Endpoint(vc, tenant.getName()));
-
-            return new ArrayList<>(novaApi.listRegions());
-        } finally {
-            if (keystone != null) {
-                keystone.close();
-            }
-            if (novaApi != null) {
-                novaApi.close();
-            }
+        if (project == null) {
+            throw new VmidcBrokerValidationException("Project: '" + dto.getTenantName() + "' does not exist.");
         }
+
+        ArrayList<String> regionsList;
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, project.getName()))) {
+            regionsList = new ArrayList<>(novaApi.listRegions());
+        }
+        return regionsList;
     }
 
     /**
      * Validates the member to check for null fields and also check the region specified exists
-     *
      */
     protected void validate(SecurityGroupMemberItemDto memberItem, List<String> regions) throws VmidcBrokerInvalidEntryException,
             VmidcBrokerValidationException {
@@ -118,9 +107,9 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
             throw new VmidcBrokerValidationException(String.format("Region: '%s' does not exist for member '%s'",
                     memberItem.getRegion(), memberItem.getName()));
         }
-        if (memberItem.isProtectExternal()){
+        if (memberItem.isProtectExternal()) {
             if (memberItem.getType().equals(SecurityGroupMemberType.VM.toString()) ||
-                    memberItem.getType().equals(SecurityGroupMemberType.NETWORK.toString())){
+                    memberItem.getType().equals(SecurityGroupMemberType.NETWORK.toString())) {
                 throw new VmidcBrokerValidationException(String.format("Protect External: Not allowed for type '%s' member '%s'",
                         memberItem.getType(), memberItem.getName()));
             }
@@ -128,10 +117,10 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
     }
 
     public void addSecurityGroupMember(EntityManager em, SecurityGroup securityGroup,
-            SecurityGroupMemberItemDto securityGroupMemberDto) throws VmidcBrokerValidationException {
+                                       SecurityGroupMemberItemDto securityGroupMemberDto) throws VmidcBrokerValidationException {
         String openstackId = securityGroupMemberDto.getOpenstackId();
         SecurityGroupMemberType type = SecurityGroupMemberType.fromText(securityGroupMemberDto.getType());
-        OsProtectionEntity entity = null;
+        OsProtectionEntity entity;
 
         if (type == SecurityGroupMemberType.VM) {
             entity = VMEntityManager.findByOpenstackId(em, openstackId);

@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -110,25 +110,20 @@ public class VirtualizationConnectorUtil {
             // Check Connectivity with Key stone if https response exception is not to be ignored
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstackkeystone");
-                JCloudKeyStone keystoneAPi = null;
                 try {
                     VirtualizationConnectorDto vcDto = request.getDto();
                     boolean isHttps = isHttps(vcDto.getProviderAttributes());
 
-                    Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
+                    Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminDomainId(), vcDto.getAdminTenantName(),
                             vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps,
                             SslContextProvider.getInstance().getSSLContext());
-                    keystoneAPi = new JCloudKeyStone(endPoint);
-                    keystoneAPi.listTenants();
 
+                    Openstack4jKeystone keystoneAPi = new Openstack4jKeystone(endPoint);
+                    keystoneAPi.listProjects();
                 } catch (Exception exception) {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
                     LOG.warn(
                             "Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
-                } finally {
-                    if (keystoneAPi != null) {
-                        keystoneAPi.close();
-                    }
                 }
             }
 
@@ -162,7 +157,7 @@ public class VirtualizationConnectorUtil {
 
             this.managerFactory.clearListener();
 
-            if (!certificateResolverModels.isEmpty()) {
+            if (!certificateResolverModels.isEmpty() && errorTypeException != null) {
                 throw new SslCertificatesExtendedException(errorTypeException, certificateResolverModels);
             } else if (errorTypeException != null) {
                 throw errorTypeException;
