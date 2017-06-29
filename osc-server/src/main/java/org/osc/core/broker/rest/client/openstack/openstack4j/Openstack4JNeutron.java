@@ -53,8 +53,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     private static final String QUERY_PARAM_EXTERNAL_ROUTER = "router:external";
 
     private static final int OPENSTACK_CONFLICT_STATUS = 409;
-
-    private enum FloatingIpStatus {ACTIVE, DOWN, ERROR}
+    private static final int OPENSTACK_NOT_FOUND_STATUS = 404;
 
     public Openstack4JNeutron(Endpoint endPoint) {
         super(endPoint);
@@ -296,8 +295,17 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         builder.floatingNetworkId(networkId);
         builder.portId(portId);
 
-        NetFloatingIP netFloatingIP = getOs().networking().floatingip().create(builder.build());
-        log.info("Allocated Floating ip: " + netFloatingIP.getId() + " To server with Id: " + serverId);
+        NetFloatingIP netFloatingIP = null;
+        try {
+            netFloatingIP = getOs().networking().floatingip().create(builder.build());
+            log.info("Allocated Floating ip: " + netFloatingIP.getId() + " To server with Id: " + serverId);
+        } catch (ServerResponseException e) {
+            if (e.getStatusCode().getCode() == OPENSTACK_NOT_FOUND_STATUS) {
+                log.warn("Cannot create floating ip: " + e.getMessage());
+            } else {
+                throw e;
+            }
+        }
         return netFloatingIP;
     }
 
