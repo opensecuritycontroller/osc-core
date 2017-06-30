@@ -107,5 +107,6 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
         if (getOs() != null) {
             getOs().removeRegion();
         }
+        super.close();
     }
 }

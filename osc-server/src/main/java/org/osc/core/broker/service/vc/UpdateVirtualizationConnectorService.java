@@ -24,8 +24,6 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
-import org.osc.core.broker.rest.client.openstack.openstack4j.KeystoneProvider;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.ServiceDispatcher;
@@ -96,8 +94,6 @@ public class UpdateVirtualizationConnectorService
         // retrieve existing entry from db
         VirtualizationConnector vc = vcEntityMgr.findByPrimaryKey(request.getDto().getId());
 
-        cleanKeystoneProviderConnection(vc);
-
         Set<SslCertificateAttr> persistentSslCertificatesSet = vc.getSslCertificateAttrSet();
 
         try {
@@ -150,11 +146,6 @@ public class UpdateVirtualizationConnectorService
 
         Long jobId = this.conformService.startVCSyncJob(vc, em).getId();
         return new BaseJobResponse(vc.getId(), jobId);
-    }
-
-    private void cleanKeystoneProviderConnection(VirtualizationConnector vc) throws EncryptionException {
-        Endpoint endpoint = new Endpoint(vc);
-        KeystoneProvider.getInstance().cleanConnection(endpoint);
     }
 
     private DryRunRequest<VirtualizationConnectorRequest> internalSSLCertificatesFetch(
