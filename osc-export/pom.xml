@@ -260,7 +260,7 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-uber-openstack4j</artifactId>
-			<version>1.0.0</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -446,7 +446,7 @@
 
 								<copy todir="${basedir}/webapp/SDK">
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.0.1-SNAPSHOT">
+										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.1.0-SNAPSHOT">
 										<include name="**/*-sources.jar" />
 									</fileset>
 									<fileset

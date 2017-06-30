@@ -21,10 +21,7 @@ import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockRequest;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
-import org.osc.core.broker.rest.client.openstack.openstack4j.KeystoneProvider;
 import org.osc.core.broker.service.LockUtil;
-import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SslCertificateAttrEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -60,8 +57,6 @@ public class VCDeleteMetaTask extends TransactionalTask {
             OSCEntityManager<VirtualizationConnector> vcEntityMgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
             VirtualizationConnector connector = vcEntityMgr.findByPrimaryKey(this.vc.getId());
 
-            cleanKeystoneProviderConnection(connector);
-
             SslCertificateAttrEntityMgr sslCertificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             sslCertificateAttrEntityMgr.removeCertificateList(connector.getSslCertificateAttrSet());
             vcEntityMgr.delete(this.vc.getId());
@@ -74,11 +69,6 @@ public class VCDeleteMetaTask extends TransactionalTask {
                 LockManager.getLockManager().releaseLock(new LockRequest(vcUnlockTask));
             }
         }
-    }
-
-    private void cleanKeystoneProviderConnection(VirtualizationConnector vc) throws EncryptionException {
-        Endpoint endpoint = new Endpoint(vc);
-        KeystoneProvider.getInstance().cleanConnection(endpoint);
     }
 
     @Override

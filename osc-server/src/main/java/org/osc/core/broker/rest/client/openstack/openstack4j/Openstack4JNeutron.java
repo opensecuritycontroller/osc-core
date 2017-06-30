@@ -323,5 +323,6 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         if (getOs() != null) {
             getOs().removeRegion();
         }
+        super.close();
     }
 }

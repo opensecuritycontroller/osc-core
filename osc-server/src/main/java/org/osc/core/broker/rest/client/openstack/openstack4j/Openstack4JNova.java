@@ -257,5 +257,6 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         if (getOs() != null) {
             getOs().removeRegion();
         }
+        super.close();
     }
 }

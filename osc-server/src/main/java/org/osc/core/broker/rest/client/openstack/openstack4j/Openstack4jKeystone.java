@@ -18,7 +18,6 @@ package org.osc.core.broker.rest.client.openstack.openstack4j;
 
 import org.openstack4j.model.identity.v3.Project;
 
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 
@@ -36,10 +35,5 @@ public class Openstack4jKeystone extends BaseOpenstack4jApi {
 
     public Project getProjectById(String projectId) {
         return this.getOs().identity().projects().get(projectId);
-    }
-
-    @Override
-    public void close() throws IOException {
-
     }
 }
