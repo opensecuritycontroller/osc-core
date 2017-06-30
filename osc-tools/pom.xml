@@ -15,25 +15,25 @@
     limitations under the License.
  -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.osc.core</groupId>
-	<artifactId>osc-tools</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
-	<name>org.osc.core:osc-tools</name>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.0</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-			<!-- Creating single jar -->
-			<plugin>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.osc.core</groupId>
+    <artifactId>osc-tools</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>org.osc.core:osc-tools</name>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <!-- Creating single jar -->
+            <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.5</version>
                 <configuration>
@@ -42,41 +42,41 @@
                         <manifestEntries>
                             <Build-Time>${maven.build.timestamp}</Build-Time>
                             <Implementation-Build>${fullVersion}</Implementation-Build>
-							<Implementation-Version>${project.version}</Implementation-Version>
+                            <Implementation-Version>${project.version}</Implementation-Version>
                         </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
             <plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
-				<executions>
-					<execution>
-						<id>prodVer</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<target>
-								<!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>prodVer</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
                                 <exec outputproperty="fullVersion" dir="." executable="sh">
-									<arg value="-c" />
-									<arg value="git describe --long | tr -d v" />
-								</exec>
+                                    <arg value="-c" />
+                                    <arg value="git describe --long | tr -d v" />
+                                </exec>
                                 <!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, etc -->
                                 <exec outputproperty="releaseVersion" dir="." executable="sh">
-									<arg value="-c" />
-									<arg value="git describe --abbrev=0 | tr -d v" />
-								</exec>
-								<echo>Full Version: ${fullVersion}</echo>
+                                    <arg value="-c" />
+                                    <arg value="git describe --abbrev=0 | tr -d v" />
+                                </exec>
+                                <echo>Full Version: ${fullVersion}</echo>
                                 <echo>Version: ${releaseVersion}</echo>
-							</target>
-							<exportAntProperties>true</exportAntProperties>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+                            </target>
+                            <exportAntProperties>true</exportAntProperties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -101,6 +101,6 @@
                     </execution>
                 </executions>
             </plugin>
-		</plugins>
-	</build>
+        </plugins>
+    </build>
 </project>
