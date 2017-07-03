@@ -16,15 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.neutron.v2.domain.IP;
-import org.jclouds.openstack.neutron.v2.domain.Port;
+import org.openstack4j.model.network.IP;
+import org.openstack4j.model.network.Port;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -32,8 +26,8 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
@@ -43,6 +37,11 @@ import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.Op
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 @Component(service = SecurityGroupMemberNetworkUpdateTask.class)
 public class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask {
@@ -78,11 +77,8 @@ public class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask 
 
         SecurityGroup sg = this.sgm.getSecurityGroup();
 
-        JCloudNeutron neutron = null;
-
-        try {
-            neutron = new JCloudNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
-
+        Endpoint endPoint = new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName());
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
             List<Port> osPorts = neutron.listComputePortsByNetwork(network.getRegion(), sg.getTenantId(),
                     network.getOpenstackId());
             List<String> existingOsPortIds = new ArrayList<>();
@@ -113,7 +109,8 @@ public class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask 
                                 SecurityGroup otherSecurityGroup = iterator.next().getSecurityGroup();
                                 if (!otherSecurityGroup.equals(sg)) {
                                     String errMessage = String
-                                            .format("VM Port with MAC '%s' (VM '%s') belonging to network member '%s' is already being protected by Security Group '%s'",
+                                            .format("VM Port with MAC '%s' (VM '%s') belonging to network member '%s' " +
+                                                            "is already being protected by Security Group '%s'",
                                                     vmPort.getMacAddresses(), vmPort.getVm().getName(),
                                                     network.getName(), otherSecurityGroup.getName());
                                     this.tg.addTask(new FailedWithObjectInfoTask(String.format(
@@ -130,7 +127,8 @@ public class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask 
                                 SecurityGroup otherSecurityGroup = iterator.next().getSecurityGroup();
                                 if (!otherSecurityGroup.equals(sg)) {
                                     String errMessage = String
-                                            .format("VM Port with MAC '%s' (Subnet '%s') belonging to network member '%s' is already being protected by Security Group '%s'",
+                                            .format("VM Port with MAC '%s' (Subnet '%s') belonging to network member '%s' " +
+                                                            "is already being protected by Security Group '%s'",
                                                     vmPort.getMacAddresses(), vmPort.getSubnet().getName(),
                                                     network.getName(), otherSecurityGroup.getName());
                                     this.tg.addTask(new FailedWithObjectInfoTask(String.format(
@@ -149,13 +147,9 @@ public class SecurityGroupMemberNetworkUpdateTask extends TransactionalMetaTask 
             this.tg.appendTask(this.markStalePortsAsDeletedTask.create(network, existingOsPortIds),
                     TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
-        } finally {
-            if (neutron != null) {
-                neutron.close();
-            }
+            OSCEntityManager.update(em, network, this.txBroadcastUtil);
         }
 
-        OSCEntityManager.update(em, network, this.txBroadcastUtil);
     }
 
     @Override

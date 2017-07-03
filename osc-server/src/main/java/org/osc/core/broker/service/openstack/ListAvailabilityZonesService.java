@@ -16,17 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
-import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZone;
+import org.openstack4j.model.compute.ext.AvailabilityZone;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListAvailabilityZonesServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
@@ -36,6 +30,11 @@ import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 
+import javax.persistence.EntityManager;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 public class ListAvailabilityZonesService
         extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<AvailabilityZoneDto>>
@@ -43,32 +42,21 @@ public class ListAvailabilityZonesService
 
     @Override
     public ListResponse<AvailabilityZoneDto> exec(BaseOpenStackRequest request, EntityManager em) throws IOException, EncryptionException {
-        ListResponse<AvailabilityZoneDto> response = new ListResponse<AvailabilityZoneDto>();
-        List<AvailabilityZoneDto> azList = new ArrayList<AvailabilityZoneDto>();
-        // Initializing Entity Manager
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
+        List<AvailabilityZoneDto> azList = new ArrayList<>();
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
-        JCloudNova novaApi = new JCloudNova(new Endpoint(vc, request.getTenantName()));
-        try {
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()))) {
             for (String region : novaApi.listRegions()) {
                 for (AvailabilityZone az : novaApi.listAvailabilityZones(region)) {
                     AvailabilityZoneDto azDto = new AvailabilityZoneDto();
                     azDto.setRegion(region);
-                    azDto.setZone(az.getName());
-
+                    azDto.setZone(az.getZoneName());
                     azList.add(azDto);
                 }
             }
-            response.setList(azList);
-
-        } finally {
-            if (novaApi != null) {
-                novaApi.close();
-            }
-
         }
-        return response;
+        return new ListResponse<>(azList);
     }
 }

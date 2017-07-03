@@ -14,25 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest.client.openstack.vmidc.api;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
 import org.openstack4j.model.identity.v3.Token;
-import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
-import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jAuthentication;
-import org.osc.core.broker.rest.client.openstack.vmidc.OSGlanceClient;
 
-import java.io.IOException;
+public class Openstack4jAuthentication extends BaseOpenstack4jApi {
 
-public class OSGlanceRestApi {
-
-    private Token token;
-    protected OSGlanceClient osGlanceClient;
-
-    public OSGlanceRestApi(Endpoint endPoint) throws IOException {
-        try (Openstack4jAuthentication authApi = new Openstack4jAuthentication(endPoint)) {
-            this.token = authApi.getTenantToken();
-        }
-        this.osGlanceClient = new OSGlanceClient(endPoint, this.token.getId());
+    public Openstack4jAuthentication(Endpoint endPoint) {
+        super(endPoint);
     }
 
+    public Token getTenantToken() {
+        return this.getOs().getToken();
+    }
 }

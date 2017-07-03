@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest.client.openstack.jcloud;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZoneDetails;
+import org.openstack4j.model.compute.ext.AvailabilityZone;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 
@@ -51,11 +51,11 @@ public class HostAvailabilityZoneMapping {
         }
     }
 
-    private List<AvailabilityZoneDetails> availabilityZones = new ArrayList<>();
+    private List<AvailabilityZone> availabilityZones = new ArrayList<>();
     private Map<String, String> hostAvailabilityZoneMap;
     private Map<String, Set<String>> availabilityZoneHostsMap;
 
-    HostAvailabilityZoneMapping(List<AvailabilityZoneDetails> availabilityZones) {
+    HostAvailabilityZoneMapping(List<? extends AvailabilityZone> availabilityZones) {
         this.availabilityZones.addAll(availabilityZones);
         initAvailabilityZoneHostsMap();
         initHostAvailabilityZoneMap();
@@ -106,16 +106,16 @@ public class HostAvailabilityZoneMapping {
 
     private void initAvailabilityZoneHostsMap() {
         this.availabilityZoneHostsMap = new HashMap<>();
-        for (AvailabilityZoneDetails az : this.availabilityZones) {
-            this.availabilityZoneHostsMap.put(az.getName(), az.getHosts().keySet());
+        for (AvailabilityZone az : this.availabilityZones) {
+            this.availabilityZoneHostsMap.put(az.getZoneName(), az.getHosts().keySet());
         }
     }
 
     private void initHostAvailabilityZoneMap() {
         this.hostAvailabilityZoneMap = new HashMap<>();
-        for (AvailabilityZoneDetails az : this.availabilityZones) {
+        for (AvailabilityZone az : this.availabilityZones) {
             for (String hostName : az.getHosts().keySet()) {
-                this.hostAvailabilityZoneMap.put(hostName, az.getName());
+                this.hostAvailabilityZoneMap.put(hostName, az.getZoneName());
             }
         }
     }

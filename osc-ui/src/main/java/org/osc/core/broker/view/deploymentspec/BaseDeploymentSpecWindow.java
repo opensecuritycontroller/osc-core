@@ -451,7 +451,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
 
                 List<String> floatingIpPoolList = this.listFloatingIpPoolsService.dispatch(req).getList();
 
-                if (floatingIpPoolList.get(0) != null) {
+                if (floatingIpPoolList.size() > 0) {
                     this.floatingIpPool.addItems(floatingIpPoolList);
                 }
             }

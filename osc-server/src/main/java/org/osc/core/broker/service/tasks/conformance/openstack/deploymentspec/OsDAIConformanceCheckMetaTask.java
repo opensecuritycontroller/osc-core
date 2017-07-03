@@ -16,16 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.persistence.EntityManager;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.nova.v2_0.domain.Server;
+import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -34,8 +27,8 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -44,7 +37,6 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
-import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.controller.exception.NetworkPortNotFoundException;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
@@ -52,6 +44,12 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Makes sure the DAI has a corresponding SVA on the specified end point. If the SVA does not exist
@@ -156,10 +154,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
 
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
         Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
-        JCloudNova nova = null;
 
-        try {
-            nova = new JCloudNova(endPoint);
+        try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
 
             Server sva = null;
             if (this.dai.getOsServerId() != null) {
@@ -170,10 +166,10 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
             if (sva == null) {
                 log.info("SVA missing for Dai: " + this.dai);
                 Server namedSva = nova.getServerByName(ds.getRegion(), this.dai.getName());
-                /*
-                 * If we found VM with this name and we have not previously with the ID we had in DB,
-                 * that means that all are OS attributes are staled and should be re-discovered
-                 */
+            /*
+             * If we found VM with this name and we have not previously with the ID we had in DB,
+             * that means that all are OS attributes are staled and should be re-discovered
+             */
                 if (namedSva != null) {
                     log.info("Missing SVA found by name, deleting stale SVA to redeploy: " + this.dai.getName());
                     this.tg.addTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
@@ -220,11 +216,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                 }
 
             }
-        } finally {
-            if (nova != null) {
-                nova.close();
-            }
         }
+
     }
 
     private boolean isPortRegistered() throws NetworkPortNotFoundException, Exception {
@@ -239,8 +232,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
             if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
                 String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
-                        ds.getVirtualSystem().getVirtualizationConnector(),
-                        new ArrayList<NetworkElement>(Arrays.asList(ingressPort)));
+                        ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<>(Arrays.asList(ingressPort)));
                 if (domainId != null) {
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);

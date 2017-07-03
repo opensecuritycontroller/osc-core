@@ -77,7 +77,7 @@
 		<dependency>
 			<groupId>org.osc.api</groupId>
 			<artifactId>sdn-controller-api</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.1.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -128,20 +128,6 @@
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.5</version>
-		</dependency>
-		
-		<!--TODO: The following dependencies are only needed for exception handling 
-		    due to a leaky API and should be removed if possible -->
-		<dependency>
-			<groupId>org.apache.jclouds</groupId>
-			<artifactId>jclouds-core</artifactId>
-			<version>${jclouds.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.ws.rs</groupId>
-					<artifactId>jsr311-api</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<!-- Vaadin Dependencies -->

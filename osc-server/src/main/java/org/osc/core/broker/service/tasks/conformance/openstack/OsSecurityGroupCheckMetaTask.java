@@ -16,39 +16,35 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.neutron.v2.domain.Rule;
-import org.jclouds.openstack.neutron.v2.domain.RuleDirection;
-import org.jclouds.openstack.neutron.v2.domain.RuleEthertype;
-import org.jclouds.openstack.neutron.v2.domain.SecurityGroup;
+import org.openstack4j.api.Builders;
+import org.openstack4j.model.network.SecurityGroup;
+import org.openstack4j.model.network.SecurityGroupRule;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-@Component(service=OsSecurityGroupCheckMetaTask.class)
+@Component(service = OsSecurityGroupCheckMetaTask.class)
 public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
     private static final Logger log = Logger.getLogger(OsSecurityGroupCheckMetaTask.class);
@@ -58,6 +54,11 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
     @Reference
     private ApiFactoryService apiFactoryService;
+
+    private final static String INGRESS = "INGRESS";
+    private final static String EGRESS = "EGRESS";
+    private final static String IPV4 = "IPv4";
+    private final static String IPV6 = "IPv6";
 
     private DeploymentSpec ds;
     private TaskGraph tg;
@@ -77,38 +78,36 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
-        DeploymentSpec ds = em.find(DeploymentSpec.class, this.ds.getId(),
-                LockModeType.PESSIMISTIC_WRITE);
+        DeploymentSpec ds = em.find(DeploymentSpec.class, this.ds.getId(), LockModeType.PESSIMISTIC_WRITE);
         VirtualSystem vs = ds.getVirtualSystem();
-        log.info(
-                "Checking if VS" + vs.getName() + " has the corresponding Openstack Security Group");
+        log.info("Checking if VS" + vs.getName() + " has the corresponding Openstack Security Group");
 
         Endpoint endPoint = new Endpoint(ds);
-        try (JCloudNeutron neutron = new JCloudNeutron(endPoint)) {
-            // Check if the VS have ds or dds with os security group reference
-            OsSecurityGroupReference sgReference = null;
-            List<DeploymentSpec> dss = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(
-                    em, ds.getVirtualSystem(), ds.getTenantId(), ds.getRegion());
-            for (DeploymentSpec depSpec : dss) {
-                if (depSpec.getOsSecurityGroupReference() != null) {
-                    sgReference = depSpec.getOsSecurityGroupReference();
-                    break;
-                }
+        // Check if the VS have ds or dds with os security group reference
+        OsSecurityGroupReference sgReference = null;
+        List<DeploymentSpec> dss = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(
+                em, ds.getVirtualSystem(), ds.getTenantId(), ds.getRegion());
+        for (DeploymentSpec depSpec : dss) {
+            if (depSpec.getOsSecurityGroupReference() != null) {
+                sgReference = depSpec.getOsSecurityGroupReference();
+                break;
             }
+        }
 
-            // The only SDN controller that currently returns true for supportsPortGroup is Nuage.
-            boolean skipSecurityGroupCreation = vs.getVirtualizationConnector().isControllerDefined()
-                    ? this.apiFactoryService.supportsPortGroup(vs) : false;
-            // If DS or DDS both have no os security group reference, create OS SG
-            if (sgReference == null) {
-                //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
-                if (!skipSecurityGroupCreation) {
-                    this.tg.appendTask(this.createOsSecurityGroupTask.create(ds, endPoint));
-                }
-            } else {
-                DeploymentSpec existingDs = null;
+        // The only SDN controller that currently returns true for supportsPortGroup is Nuage.
+        boolean skipSecurityGroupCreation = vs.getVirtualizationConnector().isControllerDefined()
+                ? this.apiFactoryService.supportsPortGroup(vs) : false;
+        // If DS or DDS both have no os security group reference, create OS SG
+        if (sgReference == null) {
+            //TODO: sjallapx Hack to workaround Nuage SimpleDateFormat parse errors due to JCloud
+            if (!skipSecurityGroupCreation) {
+                this.tg.appendTask(this.createOsSecurityGroupTask.create(ds, endPoint));
+            }
+        } else {
+            DeploymentSpec existingDs;
+            try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
                 for (Iterator<DeploymentSpec> iterator = sgReference.getDeploymentSpecs().iterator(); iterator
-                        .hasNext();) {
+                        .hasNext(); ) {
                     existingDs = iterator.next();
                     // For a given tenant, region and VS there will be only one SG
                     if (existingDs.getRegion().equals(this.ds.getRegion())
@@ -136,34 +135,25 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         }
     }
 
-    private void syncSGRules(SecurityGroup sg, JCloudNeutron neutron) throws Exception {
-        final ImmutableList<Rule> rules = sg.getRules();
-        List<Rule> expectedList = new ArrayList<>();
-        expectedList.add(
-                Rule.createBuilder(RuleDirection.INGRESS, "").ethertype(RuleEthertype.IPV4).protocol(null).build());
-        expectedList
-        .add(Rule.createBuilder(RuleDirection.EGRESS, "").ethertype(RuleEthertype.IPV4).protocol(null).build());
-        expectedList.add(
-                Rule.createBuilder(RuleDirection.INGRESS, "").ethertype(RuleEthertype.IPV6).protocol(null).build());
-        expectedList
-        .add(Rule.createBuilder(RuleDirection.EGRESS, "").ethertype(RuleEthertype.IPV6).protocol(null).build());
+    private void syncSGRules(SecurityGroup sg, Openstack4JNeutron neutron) throws Exception {
+        final List<? extends SecurityGroupRule> rules = sg.getRules();
 
-        ImmutableList.<Rule>builder().addAll(expectedList);
+        List<SecurityGroupRule> expectedList = new ArrayList<>();
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV4).direction(INGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV4).direction(EGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV6).direction(INGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV6).direction(EGRESS).build());
+        ImmutableList.<SecurityGroupRule>builder().addAll(expectedList);
 
         // Filter the missing rules from the expected SG rules
-        Collection<Rule> missingRules = Collections2.filter(expectedList, new Predicate<Rule>() {
-
-            @Override
-            public boolean apply(Rule expRule) {
-                for (Rule osRule : rules) {
-                    if (osRule.getDirection().equals(expRule.getDirection())
-                            && osRule.getEthertype().equals(expRule.getEthertype()) && osRule.getProtocol() == null) {
-                        return false;
-                    }
+        Collection<SecurityGroupRule> missingRules = Collections2.filter(expectedList, expRule -> {
+            for (SecurityGroupRule osRule : rules) {
+                if (expRule != null && osRule.getDirection().equals(expRule.getDirection())
+                        && osRule.getEtherType().equals(expRule.getEtherType()) && osRule.getProtocol() == null) {
+                    return false;
                 }
-                return true;
             }
-
+            return true;
         });
         if (!missingRules.isEmpty()) {
             neutron.addSecurityGroupRules(sg, this.ds.getRegion(), missingRules);

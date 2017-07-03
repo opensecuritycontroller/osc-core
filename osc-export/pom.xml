@@ -81,11 +81,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.osc.core</groupId>
-			<artifactId>osc-uber-jcloud</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.osc.core</groupId>
 			<artifactId>osc-ui</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -284,6 +279,23 @@
 
 		<dependency>
 			<groupId>org.osc.core</groupId>
+			<artifactId>osc-uber-openstack4j</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.8.5</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-annotations</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.osc.core</groupId>
 			<artifactId>osc-rest-server</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -455,7 +467,7 @@
 
 								<copy todir="${basedir}/webapp/SDK">
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.0.0-SNAPSHOT">
+										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.1.0-SNAPSHOT">
 										<include name="**/*-sources.jar" />
 									</fileset>
 									<fileset
