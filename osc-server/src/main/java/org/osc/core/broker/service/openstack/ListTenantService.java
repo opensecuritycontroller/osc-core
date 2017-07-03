@@ -16,11 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
-
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
@@ -32,6 +27,10 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
+
+import javax.persistence.EntityManager;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResponse<OsTenantDto>>
@@ -46,9 +45,12 @@ public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResp
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
-        Openstack4jKeystone keystoneApi = new Openstack4jKeystone(new Endpoint(vc));
-        List<OsTenantDto> tenantDtos = keystoneApi.listProjects().stream()
-                .map(tenant -> new OsTenantDto(tenant.getName(), tenant.getId())).collect(Collectors.toList());
-        return new ListResponse<>(tenantDtos);
+        ListResponse<OsTenantDto> listResponse = new ListResponse<>();
+        try (Openstack4jKeystone keystoneApi = new Openstack4jKeystone(new Endpoint(vc))) {
+            List<OsTenantDto> tenantDtos = keystoneApi.listProjects().stream()
+                    .map(tenant -> new OsTenantDto(tenant.getName(), tenant.getId())).collect(Collectors.toList());
+            listResponse.setList(tenantDtos);
+        }
+        return listResponse;
     }
 }
