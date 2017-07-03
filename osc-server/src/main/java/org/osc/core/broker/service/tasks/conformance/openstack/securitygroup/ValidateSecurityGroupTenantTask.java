@@ -32,7 +32,7 @@ import java.util.Set;
 /**
  * Validates the DS tenant exists and syncs the name if needed
  */
-@Component(service=ValidateSecurityGroupTenantTask.class)
+@Component(service = ValidateSecurityGroupTenantTask.class)
 public class ValidateSecurityGroupTenantTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(ValidateSecurityGroupTenantTask.class);
@@ -54,18 +54,19 @@ public class ValidateSecurityGroupTenantTask extends TransactionalTask {
         this.securityGroup = sgEmgr.findByPrimaryKey(this.securityGroup.getId());
 
         this.log.info("Validating the Security Group tenant " + this.securityGroup.getTenantName() + " exists.");
-        Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(this.securityGroup.getVirtualizationConnector()));
-        Project tenant = keystone.getProjectById(this.securityGroup.getTenantId());
-        if (tenant == null) {
-            this.log.info("Security Group tenant " + this.securityGroup.getTenantName() + " Deleted from openstack. Marking Security Group for deletion.");
-            // Tenant was deleted, mark Security Group for deleting as well
-            OSCEntityManager.markDeleted(em, this.securityGroup, this.txBroadcastUtil);
-        } else {
-            // Sync the tenant name if needed
-            if (!tenant.getName().equals(this.securityGroup.getTenantName())) {
-                this.log.info("Security Group tenant name updated from " + this.securityGroup.getTenantName() + " to " + tenant.getName());
-                this.securityGroup.setTenantName(tenant.getName());
-                OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
+        try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(this.securityGroup.getVirtualizationConnector()))) {
+            Project tenant = keystone.getProjectById(this.securityGroup.getTenantId());
+            if (tenant == null) {
+                this.log.info("Security Group tenant " + this.securityGroup.getTenantName() + " Deleted from openstack. Marking Security Group for deletion.");
+                // Tenant was deleted, mark Security Group for deleting as well
+                OSCEntityManager.markDeleted(em, this.securityGroup, this.txBroadcastUtil);
+            } else {
+                // Sync the tenant name if needed
+                if (!tenant.getName().equals(this.securityGroup.getTenantName())) {
+                    this.log.info("Security Group tenant name updated from " + this.securityGroup.getTenantName() + " to " + tenant.getName());
+                    this.securityGroup.setTenantName(tenant.getName());
+                    OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
+                }
             }
         }
     }
@@ -73,12 +74,10 @@ public class ValidateSecurityGroupTenantTask extends TransactionalTask {
     @Override
     public String getName() {
         return String.format("Validating Security Group '%s' for tenant '%s'", this.securityGroup.getName(), this.securityGroup.getTenantName());
-    };
-
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {
         return LockObjectReference.getObjectReferences(this.securityGroup);
     }
-
 }

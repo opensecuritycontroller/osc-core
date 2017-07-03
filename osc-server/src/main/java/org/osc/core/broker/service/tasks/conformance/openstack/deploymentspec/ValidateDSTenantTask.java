@@ -33,7 +33,7 @@ import java.util.Set;
 /**
  * Validates the DS tenant exists and syncs the name if needed
  */
-@Component(service=ValidateDSTenantTask.class)
+@Component(service = ValidateDSTenantTask.class)
 public class ValidateDSTenantTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(ValidateDSTenantTask.class);
@@ -58,18 +58,19 @@ public class ValidateDSTenantTask extends TransactionalTask {
             VirtualizationConnector vc = this.ds.getVirtualSystem().getVirtualizationConnector();
             this.log.info("Validating the DS tenant " + this.ds.getTenantName() + " exists.");
 
-            Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc));
-            Project tenant = keystone.getProjectById(this.ds.getTenantId());
-            if (tenant == null) {
-                this.log.info("DS tenant " + this.ds.getTenantName() + " Deleted from openstack. Marking DS for deletion.");
-                // Tenant was deleted, mark ds for deleting as well
-                OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
-            } else {
-                // Sync the tenant name if needed
-                if (!tenant.getName().equals(this.ds.getTenantName())) {
-                    this.log.info("DS tenant name updated from " + this.ds.getTenantName() + " to " + tenant.getName());
-                    this.ds.setTenantName(tenant.getName());
-                    OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
+            try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc))) {
+                Project tenant = keystone.getProjectById(this.ds.getTenantId());
+                if (tenant == null) {
+                    this.log.info("DS tenant " + this.ds.getTenantName() + " Deleted from openstack. Marking DS for deletion.");
+                    // Tenant was deleted, mark ds for deleting as well
+                    OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
+                } else {
+                    // Sync the tenant name if needed
+                    if (!tenant.getName().equals(this.ds.getTenantName())) {
+                        this.log.info("DS tenant name updated from " + this.ds.getTenantName() + " to " + tenant.getName());
+                        this.ds.setTenantName(tenant.getName());
+                        OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
+                    }
                 }
             }
         }

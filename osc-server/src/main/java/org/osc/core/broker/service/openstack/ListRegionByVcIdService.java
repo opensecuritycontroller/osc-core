@@ -40,9 +40,12 @@ public class ListRegionByVcIdService extends ServiceDispatcher<BaseOpenStackRequ
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
 
-        Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc, request.getTenantName()));
-        List<? extends Region> endpoints = keystone.getOs().identity().regions().list();
-        List<String> regions = endpoints.stream().map(Region::getId).collect(Collectors.toList());
-        return new ListResponse<>(regions);
+        ListResponse<String> listResponse = new ListResponse<>();
+        try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc, request.getTenantName()))) {
+            List<? extends Region> endpoints = keystone.getOs().identity().regions().list();
+            List<String> regions = endpoints.stream().map(Region::getId).collect(Collectors.toList());
+            listResponse.setList(regions);
+        }
+        return listResponse;
     }
 }
