@@ -55,6 +55,7 @@
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-common</artifactId>
 			<version>${project.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.osc.api</groupId>
@@ -132,13 +133,6 @@
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-tools</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.osc.core</groupId>
-			<artifactId>osc-common</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
