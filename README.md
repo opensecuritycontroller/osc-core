@@ -4,7 +4,7 @@
   </a>
 </p>
 
-[![Build Status](https://travis-ci.com/opensecuritycontroller/osc-core.svg?token=FzxT1Qx9H6sqEHPcKhqW&branch=master)](https://travis-ci.com/opensecuritycontroller/osc-core)
+[![Build Status](https://travis-ci.org/opensecuritycontroller/osc-core.svg?branch=master)](https://travis-ci.org/opensecuritycontroller/osc-core)
 
 Open Security Controller (OSC) is a software-defined security orchestration solution that automates deployment of virtualized network security functions, like next-generation firewall, intrusion prevention systems, and application data controllers. OSC enables East-West data center security, is scalable, and reduces threats in software defined network environments.
 
