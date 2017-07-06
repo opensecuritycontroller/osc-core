@@ -87,17 +87,12 @@
 	osc-server;version='[1.0.0,1.0.1)',\
 	osc-common;version='[1.0.0,1.0.1)',\
 	log4j;version='[1.2.17,1.2.18)',\
-	jclouds-compute;version='[2.0.0,2.0.1)',\
 	openstack-glance;version='[2.0.0,2.0.1)',\
 	openstack-neutron;version='[2.0.0,2.0.1)',\
-	openstack-nova;version='[2.0.0,2.0.1)',\
-	org.apache.commons.lang3;version='[3.2.1,3.2.2)',\
 	sdn-controller-api;version='[1.0.1,1.0.2)',\
-	security-mgr-api;version='[1.0.1,1.0.2)'
+	security-mgr-api;version='[1.0.1,1.0.2)', \
 	openstack-keystone;version='[2.0.0,2.0.1)',\
 	openstack-nova;version='[2.0.0,2.0.1)',\
-	org.apache.felix.http.api;version='[3.0.0,3.0.1)'
-=======
+	org.apache.felix.http.api;version='[3.0.0,3.0.1)',\
 	openstack-glance;version='[2.0.0,2.0.1)',\
 	openstack-neutron;version='[2.0.0,2.0.1)'
->>>>>>> remove esapi #282
