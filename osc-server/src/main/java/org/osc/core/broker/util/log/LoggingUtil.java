@@ -24,7 +24,7 @@ import java.util.Collection;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.annotations.VmidcLogHidden;
 import org.osc.core.broker.service.api.server.LoggingApi;
@@ -179,7 +179,7 @@ public final class LoggingUtil implements LoggingApi {
     @Override
     public String removeCRLF(String message) {
         // See https://www.owasp.org/index.php/Category:Encoding
-        String clean = StringEscapeUtils.escapeHtml4(message.replace('\n', '_').replace('\r', '_'));
+        String clean = StringEscapeUtils.escapeHtml(message.replace('\n', '_').replace('\r', '_'));
         if (!message.equals(clean)) {
             clean += " (Encoded)";
         }
