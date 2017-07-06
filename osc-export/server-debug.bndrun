@@ -97,7 +97,6 @@ x-runproperties.debug: \
 	osc-ui-widgetset;version='[1.0.0,1.0.1)',\
 	com.rabbitmq.client;version='[4.1.0,4.1.1)',\
 	org.apache.commons.collections4;version='[4.1.0,4.1.1)',\
-	org.apache.commons.lang3;version='[3.2.1,3.2.2)',\
 	org.glassfish.grizzly.framework;version='[2.3.13,2.3.14)',\
 	org.glassfish.tyrus.bundles.tyrus-standalone-client;version='[1.7.0,1.7.1)',\
 	joda-time;version='[2.9.7,2.9.8)',\
@@ -110,4 +109,7 @@ x-runproperties.debug: \
 	org.apache.commons.logging;version='[1.1.3,1.1.4)',\
 	osc-server;version='[1.0.0,1.0.1)',\
 	osc-common;version='[1.0.0,1.0.1)',\
-	log4j;version='[1.2.17,1.2.18)'
+	log4j;version='[1.2.17,1.2.18)',\
+	openstack-keystone;version='[2.0.0,2.0.1)',\
+	openstack-nova;version='[2.0.0,2.0.1)',\
+	org.apache.felix.http.api;version='[3.0.0,3.0.1)'

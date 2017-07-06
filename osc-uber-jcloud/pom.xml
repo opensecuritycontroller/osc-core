@@ -98,51 +98,61 @@
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-bundle</artifactId>
 			<version>1.12</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>javax.annotation</groupId>
 			<artifactId>jsr250-api</artifactId>
 			<version>1.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>javax.ws.rs</groupId>
 			<artifactId>jsr311-api</artifactId>
 			<version>1.1.1</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jclouds</groupId>
 			<artifactId>jclouds-compute</artifactId>
 			<version>2.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jclouds</groupId>
 			<artifactId>jclouds-core</artifactId>
 			<version>2.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jclouds</groupId>
 			<artifactId>jclouds-scriptbuilder</artifactId>
 			<version>2.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jclouds.labs</groupId>
 			<artifactId>openstack-neutron</artifactId>
 			<version>2.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jclouds.labs</groupId>
 			<artifactId>openstack-glance</artifactId>
 			<version>2.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jclouds.api</groupId>
 			<artifactId>openstack-keystone</artifactId>
 			<version>2.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jclouds.api</groupId>
 			<artifactId>openstack-nova</artifactId>
 			<version>2.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 </project>

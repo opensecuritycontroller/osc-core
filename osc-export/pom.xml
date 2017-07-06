@@ -79,6 +79,20 @@
 			<artifactId>osc-uber</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<!-- Runtime dependencies for the uber jar -->
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.6</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.1.3</version>
+			<scope>runtime</scope>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-uber-jcloud</artifactId>
@@ -166,26 +180,14 @@
 			<classifier>all</classifier>
 		</dependency>
 		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>osgi.core</artifactId>
-			<version>6.0.0</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>osgi.cmpn</artifactId>
-			<version>6.0.0</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>osgi.annotation</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.eventadmin</artifactId>
 			<version>1.4.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.osgi.repository</groupId>
+			<artifactId>jbosgi-repository-core</artifactId>
+			<version>6.0.1.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
@@ -200,16 +202,6 @@
 			<version>2.0.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish.hk2.external</groupId>
-			<artifactId>javax.inject</artifactId>
-			<version>2.5.0-b05</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.hk2.external</groupId>
-			<artifactId>aopalliance-repackaged</artifactId>
-			<version>2.5.0-b05</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.geronimo.specs</groupId>
 			<artifactId>geronimo-jta_1.1_spec</artifactId>
 			<version>1.1.1</version>
@@ -220,18 +212,6 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
 			<version>1.7.21</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-common</artifactId>
-			<version>2.25</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-client</artifactId>
-			<version>2.25</version>
 			<scope>runtime</scope>
 		</dependency>
 
