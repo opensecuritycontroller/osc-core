@@ -24,11 +24,11 @@ import java.util.Collection;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.annotations.VmidcLogHidden;
 import org.osc.core.broker.service.api.server.LoggingApi;
 import org.osgi.service.component.annotations.Component;
-import org.owasp.esapi.ESAPI;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -176,15 +176,12 @@ public final class LoggingUtil implements LoggingApi {
         return null;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public String removeCRLF(String message){
-        String clean = message.replace('\n', '_').replace('\r', '_');
-        if (ESAPI.securityConfiguration().getLogEncodingRequired()) {
-            clean = ESAPI.encoder().encodeForHTML(message);
-            if (!message.equals(clean)) {
-                clean += " (Encoded)";
-            }
+    public String removeCRLF(String message) {
+        // See https://www.owasp.org/index.php/Category:Encoding
+        String clean = StringEscapeUtils.escapeHtml(message.replace('\n', '_').replace('\r', '_'));
+        if (!message.equals(clean)) {
+            clean += " (Encoded)";
         }
         return clean;
     }

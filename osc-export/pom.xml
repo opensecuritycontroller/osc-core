@@ -394,7 +394,6 @@
 								<exclude>mgr_plugins</exclude>
 								<exclude>sdn_ctrl_plugins</exclude>
 								<exclude>log4j.properties</exclude>
-								<exclude>ESAPI.properties</exclude>
 								<exclude>quartz.properties</exclude>
 								<exclude>vmidcServer.conf</exclude>
 								<exclude>vmidc.sh</exclude>
