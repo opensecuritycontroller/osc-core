@@ -1,1 +1,0 @@
-$wnd.org_osc_core_broker_view_AppWidgetSet.runAsyncCallback2('Hgb(1694,1,gne);_.vc=function Wmc(){H6b((!A6b&&(A6b=new M6b),A6b),this.a.d)};xge(Th)(2);\n//# sourceURL=org.osc.core.broker.view.AppWidgetSet-2.js\n')
