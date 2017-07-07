@@ -103,6 +103,7 @@
 			<groupId>com.google.code.findbugs</groupId>
 			<artifactId>annotations</artifactId>
 			<version>3.0.1</version>
+			<scope>provided</scope>
 		</dependency>
         
 		<dependency>
@@ -134,12 +135,6 @@
 			<groupId>org.osc.core</groupId>
 			<artifactId>osc-installer</artifactId>
 			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.code.findbugs</groupId>
-			<artifactId>annotations</artifactId>
-			<version>3.0.1</version>
-			<scope>provided</scope>
 		</dependency>
 		
 		<dependency>
