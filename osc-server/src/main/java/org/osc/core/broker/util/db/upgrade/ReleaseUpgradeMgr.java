@@ -31,13 +31,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.h2.util.StringUtils;
 import org.osc.core.broker.model.entities.ReleaseInfo;
-import org.osc.core.common.job.FreqType;
-import org.osc.core.common.job.ThresholdType;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.osc.core.common.job.FreqType;
+import org.osc.core.common.job.ThresholdType;
 
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
@@ -252,6 +252,8 @@ public class ReleaseUpgradeMgr {
 
     private static void upgrade80to81(Statement stmt) throws SQLException {
         execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR add column admin_domain_id varchar(255);");
+        // For any existing openstack installations which are currently V2, default domain needs to be used to continue operations
+        execSql(stmt, "update VIRTUALIZATION_CONNECTOR SET admin_domain_id = 'default' WHERE virtualization_type = 'OPENSTACK'");
     }
 
     private static void upgrade79to80(Statement stmt) throws SQLException {
@@ -267,7 +269,7 @@ public class ReleaseUpgradeMgr {
 
         execSql(stmt, "drop table VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
         execSql(stmt, "alter table VIRTUAL_SYSTEM drop column if exists nsx_deployment_spec_id;");
-        
+
         execSql(stmt, "DROP table IF EXISTS VIRTUAL_SYSTEM_MGR_FILE;");
 
         execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_NSX';");
