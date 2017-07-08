@@ -222,6 +222,11 @@
                         <artifactId>checkstyle</artifactId>
                         <version>6.7</version>
                     </dependency>
+					<dependency>
+                        <groupId>org.osc.core</groupId>
+                        <artifactId>osc-tools</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
                 </dependencies>
                 <executions>
                     <execution>
@@ -230,8 +235,8 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
-                            <configLocation>OSC_checks.xml</configLocation>
-                            <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+                            <configLocation>quality/OSC_checks.xml</configLocation>
+                            <suppressionsLocation>quality/checkstyle-suppressions.xml</suppressionsLocation>
                             <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <violationSeverity>info</violationSeverity>
@@ -348,8 +353,8 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>2.15</version>
                 <configuration>
-                    <configLocation>OSC_checks.xml</configLocation>
-                    <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+                    <configLocation>quality/OSC_checks.xml</configLocation>
+                    <suppressionsLocation>quality/checkstyle-suppressions.xml</suppressionsLocation>
                     <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <violationSeverity>info</violationSeverity>
