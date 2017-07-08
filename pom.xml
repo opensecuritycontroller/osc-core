@@ -237,6 +237,7 @@
                         <configuration>
                             <configLocation>quality/OSC_checks.xml</configLocation>
                             <suppressionsLocation>quality/checkstyle-suppressions.xml</suppressionsLocation>
+							<headerLocation>quality/java.header</headerLocation> 							
                             <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <violationSeverity>info</violationSeverity>
@@ -355,6 +356,7 @@
                 <configuration>
                     <configLocation>quality/OSC_checks.xml</configLocation>
                     <suppressionsLocation>quality/checkstyle-suppressions.xml</suppressionsLocation>
+					<headerLocation>quality/java.header</headerLocation> 
                     <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <violationSeverity>info</violationSeverity>

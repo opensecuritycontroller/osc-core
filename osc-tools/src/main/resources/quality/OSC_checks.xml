@@ -82,7 +82,7 @@
   </module>
   <module name="Header">
     <property name="severity" value="error"/>
-    <property name="headerFile" value="java.header"/>
+    <property name="headerFile" value="${checkstyle.header.file}"/>
     <property name="fileExtensions" value="java"/>
 	<property name="ignoreLines" value="3"/>
     <message key="header.mismatch" value="Line does not match expected header line of ''{0}''. Please use the valid header."/>
