@@ -16,7 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.discovery;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.openstack4j.model.compute.InterfaceAttachment;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -25,16 +30,12 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.sdk.controller.element.NetworkElement;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 public class VmDiscoveryCache {
 
     private VirtualizationConnector vc;
-    private String tenant;
+    private String project;
 
     public static class PortInfo implements NetworkElement {
         public VmInfo vm;
@@ -75,7 +76,7 @@ public class VmDiscoveryCache {
 
     public class VmInfo {
         public String vmId;
-        public String tenantId;
+        public String projectId;
         public String name;
         public String host;
 
@@ -83,7 +84,7 @@ public class VmDiscoveryCache {
 
         @Override
         public String toString() {
-            return "VmInfo [vmId=" + this.vmId + ", tenantId=" + this.tenantId + ", name=" + this.name + ", host="
+            return "VmInfo [vmId=" + this.vmId + ", projectId=" + this.projectId + ", name=" + this.name + ", host="
                     + this.host + ", portsByMacMap=" + this.macAddressToPortMap + "]";
         }
     }
@@ -94,10 +95,10 @@ public class VmDiscoveryCache {
 
     private Openstack4JNova novaApi;
 
-    public VmDiscoveryCache(VirtualizationConnector vc, String tenant) throws IOException, EncryptionException {
+    public VmDiscoveryCache(VirtualizationConnector vc, String project) throws IOException, EncryptionException {
         this.vc = vc;
-        this.tenant = tenant;
-        this.novaApi = new Openstack4JNova(new Endpoint(vc, tenant));
+        this.project = project;
+        this.novaApi = new Openstack4JNova(new Endpoint(vc, project));
     }
 
     public VmInfo discover(String region, String vmId) throws Exception {
@@ -118,7 +119,7 @@ public class VmDiscoveryCache {
                 return null;
             }
 
-            vmInfo.tenantId = vm.getTenantId();
+            vmInfo.projectId = vm.getTenantId();
             vmInfo.name = vm.getName();
             vmInfo.host = vm.getHypervisorHostname();
             List<? extends InterfaceAttachment> interfaces = this.novaApi.getVmAttachedNetworks(region, vmId);
@@ -151,7 +152,7 @@ public class VmDiscoveryCache {
 
     @Override
     public String toString() {
-        return "VmDiscoveryCache [vc=" + this.vc + ", tenant=" + this.tenant + ", vmMap=" + this.vmIdToVmMap + "]";
+        return "VmDiscoveryCache [vc=" + this.vc + ", project=" + this.project + ", vmMap=" + this.vmIdToVmMap + "]";
     }
 
     public synchronized void clear() {

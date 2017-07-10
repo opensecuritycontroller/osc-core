@@ -43,8 +43,8 @@ public class SecurityGroupDtoValidator {
         Map<String, Object> map = new HashMap<String, Object>();
 
         map.put("Name", dto.getName());
-        map.put("Tenant Id", dto.getTenantId());
-        map.put("Tenant Name", dto.getTenantName());
+        map.put("Project Id", dto.getTenantId());
+        map.put("Project Name", dto.getTenantName());
 
         ValidateUtil.checkForNullFields(map);
     }

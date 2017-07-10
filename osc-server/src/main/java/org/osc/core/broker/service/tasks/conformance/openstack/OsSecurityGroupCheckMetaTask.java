@@ -82,7 +82,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         Endpoint endPoint = new Endpoint(ds);
         // Check if the VS have ds or dds with os security group reference
         OsSecurityGroupReference sgReference = null;
-        List<DeploymentSpec> dss = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(
+        List<DeploymentSpec> dss = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemProjectAndRegion(
                 em, ds.getVirtualSystem(), ds.getProjectId(), ds.getRegion());
         for (DeploymentSpec depSpec : dss) {
             if (depSpec.getOsSecurityGroupReference() != null) {
@@ -106,7 +106,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                 for (Iterator<DeploymentSpec> iterator = sgReference.getDeploymentSpecs().iterator(); iterator
                         .hasNext(); ) {
                     existingDs = iterator.next();
-                    // For a given tenant, region and VS there will be only one SG
+                    // For a given Project, region and VS there will be only one SG
                     if (existingDs.getRegion().equals(this.ds.getRegion())
                             && existingDs.getProjectName().equals(this.ds.getProjectName())
                             && existingDs.getVirtualSystem().getName().equals(this.ds.getVirtualSystem().getName())) {
@@ -174,7 +174,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
     @Override
     public String getName() {
         return String.format(
-                "Checking if Openstack Security Group exists for Virtual System '%s' in tenant '%s' for region '%s'",
+                "Checking if Openstack Security Group exists for Virtual System '%s' in project '%s' for region '%s'",
                 this.ds.getVirtualSystem().getName(), this.ds.getProjectName(), this.ds.getRegion());
     }
 

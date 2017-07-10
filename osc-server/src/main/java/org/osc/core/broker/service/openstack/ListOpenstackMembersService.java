@@ -96,18 +96,18 @@ public class ListOpenstackMembersService
 
         } else if (SecurityGroupMemberType.fromText(request.getType()) == SecurityGroupMemberType.NETWORK) {
             try (Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getProjectName()))) {
-                List<Network> tenantNetworks = neutronApi.listNetworkByTenant(request.getRegion(), request.getProjectId());
-                for (Network tenantNetwork : tenantNetworks) {
-                    if (!existingMemberIds.contains(tenantNetwork.getId())) {
-                        openstackMemberList.add(new SecurityGroupMemberItemDto(region, tenantNetwork.getName(),
-                                tenantNetwork.getId(), SecurityGroupMemberType.NETWORK.toString(), false));
+                List<Network> projectNetworks = neutronApi.listNetworkByTenant(request.getRegion(), request.getProjectId());
+                for (Network projectNetwork : projectNetworks) {
+                    if (!existingMemberIds.contains(projectNetwork.getId())) {
+                        openstackMemberList.add(new SecurityGroupMemberItemDto(region, projectNetwork.getName(),
+                                projectNetwork.getId(), SecurityGroupMemberType.NETWORK.toString(), false));
                     }
                 }
             }
         } else if (SecurityGroupMemberType.fromText(request.getType()) == SecurityGroupMemberType.SUBNET) {
             try (Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getProjectName()))) {
-                List<Subnet> tenantSubnets = neutronApi.listSubnetByTenant(request.getRegion(), request.getProjectId());
-                for (Subnet subnet : tenantSubnets) {
+                List<Subnet> projectSubnets = neutronApi.listSubnetByTenant(request.getRegion(), request.getProjectId());
+                for (Subnet subnet : projectSubnets) {
                     if (!existingMemberIds.contains(subnet.getId())) {
                         openstackMemberList.add(new SecurityGroupMemberItemDto(request.getRegion(),
                                 createSubnetNetworkName(subnet, request.getRegion(), neutronApi), subnet.getId(),

@@ -65,6 +65,9 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
         this.ds = em.find(DeploymentSpec.class, this.ds.getId());
 
         try (Openstack4JNeutron neutron = new Openstack4JNeutron(this.osEndPoint)) {
+            this.log.info("Creating Openstack Security Group " + this.sgName + " in project " + this.ds.getProjectName()
+                    + " for region " + this.ds.getRegion());
+
             SecurityGroup securityGroup = neutron.createSecurityGroup(this.sgName, this.ds.getRegion());
             neutron.addSecurityGroupRules(securityGroup, this.ds.getRegion(), createSecurityGroupRules());
             OsSecurityGroupReference sgRef = new OsSecurityGroupReference(securityGroup.getId(), this.sgName, this.ds);
@@ -82,7 +85,7 @@ public class CreateOsSecurityGroupTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Creating Openstack Security Group '%s' in tenant '%s' for region '%s'", this.sgName, this.ds.getProjectName(), this.ds.getRegion());
+        return String.format("Creating Openstack Security Group '%s' in project '%s' for region '%s'", this.sgName, this.ds.getProjectName(), this.ds.getRegion());
     };
 
     @Override

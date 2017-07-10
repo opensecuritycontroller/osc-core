@@ -33,15 +33,15 @@ import org.osgi.service.component.annotations.Component;
 /**
  * Validates the DS tenant exists and syncs the name if needed
  */
-@Component(service = ValidateSecurityGroupTenantTask.class)
-public class ValidateSecurityGroupTenantTask extends TransactionalTask {
+@Component(service=ValidateSecurityGroupProjectTask.class)
+public class ValidateSecurityGroupProjectTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(ValidateSecurityGroupTenantTask.class);
+    private final Logger log = Logger.getLogger(ValidateSecurityGroupProjectTask.class);
 
     private SecurityGroup securityGroup;
 
-    public ValidateSecurityGroupTenantTask create(SecurityGroup securityGroup) {
-        ValidateSecurityGroupTenantTask task = new ValidateSecurityGroupTenantTask();
+    public ValidateSecurityGroupProjectTask create(SecurityGroup securityGroup) {
+        ValidateSecurityGroupProjectTask task = new ValidateSecurityGroupProjectTask();
         task.securityGroup = securityGroup;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;

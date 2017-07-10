@@ -38,9 +38,9 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osgi.service.transaction.control.ScopedWorkException;
 
-public class OsTenantNotificationListener extends OsNotificationListener {
+public class OsProjectNotificationListener extends OsNotificationListener {
 
-    private static final Logger log = Logger.getLogger(OsTenantNotificationListener.class);
+    private static final Logger log = Logger.getLogger(OsProjectNotificationListener.class);
 
     private final ConformService conformService;
 
@@ -48,10 +48,10 @@ public class OsTenantNotificationListener extends OsNotificationListener {
 
     private final DBConnectionManager dbMgr;
 
-    public OsTenantNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
+    public OsProjectNotificationListener(VirtualizationConnector vc, OsNotificationObjectType objectType,
             List<String> objectIdList, BaseEntity entity, ConformService conformService, AlertGenerator alertGenerator, RabbitMQRunner activeRunner,
             DBConnectionManager dbMgr) {
-        super(vc, OsNotificationObjectType.TENANT, objectIdList, entity, activeRunner);
+        super(vc, OsNotificationObjectType.PROJECT, objectIdList, entity, activeRunner);
         this.conformService = conformService;
         this.alertGenerator = alertGenerator;
         this.dbMgr = dbMgr;
@@ -61,7 +61,7 @@ public class OsTenantNotificationListener extends OsNotificationListener {
     @Override
     public void onMessage(String message) {
         String eventType = OsNotificationUtil.getEventTypeFromMessage(message);
-        if (eventType.contains(OsNotificationEventState.TENANT_DELETED.toString())) {
+        if (eventType.contains(OsNotificationEventState.PROJECT_DELETED.toString())) {
             String keyValue = OsNotificationUtil.isMessageRelevant(message, this.objectIdList,
                     OsNotificationKeyType.RESOURCE_INFO.toString());
             if (keyValue != null) {
@@ -93,13 +93,13 @@ public class OsTenantNotificationListener extends OsNotificationListener {
                         SystemFailureType.OS_NOTIFICATION_FAILURE,
                         LockObjectReference.getLockObjectReference(this.entity, new LockObjectReference(
                                 this.vc)),
-                        "Fail to process Openstack Tenant (" + keyValue + ") notification ("
+                        "Fail to process Openstack Project (" + keyValue + ") notification ("
                                 + e.getMessage() + ")");
     }
 
     private void handleSGMessages(EntityManager em, String keyValue) throws Exception {
-        // if tenant deleted belongs to a security group
-        for (SecurityGroup securityGroup : SecurityGroupEntityMgr.listByTenantId(em, keyValue)) {
+        // if Project deleted belongs to a security group
+        for (SecurityGroup securityGroup : SecurityGroupEntityMgr.listByProjectId(em, keyValue)) {
             // trigger sync job for that SG
             if (securityGroup.getId().equals(((SecurityGroup) this.entity).getId())) {
                 this.conformService.startSecurityGroupConformanceJob(securityGroup);
@@ -108,7 +108,7 @@ public class OsTenantNotificationListener extends OsNotificationListener {
     }
 
     private void handleDSMessages(EntityManager em, String keyValue) throws Exception {
-        // if tenant deleted belongs to a deployment spec
+        // if Project deleted belongs to a deployment spec
         for (DeploymentSpec ds : DeploymentSpecEntityMgr.listDeploymentSpecByTenentId(em, keyValue)) {
             // trigger sync job for that DS
             if (ds.getId().equals(((DeploymentSpec) this.entity).getId())) {

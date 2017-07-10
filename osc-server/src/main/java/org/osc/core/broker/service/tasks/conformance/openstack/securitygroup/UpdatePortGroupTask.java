@@ -70,7 +70,7 @@ public class UpdatePortGroupTask  extends TransactionalTask{
         String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
                 this.securityGroup.getVirtualizationConnector(), protectedPorts);
         if (domainId == null){
-            throw new Exception(String.format("Failed to retrieve domainId for given tenant: '%s' and Security Group: '%s",
+            throw new Exception(String.format("Failed to retrieve domainId for given project: '%s' and Security Group: '%s",
                     this.securityGroup.getProjectName(), this.securityGroup.getName()));
         }
         this.portGroup.setParentId(domainId);

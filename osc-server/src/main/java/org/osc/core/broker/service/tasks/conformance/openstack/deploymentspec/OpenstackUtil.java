@@ -75,8 +75,12 @@ public class OpenstackUtil {
 
     /**
      * Extract domainId for the given list of protected ports, which all belong to the same domain
+<<<<<<< HEAD
      *
      * @param tenantId
+=======
+     * @param projectId
+>>>>>>> update rest of refernces
      * @param tenantName
      * @param vc
      * @param protectedPorts
@@ -188,12 +192,22 @@ public class OpenstackUtil {
      * We'll try to locate DAIs running on hosts deployed on the same availability zone as requested host.
      * If found, we try finding the least loaded (based on port assignment).
      *
+<<<<<<< HEAD
      * @param em       the database session
      * @param region   the OpenStack region of the deployment
      * @param tenantId the OpenStack tenant of the deployment.
      *                 If empty string, the search will target shared deployment sepcs. This parameter cannot be null.
      * @param host     the host of the DAI
      * @param vs       the virtual system of the deployment specs.
+=======
+     *
+     * @param session  the database session
+     * @param region  the OpenStack region of the deployment
+     * @param projectId  the OpenStack tenant of the deployment.
+     *            If empty string, the search will target shared deployment sepcs. This parameter cannot be null.
+     * @param host the host of the DAI
+     * @param vs  the virtual system of the deployment specs.
+>>>>>>> update rest of refernces
      * @return a deployed SVA/DAI
      * @throws VmidcBrokerValidationException if there are no valid DAI/SVA's available with the provided criteria.
      */

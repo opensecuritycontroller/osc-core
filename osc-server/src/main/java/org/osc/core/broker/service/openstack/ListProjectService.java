@@ -48,7 +48,7 @@ public class ListProjectService extends ServiceDispatcher<BaseIdRequest, ListRes
         ListResponse<OsProjectDto> listResponse = new ListResponse<>();
         try (Openstack4jKeystone keystoneApi = new Openstack4jKeystone(new Endpoint(vc))) {
             List<OsProjectDto> tenantDtos = keystoneApi.listProjects().stream()
-                    .map(tenant -> new OsProjectDto(tenant.getName(), tenant.getId())).collect(Collectors.toList());
+                    .map(project -> new OsProjectDto(project.getName(), project.getId())).collect(Collectors.toList());
             listResponse.setList(tenantDtos);
         }
         return listResponse;

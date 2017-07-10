@@ -67,7 +67,7 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
                     "Security Group exists with the same Tenant and Selection for this Virtualization Connector.");
         }
 
-        if (SecurityGroupEntityMgr.isSecurityGroupExistWithSameNameAndTenant(em, dto.getName(), dto.getTenantId())) {
+        if (SecurityGroupEntityMgr.isSecurityGroupExistWithSameNameAndProject(em, dto.getName(), dto.getTenantId())) {
             throw new VmidcBrokerValidationException("Security Group Name: " + dto.getName() + " already exists on the same Tenant.");
         }
 

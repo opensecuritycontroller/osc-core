@@ -23,15 +23,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.mockito.Mockito;
-import org.osc.core.common.job.TaskGuard;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.manager.ManagerType;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -52,6 +49,9 @@ import org.osc.core.broker.service.tasks.conformance.openstack.DeleteFlavorTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteImageFromGlanceTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.SecurityGroupCleanupCheckMetaTask;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.manager.ManagerType;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class VSConformanceCheckMetaTaskTestData {
 
@@ -156,7 +156,7 @@ public class VSConformanceCheckMetaTaskTestData {
         VirtualSystem vs = createVirtualSystem(vsId, vcId, daId);
 
         DeploymentSpec ds = new DeploymentSpec(vs, null, null, null, null, null);
-        ds.setProjectName("OpenstackWithDeploymentSpecTenantName");
+        ds.setProjectName("OpenstackWithDeploymentSpecProjectName");
         Set<DeploymentSpec> dsSet = new HashSet<DeploymentSpec>();
         dsSet.add(ds);
 
@@ -220,7 +220,7 @@ public class VSConformanceCheckMetaTaskTestData {
         VirtualSystem vs = createVirtualSystem(vsId, vcId, daId);
 
         DeploymentSpec ds = new DeploymentSpec(vs, null, null, null, null, null);
-        ds.setProjectName("DeleteOpenStackWithDeploymentSpecTenantName");
+        ds.setProjectName("DeleteOpenStackWithDeploymentSpecProjectName");
         Set<DeploymentSpec> dsSet = new HashSet<DeploymentSpec>();
         dsSet.add(ds);
 

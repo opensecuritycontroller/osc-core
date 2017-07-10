@@ -55,7 +55,7 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
 
         int count = MAX_ATTEMPTS;
 
-        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(em,
+        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemProjectAndRegion(em,
                 this.ds.getVirtualSystem(), this.ds.getProjectId(), this.ds.getRegion()).size() <= 1;
 
         if (osSgCanBeDeleted) {
@@ -97,7 +97,7 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Deleting Openstack Security Group with id '%s' from tenant '%s' in region '%s'",
+        return String.format("Deleting Openstack Security Group with id '%s' from project '%s' in region '%s'",
                 this.sgReference.getSgRefId(), this.ds.getProjectName(), this.ds.getRegion());
 
     }

@@ -66,7 +66,7 @@ public class ForceDeleteDSTask extends TransactionalTask {
         }
 
         // remove the sg reference from database
-        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(em,
+        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemProjectAndRegion(em,
                 this.ds.getVirtualSystem(), this.ds.getProjectId(), this.ds.getRegion()).size() <= 1;
 
         if (osSgCanBeDeleted) {

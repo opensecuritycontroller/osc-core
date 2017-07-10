@@ -199,13 +199,13 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
             // create port listener for Subnets...
             addMemberListener(sg, OsNotificationObjectType.PORT, SecurityGroupMemberType.SUBNET);
 
-            // create Deletion Tenant Listener
-            addTenantDeletionListener(sg, OsNotificationObjectType.TENANT);
+            // create Deletion Project Listener
+            addProjectDeletionListener(sg, OsNotificationObjectType.PROJECT);
 
             if (sg.isProtectAll()) {
 
-                // create Port Listener with tenant Id in context
-                addPortToTenantListener(sg, OsNotificationObjectType.PORT);
+                // create Port Listener with Project Id in context
+                addPortToProjectListener(sg, OsNotificationObjectType.PORT);
 
             } else {
 
@@ -241,7 +241,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                 if (sg.isProtectAll()) { // type = protectALL
                     /*
                      * if SG is protectAll or is being changed by user to protectAll
-                     * Update Port Listener with Tenant ID instead of Network ID(s)
+                     * Update Port Listener with Project ID instead of Network ID(s)
                      */
                     OsNotificationUtil.updateListener(listener, sg, Arrays.asList(sg.getProjectId()));
 
@@ -249,7 +249,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
                     /*
                      * User changed SG from Protect All to VM/Network/Subnet.
-                     * Remove tenant ID and add Network Id(s) for port listeners..
+                     * Remove Project ID and add Network Id(s) for port listeners..
                      * or
                      * SG is not protect all and SG type is not modified... Update Member ID(s)
                      */
@@ -260,7 +260,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         }
     }
 
-    private void addPortToTenantListener(SecurityGroup sg, OsNotificationObjectType type)
+    private void addPortToProjectListener(SecurityGroup sg, OsNotificationObjectType type)
             throws VmidcBrokerInvalidEntryException {
         // Creating member change Notification Listener
         OsNotificationListener listener = this.notificationListenerFactory
@@ -271,7 +271,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         this.sgToListenerMap.put(sg.getId(), listener);
     }
 
-    private void addTenantDeletionListener(SecurityGroup sg, OsNotificationObjectType type)
+    private void addProjectDeletionListener(SecurityGroup sg, OsNotificationObjectType type)
             throws VmidcBrokerInvalidEntryException {
 
         OsNotificationListener listener = this.notificationListenerFactory

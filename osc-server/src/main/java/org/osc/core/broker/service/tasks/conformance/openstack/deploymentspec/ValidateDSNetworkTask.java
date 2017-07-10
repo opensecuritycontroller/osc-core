@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import java.util.Set;
 
 /**
- * Validates the DS tenant exists and syncs the name if needed
+ * Validates the DS Network exists and syncs the name if needed
  */
 @Component(service = ValidateDSNetworkTask.class)
 public class ValidateDSNetworkTask extends TransactionalTask {

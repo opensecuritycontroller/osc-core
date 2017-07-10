@@ -207,7 +207,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
 
             addNetworkListener(ds);
 
-            addTenantListener(ds);
+            addProjectListener(ds);
 
             // Add DS and VC to the map. We will use this for unregistering all listeners for this DS
             this.dsToVCMap.put(ds.getId(), ds.getVirtualSystem().getVirtualizationConnector());
@@ -230,16 +230,16 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
 
     }
 
-    private void addTenantListener(DeploymentSpec ds) throws VmidcBrokerInvalidEntryException {
-        List<String> tenenatIdList = new ArrayList<String>();
-        tenenatIdList.add(ds.getProjectId());
+    private void addProjectListener(DeploymentSpec ds) throws VmidcBrokerInvalidEntryException {
+        List<String> projectIdList = new ArrayList<String>();
+        projectIdList.add(ds.getProjectId());
         // Creating member change Notification Listener
-        OsNotificationListener tenantListener = this.notificationListenerFactory
+        OsNotificationListener projectListener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(ds.getVirtualSystem().getVirtualizationConnector(),
-                        OsNotificationObjectType.TENANT, tenenatIdList, ds);
+                        OsNotificationObjectType.PROJECT, projectIdList, ds);
 
-        // Register Tenant deletion listener
-        this.dsToListenerMap.put(ds.getId(), tenantListener);
+        // Register Project deletion listener
+        this.dsToListenerMap.put(ds.getId(), projectListener);
     }
 
     private void addNetworkListener(DeploymentSpec ds) throws VmidcBrokerInvalidEntryException {

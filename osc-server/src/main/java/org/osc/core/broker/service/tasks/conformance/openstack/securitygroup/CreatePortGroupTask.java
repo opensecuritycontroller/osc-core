@@ -67,7 +67,7 @@ public class CreatePortGroupTask extends TransactionalTask {
         String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
                 this.securityGroup.getVirtualizationConnector(), protectedPorts);
         if (domainId == null){
-            throw new Exception(String.format("A domain was not found for the tenant: '%s' and Security Group: '%s",
+            throw new Exception(String.format("A domain was not found for the project: '%s' and Security Group: '%s",
                     this.securityGroup.getProjectName(), this.securityGroup.getName()));
         }
 

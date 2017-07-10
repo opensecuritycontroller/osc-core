@@ -34,15 +34,15 @@ import org.osgi.service.component.annotations.Component;
 /**
  * Validates the DS tenant exists and syncs the name if needed
  */
-@Component(service = ValidateDSTenantTask.class)
-public class ValidateDSTenantTask extends TransactionalTask {
+@Component(service=ValidateDSProjectTask.class)
+public class ValidateDSProjectTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(ValidateDSTenantTask.class);
+    private final Logger log = Logger.getLogger(ValidateDSProjectTask.class);
 
     private DeploymentSpec ds;
 
-    public ValidateDSTenantTask create(DeploymentSpec ds) {
-        ValidateDSTenantTask task = new ValidateDSTenantTask();
+    public ValidateDSProjectTask create(DeploymentSpec ds) {
+        ValidateDSProjectTask task = new ValidateDSProjectTask();
         task.ds = ds;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
