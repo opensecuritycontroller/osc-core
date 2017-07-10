@@ -242,7 +242,7 @@ public class CheckPortGroupHookMetaTaskTest {
         PowerMockito.doReturn(domainId).
         when(OpenstackUtil.class, "extractDomainId",
                 eq(sgi.getSecurityGroup().getProjectId()),
-                eq(sgi.getSecurityGroup().getVirtualizationConnector().getProviderAdminTenantName()),
+                eq(sgi.getSecurityGroup().getVirtualizationConnector().getProviderAdminProjectName()),
                 Mockito.any(),
                 Mockito.any());
     }

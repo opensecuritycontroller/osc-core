@@ -281,7 +281,7 @@ public class OpenstackUtil {
 
         DistributedApplianceInstance selectedDai = null;
 
-        dais = filterDAIsByDomain(dais, sg.getVirtualizationConnector(), sg.getVirtualizationConnector().getProviderAdminTenantName(), domainId);
+        dais = filterDAIsByDomain(dais, sg.getVirtualizationConnector(), sg.getVirtualizationConnector().getProviderAdminProjectName(), domainId);
 
         if (dais.isEmpty()) {
             throw new VmidcBrokerValidationException(String.format("No appliance instance found in a network assigned to the router/domain %s.", domainId));

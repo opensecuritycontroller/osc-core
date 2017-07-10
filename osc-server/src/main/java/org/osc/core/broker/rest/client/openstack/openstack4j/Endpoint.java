@@ -49,7 +49,7 @@ public class Endpoint {
     public Endpoint(VirtualizationConnector vc) throws EncryptionException {
         this.endPointIP = vc.getProviderIpAddress();
         this.domainId = vc.getAdminDomainId();
-        this.tenant = vc.getProviderAdminTenantName();
+        this.tenant = vc.getProviderAdminProjectName();
         this.user = vc.getProviderUsername();
         this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();

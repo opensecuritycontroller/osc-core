@@ -180,7 +180,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 VMPort sgMemberPort = OpenstackUtil.getAnyProtectedPort(this.sg);
 
                 domainId = OpenstackUtil.extractDomainId(this.sg.getProjectId(),
-                        this.sg.getVirtualizationConnector().getProviderAdminTenantName(),
+                        this.sg.getVirtualizationConnector().getProviderAdminProjectName(),
                         this.sg.getVirtualizationConnector(), Arrays.asList(new NetworkElementImpl(sgMemberPort)));
 
                 if (domainId == null) {
@@ -234,7 +234,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     private void buildTaskGraph(EntityManager em, boolean isDeleteTg, String domainId) throws Exception {
         VmDiscoveryCache vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(),
-                this.sg.getVirtualizationConnector().getProviderAdminTenantName());
+                this.sg.getVirtualizationConnector().getProviderAdminProjectName());
 
         // SGM Member sync with no task deferred
         addSGMemberSyncJob(em, isDeleteTg, vdc);

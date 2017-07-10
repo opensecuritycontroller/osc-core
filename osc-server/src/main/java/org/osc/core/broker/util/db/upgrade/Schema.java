@@ -377,7 +377,7 @@ public class Schema {
                 "virtualization_software_version varchar(255)," +
                 "virtualization_type varchar(255) not null," +
                 "controller_type varchar(255) not null," +
-                "admin_tenant_name varchar(255)," +
+                "admin_project_name varchar(255)," +
                 "admin_domain_id varchar(255)," +
                 "last_job_id_fk bigint," +
                 "primary key (id)" +

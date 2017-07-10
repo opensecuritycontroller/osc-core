@@ -170,7 +170,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
     private DistributedApplianceInstance getDeployedDAI(SecurityGroupMember sgm, VMPort protectedPort, EntityManager em) throws Exception {
         String sgmDomainId = OpenstackUtil.extractDomainId(
                 sgm.getSecurityGroup().getProjectId(),
-                sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminTenantName(),
+                sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminProjectName(),
                 sgm.getSecurityGroup().getVirtualizationConnector(),
                 OpenstackUtil.getPorts(sgm));
 

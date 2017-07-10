@@ -118,7 +118,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
         List<NetworkElement> sgmPorts = OpenstackUtil.getPorts(this.sgm);
         String sgmDomainId = OpenstackUtil.extractDomainId(
                 this.sgm.getSecurityGroup().getProjectId(),
-                this.sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminTenantName(),
+                this.sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminProjectName(),
                 this.sgm.getSecurityGroup().getVirtualizationConnector(),
                 sgmPorts);
 

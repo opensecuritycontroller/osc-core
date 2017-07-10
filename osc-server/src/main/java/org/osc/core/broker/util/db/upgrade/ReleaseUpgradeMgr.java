@@ -269,6 +269,10 @@ public class ReleaseUpgradeMgr {
         execSql(stmt, "alter table SECURITY_GROUP alter column tenant_id RENAME TO " + "project_id;");
 
         execSql(stmt, "alter table SECURITY_GROUP add constraint UK_NAME_PROJECT unique (name, project_id);");
+
+        // VC References
+        execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR alter column admin_tenant_name RENAME TO "
+                + "admin_project_name;");
     }
 
     private static void upgrade80to81(Statement stmt) throws SQLException {
