@@ -16,6 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+
 import org.openstack4j.model.identity.v3.Region;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
@@ -27,10 +32,6 @@ import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 
-import javax.persistence.EntityManager;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Component
 public class ListRegionByVcIdService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>>
         implements ListRegionByVcIdServiceApi {
@@ -41,7 +42,7 @@ public class ListRegionByVcIdService extends ServiceDispatcher<BaseOpenStackRequ
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
 
         ListResponse<String> listResponse = new ListResponse<>();
-        try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc, request.getTenantName()))) {
+        try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc, request.getProjectName()))) {
             List<? extends Region> endpoints = keystone.getOs().identity().regions().list();
             List<String> regions = endpoints.stream().map(Region::getId).collect(Collectors.toList());
             listResponse.setList(regions);

@@ -27,8 +27,8 @@ import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.api.ListProjectServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
-import org.osc.core.broker.service.api.ListTenantServiceApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
@@ -74,7 +74,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
     private final ListHostAggregateServiceApi listHostAggregateService;
     private final ListNetworkServiceApi listNetworkService;
     private final ListRegionServiceApi listRegionService;
-    private final ListTenantServiceApi listTenantService;
+    private final ListProjectServiceApi listProjectService;
     private final ServerApi server;
 
     public DeploymentSpecSubView(String title, ToolbarButtons[] buttons, CRUDBaseView<?, ?> currentView,
@@ -89,7 +89,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
             ListHostAggregateServiceApi listHostAggregateService,
             ListNetworkServiceApi listNetworkService,
             ListRegionServiceApi listRegionService,
-            ListTenantServiceApi listTenantService, ServerApi server
+            ListProjectServiceApi listProjectService, ServerApi server
             ) {
         super(currentView, title, buttons, parent);
         this.addDeploymentSpecService = addDeploymentSpecService;
@@ -102,7 +102,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
         this.listHostAggregateService = listHostAggregateService;
         this.listNetworkService = listNetworkService;
         this.listRegionService = listRegionService;
-        this.listTenantService = listTenantService;
+        this.listProjectService = listProjectService;
         this.updateDeploymentSpecService = updateDeploymentSpecService;
         this.server = server;
 
@@ -130,7 +130,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
 
         // Customizing column header names
         this.table.setColumnHeader("name", "Name");
-        this.table.setColumnHeader("tenantName", "Tenant");
+        this.table.setColumnHeader("tenantName", "Project");
         this.table.setColumnHeader("managementNetworkName", "Network");
         this.table.setColumnHeader("markForDeletion", "Deleted");
         this.table.addGeneratedColumn("lastJobStatus", new ColumnGenerator() {
@@ -174,7 +174,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
             ViewUtil.addWindow(new AddDeploymentSpecWindow(getDtoInContext().getId(),
                     this.addDeploymentSpecService, this.listAvailabilityZonesService,
                     this.listFloatingIpPoolsService, this.listHostService, this.listHostAggregateService,
-                    this.listNetworkService, this.listRegionService, this.listTenantService, this.server));
+                    this.listNetworkService, this.listRegionService, this.listProjectService, this.server));
         }
         if (event.getButton().getId().equals(ToolbarButtons.EDIT.getId())) {
             log.debug("Redirecting to Update Deployment Spec Window");
@@ -188,7 +188,7 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
                                 getTableContainer().getItem(getSelectedItemId()).getBean(),
                                 this.updateDeploymentSpecService, this.listAvailabilityZonesService,
                                 this.listFloatingIpPoolsService, this.listHostService, this.listHostAggregateService,
-                                this.listNetworkService, this.listRegionService, this.listTenantService, this.server));
+                                this.listNetworkService, this.listRegionService, this.listProjectService, this.server));
             }
         }
         if (event.getButton().getId() == ToolbarButtons.DELETE.getId()) {

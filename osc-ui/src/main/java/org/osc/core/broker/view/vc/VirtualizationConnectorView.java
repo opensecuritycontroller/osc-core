@@ -29,11 +29,11 @@ import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
+import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupByVcServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
-import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.SyncVirtualizationConnectorServiceApi;
@@ -74,7 +74,7 @@ import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.CustomTable;		
+import com.vaadin.ui.CustomTable;
 import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
 
@@ -101,7 +101,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     private ListRegionByVcIdServiceApi listRegionByVcIdService;
 
     @Reference
-    private ListTenantByVcIdServiceApi listTenantByVcIdServiceApi;
+    private ListProjectByVcIdServiceApi listProjectByVcIdServiceApi;
 
     @Reference
     private AddSecurityGroupServiceApi addSecurityGroupService;
@@ -163,7 +163,6 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                         ToolbarButtons.BIND_SECURITY_GROUP, ToolbarButtons.CONFORM));
     }
 
-    @SuppressWarnings("serial")
     @Override
     public void initParentTable() {
         this.parentContainer = new BeanContainer<>(VirtualizationConnectorDto.class);
@@ -229,7 +228,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
         // re-naming table header columns
         this.childTable.setColumnHeader("name", "Name");
-        this.childTable.setColumnHeader("tenantName", "Tenant");
+        this.childTable.setColumnHeader("tenantName", "Project");
         this.childTable.setColumnHeader("memberDescription", "Members");
         this.childTable.setColumnHeader("servicesDescription", "Services");
         this.childTable.setColumnHeader("markForDeletion", "Deleted");
@@ -293,7 +292,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                         Notification.Type.ERROR_MESSAGE);
             } else {
                 ViewUtil.addWindow(new AddSecurityGroupWindow(getParentItem().getBean(),
-                        this.listOpenstackMembersService, this.listRegionByVcIdService, this.listTenantByVcIdServiceApi,
+                        this.listOpenstackMembersService, this.listRegionByVcIdService, this.listProjectByVcIdServiceApi,
                         this.addSecurityGroupService, this.listSecurityGroupMembersBySgService, this.server));
             }
         }
@@ -305,7 +304,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                         Notification.Type.WARNING_MESSAGE);
             } else {
                 ViewUtil.addWindow(new UpdateSecurityGroupWindow(securityGroup,
-                        this.listOpenstackMembersService, this.listRegionByVcIdService, this.listTenantByVcIdServiceApi,
+                        this.listOpenstackMembersService, this.listRegionByVcIdService, this.listProjectByVcIdServiceApi,
                         this.updateSecurityGroupService, this.listSecurityGroupMembersBySgService, this.server));
             }
         }

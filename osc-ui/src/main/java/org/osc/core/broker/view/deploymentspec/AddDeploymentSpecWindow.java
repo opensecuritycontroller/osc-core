@@ -27,14 +27,14 @@ import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
-import org.osc.core.broker.service.api.ListTenantServiceApi;
+import org.osc.core.broker.service.api.ListProjectServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -60,11 +60,11 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
             ListFloatingIpPoolsServiceApi listFloatingIpPoolsService, ListHostServiceApi listHostService,
             ListHostAggregateServiceApi listHostAggregateService,
             ListNetworkServiceApi listNetworkService,
-            ListRegionServiceApi listRegionService, ListTenantServiceApi listTenantService,
+            ListRegionServiceApi listRegionService, ListProjectServiceApi listProjectService,
             ServerApi server) throws Exception {
         super(new DeploymentSpecDto().withParentId(vsId), listAvailabilityZonesService,
                 listFloatingIpPoolsService, listHostService, listHostAggregateService, listNetworkService,
-                listRegionService, listTenantService);
+                listRegionService, listProjectService);
         this.addDeploymentSpecService = addDeploymentSpecService;
         this.server = server;
         createWindow(this.CAPTION);
@@ -76,8 +76,8 @@ public class AddDeploymentSpecWindow extends BaseDeploymentSpecWindow {
             if (validateForm()) {
                 DeploymentSpecDto dto = new DeploymentSpecDto();
                 dto.setName(this.name.getValue().trim());
-                dto.setTenantId(((OsTenantDto) this.tenant.getValue()).getId());
-                dto.setTenantName(((OsTenantDto) this.tenant.getValue()).getName());
+                dto.setTenantId(((OsProjectDto) this.project.getValue()).getId());
+                dto.setTenantName(((OsProjectDto) this.project.getValue()).getName());
                 dto.setParentId(this.vsId);
                 dto.setCount(this.count.getValue());
                 dto.setShared(this.shared.getValue() == null ? false : this.shared.getValue());

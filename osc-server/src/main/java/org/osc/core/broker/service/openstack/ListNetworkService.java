@@ -16,6 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
 import org.openstack4j.model.network.Network;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -28,10 +33,6 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
-
-import javax.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<OsNetworkDto>>
@@ -47,8 +48,8 @@ public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, 
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
         List<OsNetworkDto> networkList = new ArrayList<>();
-        try (Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getTenantName()))) {
-            for (Network network : neutronApi.listNetworkByTenant(request.getRegion(), request.getTenantId())) {
+        try (Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getProjectName()))) {
+            for (Network network : neutronApi.listNetworkByTenant(request.getRegion(), request.getProjectId())) {
                 networkList.add(new OsNetworkDto(network.getName(), network.getId()));
             }
         }

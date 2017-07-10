@@ -16,6 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
@@ -27,9 +31,6 @@ import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 
-import javax.persistence.EntityManager;
-import java.util.List;
-
 @Component
 public class ListFloatingIpPoolsService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>>
         implements ListFloatingIpPoolsServiceApi {
@@ -39,8 +40,8 @@ public class ListFloatingIpPoolsService extends ServiceDispatcher<BaseOpenStackR
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
-        try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc, request.getTenantName()))) {
-            List<String> osFloatingIpPoolsList = neutron.getFloatingIpPools(request.getRegion(), request.getTenantId());
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc, request.getProjectName()))) {
+            List<String> osFloatingIpPoolsList = neutron.getFloatingIpPools(request.getRegion(), request.getProjectId());
             return new ListResponse<>(osFloatingIpPoolsList);
         }
     }

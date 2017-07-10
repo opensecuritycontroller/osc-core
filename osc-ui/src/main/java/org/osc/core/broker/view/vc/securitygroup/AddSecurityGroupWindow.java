@@ -21,11 +21,11 @@ import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
-import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -50,11 +50,11 @@ public class AddSecurityGroupWindow extends BaseSecurityGroupWindow {
     public AddSecurityGroupWindow(VirtualizationConnectorDto vcDto,
             ListOpenstackMembersServiceApi listOpenstackMembersService,
             ListRegionByVcIdServiceApi listRegionByVcIdService,
-            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi,
+            ListProjectByVcIdServiceApi listProjectByVcIdServiceApi,
             AddSecurityGroupServiceApi addSecurityGroupService,
             ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService,
             ServerApi server) throws Exception {
-        super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi,
+        super(listOpenstackMembersService, listRegionByVcIdService, listProjectByVcIdServiceApi,
                 listSecurityGroupMembersBySgService);
         this.addSecurityGroupService = addSecurityGroupService;
         this.server = server;
@@ -74,8 +74,8 @@ public class AddSecurityGroupWindow extends BaseSecurityGroupWindow {
                 SecurityGroupDto dto = new SecurityGroupDto();
                 dto.setParentId(this.currentSecurityGroup.getParentId());
                 dto.setName(this.name.getValue().trim());
-                dto.setTenantId(((OsTenantDto) this.tenant.getValue()).getId());
-                dto.setTenantName(((OsTenantDto) this.tenant.getValue()).getName());
+                dto.setTenantId(((OsProjectDto) this.project.getValue()).getId());
+                dto.setTenantName(((OsProjectDto) this.project.getValue()).getName());
                 dto.setProtectAll(this.protectionTypeOption.getValue() == TYPE_ALL);
 
                 request.setDto(dto);
