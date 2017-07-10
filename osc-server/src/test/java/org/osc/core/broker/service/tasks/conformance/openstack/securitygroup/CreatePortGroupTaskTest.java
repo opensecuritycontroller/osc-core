@@ -180,7 +180,7 @@ public class CreatePortGroupTaskTest {
 		this.exception.expect(Exception.class);
 		this.exception
 				.expectMessage(String.format("A domain was not found for the tenant: '%s' and Security Group: '%s",
-						sg.getTenantName(), sg.getName()));
+						sg.getProjectName(), sg.getName()));
 
 		CreatePortGroupTask task = this.factoryTask.create(sg);
 
@@ -276,8 +276,8 @@ public class CreatePortGroupTaskTest {
 	}
 
 	private void registerDomain(String domainId, SecurityGroup sg) throws Exception {
-		PowerMockito.doReturn(domainId).when(OpenstackUtil.class, "extractDomainId", eq(sg.getTenantId()),
-				eq(sg.getTenantName()), eq(sg.getVirtualizationConnector()),
+		PowerMockito.doReturn(domainId).when(OpenstackUtil.class, "extractDomainId", eq(sg.getProjectId()),
+				eq(sg.getProjectName()), eq(sg.getVirtualizationConnector()),
 				this.domainIdNetworkElementCaptor.capture());
 	}
 

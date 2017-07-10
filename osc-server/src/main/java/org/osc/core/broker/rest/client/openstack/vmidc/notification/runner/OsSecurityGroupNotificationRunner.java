@@ -243,7 +243,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                      * if SG is protectAll or is being changed by user to protectAll
                      * Update Port Listener with Tenant ID instead of Network ID(s)
                      */
-                    OsNotificationUtil.updateListener(listener, sg, Arrays.asList(sg.getTenantId()));
+                    OsNotificationUtil.updateListener(listener, sg, Arrays.asList(sg.getProjectId()));
 
                 } else { // type = not protectALL
 
@@ -265,7 +265,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
         // Creating member change Notification Listener
         OsNotificationListener listener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(sg.getVirtualizationConnector(), type,
-                        Arrays.asList(sg.getTenantId()), sg);
+                        Arrays.asList(sg.getProjectId()), sg);
 
         // Register Member change listener
         this.sgToListenerMap.put(sg.getId(), listener);
@@ -276,7 +276,7 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
         OsNotificationListener listener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(sg.getVirtualizationConnector(), type,
-                        Arrays.asList(sg.getTenantId()), sg);
+                        Arrays.asList(sg.getProjectId()), sg);
 
         // Register Member change listener
         this.sgToListenerMap.put(sg.getId(), listener);

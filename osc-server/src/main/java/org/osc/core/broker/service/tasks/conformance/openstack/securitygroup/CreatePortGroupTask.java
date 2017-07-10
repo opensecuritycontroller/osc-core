@@ -64,11 +64,11 @@ public class CreatePortGroupTask extends TransactionalTask {
         for (SecurityGroupMember sgm : members) {
             protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
         }
-        String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getTenantId(), this.securityGroup.getTenantName(),
+        String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
                 this.securityGroup.getVirtualizationConnector(), protectedPorts);
         if (domainId == null){
             throw new Exception(String.format("A domain was not found for the tenant: '%s' and Security Group: '%s",
-                    this.securityGroup.getTenantName(), this.securityGroup.getName()));
+                    this.securityGroup.getProjectName(), this.securityGroup.getName()));
         }
 
         SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(

@@ -16,6 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.model.network.IP;
 import org.openstack4j.model.network.Port;
@@ -37,11 +43,6 @@ import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.Op
 import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 @Component(service = SecurityGroupMemberSubnetUpdateTask.class)
 public class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
@@ -78,8 +79,8 @@ public class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
         SecurityGroup sg = this.sgm.getSecurityGroup();
 
         List<String> existingOsPortIds = new ArrayList<>();
-        try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()))) {
-            List<Port> osPorts = neutron.listPortsBySubnet(subnet.getRegion(), sg.getTenantId(), subnet.getNetworkId(),
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getProjectName()))) {
+            List<Port> osPorts = neutron.listPortsBySubnet(subnet.getRegion(), sg.getProjectId(), subnet.getNetworkId(),
                     subnet.getOpenstackId(), subnet.isProtectExternal());
             for (Port osPort : osPorts) {
                 existingOsPortIds.add(osPort.getId());

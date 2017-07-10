@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
@@ -26,8 +28,6 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
 
 @Component(service = SecurityGroupMemberSubnetCheckTask.class)
 public class SecurityGroupMemberSubnetCheckTask extends TransactionalMetaTask {
@@ -74,7 +74,7 @@ public class SecurityGroupMemberSubnetCheckTask extends TransactionalMetaTask {
 
         SecurityGroup sg = this.sgm.getSecurityGroup();
 
-        Endpoint endPoint = new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName());
+        Endpoint endPoint = new Endpoint(sg.getVirtualizationConnector(), sg.getProjectName());
         try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
             org.openstack4j.model.network.Subnet subnet = neutron.getSubnetById(this.subnet.getRegion(),
                     this.subnet.getOpenstackId());

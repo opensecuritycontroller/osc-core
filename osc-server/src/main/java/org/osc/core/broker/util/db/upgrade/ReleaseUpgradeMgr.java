@@ -253,13 +253,22 @@ public class ReleaseUpgradeMgr {
     }
 
     private static void upgrade81to82(Statement stmt) throws SQLException {
+        // DS references
         execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint UK_VS_TENANT_REGION;");
 
         execSql(stmt, "alter table DEPLOYMENT_SPEC alter column tenant_name RENAME TO " + "project_name;");
         execSql(stmt, "alter table DEPLOYMENT_SPEC alter column tenant_id RENAME TO " + "project_id;");
 
         execSql(stmt,
-                "alter table DEPLOYMENT_SPEC add constraint UK_VS_TENANT_REGION unique (vs_fk, project_id, region);");
+                "alter table DEPLOYMENT_SPEC add constraint UK_VS_PROJECT_REGION unique (vs_fk, project_id, region);");
+
+        // SG references
+        execSql(stmt, "alter table SECURITY_GROUP drop constraint UK_NAME_TENANT;");
+
+        execSql(stmt, "alter table SECURITY_GROUP alter column tenant_name RENAME TO " + "project_name;");
+        execSql(stmt, "alter table SECURITY_GROUP alter column tenant_id RENAME TO " + "project_id;");
+
+        execSql(stmt, "alter table SECURITY_GROUP add constraint UK_NAME_PROJECT unique (name, project_id);");
     }
 
     private static void upgrade80to81(Statement stmt) throws SQLException {

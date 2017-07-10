@@ -422,8 +422,8 @@ public class Schema {
                    "last_job_id_fk bigint," +
                    "network_elem_id varchar(255)," +
                    "vc_fk bigint not null," +
-                   "tenant_id varchar(255)," +
-                   "tenant_name varchar(255)," +
+                   "project_id varchar(255)," +
+                   "project_name varchar(255)," +
                    "protect_all bit not null default 1," +
                    "primary key (id)" +
                    ");",
@@ -982,8 +982,8 @@ public class Schema {
                 "references VIRTUALIZATION_CONNECTOR;",
 
             "alter table SECURITY_GROUP " +
-                "add constraint UK_NAME_TENANT unique (" +
-                "name, tenant_id);",
+                "add constraint UK_NAME_PROJECT unique (" +
+                "name, project_id);",
 
             "alter table SECURITY_GROUP " +
                 "add constraint FK_SG_VC " +
@@ -1049,7 +1049,7 @@ public class Schema {
                    "references OS_SECURITY_GROUP_REFERENCE;",
 
            "alter table DEPLOYMENT_SPEC " +
-                "add constraint UK_VS_TENANT_REGION unique (" +
+                "add constraint UK_VS_PROJECT_REGION unique (" +
                 "vs_fk, project_id, region);",
 
             "alter table DEPLOYMENT_SPEC " +

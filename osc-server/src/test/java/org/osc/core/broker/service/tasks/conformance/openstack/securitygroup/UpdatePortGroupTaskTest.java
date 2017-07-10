@@ -186,7 +186,7 @@ public class UpdatePortGroupTaskTest {
 		this.exception.expect(Exception.class);
 		this.exception.expectMessage(
 				String.format("Failed to retrieve domainId for given tenant: '%s' and Security Group: '%s",
-						sg.getTenantName(), sg.getName()));
+						sg.getProjectName(), sg.getName()));
 
 		UpdatePortGroupTask task = this.factoryTask.create(sg, portGroup);
 
@@ -286,8 +286,8 @@ public class UpdatePortGroupTaskTest {
 	}
 
 	private void registerDomain(String domainId, SecurityGroup sg) throws Exception {
-		PowerMockito.doReturn(domainId).when(OpenstackUtil.class, "extractDomainId", eq(sg.getTenantId()),
-				eq(sg.getTenantName()), eq(sg.getVirtualizationConnector()),
+		PowerMockito.doReturn(domainId).when(OpenstackUtil.class, "extractDomainId", eq(sg.getProjectId()),
+				eq(sg.getProjectName()), eq(sg.getVirtualizationConnector()),
 				this.domainIdNetworkElementCaptor.capture());
 	}
 

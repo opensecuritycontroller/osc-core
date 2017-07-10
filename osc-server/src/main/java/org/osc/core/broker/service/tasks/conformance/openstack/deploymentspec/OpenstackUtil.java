@@ -16,6 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.InterfaceAttachment;
 import org.openstack4j.model.compute.PortState;
@@ -52,16 +63,6 @@ import org.osc.core.broker.service.persistence.VMEntityManager;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.element.NetworkElement;
-
-import javax.persistence.EntityManager;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class OpenstackUtil {
 
@@ -463,7 +464,7 @@ public class OpenstackUtil {
     public static void discoverVmForPort(EntityManager em, String region, SecurityGroup sg, Port osPort, VMPort vmPort)
             throws IOException, EncryptionException {
 
-        try (Openstack4JNova nova = new Openstack4JNova(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()))) {
+        try (Openstack4JNova nova = new Openstack4JNova(new Endpoint(sg.getVirtualizationConnector(), sg.getProjectName()))) {
             Server osVm = nova.getServer(region, osPort.getDeviceId());
             if (null == osVm) {
                 OSCEntityManager.delete(em, vmPort, StaticRegistry.transactionalBroadcastUtil());
