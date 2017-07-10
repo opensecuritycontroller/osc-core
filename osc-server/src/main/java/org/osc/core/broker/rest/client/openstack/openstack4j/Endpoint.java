@@ -57,7 +57,7 @@ public class Endpoint {
     }
 
     public Endpoint(DeploymentSpec ds) throws EncryptionException {
-        this(ds.getVirtualSystem().getVirtualizationConnector(), ds.getTenantName());
+        this(ds.getVirtualSystem().getVirtualizationConnector(), ds.getProjectName());
     }
 
     public Endpoint(VirtualizationConnector vc, String tenant) throws EncryptionException {

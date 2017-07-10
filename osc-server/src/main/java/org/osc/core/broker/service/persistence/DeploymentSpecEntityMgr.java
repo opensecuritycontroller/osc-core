@@ -50,7 +50,7 @@ public class DeploymentSpecEntityMgr {
         ds.setName(dto.getName());
         ds.setManagementNetworkName(dto.getManagementNetworkName());
         ds.setInspectionNetworkName(dto.getInspectionNetworkName());
-        ds.setTenantName(dto.getTenantName());
+        ds.setProjectName(dto.getTenantName());
         ds.setInstanceCount(dto.getCount());
         ds.setShared(dto.isShared());
     }
@@ -59,8 +59,8 @@ public class DeploymentSpecEntityMgr {
         dto.setId(ds.getId());
         dto.setParentId(ds.getVirtualSystem().getId());
         dto.setName(ds.getName());
-        dto.setTenantName(ds.getTenantName());
-        dto.setTenantId(ds.getTenantId());
+        dto.setTenantName(ds.getProjectName());
+        dto.setTenantId(ds.getProjectId());
         dto.setRegion(ds.getRegion());
         dto.setFloatingIpPoolName(ds.getFloatingIpPoolName());
         dto.setManagementNetworkName(ds.getManagementNetworkName());

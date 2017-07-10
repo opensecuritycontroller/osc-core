@@ -239,6 +239,8 @@ public class ReleaseUpgradeMgr {
                 upgrade79to80(stmt);
             case 80:
                 upgrade80to81(stmt);
+            case 81:
+                upgrade81to82(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -248,6 +250,16 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+
+    private static void upgrade81to82(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint UK_VS_TENANT_REGION;");
+
+        execSql(stmt, "alter table DEPLOYMENT_SPEC alter column tenant_name RENAME TO " + "project_name;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC alter column tenant_id RENAME TO " + "project_id;");
+
+        execSql(stmt,
+                "alter table DEPLOYMENT_SPEC add constraint UK_VS_TENANT_REGION unique (vs_fk, project_id, region);");
     }
 
     private static void upgrade80to81(Statement stmt) throws SQLException {

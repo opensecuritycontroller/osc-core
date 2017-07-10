@@ -16,7 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import com.google.common.collect.ImmutableMap;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -44,10 +49,7 @@ import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import javax.persistence.EntityManager;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Creates SVA for given dai
@@ -111,7 +113,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
         VirtualSystem vs = ds.getVirtualSystem();
 
         VirtualizationConnector vc = vs.getVirtualizationConnector();
-        Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
+        Endpoint endPoint = new Endpoint(vc, ds.getProjectName());
         SdnRedirectionApi controller = null;
 
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
@@ -158,24 +160,23 @@ public class OsSvaServerCreateTask extends TransactionalTask {
         this.activeRunner.getOsDeploymentSpecNotificationRunner()
                 .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
-        if (vc.isControllerDefined()) {
-            try {
-                DefaultNetworkPort ingressPort = new DefaultNetworkPort(createdServer.getIngressInspectionPortId(),
-                        createdServer.getIngressInspectionMacAddr());
-                DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
-                        createdServer.getEgressInspectionMacAddr());
+            if (vc.isControllerDefined()) {
+                try {
+                    DefaultNetworkPort ingressPort = new DefaultNetworkPort(createdServer.getIngressInspectionPortId(),
+                            createdServer.getIngressInspectionMacAddr());
+                    DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
+                            createdServer.getEgressInspectionMacAddr());
 
-                if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
-                    String domainId = OpenstackUtil.extractDomainId(
-                            ds.getTenantId(),
-                            ds.getTenantName(),
-                            ds.getVirtualSystem().getVirtualizationConnector(),
-                            Arrays.asList(ingressPort));
-                    ingressPort.setParentId(domainId);
-                    egressPort.setParentId(domainId);
-                }
-                controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
-
+                    if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
+                        String domainId = OpenstackUtil.extractDomainId(
+                                ds.getProjectId(),
+                                ds.getProjectName(),
+                                ds.getVirtualSystem().getVirtualizationConnector(),
+                                Arrays.asList(ingressPort));
+                        ingressPort.setParentId(domainId);
+                        egressPort.setParentId(domainId);
+                    }
+                    controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
             } finally {
                 controller.close();
             }

@@ -239,7 +239,7 @@ public class CheckPortGroupHookMetaTaskTestData {
         DeploymentSpec ds = new DeploymentSpec(vs, "RegionOne", baseName + "_tenantId", baseName + "_mnId",
                 baseName + "_inId", null);
         ds.setName(baseName + "_DS");
-        ds.setTenantName(baseName + "_tenantName");
+        ds.setProjectName(baseName + "_tenantName");
         ds.setManagementNetworkName(baseName + "_mnName");
         ds.setInspectionNetworkName(baseName + "_inName");
 

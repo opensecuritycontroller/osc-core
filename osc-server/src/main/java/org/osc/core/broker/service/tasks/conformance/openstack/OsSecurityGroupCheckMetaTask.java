@@ -83,7 +83,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         // Check if the VS have ds or dds with os security group reference
         OsSecurityGroupReference sgReference = null;
         List<DeploymentSpec> dss = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(
-                em, ds.getVirtualSystem(), ds.getTenantId(), ds.getRegion());
+                em, ds.getVirtualSystem(), ds.getProjectId(), ds.getRegion());
         for (DeploymentSpec depSpec : dss) {
             if (depSpec.getOsSecurityGroupReference() != null) {
                 sgReference = depSpec.getOsSecurityGroupReference();
@@ -108,7 +108,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
                     existingDs = iterator.next();
                     // For a given tenant, region and VS there will be only one SG
                     if (existingDs.getRegion().equals(this.ds.getRegion())
-                            && existingDs.getTenantName().equals(this.ds.getTenantName())
+                            && existingDs.getProjectName().equals(this.ds.getProjectName())
                             && existingDs.getVirtualSystem().getName().equals(this.ds.getVirtualSystem().getName())) {
                         SecurityGroup sg = neutron.getSecurityGroupById(ds.getRegion(), sgReference.getSgRefId());
                         if (sg == null) {
@@ -175,7 +175,7 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
     public String getName() {
         return String.format(
                 "Checking if Openstack Security Group exists for Virtual System '%s' in tenant '%s' for region '%s'",
-                this.ds.getVirtualSystem().getName(), this.ds.getTenantName(), this.ds.getRegion());
+                this.ds.getVirtualSystem().getName(), this.ds.getProjectName(), this.ds.getRegion());
     }
 
 }

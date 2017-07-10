@@ -156,7 +156,7 @@ public class VSConformanceCheckMetaTaskTestData {
         VirtualSystem vs = createVirtualSystem(vsId, vcId, daId);
 
         DeploymentSpec ds = new DeploymentSpec(vs, null, null, null, null, null);
-        ds.setTenantName("OpenstackWithDeploymentSpecTenantName");
+        ds.setProjectName("OpenstackWithDeploymentSpecTenantName");
         Set<DeploymentSpec> dsSet = new HashSet<DeploymentSpec>();
         dsSet.add(ds);
 
@@ -172,7 +172,7 @@ public class VSConformanceCheckMetaTaskTestData {
         DeploymentSpec ds = (DeploymentSpec) vs.getDeploymentSpecs().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
-        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), ds.getTenantName());
+        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), ds.getProjectName());
         expectedGraph.appendTask(new DSConformanceCheckMetaTask().create(ds, endPoint));
         expectedGraph.appendTask(UPDATE_OPENSTACK_NO_DEPLOYMENT_SPEC_TASK, TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask().create(vs));
@@ -190,7 +190,7 @@ public class VSConformanceCheckMetaTaskTestData {
         VirtualSystem vs = createVirtualSystem(vsId, vcId, daId);
 
         DeploymentSpec ds = new DeploymentSpec(vs, null, null, null, null, null);
-        ds.setTenantName("OpenstacWhenLockingDeploymentSpecFails");
+        ds.setProjectName("OpenstacWhenLockingDeploymentSpecFails");
         Set<DeploymentSpec> dsSet = new HashSet<DeploymentSpec>();
         dsSet.add(ds);
 
@@ -220,7 +220,7 @@ public class VSConformanceCheckMetaTaskTestData {
         VirtualSystem vs = createVirtualSystem(vsId, vcId, daId);
 
         DeploymentSpec ds = new DeploymentSpec(vs, null, null, null, null, null);
-        ds.setTenantName("DeleteOpenStackWithDeploymentSpecTenantName");
+        ds.setProjectName("DeleteOpenStackWithDeploymentSpecTenantName");
         Set<DeploymentSpec> dsSet = new HashSet<DeploymentSpec>();
         dsSet.add(ds);
 
@@ -236,7 +236,7 @@ public class VSConformanceCheckMetaTaskTestData {
         DeploymentSpec ds = (DeploymentSpec) vs.getDeploymentSpecs().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
-        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), ds.getTenantName());
+        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), ds.getProjectName());
         expectedGraph.appendTask(new DSConformanceCheckMetaTask().create(ds, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);

@@ -211,7 +211,7 @@ public class OpenstackUtil {
         // Get all DSs that are uses the same region
         for (DeploymentSpec ds : vs.getDeploymentSpecs()) {
             // Examine only DS of same region
-            if (ds.getRegion().equals(region) && ds.getTenantId().equals(tenantId)) {
+            if (ds.getRegion().equals(region) && ds.getProjectId().equals(tenantId)) {
                 selectedDs = ds;
                 // If we found an exclusive DS, there must be one and only one for that tenant
                 break;
@@ -344,7 +344,7 @@ public class OpenstackUtil {
     private static String extractDomainId(String tenantId, VirtualizationConnector vc, DistributedApplianceInstance dai) throws IOException, EncryptionException {
         DefaultNetworkPort ingressPort = new DefaultNetworkPort(dai.getInspectionOsIngressPortId(), dai.getInspectionIngressMacAddress());
         return OpenstackUtil.extractDomainId(
-                dai.getDeploymentSpec().getTenantId(),
+                dai.getDeploymentSpec().getProjectId(),
                 tenantId,
                 vc,
                 Arrays.asList(ingressPort));

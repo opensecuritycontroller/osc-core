@@ -232,7 +232,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
 
     private void addTenantListener(DeploymentSpec ds) throws VmidcBrokerInvalidEntryException {
         List<String> tenenatIdList = new ArrayList<String>();
-        tenenatIdList.add(ds.getTenantId());
+        tenenatIdList.add(ds.getProjectId());
         // Creating member change Notification Listener
         OsNotificationListener tenantListener = this.notificationListenerFactory
                 .createAndRegisterNotificationListener(ds.getVirtualSystem().getVirtualizationConnector(),

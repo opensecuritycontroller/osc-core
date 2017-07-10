@@ -24,11 +24,11 @@ import java.sql.Statement;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.common.job.FreqType;
-import org.osc.core.common.job.ThresholdType;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.crypto.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.common.job.FreqType;
+import org.osc.core.common.job.ThresholdType;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -512,8 +512,8 @@ public class Schema {
                 "version bigint," +
                 "name varchar(255) not null," +
                 "region varchar(255) not null," +
-                "tenant_name varchar(255) not null," +
-                "tenant_id varchar(255) not null," +
+                "project_name varchar(255) not null," +
+                "project_id varchar(255) not null," +
                 "management_network_name varchar(255) not null," +
                 "management_network_id varchar(255) not null," +
                 "inspection_network_name varchar(255) not null," +
@@ -1050,7 +1050,7 @@ public class Schema {
 
            "alter table DEPLOYMENT_SPEC " +
                 "add constraint UK_VS_TENANT_REGION unique (" +
-                "vs_fk, tenant_id, region);",
+                "vs_fk, project_id, region);",
 
             "alter table DEPLOYMENT_SPEC " +
                 "add constraint FK_DEPLOYMENT_SPEC_VS " +
