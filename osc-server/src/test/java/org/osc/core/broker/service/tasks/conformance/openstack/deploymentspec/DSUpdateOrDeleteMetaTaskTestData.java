@@ -27,7 +27,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -38,6 +37,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.HostAggregate
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class DSUpdateOrDeleteMetaTaskTestData {
     public static List<DeploymentSpec> TEST_DEPLOYMENT_SPECS = new ArrayList<>();
@@ -313,10 +313,10 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         vs.setName(baseName + "_vs");
         vs.setMgrId(baseName + "_mgrId");
 
-        DeploymentSpec ds = new DeploymentSpec(vs, region, baseName + "_tenantId",
+        DeploymentSpec ds = new DeploymentSpec(vs, region, baseName + "_projectId",
                 baseName + "_mnId",baseName + "_inId", null);
         ds.setName(baseName + "_ds");
-        ds.setProjectName(baseName + "_tenantName");
+        ds.setProjectName(baseName + "_projectName");
         ds.setManagementNetworkName(baseName + "_mnName");
         ds.setInspectionNetworkName(baseName + "_inName");
 

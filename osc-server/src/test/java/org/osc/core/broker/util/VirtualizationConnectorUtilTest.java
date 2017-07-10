@@ -174,7 +174,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListTenantsFail_ReturnsErrorTypeException() throws Exception {
+	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListProjectsFail_ReturnsErrorTypeException() throws Exception {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);
@@ -199,7 +199,7 @@ public class VirtualizationConnectorUtilTest {
 	}
 
 	@Test
-	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListTenantsSuccess_ReturnsSuccessful() throws Exception {
+	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListProjectsSuccess_ReturnsSuccessful() throws Exception {
 
 		// Arrange
 		this.exception.expect(ErrorTypeException.class);

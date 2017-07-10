@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.validator;
 
-import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.EMPTY_VALUE_ERROR_MESSAGE;
+import static org.osc.core.broker.service.validator.DistributedApplianceDtoValidatorTestData.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,7 +72,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
         result.addAll(getInvalidControllerIpTestData());
         result.addAll(getInvalidProviderIpTestData());
         result.addAll(getInvalidSoftwareVersions());
-        result.addAll(getInvalidTenantNameTestData());
+        result.addAll(getInvalidProjectNameTestData());
         result.addAll(getInvalidMqUserTestData());
         result.addAll(getInvalidMqPasswordTestData());
         result.addAll(getInvalidMqPortTestData());
@@ -177,7 +177,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
         return result;
     }
 
-    static List<Object[]> getInvalidTenantNameTestData() {
+    static List<Object[]> getInvalidProjectNameTestData() {
         String[] invalidNames = new String[] { null, "",
                 StringUtils.rightPad("dtoName", ValidateUtil.DEFAULT_MAX_LEN + 10, 'e') };
 

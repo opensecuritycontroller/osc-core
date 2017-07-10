@@ -16,8 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
@@ -118,7 +117,7 @@ public class UpdatePortGroupTaskTest {
 	@Test
 	public void testExecute_WhenElementIdMatches_UpdateNotNeeded() throws Exception {
 		// Arrange.
-		SecurityGroup sg = registerSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
+		SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(1L, OPENSTACK_ID));
 		PortGroup portGroup = createPortGroup(OPENSTACK_ID);
 
@@ -144,7 +143,7 @@ public class UpdatePortGroupTaskTest {
 	@Test
 	public void testExecute_WhenElementIdMismatches_UpdateDone() throws Exception {
 		// Arrange.
-		SecurityGroup sg = registerSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
+		SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(1L, OPENSTACK_ID));
 		PortGroup portGroup = createPortGroup("different_openstackId");
 
@@ -173,7 +172,7 @@ public class UpdatePortGroupTaskTest {
 	@Test
 	public void testExecute_WhenDomainIsNotFound_ThrowsException() throws Exception {
 		// Arrange.
-		SecurityGroup sg = registerSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
+		SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(1L, OPENSTACK_ID));
 		PortGroup portGroup = createPortGroup(OPENSTACK_ID);
 
@@ -185,7 +184,7 @@ public class UpdatePortGroupTaskTest {
 
 		this.exception.expect(Exception.class);
 		this.exception.expectMessage(
-				String.format("Failed to retrieve domainId for given tenant: '%s' and Security Group: '%s",
+				String.format("Failed to retrieve domainId for given project: '%s' and Security Group: '%s",
 						sg.getProjectName(), sg.getName()));
 
 		UpdatePortGroupTask task = this.factoryTask.create(sg, portGroup);
@@ -200,7 +199,7 @@ public class UpdatePortGroupTaskTest {
 	@Test
 	public void testExecute_WhenPortGroupIsNotFound_ThrowsException() throws Exception {
 		// Arrange.
-		SecurityGroup sg = registerSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
+		SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(1L, ""));
 		PortGroup portGroup = createPortGroup(OPENSTACK_ID);
 
@@ -252,11 +251,11 @@ public class UpdatePortGroupTaskTest {
 				null);
 	}
 
-	private SecurityGroup registerSecurityGroup(Long vcId, String tenantId, String tenantName, Long sgId,
+	private SecurityGroup registerSecurityGroup(Long vcId, String projectId, String projectName, Long sgId,
 			String sgName) {
 		VirtualizationConnector vc = new VirtualizationConnector();
 		vc.setId(1L);
-		SecurityGroup sg = new SecurityGroup(vc, tenantId, tenantName);
+		SecurityGroup sg = new SecurityGroup(vc, projectId, projectName);
 		sg.setId(sgId);
 		sg.setName(sgName);
 
