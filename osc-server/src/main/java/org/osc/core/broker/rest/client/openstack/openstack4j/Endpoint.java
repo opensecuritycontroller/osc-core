@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
+import javax.net.ssl.SSLContext;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -23,8 +25,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.crypto.SslContextProvider;
-
-import javax.net.ssl.SSLContext;
 
 public class Endpoint {
 
@@ -67,6 +67,7 @@ public class Endpoint {
         this.user = vc.getProviderUsername();
         this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
+        this.sslContext = SslContextProvider.getInstance().getSSLContext();
     }
 
     public String getEndPointIP() {
