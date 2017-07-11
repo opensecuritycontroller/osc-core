@@ -383,6 +383,7 @@
 							<includes>
 								<include>mgr_plugins/**</include>
 								<include>sdn_ctrl_plugins/**</include>
+								<include>plugins/**</include>								
 								<include>generated/**</include>
 								<include>webapp/**</include>
 							</includes>
@@ -393,6 +394,7 @@
 							<excludes>
 								<exclude>mgr_plugins</exclude>
 								<exclude>sdn_ctrl_plugins</exclude>
+								<exclude>plugins</exclude>
 								<exclude>log4j.properties</exclude>
 								<exclude>quartz.properties</exclude>
 								<exclude>vmidcServer.conf</exclude>
@@ -403,6 +405,7 @@
 							<includes>
 								<include>sdn_ctrl_plugins/**</include>
 								<include>mgr_plugins/**</include>
+								<include>plugins/**</include>
 								<include>jar/**</include>
 								<include>osc-server.jar</include>
 							</includes>
@@ -457,6 +460,7 @@
 										<include name="config/**" />
 										<include name="mgr_plugins/**" />
 										<include name="sdn_ctrl_plugins/**" />
+										<include name="plugins/**" />
 										<include name="webapp/**" />
 									</fileset>
 									<fileset dir="${basedir}/../osc-control/target"

@@ -51,6 +51,7 @@ import org.osgi.annotation.versioning.ConsumerType;
 public interface ApiFactoryService {
     String MANAGER_PLUGINS_DIRECTORY = "mgr_plugins";
     String SDN_CONTROLLER_PLUGINS_DIRECTORY = "sdn_ctrl_plugins";
+    String PLUGINS_DIRECTORY = "plugins";
 
     ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception;
 

@@ -17,6 +17,7 @@
 package org.osc.core.broker.view;
 
 import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
+import org.osc.core.broker.service.api.ImportPluginServiceApi;
 import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.view.common.StyleConstants;
@@ -56,6 +57,9 @@ public class PluginView extends VerticalLayout implements View {
     ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService;
 
     @Reference
+    ImportPluginServiceApi importPluginService;
+
+    @Reference
     ServerApi server;
 
     @Activate
@@ -69,13 +73,13 @@ public class PluginView extends VerticalLayout implements View {
 
         // adding SDN Controller Plugin
         this.tabs.addTab(createTab("SDN Controller Plugins", "SDN Controller Plugins",
-                new SdnControllerPluginsLayout(ctx, this.importSdnControllerPluginService, this.server),
+                new SdnControllerPluginsLayout(ctx, this.importPluginService, this.server),
                 MAINTENANCE_CONTROLLER_PLUGIN_GUID));
 
         // Adding Manager Plugin tab
         this.tabs.addTab(createTab(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_TITLE),
                 VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_NAME),
-                new ManagerPluginsLayout(ctx, this.importApplianceManagerPluginService, this.server),
+                new ManagerPluginsLayout(ctx, this.importPluginService, this.server),
                 MAINTENANCE_MANAGER_PLUGIN_GUID));
 
         // adding tab sheet to the view

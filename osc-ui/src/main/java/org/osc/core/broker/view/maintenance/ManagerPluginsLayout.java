@@ -16,18 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.view.maintenance;
 
-import com.vaadin.data.Item;
-import com.vaadin.server.ExternalResource;
-import com.vaadin.server.FileDownloader;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
+import org.osc.core.broker.service.api.ImportPluginServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginApi;
 import org.osc.core.broker.service.api.plugin.PluginApi.State;
 import org.osc.core.broker.service.api.plugin.PluginEvent;
@@ -46,11 +42,16 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
+import com.vaadin.data.Item;
+import com.vaadin.server.ExternalResource;
+import com.vaadin.server.FileDownloader;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 
 public class ManagerPluginsLayout extends FormLayout {
 
@@ -69,14 +70,14 @@ public class ManagerPluginsLayout extends FormLayout {
     private Panel pluginsPanel;
     PluginUploader uploader;
 
-    private ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService;
+    private ImportPluginServiceApi importPluginService;
     private ServiceRegistration<PluginListener> registration;
 
     public ManagerPluginsLayout(BundleContext ctx,
-            ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService,
+    		ImportPluginServiceApi importPluginService,
             ServerApi server) throws Exception {
         super();
-        this.importApplianceManagerPluginService = importApplianceManagerPluginService;
+        this.importPluginService = importPluginService;
         this.uploader = new PluginUploader(PluginType.MANAGER, server);
 
         // Create Controls
@@ -189,7 +190,7 @@ public class ManagerPluginsLayout extends FormLayout {
     private void deletePlugin(PluginApi plugin) {
         final VmidcWindow<OkCancelButtonModel> deleteWindow = WindowUtil.createAlertWindow("Delete Plugin", "Delete Plugin - " + plugin.getSymbolicName());
         deleteWindow.getComponentModel().setOkClickedListener(event -> {
-            if (this.importApplianceManagerPluginService.isManagerTypeUsed(plugin.getName())) {
+            if (this.importPluginService.isManagerTypeUsed(plugin.getName())) {
                 ViewUtil.iscNotification("Manager Plugin '" + plugin.getName() + "' is used.", Notification.Type.ERROR_MESSAGE);
             } else {
                 try {
@@ -217,7 +218,7 @@ public class ManagerPluginsLayout extends FormLayout {
                 try {
                     ImportFileRequest importRequest = new ImportFileRequest(uploadPath);
 
-                    ManagerPluginsLayout.this.importApplianceManagerPluginService.dispatch(importRequest);
+                    ManagerPluginsLayout.this.importPluginService.dispatch(importRequest);
 
                     ViewUtil.iscNotification(VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_MANAGER_SUCCESSFUL),
                             null, Notification.Type.TRAY_NOTIFICATION);

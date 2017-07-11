@@ -48,7 +48,7 @@ hk2:\
 -runproperties: \
     org.osgi.framework.bootdelegation=sun.*,\
     org.apache.felix.http.enable=false,\
-    felix.fileinstall.dir='./config,./mgr_plugins,./sdn_ctrl_plugins'
+    felix.fileinstall.dir='./config,./mgr_plugins,./sdn_ctrl_plugins,./plugins'
 
 -runsystempackages:\
     sun.misc,\
