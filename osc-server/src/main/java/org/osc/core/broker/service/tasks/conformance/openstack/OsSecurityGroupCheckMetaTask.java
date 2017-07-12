@@ -16,8 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.api.Builders;
 import org.openstack4j.model.network.SecurityGroup;
@@ -36,13 +43,8 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 @Component(service = OsSecurityGroupCheckMetaTask.class)
 public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
@@ -54,11 +56,6 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
 
     @Reference
     private ApiFactoryService apiFactoryService;
-
-    private final static String INGRESS = "INGRESS";
-    private final static String EGRESS = "EGRESS";
-    private final static String IPV4 = "IPv4";
-    private final static String IPV6 = "IPv6";
 
     private DeploymentSpec ds;
     private TaskGraph tg;
@@ -139,10 +136,14 @@ public class OsSecurityGroupCheckMetaTask extends TransactionalMetaTask {
         final List<? extends SecurityGroupRule> rules = sg.getRules();
 
         List<SecurityGroupRule> expectedList = new ArrayList<>();
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV4).direction(INGRESS).build());
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV4).direction(EGRESS).build());
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV6).direction(INGRESS).build());
-        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(IPV6).direction(EGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(CreateOsSecurityGroupTask.IPV4)
+                .direction(CreateOsSecurityGroupTask.INGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(CreateOsSecurityGroupTask.IPV4)
+                .direction(CreateOsSecurityGroupTask.EGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(CreateOsSecurityGroupTask.IPV6)
+                .direction(CreateOsSecurityGroupTask.INGRESS).build());
+        expectedList.add(Builders.securityGroupRule().protocol(null).ethertype(CreateOsSecurityGroupTask.IPV6)
+                .direction(CreateOsSecurityGroupTask.EGRESS).build());
         ImmutableList.<SecurityGroupRule>builder().addAll(expectedList);
 
         // Filter the missing rules from the expected SG rules

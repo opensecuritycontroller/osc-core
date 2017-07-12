@@ -179,10 +179,10 @@ public class UpdateDistributedApplianceService
                     .getApplianceId(), daDto.getApplianceSoftwareVersionName(), vc.getVirtualizationType(), vc
                     .getVirtualizationSoftwareVersion());
 
-            // load domain
-            Domain domain = domainEntityManager.findByPrimaryKey(vsDto.getDomainId());
-
             if (vsDto.getId() == null) { // new item
+
+                // load domain
+                Domain domain = domainEntityManager.findByPrimaryKey(vsDto.getDomainId());
 
                 VirtualSystem newVs = new VirtualSystem(da);
 
