@@ -43,7 +43,7 @@ public class SecurityGroupEntityMgr {
 
     public static void toEntity(SecurityGroup entity, SecurityGroupDto dto) {
         entity.setName(dto.getName());
-        entity.setProjectName(dto.getTenantName());
+        entity.setProjectName(dto.getProjectName());
         entity.setProtectAll(dto.isProtectAll());
     }
 
@@ -58,8 +58,8 @@ public class SecurityGroupEntityMgr {
         dto.setMarkForDeletion(entity.getMarkedForDeletion());
         dto.setProtectAll(entity.isProtectAll());
         dto.setVirtualizationConnectorName(entity.getVirtualizationConnector().getName());
-        dto.setTenantId(entity.getProjectId());
-        dto.setTenantName(entity.getProjectName());
+        dto.setProjectId(entity.getProjectId());
+        dto.setProjectName(entity.getProjectName());
         if (entity.getLastJob() != null) {
             dto.setLastJobStatus(entity.getLastJob().getStatus().name());
             dto.setLastJobState(entity.getLastJob().getState().name());

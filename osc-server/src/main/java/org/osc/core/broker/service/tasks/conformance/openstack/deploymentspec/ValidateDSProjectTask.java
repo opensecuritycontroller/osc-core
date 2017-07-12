@@ -32,7 +32,7 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * Validates the DS tenant exists and syncs the name if needed
+ * Validates the DS project exists and syncs the name if needed
  */
 @Component(service=ValidateDSProjectTask.class)
 public class ValidateDSProjectTask extends TransactionalTask {
@@ -60,17 +60,17 @@ public class ValidateDSProjectTask extends TransactionalTask {
             this.log.info("Validating the DS project " + this.ds.getProjectName() + " exists.");
 
             try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc))) {
-                Project tenant = keystone.getProjectById(this.ds.getProjectId());
-                if (tenant == null) {
-                    this.log.info("DS tenant " + this.ds.getProjectName() + " Deleted from openstack. Marking DS for deletion.");
-                    // Tenant was deleted, mark ds for deleting as well
+                Project project = keystone.getProjectById(this.ds.getProjectId());
+                if (project == null) {
+                    this.log.info("DS project " + this.ds.getProjectName() + " Deleted from openstack. Marking DS for deletion.");
+                    // project was deleted, mark ds for deleting as well
                     OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
                 } else {
-                    // Sync the tenant name if needed
-                    if (!tenant.getName().equals(this.ds.getProjectName())) {
-                        this.log.info("DS tenant name updated from " + this.ds.getProjectName() + " to "
-                                + tenant.getName());
-                        this.ds.setProjectName(tenant.getName());
+                    // Sync the project name if needed
+                    if (!project.getName().equals(this.ds.getProjectName())) {
+                        this.log.info("DS project name updated from " + this.ds.getProjectName() + " to "
+                                + project.getName());
+                        this.ds.setProjectName(project.getName());
                         OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
                     }
                 }
@@ -80,7 +80,7 @@ public class ValidateDSProjectTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Validating Deployment Specification '%s' for tenant '%s'", this.ds.getName(),
+        return String.format("Validating Deployment Specification '%s' for project '%s'", this.ds.getName(),
                 this.ds.getProjectName());
     };
 

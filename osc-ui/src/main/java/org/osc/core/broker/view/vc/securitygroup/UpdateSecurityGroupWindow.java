@@ -66,7 +66,7 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
             this.name.setValue(this.currentSecurityGroup.getName());
 
             for (Object id : this.project.getContainerDataSource().getItemIds()) {
-                if (this.currentSecurityGroup.getTenantId().equals(
+                if (this.currentSecurityGroup.getProjectId().equals(
                         this.project.getContainerDataSource().getContainerProperty(id, "id").getValue())) {
                     this.project.select(id);
                 }
@@ -102,8 +102,8 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
                 newDto.setId(this.currentSecurityGroup.getId());
 
                 newDto.setName(this.name.getValue().trim());
-                newDto.setTenantId(((OsProjectDto) this.project.getValue()).getId());
-                newDto.setTenantName(((OsProjectDto) this.project.getValue()).getName());
+                newDto.setProjectId(((OsProjectDto) this.project.getValue()).getId());
+                newDto.setProjectName(((OsProjectDto) this.project.getValue()).getName());
                 newDto.setProtectAll(this.protectionTypeOption.getValue() == TYPE_ALL);
 
                 request.setDto(newDto);

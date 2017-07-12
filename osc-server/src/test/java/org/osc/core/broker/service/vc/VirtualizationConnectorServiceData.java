@@ -142,7 +142,7 @@ public class VirtualizationConnectorServiceData {
             String controllerTypeStr){
 
         vcDto.setAdminDomainId(domainId);
-        vcDto.setAdminTenantName(projectName);
+        vcDto.setAdminProjectName(projectName);
 
         Map<String, String> providerAttributes = new HashMap<>();
         providerAttributes.put(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_USER, rabbitMquser);

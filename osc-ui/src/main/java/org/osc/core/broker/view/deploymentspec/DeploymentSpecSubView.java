@@ -125,12 +125,12 @@ public class DeploymentSpecSubView extends CRUDBaseSubView<VirtualSystemDto, Dep
     public void initTable() {
         this.tableContainer = new BeanContainer<Long, DeploymentSpecDto>(DeploymentSpecDto.class);
         this.table.setContainerDataSource(this.tableContainer);
-        this.table.setVisibleColumns("name", "tenantName", "managementNetworkName", "markForDeletion",
+        this.table.setVisibleColumns("name", "projectName", "managementNetworkName", "markForDeletion",
                 "lastJobStatus");
 
         // Customizing column header names
         this.table.setColumnHeader("name", "Name");
-        this.table.setColumnHeader("tenantName", "Project");
+        this.table.setColumnHeader("projectName", "Project");
         this.table.setColumnHeader("managementNetworkName", "Network");
         this.table.setColumnHeader("markForDeletion", "Deleted");
         this.table.addGeneratedColumn("lastJobStatus", new ColumnGenerator() {

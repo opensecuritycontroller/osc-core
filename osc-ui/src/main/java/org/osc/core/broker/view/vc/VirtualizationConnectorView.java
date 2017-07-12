@@ -215,7 +215,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
     public void initChildTable() {
         this.childContainer = new BeanContainer<Long, SecurityGroupDto>(SecurityGroupDto.class);
         this.childTable.setContainerDataSource(this.childContainer);
-        this.childTable.setVisibleColumns("name", "tenantName", "memberDescription", "servicesDescription",
+        this.childTable.setVisibleColumns("name", "projectName", "memberDescription", "servicesDescription",
                 "markForDeletion", "lastJobStatus");
         this.childTable.addGeneratedColumn("lastJobStatus", new ColumnGenerator() {
             @Override
@@ -228,7 +228,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
         // re-naming table header columns
         this.childTable.setColumnHeader("name", "Name");
-        this.childTable.setColumnHeader("tenantName", "Project");
+        this.childTable.setColumnHeader("projectName", "Project");
         this.childTable.setColumnHeader("memberDescription", "Members");
         this.childTable.setColumnHeader("servicesDescription", "Services");
         this.childTable.setColumnHeader("markForDeletion", "Deleted");

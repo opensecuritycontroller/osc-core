@@ -32,8 +32,8 @@ public class DeploymentSpecDtoValidator {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("Name", dto.getName());
 
-        map.put("Project Name", dto.getTenantName());
-        map.put("Project", dto.getTenantId());
+        map.put("Project Name", dto.getProjectName());
+        map.put("Project", dto.getProjectId());
 
         map.put("Region", dto.getRegion());
 

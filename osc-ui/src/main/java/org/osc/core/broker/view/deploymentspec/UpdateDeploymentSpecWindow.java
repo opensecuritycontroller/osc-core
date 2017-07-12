@@ -75,7 +75,7 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
             // filling existing information to our form
             this.name.setValue(this.deploymentSpecDto.getName());
             for (Object id : this.project.getContainerDataSource().getItemIds()) {
-                if (this.deploymentSpecDto.getTenantId().equals(
+                if (this.deploymentSpecDto.getProjectId().equals(
                         this.project.getContainerDataSource().getContainerProperty(id, "id").getValue())) {
                     this.project.select(id);
                 }
@@ -174,8 +174,8 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
                 requestDto.setId(this.deploymentSpecDto.getId());
                 requestDto.setParentId(this.deploymentSpecDto.getParentId());
                 requestDto.setName(this.name.getValue().trim());
-                requestDto.setTenantId(((OsProjectDto) this.project.getValue()).getId());
-                requestDto.setTenantName(((OsProjectDto) this.project.getValue()).getName());
+                requestDto.setProjectId(((OsProjectDto) this.project.getValue()).getId());
+                requestDto.setProjectName(((OsProjectDto) this.project.getValue()).getName());
                 requestDto.setCount(this.count.getValue());
                 requestDto.setShared(this.shared.getValue() == null ? false : this.shared.getValue());
                 requestDto.setFloatingIpPoolName((String) this.floatingIpPool.getValue());

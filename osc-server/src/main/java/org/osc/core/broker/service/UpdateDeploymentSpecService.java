@@ -119,7 +119,7 @@ public class UpdateDeploymentSpecService
 
         if (!dto.getParentId().equals(this.ds.getVirtualSystem().getId())) {
             throwInvalidUpdateActionException("Virtual System", this.ds.getName());
-        } else if (!dto.getTenantId().equals(this.ds.getProjectId())) {
+        } else if (!dto.getProjectId().equals(this.ds.getProjectId())) {
             throwInvalidUpdateActionException("Project", this.ds.getName());
         } else if (dto.isShared() != this.ds.isShared()) {
             throwInvalidUpdateActionException("Shared", this.ds.getName());

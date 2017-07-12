@@ -74,7 +74,7 @@ public class VirtualizationConnectorDto extends BaseDto {
     private Map<String, String> providerAttributes = new HashMap<>();
 
     @ApiModelProperty(value = "Required if Provider is openstack")
-    private String adminTenantName;
+    private String adminProjectName;
 
     @ApiModelProperty(value = "Required if Provider is openstack")
     private String adminDomainId;
@@ -216,12 +216,12 @@ public class VirtualizationConnectorDto extends BaseDto {
         this.lastJobState = lastJobState;
     }
 
-    public String getAdminTenantName() {
-        return this.adminTenantName;
+    public String getAdminProjectName() {
+        return this.adminProjectName;
     }
 
-    public void setAdminTenantName(String adminTenantName) {
-        this.adminTenantName = adminTenantName;
+    public void setAdminProjectName(String adminProjectName) {
+        this.adminProjectName = adminProjectName;
     }
 
     public String getAdminDomainId() {

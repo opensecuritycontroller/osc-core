@@ -115,7 +115,7 @@ public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequ
 
         DeploymentSpec existingDs = null;
         existingDs = DeploymentSpecEntityMgr.findDeploymentSpecByVirtualSystemProjectAndRegion(em, this.vs,
-        				dto.getTenantId(), dto.getRegion());
+        				dto.getProjectId(), dto.getRegion());
         if (existingDs != null) {
             throw new VmidcBrokerValidationException("A Deployment Specification: " + existingDs.getName()
                     + " Already exists for the combination of the specified virtual system, project and region. "

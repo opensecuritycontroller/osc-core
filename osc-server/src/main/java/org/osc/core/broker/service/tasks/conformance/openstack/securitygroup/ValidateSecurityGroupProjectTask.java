@@ -31,7 +31,7 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * Validates the DS tenant exists and syncs the name if needed
+ * Validates the DS project exists and syncs the name if needed
  */
 @Component(service=ValidateSecurityGroupProjectTask.class)
 public class ValidateSecurityGroupProjectTask extends TransactionalTask {
@@ -54,18 +54,18 @@ public class ValidateSecurityGroupProjectTask extends TransactionalTask {
         OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em, this.txBroadcastUtil);
         this.securityGroup = sgEmgr.findByPrimaryKey(this.securityGroup.getId());
 
-        this.log.info("Validating the Security Group tenant " + this.securityGroup.getProjectName() + " exists.");
+        this.log.info("Validating the Security Group project " + this.securityGroup.getProjectName() + " exists.");
         try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(this.securityGroup.getVirtualizationConnector()))) {
-            Project tenant = keystone.getProjectById(this.securityGroup.getProjectId());
-            if (tenant == null) {
-                this.log.info("Security Group tenant " + this.securityGroup.getProjectName() + " Deleted from openstack. Marking Security Group for deletion.");
-                // Tenant was deleted, mark Security Group for deleting as well
+            Project project = keystone.getProjectById(this.securityGroup.getProjectId());
+            if (project == null) {
+                this.log.info("Security Group project " + this.securityGroup.getProjectName() + " Deleted from openstack. Marking Security Group for deletion.");
+                // project was deleted, mark Security Group for deleting as well
                 OSCEntityManager.markDeleted(em, this.securityGroup, this.txBroadcastUtil);
             } else {
-                // Sync the tenant name if needed
-                if (!tenant.getName().equals(this.securityGroup.getProjectName())) {
-                    this.log.info("Security Group tenant name updated from " + this.securityGroup.getProjectName() + " to " + tenant.getName());
-                    this.securityGroup.setProjectName(tenant.getName());
+                // Sync the project name if needed
+                if (!project.getName().equals(this.securityGroup.getProjectName())) {
+                    this.log.info("Security Group project name updated from " + this.securityGroup.getProjectName() + " to " + project.getName());
+                    this.securityGroup.setProjectName(project.getName());
                     OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
                 }
             }

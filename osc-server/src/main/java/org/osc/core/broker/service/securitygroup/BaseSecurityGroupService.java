@@ -86,9 +86,9 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
 
         ArrayList<String> regionsList;
         try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc))) {
-            Project project = keystone.getProjectById(dto.getTenantId());
+            Project project = keystone.getProjectById(dto.getProjectId());
             if (project == null) {
-                throw new VmidcBrokerValidationException("Project: '" + dto.getTenantName() + "' does not exist.");
+                throw new VmidcBrokerValidationException("Project: '" + dto.getProjectName() + "' does not exist.");
             }
             try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, project.getName()))) {
                 regionsList = new ArrayList<>(novaApi.listRegions());

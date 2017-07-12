@@ -146,7 +146,7 @@ public class OsRabbitMQClient extends RabbitMQClient {
             try {
                 notifyListeners(message, OsNotificationObjectType.getType(eventType));
             } catch (IllegalArgumentException e) {
-                log.error(" Disregarding notification message with unknown object type");
+                log.error("Disregarding notification message with unknown object type" + eventType);
             }
         }
     }

@@ -185,7 +185,7 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 
 		for (String invalidName : invalidNames) {
 			VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStack();
-			vcDto.setAdminTenantName(invalidName);
+			vcDto.setAdminProjectName(invalidName);
 			String errorMessage = invalidName == null || invalidName.equals("")
 					? Server.PRODUCT_NAME + ": " + "Admin Project Name " + EMPTY_VALUE_ERROR_MESSAGE
 					: Server.PRODUCT_NAME + ": " + "Admin Project Name" + " length should not exceed "

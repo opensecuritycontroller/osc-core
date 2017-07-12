@@ -144,7 +144,7 @@ public class CheckPortGroupHookMetaTaskTestData {
         SecurityGroupInterface sgi = new SecurityGroupInterface(vs, null, tag, FailurePolicyType.FAIL_CLOSE, 0L);
         sgi.setName(name + "_SGI");
 
-        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), UUID.randomUUID().toString(), name + "_tenant");
+        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), UUID.randomUUID().toString(), name + "_project");
         sg.setName(name + "_SG");
 
         newSGMWithPort(sg, dai, VM.class);

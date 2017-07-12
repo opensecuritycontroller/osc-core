@@ -121,7 +121,7 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
         ValidateUtil.checkForNullFields(notNullFieldsMap);
 
         if (dto.getType().isOpenstack()) {
-            notNullFieldsMap.put("Admin Project Name", dto.getAdminTenantName());
+            notNullFieldsMap.put("Admin Project Name", dto.getAdminProjectName());
             notNullFieldsMap.put("Admin Domain Id", dto.getAdminDomainId());
             if (!dto.isControllerDefined()) {
                 nullFieldsMap.put("Controller IP Address", dto.getControllerIP());
@@ -175,7 +175,7 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
         map.put("Provider User Name", dto.getProviderUser());
         map.put("Provider Password", dto.getProviderPassword());
         if (dto.getType().isOpenstack()) {
-            map.put("Admin Project Name", dto.getAdminTenantName());
+            map.put("Admin Project Name", dto.getAdminProjectName());
             String rabbitMqPort = dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT);
             if (!StringUtils.isNumeric(rabbitMqPort)) {
                 throw new VmidcBrokerInvalidEntryException(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT

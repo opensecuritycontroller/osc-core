@@ -98,7 +98,7 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
                 .map(SslCertificateAttrEntityMgr::fromEntity)
                 .collect(toSet()));
-        dto.setAdminTenantName(vc.getProviderAdminProjectName());
+        dto.setAdminProjectName(vc.getProviderAdminProjectName());
         dto.setAdminDomainId(vc.getAdminDomainId());
         return request;
     }

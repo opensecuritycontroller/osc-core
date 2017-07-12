@@ -451,7 +451,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         }
         String projectName = this.adminProjectName.getValue();
         if (projectName != null) {
-            dto.setAdminTenantName(projectName.trim());
+            dto.setAdminProjectName(projectName.trim());
         }
         if (virtualizationTypeValue.equals(VirtualizationType.OPENSTACK)) {
             dto.setProviderAttributes(this.providerAttributes);

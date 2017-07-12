@@ -75,24 +75,19 @@ public class OpenstackUtil {
 
     /**
      * Extract domainId for the given list of protected ports, which all belong to the same domain
-<<<<<<< HEAD
-     *
-     * @param tenantId
-=======
      * @param projectId
->>>>>>> update rest of refernces
-     * @param tenantName
+     * @param projectName
      * @param vc
      * @param protectedPorts
      * @return
      * @throws IOException
      */
-    public static String extractDomainId(String tenantId, String tenantName, VirtualizationConnector vc,
+    public static String extractDomainId(String projectId, String projectName, VirtualizationConnector vc,
                                          List<NetworkElement> protectedPorts) throws IOException, EncryptionException {
         String domainId = null;
         Port port;
-        try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc, tenantName));
-             Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, tenantName))) {
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc, projectName));
+             Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, projectName))) {
 
             Set<String> regions = nova.listRegions();
 
@@ -101,7 +96,7 @@ public class OpenstackUtil {
                 for (NetworkElement elem : protectedPorts) {
                     port = neutron.getPortById(region, elem.getElementId());
                     if (port != null) {
-                        domainId = neutron.getNetworkPortRouterDeviceId(tenantId, region, port);
+                        domainId = neutron.getNetworkPortRouterDeviceId(projectId, region, port);
                         if (domainId != null) {
                             break outerloop;
                         }
@@ -129,10 +124,10 @@ public class OpenstackUtil {
     /**
      * Waits until the VM state becomes active. If the VM enters a terminal state, throws a VmidcException
      */
-    public static void ensureVmActive(VirtualizationConnector vc, String tenant, String region, String vmId)
+    public static void ensureVmActive(VirtualizationConnector vc, String project, String region, String vmId)
             throws Exception {
 
-        try (Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, tenant))) {
+        try (Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc, project))) {
             Server server = null;
             int i = MAX_DISCOVERY_RETRIES;
             while (i > 0) {
@@ -183,8 +178,8 @@ public class OpenstackUtil {
     }
 
     /**
-     * Finds a DAI/SVA given the region, tenant, host for the given virtual system.
-     * 1) We first attempt to use exclusive Deployment spec for the specific tenant specified by the tenant id.
+     * Finds a DAI/SVA given the region, project, host for the given virtual system.
+     * 1) We first attempt to use exclusive Deployment spec for the specific project specified by the project id.
      * If found, we ensure there are DAI(s) on the host. If so, pick one based on port assignment load balancing.
      * 2) If above not found, we try to find a shared deployment specs which has a DAI on the host with list usage.
      * If found, we try finding the least loaded (based on port assignment).
@@ -192,22 +187,12 @@ public class OpenstackUtil {
      * We'll try to locate DAIs running on hosts deployed on the same availability zone as requested host.
      * If found, we try finding the least loaded (based on port assignment).
      *
-<<<<<<< HEAD
-     * @param em       the database session
-     * @param region   the OpenStack region of the deployment
-     * @param tenantId the OpenStack tenant of the deployment.
-     *                 If empty string, the search will target shared deployment sepcs. This parameter cannot be null.
-     * @param host     the host of the DAI
-     * @param vs       the virtual system of the deployment specs.
-=======
-     *
      * @param session  the database session
      * @param region  the OpenStack region of the deployment
-     * @param projectId  the OpenStack tenant of the deployment.
+     * @param projectId  the OpenStack project of the deployment.
      *            If empty string, the search will target shared deployment sepcs. This parameter cannot be null.
      * @param host the host of the DAI
      * @param vs  the virtual system of the deployment specs.
->>>>>>> update rest of refernces
      * @return a deployed SVA/DAI
      * @throws VmidcBrokerValidationException if there are no valid DAI/SVA's available with the provided criteria.
      */
@@ -215,7 +200,7 @@ public class OpenstackUtil {
             EntityManager em,
             VirtualSystem vs,
             SecurityGroup sg,
-            String tenantId,
+            String projectId,
             String region,
             String domainId,
             String host,
@@ -226,9 +211,9 @@ public class OpenstackUtil {
         // Get all DSs that are uses the same region
         for (DeploymentSpec ds : vs.getDeploymentSpecs()) {
             // Examine only DS of same region
-            if (ds.getRegion().equals(region) && ds.getProjectId().equals(tenantId)) {
+            if (ds.getRegion().equals(region) && ds.getProjectId().equals(projectId)) {
                 selectedDs = ds;
-                // If we found an exclusive DS, there must be one and only one for that tenant
+                // If we found an exclusive DS, there must be one and only one for that project
                 break;
             }
         }
@@ -238,7 +223,7 @@ public class OpenstackUtil {
         if (selectedDs == null || selectedDs.getDistributedApplianceInstances().isEmpty()) {
             // We did not find a DS with a host deployment and
             // the SDN controller does not support off-box traffic redirection.
-            throw new VmidcBrokerValidationException(String.format("No distributed appliance instance was found for the tenant %s and host %s.", tenantId, host));
+            throw new VmidcBrokerValidationException(String.format("No distributed appliance instance was found for the project %s and host %s.", projectId, host));
         }
 
         if (!supportsOffboxRedirection) {
@@ -322,7 +307,7 @@ public class OpenstackUtil {
     private static Collection<DistributedApplianceInstance> filterDAIsByDomain(
             Collection<DistributedApplianceInstance> dais,
             VirtualizationConnector vc,
-            String tenantId,
+            String projectId,
             String domainId) throws Exception {
         if (domainId == null || domainId.isEmpty()) {
             // No domain identifier provided, nothing to filter.
@@ -333,7 +318,7 @@ public class OpenstackUtil {
                 .stream()
                 .filter(dai -> {
                     try {
-                        return extractDomainId(tenantId, vc, dai).equals(domainId);
+                        return extractDomainId(projectId, vc, dai).equals(domainId);
                     } catch (Exception ex) {
                         LOG.error(String.format("Failure while extracting the domain for DAI %s.", dai.getName(), ex));
                         return false;
@@ -356,11 +341,11 @@ public class OpenstackUtil {
                 .collect(Collectors.toList());
     }
 
-    private static String extractDomainId(String tenantId, VirtualizationConnector vc, DistributedApplianceInstance dai) throws IOException, EncryptionException {
+    private static String extractDomainId(String projectId, VirtualizationConnector vc, DistributedApplianceInstance dai) throws IOException, EncryptionException {
         DefaultNetworkPort ingressPort = new DefaultNetworkPort(dai.getInspectionOsIngressPortId(), dai.getInspectionIngressMacAddress());
         return OpenstackUtil.extractDomainId(
                 dai.getDeploymentSpec().getProjectId(),
-                tenantId,
+                projectId,
                 vc,
                 Arrays.asList(ingressPort));
     }
@@ -376,7 +361,7 @@ public class OpenstackUtil {
             if (host != null) {
                 String az = hostAvailabilityZoneMap.getHostAvailibilityZone(host);
 
-                // Search for DAI in exclusive DSs of the same region and tenant
+                // Search for DAI in exclusive DSs of the same region and project
                 for (DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
                     // TODO: Future. Optimize by using DB query
                     String daiAz = hostAvailabilityZoneMap.getHostAvailibilityZone(dai.getHostName());

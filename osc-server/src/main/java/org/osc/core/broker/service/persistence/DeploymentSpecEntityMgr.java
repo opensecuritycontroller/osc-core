@@ -39,7 +39,7 @@ public class DeploymentSpecEntityMgr {
 
     public static DeploymentSpec createEntity(// for add
             DeploymentSpecDto dto, VirtualSystem vs) throws Exception {
-        DeploymentSpec ds = new DeploymentSpec(vs, dto.getRegion(), dto.getTenantId(), dto.getManagementNetworkId(),
+        DeploymentSpec ds = new DeploymentSpec(vs, dto.getRegion(), dto.getProjectId(), dto.getManagementNetworkId(),
                 dto.getInspectionNetworkId(), dto.getFloatingIpPoolName());
         toEntity(ds, dto);
         return ds;
@@ -50,7 +50,7 @@ public class DeploymentSpecEntityMgr {
         ds.setName(dto.getName());
         ds.setManagementNetworkName(dto.getManagementNetworkName());
         ds.setInspectionNetworkName(dto.getInspectionNetworkName());
-        ds.setProjectName(dto.getTenantName());
+        ds.setProjectName(dto.getProjectName());
         ds.setInstanceCount(dto.getCount());
         ds.setShared(dto.isShared());
     }
@@ -59,8 +59,8 @@ public class DeploymentSpecEntityMgr {
         dto.setId(ds.getId());
         dto.setParentId(ds.getVirtualSystem().getId());
         dto.setName(ds.getName());
-        dto.setTenantName(ds.getProjectName());
-        dto.setTenantId(ds.getProjectId());
+        dto.setProjectName(ds.getProjectName());
+        dto.setProjectId(ds.getProjectId());
         dto.setRegion(ds.getRegion());
         dto.setFloatingIpPoolName(ds.getFloatingIpPoolName());
         dto.setManagementNetworkName(ds.getManagementNetworkName());
