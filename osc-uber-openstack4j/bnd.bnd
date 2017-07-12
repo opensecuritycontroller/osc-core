@@ -1,0 +1,33 @@
+#
+# Create bundle to allow openstack4j to be extracted from uber-bundle
+#
+-include target/depend.bnd
+
+-nouses:	true
+Include-Resource:\
+    @${btf.dep},\
+    @${json-patch.dep},\
+    @${jsr305.dep},\
+    @${msg-simple.dep},\
+    @${openstack4j-core.dep},\
+    @${openstack4j-jersey2.dep},\
+    @${snakeyaml.dep},\
+    @${guava.dep}
+
+Import-Package:\
+    org.slf4j.*,\
+    javax.ws.rs.*,\
+    org.glassfish.jersey.client.*,\
+    org.glassfish.jersey.filter.*,\
+    org.glassfish.jersey.jackson.*,\
+    com.fasterxml.jackson.databind.*,\
+    com.fasterxml.jackson.annotation.*
+
+# exporting javax.ws.rs with version=1.1.0 (instead of 1.1.1)
+#  is workaround to stop jackson binding to wrong version
+#  as it imports version="[1.1.1,2.0)"
+-exportcontents:\
+  org.openstack4j.*;version=3.0.4,\
+  org.openstack4j.openstack.*;version=3.0.4
+
+# end

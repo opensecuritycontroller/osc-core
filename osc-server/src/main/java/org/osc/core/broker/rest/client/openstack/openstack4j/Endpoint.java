@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest.client.openstack.jcloud;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
 import javax.net.ssl.SSLContext;
 
@@ -29,14 +29,16 @@ import org.osc.core.broker.util.crypto.SslContextProvider;
 public class Endpoint {
 
     private String endPointIP;
+    private String domainId;
     private String tenant;
     private String user;
     private String password;
     private boolean isHttps;
     private SSLContext sslContext;
 
-    public Endpoint(String endPointIP, String tenant, String user, String password, boolean isHttps, SSLContext sslContext) {
+    public Endpoint(String endPointIP, String domainId, String tenant, String user, String password, boolean isHttps, SSLContext sslContext) {
         this.endPointIP = endPointIP;
+        this.domainId = domainId;
         this.tenant = tenant;
         this.user = user;
         this.password = password;
@@ -46,6 +48,7 @@ public class Endpoint {
 
     public Endpoint(VirtualizationConnector vc) throws EncryptionException {
         this.endPointIP = vc.getProviderIpAddress();
+        this.domainId = vc.getAdminDomainId();
         this.tenant = vc.getProviderAdminTenantName();
         this.user = vc.getProviderUsername();
         this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
@@ -60,9 +63,11 @@ public class Endpoint {
     public Endpoint(VirtualizationConnector vc, String tenant) throws EncryptionException {
         this.endPointIP = vc.getProviderIpAddress();
         this.tenant = tenant;
+        this.domainId = vc.getAdminDomainId();
         this.user = vc.getProviderUsername();
         this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
+        this.sslContext = SslContextProvider.getInstance().getSSLContext();
     }
 
     public String getEndPointIP() {
@@ -97,6 +102,14 @@ public class Endpoint {
         this.password = password;
     }
 
+    public String getDomainId() {
+        return this.domainId;
+    }
+
+    public void setDomainId(String domainId) {
+        this.domainId = domainId;
+    }
+
     public boolean isHttps() {
         return this.isHttps;
     }
@@ -121,9 +134,11 @@ public class Endpoint {
 
         return new EqualsBuilder()
                 .append(getEndPointIP(), other.getEndPointIP())
+                .append(getDomainId(), other.getDomainId())
                 .append(getTenant(), other.getTenant())
                 .append(getUser(), other.getUser())
                 .append(getPassword(), other.getPassword())
+                .append(isHttps(), other.isHttps())
                 .isEquals();
     }
 
@@ -131,9 +146,11 @@ public class Endpoint {
     public int hashCode() {
         return new HashCodeBuilder()
                 .append(getEndPointIP())
+                .append(getDomainId())
                 .append(getTenant())
                 .append(getUser())
                 .append(getPassword())
+                .append(isHttps())
                 .toHashCode();
     }
 }

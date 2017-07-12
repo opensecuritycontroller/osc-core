@@ -16,15 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.neutron.v2.domain.IP;
-import org.jclouds.openstack.neutron.v2.domain.Port;
+import org.openstack4j.model.network.IP;
+import org.openstack4j.model.network.Port;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -32,8 +26,8 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.VMPortEntityManager;
@@ -44,7 +38,12 @@ import org.osc.core.common.job.TaskGuard;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service=SecurityGroupMemberSubnetUpdateTask.class)
+import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+@Component(service = SecurityGroupMemberSubnetUpdateTask.class)
 public class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
 
     private final Logger log = Logger.getLogger(SecurityGroupMemberSubnetUpdateTask.class);
@@ -78,16 +77,10 @@ public class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
 
         SecurityGroup sg = this.sgm.getSecurityGroup();
 
-        JCloudNeutron neutron = null;
-
-        try {
-            neutron = new JCloudNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()));
-
+        List<String> existingOsPortIds = new ArrayList<>();
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(sg.getVirtualizationConnector(), sg.getTenantName()))) {
             List<Port> osPorts = neutron.listPortsBySubnet(subnet.getRegion(), sg.getTenantId(), subnet.getNetworkId(),
                     subnet.getOpenstackId(), subnet.isProtectExternal());
-
-            List<String> existingOsPortIds = new ArrayList<>();
-
             for (Port osPort : osPorts) {
                 existingOsPortIds.add(osPort.getId());
                 // Check to see if the port belongs to one of our DAI. Only if the port does not belong to the DAI
@@ -151,18 +144,13 @@ public class SecurityGroupMemberSubnetUpdateTask extends TransactionalMetaTask {
                         OpenstackUtil.discoverVmForPort(em, subnet.getRegion(), sg, osPort, vmPort);
                     }
                 }
-
-            }
-            // Any ports not listed from openstack but are in our database are stale and need to be removed(after hooks
-            // are removed) so marking them as deleted
-            this.tg.appendTask(this.markStalePortsAsDeletedTask.create(subnet, existingOsPortIds),
-                    TaskGuard.ALL_PREDECESSORS_COMPLETED);
-
-        } finally {
-            if (neutron != null) {
-                neutron.close();
             }
         }
+
+        // Any ports not listed from openstack but are in our database are stale and need to be removed(after hooks
+        // are removed) so marking them as deleted
+        this.tg.appendTask(this.markStalePortsAsDeletedTask.create(subnet, existingOsPortIds),
+                TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
         OSCEntityManager.update(em, subnet, this.txBroadcastUtil);
     }

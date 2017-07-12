@@ -14,25 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest.client.openstack.vmidc.api;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import org.openstack4j.model.identity.v3.Token;
-import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
-import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jAuthentication;
-import org.osc.core.broker.rest.client.openstack.vmidc.OSGlanceClient;
+import org.openstack4j.api.OSClient;
 
+import java.io.Closeable;
 import java.io.IOException;
 
-public class OSGlanceRestApi {
+/**
+ * Designed to be a base class for all openstack4j API wrappers in the code.
+ */
+public abstract class BaseOpenstack4jApi implements Closeable {
 
-    private Token token;
-    protected OSGlanceClient osGlanceClient;
+    protected Endpoint endPoint;
+    KeystoneProvider keystoneProvider;
 
-    public OSGlanceRestApi(Endpoint endPoint) throws IOException {
-        try (Openstack4jAuthentication authApi = new Openstack4jAuthentication(endPoint)) {
-            this.token = authApi.getTenantToken();
-        }
-        this.osGlanceClient = new OSGlanceClient(endPoint, this.token.getId());
+    BaseOpenstack4jApi(Endpoint endPoint) {
+        this.endPoint = endPoint;
+        this.keystoneProvider = KeystoneProvider.getInstance();
     }
 
+    public OSClient.OSClientV3 getOs() {
+        return this.keystoneProvider.getAvailableSession(this.endPoint);
+    }
+
+    @Override
+    public void close() throws IOException {
+        this.keystoneProvider.clearConnectionMap(this.endPoint);
+    }
 }

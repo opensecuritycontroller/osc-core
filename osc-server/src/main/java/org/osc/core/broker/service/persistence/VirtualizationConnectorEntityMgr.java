@@ -73,6 +73,7 @@ public class VirtualizationConnectorEntityMgr {
         vc.setProviderUsername(dto.getProviderUser());
         vc.setProviderPassword(encryption.encryptAESCTR(dto.getProviderPassword()));
         vc.setAdminTenantName(dto.getAdminTenantName());
+        vc.setAdminDomainId(dto.getAdminDomainId());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
         vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
                 .stream()
@@ -99,6 +100,7 @@ public class VirtualizationConnectorEntityMgr {
         dto.setProviderUser(vc.getProviderUsername());
         dto.setProviderPassword(encryption.decryptAESCTR(vc.getProviderPassword()));
         dto.setAdminTenantName(vc.getProviderAdminTenantName());
+        dto.setAdminDomainId(vc.getAdminDomainId());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
                 .map(SslCertificateAttrEntityMgr::fromEntity)

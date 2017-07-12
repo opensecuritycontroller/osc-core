@@ -16,24 +16,23 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
+import org.openstack4j.model.identity.v3.Project;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
+import javax.persistence.EntityManager;
+import java.util.Set;
+
 /**
  * Validates the DS tenant exists and syncs the name if needed
  */
-@Component(service=ValidateSecurityGroupTenantTask.class)
+@Component(service = ValidateSecurityGroupTenantTask.class)
 public class ValidateSecurityGroupTenantTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(ValidateSecurityGroupTenantTask.class);
@@ -55,10 +54,8 @@ public class ValidateSecurityGroupTenantTask extends TransactionalTask {
         this.securityGroup = sgEmgr.findByPrimaryKey(this.securityGroup.getId());
 
         this.log.info("Validating the Security Group tenant " + this.securityGroup.getTenantName() + " exists.");
-        JCloudKeyStone keystone = new JCloudKeyStone(new Endpoint(this.securityGroup.getVirtualizationConnector()));
-
-        try {
-            Tenant tenant = keystone.getTenantById(this.securityGroup.getTenantId());
+        try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(this.securityGroup.getVirtualizationConnector()))) {
+            Project tenant = keystone.getProjectById(this.securityGroup.getTenantId());
             if (tenant == null) {
                 this.log.info("Security Group tenant " + this.securityGroup.getTenantName() + " Deleted from openstack. Marking Security Group for deletion.");
                 // Tenant was deleted, mark Security Group for deleting as well
@@ -71,21 +68,16 @@ public class ValidateSecurityGroupTenantTask extends TransactionalTask {
                     OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
                 }
             }
-
-        } finally {
-            keystone.close();
         }
     }
 
     @Override
     public String getName() {
         return String.format("Validating Security Group '%s' for tenant '%s'", this.securityGroup.getName(), this.securityGroup.getTenantName());
-    };
-
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {
         return LockObjectReference.getObjectReferences(this.securityGroup);
     }
-
 }

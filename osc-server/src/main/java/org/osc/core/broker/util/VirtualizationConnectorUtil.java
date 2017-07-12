@@ -16,15 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.rabbitmq.client.ShutdownSignalException;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -42,7 +39,9 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 
-import com.rabbitmq.client.ShutdownSignalException;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component(service = VirtualizationConnectorUtil.class)
 public class VirtualizationConnectorUtil {
@@ -79,13 +78,11 @@ public class VirtualizationConnectorUtil {
     /**
      * Checks connection for openstack.
      *
-     * @throws ErrorTypeException
-     *             in case of keystone/controller/rabbitmq connection issues
-     * @throws Exception
-     *             in case of any other issues
+     * @throws ErrorTypeException in case of keystone/controller/rabbitmq connection issues
+     * @throws Exception          in case of any other issues
      */
     public <T extends VirtualizationConnectorDto> void checkOpenstackConnection(DryRunRequest<T> request,
-            VirtualizationConnector vc) throws Exception {
+                                                                                VirtualizationConnector vc) throws Exception {
         if (!request.isSkipAllDryRun()) {
 
             ErrorTypeException errorTypeException = null;
@@ -110,25 +107,21 @@ public class VirtualizationConnectorUtil {
             // Check Connectivity with Key stone if https response exception is not to be ignored
             if (!request.isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION)) {
                 initSSLCertificatesListener(this.managerFactory, certificateResolverModels, "openstackkeystone");
-                JCloudKeyStone keystoneAPi = null;
                 try {
                     VirtualizationConnectorDto vcDto = request.getDto();
                     boolean isHttps = isHttps(vcDto.getProviderAttributes());
 
-                    Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminTenantName(),
+                    Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminDomainId(), vcDto.getAdminTenantName(),
                             vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps,
                             SslContextProvider.getInstance().getSSLContext());
-                    keystoneAPi = new JCloudKeyStone(endPoint);
-                    keystoneAPi.listTenants();
 
+                    try (Openstack4jKeystone keystoneAPi = new Openstack4jKeystone(endPoint)) {
+                        keystoneAPi.listProjects();
+                    }
                 } catch (Exception exception) {
                     errorTypeException = new ErrorTypeException(exception, ErrorType.PROVIDER_EXCEPTION);
                     LOG.warn(
                             "Exception encountered when trying to add Keystone info to Virtualization Connector, allowing user to either ignore or correct issue");
-                } finally {
-                    if (keystoneAPi != null) {
-                        keystoneAPi.close();
-                    }
                 }
             }
 
@@ -162,7 +155,7 @@ public class VirtualizationConnectorUtil {
 
             this.managerFactory.clearListener();
 
-            if (!certificateResolverModels.isEmpty()) {
+            if (!certificateResolverModels.isEmpty() && errorTypeException != null) {
                 throw new SslCertificatesExtendedException(errorTypeException, certificateResolverModels);
             } else if (errorTypeException != null) {
                 throw errorTypeException;
@@ -176,7 +169,7 @@ public class VirtualizationConnectorUtil {
     }
 
     private void initSSLCertificatesListener(X509TrustManagerFactory managerFactory,
-            ArrayList<CertificateResolverModel> resolverList, String aliasPrefix) {
+                                             ArrayList<CertificateResolverModel> resolverList, String aliasPrefix) {
         try {
             managerFactory.setListener(model -> {
                 model.setAlias(aliasPrefix + "_" + model.getAlias());

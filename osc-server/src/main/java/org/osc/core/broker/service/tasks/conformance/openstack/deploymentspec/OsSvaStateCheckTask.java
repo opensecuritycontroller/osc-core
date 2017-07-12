@@ -16,22 +16,21 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.nova.v2_0.domain.Server;
+import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service=OsSvaStateCheckTask.class)
+import javax.persistence.EntityManager;
+import java.util.Set;
+
+@Component(service = OsSvaStateCheckTask.class)
 public class OsSvaStateCheckTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(OsSvaStateCheckTask.class);
@@ -53,17 +52,13 @@ public class OsSvaStateCheckTask extends TransactionalTask {
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         Endpoint endPoint = new Endpoint(ds);
-        JCloudNova nova = new JCloudNova(endPoint);
-        try {
+        try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
             Server serverDAI = nova.getServer(ds.getRegion(), this.dai.getOsServerId());
             // Check is SVA is Shut off
             if (serverDAI.getStatus().equals(Server.Status.SHUTOFF)) {
-                this.log.info("SVA found in SHUTOFF state we will try to start it ...");
-                nova.startServer(ds.getRegion(), this.dai.getOsServerId());
+                boolean isStarted = nova.startServer(ds.getRegion(), this.dai.getOsServerId());
+                this.log.info("SVA found in SHUTOFF state we will try to start it ... Is SVA started successfully: " + isStarted);
             }
-
-        } finally {
-            nova.close();
         }
     }
 

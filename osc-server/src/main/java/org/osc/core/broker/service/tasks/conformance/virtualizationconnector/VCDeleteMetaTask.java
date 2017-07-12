@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockManager;
 import org.osc.core.broker.job.lock.LockRequest;
@@ -30,7 +28,9 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service=VCDeleteMetaTask.class)
+import javax.persistence.EntityManager;
+
+@Component(service = VCDeleteMetaTask.class)
 public class VCDeleteMetaTask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(VCDeleteMetaTask.class);
 
@@ -62,8 +62,8 @@ public class VCDeleteMetaTask extends TransactionalTask {
             vcEntityMgr.delete(this.vc.getId());
         } catch (Exception ex) {
             throw ex;
-        } finally{
-        	 // Unlock VC.
+        } finally {
+            // Unlock VC.
             if (vcUnlockTask != null) {
                 log.info("Releasing lock for VC '" + this.vc.getName() + "'");
                 LockManager.getLockManager().releaseLock(new LockRequest(vcUnlockTask));

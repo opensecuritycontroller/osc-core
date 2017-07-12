@@ -28,9 +28,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.jclouds.openstack.nova.v2_0.domain.HostAggregate;
-import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZoneDetails;
-import org.jclouds.openstack.nova.v2_0.domain.regionscoped.AvailabilityZoneDetails.HostService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,10 +39,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.openstack4j.api.compute.HostService;
+import org.openstack4j.model.compute.HostAggregate;
+import org.openstack4j.model.compute.ext.AvailabilityZone;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteOsSecurityGroupTask;
 import org.osc.core.broker.service.test.InMemDB;
@@ -60,7 +60,7 @@ public class DSUpdateOrDeleteMetaTaskTest {
     public EntityManager em;
 
     @Mock
-    public JCloudNova novaApiMock;
+    public Openstack4JNova novaApiMock;
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private TestTransactionControl txControl;
@@ -96,12 +96,12 @@ public class DSUpdateOrDeleteMetaTaskTest {
 
         populateDatabase();
 
-        List<AvailabilityZoneDetails> osAvailabilityZones1 = Arrays.asList(createAvailableZoneDetails(AZ_1, Arrays.asList(HS_1_1)));
+        List<String> stringList = Arrays.asList(HS_1_1);
+        List<AvailabilityZone> osAvailabilityZones1 = Arrays.asList(createAvailableZoneDetails(AZ_1, stringList));
         HostAggregate ha = Mockito.mock(HostAggregate.class);
-        Set<String> h1set = new HashSet<>(Arrays.asList(HS_1_1));
-        Mockito.doReturn(h1set).when(ha).getHosts();
+        Mockito.doReturn(stringList).when(ha).getHosts();
         Mockito.doReturn("ha_name").when(ha).getName();
-
+        Set<String> h1set = new HashSet<>(Arrays.asList(HS_1_1));
         Mockito.doReturn(osAvailabilityZones1).when(this.novaApiMock).getAvailabilityZonesDetail(REGION_1);
         Mockito.doReturn(h1set).when(this.novaApiMock).getComputeHosts(REGION_1);
         Mockito.doReturn(ha).when(this.novaApiMock).getHostAggregateById(
@@ -165,15 +165,15 @@ public class DSUpdateOrDeleteMetaTaskTest {
         TaskGraphHelper.validateTaskGraph(task, this.expectedGraph);
     }
 
-    private AvailabilityZoneDetails createAvailableZoneDetails(String azName, List<String> hostNames) {
-        AvailabilityZoneDetails result = Mockito.mock(AvailabilityZoneDetails.class);
-        Map<String, Map<String, HostService>> hosts = new HashMap<String, Map<String, HostService>>();
+    private AvailabilityZone createAvailableZoneDetails(String azName, List<String> hostNames) {
+        AvailabilityZone result = Mockito.mock(AvailabilityZone.class);
+        Map<String, Map<String, HostService>> hosts = new HashMap<>();
         for(String hostName : hostNames) {
             hosts.put(hostName, null);
         }
 
         Mockito.doReturn(hosts).when(result).getHosts();
-        Mockito.doReturn(azName).when(result).getName();
+        Mockito.doReturn(azName).when(result).getZoneName();
 
         return result;
     }
