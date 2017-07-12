@@ -28,9 +28,9 @@ public class Openstack4jKeystone extends BaseOpenstack4jApi {
     }
 
     public List<? extends Project> listProjects() {
-        List<? extends Project> tenantsList = this.getOs().identity().projects().list();
-        tenantsList.sort(Comparator.comparing(Project::getName));
-        return tenantsList;
+        List<? extends Project> projectsList = this.getOs().identity().projects().list();
+        projectsList.sort(Comparator.comparing(Project::getName));
+        return projectsList;
     }
 
     public Project getProjectById(String projectId) {

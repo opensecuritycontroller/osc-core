@@ -16,8 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.api.exceptions.ServerResponseException;
 import org.openstack4j.model.common.ActionResponse;
@@ -35,13 +41,8 @@ import org.openstack4j.model.network.options.PortListOptions;
 import org.openstack4j.openstack.networking.domain.NeutronFloatingIP;
 import org.openstack4j.openstack.networking.domain.NeutronSecurityGroup;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
 public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
@@ -60,20 +61,20 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     }
 
     /**
-     * Lists both tenant networks and shared networks
+     * Lists both Project networks and shared networks
      */
-    public List<Network> listNetworkByTenant(String region, String tenantId) {
+    public List<Network> listNetworkByProject(String region, String projectId) {
         getOs().useRegion(region);
         List<? extends Network> list = getOs().networking().network().list().stream()
-                .filter(subnet -> (tenantId.equals(subnet.getTenantId()) && !subnet.isShared())
+                .filter(subnet -> (projectId.equals(subnet.getTenantId()) && !subnet.isShared())
                         || subnet.isShared()).collect(Collectors.toList());
         return ImmutableList.<Network>builder().addAll(list).build();
     }
 
-    public List<Subnet> listSubnetByTenant(String region, String tenantId) {
+    public List<Subnet> listSubnetByProject(String region, String projectId) {
         getOs().useRegion(region);
         List<? extends Subnet> list = getOs().networking().subnet().list()
-                .stream().filter(subnet -> tenantId.equals(subnet.getTenantId())).collect(Collectors.toList());
+                .stream().filter(subnet -> projectId.equals(subnet.getTenantId())).collect(Collectors.toList());
         return ImmutableList.<Subnet>builder().addAll(list).build();
     }
 
@@ -94,8 +95,8 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         return getOs().networking().subnet().get(id);
     }
 
-    public List<Port> listComputePortsByNetwork(String region, String tenantId, String networkId) {
-        List<? extends Port> portList = listPorts(region, tenantId, networkId);
+    public List<Port> listComputePortsByNetwork(String region, String projectId, String networkId) {
+        List<? extends Port> portList = listPorts(region, projectId, networkId);
         List<Port> computePorts = new ArrayList<>();
 
         for (Port port : portList) {
@@ -110,11 +111,11 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         return computePorts;
     }
 
-    public String getNetworkPortRouterDeviceId(String tenantId, String region, Port osPort) {
+    public String getNetworkPortRouterDeviceId(String projectId, String region, Port osPort) {
 
         String routerPortDeviceId = null;
         String networkId = osPort.getNetworkId();
-        List<? extends Port> osPorts = listPorts(region, tenantId, networkId);
+        List<? extends Port> osPorts = listPorts(region, projectId, networkId);
         for (Port port : osPorts) {
             String deviceOwner = port.getDeviceOwner();
             if (deviceOwner != null
@@ -126,9 +127,9 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         return routerPortDeviceId;
     }
 
-    public List<Port> listPortsBySubnet(String region, String tenantId, String networkId, String subnetId,
+    public List<Port> listPortsBySubnet(String region, String projectId, String networkId, String subnetId,
                                         boolean routerPortsOnly) {
-        List<? extends Port> osPorts = listPorts(region, tenantId, networkId);
+        List<? extends Port> osPorts = listPorts(region, projectId, networkId);
         List<Port> subnetPorts = new ArrayList<>();
 
         String classifier = routerPortsOnly ? QUERY_PARAM_ROUTER_DEVICE_OWNER : QUERY_PARAM_COMPUTE_DEVICE_OWNER;
@@ -147,9 +148,9 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         return subnetPorts;
     }
 
-    private List<? extends Port> listPorts(String region, String tenantId, String networkId) {
+    private List<? extends Port> listPorts(String region, String projectId, String networkId) {
         getOs().useRegion(region);
-        return getOs().networking().port().list(PortListOptions.create().networkId(networkId).tenantId(tenantId));
+        return getOs().networking().port().list(PortListOptions.create().networkId(networkId).tenantId(projectId));
     }
 
     private Port getPortByMacAddress(String region, String macAddress) {
@@ -257,11 +258,11 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     }
 
     // Floating IP API
-    public List<String> getFloatingIpPools(String region, String tenantId) throws Exception {
+    public List<String> getFloatingIpPools(String region, String projectId) throws Exception {
         getOs().useRegion(region);
 
         Map<String, String> filter = Maps.newHashMap();
-        filter.put(QUERY_PARAM_TENANT_ID, tenantId);
+        filter.put(QUERY_PARAM_TENANT_ID, projectId);
         filter.put(QUERY_PARAM_EXTERNAL_ROUTER, Boolean.TRUE.toString());
 
         return getOs().networking().network().list(filter)

@@ -49,7 +49,7 @@ public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, 
 
         List<OsNetworkDto> networkList = new ArrayList<>();
         try (Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getProjectName()))) {
-            for (Network network : neutronApi.listNetworkByTenant(request.getRegion(), request.getProjectId())) {
+            for (Network network : neutronApi.listNetworkByProject(request.getRegion(), request.getProjectId())) {
                 networkList.add(new OsNetworkDto(network.getName(), network.getId()));
             }
         }

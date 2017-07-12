@@ -24,7 +24,7 @@ public class Openstack4jAuthentication extends BaseOpenstack4jApi {
         super(endPoint);
     }
 
-    public Token getTenantToken() {
+    public Token getProjectToken() {
         return this.getOs().getToken();
     }
 }

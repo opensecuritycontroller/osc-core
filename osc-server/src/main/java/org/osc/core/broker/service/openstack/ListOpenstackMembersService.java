@@ -96,7 +96,7 @@ public class ListOpenstackMembersService
 
         } else if (SecurityGroupMemberType.fromText(request.getType()) == SecurityGroupMemberType.NETWORK) {
             try (Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getProjectName()))) {
-                List<Network> projectNetworks = neutronApi.listNetworkByTenant(request.getRegion(), request.getProjectId());
+                List<Network> projectNetworks = neutronApi.listNetworkByProject(request.getRegion(), request.getProjectId());
                 for (Network projectNetwork : projectNetworks) {
                     if (!existingMemberIds.contains(projectNetwork.getId())) {
                         openstackMemberList.add(new SecurityGroupMemberItemDto(region, projectNetwork.getName(),
@@ -106,7 +106,7 @@ public class ListOpenstackMembersService
             }
         } else if (SecurityGroupMemberType.fromText(request.getType()) == SecurityGroupMemberType.SUBNET) {
             try (Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getProjectName()))) {
-                List<Subnet> projectSubnets = neutronApi.listSubnetByTenant(request.getRegion(), request.getProjectId());
+                List<Subnet> projectSubnets = neutronApi.listSubnetByProject(request.getRegion(), request.getProjectId());
                 for (Subnet subnet : projectSubnets) {
                     if (!existingMemberIds.contains(subnet.getId())) {
                         openstackMemberList.add(new SecurityGroupMemberItemDto(request.getRegion(),
