@@ -109,7 +109,7 @@ public class OsProjectNotificationListener extends OsNotificationListener {
 
     private void handleDSMessages(EntityManager em, String keyValue) throws Exception {
         // if Project deleted belongs to a deployment spec
-        for (DeploymentSpec ds : DeploymentSpecEntityMgr.listDeploymentSpecByTenentId(em, keyValue)) {
+        for (DeploymentSpec ds : DeploymentSpecEntityMgr.listDeploymentSpecByProjectId(em, keyValue)) {
             // trigger sync job for that DS
             if (ds.getId().equals(((DeploymentSpec) this.entity).getId())) {
                 this.conformService.startDsConformanceJob(ds, null);

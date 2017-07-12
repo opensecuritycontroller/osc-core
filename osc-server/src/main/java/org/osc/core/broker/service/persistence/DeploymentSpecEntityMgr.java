@@ -152,7 +152,7 @@ public class DeploymentSpecEntityMgr {
         return em.find(DeploymentSpec.class, id);
     }
 
-    public static List<DeploymentSpec> listDeploymentSpecByTenentId(EntityManager em, String tenantId) {
+    public static List<DeploymentSpec> listDeploymentSpecByProjectId(EntityManager em, String projectId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<DeploymentSpec> query = cb.createQuery(DeploymentSpec.class);
@@ -160,7 +160,7 @@ public class DeploymentSpecEntityMgr {
         Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
 
         query = query.select(root).distinct(true)
-                .where(cb.equal(root.get("projectId"), tenantId));
+                .where(cb.equal(root.get("projectId"), projectId));
 
         return em.createQuery(query).getResultList();
     }
