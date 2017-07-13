@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.window.add;
 
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
@@ -284,6 +286,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
         final Throwable exception;
         if (originalException instanceof ErrorTypeException) {
             exception = originalException.getCause();
+            final Throwable rootCause = ExceptionUtils.getRootCause(originalException);
             if (exception instanceof RestClientException) {
                 RestClientException restClientException = (RestClientException) exception;
                 if (restClientException.isConnectException()) {
@@ -297,6 +300,11 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
                             this.ip.getValue(), exception.getMessage()), exception));
                     return;
                 }
+            } else if (rootCause instanceof SocketException) {
+                String msg = rootCause.getMessage() != null ?
+                        rootCause.getMessage() : rootCause.getClass().getSimpleName();
+                contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_RABBIT,
+                        StringEscapeUtils.escapeHtml(msg));
             }
         } else {
             exception = originalException;
