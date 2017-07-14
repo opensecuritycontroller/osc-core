@@ -17,6 +17,5 @@
 ### Status
 - [ ] Reproduced
 - [ ] In Progress
-- [ ] Validated
+- [ ] Validated     =>    Verified with build: 
 
-** Verified with build: **
