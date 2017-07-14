@@ -54,9 +54,9 @@ import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.broker.util.ServerUtil;
+import org.osc.core.broker.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VersionUtil;
-import org.osc.core.broker.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
@@ -578,11 +578,11 @@ public class Server implements ServerApi {
         return Server.inMaintenance;
     }
 
-    public static boolean isInMaintenance() {
+    public boolean isInMaintenance() {
         return Server.inMaintenance;
     }
 
-    public static void setInMaintenance(boolean inMaintenance) {
+    public void setInMaintenance(boolean inMaintenance) {
         Server.inMaintenance = inMaintenance;
     }
 

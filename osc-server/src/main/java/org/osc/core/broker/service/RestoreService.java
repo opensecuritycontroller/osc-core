@@ -36,7 +36,6 @@ import org.osc.core.broker.util.crypto.KeyStoreProvider;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.RestoreUtil;
-import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -51,7 +50,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     public EmptySuccessResponse exec(RestoreRequest request, EntityManager em) throws Exception {
     	File backupFile = request.getBkpFile();
     	String backupFilename = backupFile.getName();
-    	Server.setInMaintenance(true);
+    	this.serverInstance.setInMaintenance(true);
     	DBConnectionParameters connectionParams = new DBConnectionParameters();
     	String oldDBPassword = connectionParams.getPassword();
 
@@ -73,7 +72,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
                 // reload truststore from backup
                 updateTruststore(backupData);
     		} catch(Exception e) {
-    			Server.setInMaintenance(false);
+    		    this.serverInstance.setInMaintenance(false);
     			throw e;
     		} finally {
     			encryptedBackupFile.delete();
@@ -95,7 +94,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
         } catch (Exception ex) {
         	// restore old DB password
         	connectionParams.updatePassword(oldDBPassword);
-            Server.setInMaintenance(false);
+        	this.serverInstance.setInMaintenance(false);
             throw ex;
         }
 
@@ -125,7 +124,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
         } catch (Exception ex) {
         	// restore old DB password
         	connectionParams.updatePassword(oldDBPassword);
-            Server.setInMaintenance(false);
+        	this.serverInstance.setInMaintenance(false);
             if (successRename) {
             	newDBFileTemp.delete();
                 originalDBFile.renameTo(newDBFileTemp);

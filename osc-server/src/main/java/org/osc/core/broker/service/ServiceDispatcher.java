@@ -66,6 +66,9 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
     @Reference
     protected TransactionalBroadcastUtil txBroadcastUtil;
 
+    @Reference
+    protected Server serverInstance;
+
     private final Queue<ChainedDispatch<O>> chainedDispatches = new LinkedList<>();
 
     // generalized method to dispatch incoming requests to the appropriate
@@ -75,7 +78,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
         log.info("Service dispatch " + this.getClass().getSimpleName() + ". User: " + this.userContext.getCurrentUser()
         + ", Request: " + request);
 
-        if (Server.isInMaintenance()) {
+        if (this.serverInstance.isInMaintenance()) {
             log.warn("Incoming request (pid:" + ServerUtil.getCurrentPid() + ") while server is in maintenance mode.");
             throw new VmidcException(Server.PRODUCT_NAME + " server is in maintenance mode.");
         }
