@@ -18,16 +18,16 @@ package org.osc.core.broker.service.request;
 
 public class BaseOpenStackRequest extends BaseIdRequest {
 
-    private String tenantName;
-    private String tenantId;
+    private String projectName;
+    private String projectId;
     private String region;
 
-    public String getTenantName() {
-        return this.tenantName;
+    public String getProjectName() {
+        return this.projectName;
     }
 
-    public void setTenantName(String tenant) {
-        this.tenantName = tenant;
+    public void setProjectName(String project) {
+        this.projectName = project;
     }
 
     public String getRegion() {
@@ -38,12 +38,12 @@ public class BaseOpenStackRequest extends BaseIdRequest {
         this.region = region;
     }
 
-    public String getTenantId() {
-        return this.tenantId;
+    public String getProjectId() {
+        return this.projectId;
     }
 
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
 }

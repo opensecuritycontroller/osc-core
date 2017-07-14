@@ -30,16 +30,16 @@ public class Endpoint {
 
     private String endPointIP;
     private String domainId;
-    private String tenant;
+    private String project;
     private String user;
     private String password;
     private boolean isHttps;
     private SSLContext sslContext;
 
-    public Endpoint(String endPointIP, String domainId, String tenant, String user, String password, boolean isHttps, SSLContext sslContext) {
+    public Endpoint(String endPointIP, String domainId, String project, String user, String password, boolean isHttps, SSLContext sslContext) {
         this.endPointIP = endPointIP;
         this.domainId = domainId;
-        this.tenant = tenant;
+        this.project = project;
         this.user = user;
         this.password = password;
         this.isHttps = isHttps;
@@ -49,7 +49,7 @@ public class Endpoint {
     public Endpoint(VirtualizationConnector vc) throws EncryptionException {
         this.endPointIP = vc.getProviderIpAddress();
         this.domainId = vc.getAdminDomainId();
-        this.tenant = vc.getProviderAdminTenantName();
+        this.project = vc.getProviderAdminProjectName();
         this.user = vc.getProviderUsername();
         this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
@@ -57,13 +57,13 @@ public class Endpoint {
     }
 
     public Endpoint(DeploymentSpec ds) throws EncryptionException {
-        this(ds.getVirtualSystem().getVirtualizationConnector(), ds.getTenantName());
+        this(ds.getVirtualSystem().getVirtualizationConnector(), ds.getProjectName());
     }
 
-    public Endpoint(VirtualizationConnector vc, String tenant) throws EncryptionException {
+    public Endpoint(VirtualizationConnector vc, String project) throws EncryptionException {
         this.endPointIP = vc.getProviderIpAddress();
-        this.tenant = tenant;
         this.domainId = vc.getAdminDomainId();
+        this.project = project;
         this.user = vc.getProviderUsername();
         this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
@@ -78,12 +78,12 @@ public class Endpoint {
         this.endPointIP = endPointIP;
     }
 
-    public String getTenant() {
-        return this.tenant;
+    public String getProject() {
+        return this.project;
     }
 
-    public void setTenant(String tenant) {
-        this.tenant = tenant;
+    public void setProject(String project) {
+        this.project = project;
     }
 
     public String getUser() {
@@ -135,7 +135,7 @@ public class Endpoint {
         return new EqualsBuilder()
                 .append(getEndPointIP(), other.getEndPointIP())
                 .append(getDomainId(), other.getDomainId())
-                .append(getTenant(), other.getTenant())
+                .append(getProject(), other.getProject())
                 .append(getUser(), other.getUser())
                 .append(getPassword(), other.getPassword())
                 .append(isHttps(), other.isHttps())
@@ -147,7 +147,7 @@ public class Endpoint {
         return new HashCodeBuilder()
                 .append(getEndPointIP())
                 .append(getDomainId())
-                .append(getTenant())
+                .append(getProject())
                 .append(getUser())
                 .append(getPassword())
                 .append(isHttps())

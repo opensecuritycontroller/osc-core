@@ -232,7 +232,7 @@ public class DeleteInspectionPortTaskTest {
 
     private void registerDomain(String domainId, DistributedApplianceInstance dai) throws Exception {
         PowerMockito.doReturn(domainId).when(OpenstackUtil.class, "extractDomainId",
-                eq(dai.getDeploymentSpec().getTenantId()), eq(dai.getDeploymentSpec().getTenantName()),
+                eq(dai.getDeploymentSpec().getProjectId()), eq(dai.getDeploymentSpec().getProjectName()),
                 eq(dai.getDeploymentSpec().getVirtualSystem().getVirtualizationConnector()),
                 argThat(new NetworkElementsMatcher(dai)));
     }

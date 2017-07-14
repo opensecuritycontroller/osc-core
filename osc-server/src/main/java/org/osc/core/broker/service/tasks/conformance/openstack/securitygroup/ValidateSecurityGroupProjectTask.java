@@ -16,6 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.model.identity.v3.Project;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -26,21 +30,18 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
-import javax.persistence.EntityManager;
-import java.util.Set;
-
 /**
- * Validates the DS tenant exists and syncs the name if needed
+ * Validates the DS project exists and syncs the name if needed
  */
-@Component(service = ValidateSecurityGroupTenantTask.class)
-public class ValidateSecurityGroupTenantTask extends TransactionalTask {
+@Component(service=ValidateSecurityGroupProjectTask.class)
+public class ValidateSecurityGroupProjectTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(ValidateSecurityGroupTenantTask.class);
+    private final Logger log = Logger.getLogger(ValidateSecurityGroupProjectTask.class);
 
     private SecurityGroup securityGroup;
 
-    public ValidateSecurityGroupTenantTask create(SecurityGroup securityGroup) {
-        ValidateSecurityGroupTenantTask task = new ValidateSecurityGroupTenantTask();
+    public ValidateSecurityGroupProjectTask create(SecurityGroup securityGroup) {
+        ValidateSecurityGroupProjectTask task = new ValidateSecurityGroupProjectTask();
         task.securityGroup = securityGroup;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
@@ -53,18 +54,18 @@ public class ValidateSecurityGroupTenantTask extends TransactionalTask {
         OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em, this.txBroadcastUtil);
         this.securityGroup = sgEmgr.findByPrimaryKey(this.securityGroup.getId());
 
-        this.log.info("Validating the Security Group tenant " + this.securityGroup.getTenantName() + " exists.");
+        this.log.info("Validating the Security Group project " + this.securityGroup.getProjectName() + " exists.");
         try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(this.securityGroup.getVirtualizationConnector()))) {
-            Project tenant = keystone.getProjectById(this.securityGroup.getTenantId());
-            if (tenant == null) {
-                this.log.info("Security Group tenant " + this.securityGroup.getTenantName() + " Deleted from openstack. Marking Security Group for deletion.");
-                // Tenant was deleted, mark Security Group for deleting as well
+            Project project = keystone.getProjectById(this.securityGroup.getProjectId());
+            if (project == null) {
+                this.log.info("Security Group project " + this.securityGroup.getProjectName() + " Deleted from openstack. Marking Security Group for deletion.");
+                // project was deleted, mark Security Group for deleting as well
                 OSCEntityManager.markDeleted(em, this.securityGroup, this.txBroadcastUtil);
             } else {
-                // Sync the tenant name if needed
-                if (!tenant.getName().equals(this.securityGroup.getTenantName())) {
-                    this.log.info("Security Group tenant name updated from " + this.securityGroup.getTenantName() + " to " + tenant.getName());
-                    this.securityGroup.setTenantName(tenant.getName());
+                // Sync the project name if needed
+                if (!project.getName().equals(this.securityGroup.getProjectName())) {
+                    this.log.info("Security Group project name updated from " + this.securityGroup.getProjectName() + " to " + project.getName());
+                    this.securityGroup.setProjectName(project.getName());
                     OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
                 }
             }
@@ -73,8 +74,9 @@ public class ValidateSecurityGroupTenantTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Validating Security Group '%s' for tenant '%s'", this.securityGroup.getName(), this.securityGroup.getTenantName());
-    }
+        return String.format("Validating Security Group '%s' for project '%s'", this.securityGroup.getName(), this.securityGroup.getProjectName());
+    };
+
 
     @Override
     public Set<LockObjectReference> getObjects() {

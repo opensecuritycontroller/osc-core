@@ -16,6 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.securitygroup;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.openstack4j.model.identity.v3.Project;
@@ -50,18 +57,12 @@ import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.service.validator.SecurityGroupMemberItemDtoValidator;
 import org.osc.core.common.controller.ControllerType;
 
-import javax.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 public abstract class BaseSecurityGroupService<I extends Request, O extends Response> extends ServiceDispatcher<I, O> {
 
     private static final Logger log = Logger.getLogger(BaseSecurityGroupService.class);
 
     /**
-     * Validates Virtualization connector and tenant exists
+     * Validates Virtualization connector and Project exists
      */
     protected List<String> validateAndLoad(EntityManager em, SecurityGroupDto dto) throws Exception {
         SecurityGroupDtoValidator.checkForNullFields(dto);
@@ -85,9 +86,9 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
 
         ArrayList<String> regionsList;
         try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc))) {
-            Project project = keystone.getProjectById(dto.getTenantId());
+            Project project = keystone.getProjectById(dto.getProjectId());
             if (project == null) {
-                throw new VmidcBrokerValidationException("Project: '" + dto.getTenantName() + "' does not exist.");
+                throw new VmidcBrokerValidationException("Project: '" + dto.getProjectName() + "' does not exist.");
             }
             try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, project.getName()))) {
                 regionsList = new ArrayList<>(novaApi.listRegions());

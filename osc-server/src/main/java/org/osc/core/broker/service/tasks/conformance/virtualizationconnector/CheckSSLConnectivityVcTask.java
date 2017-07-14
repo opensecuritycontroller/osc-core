@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 import java.util.Set;
 
@@ -98,7 +98,7 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
                 .map(SslCertificateAttrEntityMgr::fromEntity)
                 .collect(toSet()));
-        dto.setAdminTenantName(vc.getProviderAdminTenantName());
+        dto.setAdminProjectName(vc.getProviderAdminProjectName());
         dto.setAdminDomainId(vc.getAdminDomainId());
         return request;
     }

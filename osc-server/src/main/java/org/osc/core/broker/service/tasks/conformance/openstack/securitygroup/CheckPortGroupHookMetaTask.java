@@ -169,8 +169,8 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
 
     private DistributedApplianceInstance getDeployedDAI(SecurityGroupMember sgm, VMPort protectedPort, EntityManager em) throws Exception {
         String sgmDomainId = OpenstackUtil.extractDomainId(
-                sgm.getSecurityGroup().getTenantId(),
-                sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminTenantName(),
+                sgm.getSecurityGroup().getProjectId(),
+                sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminProjectName(),
                 sgm.getSecurityGroup().getVirtualizationConnector(),
                 OpenstackUtil.getPorts(sgm));
 
@@ -179,7 +179,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
                     + "the member %s of the security group %s.", sgm.getMemberName(), sgm.getSecurityGroup().getName()));
         }
 
-        String tenantId = this.sgi.getSecurityGroup().getTenantId();
+        String projectId = this.sgi.getSecurityGroup().getProjectId();
 
         if (sgm.getType().equals(SecurityGroupMemberType.SUBNET) && sgm.getSubnet().isProtectExternal()
                 && protectedPort.getVm() == null) {
@@ -188,7 +188,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
                         em,
                         this.sgi.getVirtualSystem(),
                         this.sgi.getSecurityGroup(),
-                        tenantId,
+                        projectId,
                         getMemberRegion(sgm),
                         sgmDomainId,
                         null,
@@ -206,7 +206,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
                 em,
                 this.sgi.getVirtualSystem(),
                 sgm.getSecurityGroup(),
-                tenantId,
+                projectId,
                 getMemberRegion(sgm),
                 sgmDomainId,
                 protectedPort.getVm().getHost(),

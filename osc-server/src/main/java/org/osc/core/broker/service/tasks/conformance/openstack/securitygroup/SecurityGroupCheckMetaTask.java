@@ -44,7 +44,7 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
     ApiFactoryService apiFactoryService;
 
     @Reference
-    ValidateSecurityGroupTenantTask validateSecurityGroupTenantTask;
+    ValidateSecurityGroupProjectTask validateSecurityGroupProjectTask;
 
     @Reference
     SecurityGroupUpdateOrDeleteMetaTask securityGroupUpdateOrDeleteMetaTask;
@@ -57,7 +57,7 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
         task.sg = sg;
         task.mgrSecurityGroupInterfacesCheckMetaTask = this.mgrSecurityGroupInterfacesCheckMetaTask;
         task.apiFactoryService = this.apiFactoryService;
-        task.validateSecurityGroupTenantTask = this.validateSecurityGroupTenantTask;
+        task.validateSecurityGroupProjectTask = this.validateSecurityGroupProjectTask;
         task.securityGroupUpdateOrDeleteMetaTask = this.securityGroupUpdateOrDeleteMetaTask;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
@@ -70,7 +70,7 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
         this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
         this.tg = new TaskGraph();
-        this.tg.addTask(this.validateSecurityGroupTenantTask.create(this.sg));
+        this.tg.addTask(this.validateSecurityGroupProjectTask.create(this.sg));
         this.tg.appendTask(this.securityGroupUpdateOrDeleteMetaTask.create(this.sg));
 
         if (!ValidateUtil.isEmpty(this.sg.getSecurityGroupInterfaces())) {

@@ -14,32 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.dto.openstack;
+package org.osc.core.broker.service.api;
 
-public class OsTenantDto {
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
+import org.osc.core.broker.service.request.BaseIdRequest;
+import org.osc.core.broker.service.response.ListResponse;
 
-    private String id;
-    private String name;
-
-    public OsTenantDto(String name, String id) {
-        this.id = id;
-        this.name = name;
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
+public interface ListProjectByVcIdServiceApi
+        extends ServiceDispatcherApi<BaseIdRequest, ListResponse<OsProjectDto>> {
 }

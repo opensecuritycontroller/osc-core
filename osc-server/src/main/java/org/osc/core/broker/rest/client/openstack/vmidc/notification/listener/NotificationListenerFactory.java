@@ -81,8 +81,8 @@ public class NotificationListenerFactory {
         case HOST_AGGREGRATE:
             return new OsHostAggregrateNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
                     this.alertGenerator, this.activeRunner, this.dbMgr.getTransactionControl());
-        case TENANT:
-            return new OsTenantNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
+        case PROJECT:
+            return new OsProjectNotificationListener(vc, objectType, objectIdList, entity, this.conformService,
                     this.alertGenerator, this.activeRunner, this.dbMgr);
         case NETWORK:
             return new OsNetworkNotificationListener(vc, objectType, objectIdList, entity, this.conformService,

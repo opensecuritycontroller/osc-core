@@ -16,18 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.EncryptionApi;
@@ -53,12 +48,18 @@ import org.osc.core.broker.window.button.OkCancelButtonModel;
 import org.osc.core.common.controller.ControllerType;
 import org.osc.core.common.virtualization.VirtualizationType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.util.BeanItem;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
 
 public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
 
@@ -110,7 +111,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     // Provider input fields
     protected TextField providerIP = null;
     protected TextField adminDomainId = null;
-    protected TextField adminTenantName = null;
+    protected TextField adminProjectName = null;
     protected TextField providerUser = null;
     protected PasswordField providerPW = null;
 
@@ -159,8 +160,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             if (this.adminDomainId.isVisible()) {
                 this.adminDomainId.validate();
             }
-            if (this.adminTenantName.isVisible()) {
-                this.adminTenantName.validate();
+            if (this.adminProjectName.isVisible()) {
+                this.adminProjectName.validate();
             }
             this.providerUser.validate();
             this.providerPW.validate();
@@ -225,8 +226,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.providerIP.setImmediate(true);
         this.adminDomainId = new TextField("Admin Domain Id");
         this.adminDomainId.setImmediate(true);
-        this.adminTenantName = new TextField("Admin Tenant Name");
-        this.adminTenantName.setImmediate(true);
+        this.adminProjectName = new TextField("Admin Project Name");
+        this.adminProjectName.setImmediate(true);
         this.providerUser = new TextField("User Name");
         this.providerUser.setImmediate(true);
         this.providerPW = new PasswordField("Password");
@@ -235,8 +236,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         // adding not null constraint
         this.adminDomainId.setRequired(true);
         this.adminDomainId.setRequiredError(this.providerPanel.getCaption() + " Admin Domain Id cannot be empty");
-        this.adminTenantName.setRequired(true);
-        this.adminTenantName.setRequiredError(this.providerPanel.getCaption() + " Admin Tenant Name cannot be empty");
+        this.adminProjectName.setRequired(true);
+        this.adminProjectName.setRequiredError(this.providerPanel.getCaption() + " Admin Project Name cannot be empty");
         this.providerIP.setRequired(true);
         this.providerIP.setRequiredError(this.providerPanel.getCaption() + " IP cannot be empty");
         this.providerUser.setRequired(true);
@@ -247,7 +248,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         FormLayout providerFormPanel = new FormLayout();
         providerFormPanel.addComponent(this.providerIP);
         providerFormPanel.addComponent(this.adminDomainId);
-        providerFormPanel.addComponent(this.adminTenantName);
+        providerFormPanel.addComponent(this.adminProjectName);
         providerFormPanel.addComponent(this.providerUser);
         providerFormPanel.addComponent(this.providerPW);
         this.providerPanel.setContent(providerFormPanel);
@@ -448,9 +449,9 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         if (domainId != null) {
             dto.setAdminDomainId(domainId.trim());
         }
-        String tenantName = this.adminTenantName.getValue();
-        if (tenantName != null) {
-            dto.setAdminTenantName(tenantName.trim());
+        String projectName = this.adminProjectName.getValue();
+        if (projectName != null) {
+            dto.setAdminProjectName(projectName.trim());
         }
         if (virtualizationTypeValue.equals(VirtualizationType.OPENSTACK)) {
             dto.setProviderAttributes(this.providerAttributes);
@@ -488,7 +489,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             this.controllerType.setValue(ControllerType.NONE);
             updateControllerFields(ControllerType.NONE);
             this.adminDomainId.setVisible(true);
-            this.adminTenantName.setVisible(true);
+            this.adminProjectName.setVisible(true);
             this.advancedSettings.setVisible(true);
             this.advancedSettings.setCaption(SHOW_ADVANCED_SETTINGS_CAPTION);
             updateProviderFields();
@@ -503,7 +504,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.providerUser.setRequiredError(this.providerPanel.getCaption() + " User Name cannot be empty");
         this.providerPW.setRequiredError(this.providerPanel.getCaption() + " Password cannot be empty");
         this.adminDomainId.setRequiredError(this.providerPanel.getCaption() + " Admin Domain Id cannot be empty");
-        this.adminTenantName.setRequiredError(this.providerPanel.getCaption() + " Admin Tenant Name cannot be empty");
+        this.adminProjectName.setRequiredError(this.providerPanel.getCaption() + " Admin Project Name cannot be empty");
     }
 
     private void updateControllerFields(ControllerType type) {

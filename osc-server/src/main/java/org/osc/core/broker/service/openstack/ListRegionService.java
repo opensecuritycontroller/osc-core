@@ -16,6 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
@@ -26,10 +31,6 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
-
-import javax.persistence.EntityManager;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class ListRegionService extends ServiceDispatcher<BaseOpenStackRequest, ListResponse<String>>
@@ -43,7 +44,7 @@ public class ListRegionService extends ServiceDispatcher<BaseOpenStackRequest, L
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
         ListResponse<String> stringListResponse = new ListResponse<>();
-        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getTenantName()))) {
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getProjectName()))) {
             List<String> strings = novaApi.listRegions().stream().collect(Collectors.toList());
             stringListResponse.setList(strings);
         }

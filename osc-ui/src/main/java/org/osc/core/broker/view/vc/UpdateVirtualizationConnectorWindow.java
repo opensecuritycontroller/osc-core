@@ -80,7 +80,7 @@ public class UpdateVirtualizationConnectorWindow extends BaseVCWindow {
 
         this.providerIP.setValue(vcObject.getProviderIP());
         this.adminDomainId.setValue(vcObject.getAdminDomainId());
-        this.adminTenantName.setValue(vcObject.getAdminTenantName());
+        this.adminProjectName.setValue(vcObject.getAdminProjectName());
         this.providerUser.setValue(vcObject.getProviderUser());
         this.providerPW.setValue(vcObject.getProviderPassword());
         this.providerAttributes = vcObject.getProviderAttributes();

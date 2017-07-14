@@ -29,7 +29,7 @@ public enum OsNotificationEventState {
     ADD_HOST("addhost.end"),
     POWER_OFF("power_off.end"),
     POWER_ON("power_on.end"),
-    TENANT_DELETED("identity.project.deleted"),
+    PROJECT_DELETED("identity.project.deleted"),
     UPDATE_END("update.end"),
     RESIZE_CONFIRM_END("compute.instance.resize.confirm.end");
 

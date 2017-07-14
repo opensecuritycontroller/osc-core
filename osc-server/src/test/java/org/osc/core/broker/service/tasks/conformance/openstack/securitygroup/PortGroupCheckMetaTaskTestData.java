@@ -51,7 +51,7 @@ public class PortGroupCheckMetaTaskTestData {
     private static SecurityGroup createSG(String name, String netElementId) {
         VirtualizationConnector vc = createVC(name);
 
-        SecurityGroup sg = new SecurityGroup(vc, UUID.randomUUID().toString(), name + "_tenant");
+        SecurityGroup sg = new SecurityGroup(vc, UUID.randomUUID().toString(), name + "_project");
         sg.setName(name + "_SG");
         sg.setNetworkElementId(netElementId);
         return sg;

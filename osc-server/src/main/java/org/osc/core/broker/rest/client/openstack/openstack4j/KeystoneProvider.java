@@ -16,6 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.api.client.IOSClientBuilder;
@@ -24,11 +29,6 @@ import org.openstack4j.core.transport.Config;
 import org.openstack4j.model.common.Identifier;
 import org.openstack4j.model.identity.v3.Token;
 import org.openstack4j.openstack.OSFactory;
-
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
 
 public final class KeystoneProvider {
 
@@ -71,7 +71,7 @@ public final class KeystoneProvider {
             IOSClientBuilder.V3 keystoneV3Builder = OSFactory.builderV3().perspective(Facing.ADMIN)
                     .endpoint(endpointURL)
                     .credentials(endpoint.getUser(), endpoint.getPassword(), domainIdentifier)
-                    .scopeToProject(Identifier.byName(endpoint.getTenant()), domainIdentifier)
+                    .scopeToProject(Identifier.byName(endpoint.getProject()), domainIdentifier)
                     .withConfig(config);
 
             localOs = keystoneV3Builder.authenticate();

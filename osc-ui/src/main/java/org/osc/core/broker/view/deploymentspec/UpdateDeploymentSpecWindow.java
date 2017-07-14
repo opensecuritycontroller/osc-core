@@ -26,7 +26,7 @@ import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
-import org.osc.core.broker.service.api.ListTenantServiceApi;
+import org.osc.core.broker.service.api.ListProjectServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
@@ -34,7 +34,7 @@ import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -58,9 +58,9 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
     public UpdateDeploymentSpecWindow(DeploymentSpecDto dto, UpdateDeploymentSpecServiceApi updateDeploymentSpecService,
             ListAvailabilityZonesServiceApi listAvailabilityZonesService, ListFloatingIpPoolsServiceApi listFloatingIpPoolsService,
             ListHostServiceApi listHostService, ListHostAggregateServiceApi listHostAggregateService, ListNetworkServiceApi listNetworkService, ListRegionServiceApi listRegionService,
-            ListTenantServiceApi listTenantService, ServerApi server) throws Exception {
+            ListProjectServiceApi listProjectService, ServerApi server) throws Exception {
         super(dto, listAvailabilityZonesService, listFloatingIpPoolsService, listHostService, listHostAggregateService,
-                listNetworkService, listRegionService, listTenantService);
+                listNetworkService, listRegionService, listProjectService);
         this.updateDeploymentSpecService = updateDeploymentSpecService;
         this.server = server;
         createWindow(this.CAPTION);
@@ -74,14 +74,14 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
 
             // filling existing information to our form
             this.name.setValue(this.deploymentSpecDto.getName());
-            for (Object id : this.tenant.getContainerDataSource().getItemIds()) {
-                if (this.deploymentSpecDto.getTenantId().equals(
-                        this.tenant.getContainerDataSource().getContainerProperty(id, "id").getValue())) {
-                    this.tenant.select(id);
+            for (Object id : this.project.getContainerDataSource().getItemIds()) {
+                if (this.deploymentSpecDto.getProjectId().equals(
+                        this.project.getContainerDataSource().getContainerProperty(id, "id").getValue())) {
+                    this.project.select(id);
                 }
             }
 
-            this.tenant.setEnabled(false);
+            this.project.setEnabled(false);
 
             this.region.setValue(this.deploymentSpecDto.getRegion());
             this.region.setEnabled(false);
@@ -174,8 +174,8 @@ public class UpdateDeploymentSpecWindow extends BaseDeploymentSpecWindow {
                 requestDto.setId(this.deploymentSpecDto.getId());
                 requestDto.setParentId(this.deploymentSpecDto.getParentId());
                 requestDto.setName(this.name.getValue().trim());
-                requestDto.setTenantId(((OsTenantDto) this.tenant.getValue()).getId());
-                requestDto.setTenantName(((OsTenantDto) this.tenant.getValue()).getName());
+                requestDto.setProjectId(((OsProjectDto) this.project.getValue()).getId());
+                requestDto.setProjectName(((OsProjectDto) this.project.getValue()).getName());
                 requestDto.setCount(this.count.getValue());
                 requestDto.setShared(this.shared.getValue() == null ? false : this.shared.getValue());
                 requestDto.setFloatingIpPoolName((String) this.floatingIpPool.getValue());

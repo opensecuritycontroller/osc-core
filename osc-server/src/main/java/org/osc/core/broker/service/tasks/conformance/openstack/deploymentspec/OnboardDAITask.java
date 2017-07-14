@@ -70,7 +70,7 @@ public class OnboardDAITask extends TransactionalTask {
 
             if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
-                String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
+                String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(), ds.getProjectName(),
                         ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<>(
                                 Arrays.asList(ingressPort)));
                 ingressPort.setParentId(domainId);

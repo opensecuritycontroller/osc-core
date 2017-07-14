@@ -16,6 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -27,9 +31,6 @@ import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntit
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
-
-import javax.persistence.EntityManager;
-import java.util.Set;
 
 @Component(service = OsSvaDeleteFloatingIpTask.class)
 public class OsSvaDeleteFloatingIpTask extends TransactionalTask {
@@ -56,7 +57,7 @@ public class OsSvaDeleteFloatingIpTask extends TransactionalTask {
         DeploymentSpec ds = this.dai.getDeploymentSpec();
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
 
-        Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
+        Endpoint endPoint = new Endpoint(vc, ds.getProjectName());
         try (Openstack4JNeutron nova = new Openstack4JNeutron(endPoint)) {
             nova.deleteFloatingIp(ds.getRegion(), this.dai.getFloatingIpId());
         }

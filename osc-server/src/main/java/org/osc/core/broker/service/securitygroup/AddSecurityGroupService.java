@@ -61,14 +61,14 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
         SecurityGroupDto dto = request.getDto();
         List<String> regions = validateAndLoad(em, dto);
         if (dto.isProtectAll()
-                && SecurityGroupEntityMgr.isSecurityGroupExistWithProtectAll(em, dto.getTenantId(),
+                && SecurityGroupEntityMgr.isSecurityGroupExistWithProtectAll(em, dto.getProjectId(),
                         dto.getParentId())) {
             throw new VmidcBrokerValidationException(
-                    "Security Group exists with the same Tenant and Selection for this Virtualization Connector.");
+                    "Security Group exists with the same Project and Selection for this Virtualization Connector.");
         }
 
-        if (SecurityGroupEntityMgr.isSecurityGroupExistWithSameNameAndTenant(em, dto.getName(), dto.getTenantId())) {
-            throw new VmidcBrokerValidationException("Security Group Name: " + dto.getName() + " already exists on the same Tenant.");
+        if (SecurityGroupEntityMgr.isSecurityGroupExistWithSameNameAndProject(em, dto.getName(), dto.getProjectId())) {
+            throw new VmidcBrokerValidationException("Security Group Name: " + dto.getName() + " already exists on the same Project.");
         }
 
         UnlockObjectMetaTask unlockTask = null;
@@ -77,7 +77,7 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
             VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
             unlockTask = LockUtil.tryLockVC(vc, LockType.READ_LOCK);
 
-            SecurityGroup securityGroup = new SecurityGroup(vc, dto.getTenantId(), dto.getTenantName());
+            SecurityGroup securityGroup = new SecurityGroup(vc, dto.getProjectId(), dto.getProjectName());
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
             LOG.info("Creating security group: " + securityGroup.toString());

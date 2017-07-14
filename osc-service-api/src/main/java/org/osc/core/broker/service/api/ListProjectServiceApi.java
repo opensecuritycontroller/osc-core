@@ -16,10 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 
-public interface ListTenantByVcIdServiceApi
-        extends ServiceDispatcherApi<BaseIdRequest, ListResponse<OsTenantDto>> {
+public interface ListProjectServiceApi
+        extends ServiceDispatcherApi<BaseIdRequest, ListResponse<OsProjectDto>> {
 }

@@ -137,7 +137,7 @@ public class DeletePortGroupTaskTest {
 	private SecurityGroup registerSecurityGroup(String name, Long sgId, String netElementId) {
 		VirtualizationConnector vc = createVC(name);
 
-		SecurityGroup sg = new SecurityGroup(vc, UUID.randomUUID().toString(), name + "_tenant");
+		SecurityGroup sg = new SecurityGroup(vc, UUID.randomUUID().toString(), name + "_project");
 		sg.setName(name + "_SG");
 		sg.setNetworkElementId(netElementId);
 
