@@ -9,13 +9,13 @@
 ### Additional Information
 
 ### Environment
-- OSC version/build: 
-- Cloud provider info:
-- Plugin info:
-- Others:
+- OSC Version/Build: 
+- Cloud Provider Info:
+- Plugin Info:
+- Other:
 
 ### Status
 - [ ] Reproduced
 - [ ] In Progress
-- [ ] Validated     =>    Verified with build: 
+- [ ] Validated     =>    Verified in Version/Build: 
 
