@@ -16,14 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.window.update;
 
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.UpdateApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.plugin.PluginService;
@@ -66,7 +64,6 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
     protected List<ErrorType> errorTypesToIgnore = new ArrayList<>();
 
     final String CAPTION = "Edit Manager Connector";
-    final String NODE_DESCRIPTION = "Connector Node";
 
     // current view reference
     private final ManagerConnectorView mcView;
@@ -282,7 +279,6 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         if (originalException instanceof ErrorTypeException) {
             ErrorType errorType = ((ErrorTypeException) originalException).getType();
             exception = originalException.getCause();
-            final Throwable rootCause = ExceptionUtils.getRootCause(originalException);
             if (errorType == ErrorType.MANAGER_CONNECTOR_EXCEPTION) {
                 if (exception instanceof RestClientException) {
                     RestClientException restClientException = (RestClientException) exception;
@@ -298,12 +294,6 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
                                 exception));
                         return;
                     }
-                } else if (rootCause instanceof SocketException) {
-                    String msg = rootCause.getMessage() != null ?
-                            rootCause.getMessage() : rootCause.getClass().getSimpleName();
-                    contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_GENERAL,
-                                                            this.NODE_DESCRIPTION,
-                                                            StringEscapeUtils.escapeHtml(msg));
                 }
             } else if (errorType == ErrorType.IP_CHANGED_EXCEPTION) {
                 contentText = VmidcMessages.getString(VmidcMessages_.MC_WARNING_IPUPDATE);

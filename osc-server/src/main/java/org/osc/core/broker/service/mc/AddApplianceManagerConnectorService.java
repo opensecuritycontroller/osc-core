@@ -16,10 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
+import java.net.SocketException;
 import java.util.ArrayList;
 
 import javax.persistence.EntityManager;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -31,6 +33,7 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
+import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -158,7 +161,15 @@ implements AddApplianceManagerConnectorServiceApi {
             try {
                 this.apiFactoryService.checkConnection(mc);
             } catch (Exception e) {
-                ErrorTypeException errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
+
+                Throwable rootCause = ExceptionUtils.getRootCause(e);
+                Throwable cause = e;
+
+                if (rootCause instanceof SocketException) {
+                    cause = new RestClientException(rootCause.getMessage(), rootCause);
+                }
+
+                ErrorTypeException errorTypeException = new ErrorTypeException(cause, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
                 LOG.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
                 if (!resolverModels.isEmpty()) {
                     throw new SslCertificatesExtendedException(errorTypeException, resolverModels);
