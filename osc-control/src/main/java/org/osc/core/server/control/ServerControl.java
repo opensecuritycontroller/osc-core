@@ -36,10 +36,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.output.StringBuilderWriter;
@@ -47,8 +46,8 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.rest.client.VmidcServerRestClient;
 import org.osc.core.broker.service.response.ServerStatusResponse;
 import org.osc.core.broker.util.ServerUtil;
-import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.ServerUtil.ServerServiceChecker;
+import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.log.LogUtil;
 
@@ -82,23 +81,20 @@ public class ServerControl {
         options.addOption("h", "help", false, "Print options help.");
         options.addOption("l", "lock", false, "Prints Currently acquired Locks.");
 
-        @SuppressWarnings("static-access")
-        Option exec = OptionBuilder.withArgName("sql").hasArg().withDescription("Execute given SQL").withLongOpt("exec")
-                .create("e");
+        Option exec = Option.builder("e").argName("sql").hasArg().desc("Execute given SQL").longOpt("exec")
+                .build();
         options.addOption(exec);
 
-        @SuppressWarnings("static-access")
-        Option query = OptionBuilder.withArgName("sql").hasArg().withDescription("Query given SQL").withLongOpt("query")
-                .create("q");
+        Option query = Option.builder("q").argName("sql").hasArg().desc("Query given SQL").longOpt("query")
+                .build();
         options.addOption(query);
 
-        @SuppressWarnings("static-access")
-        Option restLogging = OptionBuilder.withArgName("true").hasArg().withDescription("Enable/Disable REST logging")
-                .withLongOpt("restlog").create("rl");
+        Option restLogging = Option.builder("rl").argName("true").hasArg().desc("Enable/Disable REST logging")
+                .longOpt("restlog").build();
         options.addOption(restLogging);
 
         int exitStatus = 0;
-        final CommandLineParser parser = new GnuParser();
+        final CommandLineParser parser = new DefaultParser();
         try {
             CommandLine cmd = parser.parse(options, args, true);
 

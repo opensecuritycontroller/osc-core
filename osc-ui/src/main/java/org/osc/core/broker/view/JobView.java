@@ -364,7 +364,6 @@ public class JobView extends CRUDBaseView<JobRecordDto, TaskRecordDto> {
         }
     }
 
-    @SuppressWarnings("resource")
     private StreamResource buildImageResource() throws Exception {
         this.dotFile = new File("job-" + getParentItemId() + System.currentTimeMillis() + ".dot");
 

@@ -16,12 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.exceptions;
 
-import javax.ws.rs.NotFoundException;
-
 import java.util.Arrays;
+
+import javax.ws.rs.NotFoundException;
 
 public class OscNotFoundException extends NotFoundException {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = -1891354338797629645L;
     private ErrorCodeDto errorCodeDto;
 
     public OscNotFoundException(String errorMessege, Long errorCode){
@@ -29,6 +33,6 @@ public class OscNotFoundException extends NotFoundException {
     }
 
     public ErrorCodeDto getErrorCodeDto() {
-        return errorCodeDto;
+        return this.errorCodeDto;
     }
 }

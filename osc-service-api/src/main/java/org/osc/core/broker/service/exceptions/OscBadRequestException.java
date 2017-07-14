@@ -22,6 +22,10 @@ import javax.ws.rs.BadRequestException;
 
 public class OscBadRequestException extends BadRequestException {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = -9176801533010370069L;
     private ErrorCodeDto errorCodeDto;
 
     public OscBadRequestException(String errorMessege, Long errorCode){
