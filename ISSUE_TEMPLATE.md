@@ -1,8 +1,10 @@
+### Description
+
+### Steps to Reproduce
+
 ### Expected Behavior
 
 ### Actual Behavior
-
-### Steps to Reproduce
 
 ### Additional Information
 
