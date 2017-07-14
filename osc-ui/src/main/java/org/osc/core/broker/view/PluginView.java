@@ -16,15 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.view;
 
-import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
 import org.osc.core.broker.service.api.ImportPluginServiceApi;
-import org.osc.core.broker.service.api.ImportSdnControllerPluginServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.view.common.StyleConstants;
-import org.osc.core.broker.view.common.VmidcMessages;
-import org.osc.core.broker.view.common.VmidcMessages_;
-import org.osc.core.broker.view.maintenance.ManagerPluginsLayout;
-import org.osc.core.broker.view.maintenance.SdnControllerPluginsLayout;
+import org.osc.core.broker.view.maintenance.PluginsLayout;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -38,23 +33,15 @@ import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.ValoTheme;
 
 @SuppressWarnings("serial")
 @Component(service={PluginView.class}, scope=ServiceScope.PROTOTYPE)
 public class PluginView extends VerticalLayout implements View {
 
-    private static final String MAINTENANCE_MANAGER_PLUGIN_GUID = "GUID-07FFF1BC-EA9E-426B-A247-4AF6BD12B350.html";
     private static final String MAINTENANCE_CONTROLLER_PLUGIN_GUID = "GUID-DD7DFB29-CB4F-4DD1-BFF5-21694F740D0E.html";
 
     TabSheet subMenu = null;
     TabSheet tabs = new TabSheet();
-
-    @Reference
-    ImportSdnControllerPluginServiceApi importSdnControllerPluginService;
-
-    @Reference
-    ImportApplianceManagerPluginServiceApi importApplianceManagerPluginService;
 
     @Reference
     ImportPluginServiceApi importPluginService;
@@ -66,31 +53,16 @@ public class PluginView extends VerticalLayout implements View {
     void start(BundleContext ctx) throws Exception {
         setSizeFull();
         addStyleName(StyleConstants.BASE_CONTAINER);
-
-        // creating tabs sheet for this view
-        this.tabs.addStyleName(ValoTheme.TABSHEET_FRAMED);
-        this.tabs.setSizeFull();
-
-        // adding SDN Controller Plugin
-        this.tabs.addTab(createTab("SDN Controller Plugins", "SDN Controller Plugins",
-                new SdnControllerPluginsLayout(ctx, this.importPluginService, this.server),
-                MAINTENANCE_CONTROLLER_PLUGIN_GUID));
-
-        // Adding Manager Plugin tab
-        this.tabs.addTab(createTab(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_TITLE),
-                VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_NAME),
-                new ManagerPluginsLayout(ctx, this.importPluginService, this.server),
-                MAINTENANCE_MANAGER_PLUGIN_GUID));
-
-        // adding tab sheet to the view
-        addComponent(this.tabs);
-        setExpandRatio(this.tabs, 1L);
+        
+        VerticalLayout component = createComponent("Plugins", "Plugins",
+                new PluginsLayout(ctx, this.importPluginService, this.server),
+                MAINTENANCE_CONTROLLER_PLUGIN_GUID);
+        addComponent(component);
+        setExpandRatio(component, 1L);
     }
 
-    private VerticalLayout createTab(String caption, String title, FormLayout content, String guid) {
+    private VerticalLayout createComponent(String caption, String title, FormLayout content, String guid) {
         VerticalLayout tabSheet = new VerticalLayout();
-        tabSheet.setCaption(caption);
-        tabSheet.setStyleName(StyleConstants.TAB_SHEET);
         Panel panel = new Panel();
         // creating subHeader inside panel
         panel.setContent(content);

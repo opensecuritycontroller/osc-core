@@ -381,8 +381,6 @@
 						<fileset>
 							<directory>${basedir}</directory>
 							<includes>
-								<include>mgr_plugins/**</include>
-								<include>sdn_ctrl_plugins/**</include>
 								<include>plugins/**</include>								
 								<include>generated/**</include>
 								<include>webapp/**</include>
@@ -392,8 +390,6 @@
 						<fileset>
 							<directory>${basedir}/../osc-server-bom/root/opt/vmidc/bin</directory>
 							<excludes>
-								<exclude>mgr_plugins</exclude>
-								<exclude>sdn_ctrl_plugins</exclude>
 								<exclude>plugins</exclude>
 								<exclude>log4j.properties</exclude>
 								<exclude>quartz.properties</exclude>
@@ -403,8 +399,6 @@
 								<exclude>scripts/**</exclude>
 							</excludes>
 							<includes>
-								<include>sdn_ctrl_plugins/**</include>
-								<include>mgr_plugins/**</include>
 								<include>plugins/**</include>
 								<include>jar/**</include>
 								<include>osc-server.jar</include>
@@ -458,8 +452,6 @@
 									<fileset dir="${basedir}">
 										<include name="vmidcKeyStore.jks" />
 										<include name="config/**" />
-										<include name="mgr_plugins/**" />
-										<include name="sdn_ctrl_plugins/**" />
 										<include name="plugins/**" />
 										<include name="webapp/**" />
 									</fileset>
