@@ -26,12 +26,12 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
+import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
-import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
 import org.osc.core.broker.service.request.ListOpenstackMembersRequest;
@@ -98,8 +98,6 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
 
     private static final String SECURITY_GROUP_MEMBER_VM = "VM";
     private static final String SECURITY_GROUP_MEMBER_NETWORK = "NETWORK";
-    private static final String SECURITY_GROUP_MEMBER_IP = "IP";
-    private static final String SECURITY_GROUP_MEMBER_MAC = "MAC";
     private static final String SECURITY_GROUP_MEMBER_SUBNET = "SUBNET";
 
     private final class ImmediateTextFilterDecorator implements FilterDecorator {
@@ -195,7 +193,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
 
     protected SecurityGroupDto currentSecurityGroup = null;
 
-    private ValueChangeListener tenantChangedListener;
+    private ValueChangeListener projectChangedListener;
     private ValueChangeListener triggerPopulateFromListListener;
     /**
      * Indicates whether the from list is being loaded for the first time or not. After the first time
@@ -204,11 +202,11 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
     private boolean isInitialFromListLoad = true;
 
     protected static final String TYPE_SELECTION = "By Type";
-    protected static final String TYPE_ALL = "All Servers belonging to Tenant";
+    protected static final String TYPE_ALL = "All Servers belonging to Project";
 
     // form fields
     protected TextField name;
-    protected ComboBox tenant;
+    protected ComboBox project;
     protected ComboBox region;
     protected OptionGroup protectionTypeOption;
     protected ComboBox protectionEntityType;
@@ -222,17 +220,17 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
 
     private ListOpenstackMembersServiceApi listOpenstackMembersService;
     private ListRegionByVcIdServiceApi listRegionByVcIdService;
-    private ListTenantByVcIdServiceApi listTenantByVcIdServiceApi;
+    private ListProjectByVcIdServiceApi listProjectByVcIdServiceApi;
     private ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService;
 
     public BaseSecurityGroupWindow(ListOpenstackMembersServiceApi listOpenstackMembersService,
             ListRegionByVcIdServiceApi listRegionByVcIdService,
-            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi,
+            ListProjectByVcIdServiceApi listProjectByVcIdServiceApi,
             ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService) {
         super();
         this.listOpenstackMembersService = listOpenstackMembersService;
         this.listRegionByVcIdService = listRegionByVcIdService;
-        this.listTenantByVcIdServiceApi = listTenantByVcIdServiceApi;
+        this.listProjectByVcIdServiceApi = listProjectByVcIdServiceApi;
         this.listSecurityGroupMembersBySgService = listSecurityGroupMembersBySgService;
         initListeners();
     }
@@ -286,7 +284,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
     public void initForm() {
         try {
             this.form.addComponent(getName());
-            this.form.addComponent(getTenant());
+            this.form.addComponent(getProject());
             this.form.addComponent(getRegion());
             this.form.addComponent(getType());
             this.form.addComponent(getProtectionEntityType());
@@ -299,9 +297,9 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
 
     @Override
     public void makeServiceCalls(ProgressIndicatorWindow progressIndicatorWindow) {
-        progressIndicatorWindow.updateStatus("Populating Tenant Information");
-        // Dont auto select tenant in case of update, since update sets the tenant automatically once the load completes.
-        populateTenants(!isUpdateWindow());
+        progressIndicatorWindow.updateStatus("Populating Project Information");
+        // Dont auto select project in case of update, since update sets the project automatically once the load completes.
+        populateProjects(!isUpdateWindow());
         progressIndicatorWindow.updateStatus("Populating Region Information");
         populateRegion();
     }
@@ -310,7 +308,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
     public boolean validateForm() {
         try {
             this.name.validate();
-            this.tenant.validate();
+            this.project.validate();
             return true;
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage() + ".", Notification.Type.ERROR_MESSAGE);
@@ -326,21 +324,21 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
         return this.name;
     }
 
-    protected ComboBox getTenant() {
+    protected ComboBox getProject() {
         try {
-            this.tenant = new ComboBox("Select Tenant");
-            this.tenant.setTextInputAllowed(true);
-            this.tenant.setNullSelectionAllowed(false);
-            this.tenant.setImmediate(true);
-            this.tenant.setRequired(true);
-            this.tenant.setRequiredError("Tenant cannot be empty");
+            this.project = new ComboBox("Select Project");
+            this.project.setTextInputAllowed(true);
+            this.project.setNullSelectionAllowed(false);
+            this.project.setImmediate(true);
+            this.project.setRequired(true);
+            this.project.setRequiredError("Project cannot be empty");
 
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
-            log.error("Error populating Tenant List combobox", e);
+            log.error("Error populating Project List combobox", e);
         }
 
-        return this.tenant;
+        return this.project;
     }
 
     protected ComboBox getRegion() {
@@ -441,7 +439,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
 
     }
 
-    private void populateTenants(boolean autoSelect) {
+    private void populateProjects(boolean autoSelect) {
         try {
             Long vcId = this.currentSecurityGroup.getParentId();
 
@@ -450,39 +448,39 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
                 BaseIdRequest req = new BaseIdRequest();
                 req.setId(vcId);
 
-                List<OsTenantDto> tenantList = this.listTenantByVcIdServiceApi.dispatch(req).getList();
+                List<OsProjectDto> projectList = this.listProjectByVcIdServiceApi.dispatch(req).getList();
 
-                this.tenant.removeValueChangeListener(this.tenantChangedListener);
-                this.tenant.removeAllItems();
+                this.project.removeValueChangeListener(this.projectChangedListener);
+                this.project.removeAllItems();
 
-                BeanItemContainer<OsTenantDto> tenantListContainer = new BeanItemContainer<>(OsTenantDto.class, tenantList);
-                this.tenant.setContainerDataSource(tenantListContainer);
-                this.tenant.setItemCaptionPropertyId("name");
+                BeanItemContainer<OsProjectDto> projectListContainer = new BeanItemContainer<>(OsProjectDto.class, projectList);
+                this.project.setContainerDataSource(projectListContainer);
+                this.project.setItemCaptionPropertyId("name");
 
-                this.tenant.addValueChangeListener(this.tenantChangedListener);
-                if (autoSelect && tenantList.get(0) != null) {
-                    this.tenant.select(tenantList.get(0));
+                this.project.addValueChangeListener(this.projectChangedListener);
+                if (autoSelect && projectList.get(0) != null) {
+                    this.project.select(projectList.get(0));
                 }
             } else {
-                this.tenant.removeAllItems();
+                this.project.removeAllItems();
             }
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
-            log.error("Error getting tenant List", e);
+            log.error("Error getting project List", e);
         }
     }
 
     private void populateRegion() {
         try {
-            OsTenantDto tenantDto = (OsTenantDto) this.tenant.getValue();
+            OsProjectDto projectDto = (OsProjectDto) this.project.getValue();
 
-            if (tenantDto != null) {
+            if (projectDto != null) {
                 this.region.removeValueChangeListener(this.triggerPopulateFromListListener);
                 this.region.removeAllItems();
 
                 BaseOpenStackRequest req = new BaseOpenStackRequest();
-                req.setTenantName(tenantDto.getName());
-                req.setTenantId(tenantDto.getId());
+                req.setProjectName(projectDto.getName());
+                req.setProjectId(projectDto.getId());
                 req.setId(this.currentSecurityGroup.getParentId());
 
                 ListResponse<String> response = this.listRegionByVcIdService.dispatch(req);
@@ -505,7 +503,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
     private void populateFromList() {
         try {
 
-            OsTenantDto tenantDto = (OsTenantDto) this.tenant.getValue();
+            OsProjectDto projectDto = (OsProjectDto) this.project.getValue();
             String region = (String) this.region.getValue();
             String memberType = (String) this.protectionEntityType.getValue();
             boolean isProtectAll = this.protectionTypeOption.getValue() == TYPE_ALL;
@@ -513,15 +511,15 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
             this.itemsContainer.removeAllItems();
             this.itemsTable.removeAllItems();
 
-            if (tenantDto != null && StringUtils.isNotEmpty(region) && !isProtectAll) {
+            if (projectDto != null && StringUtils.isNotEmpty(region) && !isProtectAll) {
 
                 ListOpenstackMembersRequest req = new ListOpenstackMembersRequest();
                 if (this.currentSecurityGroup.getId() != null) {
                     req.setId(this.currentSecurityGroup.getId());
                 }
                 req.setParentId(this.currentSecurityGroup.getParentId());
-                req.setTenantName(tenantDto.getName());
-                req.setTenantId(tenantDto.getId());
+                req.setProjectName(projectDto.getName());
+                req.setProjectId(projectDto.getId());
                 req.setRegion(region);
                 req.setType(memberType.toString());
                 if (this.isInitialFromListLoad) {
@@ -545,7 +543,7 @@ public abstract class BaseSecurityGroupWindow extends LoadingIndicatorCRUDBaseWi
 
     @SuppressWarnings("serial")
     private void initListeners() {
-        this.tenantChangedListener = new ValueChangeListener() {
+        this.projectChangedListener = new ValueChangeListener() {
 
             @Override
             public void valueChange(ValueChangeEvent event) {

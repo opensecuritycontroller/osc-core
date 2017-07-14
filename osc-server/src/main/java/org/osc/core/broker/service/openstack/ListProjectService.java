@@ -16,40 +16,40 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.api.ListTenantServiceApi;
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.api.ListProjectServiceApi;
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 
-import javax.persistence.EntityManager;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Component
-public class ListTenantService extends ServiceDispatcher<BaseIdRequest, ListResponse<OsTenantDto>>
-        implements ListTenantServiceApi {
+public class ListProjectService extends ServiceDispatcher<BaseIdRequest, ListResponse<OsProjectDto>>
+        implements ListProjectServiceApi {
 
     @Override
-    public ListResponse<OsTenantDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
-
+    public ListResponse<OsProjectDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
         // Initializing Entity Manager
         OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
-        ListResponse<OsTenantDto> listResponse = new ListResponse<>();
+        ListResponse<OsProjectDto> listResponse = new ListResponse<>();
         try (Openstack4jKeystone keystoneApi = new Openstack4jKeystone(new Endpoint(vc))) {
-            List<OsTenantDto> tenantDtos = keystoneApi.listProjects().stream()
-                    .map(tenant -> new OsTenantDto(tenant.getName(), tenant.getId())).collect(Collectors.toList());
-            listResponse.setList(tenantDtos);
+            List<OsProjectDto> projectDtos = keystoneApi.listProjects().stream()
+                    .map(project -> new OsProjectDto(project.getName(), project.getId())).collect(Collectors.toList());
+            listResponse.setList(projectDtos);
         }
         return listResponse;
     }

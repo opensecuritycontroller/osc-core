@@ -20,11 +20,11 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListOpenstackMembersServiceApi;
 import org.osc.core.broker.service.api.ListRegionByVcIdServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
-import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
+import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
 import org.osc.core.broker.service.response.BaseJobResponse;
 import org.osc.core.broker.view.util.ViewUtil;
@@ -48,9 +48,9 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
     private final ServerApi server;
 
     public UpdateSecurityGroupWindow(SecurityGroupDto dto, ListOpenstackMembersServiceApi listOpenstackMembersService, ListRegionByVcIdServiceApi listRegionByVcIdService,
-            ListTenantByVcIdServiceApi listTenantByVcIdServiceApi, UpdateSecurityGroupServiceApi updateSecurityGroupService,
+            ListProjectByVcIdServiceApi listProjectByVcIdServiceApi, UpdateSecurityGroupServiceApi updateSecurityGroupService,
             ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService, ServerApi server) throws Exception {
-        super(listOpenstackMembersService, listRegionByVcIdService, listTenantByVcIdServiceApi,
+        super(listOpenstackMembersService, listRegionByVcIdService, listProjectByVcIdServiceApi,
                 listSecurityGroupMembersBySgService);
         this.currentSecurityGroup = dto;
         this.updateSecurityGroupService = updateSecurityGroupService;
@@ -65,13 +65,13 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
 
             this.name.setValue(this.currentSecurityGroup.getName());
 
-            for (Object id : this.tenant.getContainerDataSource().getItemIds()) {
-                if (this.currentSecurityGroup.getTenantId().equals(
-                        this.tenant.getContainerDataSource().getContainerProperty(id, "id").getValue())) {
-                    this.tenant.select(id);
+            for (Object id : this.project.getContainerDataSource().getItemIds()) {
+                if (this.currentSecurityGroup.getProjectId().equals(
+                        this.project.getContainerDataSource().getContainerProperty(id, "id").getValue())) {
+                    this.project.select(id);
                 }
             }
-            this.tenant.setEnabled(false);
+            this.project.setEnabled(false);
 
             // If there is only one region, default to first entry
             if (this.region.size() == 1) {
@@ -102,8 +102,8 @@ public class UpdateSecurityGroupWindow extends BaseSecurityGroupWindow {
                 newDto.setId(this.currentSecurityGroup.getId());
 
                 newDto.setName(this.name.getValue().trim());
-                newDto.setTenantId(((OsTenantDto) this.tenant.getValue()).getId());
-                newDto.setTenantName(((OsTenantDto) this.tenant.getValue()).getName());
+                newDto.setProjectId(((OsProjectDto) this.project.getValue()).getId());
+                newDto.setProjectName(((OsProjectDto) this.project.getValue()).getName());
                 newDto.setProtectAll(this.protectionTypeOption.getValue() == TYPE_ALL);
 
                 request.setDto(newDto);

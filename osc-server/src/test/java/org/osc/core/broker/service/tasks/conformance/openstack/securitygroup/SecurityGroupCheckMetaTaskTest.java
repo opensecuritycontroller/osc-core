@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -114,7 +114,7 @@ public class SecurityGroupCheckMetaTaskTest {
         SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask();
         task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();
         task.securityGroupUpdateOrDeleteMetaTask = new SecurityGroupUpdateOrDeleteMetaTask();
-        task.validateSecurityGroupTenantTask = new ValidateSecurityGroupTenantTask();
+        task.validateSecurityGroupProjectTask = new ValidateSecurityGroupProjectTask();
 
         task = task.create(this.sg);
         task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();

@@ -16,6 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.Task;
@@ -56,14 +65,6 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-
-import javax.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Validates the Security Group members and syncs them if needed
@@ -178,8 +179,8 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             if (this.apiFactoryService.supportsPortGroup(this.sg)) {
                 VMPort sgMemberPort = OpenstackUtil.getAnyProtectedPort(this.sg);
 
-                domainId = OpenstackUtil.extractDomainId(this.sg.getTenantId(),
-                        this.sg.getVirtualizationConnector().getProviderAdminTenantName(),
+                domainId = OpenstackUtil.extractDomainId(this.sg.getProjectId(),
+                        this.sg.getVirtualizationConnector().getProviderAdminProjectName(),
                         this.sg.getVirtualizationConnector(), Arrays.asList(new NetworkElementImpl(sgMemberPort)));
 
                 if (domainId == null) {
@@ -200,7 +201,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 List<String> excludedMembers = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(em,
                         this.sg.getVirtualizationConnector().getId());
 
-                Endpoint endPoint = new Endpoint(this.sg.getVirtualizationConnector(), this.sg.getTenantName());
+                Endpoint endPoint = new Endpoint(this.sg.getVirtualizationConnector(), this.sg.getProjectName());
                 try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
                     Set<String> regions = nova.listRegions();
                     for (String region : regions) {
@@ -233,7 +234,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     private void buildTaskGraph(EntityManager em, boolean isDeleteTg, String domainId) throws Exception {
         VmDiscoveryCache vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(),
-                this.sg.getVirtualizationConnector().getProviderAdminTenantName());
+                this.sg.getVirtualizationConnector().getProviderAdminProjectName());
 
         // SGM Member sync with no task deferred
         addSGMemberSyncJob(em, isDeleteTg, vdc);

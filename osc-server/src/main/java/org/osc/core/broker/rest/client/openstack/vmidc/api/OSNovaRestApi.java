@@ -30,7 +30,7 @@ public class OSNovaRestApi {
 
     public OSNovaRestApi(Endpoint endPoint) throws IOException {
         try (Openstack4jAuthentication authApi = new Openstack4jAuthentication(endPoint)) {
-            this.token = authApi.getTenantToken();
+            this.token = authApi.getProjectToken();
         }
         this.osNovaClient = new OSNovaClient(endPoint, this.token.getId());
     }

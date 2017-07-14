@@ -30,7 +30,7 @@ public class OSGlanceRestApi {
 
     public OSGlanceRestApi(Endpoint endPoint) throws IOException {
         try (Openstack4jAuthentication authApi = new Openstack4jAuthentication(endPoint)) {
-            this.token = authApi.getTenantToken();
+            this.token = authApi.getProjectToken();
         }
         this.osGlanceClient = new OSGlanceClient(endPoint, this.token.getId());
     }

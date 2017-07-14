@@ -108,9 +108,9 @@ public class OsPortNotificationListener extends OsNotificationListener {
         sg = SecurityGroupEntityMgr.findById(em, sg.getId());
 
         if (sg.isProtectAll()) {
-            // If protect all then check tenant id in context
+            // If protect all then check Project id in context
             keyValue = OsNotificationUtil.isMessageRelevant(message, this.objectIdList,
-                    OsNotificationKeyType.TENANT_ID.toString());
+                    OsNotificationKeyType.PROJECT_ID.toString());
 
         } else {
             // check network id in context
@@ -164,9 +164,9 @@ public class OsPortNotificationListener extends OsNotificationListener {
                 }
 
             } else {
-                String tenantId = OsNotificationUtil.getPropertyFromNotificationMessage(message,
-                        OsNotificationKeyType.CONTEXT_TENANT_ID.toString());
-                if (this.objectIdList.contains(tenantId)) {
+                String projectId = OsNotificationUtil.getPropertyFromNotificationMessage(message,
+                        OsNotificationKeyType.CONTEXT_PROJECT_ID.toString());
+                if (this.objectIdList.contains(projectId)) {
                     triggerSGSync(sg, em);
                 }
             }

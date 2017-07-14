@@ -46,7 +46,7 @@ public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
     private DSUpdateOrDeleteMetaTask dsUpdateOrDeleteMetaTask;
 
     @Reference
-    private ValidateDSTenantTask validateTenant;
+    private ValidateDSProjectTask validateProject;
 
     @Reference
     private ValidateDSNetworkTask validateNetwork;
@@ -70,7 +70,7 @@ public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
         task.ds = ds;
         task.endPoint = endPoint;
         task.name = task.getName();
-        task.validateTenant = this.validateTenant;
+        task.validateProject = this.validateProject;
         task.validateNetwork = this.validateNetwork;
         task.osImageCheckMetaTask = this.osImageCheckMetaTask;
         task.flavorCheckMetaTask = this.flavorCheckMetaTask;
@@ -95,7 +95,7 @@ public class DSConformanceCheckMetaTask extends TransactionalMetaTask {
         FlavorCheckMetaTask flavorCheckTask = this.flavorCheckMetaTask.create(virtualSystem, this.ds.getRegion(), this.endPoint);
         OsSecurityGroupCheckMetaTask osSecurityGroupCheckMetaTask = this.osSecurityGroupCheckMetaTask.create(this.ds);
 
-        this.tg.appendTask(this.validateTenant.create(this.ds));
+        this.tg.appendTask(this.validateProject.create(this.ds));
         this.tg.appendTask(this.validateNetwork.create(this.ds, this.endPoint, NetworkType.MANAGEMENT));
         this.tg.appendTask(this.validateNetwork.create(this.ds, this.endPoint, NetworkType.INSPECTION));
         // if DS is already marked for deletion don't upload the image

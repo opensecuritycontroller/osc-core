@@ -16,6 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
@@ -37,6 +44,7 @@ import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
+import org.osc.sdk.controller.element.NetworkElement;
 import org.osc.sdk.controller.exception.NetworkPortNotFoundException;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
@@ -44,12 +52,6 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-
-import javax.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Makes sure the DAI has a corresponding SVA on the specified end point. If the SVA does not exist
@@ -153,7 +155,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         log.info("Checking DAI: " + this.dai.getName());
 
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
-        Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
+
+        Endpoint endPoint = new Endpoint(vc, ds.getProjectName());
 
         try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
 
@@ -231,8 +234,10 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
             InspectionPortElement inspectionPort = null;
             if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
-                String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
-                        ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<>(Arrays.asList(ingressPort)));
+
+                String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(), ds.getProjectName(),
+                        ds.getVirtualSystem().getVirtualizationConnector(),
+                        new ArrayList<NetworkElement>(Arrays.asList(ingressPort)));
                 if (domainId != null) {
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);

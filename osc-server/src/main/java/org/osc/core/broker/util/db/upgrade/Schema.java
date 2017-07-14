@@ -24,11 +24,11 @@ import java.sql.Statement;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.common.job.FreqType;
-import org.osc.core.common.job.ThresholdType;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.crypto.KeyStoreProvider.KeyStoreProviderException;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.common.job.FreqType;
+import org.osc.core.common.job.ThresholdType;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -377,7 +377,7 @@ public class Schema {
                 "virtualization_software_version varchar(255)," +
                 "virtualization_type varchar(255) not null," +
                 "controller_type varchar(255) not null," +
-                "admin_tenant_name varchar(255)," +
+                "admin_project_name varchar(255)," +
                 "admin_domain_id varchar(255)," +
                 "last_job_id_fk bigint," +
                 "primary key (id)" +
@@ -422,8 +422,8 @@ public class Schema {
                    "last_job_id_fk bigint," +
                    "network_elem_id varchar(255)," +
                    "vc_fk bigint not null," +
-                   "tenant_id varchar(255)," +
-                   "tenant_name varchar(255)," +
+                   "project_id varchar(255)," +
+                   "project_name varchar(255)," +
                    "protect_all bit not null default 1," +
                    "primary key (id)" +
                    ");",
@@ -512,8 +512,8 @@ public class Schema {
                 "version bigint," +
                 "name varchar(255) not null," +
                 "region varchar(255) not null," +
-                "tenant_name varchar(255) not null," +
-                "tenant_id varchar(255) not null," +
+                "project_name varchar(255) not null," +
+                "project_id varchar(255) not null," +
                 "management_network_name varchar(255) not null," +
                 "management_network_id varchar(255) not null," +
                 "inspection_network_name varchar(255) not null," +
@@ -982,8 +982,8 @@ public class Schema {
                 "references VIRTUALIZATION_CONNECTOR;",
 
             "alter table SECURITY_GROUP " +
-                "add constraint UK_NAME_TENANT unique (" +
-                "name, tenant_id);",
+                "add constraint UK_NAME_PROJECT unique (" +
+                "name, project_id);",
 
             "alter table SECURITY_GROUP " +
                 "add constraint FK_SG_VC " +
@@ -1049,8 +1049,8 @@ public class Schema {
                    "references OS_SECURITY_GROUP_REFERENCE;",
 
            "alter table DEPLOYMENT_SPEC " +
-                "add constraint UK_VS_TENANT_REGION unique (" +
-                "vs_fk, tenant_id, region);",
+                "add constraint UK_VS_PROJECT_REGION unique (" +
+                "vs_fk, project_id, region);",
 
             "alter table DEPLOYMENT_SPEC " +
                 "add constraint FK_DEPLOYMENT_SPEC_VS " +

@@ -111,7 +111,7 @@ public class VirtualizationConnectorUtil {
                     VirtualizationConnectorDto vcDto = request.getDto();
                     boolean isHttps = isHttps(vcDto.getProviderAttributes());
 
-                    Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminDomainId(), vcDto.getAdminTenantName(),
+                    Endpoint endPoint = new Endpoint(vcDto.getProviderIP(), vcDto.getAdminDomainId(), vcDto.getAdminProjectName(),
                             vcDto.getProviderUser(), vcDto.getProviderPassword(), isHttps,
                             SslContextProvider.getInstance().getSSLContext());
 

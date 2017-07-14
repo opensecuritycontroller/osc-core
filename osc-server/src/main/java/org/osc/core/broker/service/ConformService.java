@@ -377,7 +377,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 dsUnlockTask = LockUtil.tryLockDS(ds, da, da.getApplianceManagerConnector(),
                         ds.getVirtualSystem().getVirtualizationConnector());
             }
-            tg.addTask(this.dsConformanceCheckMetaTask.create(ds, new Endpoint(vc, ds.getTenantName())));
+            tg.addTask(this.dsConformanceCheckMetaTask.create(ds, new Endpoint(vc, ds.getProjectName())));
             tg.appendTask(dsUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             String jobName = "Syncing Deployment Specification";

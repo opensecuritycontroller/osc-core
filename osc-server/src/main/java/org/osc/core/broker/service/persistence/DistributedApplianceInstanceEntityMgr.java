@@ -88,26 +88,6 @@ public class DistributedApplianceInstanceEntityMgr {
         return true;
     }
 
-    public static DistributedApplianceInstance findByOsHostNameAndOsTenantId(EntityManager em, String osHostName,
-            String osTenantId) {
-
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-
-        CriteriaQuery<DistributedApplianceInstance> query = cb.createQuery(DistributedApplianceInstance.class);
-
-        Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
-
-        query = query.select(from).where(
-                cb.equal(from.get("osHostName"), osHostName),
-                cb.equal(from.get("osTenantId"), osTenantId));
-
-        try {
-            return em.createQuery(query).getSingleResult();
-        } catch (NoResultException nre) {
-            return null;
-        }
-    }
-
     public static List<DistributedApplianceInstance> listByVsId(EntityManager em, Long vsId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 

@@ -117,8 +117,8 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
 
         List<NetworkElement> sgmPorts = OpenstackUtil.getPorts(this.sgm);
         String sgmDomainId = OpenstackUtil.extractDomainId(
-                this.sgm.getSecurityGroup().getTenantId(),
-                this.sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminTenantName(),
+                this.sgm.getSecurityGroup().getProjectId(),
+                this.sgm.getSecurityGroup().getVirtualizationConnector().getProviderAdminProjectName(),
                 this.sgm.getSecurityGroup().getVirtualizationConnector(),
                 sgmPorts);
 
@@ -131,7 +131,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
             if (assignedRedirectedDai == null) {
                 this.log.info("No assigned DAI found for port " + this.vmPort);
 
-                String tenantId = this.sgm.getSecurityGroup().getTenantId();
+                String projectId = this.sgm.getSecurityGroup().getProjectId();
 
                 if (this.sgm.getType().equals(SecurityGroupMemberType.SUBNET) && this.sgm.getSubnet().isProtectExternal()
                         && this.vmPort.getVm() == null) {
@@ -141,7 +141,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
                                 em,
                                 this.vs,
                                 this.sgm.getSecurityGroup(),
-                                tenantId,
+                                projectId,
                                 getMemberRegion(this.sgm),
                                 sgmDomainId,
                                 null,
@@ -156,7 +156,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
                             em,
                             this.vs,
                             this.sgm.getSecurityGroup(),
-                            tenantId,
+                            projectId,
                             getMemberRegion(this.sgm),
                             sgmDomainId,
                             this.vmPort.getVm().getHost(),

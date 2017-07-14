@@ -16,6 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.model.identity.v3.Project;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -27,21 +31,18 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
-import javax.persistence.EntityManager;
-import java.util.Set;
-
 /**
- * Validates the DS tenant exists and syncs the name if needed
+ * Validates the DS project exists and syncs the name if needed
  */
-@Component(service = ValidateDSTenantTask.class)
-public class ValidateDSTenantTask extends TransactionalTask {
+@Component(service=ValidateDSProjectTask.class)
+public class ValidateDSProjectTask extends TransactionalTask {
 
-    private final Logger log = Logger.getLogger(ValidateDSTenantTask.class);
+    private final Logger log = Logger.getLogger(ValidateDSProjectTask.class);
 
     private DeploymentSpec ds;
 
-    public ValidateDSTenantTask create(DeploymentSpec ds) {
-        ValidateDSTenantTask task = new ValidateDSTenantTask();
+    public ValidateDSProjectTask create(DeploymentSpec ds) {
+        ValidateDSProjectTask task = new ValidateDSProjectTask();
         task.ds = ds;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
@@ -56,19 +57,20 @@ public class ValidateDSTenantTask extends TransactionalTask {
 
         if (!this.ds.getMarkedForDeletion()) {
             VirtualizationConnector vc = this.ds.getVirtualSystem().getVirtualizationConnector();
-            this.log.info("Validating the DS tenant " + this.ds.getTenantName() + " exists.");
+            this.log.info("Validating the DS project " + this.ds.getProjectName() + " exists.");
 
             try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc))) {
-                Project tenant = keystone.getProjectById(this.ds.getTenantId());
-                if (tenant == null) {
-                    this.log.info("DS tenant " + this.ds.getTenantName() + " Deleted from openstack. Marking DS for deletion.");
-                    // Tenant was deleted, mark ds for deleting as well
+                Project project = keystone.getProjectById(this.ds.getProjectId());
+                if (project == null) {
+                    this.log.info("DS project " + this.ds.getProjectName() + " Deleted from openstack. Marking DS for deletion.");
+                    // project was deleted, mark ds for deleting as well
                     OSCEntityManager.markDeleted(em, this.ds, this.txBroadcastUtil);
                 } else {
-                    // Sync the tenant name if needed
-                    if (!tenant.getName().equals(this.ds.getTenantName())) {
-                        this.log.info("DS tenant name updated from " + this.ds.getTenantName() + " to " + tenant.getName());
-                        this.ds.setTenantName(tenant.getName());
+                    // Sync the project name if needed
+                    if (!project.getName().equals(this.ds.getProjectName())) {
+                        this.log.info("DS project name updated from " + this.ds.getProjectName() + " to "
+                                + project.getName());
+                        this.ds.setProjectName(project.getName());
                         OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
                     }
                 }
@@ -78,9 +80,9 @@ public class ValidateDSTenantTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Validating Deployment Specification '%s' for tenant '%s'", this.ds.getName(),
-                this.ds.getTenantName());
-    }
+        return String.format("Validating Deployment Specification '%s' for project '%s'", this.ds.getName(),
+                this.ds.getProjectName());
+    };
 
     @Override
     public Set<LockObjectReference> getObjects() {

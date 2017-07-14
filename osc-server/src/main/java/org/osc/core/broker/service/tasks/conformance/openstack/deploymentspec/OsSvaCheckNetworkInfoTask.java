@@ -16,6 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.openstack4j.model.network.IP;
@@ -32,10 +37,6 @@ import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntit
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
-
-import javax.persistence.EntityManager;
-import java.util.List;
-import java.util.Set;
 
 @Component(service = OsSvaCheckNetworkInfoTask.class)
 public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
@@ -118,7 +119,7 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
     }
 
     private Port getMgmtPort(DeploymentSpec ds, Network mgmgNetwork, Subnet mgmtSubnet, DistributedApplianceInstance dai, Openstack4JNeutron neutron) {
-        List<Port> ports = neutron.listPortsBySubnet(ds.getRegion(), ds.getTenantId(), mgmgNetwork.getId(), mgmtSubnet.getId(), false);
+        List<Port> ports = neutron.listPortsBySubnet(ds.getRegion(), ds.getProjectId(), mgmgNetwork.getId(), mgmtSubnet.getId(), false);
         for (Port port : ports) {
             if (port.getDeviceId().equals(dai.getOsServerId())) {
                 return port;
