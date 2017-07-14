@@ -68,6 +68,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private static final long serialVersionUID = 1L;
 
     final String CAPTION = "Add Manager Connector";
+    final String NODE_DESCRIPTION = "Connector Node";
 
     private static final Logger log = Logger.getLogger(AddManagerConnectorWindow.class);
 
@@ -303,8 +304,9 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
             } else if (rootCause instanceof SocketException) {
                 String msg = rootCause.getMessage() != null ?
                         rootCause.getMessage() : rootCause.getClass().getSimpleName();
-                contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_RABBIT,
-                        StringEscapeUtils.escapeHtml(msg));
+                contentText = VmidcMessages.getString(VmidcMessages_.VC_CONFIRM_GENERAL,
+                                                        this.NODE_DESCRIPTION,
+                                                        StringEscapeUtils.escapeHtml(msg));
             }
         } else {
             exception = originalException;
