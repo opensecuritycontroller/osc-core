@@ -19,7 +19,10 @@ package org.osc.core.broker.service.mc;
 import java.net.SocketException;
 import java.util.ArrayList;
 
+import javax.net.ssl.SSLException;
 import javax.persistence.EntityManager;
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAuthorizedException;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
@@ -33,7 +36,6 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AddApplianceManagerConnectorServiceApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
@@ -165,8 +167,11 @@ implements AddApplianceManagerConnectorServiceApi {
                 Throwable rootCause = ExceptionUtils.getRootCause(e);
                 Throwable cause = e;
 
-                if (rootCause instanceof SocketException) {
-                    cause = new RestClientException(rootCause.getMessage(), rootCause);
+                if (rootCause instanceof SocketException
+                        || rootCause instanceof SSLException
+                        || rootCause instanceof ForbiddenException
+                        || rootCause instanceof NotAuthorizedException) {
+                    cause = rootCause;
                 }
 
                 ErrorTypeException errorTypeException = new ErrorTypeException(cause, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
