@@ -17,12 +17,11 @@
 package org.osc.core.broker.service.mc;
 
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
 import javax.net.ssl.SSLException;
 import javax.persistence.EntityManager;
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.NotAuthorizedException;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
@@ -169,8 +168,7 @@ implements AddApplianceManagerConnectorServiceApi {
 
                 if (rootCause instanceof SocketException
                         || rootCause instanceof SSLException
-                        || rootCause instanceof ForbiddenException
-                        || rootCause instanceof NotAuthorizedException) {
+                        || rootCause instanceof SocketTimeoutException) {
                     cause = rootCause;
                 }
 

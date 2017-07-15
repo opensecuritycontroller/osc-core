@@ -17,14 +17,13 @@
 package org.osc.core.broker.window.update;
 
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLException;
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.NotAuthorizedException;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -284,12 +283,11 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
             ErrorType errorType = ((ErrorTypeException) originalException).getType();
             cause = originalException.getCause();
             if (errorType == ErrorType.MANAGER_CONNECTOR_EXCEPTION) {
-                if (cause instanceof SocketException || cause instanceof SSLException) {
+                if (cause instanceof SocketException
+                        || cause instanceof SSLException
+                        ||  cause instanceof SocketTimeoutException) {
                     contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_IP,
                             StringEscapeUtils.escapeHtml(this.name.getValue()));
-                } else if (cause instanceof ForbiddenException || cause instanceof NotAuthorizedException) {
-                    contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_CREDS, StringEscapeUtils
-                            .escapeHtml(this.name.getValue()));
                 } else {
                     handleCatchAllException(new Exception(VmidcMessages.getString(
                             VmidcMessages_.GENERAL_REST_ERROR, this.ip.getValue(), cause.getMessage()),
