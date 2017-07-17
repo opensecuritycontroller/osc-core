@@ -25,6 +25,7 @@
     <description>OSC Parent Project</description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <openstack4j.version>3.0.4</openstack4j.version>
         <powermock.version>1.6.5</powermock.version>
     </properties>
 
