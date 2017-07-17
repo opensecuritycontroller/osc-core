@@ -16,12 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.window.add;
 
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.net.ssl.SSLException;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -30,7 +34,6 @@ import org.osc.core.broker.service.api.plugin.PluginService;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.api.server.ValidationApi;
 import org.osc.core.broker.service.dto.SslCertificateAttrDto;
-import org.osc.core.broker.service.exceptions.RestClientException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.ApplianceManagerConnectorRequest;
 import org.osc.core.broker.service.request.DryRunRequest;
@@ -281,25 +284,22 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
     private void handleException(final Exception originalException) {
         String caption = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_CAPTION);
         String contentText = null;
-        final Throwable exception;
+        final Throwable cause;
         if (originalException instanceof ErrorTypeException) {
-            exception = originalException.getCause();
-            if (exception instanceof RestClientException) {
-                RestClientException restClientException = (RestClientException) exception;
-                if (restClientException.isConnectException()) {
-                    contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_IP,
-                            StringEscapeUtils.escapeHtml(this.name.getValue()));
-                } else if (restClientException.isCredentialError()) {
-                    contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_CREDS,
-                            StringEscapeUtils.escapeHtml(this.name.getValue()));
-                } else {
-                    handleCatchAllException(new Exception(VmidcMessages.getString(VmidcMessages_.GENERAL_REST_ERROR,
-                            this.ip.getValue(), exception.getMessage()), exception));
-                    return;
-                }
+            cause = originalException.getCause();
+            if (cause instanceof SocketException
+                    || cause instanceof SSLException
+                    ||  cause instanceof SocketTimeoutException) {
+                contentText = VmidcMessages.getString(VmidcMessages_.MC_CONFIRM_IP,
+                        StringEscapeUtils.escapeHtml(this.name.getValue()));
+            } else {
+                handleCatchAllException(new Exception(VmidcMessages.getString(
+                        VmidcMessages_.GENERAL_REST_ERROR, this.ip.getValue(), cause.getMessage()),
+                        cause));
+                return;
             }
         } else {
-            exception = originalException;
+            cause = originalException;
         }
         if (contentText != null) {
 
@@ -321,7 +321,7 @@ public class AddManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonMode
             });
             ViewUtil.addWindow(alertWindow);
         } else {
-            handleCatchAllException(exception);
+            handleCatchAllException(cause);
         }
     }
 }
