@@ -16,14 +16,15 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.powermock.api.support.membermodification.MemberMatcher.method;
-import static org.powermock.api.support.membermodification.MemberModifier.replace;
+import static org.powermock.api.support.membermodification.MemberMatcher.*;
+import static org.powermock.api.support.membermodification.MemberModifier.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
@@ -179,7 +180,8 @@ public class ServerUtilTest {
         Mockito.when(this.serverStatusResponseInjectionMock.getProcessId()).thenReturn(this.oldProcessId);
 
         // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock, this.oldProcessId, this.serverStatusResponseInjectionMock);
+        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
+                this.oldProcessId, this.serverStatusResponseInjectionMock);
 
         // Assert.
         Assert.assertTrue(isServerRunning);
@@ -194,7 +196,8 @@ public class ServerUtilTest {
         mockGetCurrentPid();
 
         // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock, this.oldProcessId, this.serverStatusResponseInjectionMock);
+        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
+                this.oldProcessId, this.serverStatusResponseInjectionMock);
 
         // Assert.
         Assert.assertFalse(isServerRunning);
@@ -209,7 +212,8 @@ public class ServerUtilTest {
         mockGetCurrentPid();
 
         // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock, this.oldProcessId, this.serverStatusResponseInjectionMock);
+        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
+                this.oldProcessId, this.serverStatusResponseInjectionMock);
 
         // Assert.
         Assert.assertFalse(isServerRunning);
@@ -231,7 +235,8 @@ public class ServerUtilTest {
                 });
 
         // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock, this.oldProcessId, this.serverStatusResponseInjectionMock);
+        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
+                this.oldProcessId, this.serverStatusResponseInjectionMock);
 
         // Assert.
         Assert.assertFalse(isServerRunning);
@@ -253,7 +258,8 @@ public class ServerUtilTest {
                 });
 
         // Act.
-        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock, this.oldProcessId, this.serverStatusResponseInjectionMock);
+        boolean isServerRunning = ServerUtil.terminateProcessInRunningServer(this.vmidcServerRestClientMock,
+                this.oldProcessId, this.serverStatusResponseInjectionMock);
 
         // Assert.
         Assert.assertFalse(isServerRunning);
@@ -263,7 +269,8 @@ public class ServerUtilTest {
     public void testGetPidByProcessName_WithProperData_ReturnsProperProcessId() throws IOException, InterruptedException {
         // Arrange.
         InputStream stubInputStream = IOUtils.toInputStream(
-                " PID TTY STAT TIME COMMAND\n 9990 ? Ss 0:07 /test/java\n " + this.oldProcessId + " ? Ss 0:07 /osc/java");
+                " PID TTY STAT TIME COMMAND\n 9990 ? Ss 0:07 /test/java\n " + this.oldProcessId + " ? Ss 0:07 /osc/java",
+                Charset.defaultCharset());
         PowerMockito.when(this.processMock.getInputStream()).thenReturn(stubInputStream);
         PowerMockito.when(this.runtimeMock.exec(Matchers.anyString())).thenReturn(this.processMock);
 
@@ -280,7 +287,8 @@ public class ServerUtilTest {
     public void testGetPidByProcessName_WithImproperData_ReturnsNothing() throws IOException, InterruptedException {
         // Arrange.
         InputStream stubInputStream = IOUtils.toInputStream(
-                " PID TTY STAT TIME COMMAND\n 9990 ? Ss 0:07 /test/java\n " + this.oldProcessId + " ? Ss 0:07 /osc/java");
+                " PID TTY STAT TIME COMMAND\n 9990 ? Ss 0:07 /test/java\n " + this.oldProcessId + " ? Ss 0:07 /osc/java",
+                Charset.defaultCharset());
 
         PowerMockito.when(this.processMock.getInputStream()).thenReturn(stubInputStream);
         PowerMockito.when(this.runtimeMock.exec(this.linuxProcessExec)).thenReturn(this.processMock);
@@ -313,7 +321,8 @@ public class ServerUtilTest {
     public void testGetPidByProcessName_WithWindowsMachineFlag_ReturnsProperProcessId() throws IOException, InterruptedException {
         // Arrange.
         InputStream stubInputStream = IOUtils.toInputStream(
-                " PID TTY STAT TIME COMMAND\n 9990 ? Ss 0:07 /test/java\n " + this.oldProcessId + " ? Ss 0:07 /osc/java");
+                " PID TTY STAT TIME COMMAND\n 9990 ? Ss 0:07 /test/java\n " + this.oldProcessId + " ? Ss 0:07 /osc/java",
+                Charset.defaultCharset());
 
         PowerMockito.when(this.processMock.getInputStream()).thenReturn(stubInputStream);
         PowerMockito.when(this.runtimeMock.exec(this.linuxProcessExec + "-W")).thenReturn(this.processMock);

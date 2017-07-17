@@ -114,7 +114,6 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
         this.registration = ctx.registerService(TruststoreChangedListener.class, this, null);
     }
 
-    @SuppressWarnings("serial")
     private HorizontalLayout createHeaderForSslList() {
         HorizontalLayout header = ViewUtil.createSubHeader("List of available certificates", null);
 
@@ -192,7 +191,6 @@ public class SslConfigurationLayout extends FormLayout implements TruststoreChan
         colorizeValidUntilRows();
     }
 
-    @SuppressWarnings("serial")
     private Button createDeleteEntry(CertificateBasicInfoModel certificateModel) {
         String removeBtnLabel = (certificateModel.isConnected()) ? "Force delete" : "Delete";
         final Button deleteArchiveButton = new Button(removeBtnLabel);

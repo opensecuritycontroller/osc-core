@@ -18,6 +18,7 @@ package org.osc.core.broker.service.appliance;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -271,7 +272,8 @@ implements ImportApplianceSoftwareVersionServiceApi {
     private ImageMetadata getFromJson(File metaDataFile) throws VmidcBrokerValidationException {
         ImageMetadata tempImageMetadata;
         try {
-            tempImageMetadata = new Gson().fromJson(FileUtils.readFileToString(metaDataFile), ImageMetadata.class);
+            tempImageMetadata = new Gson().fromJson(FileUtils.readFileToString(metaDataFile, Charset.defaultCharset()),
+                    ImageMetadata.class);
         } catch (JsonSyntaxException | IOException exception) {
             log.error("Error reading meta data file", exception);
             throw new VmidcBrokerValidationException(

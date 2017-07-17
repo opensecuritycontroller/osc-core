@@ -368,22 +368,4 @@ public class VirtualizationConnectorDtoValidatorParameterizedTest extends Virtua
 
         return result;
     }
-
-    static List<Object[]> getInvalidTypeTestData() {
-        String[] invalidTypes = new String[] { null, "" };
-
-		List<Object[]> result = new ArrayList<>();
-
-        for (String invalidType : invalidTypes) {
-            VirtualizationConnectorDto vcDto = VirtualizationConnectorServiceData.getVCDtoforOpenStack();
-            // TODO: No setters allowed to VirtualizationType Enum
-            String errorMessage = Server.PRODUCT_NAME + ": " + "Type " + EMPTY_VALUE_ERROR_MESSAGE;
-
-            Class<?> expectedException = VmidcBrokerInvalidEntryException.class;
-
-            result.add(new Object[] { vcDto, expectedException, errorMessage });
-        }
-
-        return result;
-    }
 }

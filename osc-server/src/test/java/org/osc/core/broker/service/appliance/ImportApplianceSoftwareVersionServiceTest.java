@@ -16,14 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.service.appliance;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 import static org.powermock.api.mockito.PowerMockito.*;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.spy;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import javax.persistence.EntityManager;
 
@@ -194,7 +197,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
     public void testDispatch_ImportApplianceNonExistingModel_ExpectsValidResponse() throws Exception {
         // Arrange.
         this.imageMetaData.setModel(NON_EXISTING_SOFTWARE_MODEL);
-        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
+        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile, Charset.defaultCharset()))
         .thenReturn(new Gson().toJson(this.imageMetaData));
 
         // Act.
@@ -213,7 +216,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
     public void testDispatch_ImportApplianceWithExistingModel_ExpectsValidResponse() throws Exception {
         // Arrange.
         this.imageMetaData.setModel(SOFTWARE_MODEL);
-        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
+        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile, Charset.defaultCharset()))
         .thenReturn(new Gson().toJson(this.imageMetaData));
 
         // Act.
@@ -231,7 +234,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
     public void testDispatch_ReImportApplianceWithFileMissing_ExpectsValidResponse() throws Exception {
         // Arrange.
         this.imageMetaData.setModel(NON_EXISTING_SOFTWARE_MODEL);
-        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
+        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile, Charset.defaultCharset()))
         .thenReturn(new Gson().toJson(this.imageMetaData));
 
         // Act.
@@ -253,7 +256,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
     public void testDispatch_ReImportApplianceWithFilePresent_ExpectsErrorResponse() throws Exception {
         // Arrange.
         this.imageMetaData.setModel(NON_EXISTING_SOFTWARE_MODEL);
-        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
+        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile, Charset.defaultCharset()))
         .thenReturn(new Gson().toJson(this.imageMetaData));
 
         // Causes isImageMissing to return false, which means file is already present.
@@ -273,7 +276,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         createExistingAppliance();
         this.imageMetaData.setModel(NON_EXISTING_SOFTWARE_MODEL);
         this.imageMetaData.setSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
-        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
+        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile, Charset.defaultCharset()))
         .thenReturn(new Gson().toJson(this.imageMetaData));
 
         this.exception.expect(VmidcBrokerValidationException.class);
@@ -337,7 +340,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
     public void testDispatch_ImportApplianceMissingPayloadFile_ExpectsErrorResponse() throws Exception {
         // Arrange. Make sure input is missing a file
         PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] { this.mockMetaDataFile });
-        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile))
+        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile, Charset.defaultCharset()))
         .thenReturn(new Gson().toJson(this.imageMetaData));
 
         this.exception.expect(VmidcBrokerValidationException.class);

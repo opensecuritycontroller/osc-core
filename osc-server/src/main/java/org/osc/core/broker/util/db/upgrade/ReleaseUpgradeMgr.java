@@ -340,6 +340,7 @@ public class ReleaseUpgradeMgr {
     /**
      * 3DES encrypted passwords -> AES-CTR encrypted passwords
      */
+    @SuppressWarnings("deprecation")
     private static void upgrade72to73(Statement stmt, EncryptionApi encrypter) throws SQLException, EncryptionException {
         updatePasswordScheme(stmt, "user", "password", encrypter);
         updatePasswordScheme(stmt, "appliance_manager_connector", "password", encrypter);
@@ -1828,6 +1829,7 @@ public class ReleaseUpgradeMgr {
         return !StringUtils.isNullOrEmpty(val) && Integer.parseInt(val) == 0;
     }
 
+    @SuppressWarnings("deprecation")
     private static void updatePasswordScheme(Statement statement, String tableName, String columnName, EncryptionApi encrypter) throws SQLException, EncryptionException {
         String sqlQuery = "SELECT id, " + columnName + " FROM " + tableName + ";";
         ResultSet result = statement.executeQuery(sqlQuery);

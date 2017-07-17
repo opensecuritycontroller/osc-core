@@ -63,7 +63,6 @@ public class EncryptionUtilTest {
             }
         });
 
-        String test = new EncryptionUtil().encryptAESCTR("helloworld");
     }
 
     @Rule
@@ -72,26 +71,26 @@ public class EncryptionUtilTest {
     /** To check the valid behavior of encryption with valid string message */
     @Test
     public void testEncryptPbkdf2_WithValidMessage_ExpectsPbkdf2Hash() throws EncryptionException {
-        String encryption = new EncryptionUtil().encryptPbkdf2(this.unEncryptedMessage);
+        String encryption = EncryptionUtil.encryptPbkdf2(this.unEncryptedMessage);
         assertTrue(encryption.startsWith("4000"));
         assertEquals(encryption.length(), 102);
     }
 
     @Test
     public void testValidatePbkdf2_WithValidMessage_ExpectsSuccess() throws EncryptionException {
-        String encryption = new EncryptionUtil().encryptPbkdf2(this.unEncryptedMessage);
-        assertTrue(new EncryptionUtil().validatePbkdf2(this.unEncryptedMessage, encryption));
+        String encryption = EncryptionUtil.encryptPbkdf2(this.unEncryptedMessage);
+        assertTrue(EncryptionUtil.validatePbkdf2(this.unEncryptedMessage, encryption));
     }
 
     @Test
     public void testEncryptPbkdf2_WithEmptyMessage_ExpectsEmptyMessage() throws EncryptionException {
-        String encryption = new EncryptionUtil().encryptPbkdf2("");
+        String encryption = EncryptionUtil.encryptPbkdf2("");
         assertEquals("", encryption);
     }
 
     @Test
     public void testEncryptPbkdf2_WithNullMessage_ExpectsNull() throws EncryptionException {
-        String encryption = new EncryptionUtil().encryptPbkdf2(null);
+        String encryption = EncryptionUtil.encryptPbkdf2(null);
         assertEquals(null, encryption);
     }
 

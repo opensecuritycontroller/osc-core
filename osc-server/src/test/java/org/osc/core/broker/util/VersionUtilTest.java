@@ -16,12 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.util;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -103,7 +104,7 @@ public class VersionUtilTest {
         PowerMockito.when(VersionUtil.class.getPackage()).thenReturn(this.aPackage);
         PowerMockito.when(VersionUtil.class.getClassLoader()).thenReturn(this.classLoader);
         PowerMockito.when(this.classLoader.findResource(Matchers.anyString())).thenReturn(this.mockedUrl);
-        InputStream stubInputStream = IOUtils.toInputStream(this.MANIFEST_CONTENT);
+        InputStream stubInputStream = IOUtils.toInputStream(this.MANIFEST_CONTENT, Charset.defaultCharset());
         PowerMockito.when(this.mockedUrl.openStream()).thenReturn(stubInputStream);
         PowerMockito.when(this.aPackage.getImplementationVersion()).thenReturn("1.0.0");
 
