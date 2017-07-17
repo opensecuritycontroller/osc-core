@@ -16,10 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
+import javax.net.ssl.SSLException;
 import javax.persistence.EntityManager;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -158,7 +162,17 @@ implements AddApplianceManagerConnectorServiceApi {
             try {
                 this.apiFactoryService.checkConnection(mc);
             } catch (Exception e) {
-                ErrorTypeException errorTypeException = new ErrorTypeException(e, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
+
+                Throwable rootCause = ExceptionUtils.getRootCause(e);
+                Throwable cause = e;
+
+                if (rootCause instanceof SocketException
+                        || rootCause instanceof SSLException
+                        || rootCause instanceof SocketTimeoutException) {
+                    cause = rootCause;
+                }
+
+                ErrorTypeException errorTypeException = new ErrorTypeException(cause, ErrorType.MANAGER_CONNECTOR_EXCEPTION);
                 LOG.warn("Exception encountered when trying to add Manager Connector, allowing user to either ignore or correct issue");
                 if (!resolverModels.isEmpty()) {
                     throw new SslCertificatesExtendedException(errorTypeException, resolverModels);
