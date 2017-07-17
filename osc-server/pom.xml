@@ -219,13 +219,9 @@
 
 		<dependency>
 			<groupId>org.pacesys</groupId>
-			<artifactId>openstack4j</artifactId>
-			<version>3.0.4</version>
+			<artifactId>openstack4j-core</artifactId>
+			<version>${openstack4j.version}</version>
 			<exclusions>
-				<exclusion>
-					<groupId>org.pacesys.openstack4j.connectors</groupId>
-					<artifactId>openstack4j-resteasy</artifactId>
-				</exclusion>
 				<exclusion>
 					<groupId>com.fasterxml.jackson.core</groupId>
 					<artifactId>jackson-databind</artifactId>
@@ -235,7 +231,7 @@
 		<dependency>
 			<groupId>org.pacesys.openstack4j.connectors</groupId>
 			<artifactId>openstack4j-jersey2</artifactId>
-			<version>3.0.4</version>
+			<version>${openstack4j.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>com.fasterxml.jackson.core</groupId>
