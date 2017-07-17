@@ -45,7 +45,6 @@ import org.osc.core.broker.service.tasks.conformance.openstack.DeleteImageFromGl
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.SecurityGroupCleanupCheckMetaTask;
 import org.osc.core.broker.util.PasswordUtil;
-import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.powermock.api.mockito.PowerMockito;
@@ -157,10 +156,5 @@ public class VSConformanceCheckMetaTaskTest {
             {DELETE_OPENSTACK_WITH_OS_IMAGE_REF_VS,  createDeleteOpenStackWithOSImageRefGraph(DELETE_OPENSTACK_WITH_OS_IMAGE_REF_VS), false},
             {DELETE_OPENSTACK_WITH_OS_FLAVOR_REF_VS,  createDeleteOpenStackWithOSFlavorRefGraph(DELETE_OPENSTACK_WITH_OS_FLAVOR_REF_VS), false},
         });
-    }
-
-    private static String getDefaultServerIp() {
-        ServerUtil.setServerIP("127.0.0.1");
-        return ServerUtil.getServerIP();
     }
 }

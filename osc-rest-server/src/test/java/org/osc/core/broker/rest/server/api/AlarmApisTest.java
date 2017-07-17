@@ -16,9 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.server.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +50,7 @@ import org.osc.core.common.alarm.Severity;
 
 public class AlarmApisTest extends BaseJerseyTest {
 
-    private ListResponse expectedResponseList;
+    private ListResponse<AlarmDto> expectedResponseList;
 
     private Response expectedResponse;
 
@@ -89,7 +89,7 @@ public class AlarmApisTest extends BaseJerseyTest {
         //configure responses
         this.expectedResponseList = new ListResponse<AlarmDto>();
         this.expectedResponse = Response.status(Response.Status.ACCEPTED).build();
-        when(apiUtil.getListResponse(any(), any())).thenReturn(this.expectedResponseList);
+        Mockito.<ListResponse<?>>when(apiUtil.getListResponse(any(), any())).thenReturn(this.expectedResponseList);
         when(apiUtil.getResponseForBaseRequest(any(), any())).thenReturn(this.expectedResponse);
 
         return application;

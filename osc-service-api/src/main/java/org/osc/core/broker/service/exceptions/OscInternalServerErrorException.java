@@ -16,12 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.exceptions;
 
-import javax.ws.rs.InternalServerErrorException;
-
 import java.util.Arrays;
+
+import javax.ws.rs.InternalServerErrorException;
 
 public class OscInternalServerErrorException extends InternalServerErrorException {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = -191654981387380333L;
     private ErrorCodeDto errorCodeDto;
 
     public OscInternalServerErrorException(String errorMessege, Long errorCode){
@@ -33,6 +37,6 @@ public class OscInternalServerErrorException extends InternalServerErrorExceptio
     }
 
     public ErrorCodeDto getErrorCodeDto() {
-        return errorCodeDto;
+        return this.errorCodeDto;
     }
 }

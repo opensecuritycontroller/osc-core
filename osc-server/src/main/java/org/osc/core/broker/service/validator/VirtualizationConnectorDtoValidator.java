@@ -23,7 +23,6 @@ import java.util.Map.Entry;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -38,7 +37,6 @@ public class VirtualizationConnectorDtoValidator
 implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
 
     private EntityManager em;
-    private static final Logger LOG = Logger.getLogger(VirtualizationConnectorDtoValidator.class);
     private TransactionalBroadcastUtil txBroadcastUtil;
     private ApiFactoryService apiFactoryService;
 
