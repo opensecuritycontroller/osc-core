@@ -236,7 +236,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "name")
         .setValue(this.name.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "managerType")
-        .setValue(this.type.getValue().trim());
+        .setValue(ManagerType.fromText(this.type.getValue().trim()));
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "ipAddress")
         .setValue(this.ip.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "username")
