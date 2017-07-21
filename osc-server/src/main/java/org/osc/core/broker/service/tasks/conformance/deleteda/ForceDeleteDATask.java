@@ -62,7 +62,7 @@ public class ForceDeleteDATask extends TransactionalTask {
 
         // remove all virtual systems for this DA
         for (VirtualSystem vs : da.getVirtualSystems()) {
-            this.forceDeleteVsTask.create(vs).forceDeleteVirtualSystem(em);
+            this.forceDeleteVsTask.create(vs).executeTransaction(em);
         }
 
         // delete distributed appliance from database

@@ -31,7 +31,7 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service=ForceDeleteVirtualSystemTask.class)
+@Component(service = ForceDeleteVirtualSystemTask.class)
 public class ForceDeleteVirtualSystemTask extends TransactionalTask {
 
     private VirtualSystem vs;
@@ -53,10 +53,6 @@ public class ForceDeleteVirtualSystemTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) {
-        forceDeleteVirtualSystem(em);
-    }
-
-    void forceDeleteVirtualSystem(EntityManager em) {
         // load Distributed Appliance from Database
         this.vs = em.find(VirtualSystem.class, this.vs.getId());
 
