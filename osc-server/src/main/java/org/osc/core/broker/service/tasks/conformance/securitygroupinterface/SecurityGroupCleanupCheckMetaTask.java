@@ -43,6 +43,7 @@ public class SecurityGroupCleanupCheckMetaTask extends TransactionalMetaTask {
         task.name = task.getName();
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
+        task.deleteSecurityGroupInterfaceTask = this.deleteSecurityGroupInterfaceTask;
 
         return task;
     }

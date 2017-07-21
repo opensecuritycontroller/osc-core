@@ -44,6 +44,7 @@ public class ForceDeleteDATask extends TransactionalTask {
         task.name = task.getName();
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
+        task.forceDeleteVsTask = this.forceDeleteVsTask;
 
         return task;
     }
