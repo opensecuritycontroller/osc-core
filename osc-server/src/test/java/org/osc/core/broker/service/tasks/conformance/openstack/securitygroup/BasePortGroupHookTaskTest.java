@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.UUID;
 
@@ -132,7 +132,7 @@ public class BasePortGroupHookTaskTest {
         sgi.setId(entityId);
 
         if (sg != null) {
-            sgi.addSecurityGroup(sg);
+            sgi.setSecurityGroup(sg);
         }
 
         when(this.em.find(SecurityGroupInterface.class, sgi.getId())).thenReturn(sgi);

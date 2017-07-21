@@ -149,7 +149,7 @@ public class CheckPortGroupHookMetaTaskTestData {
 
         newSGMWithPort(sg, dai, VM.class);
 
-        sgi.addSecurityGroup(sg);
+        sgi.setSecurityGroup(sg);
         sg.addSecurityGroupInterface(sgi);
 
         return sgi;

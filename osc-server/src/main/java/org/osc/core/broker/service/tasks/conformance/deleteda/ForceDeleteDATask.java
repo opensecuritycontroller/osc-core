@@ -69,12 +69,11 @@ public class ForceDeleteDATask extends TransactionalTask {
 
             // remove all SGI(s) - SG references
             for (SecurityGroupInterface sgi : vs.getSecurityGroupInterfaces()) {
-                for (SecurityGroup sg : sgi.getSecurityGroups()) {
-                    sgi.removeSecurity(sg);
-                    sg.removeSecurityInterface(sgi);
-                    OSCEntityManager.update(em, sg, this.txBroadcastUtil);
-                    OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
-                }
+                SecurityGroup sg = sgi.getSecurityGroup();
+                sgi.setSecurityGroup(null);
+                sg.removeSecurityInterface(sgi);
+                OSCEntityManager.update(em, sg, this.txBroadcastUtil);
+                OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
             }
 
             // remove all Deployment Specs for this virtual system

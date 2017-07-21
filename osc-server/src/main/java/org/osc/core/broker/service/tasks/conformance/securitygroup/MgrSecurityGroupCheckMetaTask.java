@@ -97,23 +97,22 @@ public class MgrSecurityGroupCheckMetaTask extends TransactionalMetaTask {
             }
 
             for (SecurityGroupInterface sgi : this.vs.getSecurityGroupInterfaces()) {
-                for (SecurityGroup sg : sgi.getSecurityGroups()) {
-                    ManagerSecurityGroupElement mepg = findByMgrSecurityGroupId(mgrEndpointGroups, sg.getMgrId());
+                SecurityGroup sg = sgi.getSecurityGroup();
+                ManagerSecurityGroupElement mepg = findByMgrSecurityGroupId(mgrEndpointGroups, sg.getMgrId());
+                if (mepg == null) {
+                    // It is possible it exists but have not been persisted in database.
+                    // Search security group by name
+                    mepg = findBySecurityGroupByName(mgrEndpointGroups, sg.getName());
+                }
+                if (!sgi.getMarkedForDeletion()) {
                     if (mepg == null) {
-                        // It is possible it exists but have not been persisted in database.
-                        // Search security group by name
-                        mepg = findBySecurityGroupByName(mgrEndpointGroups, sg.getName());
+                        // Add new security group to Manager
+                        this.tg.appendTask(this.createMgrSecurityGroupTask.create(this.vs, sg));
+                    } else {
+                        this.tg.appendTask(this.updateMgrSecurityGroupTask.create(this.vs, sg));
                     }
-                    if (!sgi.getMarkedForDeletion()) {
-                        if (mepg == null) {
-                            // Add new security group to Manager
-                            this.tg.appendTask(this.createMgrSecurityGroupTask.create(this.vs, sg));
-                        } else {
-                            this.tg.appendTask(this.updateMgrSecurityGroupTask.create(this.vs, sg));
-                        }
-                    } else if (mepg != null) {
-                        this.tg.appendTask(this.deleteMgrSecurityGroupTask.create(this.vs, mepg));
-                    }
+                } else if (mepg != null) {
+                    this.tg.appendTask(this.deleteMgrSecurityGroupTask.create(this.vs, mepg));
                 }
             }
 

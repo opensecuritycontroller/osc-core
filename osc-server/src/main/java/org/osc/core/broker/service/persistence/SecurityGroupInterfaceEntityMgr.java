@@ -71,7 +71,7 @@ public class SecurityGroupInterfaceEntityMgr {
         Root<SecurityGroupInterface> root = query.from(SecurityGroupInterface.class);
 
         query = query.select(root)
-                .where(cb.equal(root.join("securityGroups").get("id"), sg.getId()),
+                .where(cb.equal(root.get("securityGroup"), sg),
                        cb.equal(root.get("virtualSystem"), vs));
 
         try {

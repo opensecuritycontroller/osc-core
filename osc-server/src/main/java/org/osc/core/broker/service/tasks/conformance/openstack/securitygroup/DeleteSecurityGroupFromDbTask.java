@@ -59,7 +59,7 @@ public class DeleteSecurityGroupFromDbTask extends TransactionalTask {
         log.debug("Start Executing DeleteSecurityGroupFromDb Task : " + this.sg.getId());
         this.sg = em.find(SecurityGroup.class, this.sg.getId());
         for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
-            sgi.removeSecurity(this.sg);
+            sgi.setSecurityGroup(null);
             this.sg.removeSecurityInterface(sgi);
             OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
             OSCEntityManager.update(em, this.sg, this.txBroadcastUtil);

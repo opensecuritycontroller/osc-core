@@ -162,7 +162,7 @@ public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGrou
                             OSCEntityManager.create(em, sgi, this.txBroadcastUtil);
 
                             this.securityGroup.addSecurityGroupInterface(sgi);
-                            sgi.addSecurityGroup(this.securityGroup);
+                            sgi.setSecurityGroup(this.securityGroup);
                             OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
                         } else {
                             if (hasServiceChanged(sgi, serviceToBindTo, policy, order)) {

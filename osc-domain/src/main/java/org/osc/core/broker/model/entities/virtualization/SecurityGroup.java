@@ -26,8 +26,6 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -79,10 +77,7 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
     @OrderBy("type")
     private Set<SecurityGroupMember> securityGroupMembers = new TreeSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(name = "GROUP_INTERFACE", joinColumns = @JoinColumn(name = "security_group_fk",
-            referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "security_group_interface_fk",
-            referencedColumnName = "id"))
+    @OneToMany(mappedBy = "securityGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<SecurityGroupInterface> securityGroupInterfaces = new HashSet<SecurityGroupInterface>();
 
     public SecurityGroup(VirtualizationConnector virtualizationConnector, String projectId, String projectName) {

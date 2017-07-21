@@ -134,12 +134,10 @@ public class SecurityGroupCheckMetaTaskTest {
         // entities retain state between tests (which is bad!)
         SecurityGroupCheckMetaTaskTestData sgcmttd1 = new SecurityGroupCheckMetaTaskTestData();
         SecurityGroupCheckMetaTaskTestData sgcmttd2 = new SecurityGroupCheckMetaTaskTestData();
-        SecurityGroupCheckMetaTaskTestData sgcmttd3 = new SecurityGroupCheckMetaTaskTestData();
 
         return Arrays.asList(new Object[][] {
             {sgcmttd1, sgcmttd1.NO_MC_POLICY_MAPPING_SUPPORTED_SG, sgcmttd1.createNoMcPolicyMappingGraph(sgcmttd1.NO_MC_POLICY_MAPPING_SUPPORTED_SG)},
             {sgcmttd2, sgcmttd2.SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG, sgcmttd2.createSingleMcPolicyMappingGraph(sgcmttd2.SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG)},
-            {sgcmttd3, sgcmttd3.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG, sgcmttd3.createMultipleMcPolicyMappingGraph(sgcmttd3.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG)}
         });
     }
 }
