@@ -261,7 +261,7 @@ public class ReleaseUpgradeMgr {
 
         execSql(stmt,
                 "update SECURITY_GROUP_INTERFACE AS sgi SET sgi.security_group_fk = "
-                + "(select gi.security_group_fk from GROUP_INTERFACE gi where gi.security_group_interface_fk = sgi.id;");
+                + "(select gi.security_group_fk from GROUP_INTERFACE gi where gi.security_group_interface_fk = sgi.id);");
 
         execSql(stmt, "drop table GROUP_INTERFACE;");
 
