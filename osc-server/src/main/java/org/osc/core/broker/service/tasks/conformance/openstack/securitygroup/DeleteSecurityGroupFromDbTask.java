@@ -20,10 +20,10 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
@@ -58,11 +58,8 @@ public class DeleteSecurityGroupFromDbTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) {
         log.debug("Start Executing DeleteSecurityGroupFromDb Task : " + this.sg.getId());
         this.sg = em.find(SecurityGroup.class, this.sg.getId());
-        for (SecurityGroupInterface sgi : this.sg.getSecurityGroupInterfaces()) {
-            sgi.setSecurityGroup(null);
-            this.sg.removeSecurityInterface(sgi);
-            OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
-            OSCEntityManager.update(em, this.sg, this.txBroadcastUtil);
+        if(!CollectionUtils.isEmpty(this.sg.getSecurityGroupInterfaces())) {
+            throw new IllegalStateException("Security group should not have any references to policy mappings.");
         }
         OSCEntityManager.delete(em, this.sg, this.txBroadcastUtil);
     }

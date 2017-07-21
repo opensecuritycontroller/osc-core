@@ -23,20 +23,20 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
-import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.persistence.DistributedApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 @Component(service = ForceDeleteDATask.class)
 public class ForceDeleteDATask extends TransactionalTask {
     private static final Logger log = Logger.getLogger(ForceDeleteDATask.class);
 
     private DistributedAppliance da;
+
+    @Reference
+    private ForceDeleteVirtualSystemTask forceDeleteVsTask;
 
     public ForceDeleteDATask create(DistributedAppliance da) {
         ForceDeleteDATask task = new ForceDeleteDATask();
@@ -61,33 +61,7 @@ public class ForceDeleteDATask extends TransactionalTask {
 
         // remove all virtual systems for this DA
         for (VirtualSystem vs : da.getVirtualSystems()) {
-
-            // remove all DAI(s)
-            for (DistributedApplianceInstance dai : vs.getDistributedApplianceInstances()) {
-                OSCEntityManager.delete(em, dai, this.txBroadcastUtil);
-            }
-
-            // remove all SGI(s) - SG references
-            for (SecurityGroupInterface sgi : vs.getSecurityGroupInterfaces()) {
-                SecurityGroup sg = sgi.getSecurityGroup();
-                sgi.setSecurityGroup(null);
-                sg.removeSecurityInterface(sgi);
-                OSCEntityManager.update(em, sg, this.txBroadcastUtil);
-                OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
-            }
-
-            // remove all Deployment Specs for this virtual system
-            for (DeploymentSpec ds : vs.getDeploymentSpecs()) {
-                OSCEntityManager.delete(em, ds, this.txBroadcastUtil);
-            }
-
-            // remove all SGI for this virtual system
-            for (SecurityGroupInterface sgi : vs.getSecurityGroupInterfaces()) {
-                OSCEntityManager.delete(em, sgi, this.txBroadcastUtil);
-            }
-
-            // delete virtual system from database
-            OSCEntityManager.delete(em, vs, this.txBroadcastUtil);
+            this.forceDeleteVsTask.create(vs).forceDeleteVirtualSystem(em);
         }
 
         // delete distributed appliance from database
