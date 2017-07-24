@@ -40,7 +40,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -55,6 +54,8 @@ import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.common.virtualization.VirtualizationType;
+import org.osc.core.server.Server;
 import org.osc.core.test.util.TestTransactionControl;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -91,6 +92,9 @@ public class AddDistributedApplianceServiceTest {
 
     @InjectMocks
     private AddDistributedApplianceService service;
+
+    @Mock
+    private Server mockServerInstance;
 
     private BaseRequest<DistributedApplianceDto> request;
     private Appliance app;

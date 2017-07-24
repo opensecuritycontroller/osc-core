@@ -65,6 +65,7 @@ import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.common.manager.ManagerType;
 import org.osc.core.common.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.common.virtualization.VirtualizationType;
+import org.osc.core.server.Server;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.powermock.api.mockito.PowerMockito;
@@ -125,6 +126,9 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
     @InjectMocks
     private ImportApplianceSoftwareVersionService service;
+
+    @Mock
+    private Server mockServerInstance;
 
     private ApplianceSoftwareVersion validAsv;
 
