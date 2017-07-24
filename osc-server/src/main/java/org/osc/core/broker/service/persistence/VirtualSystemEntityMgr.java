@@ -93,7 +93,7 @@ public class VirtualSystemEntityMgr {
 
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.join("securityGroupInterfaces")
-                        .join("securityGroups").get("id"), sgId));
+                        .join("securityGroup").get("id"), sgId));
 
         return em.createQuery(query).getResultList();
     }

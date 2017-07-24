@@ -66,19 +66,11 @@ public class ForceDeleteSecurityGroupTask extends TransactionalTask {
 
         // remove SGI - references
         for (SecurityGroupInterface sgi : this.securityGroup.getSecurityGroupInterfaces()) {
-            sgi.removeSecurity(this.securityGroup);
+            sgi.setSecurityGroup(null);
             this.securityGroup.removeSecurityInterface(sgi);
 
-            sgi.removeSecurity(this.securityGroup);
-
-            // if this SGI is not referred by any other SG then remove this from Database as well.
-            if (sgi.getSecurityGroups().isEmpty()) {
-                // delete SGI from Database
-                OSCEntityManager.delete(em, sgi, this.txBroadcastUtil);
-            } else {
-                // update SGI entity
-                OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
-            }
+            // delete SGI from Database
+            OSCEntityManager.delete(em, sgi, this.txBroadcastUtil);
         }
 
         // remove all SGM for this Security Group

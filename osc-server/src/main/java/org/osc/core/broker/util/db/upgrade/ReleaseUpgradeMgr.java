@@ -241,6 +241,8 @@ public class ReleaseUpgradeMgr {
                 upgrade80to81(stmt);
             case 81:
                 upgrade81to82(stmt);
+            case 82:
+                upgrade82to83(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -250,6 +252,22 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+
+    private static void upgrade82to83(Statement stmt) throws SQLException {
+
+        execSql(stmt,
+                "alter table SECURITY_GROUP_INTERFACE add column security_group_fk bigint;");
+
+        execSql(stmt,
+                "update SECURITY_GROUP_INTERFACE AS sgi SET sgi.security_group_fk = "
+                + "(select gi.security_group_fk from GROUP_INTERFACE gi where gi.security_group_interface_fk = sgi.id);");
+
+        execSql(stmt, "drop table GROUP_INTERFACE;");
+
+        execSql(stmt,
+                "alter table SECURITY_GROUP_INTERFACE add constraint FK_SECURITY_GROUP foreign key "
+                + "(security_group_fk) references SECURITY_GROUP;");
     }
 
     private static void upgrade81to82(Statement stmt) throws SQLException {

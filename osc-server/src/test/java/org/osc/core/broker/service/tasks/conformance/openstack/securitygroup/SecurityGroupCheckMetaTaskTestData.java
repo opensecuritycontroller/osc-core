@@ -57,8 +57,6 @@ class SecurityGroupCheckMetaTaskTestData {
                 this.MC_POLICY_MAPPING_NOT_SUPPORTED_VS);
     public SecurityGroup SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(SINGLE_MC_POLICY_MAPPING_SUPPORTED,
                 this.MC_POLICY_MAPPING_SUPPORTED_VS);
-    public SecurityGroup MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(MULTIPLE_MC_POLICY_MAPPING_SUPPORTED,
-                this.MC_POLICY_MAPPING_SUPPORTED_VS);
 
     {
         VirtualSystem vs = this.MC_POLICY_MAPPING_SUPPORTED_VS_2;
@@ -75,10 +73,7 @@ class SecurityGroupCheckMetaTaskTestData {
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg");
         sg.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(sg);
-
-        this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG);
+        sgi.setSecurityGroup(sg);
     }
 
     public TaskGraph createNoMcPolicyMappingGraph(SecurityGroup sg) {
@@ -120,7 +115,7 @@ class SecurityGroupCheckMetaTaskTestData {
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg");
         sg.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(sg);
+        sgi.setSecurityGroup(sg);
 
         this.TEST_SECURITY_GROUPS.add(sg);
         return sg;

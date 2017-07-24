@@ -23,14 +23,15 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
+import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service=ForceDeleteVirtualSystemTask.class)
+@Component(service = ForceDeleteVirtualSystemTask.class)
 public class ForceDeleteVirtualSystemTask extends TransactionalTask {
 
     private VirtualSystem vs;
@@ -62,12 +63,7 @@ public class ForceDeleteVirtualSystemTask extends TransactionalTask {
 
         // remove all SGI(s) - SG references
         for (SecurityGroupInterface sgi : this.vs.getSecurityGroupInterfaces()) {
-            for (SecurityGroup sg : sgi.getSecurityGroups()) {
-                sgi.removeSecurity(sg);
-                sg.removeSecurityInterface(sgi);
-                OSCEntityManager.update(em, sg, this.txBroadcastUtil);
-                OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
-            }
+            OSCEntityManager.delete(em, sgi, this.txBroadcastUtil);
         }
 
         // remove all Deployment Specs for this virtual system
@@ -80,7 +76,13 @@ public class ForceDeleteVirtualSystemTask extends TransactionalTask {
             OSCEntityManager.delete(em, sgi, this.txBroadcastUtil);
         }
 
-        //TODO: Delete OsFlavorReference and OsImageReferences too
+        for (OsImageReference imageRef : this.vs.getOsImageReference()) {
+            OSCEntityManager.delete(em, imageRef, this.txBroadcastUtil);
+        }
+
+        for (OsFlavorReference flavorRef : this.vs.getOsFlavorReference()) {
+            OSCEntityManager.delete(em, flavorRef, this.txBroadcastUtil);
+        }
 
         // delete virtual system from database
         OSCEntityManager.delete(em, this.vs, this.txBroadcastUtil);

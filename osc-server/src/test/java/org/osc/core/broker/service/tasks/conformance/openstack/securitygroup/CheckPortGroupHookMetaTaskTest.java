@@ -16,9 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 import static org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.CheckPortGroupHookMetaTaskTestData.*;
 
 import java.util.Arrays;
@@ -282,9 +281,9 @@ public class CheckPortGroupHookMetaTaskTest {
             this.em.persist(this.sgi.getVirtualSystem());
         }
 
-        this.em.persist(this.sgi);
-
         this.em.persist(this.sgi.getSecurityGroup());
+
+        this.em.persist(this.sgi);
 
         Set<VMPort> protectedPorts = new HashSet<VMPort>();
         for (SecurityGroupMember sgm : this.sgi.getSecurityGroup().getSecurityGroupMembers()) {

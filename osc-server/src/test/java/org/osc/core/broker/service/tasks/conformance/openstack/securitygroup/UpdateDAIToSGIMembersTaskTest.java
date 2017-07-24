@@ -120,7 +120,7 @@ public class UpdateDAIToSGIMembersTaskTest {
         SecurityGroupInterface sgi = new SecurityGroupInterface();
         sgi.setId(1L);
         if (sg != null) {
-            sgi.addSecurityGroup(sg);
+            sgi.setSecurityGroup(sg);
         }
 
         Mockito.when(this.em.find(SecurityGroupInterface.class, sgi.getId())).thenReturn(sgi);
