@@ -118,7 +118,7 @@ public class Server implements ServerApi {
 
     // static to avoid many trivial references
     private static Integer apiPort = DEFAULT_API_PORT;
-    private static volatile boolean inMaintenance = false;
+    private volatile boolean inMaintenance = false;
 
     private int scheduledSyncInterval = 60; // 60 minutes
     private boolean devMode = false;
@@ -514,7 +514,7 @@ public class Server implements ServerApi {
         Thread restartThread = new Thread("Restart-Server-Thread") {
             @Override
             public void run() {
-                Server.inMaintenance = true;
+                Server.this.inMaintenance = true;
                 try {
                     log.info("Restarting server.");
                     boolean successStarted = startNewServer();
@@ -575,15 +575,15 @@ public class Server implements ServerApi {
 
     @Override
     public boolean isUnderMaintenance() {
-        return Server.inMaintenance;
+        return this.inMaintenance;
     }
 
     public boolean isInMaintenance() {
-        return Server.inMaintenance;
+        return this.inMaintenance;
     }
 
     public void setInMaintenance(boolean inMaintenance) {
-        Server.inMaintenance = inMaintenance;
+        this.inMaintenance = inMaintenance;
     }
 
     private boolean startNewServer() {
