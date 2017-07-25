@@ -66,8 +66,9 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
     @Reference
     protected TransactionalBroadcastUtil txBroadcastUtil;
 
+    // Package private to enable unit tests
     @Reference
-    protected Server serverInstance;
+    Server serverInstance;
 
     private final Queue<ChainedDispatch<O>> chainedDispatches = new LinkedList<>();
 
