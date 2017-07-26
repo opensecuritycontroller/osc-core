@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -59,8 +60,9 @@ public class ForceDeleteDSTask extends TransactionalTask {
 
         // remove DAI(s) for this ds
         for (DistributedApplianceInstance dai : this.ds.getDistributedApplianceInstances()) {
-            for (VMPort port : dai.getProtectedPorts()) {
-                dai.removeProtectedPort(port);
+            Iterator<VMPort> portIter = dai.getProtectedPorts().iterator();
+            while (portIter.hasNext()) {
+                portIter.remove();
             }
             OSCEntityManager.delete(em, dai, this.txBroadcastUtil);
         }
