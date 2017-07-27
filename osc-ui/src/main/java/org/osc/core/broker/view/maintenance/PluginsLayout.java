@@ -124,12 +124,6 @@ public class PluginsLayout extends FormLayout {
 
     private void updateTable(PluginEvent event) {
         PluginApi plugin = event.getPlugin();
-
-        PluginType pluginType = plugin.getType();
-        
-        if(! ((PluginType.SDN.equals(pluginType))  || (PluginType.MANAGER.equals(pluginType)))) {
-        	return;
-        }
         
         switch (event.getType()) {
         case ADDING:

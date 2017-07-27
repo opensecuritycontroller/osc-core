@@ -26,7 +26,6 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.common.controller.ControllerType;
 import org.osc.core.common.manager.ManagerType;
@@ -148,13 +147,9 @@ public interface ApiFactoryService {
      *            The service type registered by the Plugin.
      *
      * @param customizer
-     * @param pluginClass
-     * @param pluginType
-     * @param requiredProperties
      * @return
      */
-    <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
-            PluginType pluginType, Map<String, Class<?>> requiredProperties);
+    <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer);
 
     Map<String, FlowPortInfo> queryPortInfo(VirtualizationConnector vc, String region,
             HashMap<String, FlowInfo> portsQuery) throws Exception;

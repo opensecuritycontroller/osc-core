@@ -20,8 +20,6 @@ interface Constants {
 
     String DEPLOYMENT_NAME = "Deployment-Name";
 
-    String DEPLOYMENT_TYPE = "Deployment-Type";
-
     String DEPLOYMENT_SYMBOLIC_NAME = "Deployment-SymbolicName";
 
     String DEPLOYMENT_VERSION = "Deployment-Version";

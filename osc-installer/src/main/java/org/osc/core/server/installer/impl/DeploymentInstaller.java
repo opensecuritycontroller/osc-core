@@ -338,7 +338,7 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
             request = analyseFile(file);
         } catch (Exception e) {
             debug("Failed to analyse file %s: %s", file, e.getMessage());
-            return newFailedUnit(file, file.getName(), file.getName(), "UNKNOWN_VERSION", "UNKNOWN_TYPE", String.format("Error reading archive file %s: %s", file.getAbsolutePath(), e.getMessage()));
+            return newFailedUnit(file, file.getName(), file.getName(), "UNKNOWN_VERSION",  String.format("Error reading archive file %s: %s", file.getAbsolutePath(), e.getMessage()));
         }
 
         ResolveResult result;
@@ -346,7 +346,8 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
             result = this.resolver.resolve(request);
         } catch (Exception e) {
             debug("Failed to resolve file %s: %s", file, e.getMessage());
-            return newFailedUnit(file, request.getName(), request.getSymbolicName(), request.getVersion(), request.getType(), "Resolution failed: " + e.getMessage());
+            return newFailedUnit(file, request.getName(), request.getSymbolicName(), request.getVersion(),  "Resolution failed: " + e.getMessage());
+
         }
 
         List<Artifact> artifacts = new ArrayList<>(result.getResources().size());
@@ -355,18 +356,19 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
             ArtifactImpl artifact = new ArtifactImpl(getIdentity(idCap), getVersion(idCap), resourceEntry.getValue(), getContentHash(resourceEntry.getKey()));
             artifacts.add(artifact);
         }
-        debug("Sucessful resolve for file %s: Deployment-Name=%s, Deployment-SymbolicName=%s, Deployment-Version= %s, Deployment-Type=%s", file, request.getName(), request.getSymbolicName(), request.getVersion(), request.getType());
-        return newResolvedUnit(file, request.getName(), request.getSymbolicName(), request.getVersion(), request.getType(), artifacts);
+        debug("Sucessful resolve for file %s: Deployment-Name=%s, Deployment-SymbolicName=%s, Deployment-Version= %s", file, request.getName(), request.getSymbolicName(), request.getVersion());
+        return newResolvedUnit(file, request.getName(), request.getSymbolicName(), request.getVersion(), artifacts);
+        
     }
 
-    private InstallableUnitImpl newResolvedUnit(File file, String name, String symbolicName, String version, String type, List<Artifact> artifacts) {
-        InstallableUnitImpl newUnit = new InstallableUnitImpl(this, file, name, symbolicName, version, type, artifacts);
+    private InstallableUnitImpl newResolvedUnit(File file, String name, String symbolicName, String version, List<Artifact> artifacts) {
+        InstallableUnitImpl newUnit = new InstallableUnitImpl(this, file, name, symbolicName, version,  artifacts);
         newUnit.setState(State.RESOLVED);
         return newUnit;
     }
 
-    private InstallableUnitImpl newFailedUnit(File file, String name, String symbolicName, String version, String type, String message) {
-        InstallableUnitImpl newUnit = new InstallableUnitImpl(this, file, name, symbolicName, version, type, Collections.emptyList());
+    private InstallableUnitImpl newFailedUnit(File file, String name, String symbolicName, String version, String message) {
+        InstallableUnitImpl newUnit = new InstallableUnitImpl(this, file, name, symbolicName, version, Collections.emptyList());
         newUnit.setState(State.ERROR);
         newUnit.setErrorMessage(message);
         return newUnit;
@@ -426,14 +428,12 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
         String fileUriStr = file.toURI().toString();
         String indexUriStr;
         String name;
-        String type;
         String symbolicName;
         String version = "";
 
         List<Requirement> requirements = new LinkedList<>();
         try (JarFile jar = new JarFile(file)) {
             Attributes manifestAttribs = jar.getManifest().getMainAttributes();
-            type = manifestAttribs.getValue(Constants.DEPLOYMENT_TYPE);
 
             symbolicName = manifestAttribs.getValue(Constants.DEPLOYMENT_SYMBOLIC_NAME);
             if (symbolicName == null) {
@@ -463,7 +463,7 @@ public class DeploymentInstaller implements ArtifactInstaller, InstallableManage
         }
 
         try {
-            ResolveRequest request = new ResolveRequest(name, symbolicName, version, type,
+            ResolveRequest request = new ResolveRequest(name, symbolicName, version,
                     Collections.singletonList(new URI(indexUriStr)), requirements);
 
             return request;

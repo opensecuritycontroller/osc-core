@@ -22,27 +22,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.osc.core.broker.service.api.plugin.PluginApi;
-import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.server.installer.InstallableUnit;
-import org.osc.sdk.controller.api.SdnControllerApi;
-import org.osc.sdk.manager.api.ApplianceManagerApi;
 
 public final class Plugin<T> implements PluginApi {
 
-	private final Class<T> pluginClass;
 	private final List<T> services = new LinkedList<>();
 
 	private InstallableUnit installUnit;
 	private State state = State.INSTALL_WAIT;
 	private String error = null;
-
-	Plugin(Class<T> pluginClass) {
-		this.pluginClass = pluginClass;
-	}
-
-	public Class<T> getPluginClass() {
-		return this.pluginClass;
-	}
 
 	@Override
     public synchronized State getState() {
@@ -128,19 +116,6 @@ public final class Plugin<T> implements PluginApi {
     @Override
     public int getServiceCount() {
         return getServices().size();
-    }
-
-    @Override
-    public PluginType getType() {
-        if(ApplianceManagerApi.class.equals(this.pluginClass)) {
-            return PluginType.MANAGER;
-        }
-
-        if(SdnControllerApi.class.equals(this.pluginClass)) {
-            return PluginType.SDN;
-        }
-
-        throw new IllegalArgumentException("The plugin class " + this.pluginClass + " is not recognised");
     }
 
     @Override
