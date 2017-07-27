@@ -48,6 +48,8 @@ import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -85,7 +87,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     private ApiFactoryService apiFactoryService;
 
     // target ensures this only binds to active runner published by Server
-    @Reference(target = "(active=true)")
+    @Reference(target = "(active=true)", cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     private RabbitMQRunner activeRunner;
 
     private DistributedApplianceInstance dai;

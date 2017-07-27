@@ -16,6 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -29,9 +33,8 @@ import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntit
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
-import java.util.Set;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 @Component(service = DeleteSvaServerTask.class)
 public class DeleteSvaServerTask extends TransactionalTask {
@@ -39,7 +42,7 @@ public class DeleteSvaServerTask extends TransactionalTask {
     private final Logger log = Logger.getLogger(DeleteSvaServerTask.class);
 
     // target ensures this only binds to active runner published by Server
-    @Reference(target = "(active=true)")
+    @Reference(target = "(active=true)", cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     private RabbitMQRunner activeRunner;
 
     private DistributedApplianceInstance dai;
