@@ -28,7 +28,6 @@ import org.osc.core.broker.service.api.plugin.PluginApi;
 import org.osc.core.broker.service.api.plugin.PluginApi.State;
 import org.osc.core.broker.service.api.plugin.PluginEvent;
 import org.osc.core.broker.service.api.plugin.PluginListener;
-import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.view.common.VmidcMessages;
@@ -47,6 +46,7 @@ import com.vaadin.server.ExternalResource;
 import com.vaadin.server.FileDownloader;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
@@ -78,7 +78,7 @@ public class PluginsLayout extends FormLayout {
         super();
         this.importPluginService = importPluginService;
 
-        this.uploader = new PluginUploader(PluginType.SDN, server);
+        this.uploader = new PluginUploader(server);
         VerticalLayout uploadContainer = new VerticalLayout();
         VerticalLayout pluginsContainer = new VerticalLayout();
         VerticalLayout sdkContainer = new VerticalLayout();
@@ -105,12 +105,11 @@ public class PluginsLayout extends FormLayout {
         pluginsContainer.addComponent(ViewUtil.createSubHeader("Plugins", null));
         pluginsContainer.addComponent(this.pluginsPanel);
 
-        Panel sdkLinkPanel = new Panel();
         Button downloadSdk = getDownloadSdkButton();
-        sdkLinkPanel.setContent(downloadSdk);
-
+        Button downloadSdkManager = getDownloadSdkButtonforManager();
+        
         sdkContainer.addComponent(ViewUtil.createSubHeader("SDK", null));
-        sdkContainer.addComponent(sdkLinkPanel);
+        sdkContainer.addComponent(new HorizontalLayout(downloadSdk, downloadSdkManager));
 
         addComponent(uploadContainer);
         addComponent(pluginsContainer);
@@ -161,6 +160,17 @@ public class PluginsLayout extends FormLayout {
         return downloadSdk;
     }
 
+    private Button getDownloadSdkButtonforManager() throws URISyntaxException, MalformedURLException {
+        SdkUtil sdkUtil = new SdkUtil();
+        Button downloadSdk = new Button(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_DOWNLOAD_SDK));
+        URI currentLocation = UI.getCurrent().getPage().getLocation();
+        URI downloadLocation = new URI(currentLocation.getScheme(), null, currentLocation.getHost(),
+                currentLocation.getPort(), sdkUtil.getSdk(SdkUtil.sdkType.MANAGER), null, null);
+        FileDownloader downloader = new FileDownloader(new ExternalResource(downloadLocation.toURL().toString()));
+        downloader.extend(downloadSdk);
+        return downloadSdk;
+    }
+    
     @SuppressWarnings("unchecked")
     private void updateItem(Item item, PluginApi plugin) {
 
@@ -216,7 +226,7 @@ public class PluginsLayout extends FormLayout {
                     PluginsLayout.this.importPluginService.dispatch(importRequest);
 
                     ViewUtil.iscNotification(
-                            VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_SDNCONTROLLER_SUCCESSFUL), null,
+                            VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_SUCCESSFUL), null,
                             Notification.Type.TRAY_NOTIFICATION);
                 } catch (Exception e) {
                     PluginsLayout.this.log.info(e.getMessage());
