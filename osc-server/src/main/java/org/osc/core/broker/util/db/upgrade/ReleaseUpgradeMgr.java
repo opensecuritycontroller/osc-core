@@ -134,6 +134,7 @@ public class ReleaseUpgradeMgr {
      * version and update current db version in database with
      * TARGET_DB_VERSION value default: break; //do nothing }
      */
+    @SuppressWarnings("fallthrough")
     private static void performUpdateChain(int curDbVer, Statement stmt, EncryptionApi encrypter) throws Exception {
 
         switch (curDbVer) {
