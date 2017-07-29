@@ -16,20 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
-import static org.osc.sdk.controller.Constants.QUERY_PORT_INFO;
-import static org.osc.sdk.controller.Constants.SUPPORT_FAILURE_POLICY;
-import static org.osc.sdk.controller.Constants.SUPPORT_OFFBOX_REDIRECTION;
-import static org.osc.sdk.controller.Constants.SUPPORT_PORT_GROUP;
-import static org.osc.sdk.controller.Constants.SUPPORT_SFC;
-import static org.osc.sdk.controller.Constants.USE_PROVIDER_CREDS;
-import static org.osc.sdk.manager.Constants.AUTHENTICATION_TYPE;
-import static org.osc.sdk.manager.Constants.EXTERNAL_SERVICE_NAME;
-import static org.osc.sdk.manager.Constants.NOTIFICATION_TYPE;
-import static org.osc.sdk.manager.Constants.PROVIDE_DEVICE_STATUS;
-import static org.osc.sdk.manager.Constants.SERVICE_NAME;
-import static org.osc.sdk.manager.Constants.SYNC_POLICY_MAPPING;
-import static org.osc.sdk.manager.Constants.SYNC_SECURITY_GROUP;
-import static org.osc.sdk.manager.Constants.VENDOR_NAME;
+import static org.osc.sdk.controller.Constants.*;
+import static org.osc.sdk.manager.Constants.*;
 
 import java.util.Collection;
 import java.util.EnumSet;
@@ -38,7 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-//import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.server.installer.InstallableListener;
 import org.osc.core.server.installer.InstallableManager;
@@ -131,32 +118,16 @@ public class PluginTracker<T> {
 
         };
 
-        this.serviceTrackerManager = new ServiceTracker<T,T>(context, pluginClassManager, null) {
+        this.serviceTrackerManager = getServiceTracker(pluginClassManager, REQUIRED_MANAGER_PLUGIN_PROPERTIES);
+        this.serviceTrackerSdn = getServiceTracker(pluginClassSdn, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES); 
+    
+    }
+
+    private ServiceTracker<T,T> getServiceTracker(Class<T> pluginClass, Map<String, Class<?>> requiredPluginProperties) {
+    	return new ServiceTracker<T,T>(context, pluginClass, null) {
             @Override
             public T addingService(ServiceReference<T> reference) {
-                if (!containsRequiredProperties(reference, REQUIRED_MANAGER_PLUGIN_PROPERTIES)) {
-                    return null;
-                }
-
-                Object pluginNameObj = reference.getProperty(PROP_PLUGIN_NAME);
-                String pluginName = (String) pluginNameObj;
-
-                T service = this.context.getService(reference);
-                addServiceForPlugin(pluginName, service);
-                return service;
-            }
-            @Override
-            public void removedService(ServiceReference<T> reference, T service) {
-                String pluginName = (String) reference.getProperty(PROP_PLUGIN_NAME); // Safe to assume non-null String: would otherwise have been rejected by addingService
-                removeServiceForPlugin(pluginName, service);
-                this.context.ungetService(reference);
-            }
-        };
-        
-        this.serviceTrackerSdn = new ServiceTracker<T,T>(context, pluginClassSdn, null) {
-            @Override
-            public T addingService(ServiceReference<T> reference) {
-                if (!containsRequiredProperties(reference, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES)) {
+                if (!containsRequiredProperties(reference, requiredPluginProperties)) {
                     return null;
                 }
 
@@ -176,7 +147,6 @@ public class PluginTracker<T> {
         };
 
     }
-
     public void open() {
         // Register listener first, before getting current installable units. We are
         // required to handle duplicates (better than missing some).
@@ -208,7 +178,6 @@ public class PluginTracker<T> {
             Plugin<T> plugin = this.pluginMap.get(name);
             if (plugin == null) {
                 // No current plugin, add a new plugin so we can remember this service
-                //plugin = new Plugin<>(this.pluginClass);
                 plugin = new Plugin<>();
                 plugin.addService(service);
 

@@ -105,11 +105,11 @@ public class PluginsLayout extends FormLayout {
         pluginsContainer.addComponent(ViewUtil.createSubHeader("Plugins", null));
         pluginsContainer.addComponent(this.pluginsPanel);
 
-        Button downloadSdk = getDownloadSdkButton();
-        Button downloadSdkManager = getDownloadSdkButtonforManager();
+        Button downloadSdkSdn = getDownloadSdkButtonForSdnController();
+        Button downloadSdkManager = getDownloadSdkButtonForManager();
         
         sdkContainer.addComponent(ViewUtil.createSubHeader("SDK", null));
-        sdkContainer.addComponent(new HorizontalLayout(downloadSdk, downloadSdkManager));
+        sdkContainer.addComponent(new HorizontalLayout(downloadSdkSdn, downloadSdkManager));
 
         addComponent(uploadContainer);
         addComponent(pluginsContainer);
@@ -149,7 +149,7 @@ public class PluginsLayout extends FormLayout {
         }
     }
 
-    private Button getDownloadSdkButton() throws URISyntaxException, MalformedURLException {
+    private Button getDownloadSdkButtonForSdnController() throws URISyntaxException, MalformedURLException {
         SdkUtil sdkUtil = new SdkUtil();
         Button downloadSdk = new Button(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_SDNPLUGIN_DOWNLOAD_SDK));
         URI currentLocation = UI.getCurrent().getPage().getLocation();
@@ -160,7 +160,7 @@ public class PluginsLayout extends FormLayout {
         return downloadSdk;
     }
 
-    private Button getDownloadSdkButtonforManager() throws URISyntaxException, MalformedURLException {
+    private Button getDownloadSdkButtonForManager() throws URISyntaxException, MalformedURLException {
         SdkUtil sdkUtil = new SdkUtil();
         Button downloadSdk = new Button(VmidcMessages.getString(VmidcMessages_.MAINTENANCE_MANAGERPLUGIN_DOWNLOAD_SDK));
         URI currentLocation = UI.getCurrent().getPage().getLocation();

@@ -38,7 +38,7 @@ import com.vaadin.ui.VerticalLayout;
 @Component(service={PluginView.class}, scope=ServiceScope.PROTOTYPE)
 public class PluginView extends VerticalLayout implements View {
 
-    private static final String MAINTENANCE_CONTROLLER_PLUGIN_GUID = "GUID-DD7DFB29-CB4F-4DD1-BFF5-21694F740D0E.html";
+    private static final String HELP_PLUGIN_GUID = "GUID-65309889-62B2-43BE-81CE-6A4B650AAFEE.html";
 
     TabSheet subMenu = null;
     TabSheet tabs = new TabSheet();
@@ -56,7 +56,7 @@ public class PluginView extends VerticalLayout implements View {
         
         VerticalLayout component = createComponent("Plugins", "Plugins",
                 new PluginsLayout(ctx, this.importPluginService, this.server),
-                MAINTENANCE_CONTROLLER_PLUGIN_GUID);
+                HELP_PLUGIN_GUID);
         addComponent(component);
         setExpandRatio(component, 1L);
     }

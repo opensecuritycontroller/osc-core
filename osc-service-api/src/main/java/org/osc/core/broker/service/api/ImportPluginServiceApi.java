@@ -22,7 +22,7 @@ import org.osc.core.broker.service.response.BaseResponse;
 public interface ImportPluginServiceApi
         extends ServiceDispatcherApi<ImportFileRequest, BaseResponse> {
 
-    boolean isControllerTypeUsed(String name);
+    boolean isControllerTypeUsed(String controllerType);
     
     boolean isManagerTypeUsed(String managerType);
 }

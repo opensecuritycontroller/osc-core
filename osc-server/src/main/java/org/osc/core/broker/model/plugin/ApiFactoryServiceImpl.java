@@ -17,20 +17,8 @@
 package org.osc.core.broker.model.plugin;
 
 import static java.util.Collections.emptyList;
-import static org.osc.sdk.controller.Constants.QUERY_PORT_INFO;
-import static org.osc.sdk.controller.Constants.SUPPORT_FAILURE_POLICY;
-import static org.osc.sdk.controller.Constants.SUPPORT_OFFBOX_REDIRECTION;
-import static org.osc.sdk.controller.Constants.SUPPORT_PORT_GROUP;
-import static org.osc.sdk.controller.Constants.SUPPORT_SFC;
-import static org.osc.sdk.controller.Constants.USE_PROVIDER_CREDS;
-import static org.osc.sdk.manager.Constants.AUTHENTICATION_TYPE;
-import static org.osc.sdk.manager.Constants.EXTERNAL_SERVICE_NAME;
-import static org.osc.sdk.manager.Constants.NOTIFICATION_TYPE;
-import static org.osc.sdk.manager.Constants.PROVIDE_DEVICE_STATUS;
-import static org.osc.sdk.manager.Constants.SERVICE_NAME;
-import static org.osc.sdk.manager.Constants.SYNC_POLICY_MAPPING;
-import static org.osc.sdk.manager.Constants.SYNC_SECURITY_GROUP;
-import static org.osc.sdk.manager.Constants.VENDOR_NAME;
+import static org.osc.sdk.controller.Constants.*;
+import static org.osc.sdk.manager.Constants.*;
 
 import java.util.Arrays;
 import java.util.Collections;
