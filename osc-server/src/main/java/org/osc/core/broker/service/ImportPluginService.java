@@ -27,11 +27,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.service.api.ImportApplianceManagerPluginServiceApi;
+import org.osc.core.broker.service.api.ImportPluginServiceApi;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMgr;
+import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.util.FileUtil;
@@ -39,10 +40,10 @@ import org.osc.core.broker.util.ServerUtil;
 import org.osgi.service.component.annotations.Component;
 
 @Component
-public class ImportApplianceManagerPluginService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
-        implements ImportApplianceManagerPluginServiceApi {
+public class ImportPluginService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
+        implements ImportPluginServiceApi {
 
-    private static final Logger log = Logger.getLogger(ImportApplianceManagerPluginService.class);
+    private static final Logger log = Logger.getLogger(ImportPluginService.class);
 
     private File barFile = null;
     private String deploymentName;
@@ -55,7 +56,7 @@ public class ImportApplianceManagerPluginService extends ServiceDispatcher<Impor
 
 		validate(em, request, tmpUploadFolder);
 
-		File pluginTarget = new File(ApiFactoryService.MANAGER_PLUGINS_DIRECTORY, this.deploymentName);
+		File pluginTarget = new File(ApiFactoryService.PLUGINS_DIRECTORY, this.deploymentName);
 
 		FileUtils.copyFile(this.barFile, pluginTarget);
 
@@ -77,7 +78,7 @@ public class ImportApplianceManagerPluginService extends ServiceDispatcher<Impor
     private void validate(EntityManager em, ImportFileRequest request, File tmpUploadFolder) throws Exception {
 
         if (!ServerUtil.isEnoughSpace()) {
-            throw new VmidcException(VmidcMessages.getString("upload.plugin.manager.nospace"));
+            throw new VmidcException(VmidcMessages.getString("upload.plugin.nospace"));
         }
 
 		File[] tmpFolderList = FileUtil.getFileListFromDirectory(tmpUploadFolder.getPath());
@@ -114,5 +115,12 @@ public class ImportApplianceManagerPluginService extends ServiceDispatcher<Impor
             ApplianceManagerConnectorEntityMgr.isManagerTypeUsed(managerType,
                     this.dbConnectionManager.getTransactionalEntityManager()));
     }
+
+	@Override
+	public boolean isControllerTypeUsed(String name) {
+		return this.dbConnectionManager.getTransactionControl().required(() ->
+        VirtualizationConnectorEntityMgr.isControllerTypeUsed(name,
+                this.dbConnectionManager.getTransactionalEntityManager()));
+	}
 
 }

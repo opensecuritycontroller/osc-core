@@ -24,7 +24,6 @@ import java.io.OutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.api.server.ServerApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.view.common.StyleConstants;
@@ -58,7 +57,6 @@ public class PluginUploader extends CustomComponent implements Receiver, FailedL
     private final Panel panel = new Panel();
     private final VerticalLayout verLayout = new VerticalLayout();
     private String uploadPath;
-    private final PluginType type;
 
     private final ServerApi server;
 
@@ -68,8 +66,7 @@ public class PluginUploader extends CustomComponent implements Receiver, FailedL
 
     private UploadSucceededListener uploadSucceededListener;
 
-    public PluginUploader(PluginType type, ServerApi server) {
-        this.type = type;
+    public PluginUploader(ServerApi server) {
         this.server = server;
 
         this.upload = new Upload();
@@ -146,22 +143,12 @@ public class PluginUploader extends CustomComponent implements Receiver, FailedL
         try {
             // Do the unzip only if there is enough disc space
             if (!this.server.isEnoughSpace()) {
-                String message = "";
-                if (this.type == PluginType.SDN) {
-                    message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_SDNCONTROLLER_NOSPACE);
-                } else if(this.type == PluginType.MANAGER) {
-                    message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_MANAGER_NOSPACE);
-                }
+                String message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_NOSPACE);
                 throw new VmidcException(message);
             }
 
             if (!validateFileExtension(this.file.getName())) {
-                String message = "";
-                if (this.type == PluginType.SDN) {
-                    message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_SDNCONTROLLER_FAILED);
-                } else if(this.type == PluginType.MANAGER) {
-                    message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_MANAGER_FAILED);
-                }
+                String message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_FAILED);
                 throw new VmidcException(message);
             }
 
@@ -186,22 +173,12 @@ public class PluginUploader extends CustomComponent implements Receiver, FailedL
     @Override
     public void uploadFailed(FailedEvent event) {
         if (event.getFilename() == null || event.getFilename().isEmpty()) {
-            String message;
-            if (this.type == PluginType.SDN) {
-                message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_SDNCONTROLLER_NOFILE);
-            } else {
-                message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_MANAGER_NOFILE);
-            }
+            String message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_NOFILE);
             ViewUtil.iscNotification(message, Notification.Type.ERROR_MESSAGE);
         } else if (event.getReason() instanceof UploadInterruptedException) {
-            log.warn(this.type.toString() + " Plugin upload is cancelled by the user");
+            log.warn(event.getFilename().toString() + " Plugin upload is cancelled by the user");
         } else {
-            String message;
-            if (this.type == PluginType.SDN) {
-                message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_SDNCONTROLLER_FAILED);
-            } else {
-                message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_MANAGER_FAILED);
-            }
+            String message = VmidcMessages.getString(VmidcMessages_.UPLOAD_PLUGIN_FAILED);
             ViewUtil.iscNotification(message, Notification.Type.WARNING_MESSAGE);
         }
         if (this.uploadPath != null) {

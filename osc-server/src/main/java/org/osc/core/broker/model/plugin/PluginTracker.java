@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
+import static org.osc.sdk.controller.Constants.*;
+import static org.osc.sdk.manager.Constants.*;
+
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -23,19 +26,21 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.server.installer.InstallableListener;
 import org.osc.core.server.installer.InstallableManager;
 import org.osc.core.server.installer.InstallableUnit;
 import org.osc.core.server.installer.InstallableUnitEvent;
 import org.osc.core.server.installer.State;
+import org.osc.sdk.controller.api.SdnControllerApi;
+import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * This class keeps track of installed units and the services that arise from
@@ -61,31 +66,36 @@ public class PluginTracker<T> {
      */
     public static final String PROP_PLUGIN_NAME = "osc.plugin.name";
 
+    
+    private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES = ImmutableMap
+            .<String, Class<?>>builder().put(VENDOR_NAME, String.class).put(SERVICE_NAME, String.class)
+            .put(EXTERNAL_SERVICE_NAME, String.class).put(AUTHENTICATION_TYPE, String.class)
+            .put(NOTIFICATION_TYPE, String.class).put(SYNC_SECURITY_GROUP, Boolean.class)
+            .put(PROVIDE_DEVICE_STATUS, Boolean.class).put(SYNC_POLICY_MAPPING, Boolean.class).put(PROP_PLUGIN_NAME, String.class).build();
+
+    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES = ImmutableMap
+            .<String, Class<?>>builder().put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class).put(SUPPORT_SFC, Boolean.class)
+            .put(SUPPORT_FAILURE_POLICY, Boolean.class).put(USE_PROVIDER_CREDS, Boolean.class)
+            .put(QUERY_PORT_INFO, Boolean.class).put(SUPPORT_PORT_GROUP, Boolean.class).put(PROP_PLUGIN_NAME, String.class).build();
+    
     private final BundleContext context;
-    private final Class<T> pluginClass;
-    private final PluginType pluginType;
+    private final Class<T> pluginClassManager = (Class<T>) ApplianceManagerApi.class;
+    private final Class<T> pluginClassSdn = (Class<T>) SdnControllerApi.class;
+       
     private final PluginTrackerCustomizer<T> customizer;
     private final InstallableManager installMgr;
 
-    private final ServiceTracker<T, T> serviceTracker;
+    private final ServiceTracker<T, T> serviceTrackerManager;
+    private final ServiceTracker<T, T> serviceTrackerSdn;
     private final InstallableListener installListener;
-    private final Map<String, Class<?>> requiredProperties;
     private final Map<String, Plugin<T>> pluginMap = new HashMap<>();
 
     private ServiceRegistration<InstallableListener> installListenerReg;
 
-    public PluginTracker(BundleContext context, Class<T> pluginClass, PluginType pluginType, Map<String, Class<?>> requiredProperties, InstallableManager installMgr, PluginTrackerCustomizer<T> customizer) {
+    public PluginTracker(BundleContext context, InstallableManager installMgr, PluginTrackerCustomizer<T> customizer) {
         this.context = context;
-        this.pluginClass = pluginClass;
         this.installMgr = installMgr;
         this.customizer = customizer;
-        this.pluginType = pluginType;
-        this.requiredProperties = new HashMap<String, Class<?>>();
-        this.requiredProperties.put(PROP_PLUGIN_NAME, String.class);
-
-        if (requiredProperties != null) {
-            this.requiredProperties.putAll(requiredProperties);
-        }
 
         if (customizer == null) {
             throw new IllegalArgumentException("Null customizer on PluginTracker not permitted");
@@ -108,10 +118,16 @@ public class PluginTracker<T> {
 
         };
 
-        this.serviceTracker = new ServiceTracker<T,T>(context, pluginClass, null) {
+        this.serviceTrackerManager = getServiceTracker(pluginClassManager, REQUIRED_MANAGER_PLUGIN_PROPERTIES);
+        this.serviceTrackerSdn = getServiceTracker(pluginClassSdn, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES); 
+    
+    }
+
+    private ServiceTracker<T,T> getServiceTracker(Class<T> pluginClass, Map<String, Class<?>> requiredPluginProperties) {
+    	return new ServiceTracker<T,T>(context, pluginClass, null) {
             @Override
             public T addingService(ServiceReference<T> reference) {
-                if (!containsRequiredProperties(reference)) {
+                if (!containsRequiredProperties(reference, requiredPluginProperties)) {
                     return null;
                 }
 
@@ -131,7 +147,6 @@ public class PluginTracker<T> {
         };
 
     }
-
     public void open() {
         // Register listener first, before getting current installable units. We are
         // required to handle duplicates (better than missing some).
@@ -147,12 +162,14 @@ public class PluginTracker<T> {
             }
         }
 
-        this.serviceTracker.open();
+        this.serviceTrackerManager.open();
+        this.serviceTrackerSdn.open();
     }
 
     public void close() {
         this.installListenerReg.unregister();
-        this.serviceTracker.close();
+        this.serviceTrackerManager.close();
+        this.serviceTrackerSdn.close();
     }
 
     private void addServiceForPlugin(String name, T service) {
@@ -161,7 +178,7 @@ public class PluginTracker<T> {
             Plugin<T> plugin = this.pluginMap.get(name);
             if (plugin == null) {
                 // No current plugin, add a new plugin so we can remember this service
-                plugin = new Plugin<>(this.pluginClass);
+                plugin = new Plugin<>();
                 plugin.addService(service);
 
                 this.pluginMap.put(name, plugin);
@@ -197,8 +214,8 @@ public class PluginTracker<T> {
         }
     }
 
-    private boolean containsRequiredProperties(ServiceReference<?> reference) {
-        for (Map.Entry<String, Class<?>> entry : this.requiredProperties.entrySet()) {
+    private boolean containsRequiredProperties(ServiceReference<?> reference, Map<String, Class<?>> reqProperties) {
+        for (Map.Entry<String, Class<?>> entry : reqProperties.entrySet()) {
             Object pluginNameObj = reference.getProperty(entry.getKey());
             if (pluginNameObj == null || !entry.getValue().isInstance(pluginNameObj)) {
                 this.LOGGER.warn(String.format("Plugin service id=%d from bundle %s did not have %s property, or property was not a of type %s. Service ignored.", reference.getProperty(Constants.SERVICE_ID), reference.getBundle().getSymbolicName(), PROP_PLUGIN_NAME, entry.getValue()));
@@ -211,16 +228,6 @@ public class PluginTracker<T> {
 
     private void updateUnit(InstallableUnit unit) {
         String name = unit.getName();
-        String type = unit.getType();
-
-        if (StringUtils.isBlank(type)) {
-            throw new IllegalArgumentException("The provided installable unit must have a valid type.");
-        }
-
-        if (!type.equals(this.pluginType.toString())) {
-            this.LOGGER.trace(String.format("Unit %s of type %s skipped by plugin tracker of type %s", name, type, this.pluginType));
-            return;
-        }
 
         List<PluginEvent<T>> events = new LinkedList<>();
         synchronized (this.pluginMap) {
@@ -228,7 +235,7 @@ public class PluginTracker<T> {
             if (plugin == null) {
                 // No current plugin, add a new plugin if state==installed or state=error
                 if (EnumSet.of(State.INSTALLED, State.ERROR).contains(unit.getState())) {
-                    plugin = new Plugin<>(this.pluginClass);
+                    plugin = new Plugin<>();
                     plugin.setUnit(unit);
                     if (unit.getState() == State.ERROR) {
                         plugin.setError(unit.getErrorMessage());

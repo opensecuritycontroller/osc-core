@@ -50,7 +50,6 @@ import org.osc.core.broker.service.api.plugin.PluginEvent;
 import org.osc.core.broker.service.api.plugin.PluginEvent.Type;
 import org.osc.core.broker.service.api.plugin.PluginListener;
 import org.osc.core.broker.service.api.plugin.PluginService;
-import org.osc.core.broker.service.api.plugin.PluginType;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
@@ -87,24 +86,11 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 
-import com.google.common.collect.ImmutableMap;
-
 @Component(immediate = true)
 public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     private static final String OSC_PLUGIN_NAME = PluginTracker.PROP_PLUGIN_NAME;
     private final Logger log = Logger.getLogger(ApiFactoryServiceImpl.class);
-
-    private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES = ImmutableMap
-            .<String, Class<?>>builder().put(VENDOR_NAME, String.class).put(SERVICE_NAME, String.class)
-            .put(EXTERNAL_SERVICE_NAME, String.class).put(AUTHENTICATION_TYPE, String.class)
-            .put(NOTIFICATION_TYPE, String.class).put(SYNC_SECURITY_GROUP, Boolean.class)
-            .put(PROVIDE_DEVICE_STATUS, Boolean.class).put(SYNC_POLICY_MAPPING, Boolean.class).build();
-
-    private static final Map<String, Class<?>> REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES = ImmutableMap
-            .<String, Class<?>>builder().put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class).put(SUPPORT_SFC, Boolean.class)
-            .put(SUPPORT_FAILURE_POLICY, Boolean.class).put(USE_PROVIDER_CREDS, Boolean.class)
-            .put(QUERY_PORT_INFO, Boolean.class).put(SUPPORT_PORT_GROUP, Boolean.class).build();
 
     private Map<String, ApplianceManagerApi> managerApis = new ConcurrentHashMap<>();
     private Map<String, ComponentServiceObjects<ApplianceManagerApi>> managerRefs = new ConcurrentHashMap<>();
@@ -167,10 +153,8 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         PluginTrackerCustomizer customizer = pe -> notifyListener(pe, pl);
         @SuppressWarnings("unchecked")
         List<PluginTracker<?>> trackers = Arrays.asList(
-                newPluginTracker(customizer, ApplianceManagerApi.class, PluginType.MANAGER,
-                        REQUIRED_MANAGER_PLUGIN_PROPERTIES),
-                newPluginTracker(customizer, SdnControllerApi.class, PluginType.SDN,
-                        REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES));
+                newPluginTracker(customizer));
+
         return trackers;
     }
 
@@ -492,13 +476,11 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     }
 
     @Override
-    public <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer, Class<T> pluginClass,
-            PluginType pluginType, Map<String, Class<?>> requiredProperties) {
+    public <T> PluginTracker<T> newPluginTracker(PluginTrackerCustomizer<T> customizer) {
         if (customizer == null) {
             throw new IllegalArgumentException("Plugin tracker customizer may not be null");
         }
-
-        PluginTracker<T> tracker = new PluginTracker<>(this.context, pluginClass, pluginType, requiredProperties,
+        PluginTracker<T> tracker = new PluginTracker<>(this.context,
                 this.installableManager, customizer);
         synchronized (this.pluginTrackers) {
             this.pluginTrackers.add(tracker);

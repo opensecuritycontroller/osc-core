@@ -43,8 +43,6 @@ public interface PluginApi {
 
     int getServiceCount();
 
-    PluginType getType();
-
     String getSymbolicName();
 
     String getVersion();

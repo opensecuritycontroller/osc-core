@@ -14,8 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api.plugin;
+package org.osc.core.broker.service.api;
 
-public enum PluginType {
-    MANAGER, SDN;
+import org.osc.core.broker.service.request.ImportFileRequest;
+import org.osc.core.broker.service.response.BaseResponse;
+
+public interface ImportPluginServiceApi
+        extends ServiceDispatcherApi<ImportFileRequest, BaseResponse> {
+
+    boolean isControllerTypeUsed(String controllerType);
+    
+    boolean isManagerTypeUsed(String managerType);
 }

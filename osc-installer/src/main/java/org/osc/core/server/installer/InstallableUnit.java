@@ -38,8 +38,6 @@ public interface InstallableUnit {
 
     String getVersion();
 
-    String getType();
-
     /**
      * Get the physical artifacts that must be installed into the OSGi Framework
      * in order to fully install this unit. May return {@code null} or empty if
