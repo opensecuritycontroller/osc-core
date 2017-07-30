@@ -205,7 +205,7 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
                     VirtualSystemDto vsDto = new VirtualSystemDto();
                     // filling AG information
                     DomainDto domainDto = (DomainDto) getDomainComboBox(id).getValue();
-                    vsDto.setDomainId(domainDto.getId());
+                    vsDto.setDomainId(domainDto == null ? null : domainDto.getId());
                     TagEncapsulationType type = (TagEncapsulationType) getEncapsulationTypeComboBox(id).getValue();
                     vsDto.setEncapsulationType(type);
                     // filling VC information
@@ -213,7 +213,8 @@ public class UpdateDistributedApplianceWindow extends BaseDAWindow {
                     // merging new VS list with existing one
                     for (VirtualSystemDto existingVs : this.currentDAObject.getVirtualizationSystems()) {
                         if (existingVs.getVcId().equals(vsDto.getVcId())
-                                && existingVs.getDomainId().equals(vsDto.getDomainId())) {
+                                && ((existingVs.getDomainId() == null && vsDto.getDomainId() == null)
+                                || (existingVs.getDomainId().equals(vsDto.getDomainId())))) {
                             vsDto.setId(existingVs.getId());
                         }
                     }

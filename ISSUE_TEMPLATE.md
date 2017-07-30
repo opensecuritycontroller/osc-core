@@ -1,3 +1,5 @@
+### Description
+
 ### Expected Behavior
 
 ### Actual Behavior
@@ -6,7 +8,14 @@
 
 ### Additional Information
 
+### Environment
+- OSC Version/Build: 
+- Cloud Provider Info:
+- Plugin Info:
+- Other:
+
 ### Status
 - [ ] Reproduced
 - [ ] In Progress
-- [ ] Validated
+- [ ] Validated     =>    Verified in Version/Build: 
+

@@ -70,7 +70,7 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
      *
      * @param ds
      *            deployment spec
-     * @param hypervisorName
+     * @param hypervisorHostName
      *            the hypervisor to deploy to
      * @param availabilityZone
      *            the availability zone to deploy to
@@ -121,11 +121,12 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
 
         this.tg.addTask(this.osSvaServerCreateTask.create(this.dai, this.hypervisorHostName, this.availabilityZone));
         this.tg.appendTask(this.osSvaEnsureActiveTask.create(this.dai));
+
+        this.tg.appendTask(this.osSvaCheckNetworkInfoTask.create(this.dai));
+
         if (!StringUtils.isBlank(this.ds.getFloatingIpPoolName())) {
             this.tg.appendTask(this.osSvaCheckFloatingIpTask.create(this.dai));
         }
-
-        this.tg.appendTask(this.osSvaCheckNetworkInfoTask.create(this.dai));
 
         try (ManagerDeviceApi mgrApi = this.apiFactoryService.createManagerDeviceApi(this.dai.getVirtualSystem())) {
             if (mgrApi.isDeviceGroupSupported()) {
@@ -139,20 +140,16 @@ public class OsSvaCreateMetaTask extends TransactionalMetaTask {
     /**
      * Gets a DAI based on the dai id passed in. If the passed in id is null, creates a new DAI.
      *
-     * @param session
-     *            the session
-     * @param vs
-     *            the vs to associate the DAI(newly created) with
      * @param ds
      *            the ds to associate the dai(newly created) with
-     * @param daiIdToLoad
+     * @param daiToLoad
      *            the dai to load
      * @return
      * @throws Exception
      */
     private DistributedApplianceInstance getDAI(EntityManager em, DeploymentSpec ds,
             DistributedApplianceInstance daiToLoad) throws Exception {
-        DistributedApplianceInstance dai = null;
+        DistributedApplianceInstance dai;
 
         if (daiToLoad != null) {
             dai = em.find(DistributedApplianceInstance.class, daiToLoad.getId());

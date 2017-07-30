@@ -19,9 +19,6 @@ x-runproperties.debug: \
 -runbundles: \
 	com.google.gson;version='[2.5.0,2.5.1)',\
 	com.google.guava;version='[16.0.1,16.0.2)',\
-	com.google.inject;version='[3.0.0,3.0.1)',\
-	com.google.inject.assistedinject;version='[3.0.0,3.0.1)',\
-	com.google.inject.multibindings;version='[3.0.0,3.0.1)',\
 	org.apache.felix.configadmin;version='[1.8.10,1.8.11)',\
 	org.apache.felix.eventadmin;version='[1.4.8,1.4.9)',\
 	org.apache.felix.fileinstall;version='[3.5.4,3.5.5)',\
@@ -52,7 +49,7 @@ x-runproperties.debug: \
 	org.apache.felix.webconsole.plugins.ds;version='[2.0.2,2.0.3)',\
 	org.apache.felix.resolver;version='[1.10.1,1.10.2)',\
 	javassist;version='[3.20.0,3.20.1)',\
-	osc-uber-jcloud;version='[1.0.0,1.0.1)',\
+	osc-uber-openstack4j;version='[1.0.0,1.0.1)',\
 	javax.ws.rs-api;version='[2.0.1,2.0.2)',\
 	org.glassfish.jersey.core.jersey-server;version='[2.25.0,2.25.1)',\
 	org.glassfish.jersey.containers.jersey-container-servlet-core;version='[2.25.0,2.25.1)',\
@@ -100,12 +97,12 @@ x-runproperties.debug: \
 	org.glassfish.grizzly.framework;version='[2.3.13,2.3.14)',\
 	org.glassfish.tyrus.bundles.tyrus-standalone-client;version='[1.7.0,1.7.1)',\
 	joda-time;version='[2.9.7,2.9.8)',\
+	sdn-controller-api;version='[1.1.0,1.1.1)',\
 	org.apache.commons.codec;version='[1.6.0,1.6.1)',\
 	org.apache.commons.logging;version='[1.1.3,1.1.4)',\
 	osc-server;version='[1.0.0,1.0.1)',\
 	osc-common;version='[1.0.0,1.0.1)',\
 	log4j;version='[1.2.17,1.2.18)',\
-	openstack-glance;version='[2.0.0,2.0.1)',\
-	openstack-neutron;version='[2.0.0,2.0.1)',\
-	sdn-controller-api;version='[1.0.1,1.0.2)',\
+	javax.websocket-api;version='[1.0.0,1.0.1)',\
+	org.glassfish.jersey.media.jersey-media-json-jackson;version='[2.11.0,2.11.1)',\
 	security-mgr-api;version='[1.0.1,1.0.2)'

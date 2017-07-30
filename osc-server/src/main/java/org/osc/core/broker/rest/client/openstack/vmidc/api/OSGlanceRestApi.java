@@ -16,27 +16,23 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.vmidc.api;
 
-import java.io.IOException;
-
-import org.apache.log4j.Logger;
-import org.jclouds.openstack.keystone.v2_0.domain.Token;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudAuthentication;
+import org.openstack4j.model.identity.v3.Token;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jAuthentication;
 import org.osc.core.broker.rest.client.openstack.vmidc.OSGlanceClient;
 
+import java.io.IOException;
+
 public class OSGlanceRestApi {
-    Logger log = Logger.getLogger(OSGlanceRestApi.class);
 
     private Token token;
     protected OSGlanceClient osGlanceClient;
 
     public OSGlanceRestApi(Endpoint endPoint) throws IOException {
-
-        JCloudAuthentication authApi = new JCloudAuthentication(endPoint);
-
-        this.token = authApi.getTenantAccess().getToken();
+        try (Openstack4jAuthentication authApi = new Openstack4jAuthentication(endPoint)) {
+            this.token = authApi.getProjectToken();
+        }
         this.osGlanceClient = new OSGlanceClient(endPoint, this.token.getId());
-        authApi.close();
     }
 
 }

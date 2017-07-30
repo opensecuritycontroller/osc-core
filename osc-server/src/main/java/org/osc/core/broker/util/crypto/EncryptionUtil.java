@@ -23,7 +23,6 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osgi.service.component.annotations.Component;
 
 @Component
-@SuppressWarnings("deprecation") // DESDecryption is used only to support legacy upgrade purposes
 public class EncryptionUtil implements EncryptionApi {
     public static final String SECURITY_PROPS_RESOURCE_PATH = "/org/osc/core/broker/util/crypto/security.properties";
 
@@ -113,7 +112,7 @@ public class EncryptionUtil implements EncryptionApi {
      * @return decoded string
      */
     @Override
-    @Deprecated
+    @Deprecated // DESDecryption is used only to support legacy upgrade purposes
     public String decryptDES(String cipherText) throws EncryptionException {
         return new DESDecryption().decrypt(cipherText);
     }

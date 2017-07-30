@@ -112,8 +112,11 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     @JoinColumn(name = "last_job_id_fk", foreignKey = @ForeignKey(name = "FK_MC_LAST_JOB"))
     private JobRecord lastJob;
 
-    @Column(name = "admin_tenant_name")
-    private String adminTenantName;
+    @Column(name = "admin_project_name")
+    private String adminProjectName;
+
+    @Column(name = "admin_domain_id")
+    private String adminDomainId;
 
     public VirtualizationConnector() {
         super();
@@ -139,7 +142,8 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
         this.virtualSystems = originalVc.virtualSystems;
         this.securityGroups = originalVc.securityGroups;
         this.providerAttributes = originalVc.providerAttributes;
-        this.adminTenantName = originalVc.adminTenantName;
+        this.adminProjectName = originalVc.adminProjectName;
+        this.adminDomainId = originalVc.adminDomainId;
         this.lastJob = originalVc.lastJob;
     }
 
@@ -231,12 +235,20 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
         return this.virtualSystems;
     }
 
-    public String getProviderAdminTenantName() {
-        return this.adminTenantName;
+    public String getProviderAdminProjectName() {
+        return this.adminProjectName;
     }
 
-    public void setAdminTenantName(String adminTenantName) {
-        this.adminTenantName = adminTenantName;
+    public void setAdminProjectName(String adminProjectName) {
+        this.adminProjectName = adminProjectName;
+    }
+
+    public String getAdminDomainId() {
+        return this.adminDomainId;
+    }
+
+    public void setAdminDomainId(String adminDomainId) {
+        this.adminDomainId = adminDomainId;
     }
 
     public Set<SslCertificateAttr> getSslCertificateAttrSet() {

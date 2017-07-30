@@ -14,12 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
-import org.osc.core.broker.service.request.BaseIdRequest;
-import org.osc.core.broker.service.response.ListResponse;
+import org.openstack4j.model.identity.v3.Project;
 
-public interface ListTenantServiceApi
-        extends ServiceDispatcherApi<BaseIdRequest, ListResponse<OsTenantDto>> {
+import java.util.Comparator;
+import java.util.List;
+
+public class Openstack4jKeystone extends BaseOpenstack4jApi {
+
+    public Openstack4jKeystone(Endpoint endPoint) {
+        super(endPoint);
+    }
+
+    public List<? extends Project> listProjects() {
+        List<? extends Project> projectsList = this.getOs().identity().projects().list();
+        projectsList.sort(Comparator.comparing(Project::getName));
+        return projectsList;
+    }
+
+    public Project getProjectById(String projectId) {
+        return this.getOs().identity().projects().get(projectId);
+    }
 }

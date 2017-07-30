@@ -22,7 +22,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -37,7 +36,6 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(service=UpdatePortGroupTask.class)
 public class UpdatePortGroupTask  extends TransactionalTask{
-    private static final Logger LOG = Logger.getLogger(UpdatePortGroupTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -67,11 +65,11 @@ public class UpdatePortGroupTask  extends TransactionalTask{
             protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
         }
 
-        String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getTenantId(), this.securityGroup.getTenantName(),
+        String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
                 this.securityGroup.getVirtualizationConnector(), protectedPorts);
         if (domainId == null){
-            throw new Exception(String.format("Failed to retrieve domainId for given tenant: '%s' and Security Group: '%s",
-                    this.securityGroup.getTenantName(), this.securityGroup.getName()));
+            throw new Exception(String.format("Failed to retrieve domainId for given project: '%s' and Security Group: '%s",
+                    this.securityGroup.getProjectName(), this.securityGroup.getName()));
         }
         this.portGroup.setParentId(domainId);
         for (NetworkElement elem : protectedPorts) {

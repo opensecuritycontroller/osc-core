@@ -16,52 +16,41 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.jclouds.openstack.keystone.v2_0.domain.Tenant;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudKeyStone;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
 import org.osc.core.broker.service.ServiceDispatcher;
-import org.osc.core.broker.service.api.ListTenantByVcIdServiceApi;
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.api.ListProjectByVcIdServiceApi;
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osgi.service.component.annotations.Component;
 
 @Component
-public class ListTenantByVcIdService extends ServiceDispatcher<BaseIdRequest, ListResponse<OsTenantDto>>
-        implements ListTenantByVcIdServiceApi {
+public class ListProjectByVcIdService extends ServiceDispatcher<BaseIdRequest, ListResponse<OsProjectDto>>
+        implements ListProjectByVcIdServiceApi {
 
     @Override
-    public ListResponse<OsTenantDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
-        ListResponse<OsTenantDto> response = new ListResponse<>();
-
+    public ListResponse<OsProjectDto> exec(BaseIdRequest request, EntityManager em) throws Exception {
         // Initializing Entity Manager
-        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<VirtualizationConnector>(VirtualizationConnector.class, em, this.txBroadcastUtil);
+        OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(VirtualizationConnector.class, em, this.txBroadcastUtil);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId());
-        JCloudKeyStone keystoneApi = new JCloudKeyStone(new Endpoint(vc));
-        try {
-            List<OsTenantDto> tenantList = new ArrayList<>();
 
-            for (Tenant tenant : keystoneApi.listTenants()) {
-                tenantList.add(new OsTenantDto(tenant.getName(), tenant.getId()));
-            }
-
-            response.setList(tenantList);
-        } finally {
-            if (keystoneApi != null) {
-                keystoneApi.close();
-            }
+        ListResponse<OsProjectDto> listResponse = new ListResponse<>();
+        try (Openstack4jKeystone keystoneApi = new Openstack4jKeystone(new Endpoint(vc))) {
+            List<OsProjectDto> projectDtoList = keystoneApi.listProjects().stream()
+                    .map(project -> new OsProjectDto(project.getName(), project.getId())).collect(Collectors.toList());
+            listResponse.setList(projectDtoList);
         }
 
-        return response;
-
+        return listResponse;
     }
 }

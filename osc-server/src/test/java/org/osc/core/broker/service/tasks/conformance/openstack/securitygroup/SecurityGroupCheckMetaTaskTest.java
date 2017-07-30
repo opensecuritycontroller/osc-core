@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -114,7 +114,7 @@ public class SecurityGroupCheckMetaTaskTest {
         SecurityGroupCheckMetaTask task = new SecurityGroupCheckMetaTask();
         task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();
         task.securityGroupUpdateOrDeleteMetaTask = new SecurityGroupUpdateOrDeleteMetaTask();
-        task.validateSecurityGroupTenantTask = new ValidateSecurityGroupTenantTask();
+        task.validateSecurityGroupProjectTask = new ValidateSecurityGroupProjectTask();
 
         task = task.create(this.sg);
         task.mgrSecurityGroupInterfacesCheckMetaTask = new MgrSecurityGroupInterfacesCheckMetaTask();
@@ -134,12 +134,10 @@ public class SecurityGroupCheckMetaTaskTest {
         // entities retain state between tests (which is bad!)
         SecurityGroupCheckMetaTaskTestData sgcmttd1 = new SecurityGroupCheckMetaTaskTestData();
         SecurityGroupCheckMetaTaskTestData sgcmttd2 = new SecurityGroupCheckMetaTaskTestData();
-        SecurityGroupCheckMetaTaskTestData sgcmttd3 = new SecurityGroupCheckMetaTaskTestData();
 
         return Arrays.asList(new Object[][] {
             {sgcmttd1, sgcmttd1.NO_MC_POLICY_MAPPING_SUPPORTED_SG, sgcmttd1.createNoMcPolicyMappingGraph(sgcmttd1.NO_MC_POLICY_MAPPING_SUPPORTED_SG)},
             {sgcmttd2, sgcmttd2.SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG, sgcmttd2.createSingleMcPolicyMappingGraph(sgcmttd2.SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG)},
-            {sgcmttd3, sgcmttd3.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG, sgcmttd3.createMultipleMcPolicyMappingGraph(sgcmttd3.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG)}
         });
     }
 }

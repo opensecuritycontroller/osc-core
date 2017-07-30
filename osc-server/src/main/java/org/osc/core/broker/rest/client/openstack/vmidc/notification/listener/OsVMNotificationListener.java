@@ -186,7 +186,7 @@ public class OsVMNotificationListener extends OsNotificationListener {
 
         try {
 
-            VmDiscoveryCache vmCache = new VmDiscoveryCache(this.vc, this.vc.getProviderAdminTenantName());
+            VmDiscoveryCache vmCache = new VmDiscoveryCache(this.vc, this.vc.getProviderAdminProjectName());
 
             // parse Region from incoming Notification message
             String region = OsNotificationUtil.getPropertyFromNotificationMessage(message, REGION_NOTIFICATION_KEY);
@@ -210,11 +210,8 @@ public class OsVMNotificationListener extends OsNotificationListener {
                 }
 
                 // if the migrated VM host is same as what we have in the database then VM was resized and not Migrated
-                if (!vm.getHost().equals(vmInfo.host)) {
-                    return true;
-                }
+                return !vm.getHost().equals(vmInfo.host);
 
-                return false;
             });
         } catch (ScopedWorkException e) {
             log.error("Failed to check if VM openstack Id - " + vmOpenstackId + " is migrated or not!", e.getCause());

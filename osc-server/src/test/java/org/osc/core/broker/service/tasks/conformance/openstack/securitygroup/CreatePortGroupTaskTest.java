@@ -16,8 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
@@ -112,7 +111,7 @@ public class CreatePortGroupTaskTest {
 	@Test
 	public void testExecute_SGWithOneSGM_ExecutionFinishes() throws Exception {
 		// Arrange.
-		SecurityGroup sg = registerSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
+		SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(1L));
 
 		List<NetworkElement> neList = ostRegisterPorts(sg);
@@ -140,7 +139,7 @@ public class CreatePortGroupTaskTest {
 	@Test
 	public void testExecute_SGWithMultipleSGM_ExecutionFinishes() throws Exception {
 		// Arrange.
-		SecurityGroup sg = registerSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
+		SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(1L));
 		sg.addSecurityGroupMember(newSGMWithPort(2L));
 
@@ -169,7 +168,7 @@ public class CreatePortGroupTaskTest {
 	@Test
 	public void testExecute_WhenDomainIsNotFound_ThrowsException() throws Exception {
 		// Arrange.
-		SecurityGroup sg = registerSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
+		SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(1L));
 
 		ostRegisterPorts(sg);
@@ -179,8 +178,8 @@ public class CreatePortGroupTaskTest {
 
 		this.exception.expect(Exception.class);
 		this.exception
-				.expectMessage(String.format("A domain was not found for the tenant: '%s' and Security Group: '%s",
-						sg.getTenantName(), sg.getName()));
+				.expectMessage(String.format("A domain was not found for the project: '%s' and Security Group: '%s",
+						sg.getProjectName(), sg.getName()));
 
 		CreatePortGroupTask task = this.factoryTask.create(sg);
 
@@ -194,7 +193,7 @@ public class CreatePortGroupTaskTest {
 	@Test
 	public void testExecute_WhenPortGroupIsNotFound_ThrowsException() throws Exception {
 		// Arrange.
-		SecurityGroup sg = registerSecurityGroup(1L, "tenantId", "tenantName", 1L, "sgName");
+		SecurityGroup sg = registerSecurityGroup(1L, "projectId", "projectName", 1L, "sgName");
 		sg.addSecurityGroupMember(newSGMWithPort(1L));
 
 		ostRegisterPorts(sg);
@@ -243,11 +242,11 @@ public class CreatePortGroupTaskTest {
 				UUID.randomUUID().toString(), null);
 	}
 
-	private SecurityGroup registerSecurityGroup(Long vcId, String tenantId, String tenantName, Long sgId,
+	private SecurityGroup registerSecurityGroup(Long vcId, String projectId, String projectName, Long sgId,
 			String sgName) {
 		VirtualizationConnector vc = new VirtualizationConnector();
 		vc.setId(1L);
-		SecurityGroup sg = new SecurityGroup(vc, tenantId, tenantName);
+		SecurityGroup sg = new SecurityGroup(vc, projectId, projectName);
 		sg.setId(sgId);
 		sg.setName(sgName);
 
@@ -276,8 +275,8 @@ public class CreatePortGroupTaskTest {
 	}
 
 	private void registerDomain(String domainId, SecurityGroup sg) throws Exception {
-		PowerMockito.doReturn(domainId).when(OpenstackUtil.class, "extractDomainId", eq(sg.getTenantId()),
-				eq(sg.getTenantName()), eq(sg.getVirtualizationConnector()),
+		PowerMockito.doReturn(domainId).when(OpenstackUtil.class, "extractDomainId", eq(sg.getProjectId()),
+				eq(sg.getProjectName()), eq(sg.getVirtualizationConnector()),
 				this.domainIdNetworkElementCaptor.capture());
 	}
 

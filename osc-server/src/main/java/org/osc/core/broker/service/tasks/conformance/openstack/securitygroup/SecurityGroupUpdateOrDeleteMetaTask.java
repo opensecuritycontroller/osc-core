@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.v2_0.domain.Resource;
+import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
@@ -40,8 +40,8 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
@@ -179,8 +179,8 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             if (this.apiFactoryService.supportsPortGroup(this.sg)) {
                 VMPort sgMemberPort = OpenstackUtil.getAnyProtectedPort(this.sg);
 
-                domainId = OpenstackUtil.extractDomainId(this.sg.getTenantId(),
-                        this.sg.getVirtualizationConnector().getProviderAdminTenantName(),
+                domainId = OpenstackUtil.extractDomainId(this.sg.getProjectId(),
+                        this.sg.getVirtualizationConnector().getProviderAdminProjectName(),
                         this.sg.getVirtualizationConnector(), Arrays.asList(new NetworkElementImpl(sgMemberPort)));
 
                 if (domainId == null) {
@@ -201,13 +201,12 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 List<String> excludedMembers = DistributedApplianceInstanceEntityMgr.listOsServerIdByVcId(em,
                         this.sg.getVirtualizationConnector().getId());
 
-                JCloudNova nova = new JCloudNova(
-                        new Endpoint(this.sg.getVirtualizationConnector(), this.sg.getTenantName()));
-                try {
+                Endpoint endPoint = new Endpoint(this.sg.getVirtualizationConnector(), this.sg.getProjectName());
+                try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
                     Set<String> regions = nova.listRegions();
                     for (String region : regions) {
-                        List<Resource> servers = nova.listServers(region);
-                        for (Resource server : servers) {
+                        List<? extends Server> servers = nova.listServers(region);
+                        for (Server server : servers) {
                             if (!excludedMembers.contains(server.getId())) {
                                 try {
                                     this.addSecurityGroupService.addSecurityGroupMember(em, this.sg,
@@ -226,13 +225,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                             }
                         }
                     }
-
-                } finally {
-                    if (nova != null) {
-                        nova.close();
-                    }
                 }
-
             }
             buildTaskGraph(em, false, null);
         }
@@ -241,7 +234,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     private void buildTaskGraph(EntityManager em, boolean isDeleteTg, String domainId) throws Exception {
         VmDiscoveryCache vdc = new VmDiscoveryCache(this.sg.getVirtualizationConnector(),
-                this.sg.getVirtualizationConnector().getProviderAdminTenantName());
+                this.sg.getVirtualizationConnector().getProviderAdminProjectName());
 
         // SGM Member sync with no task deferred
         addSGMemberSyncJob(em, isDeleteTg, vdc);

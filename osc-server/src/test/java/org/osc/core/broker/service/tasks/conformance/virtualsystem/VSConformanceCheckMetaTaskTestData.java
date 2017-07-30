@@ -23,14 +23,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.mockito.Mockito;
-import org.osc.core.common.job.TaskGuard;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -38,8 +36,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.common.manager.ManagerType;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
 import org.osc.core.broker.service.tasks.conformance.GenerateVSSKeysTask;
@@ -52,6 +49,9 @@ import org.osc.core.broker.service.tasks.conformance.openstack.DeleteFlavorTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.DeleteImageFromGlanceTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.SecurityGroupCleanupCheckMetaTask;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.manager.ManagerType;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class VSConformanceCheckMetaTaskTestData {
 
@@ -156,7 +156,7 @@ public class VSConformanceCheckMetaTaskTestData {
         VirtualSystem vs = createVirtualSystem(vsId, vcId, daId);
 
         DeploymentSpec ds = new DeploymentSpec(vs, null, null, null, null, null);
-        ds.setTenantName("OpenstackWithDeploymentSpecTenantName");
+        ds.setProjectName("OpenstackWithDeploymentSpecProjectName");
         Set<DeploymentSpec> dsSet = new HashSet<DeploymentSpec>();
         dsSet.add(ds);
 
@@ -172,7 +172,7 @@ public class VSConformanceCheckMetaTaskTestData {
         DeploymentSpec ds = (DeploymentSpec) vs.getDeploymentSpecs().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
-        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), ds.getTenantName());
+        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), ds.getProjectName());
         expectedGraph.appendTask(new DSConformanceCheckMetaTask().create(ds, endPoint));
         expectedGraph.appendTask(UPDATE_OPENSTACK_NO_DEPLOYMENT_SPEC_TASK, TaskGuard.ALL_PREDECESSORS_COMPLETED);
         expectedGraph.appendTask(new GenerateVSSKeysTask().create(vs));
@@ -190,7 +190,7 @@ public class VSConformanceCheckMetaTaskTestData {
         VirtualSystem vs = createVirtualSystem(vsId, vcId, daId);
 
         DeploymentSpec ds = new DeploymentSpec(vs, null, null, null, null, null);
-        ds.setTenantName("OpenstacWhenLockingDeploymentSpecFails");
+        ds.setProjectName("OpenstacWhenLockingDeploymentSpecFails");
         Set<DeploymentSpec> dsSet = new HashSet<DeploymentSpec>();
         dsSet.add(ds);
 
@@ -220,7 +220,7 @@ public class VSConformanceCheckMetaTaskTestData {
         VirtualSystem vs = createVirtualSystem(vsId, vcId, daId);
 
         DeploymentSpec ds = new DeploymentSpec(vs, null, null, null, null, null);
-        ds.setTenantName("DeleteOpenStackWithDeploymentSpecTenantName");
+        ds.setProjectName("DeleteOpenStackWithDeploymentSpecProjectName");
         Set<DeploymentSpec> dsSet = new HashSet<DeploymentSpec>();
         dsSet.add(ds);
 
@@ -236,7 +236,7 @@ public class VSConformanceCheckMetaTaskTestData {
         DeploymentSpec ds = (DeploymentSpec) vs.getDeploymentSpecs().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
-        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), ds.getTenantName());
+        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), ds.getProjectName());
         expectedGraph.appendTask(new DSConformanceCheckMetaTask().create(ds, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
@@ -264,7 +264,7 @@ public class VSConformanceCheckMetaTaskTestData {
         OsImageReference image = (OsImageReference) vs.getOsImageReference().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
-        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), vs.getVirtualizationConnector().getProviderAdminTenantName());
+        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), vs.getVirtualizationConnector().getProviderAdminProjectName());
         expectedGraph.appendTask(new DeleteImageFromGlanceTask().create(image.getRegion(), image, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
@@ -292,7 +292,7 @@ public class VSConformanceCheckMetaTaskTestData {
         OsFlavorReference flavor = (OsFlavorReference) vs.getOsFlavorReference().toArray()[0];
 
         TaskGraph expectedGraph = new TaskGraph();
-        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), vs.getVirtualizationConnector().getProviderAdminTenantName());
+        Endpoint endPoint = new Endpoint(vs.getVirtualizationConnector(), vs.getVirtualizationConnector().getProviderAdminProjectName());
         expectedGraph.appendTask(new DeleteFlavorTask().create(flavor.getRegion(), flavor, endPoint));
         expectedGraph.appendTask(new SecurityGroupCleanupCheckMetaTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);
         expectedGraph.appendTask(new MgrDeleteVSSDeviceTask().create(vs), TaskGuard.ALL_ANCESTORS_SUCCEEDED);

@@ -38,16 +38,16 @@ public class DeploymentSpecDto extends BaseDto {
     @ApiModelProperty(value = "The Deployment Specification name", required = true, readOnly = true)
     private String name;
 
-    @ApiModelProperty(value = "The id of the tenant on behalf of which the service function instances will be deployed",
+    @ApiModelProperty(value = "The id of the project on behalf of which the service function instances will be deployed",
             required = true,
             readOnly = true)
-    private String tenantId;
+    private String projectId;
 
     @ApiModelProperty(
-            value = "The name of the tenant on behalf of which the service function instances will be deployed",
+            value = "The name of the project on behalf of which the service function instances will be deployed",
             required = true,
             readOnly = true)
-    private String tenantName;
+    private String projectName;
 
     @ApiModelProperty(value = "The region to which the service function instances will be deployed",
             required = true,
@@ -77,7 +77,7 @@ public class DeploymentSpecDto extends BaseDto {
     private String inspectionNetworkId;
 
     @ApiModelProperty(
-            value = "The floating ip pool from which floating ips will be allocated in case of NAT'ed environemnts",
+            value = "The floating ip pool from which floating ips will be allocated in case of NAT'ed environments",
             readOnly = true)
     private String floatingIpPoolName;
 
@@ -97,12 +97,12 @@ public class DeploymentSpecDto extends BaseDto {
     private Integer count;
 
     @ApiModelProperty(
-            value = "Indicates whether the Deployment specification is exclusive for that tenant or if its shared across tenants",
+            value = "Indicates whether the Deployment specification is exclusive for that project or if its shared across projects",
             required = true,
             readOnly = true)
     private boolean isShared;
 
-    @ApiModelProperty(value = "Indicates whether the deployment specifcation is marked for deletion",
+    @ApiModelProperty(value = "Indicates whether the deployment specification is marked for deletion",
             required = true,
             readOnly = true)
     private boolean markForDeletion = false;
@@ -124,20 +124,20 @@ public class DeploymentSpecDto extends BaseDto {
         this.name = name;
     }
 
-    public String getTenantId() {
-        return this.tenantId;
+    public String getProjectId() {
+        return this.projectId;
     }
 
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
-    public String getTenantName() {
-        return this.tenantName;
+    public String getProjectName() {
+        return this.projectName;
     }
 
-    public void setTenantName(String tenantName) {
-        this.tenantName = tenantName;
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     public String getRegion() {
@@ -267,8 +267,8 @@ public class DeploymentSpecDto extends BaseDto {
 
     @Override
     public String toString() {
-        return "DeploymentSpecDto [name=" + this.name + ", tenantId=" + this.tenantId + ", tenantName="
-                + this.tenantName + ", region=" + this.region + ", managementNetworkName=" + this.managementNetworkName
+        return "DeploymentSpecDto [name=" + this.name + ", projectId=" + this.projectId + ", projectName="
+                + this.projectName + ", region=" + this.region + ", managementNetworkName=" + this.managementNetworkName
                 + ", managementNetworkId=" + this.managementNetworkId + ", availabilityZones=" + this.availabilityZones
                 + ", hosts=" + this.hosts + ", count=" + this.count + "]";
     }

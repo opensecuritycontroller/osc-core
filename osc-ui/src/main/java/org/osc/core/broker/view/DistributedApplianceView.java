@@ -47,7 +47,7 @@ import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
-import org.osc.core.broker.service.api.ListTenantServiceApi;
+import org.osc.core.broker.service.api.ListProjectServiceApi;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorBySwVersionServiceApi;
 import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
@@ -160,7 +160,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
     private ListRegionServiceApi listRegionService;
 
     @Reference
-    private ListTenantServiceApi listTenantService;
+    private ListProjectServiceApi listProjectService;
 
     @Reference
     private ConformServiceApi conformService;
@@ -269,7 +269,7 @@ public class DistributedApplianceView extends CRUDBaseView<DistributedApplianceD
                         this.syncDeploymentSpecService, this.listAvailabilityZonesService,
                         this.listFloatingIpPoolsService, this.listHostService,
                         this.listHostAggregateService, this.listNetworkService,
-                        this.listRegionService, this.listTenantService, this.server);
+                        this.listRegionService, this.listProjectService, this.server);
 
         // Replacing childSubView map entry with the newly instantiated class on the same key
         // Required to receive delegated broadcasted messages

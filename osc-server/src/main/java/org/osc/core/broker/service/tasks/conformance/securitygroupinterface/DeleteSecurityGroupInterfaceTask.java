@@ -51,12 +51,10 @@ public class DeleteSecurityGroupInterfaceTask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
 
-        this.securityGroupInterface = em.find(SecurityGroupInterface.class,
-                this.securityGroupInterface.getId());
+        this.securityGroupInterface = em.find(SecurityGroupInterface.class, this.securityGroupInterface.getId());
 
-        for (SecurityGroup sg : this.securityGroupInterface.getSecurityGroups()) {
-            sg.removeSecurityInterface(this.securityGroupInterface);
-        }
+        SecurityGroup sg = this.securityGroupInterface.getSecurityGroup();
+        sg.removeSecurityInterface(this.securityGroupInterface);
 
         OSCEntityManager.delete(em, this.securityGroupInterface, this.txBroadcastUtil);
     }

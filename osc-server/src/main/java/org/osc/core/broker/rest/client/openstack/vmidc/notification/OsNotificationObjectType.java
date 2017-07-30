@@ -24,7 +24,7 @@ package org.osc.core.broker.rest.client.openstack.vmidc.notification;
  */
 public enum OsNotificationObjectType {
 
-    TENANT("identity"),
+    PROJECT("identity"),
     VM("compute"),
     PORT("port"),
     NETWORK("network"),

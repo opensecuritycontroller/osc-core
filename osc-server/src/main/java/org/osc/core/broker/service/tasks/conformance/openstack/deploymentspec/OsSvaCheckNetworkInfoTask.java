@@ -23,22 +23,22 @@ import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.neutron.v2.domain.IP;
-import org.jclouds.openstack.neutron.v2.domain.Network;
-import org.jclouds.openstack.neutron.v2.domain.Port;
-import org.jclouds.openstack.neutron.v2.domain.Subnet;
+import org.openstack4j.model.network.IP;
+import org.openstack4j.model.network.Network;
+import org.openstack4j.model.network.Port;
+import org.openstack4j.model.network.Subnet;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service= OsSvaCheckNetworkInfoTask.class)
+@Component(service = OsSvaCheckNetworkInfoTask.class)
 public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
 
     private static final Logger LOG = Logger.getLogger(OsSvaCheckNetworkInfoTask.class);
@@ -62,7 +62,7 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         Endpoint endPoint = new Endpoint(ds);
-        try (JCloudNeutron neutron = new JCloudNeutron(endPoint)){
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
             Network mgmtNetwork = neutron.getNetworkById(ds.getRegion(), ds.getManagementNetworkId());
 
             if (mgmtNetwork.getSubnets() == null || mgmtNetwork.getSubnets().isEmpty()) {
@@ -96,12 +96,14 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
             if (StringUtils.isBlank(mgmtIpAddress)) {
                 mgmtIpAddress = getMgmtIpAddress(ds, mgmtNetwork, mgmtSubnet, this.dai, neutron);
                 this.dai.setIpAddress(mgmtIpAddress);
-                LOG.info("Retrieved mgmg IP address" + mgmtIpAddress);
+                LOG.info("Retrieved mgmt IP address" + mgmtIpAddress);
+            } else if (this.dai.getMgmtOsPortId() == null) {
+                Port mgmtPort = getMgmtPort(ds, mgmtNetwork, mgmtSubnet, this.dai, neutron);
+                this.dai.setMgmtOsPortId(mgmtPort.getId());
             }
-
             String mgmtSubnetPrefixLength = mgmtSubnet.getCidr().split("/")[1];
 
-            this.dai.setMgmtGateway(mgmtSubnet.getGatewayIp());
+            this.dai.setMgmtGateway(mgmtSubnet.getGateway());
             this.dai.setMgmtSubnetPrefixLength(mgmtSubnetPrefixLength);
             this.dai.setMgmtIpAddress(mgmtIpAddress);
 
@@ -110,39 +112,40 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
                     this.dai.getId(),
                     mgmtIpAddress,
                     mgmtSubnetPrefixLength,
-                    mgmtSubnet.getGatewayIp()));
+                    mgmtSubnet.getGateway()));
 
             OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
         }
     }
 
-    public String getMgmtIpAddress(DeploymentSpec ds, Network mgmgNetwork, Subnet mgmtSubnet, DistributedApplianceInstance dai, JCloudNeutron neutron) {
+    private Port getMgmtPort(DeploymentSpec ds, Network mgmgNetwork, Subnet mgmtSubnet, DistributedApplianceInstance dai, Openstack4JNeutron neutron) {
+        List<Port> ports = neutron.listPortsBySubnet(ds.getRegion(), ds.getProjectId(), mgmgNetwork.getId(), mgmtSubnet.getId(), false);
+        for (Port port : ports) {
+            if (port.getDeviceId().equals(dai.getOsServerId())) {
+                return port;
+            }
+        }
+        throw new IllegalStateException(String.format("No management port found for dai %s.", dai.getName()));
+    }
+
+    private String getMgmtIpAddress(DeploymentSpec ds, Network mgmtNetwork, Subnet mgmtSubnet, DistributedApplianceInstance dai, Openstack4JNeutron neutron) {
         String mgmtPortId = dai.getMgmtOsPortId();
-        Port mgmtPort = null;
+        Port mgmtPort;
 
         // In case the DAI does not have a mgmtPortId yet, for instance in database upgrade scenarios.
         if (mgmtPortId == null) {
-            List<Port> ports = neutron.listPortsBySubnet(ds.getRegion(), ds.getTenantId(), mgmgNetwork.getId(), mgmtSubnet.getId(), false);
-            for (Port port : ports) {
-                if (port.getDeviceId().equals(dai.getOsServerId())) {
-                    mgmtPort = port;
-                    dai.setMgmtOsPortId(port.getId());
-                    dai.setMgmtMacAddress(port.getMacAddress());
-                    break;
-                }
-            }
+            mgmtPort = getMgmtPort(ds, mgmtNetwork, mgmtSubnet, this.dai, neutron);
+            dai.setMgmtOsPortId(mgmtPort.getId());
+            dai.setMgmtMacAddress(mgmtPort.getMacAddress());
         } else {
             mgmtPort = neutron.getPortById(ds.getRegion(), mgmtPortId);
         }
 
         if (mgmtPort == null) {
-            throw new IllegalStateException(String.format(
-                    "No management port found for dai %s.",
-                    dai.getName()));
+            throw new IllegalStateException(String.format("No management port found for dai %s.", dai.getName()));
         }
 
         IP ip = (IP) mgmtPort.getFixedIps().toArray()[0];
-
         return ip.getIpAddress();
     }
 

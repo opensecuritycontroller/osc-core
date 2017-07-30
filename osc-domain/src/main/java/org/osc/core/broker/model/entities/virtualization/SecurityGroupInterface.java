@@ -17,8 +17,6 @@
 package org.osc.core.broker.model.entities.virtualization;
 
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,7 +25,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -71,8 +68,10 @@ public class SecurityGroupInterface extends BaseEntity {
     @Column(name = "tag", nullable = true)
     private String tag;
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "securityGroupInterfaces")
-    private Set<SecurityGroup> securityGroups = new HashSet<SecurityGroup>();
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "security_group_fk", nullable = true,
+    foreignKey = @ForeignKey(name = "FK_SECURITY_GROUP"))
+    private SecurityGroup securityGroup;
 
     @Column(name = "user_configurable", columnDefinition = "bit default 0")
     private boolean isUserConfigurable;
@@ -173,29 +172,12 @@ public class SecurityGroupInterface extends BaseEntity {
         this.failurePolicyType = failurePolicyType;
     }
 
-    void setSecurityGroupNetworkInterfaces(Set<SecurityGroup> securityGroups) {
-        this.securityGroups = securityGroups;
-    }
-
-    public Set<SecurityGroup> getSecurityGroups() {
-        return this.securityGroups;
-    }
-
-    public void addSecurityGroup(SecurityGroup securityGroup) {
-        this.securityGroups.add(securityGroup);
-    }
-
-    public void removeSecurity(SecurityGroup securityGroup) {
-        this.securityGroups.remove(securityGroup);
+    public void setSecurityGroup(SecurityGroup securityGroup) {
+        this.securityGroup = securityGroup;
     }
 
     public SecurityGroup getSecurityGroup() {
-        // TODO: arvind - Future. Need to figure out how to eliminate this function and callers since SG to SGI
-        // has many to many relationship.
-        if (!this.securityGroups.isEmpty()) {
-            return this.securityGroups.iterator().next();
-        }
-        return null;
+        return this.securityGroup;
     }
 
     public String getSecurityGroupInterfaceId() {

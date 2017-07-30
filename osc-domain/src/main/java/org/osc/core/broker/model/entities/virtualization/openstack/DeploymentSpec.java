@@ -38,7 +38,7 @@ import org.osc.core.broker.model.entities.job.JobRecord;
 import org.osc.core.broker.model.entities.job.LastJobContainer;
 
 @Entity
-@Table(name = "DEPLOYMENT_SPEC", uniqueConstraints = { @UniqueConstraint(columnNames = { "vs_fk", "tenant_id",
+@Table(name = "DEPLOYMENT_SPEC", uniqueConstraints = { @UniqueConstraint(columnNames = { "vs_fk", "project_id",
         "region" }) })
 public class DeploymentSpec extends BaseEntity implements LastJobContainer {
 
@@ -50,11 +50,11 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
     @Column(name = "region", nullable = false)
     private String region;
 
-    @Column(name = "tenant_name", nullable = false)
-    private String tenantName;
+    @Column(name = "project_name", nullable = false)
+    private String projectName;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "project_id", nullable = false)
+    private String projectId;
 
     @Column(name = "management_network_name", nullable = false)
     private String managementNetworkName;
@@ -103,11 +103,11 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
             foreignKey = @ForeignKey(name = "FK_DS_OS_SG_REFERENCE"))
     private OsSecurityGroupReference osSecurityGroupReference;
 
-    public DeploymentSpec(VirtualSystem virtualSystem, String region, String tenantId, String managementNetworkId,
+    public DeploymentSpec(VirtualSystem virtualSystem, String region, String projectId, String managementNetworkId,
             String inspectionNetworkId, String floatingIpPoolName) {
         this.virtualSystem = virtualSystem;
         this.region = region;
-        this.tenantId = tenantId;
+        this.projectId = projectId;
         this.managementNetworkId = managementNetworkId;
         this.inspectionNetworkId = inspectionNetworkId;
         this.floatingIpPoolName = floatingIpPoolName;
@@ -125,12 +125,12 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
         this.name = name;
     }
 
-    public String getTenantId() {
-        return this.tenantId;
+    public String getProjectId() {
+        return this.projectId;
     }
 
-    void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+    void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
     public String getManagementNetworkId() {
@@ -165,12 +165,12 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
         this.hosts = hosts;
     }
 
-    public String getTenantName() {
-        return this.tenantName;
+    public String getProjectName() {
+        return this.projectName;
     }
 
-    public void setTenantName(String tenantName) {
-        this.tenantName = tenantName;
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     public String getManagementNetworkName() {

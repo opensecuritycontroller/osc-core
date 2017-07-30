@@ -16,9 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.exceptions;
 
-import javax.ws.rs.core.Response;
-import java.net.NoRouteToHostException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
+
+import javax.ws.rs.core.Response;
 
 /**
  * A general rest exception. Any of the members can be null.
@@ -72,8 +73,10 @@ public class RestClientException extends Exception {
     }
 
     public static boolean isConnectException(final Throwable exception) {
-        return (exception instanceof SocketTimeoutException || exception.getCause() instanceof SocketTimeoutException)
-                || (exception instanceof NoRouteToHostException || exception.getCause() instanceof NoRouteToHostException);
+        // SocketException has four child classes: NoRouteToHostException, ConnectException, BindException,
+        // PortUnreachableException. The last two are probably not relevant, but the first two have been observed.
+        return exception instanceof SocketTimeoutException || exception.getCause() instanceof SocketTimeoutException
+                || exception instanceof SocketException || exception.getCause() instanceof SocketException;
     }
 
     public boolean isCredentialError() {

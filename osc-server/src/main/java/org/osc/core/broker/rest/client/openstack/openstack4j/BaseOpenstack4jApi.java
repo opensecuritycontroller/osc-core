@@ -14,32 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.dto.openstack;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-public class OsTenantDto {
+import org.openstack4j.api.OSClient;
 
-    private String id;
-    private String name;
+import java.io.Closeable;
+import java.io.IOException;
 
-    public OsTenantDto(String name, String id) {
-        this.id = id;
-        this.name = name;
+/**
+ * Designed to be a base class for all openstack4j API wrappers in the code.
+ */
+public abstract class BaseOpenstack4jApi implements Closeable {
+
+    protected Endpoint endPoint;
+    KeystoneProvider keystoneProvider;
+
+    BaseOpenstack4jApi(Endpoint endPoint) {
+        this.endPoint = endPoint;
+        this.keystoneProvider = KeystoneProvider.getInstance();
     }
 
-    public String getId() {
-        return this.id;
+    public OSClient.OSClientV3 getOs() {
+        return this.keystoneProvider.getAvailableSession(this.endPoint);
     }
 
-    public void setId(String id) {
-        this.id = id;
+    @Override
+    public void close() throws IOException {
+        this.keystoneProvider.clearConnectionMap(this.endPoint);
     }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
 }

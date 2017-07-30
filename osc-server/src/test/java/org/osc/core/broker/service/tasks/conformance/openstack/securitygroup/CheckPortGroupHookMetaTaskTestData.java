@@ -24,7 +24,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
@@ -38,6 +37,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.OsProtectionE
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 public class CheckPortGroupHookMetaTaskTestData {
     public static DistributedApplianceInstance DAI_PROTECTING_PORT = createDAI("DAI_PROTECTING_PORT");
@@ -144,12 +144,12 @@ public class CheckPortGroupHookMetaTaskTestData {
         SecurityGroupInterface sgi = new SecurityGroupInterface(vs, null, tag, FailurePolicyType.FAIL_CLOSE, 0L);
         sgi.setName(name + "_SGI");
 
-        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), UUID.randomUUID().toString(), name + "_tenant");
+        SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), UUID.randomUUID().toString(), name + "_project");
         sg.setName(name + "_SG");
 
         newSGMWithPort(sg, dai, VM.class);
 
-        sgi.addSecurityGroup(sg);
+        sgi.setSecurityGroup(sg);
         sg.addSecurityGroupInterface(sgi);
 
         return sgi;
@@ -236,10 +236,10 @@ public class CheckPortGroupHookMetaTaskTestData {
 
     private static DistributedApplianceInstance createDAI(String baseName) {
         VirtualSystem vs = createVS(baseName);
-        DeploymentSpec ds = new DeploymentSpec(vs, "RegionOne", baseName + "_tenantId", baseName + "_mnId",
+        DeploymentSpec ds = new DeploymentSpec(vs, "RegionOne", baseName + "_projectId", baseName + "_mnId",
                 baseName + "_inId", null);
         ds.setName(baseName + "_DS");
-        ds.setTenantName(baseName + "_tenantName");
+        ds.setProjectName(baseName + "_projectName");
         ds.setManagementNetworkName(baseName + "_mnName");
         ds.setInspectionNetworkName(baseName + "_inName");
 

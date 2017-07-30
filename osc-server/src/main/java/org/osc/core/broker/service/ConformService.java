@@ -39,7 +39,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.service.api.ConformServiceApi;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
@@ -377,7 +377,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 dsUnlockTask = LockUtil.tryLockDS(ds, da, da.getApplianceManagerConnector(),
                         ds.getVirtualSystem().getVirtualizationConnector());
             }
-            tg.addTask(this.dsConformanceCheckMetaTask.create(ds, new Endpoint(vc, ds.getTenantName())));
+            tg.addTask(this.dsConformanceCheckMetaTask.create(ds, new Endpoint(vc, ds.getProjectName())));
             tg.appendTask(dsUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             String jobName = "Syncing Deployment Specification";

@@ -16,24 +16,24 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.nova.v2_0.domain.FloatingIP;
+import org.openstack4j.model.network.NetFloatingIP;
+import org.openstack4j.model.network.Network;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudUtil;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.InfoTask;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
+
+import javax.persistence.EntityManager;
+import java.util.Set;
 
 @Component(service = OsSvaCheckFloatingIpTask.class)
 public class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
@@ -59,40 +59,39 @@ public class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
         DeploymentSpec ds = this.dai.getDeploymentSpec();
 
         Endpoint endPoint = new Endpoint(ds);
-        JCloudNova nova = new JCloudNova(endPoint);
-        try {
-            String infoTaskName = String.format("Adding floating IP to SVA for Distributed Appliance Instance '%s'",
-                    this.dai.getName());
+        String infoTaskName = String.format("Adding floating IP to SVA for Distributed Appliance Instance '%s'",
+                this.dai.getName());
 
+        try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
             // Check if floating ip is assigned to SVA
-            String floatingIpId = this.dai.getFloatingIpId();
-            FloatingIP floatingIp = nova.getFloatingIp(ds.getRegion(), floatingIpId);
+            NetFloatingIP floatingIp = neutron.getFloatingIp(ds.getRegion(), this.dai.getFloatingIpId());
             if (floatingIp != null) {
-                if (floatingIp.getInstanceId() == null) {
+                // Floating ip is assigned to instance
+                if (StringUtils.isNotBlank(floatingIp.getFixedIpAddress())) {
+                    //Floating ip instance is different than dai management port
+                    if (!floatingIp.getPortId().equals(this.dai.getMgmtOsPortId())) {
+                        this.log.info("Original Floating ip: " + floatingIp.getFloatingIpAddress() + " has been reassigned to another server for" + " DAI: " + this.dai.getName());
+                        throw new IllegalStateException("No Floating Ip assigned to instance. Please assign the original Floating ip: " + floatingIp.getFloatingIpAddress() + " to this instance to fix the issue.");
+                    }
+                } else {
                     // Floating Ip was associated with this DAI before, assign the ip back to it if its free
-                    nova.allocateFloatingIpToServer(ds.getRegion(), this.dai.getOsServerId(), floatingIp);
-                    this.tg.addTask(new InfoTask(infoTaskName, LockObjectReference.getObjectReferences(this.dai)));
-                } else if (!this.dai.getOsServerId().equals(floatingIp.getInstanceId())) {
-                    this.log.info("Original Floating ip: " + floatingIp.getIp()
-                            + " has been reassigned to another server for" + " DAI: " + this.dai.getName());
-                    throw new IllegalStateException(
-                            "No Floating Ip assigned to instance. Please assign the original Floating ip: "
-                                    + floatingIp.getIp() + " to this instance to fix the issue.");
+                    neutron.associateMgmtPortWithFloatingIp(ds.getRegion(), floatingIp.getId(), this.dai.getMgmtOsPortId());
                 }
+                this.tg.addTask(new InfoTask(infoTaskName, LockObjectReference.getObjectReferences(this.dai)));
             } else {
+                Network floatingPoolNetwork = neutron.getNetworkByName(ds.getRegion(), ds.getFloatingIpPoolName());
                 // Floating ip is invalid or has never been assigned to this sva for some reason, try adding it now.
-                FloatingIP allocatedFloatingIp = JCloudUtil.allocateFloatingIp(nova, ds.getRegion(),
-                        ds.getFloatingIpPoolName(), this.dai.getOsServerId());
-                this.dai.setIpAddress(allocatedFloatingIp.getIp());
+                NetFloatingIP allocatedFloatingIp = neutron.createFloatingIp(ds.getRegion(),
+                        floatingPoolNetwork.getId(), this.dai.getOsServerId(), this.dai.getMgmtOsPortId());
+                this.dai.setIpAddress(allocatedFloatingIp.getFloatingIpAddress());
                 this.dai.setFloatingIpId(allocatedFloatingIp.getId());
                 this.log.info("Dai: " + this.dai + " Ip Address set to: " + allocatedFloatingIp);
                 this.tg.addTask(new InfoTask(infoTaskName, LockObjectReference.getObjectReferences(this.dai)));
 
                 OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
             }
-        } finally {
-            nova.close();
         }
+
     }
 
     @Override

@@ -123,7 +123,11 @@ public class TaskNode implements Runnable, TaskElement {
         }
 
         if (this.taskRecord != null) {
-            persistState();
+            // Maybe bug on Pessimistic lock
+            // Tracker issue: https://github.com/opensecuritycontroller/osc-core/issues/400
+            synchronized (this.taskGraph.getJob()) {
+                persistState();
+            }
         }
 
         // Notify all task state change listeners
@@ -193,7 +197,11 @@ public class TaskNode implements Runnable, TaskElement {
         this.failReason = reason;
 
         if (this.taskRecord != null) {
-            persistStatus();
+            // Maybe bug on Pessimistic lock
+            // Tracker issue: https://github.com/opensecuritycontroller/osc-core/issues/400
+            synchronized (this.taskGraph.getJob()) {
+                persistStatus();
+            }
         }
 
         // Notify all task state change listeners

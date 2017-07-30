@@ -34,7 +34,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.tasks.FailedWithObjectInfoTask;
@@ -188,7 +188,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
         if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {
             for (DeploymentSpec ds : this.vs.getDeploymentSpecs()) {
-                Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
+                Endpoint endPoint = new Endpoint(vc, ds.getProjectName());
                 tg.appendTask(this.dsConformanceCheckMetaTask.create(ds, endPoint));
             }
             for (OsImageReference image : this.vs.getOsImageReference()) {
@@ -215,7 +215,7 @@ public class VSConformanceCheckMetaTask extends TransactionalMetaTask {
 
             // Conformance of Deployment Specs
             for (DeploymentSpec ds : this.vs.getDeploymentSpecs()) {
-                Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
+                Endpoint endPoint = new Endpoint(vc, ds.getProjectName());
                 UnlockObjectMetaTask dsUnlockTask = null;
                 try {
                     DistributedAppliance da = ds.getVirtualSystem().getDistributedAppliance();

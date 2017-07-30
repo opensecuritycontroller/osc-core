@@ -16,9 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 import static org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.CheckPortGroupHookMetaTaskTestData.*;
 
 import java.util.Arrays;
@@ -241,8 +240,8 @@ public class CheckPortGroupHookMetaTaskTest {
     private void registerDomain(String domainId, SecurityGroupInterface sgi) throws Exception {
         PowerMockito.doReturn(domainId).
         when(OpenstackUtil.class, "extractDomainId",
-                eq(sgi.getSecurityGroup().getTenantId()),
-                eq(sgi.getSecurityGroup().getVirtualizationConnector().getProviderAdminTenantName()),
+                eq(sgi.getSecurityGroup().getProjectId()),
+                eq(sgi.getSecurityGroup().getVirtualizationConnector().getProviderAdminProjectName()),
                 Mockito.any(),
                 Mockito.any());
     }
@@ -253,7 +252,7 @@ public class CheckPortGroupHookMetaTaskTest {
                 this.em,
                 sgi.getVirtualSystem(),
                 sgi.getSecurityGroup(),
-                sgi.getSecurityGroup().getTenantId(),
+                sgi.getSecurityGroup().getProjectId(),
                 sgi.getSecurityGroup().getSecurityGroupMembers().iterator().next().getVm().getRegion(),
                 domainId,
                 sgi.getSecurityGroup().getSecurityGroupMembers().iterator().next().getVm().getHost(),
@@ -282,9 +281,9 @@ public class CheckPortGroupHookMetaTaskTest {
             this.em.persist(this.sgi.getVirtualSystem());
         }
 
-        this.em.persist(this.sgi);
-
         this.em.persist(this.sgi.getSecurityGroup());
+
+        this.em.persist(this.sgi);
 
         Set<VMPort> protectedPorts = new HashSet<VMPort>();
         for (SecurityGroupMember sgm : this.sgi.getSecurityGroup().getSecurityGroupMembers()) {

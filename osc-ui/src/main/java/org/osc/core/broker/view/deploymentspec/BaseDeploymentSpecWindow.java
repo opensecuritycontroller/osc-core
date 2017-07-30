@@ -25,14 +25,14 @@ import org.osc.core.broker.service.api.ListFloatingIpPoolsServiceApi;
 import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.api.ListHostServiceApi;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
+import org.osc.core.broker.service.api.ListProjectServiceApi;
 import org.osc.core.broker.service.api.ListRegionServiceApi;
-import org.osc.core.broker.service.api.ListTenantServiceApi;
 import org.osc.core.broker.service.dto.openstack.AvailabilityZoneDto;
 import org.osc.core.broker.service.dto.openstack.DeploymentSpecDto;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
 import org.osc.core.broker.service.dto.openstack.HostDto;
 import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
-import org.osc.core.broker.service.dto.openstack.OsTenantDto;
+import org.osc.core.broker.service.dto.openstack.OsProjectDto;
 import org.osc.core.broker.service.exceptions.ExtensionNotPresentException;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseOpenStackRequest;
@@ -74,7 +74,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
 
     protected DeploymentSpecDto deploymentSpecDto;
 
-    private ValueChangeListener tenantChangedListener;
+    private ValueChangeListener projectChangedListener;
     private ValueChangeListener regionChangedListener;
 
     protected TextField name;
@@ -82,7 +82,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
     protected CheckBox shared;
     protected ComboBox region;
     protected ComboBox floatingIpPool;
-    protected ComboBox tenant;
+    protected ComboBox project;
     protected OptionGroup userOption;
     protected Table optionTable;
     protected ComboBox managementNetwork;
@@ -102,7 +102,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
 
     private final ListRegionServiceApi listRegionService;
 
-    private final ListTenantServiceApi listTenantService;
+    private final ListProjectServiceApi listProjectService;
 
     public BaseDeploymentSpecWindow(DeploymentSpecDto deploymentSpecDto,
             ListAvailabilityZonesServiceApi listAvailabilityZonesService,
@@ -111,13 +111,13 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
             ListHostAggregateServiceApi listHostAggregateService,
             ListNetworkServiceApi listNetworkService,
             ListRegionServiceApi listRegionService,
-            ListTenantServiceApi listTenantService) {
+            ListProjectServiceApi listProjectService) {
         this.deploymentSpecDto = deploymentSpecDto;
         this.listAvailabilityZonesService = listAvailabilityZonesService;
         this.listFloatingIpPoolsService = listFloatingIpPoolsService;
         this.listNetworkService = listNetworkService;
         this.listRegionService = listRegionService;
-        this.listTenantService = listTenantService;
+        this.listProjectService = listProjectService;
         this.listHostService = listHostService;
         this.listHostAggregateService = listHostAggregateService;
         this.vsId = deploymentSpecDto.getParentId();
@@ -127,7 +127,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
     @Override
     public void initForm() {
         this.form.addComponent(getName());
-        this.form.addComponent(getTenants());
+        this.form.addComponent(getProjects());
         this.form.addComponent(getRegion());
         this.form.addComponent(getUserOptions());
         this.form.addComponent(getOptionTable());
@@ -145,9 +145,9 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
 
     @Override
     public void makeServiceCalls(ProgressIndicatorWindow progressIndicatorWindow) {
-        progressIndicatorWindow.updateStatus("Populating Tenant Information");
-        // Dont auto select tenant in case of update, since update sets the tenant automatically once the load completes.
-        populateTenants(!isUpdateWindow());
+        progressIndicatorWindow.updateStatus("Populating Project Information");
+        // Dont auto select project in case of update, since update sets the project automatically once the load completes.
+        populateProjects(!isUpdateWindow());
     }
 
     protected TextField getName() {
@@ -158,21 +158,21 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
         return this.name;
     }
 
-    protected Component getTenants() {
+    protected Component getProjects() {
         try {
-            this.tenant = new ComboBox("Select Tenant");
-            this.tenant.setTextInputAllowed(true);
-            this.tenant.setNullSelectionAllowed(false);
-            this.tenant.setImmediate(true);
-            this.tenant.setRequired(true);
-            this.tenant.setRequiredError("Tenant cannot be empty");
+            this.project = new ComboBox("Select Project");
+            this.project.setTextInputAllowed(true);
+            this.project.setNullSelectionAllowed(false);
+            this.project.setImmediate(true);
+            this.project.setRequired(true);
+            this.project.setRequiredError("Project cannot be empty");
 
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
-            log.error("Error populating Tenant List combobox", e);
+            log.error("Error populating Project List combobox", e);
         }
 
-        return this.tenant;
+        return this.project;
     }
 
     @SuppressWarnings("serial")
@@ -260,14 +260,14 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
 
     private List<OsNetworkDto> getNetworks() {
         try {
-            OsTenantDto selectedTenant = (OsTenantDto) this.tenant.getValue();
-            if (selectedTenant != null && this.region.getValue() != null) {
+            OsProjectDto selectedProject = (OsProjectDto) this.project.getValue();
+            if (selectedProject != null && this.region.getValue() != null) {
                 // Calling List Network Service
                 BaseOpenStackRequest req = new BaseOpenStackRequest();
                 req.setId(this.vsId);
                 req.setRegion((String) this.region.getValue());
-                req.setTenantName(selectedTenant.getName());
-                req.setTenantId(selectedTenant.getId());
+                req.setProjectName(selectedProject.getName());
+                req.setProjectId(selectedProject.getId());
 
                 List<OsNetworkDto> res = this.listNetworkService.dispatch(req).getList();
 
@@ -324,43 +324,43 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
         return this.shared;
     }
 
-    private void populateTenants(boolean autoSelect) {
+    private void populateProjects(boolean autoSelect) {
         try {
             // Calling List Service
             BaseIdRequest req = new BaseIdRequest();
             req.setId(this.vsId);
 
-            List<OsTenantDto> tenantList = this.listTenantService.dispatch(req).getList();
+            List<OsProjectDto> projectList = this.listProjectService.dispatch(req).getList();
 
-            this.tenant.removeValueChangeListener(this.tenantChangedListener);
-            this.tenant.removeAllItems();
+            this.project.removeValueChangeListener(this.projectChangedListener);
+            this.project.removeAllItems();
 
-            BeanItemContainer<OsTenantDto> tenantListContainer = new BeanItemContainer<>(OsTenantDto.class, tenantList);
-            this.tenant.setContainerDataSource(tenantListContainer);
-            this.tenant.setItemCaptionPropertyId("name");
+            BeanItemContainer<OsProjectDto> projectListContainer = new BeanItemContainer<>(OsProjectDto.class, projectList);
+            this.project.setContainerDataSource(projectListContainer);
+            this.project.setItemCaptionPropertyId("name");
 
-            this.tenant.addValueChangeListener(this.tenantChangedListener);
+            this.project.addValueChangeListener(this.projectChangedListener);
 
-            if (autoSelect && tenantListContainer.size() > 0) {
-                this.tenant.select(tenantListContainer.getIdByIndex(0));
+            if (autoSelect && projectListContainer.size() > 0) {
+                this.project.select(projectListContainer.getIdByIndex(0));
             }
         } catch (Exception e) {
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
-            log.error("Error getting tenant List", e);
+            log.error("Error getting project List", e);
         }
 
     }
 
     private void populateRegion() {
         try {
-            OsTenantDto tenantDto = (OsTenantDto) this.tenant.getValue();
+            OsProjectDto projectDto = (OsProjectDto) this.project.getValue();
 
-            if (tenantDto != null) {
+            if (projectDto != null) {
                 this.region.removeValueChangeListener(this.regionChangedListener);
                 this.region.removeAllItems();
 
                 BaseOpenStackRequest req = new BaseOpenStackRequest();
-                req.setTenantName(tenantDto.getName());
+                req.setProjectName(projectDto.getName());
                 req.setId(this.vsId);
                 ListResponse<String> response = this.listRegionService.dispatch(req);
 
@@ -385,12 +385,12 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
         try {
             this.form.replaceComponent(this.optionPanel, getOptionTable());
 
-            OsTenantDto selectedTenant = (OsTenantDto) this.tenant.getValue();
-            if (selectedTenant != null && this.region.getValue() != null) {
+            OsProjectDto selectedProject = (OsProjectDto) this.project.getValue();
+            if (selectedProject != null && this.region.getValue() != null) {
                 BaseOpenStackRequest req = new BaseOpenStackRequest();
                 req.setId(this.vsId);
-                req.setTenantName(selectedTenant.getName());
-                req.setTenantId(selectedTenant.getId());
+                req.setProjectName(selectedProject.getName());
+                req.setProjectId(selectedProject.getId());
                 req.setRegion((String) this.region.getValue());
 
                 // creating Option Table
@@ -441,17 +441,17 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
     private void populateFloatingPool() {
         this.floatingIpPool.removeAllItems();
         try {
-            OsTenantDto selectedTenant = (OsTenantDto) this.tenant.getValue();
-            if (selectedTenant != null && this.region.getValue() != null) {
+            OsProjectDto selectedProject = (OsProjectDto) this.project.getValue();
+            if (selectedProject != null && this.region.getValue() != null) {
                 BaseOpenStackRequest req = new BaseOpenStackRequest();
                 req.setId(this.vsId);
-                req.setTenantName(selectedTenant.getName());
-                req.setTenantId(selectedTenant.getId());
+                req.setProjectName(selectedProject.getName());
+                req.setProjectId(selectedProject.getId());
                 req.setRegion((String) this.region.getValue());
 
                 List<String> floatingIpPoolList = this.listFloatingIpPoolsService.dispatch(req).getList();
 
-                if (floatingIpPoolList.get(0) != null) {
+                if (floatingIpPoolList.size() > 0) {
                     this.floatingIpPool.addItems(floatingIpPoolList);
                 }
             }
@@ -483,7 +483,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
             }
         }
 
-        this.tenant.validate();
+        this.project.validate();
         this.region.validate();
         this.managementNetwork.validate();
         this.inspectionNetwork.validate();
@@ -523,7 +523,7 @@ public abstract class BaseDeploymentSpecWindow extends LoadingIndicatorCRUDBaseW
 
     @SuppressWarnings("serial")
     private void initListeners() {
-        this.tenantChangedListener = new ValueChangeListener() {
+        this.projectChangedListener = new ValueChangeListener() {
 
             @Override
             public void valueChange(ValueChangeEvent event) {

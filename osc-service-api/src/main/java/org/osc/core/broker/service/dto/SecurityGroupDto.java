@@ -33,10 +33,10 @@ public class SecurityGroupDto extends BaseDto {
     private String name;
 
     @ApiModelProperty(required = true)
-    private String tenantId;
+    private String projectId;
 
     @ApiModelProperty(required = true)
-    private String tenantName;
+    private String projectName;
 
     @ApiModelProperty(readOnly = true)
     private boolean markForDeletion = false;
@@ -68,20 +68,20 @@ public class SecurityGroupDto extends BaseDto {
         this.name = name;
     }
 
-    public String getTenantId() {
-        return this.tenantId;
+    public String getProjectId() {
+        return this.projectId;
     }
 
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
-    public String getTenantName() {
-        return this.tenantName;
+    public String getProjectName() {
+        return this.projectName;
     }
 
-    public void setTenantName(String tenantName) {
-        this.tenantName = tenantName;
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     public boolean isMarkForDeletion() {

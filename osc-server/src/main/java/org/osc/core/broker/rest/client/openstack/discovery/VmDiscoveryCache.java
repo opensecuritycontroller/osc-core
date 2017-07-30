@@ -22,13 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jclouds.openstack.nova.v2_0.domain.FixedIP;
-import org.jclouds.openstack.nova.v2_0.domain.InterfaceAttachment;
-import org.jclouds.openstack.nova.v2_0.domain.Server;
-import org.jclouds.openstack.nova.v2_0.domain.ServerExtendedAttributes;
+import org.openstack4j.model.compute.InterfaceAttachment;
+import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.sdk.controller.element.NetworkElement;
 
@@ -37,7 +35,7 @@ import com.google.common.collect.Maps;
 public class VmDiscoveryCache {
 
     private VirtualizationConnector vc;
-    private String tenant;
+    private String project;
 
     public static class PortInfo implements NetworkElement {
         public VmInfo vm;
@@ -50,7 +48,7 @@ public class VmDiscoveryCache {
         @Override
         public String toString() {
             return "PortInfo [vm=" + this.vm + ", osNetworkId=" + this.osNetworkId + ", osPortId=" + this.osPortId
-                    + ", macAddress=" + this.macAddress + ", portIPs=" + this.portIPs + ", parentId=" + this.parentId +"]";
+                    + ", macAddress=" + this.macAddress + ", portIPs=" + this.portIPs + ", parentId=" + this.parentId + "]";
         }
 
         @Override
@@ -78,7 +76,7 @@ public class VmDiscoveryCache {
 
     public class VmInfo {
         public String vmId;
-        public String tenantId;
+        public String projectId;
         public String name;
         public String host;
 
@@ -86,21 +84,21 @@ public class VmDiscoveryCache {
 
         @Override
         public String toString() {
-            return "VmInfo [vmId=" + this.vmId + ", tenantId=" + this.tenantId + ", name=" + this.name + ", host="
+            return "VmInfo [vmId=" + this.vmId + ", projectId=" + this.projectId + ", name=" + this.name + ", host="
                     + this.host + ", portsByMacMap=" + this.macAddressToPortMap + "]";
         }
     }
 
     private Map<String, VmInfo> vmIdToVmMap = Maps.newConcurrentMap();
-    private Map<String, PortInfo> osPortIdToPortMap = new HashMap<String, PortInfo>();
-    private Map<String, PortInfo> macAddressToPortMap = new HashMap<String, PortInfo>();
+    private Map<String, PortInfo> osPortIdToPortMap = new HashMap<>();
+    private Map<String, PortInfo> macAddressToPortMap = new HashMap<>();
 
-    private JCloudNova jcNovaApi;
+    private Openstack4JNova novaApi;
 
-    public VmDiscoveryCache(VirtualizationConnector vc, String tenant) throws IOException, EncryptionException {
+    public VmDiscoveryCache(VirtualizationConnector vc, String project) throws IOException, EncryptionException {
         this.vc = vc;
-        this.tenant = tenant;
-        this.jcNovaApi = new JCloudNova(new Endpoint(vc, tenant));
+        this.project = project;
+        this.novaApi = new Openstack4JNova(new Endpoint(vc, project));
     }
 
     public VmInfo discover(String region, String vmId) throws Exception {
@@ -115,71 +113,50 @@ public class VmDiscoveryCache {
         vmInfo = new VmInfo();
         vmInfo.vmId = vmId;
 
-        Server vm = this.jcNovaApi.getServer(region, vmId);
-        if (vm == null) {
-            return null;
-        }
-
-        vmInfo.tenantId = vm.getTenantId();
-        vmInfo.name = vm.getName();
-        ServerExtendedAttributes serverExtendedAttributes = vm.getExtendedAttributes().get();
-        if (serverExtendedAttributes != null) {
-            vmInfo.host = serverExtendedAttributes.getHypervisorHostName();
-        }
-        List<InterfaceAttachment> interfaces = this.jcNovaApi.getVmAttachedNetworks(region, vmId);
-        for (InterfaceAttachment infs : interfaces) {
-            if (infs.getMacAddress() == null) {
-                continue;
+        try {
+            Server vm = this.novaApi.getServer(region, vmId);
+            if (vm == null) {
+                return null;
             }
 
-            PortInfo portInfo = new PortInfo();
-            portInfo.vm = vmInfo;
-            portInfo.macAddress = infs.getMacAddress();
-            portInfo.osNetworkId = infs.getNetworkId();
-            portInfo.osPortId = infs.getPortId();
+            vmInfo.projectId = vm.getTenantId();
+            vmInfo.name = vm.getName();
+            vmInfo.host = vm.getHypervisorHostname();
+            List<? extends InterfaceAttachment> interfaces = this.novaApi.getVmAttachedNetworks(region, vmId);
+            for (InterfaceAttachment infs : interfaces) {
+                if (infs.getMacAddr() == null) {
+                    continue;
+                }
 
-            // add IP addresses for give port
-            for (FixedIP ip : infs.getFixedIps()) {
-                portInfo.portIPs.add(ip.getIpAddress());
+                PortInfo portInfo = new PortInfo();
+                portInfo.vm = vmInfo;
+                portInfo.macAddress = infs.getMacAddr();
+                portInfo.osNetworkId = infs.getNetId();
+                portInfo.osPortId = infs.getPortId();
+
+                // add IP addresses for give port
+                infs.getFixedIps().forEach(ip -> portInfo.portIPs.add(ip.getIpAddress()));
+
+                vmInfo.macAddressToPortMap.put(infs.getMacAddr(), portInfo);
+
+                this.osPortIdToPortMap.put(portInfo.osPortId, portInfo);
+                this.macAddressToPortMap.put(portInfo.macAddress, portInfo);
             }
-
-            vmInfo.macAddressToPortMap.put(infs.getMacAddress(), portInfo);
-
-            this.osPortIdToPortMap.put(portInfo.osPortId, portInfo);
-            this.macAddressToPortMap.put(portInfo.macAddress, portInfo);
+            this.vmIdToVmMap.put(vmId, vmInfo);
+        } finally {
+            this.novaApi.close();
         }
-        this.vmIdToVmMap.put(vmId, vmInfo);
 
         return vmInfo;
     }
 
     @Override
     public String toString() {
-        return "VmDiscoveryCache [vc=" + this.vc + ", tenant=" + this.tenant + ", vmMap=" + this.vmIdToVmMap + "]";
+        return "VmDiscoveryCache [vc=" + this.vc + ", project=" + this.project + ", vmMap=" + this.vmIdToVmMap + "]";
     }
 
     public synchronized void clear() {
         this.vmIdToVmMap.clear();
-    }
-
-    public void close() throws IOException {
-        if (this.jcNovaApi != null) {
-            this.jcNovaApi.close();
-        }
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        close();
-    }
-
-    public PortInfo getPortByOsPortId(String portId) {
-        return this.osPortIdToPortMap.get(portId);
-    }
-
-    public PortInfo getPortByMacAddress(String macAddress) {
-        return this.macAddressToPortMap.get(macAddress);
     }
 
 }

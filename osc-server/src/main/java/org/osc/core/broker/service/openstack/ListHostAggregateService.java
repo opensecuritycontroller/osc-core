@@ -16,16 +16,16 @@
  *******************************************************************************/
 package org.osc.core.broker.service.openstack;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.jclouds.openstack.nova.v2_0.domain.HostAggregate;
+import org.openstack4j.model.compute.HostAggregate;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListHostAggregateServiceApi;
 import org.osc.core.broker.service.dto.openstack.HostAggregateDto;
@@ -40,38 +40,23 @@ public class ListHostAggregateService extends ServiceDispatcher<BaseOpenStackReq
 
     @Override
     public ListResponse<HostAggregateDto> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
-        JCloudNova novaApi = null;
-        try {
-            ListResponse<HostAggregateDto> response = new ListResponse<>();
 
-            OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
+        VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
-            VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
-
-            novaApi = new JCloudNova(new Endpoint(vc, request.getTenantName()));
-
-            List<HostAggregate> hostAggregatesList = novaApi.listHostAggregates(request.getRegion());
-            List<HostAggregateDto> hostAggrDtoList = new ArrayList<>();
-
-            for (HostAggregate ha : hostAggregatesList) {
-                hostAggrDtoList.add(toHostAggregateDto(ha));
-            }
-
-            response.setList(hostAggrDtoList);
-            return response;
-        } finally {
-            if (novaApi != null) {
-                novaApi.close();
-            }
+        ListResponse<HostAggregateDto> hostAggregateDtoListResponse = new ListResponse<>();
+        try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, request.getProjectName()))) {
+            List<? extends HostAggregate> hostAggregatesList = novaApi.listHostAggregates(request.getRegion());
+            List<HostAggregateDto> hostAggrDtoList = hostAggregatesList.stream().map(this::toHostAggregateDto).collect(Collectors.toList());
+            hostAggregateDtoListResponse.setList(hostAggrDtoList);
         }
+        return hostAggregateDtoListResponse;
     }
 
     private HostAggregateDto toHostAggregateDto(HostAggregate ha) {
         HostAggregateDto dto = new HostAggregateDto();
-
         dto.setName(ha.getName());
         dto.setOpenstackId(ha.getId());
         return dto;
     }
-
 }

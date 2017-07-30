@@ -25,7 +25,7 @@ import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.nova.v2_0.domain.Server;
+import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -34,8 +34,8 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsImageReference;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
@@ -155,11 +155,10 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         log.info("Checking DAI: " + this.dai.getName());
 
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
-        Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
-        JCloudNova nova = null;
 
-        try {
-            nova = new JCloudNova(endPoint);
+        Endpoint endPoint = new Endpoint(vc, ds.getProjectName());
+
+        try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
 
             Server sva = null;
             if (this.dai.getOsServerId() != null) {
@@ -170,10 +169,10 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
             if (sva == null) {
                 log.info("SVA missing for Dai: " + this.dai);
                 Server namedSva = nova.getServerByName(ds.getRegion(), this.dai.getName());
-                /*
-                 * If we found VM with this name and we have not previously with the ID we had in DB,
-                 * that means that all are OS attributes are staled and should be re-discovered
-                 */
+            /*
+             * If we found VM with this name and we have not previously with the ID we had in DB,
+             * that means that all are OS attributes are staled and should be re-discovered
+             */
                 if (namedSva != null) {
                     log.info("Missing SVA found by name, deleting stale SVA to redeploy: " + this.dai.getName());
                     this.tg.addTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
@@ -220,11 +219,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                 }
 
             }
-        } finally {
-            if (nova != null) {
-                nova.close();
-            }
         }
+
     }
 
     private boolean isPortRegistered() throws NetworkPortNotFoundException, Exception {
@@ -238,7 +234,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
             InspectionPortElement inspectionPort = null;
             if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                 DeploymentSpec ds = this.dai.getDeploymentSpec();
-                String domainId = OpenstackUtil.extractDomainId(ds.getTenantId(), ds.getTenantName(),
+
+                String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(), ds.getProjectName(),
                         ds.getVirtualSystem().getVirtualizationConnector(),
                         new ArrayList<NetworkElement>(Arrays.asList(ingressPort)));
                 if (domainId != null) {

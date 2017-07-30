@@ -21,11 +21,11 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.jclouds.openstack.neutron.v2.domain.Network;
+import org.openstack4j.model.network.Network;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListNetworkServiceApi;
 import org.osc.core.broker.service.dto.openstack.OsNetworkDto;
@@ -41,30 +41,18 @@ public class ListNetworkService extends ServiceDispatcher<BaseOpenStackRequest, 
 
     @Override
     public ListResponse<OsNetworkDto> exec(BaseOpenStackRequest request, EntityManager em) throws Exception {
-        ListResponse<OsNetworkDto> response = new ListResponse<>();
-
         // Initializing Entity Manager
-        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<VirtualSystem>(VirtualSystem.class, em, this.txBroadcastUtil);
+        OSCEntityManager<VirtualSystem> emgr = new OSCEntityManager<>(VirtualSystem.class, em, this.txBroadcastUtil);
 
         // to do mapping
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
-        JCloudNeutron neutronApi = new JCloudNeutron(new Endpoint(vc, request.getTenantName()));
-
-        try {
-            List<OsNetworkDto> networkList = new ArrayList<>();
-
-            for (Network network : neutronApi.listNetworkByTenant(request.getRegion(), request.getTenantId())) {
+        List<OsNetworkDto> networkList = new ArrayList<>();
+        try (Openstack4JNeutron neutronApi = new Openstack4JNeutron(new Endpoint(vc, request.getProjectName()))) {
+            for (Network network : neutronApi.listNetworkByProject(request.getRegion(), request.getProjectId())) {
                 networkList.add(new OsNetworkDto(network.getName(), network.getId()));
             }
-
-            response.setList(networkList);
-
-        } finally {
-            if (neutronApi != null) {
-                neutronApi.close();
-            }
         }
-        return response;
+        return new ListResponse<>(networkList);
     }
 }

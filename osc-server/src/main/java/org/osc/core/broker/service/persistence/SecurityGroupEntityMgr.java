@@ -43,7 +43,7 @@ public class SecurityGroupEntityMgr {
 
     public static void toEntity(SecurityGroup entity, SecurityGroupDto dto) {
         entity.setName(dto.getName());
-        entity.setTenantName(dto.getTenantName());
+        entity.setProjectName(dto.getProjectName());
         entity.setProtectAll(dto.isProtectAll());
     }
 
@@ -58,8 +58,8 @@ public class SecurityGroupEntityMgr {
         dto.setMarkForDeletion(entity.getMarkedForDeletion());
         dto.setProtectAll(entity.isProtectAll());
         dto.setVirtualizationConnectorName(entity.getVirtualizationConnector().getName());
-        dto.setTenantId(entity.getTenantId());
-        dto.setTenantName(entity.getTenantName());
+        dto.setProjectId(entity.getProjectId());
+        dto.setProjectName(entity.getProjectName());
         if (entity.getLastJob() != null) {
             dto.setLastJobStatus(entity.getLastJob().getStatus().name());
             dto.setLastJobState(entity.getLastJob().getState().name());
@@ -74,7 +74,7 @@ public class SecurityGroupEntityMgr {
 
         Root<DistributedAppliance> root = query.from(DistributedAppliance.class);
         Join<DistributedAppliance, SecurityGroupInterface> sgi = root.join("virtualSystems").join("securityGroupInterfaces");
-        Join<SecurityGroupInterface, SecurityGroup> sgEntity = sgi.join("securityGroups");
+        Join<SecurityGroupInterface, SecurityGroup> sgEntity = sgi.join("securityGroup");
 
         query = query.select(root.get("name"))
                 .where(cb.equal(sgEntity.get("id"), dto.getId()))
@@ -257,7 +257,7 @@ public class SecurityGroupEntityMgr {
         return !em.createQuery(query).setMaxResults(1).getResultList().isEmpty();
     }
 
-    public static boolean isSecurityGroupExistWithProtectAll(EntityManager em, String tenantId, Long vcId) {
+    public static boolean isSecurityGroupExistWithProtectAll(EntityManager em, String projectId, Long vcId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
@@ -267,14 +267,14 @@ public class SecurityGroupEntityMgr {
         query = query.select(root)
                 .distinct(true)
                 .where(cb.and(
-                        cb.equal(root.get("tenantId"), tenantId),
+                        cb.equal(root.get("projectId"), projectId),
                         cb.equal(root.get("protectAll"), true),
                         cb.equal(join.get("id"), vcId)));
 
         return !em.createQuery(query).setMaxResults(1).getResultList().isEmpty();
     }
 
-    public static boolean isSecurityGroupExistWithSameNameAndTenant(EntityManager em, String name, String tenantId) {
+    public static boolean isSecurityGroupExistWithSameNameAndProject(EntityManager em, String name, String projectId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
@@ -283,7 +283,7 @@ public class SecurityGroupEntityMgr {
         query = query.select(root)
                 .distinct(true)
                 .where(cb.and(
-                        cb.equal(root.get("tenantId"), tenantId),
+                        cb.equal(root.get("projectId"), projectId),
                         cb.equal(root.get("name"), name)));
 
         return !em.createQuery(query).setMaxResults(1).getResultList().isEmpty();
@@ -293,7 +293,7 @@ public class SecurityGroupEntityMgr {
         return em.find(SecurityGroup.class, id);
     }
 
-    public static List<SecurityGroup> listByProtectAllAndtenantId(EntityManager em, String tenantId) {
+    public static List<SecurityGroup> listByProtectAllAndProjectId(EntityManager em, String projectId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
@@ -302,13 +302,13 @@ public class SecurityGroupEntityMgr {
         query = query.select(root)
                 .distinct(true)
                 .where(cb.and(
-                        cb.equal(root.get("tenantId"), tenantId),
+                        cb.equal(root.get("projectId"), projectId),
                         cb.equal(root.get("protectAll"), true)));
 
         return em.createQuery(query).getResultList();
     }
 
-    public static List<SecurityGroup> listByTenantId(EntityManager em, String tenantId) {
+    public static List<SecurityGroup> listByProjectId(EntityManager em, String projectId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<SecurityGroup> query = cb.createQuery(SecurityGroup.class);
@@ -316,7 +316,7 @@ public class SecurityGroupEntityMgr {
         Root<SecurityGroup> root = query.from(SecurityGroup.class);
         query = query.select(root)
                 .distinct(true)
-                .where(cb.equal(root.get("tenantId"), tenantId));
+                .where(cb.equal(root.get("projectId"), projectId));
 
         return em.createQuery(query).getResultList();
     }

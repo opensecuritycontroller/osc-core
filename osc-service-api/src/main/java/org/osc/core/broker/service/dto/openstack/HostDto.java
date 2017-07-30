@@ -26,6 +26,10 @@ public class HostDto extends BaseDto {
     public HostDto() {
     }
 
+    public HostDto(String name) {
+        this.name = name;
+    }
+
     public HostDto(String openstackId, String name) {
         setOpenstackId(openstackId);
         this.name = name;

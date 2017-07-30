@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.rest.client.openstack.jcloud;
+package org.osc.core.broker.rest.client.openstack.openstack4j;
 
 import javax.net.ssl.SSLContext;
 
@@ -29,15 +29,17 @@ import org.osc.core.broker.util.crypto.SslContextProvider;
 public class Endpoint {
 
     private String endPointIP;
-    private String tenant;
+    private String domainId;
+    private String project;
     private String user;
     private String password;
     private boolean isHttps;
     private SSLContext sslContext;
 
-    public Endpoint(String endPointIP, String tenant, String user, String password, boolean isHttps, SSLContext sslContext) {
+    public Endpoint(String endPointIP, String domainId, String project, String user, String password, boolean isHttps, SSLContext sslContext) {
         this.endPointIP = endPointIP;
-        this.tenant = tenant;
+        this.domainId = domainId;
+        this.project = project;
         this.user = user;
         this.password = password;
         this.isHttps = isHttps;
@@ -46,7 +48,8 @@ public class Endpoint {
 
     public Endpoint(VirtualizationConnector vc) throws EncryptionException {
         this.endPointIP = vc.getProviderIpAddress();
-        this.tenant = vc.getProviderAdminTenantName();
+        this.domainId = vc.getAdminDomainId();
+        this.project = vc.getProviderAdminProjectName();
         this.user = vc.getProviderUsername();
         this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
@@ -54,15 +57,17 @@ public class Endpoint {
     }
 
     public Endpoint(DeploymentSpec ds) throws EncryptionException {
-        this(ds.getVirtualSystem().getVirtualizationConnector(), ds.getTenantName());
+        this(ds.getVirtualSystem().getVirtualizationConnector(), ds.getProjectName());
     }
 
-    public Endpoint(VirtualizationConnector vc, String tenant) throws EncryptionException {
+    public Endpoint(VirtualizationConnector vc, String project) throws EncryptionException {
         this.endPointIP = vc.getProviderIpAddress();
-        this.tenant = tenant;
+        this.domainId = vc.getAdminDomainId();
+        this.project = project;
         this.user = vc.getProviderUsername();
         this.password = StaticRegistry.encryptionApi().decryptAESCTR(vc.getProviderPassword());
         this.isHttps = vc.isProviderHttps();
+        this.sslContext = SslContextProvider.getInstance().getSSLContext();
     }
 
     public String getEndPointIP() {
@@ -73,12 +78,12 @@ public class Endpoint {
         this.endPointIP = endPointIP;
     }
 
-    public String getTenant() {
-        return this.tenant;
+    public String getProject() {
+        return this.project;
     }
 
-    public void setTenant(String tenant) {
-        this.tenant = tenant;
+    public void setProject(String project) {
+        this.project = project;
     }
 
     public String getUser() {
@@ -95,6 +100,14 @@ public class Endpoint {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getDomainId() {
+        return this.domainId;
+    }
+
+    public void setDomainId(String domainId) {
+        this.domainId = domainId;
     }
 
     public boolean isHttps() {
@@ -121,9 +134,11 @@ public class Endpoint {
 
         return new EqualsBuilder()
                 .append(getEndPointIP(), other.getEndPointIP())
-                .append(getTenant(), other.getTenant())
+                .append(getDomainId(), other.getDomainId())
+                .append(getProject(), other.getProject())
                 .append(getUser(), other.getUser())
                 .append(getPassword(), other.getPassword())
+                .append(isHttps(), other.isHttps())
                 .isEquals();
     }
 
@@ -131,9 +146,11 @@ public class Endpoint {
     public int hashCode() {
         return new HashCodeBuilder()
                 .append(getEndPointIP())
-                .append(getTenant())
+                .append(getDomainId())
+                .append(getProject())
                 .append(getUser())
                 .append(getPassword())
+                .append(isHttps())
                 .toHashCode();
     }
 }

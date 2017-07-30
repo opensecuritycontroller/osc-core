@@ -23,7 +23,6 @@ import java.util.Map.Entry;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
@@ -38,7 +37,6 @@ public class VirtualizationConnectorDtoValidator
 implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
 
     private EntityManager em;
-    private static final Logger LOG = Logger.getLogger(VirtualizationConnectorDtoValidator.class);
     private TransactionalBroadcastUtil txBroadcastUtil;
     private ApiFactoryService apiFactoryService;
 
@@ -121,7 +119,8 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
         ValidateUtil.checkForNullFields(notNullFieldsMap);
 
         if (dto.getType().isOpenstack()) {
-            notNullFieldsMap.put("Admin Tenant Name", dto.getAdminTenantName());
+            notNullFieldsMap.put("Admin Project Name", dto.getAdminProjectName());
+            notNullFieldsMap.put("Admin Domain Id", dto.getAdminDomainId());
             if (!dto.isControllerDefined()) {
                 nullFieldsMap.put("Controller IP Address", dto.getControllerIP());
                 nullFieldsMap.put("Controller User Name", dto.getControllerUser());
@@ -164,7 +163,7 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
 
     public static void checkFieldLength(VirtualizationConnectorDto dto) throws Exception {
 
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
 
         map.put("Name", dto.getName());
 
@@ -174,12 +173,13 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
         map.put("Provider User Name", dto.getProviderUser());
         map.put("Provider Password", dto.getProviderPassword());
         if (dto.getType().isOpenstack()) {
-            map.put("Admin Tenant Name", dto.getAdminTenantName());
+            map.put("Admin Project Name", dto.getAdminProjectName());
             String rabbitMqPort = dto.getProviderAttributes().get(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT);
             if (!StringUtils.isNumeric(rabbitMqPort)) {
                 throw new VmidcBrokerInvalidEntryException(VirtualizationConnector.ATTRIBUTE_KEY_RABBITMQ_PORT
                         + " expected to be an Integer. Value is: " + rabbitMqPort);
             }
+            map.put("Admin Domain Id", dto.getAdminDomainId());
         }
         if (dto.getProviderAttributes() != null) {
             for (Entry<String, String> entry : dto.getProviderAttributes().entrySet()) {

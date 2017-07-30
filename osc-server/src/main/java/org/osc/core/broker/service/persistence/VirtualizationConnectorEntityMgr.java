@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +72,8 @@ public class VirtualizationConnectorEntityMgr {
         vc.setProviderIpAddress(dto.getProviderIP());
         vc.setProviderUsername(dto.getProviderUser());
         vc.setProviderPassword(encryption.encryptAESCTR(dto.getProviderPassword()));
-        vc.setAdminTenantName(dto.getAdminTenantName());
+        vc.setAdminProjectName(dto.getAdminProjectName());
+        vc.setAdminDomainId(dto.getAdminDomainId());
         vc.getProviderAttributes().putAll(dto.getProviderAttributes());
         vc.setSslCertificateAttrSet(dto.getSslCertificateAttrSet()
                 .stream()
@@ -98,7 +99,8 @@ public class VirtualizationConnectorEntityMgr {
         dto.setProviderIP(vc.getProviderIpAddress());
         dto.setProviderUser(vc.getProviderUsername());
         dto.setProviderPassword(encryption.decryptAESCTR(vc.getProviderPassword()));
-        dto.setAdminTenantName(vc.getProviderAdminTenantName());
+        dto.setAdminProjectName(vc.getProviderAdminProjectName());
+        dto.setAdminDomainId(vc.getAdminDomainId());
         dto.getProviderAttributes().putAll(vc.getProviderAttributes());
         dto.setSslCertificateAttrSet(vc.getSslCertificateAttrSet().stream()
                 .map(SslCertificateAttrEntityMgr::fromEntity)

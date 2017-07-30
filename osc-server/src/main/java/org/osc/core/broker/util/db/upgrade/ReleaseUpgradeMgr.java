@@ -31,13 +31,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.h2.util.StringUtils;
 import org.osc.core.broker.model.entities.ReleaseInfo;
-import org.osc.core.common.job.FreqType;
-import org.osc.core.common.job.ThresholdType;
 import org.osc.core.broker.service.api.DBConnectionManagerApi;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
+import org.osc.core.common.job.FreqType;
+import org.osc.core.common.job.ThresholdType;
 
 /**
  * ReleaseMgr: manage fresh-install and upgrade processes. We only need to
@@ -237,6 +237,12 @@ public class ReleaseUpgradeMgr {
                 upgrade78to79(stmt);
             case 79:
                 upgrade79to80(stmt);
+            case 80:
+                upgrade80to81(stmt);
+            case 81:
+                upgrade81to82(stmt);
+            case 82:
+                upgrade82to83(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -246,6 +252,51 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+
+    private static void upgrade82to83(Statement stmt) throws SQLException {
+
+        execSql(stmt,
+                "alter table SECURITY_GROUP_INTERFACE add column security_group_fk bigint;");
+
+        execSql(stmt,
+                "update SECURITY_GROUP_INTERFACE AS sgi SET sgi.security_group_fk = "
+                + "(select gi.security_group_fk from GROUP_INTERFACE gi where gi.security_group_interface_fk = sgi.id);");
+
+        execSql(stmt, "drop table GROUP_INTERFACE;");
+
+        execSql(stmt,
+                "alter table SECURITY_GROUP_INTERFACE add constraint FK_SECURITY_GROUP foreign key "
+                + "(security_group_fk) references SECURITY_GROUP;");
+    }
+
+    private static void upgrade81to82(Statement stmt) throws SQLException {
+        // DS references
+        execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint UK_VS_TENANT_REGION;");
+
+        execSql(stmt, "alter table DEPLOYMENT_SPEC alter column tenant_name RENAME TO " + "project_name;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC alter column tenant_id RENAME TO " + "project_id;");
+
+        execSql(stmt,
+                "alter table DEPLOYMENT_SPEC add constraint UK_VS_PROJECT_REGION unique (vs_fk, project_id, region);");
+
+        // SG references
+        execSql(stmt, "alter table SECURITY_GROUP drop constraint UK_NAME_TENANT;");
+
+        execSql(stmt, "alter table SECURITY_GROUP alter column tenant_name RENAME TO " + "project_name;");
+        execSql(stmt, "alter table SECURITY_GROUP alter column tenant_id RENAME TO " + "project_id;");
+
+        execSql(stmt, "alter table SECURITY_GROUP add constraint UK_NAME_PROJECT unique (name, project_id);");
+
+        // VC References
+        execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR alter column admin_tenant_name RENAME TO "
+                + "admin_project_name;");
+    }
+
+    private static void upgrade80to81(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table VIRTUALIZATION_CONNECTOR add column admin_domain_id varchar(255);");
+        // For any existing openstack installations which are currently V2, default domain needs to be used to continue operations
+        execSql(stmt, "update VIRTUALIZATION_CONNECTOR SET admin_domain_id = 'default' WHERE virtualization_type = 'OPENSTACK'");
     }
 
     private static void upgrade79to80(Statement stmt) throws SQLException {
@@ -261,7 +312,7 @@ public class ReleaseUpgradeMgr {
 
         execSql(stmt, "drop table VIRTUAL_SYSTEM_NSX_DEPLOYMENT_SPEC_ID;");
         execSql(stmt, "alter table VIRTUAL_SYSTEM drop column if exists nsx_deployment_spec_id;");
-        
+
         execSql(stmt, "DROP table IF EXISTS VIRTUAL_SYSTEM_MGR_FILE;");
 
         execSql(stmt, "DELETE FROM USER u WHERE role='SYSTEM_NSX';");
@@ -307,6 +358,7 @@ public class ReleaseUpgradeMgr {
     /**
      * 3DES encrypted passwords -> AES-CTR encrypted passwords
      */
+    @SuppressWarnings("deprecation")
     private static void upgrade72to73(Statement stmt, EncryptionApi encrypter) throws SQLException, EncryptionException {
         updatePasswordScheme(stmt, "user", "password", encrypter);
         updatePasswordScheme(stmt, "appliance_manager_connector", "password", encrypter);
@@ -1795,6 +1847,7 @@ public class ReleaseUpgradeMgr {
         return !StringUtils.isNullOrEmpty(val) && Integer.parseInt(val) == 0;
     }
 
+    @SuppressWarnings("deprecation")
     private static void updatePasswordScheme(Statement statement, String tableName, String columnName, EncryptionApi encrypter) throws SQLException, EncryptionException {
         String sqlQuery = "SELECT id, " + columnName + " FROM " + tableName + ";";
         ResultSet result = statement.executeQuery(sqlQuery);

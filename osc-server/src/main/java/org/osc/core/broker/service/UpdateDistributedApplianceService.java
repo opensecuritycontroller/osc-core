@@ -179,15 +179,17 @@ public class UpdateDistributedApplianceService
                     .getApplianceId(), daDto.getApplianceSoftwareVersionName(), vc.getVirtualizationType(), vc
                     .getVirtualizationSoftwareVersion());
 
-            // load domain
-            Domain domain = domainEntityManager.findByPrimaryKey(vsDto.getDomainId());
-
             if (vsDto.getId() == null) { // new item
+
+                // load domain
+                Domain domain = vsDto.getDomainId() == null ? null
+                        : domainEntityManager.findByPrimaryKey(vsDto.getDomainId());
 
                 VirtualSystem newVs = new VirtualSystem(da);
 
-                newVs.setEncapsulationType(TagEncapsulationType.valueOf(
-                        vsDto.getEncapsulationType().name()));
+                if (vsDto.getEncapsulationType() != null) {
+                    newVs.setEncapsulationType(TagEncapsulationType.valueOf(vsDto.getEncapsulationType().name()));
+                }
                 newVs.setApplianceSoftwareVersion(av);
                 newVs.setDomain(domain);
                 newVs.setVirtualizationConnector(vc);

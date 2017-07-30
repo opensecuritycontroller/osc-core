@@ -16,18 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack;
 
-import javax.persistence.EntityManager;
-
 import org.apache.log4j.Logger;
-import org.jclouds.openstack.neutron.v2.domain.SecurityGroup;
+import org.openstack4j.model.network.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsSecurityGroupReference;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNeutron;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DeploymentSpecEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
+
+import javax.persistence.EntityManager;
 
 @Component(service = DeleteOsSecurityGroupTask.class)
 public class DeleteOsSecurityGroupTask extends TransactionalTask {
@@ -55,8 +55,8 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
 
         int count = MAX_ATTEMPTS;
 
-        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemTenantAndRegion(em,
-                this.ds.getVirtualSystem(), this.ds.getTenantId(), this.ds.getRegion()).size() <= 1;
+        boolean osSgCanBeDeleted = DeploymentSpecEntityMgr.findDeploymentSpecsByVirtualSystemProjectAndRegion(em,
+                this.ds.getVirtualSystem(), this.ds.getProjectId(), this.ds.getRegion()).size() <= 1;
 
         if (osSgCanBeDeleted) {
             this.log.info(String.format("Deleting Openstack Security Group with id '%s' from region '%s'",
@@ -66,22 +66,20 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
                     this.sgReference.getId());
 
             Endpoint endPoint = new Endpoint(this.ds);
-            try (JCloudNeutron neutron = new JCloudNeutron(endPoint)) {
+            try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
                 boolean success = false;
                 // check if the security group exist on Openstack
                 SecurityGroup osSg = neutron.getSecurityGroupById(this.ds.getRegion(), this.sgReference.getSgRefId());
                 if (osSg != null) {
                     while (!success) {
                         try {
-                            success = neutron.deleteSecurityGroupById(this.ds.getRegion(),
-                                    this.sgReference.getSgRefId());
+                            success = neutron.deleteSecurityGroupById(this.ds.getRegion(), this.sgReference.getSgRefId());
                         } catch (IllegalStateException ex) {
-                            this.log.info(" Openstack Security Group id:" + this.sgReference.getSgRefId() + " in use.");
+                            this.log.info("Failed to remove openstack Security Group: " + ex.getMessage());
                             Thread.sleep(SLEEP_RETRIES);
                         } finally {
                             if (--count <= 0) {
-                                throw (new Exception("Unable to delete the Openstack Security Group id: "
-                                        + this.sgReference.getSgRefId()));
+                                throw new Exception("Unable to delete the Openstack Security Group id: " + this.sgReference.getSgRefId());
                             }
                         }
                     }
@@ -99,9 +97,9 @@ public class DeleteOsSecurityGroupTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Deleting Openstack Security Group with id '%s' from tenant '%s' in region '%s'",
-                this.sgReference.getSgRefId(), this.ds.getTenantName(), this.ds.getRegion());
+        return String.format("Deleting Openstack Security Group with id '%s' from project '%s' in region '%s'",
+                this.sgReference.getSgRefId(), this.ds.getProjectName(), this.ds.getRegion());
 
-    };
+    }
 
 }

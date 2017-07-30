@@ -30,7 +30,8 @@
 		<exec executable="mvn" failonerror="true">
 			<arg value="clean" />
 			<arg value="install" />
-			<arg value="-Dmaven.test.skip=true" />
+			<!-- Skip checkstyle see https://github.com/opensecuritycontroller/osc-core/issues/373 -->
+			<arg value="-Dcheckstyle.skip=true" if:true="${all}" />
 			<arg value="-Pall" if:true="${all}" />
 		</exec>
 	</target>

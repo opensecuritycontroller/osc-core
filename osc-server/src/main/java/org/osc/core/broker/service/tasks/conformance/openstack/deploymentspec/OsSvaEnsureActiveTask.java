@@ -55,9 +55,9 @@ public class OsSvaEnsureActiveTask extends TransactionalTask {
         DeploymentSpec ds = this.dai.getDeploymentSpec();
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
 
-        String tenantName = ds.getTenantName();
+        String projectName = ds.getProjectName();
         String region = ds.getRegion();
-        OpenstackUtil.ensureVmActive(vc, tenantName, region, osServerId);
+        OpenstackUtil.ensureVmActive(vc, projectName, region, osServerId);
     }
 
     @Override

@@ -25,15 +25,14 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
-import org.osc.core.broker.rest.client.openstack.jcloud.Endpoint;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudNova;
-import org.osc.core.broker.rest.client.openstack.jcloud.JCloudUtil;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
+import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNeutron;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osgi.service.component.annotations.Component;
 
-@Component(service=OsSvaDeleteFloatingIpTask.class)
+@Component(service = OsSvaDeleteFloatingIpTask.class)
 public class OsSvaDeleteFloatingIpTask extends TransactionalTask {
 
     private final Logger log = Logger.getLogger(OsSvaDeleteFloatingIpTask.class);
@@ -52,32 +51,29 @@ public class OsSvaDeleteFloatingIpTask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
-        if (this.dai.getIpAddress() == null || this.dai.getFloatingIpId() == null) {
+        if (this.dai.getFloatingIpId() == null) {
             return;
         }
         DeploymentSpec ds = this.dai.getDeploymentSpec();
         VirtualizationConnector vc = ds.getVirtualSystem().getVirtualizationConnector();
 
-        Endpoint endPoint = new Endpoint(vc, ds.getTenantName());
-        JCloudNova nova = new JCloudNova(endPoint);
-        try {
-            JCloudUtil.deleteFloatingIp(nova, ds.getRegion(), this.dai.getIpAddress(), this.dai.getFloatingIpId());
-
-            this.log.info("Dai: " + this.dai + " Ip Address set to: null");
-            this.dai.setIpAddress(null);
-            this.dai.setFloatingIpId(null);
-
-            OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
-
-        } finally {
-            nova.close();
+        Endpoint endPoint = new Endpoint(vc, ds.getProjectName());
+        try (Openstack4JNeutron nova = new Openstack4JNeutron(endPoint)) {
+            nova.deleteFloatingIp(ds.getRegion(), this.dai.getFloatingIpId());
         }
+
+        this.log.info("Dai: " + this.dai + " Ip Address set to: null");
+        this.dai.setIpAddress(null);
+        this.dai.setFloatingIpId(null);
+
+        OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
+
     }
 
     @Override
     public String getName() {
         return String.format("Deleting floating IP assoicated with Distributed Appliance Instance '%s'", this.dai.getName());
-    };
+    }
 
     @Override
     public Set<LockObjectReference> getObjects() {

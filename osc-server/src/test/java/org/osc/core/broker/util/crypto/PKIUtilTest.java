@@ -38,9 +38,6 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-/**
- * Created by GER\bsulich on 3/20/17.
- */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Files.class)
 public class PKIUtilTest {

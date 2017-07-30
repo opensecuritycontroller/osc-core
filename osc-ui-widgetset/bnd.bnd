@@ -32,10 +32,13 @@ Vaadin-Stylesheets: \
 # We don't provide any of the client packages so that we can exclude
 # GWT dependencies, dramatically decreasing the size of the deployment
 -exportcontents: \
-    !{packages;NAMED;*client*},\
-    *
+    ${filterout;${packages};client}
 
 Import-Package: \
     !com.google.gwt.*,\
     !com.vaadin.client.*,\
     *
+
+# The Vaadin themes must be on the classpath in order to work, but as a result bnd thinks they might be
+# Java code. The packages aren't valid pacakge names (for Java) but that's ok as they aren't really code   
+-fixupmessages: "Invalid package name: 'VAADIN.themes."

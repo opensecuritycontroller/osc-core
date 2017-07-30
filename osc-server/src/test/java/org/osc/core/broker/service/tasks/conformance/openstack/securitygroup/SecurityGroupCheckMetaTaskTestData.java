@@ -20,13 +20,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.osc.core.common.job.TaskGuard;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.management.Policy;
@@ -34,8 +32,10 @@ import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.manager.ManagerType;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 class SecurityGroupCheckMetaTaskTestData {
     public final static ManagerType POLICY_MAPPING_SUPPORTED_MGR_TYPE = ManagerType.NSM;
@@ -57,8 +57,6 @@ class SecurityGroupCheckMetaTaskTestData {
                 this.MC_POLICY_MAPPING_NOT_SUPPORTED_VS);
     public SecurityGroup SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(SINGLE_MC_POLICY_MAPPING_SUPPORTED,
                 this.MC_POLICY_MAPPING_SUPPORTED_VS);
-    public SecurityGroup MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(MULTIPLE_MC_POLICY_MAPPING_SUPPORTED,
-                this.MC_POLICY_MAPPING_SUPPORTED_VS);
 
     {
         VirtualSystem vs = this.MC_POLICY_MAPPING_SUPPORTED_VS_2;
@@ -75,15 +73,12 @@ class SecurityGroupCheckMetaTaskTestData {
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg");
         sg.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(sg);
-
-        this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(this.MULTIPLE_MC_POLICY_MAPPING_SUPPORTED_SG);
+        sgi.setSecurityGroup(sg);
     }
 
     public TaskGraph createNoMcPolicyMappingGraph(SecurityGroup sg) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new ValidateSecurityGroupTenantTask().create(sg));
+        expectedGraph.addTask(new ValidateSecurityGroupProjectTask().create(sg));
         expectedGraph.appendTask(new SecurityGroupUpdateOrDeleteMetaTask().create(sg));
         return expectedGraph;
     }
@@ -120,7 +115,7 @@ class SecurityGroupCheckMetaTaskTestData {
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg");
         sg.addSecurityGroupInterface(sgi);
-        sgi.addSecurityGroup(sg);
+        sgi.setSecurityGroup(sg);
 
         this.TEST_SECURITY_GROUPS.add(sg);
         return sg;

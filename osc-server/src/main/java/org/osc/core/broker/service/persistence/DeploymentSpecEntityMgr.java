@@ -39,7 +39,7 @@ public class DeploymentSpecEntityMgr {
 
     public static DeploymentSpec createEntity(// for add
             DeploymentSpecDto dto, VirtualSystem vs) throws Exception {
-        DeploymentSpec ds = new DeploymentSpec(vs, dto.getRegion(), dto.getTenantId(), dto.getManagementNetworkId(),
+        DeploymentSpec ds = new DeploymentSpec(vs, dto.getRegion(), dto.getProjectId(), dto.getManagementNetworkId(),
                 dto.getInspectionNetworkId(), dto.getFloatingIpPoolName());
         toEntity(ds, dto);
         return ds;
@@ -50,7 +50,7 @@ public class DeploymentSpecEntityMgr {
         ds.setName(dto.getName());
         ds.setManagementNetworkName(dto.getManagementNetworkName());
         ds.setInspectionNetworkName(dto.getInspectionNetworkName());
-        ds.setTenantName(dto.getTenantName());
+        ds.setProjectName(dto.getProjectName());
         ds.setInstanceCount(dto.getCount());
         ds.setShared(dto.isShared());
     }
@@ -59,8 +59,8 @@ public class DeploymentSpecEntityMgr {
         dto.setId(ds.getId());
         dto.setParentId(ds.getVirtualSystem().getId());
         dto.setName(ds.getName());
-        dto.setTenantName(ds.getTenantName());
-        dto.setTenantId(ds.getTenantId());
+        dto.setProjectName(ds.getProjectName());
+        dto.setProjectId(ds.getProjectId());
         dto.setRegion(ds.getRegion());
         dto.setFloatingIpPoolName(ds.getFloatingIpPoolName());
         dto.setManagementNetworkName(ds.getManagementNetworkName());
@@ -110,8 +110,8 @@ public class DeploymentSpecEntityMgr {
         return em.createQuery(query).getResultList();
     }
 
-    public static DeploymentSpec findDeploymentSpecByVirtualSystemTenantAndRegion(EntityManager em, VirtualSystem vs,
-            String tenantId, String region) {
+    public static DeploymentSpec findDeploymentSpecByVirtualSystemProjectAndRegion(EntityManager em, VirtualSystem vs,
+            String projectId, String region) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
@@ -120,7 +120,7 @@ public class DeploymentSpecEntityMgr {
         Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
 
         query = query.select(root)
-                .where(cb.equal(root.get("tenantId"), tenantId),
+                .where(cb.equal(root.get("projectId"), projectId),
                        cb.equal(root.get("region"), region),
                        cb.equal(root.get("virtualSystem"), vs));
 
@@ -131,8 +131,8 @@ public class DeploymentSpecEntityMgr {
         }
     }
 
-	public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemTenantAndRegion(EntityManager em,
-			VirtualSystem vs, String tenantId, String region) {
+	public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemProjectAndRegion(EntityManager em,
+			VirtualSystem vs, String projectId, String region) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
@@ -141,7 +141,7 @@ public class DeploymentSpecEntityMgr {
         Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
 
         query = query.select(root).distinct(true)
-                .where(cb.equal(root.get("tenantId"), tenantId),
+                .where(cb.equal(root.get("projectId"), projectId),
                        cb.equal(root.get("region"), region),
                        cb.equal(root.get("virtualSystem"), vs));
 
@@ -152,7 +152,7 @@ public class DeploymentSpecEntityMgr {
         return em.find(DeploymentSpec.class, id);
     }
 
-    public static List<DeploymentSpec> listDeploymentSpecByTenentId(EntityManager em, String tenantId) {
+    public static List<DeploymentSpec> listDeploymentSpecByProjectId(EntityManager em, String projectId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<DeploymentSpec> query = cb.createQuery(DeploymentSpec.class);
@@ -160,7 +160,7 @@ public class DeploymentSpecEntityMgr {
         Root<DeploymentSpec> root = query.from(DeploymentSpec.class);
 
         query = query.select(root).distinct(true)
-                .where(cb.equal(root.get("tenantId"), tenantId));
+                .where(cb.equal(root.get("projectId"), projectId));
 
         return em.createQuery(query).getResultList();
     }

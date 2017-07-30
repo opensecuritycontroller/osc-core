@@ -26,8 +26,6 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -41,7 +39,7 @@ import org.osc.core.broker.model.entities.job.LastJobContainer;
 
 @SuppressWarnings("serial")
 @Entity
-@Table(name = "SECURITY_GROUP", uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "tenant_id" }) })
+@Table(name = "SECURITY_GROUP", uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "project_id" }) })
 public class SecurityGroup extends BaseEntity implements LastJobContainer{
 
     @Column(name = "name", nullable = false)
@@ -52,11 +50,11 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
             foreignKey = @ForeignKey(name = "FK_SG_VC"))
     private VirtualizationConnector virtualizationConnector;
 
-    @Column(name = "tenant_id")
-    private String tenantId;
+    @Column(name = "project_id")
+    private String projectId;
 
-    @Column(name = "tenant_name")
-    private String tenantName;
+    @Column(name = "project_name")
+    private String projectName;
 
     @Column(name = "protect_all", nullable = false, columnDefinition = "bit default 1")
     private boolean protectAll = true;
@@ -79,16 +77,13 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
     @OrderBy("type")
     private Set<SecurityGroupMember> securityGroupMembers = new TreeSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(name = "GROUP_INTERFACE", joinColumns = @JoinColumn(name = "security_group_fk",
-            referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "security_group_interface_fk",
-            referencedColumnName = "id"))
+    @OneToMany(mappedBy = "securityGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<SecurityGroupInterface> securityGroupInterfaces = new HashSet<SecurityGroupInterface>();
 
-    public SecurityGroup(VirtualizationConnector virtualizationConnector, String tenantId, String tenantName) {
+    public SecurityGroup(VirtualizationConnector virtualizationConnector, String projectId, String projectName) {
         this.virtualizationConnector = virtualizationConnector;
-        this.tenantId = tenantId;
-        this.tenantName = tenantName;
+        this.projectId = projectId;
+        this.projectName = projectName;
     }
 
     SecurityGroup() {
@@ -110,20 +105,20 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
         this.virtualizationConnector = virtualizationConnector;
     }
 
-    public String getTenantId() {
-        return this.tenantId;
+    public String getProjectId() {
+        return this.projectId;
     }
 
-    void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+    void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
-    public String getTenantName() {
-        return this.tenantName;
+    public String getProjectName() {
+        return this.projectName;
     }
 
-    public void setTenantName(String tenantName) {
-        this.tenantName = tenantName;
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     public Set<SecurityGroupMember> getSecurityGroupMembers() {
@@ -194,8 +189,8 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
 
     @Override
     public String toString() {
-        return "SecurityGroup [name=" + this.name + ", virtualizationConnector=" + this.virtualizationConnector + ", tenantId="
-                + this.tenantId + ", tenantName=" + this.tenantName + ", protectAll=" + this.protectAll
+        return "SecurityGroup [name=" + this.name + ", virtualizationConnector=" + this.virtualizationConnector + ", projectId="
+                + this.projectId + ", projectName=" + this.projectName + ", protectAll=" + this.protectAll
                 + ", mgrId=" + this.mgrId + ", lastJob=" + this.lastJob + ", securityGroupMembers=" + this.securityGroupMembers
                 + ", securityGroupInterfaces=" + this.securityGroupInterfaces + ", networkElementId="
                         + this.networkElementId + "]";

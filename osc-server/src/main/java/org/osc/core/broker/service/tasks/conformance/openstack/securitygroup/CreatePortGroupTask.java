@@ -23,7 +23,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -37,7 +36,6 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(service = CreatePortGroupTask.class)
 public class CreatePortGroupTask extends TransactionalTask {
-    private static final Logger LOG = Logger.getLogger(CreatePortGroupTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -64,11 +62,11 @@ public class CreatePortGroupTask extends TransactionalTask {
         for (SecurityGroupMember sgm : members) {
             protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
         }
-        String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getTenantId(), this.securityGroup.getTenantName(),
+        String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
                 this.securityGroup.getVirtualizationConnector(), protectedPorts);
         if (domainId == null){
-            throw new Exception(String.format("A domain was not found for the tenant: '%s' and Security Group: '%s",
-                    this.securityGroup.getTenantName(), this.securityGroup.getName()));
+            throw new Exception(String.format("A domain was not found for the project: '%s' and Security Group: '%s",
+                    this.securityGroup.getProjectName(), this.securityGroup.getName()));
         }
 
         SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(

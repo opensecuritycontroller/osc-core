@@ -68,6 +68,7 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         if (this.factory.initDone.compareAndSet(false, true)) {
             this.factory.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTaskCSO.getService();
         }
+        this.deleteSvaServerTask = this.factory.deleteSvaServerTask;
         this.osSvaCreateMetaTask = this.factory.osSvaCreateMetaTask;
         this.conformService = this.factory.conformService;
         this.dbConnectionManager = this.factory.dbConnectionManager;
@@ -89,6 +90,8 @@ public class OsDAIUpgradeMetaTask extends TransactionalMetaTask {
         task.upgradedSoftwareVersion = upgradedSoftwareVersion;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
+        task.deleteSvaServerTask = this.deleteSvaServerTask;
+        task.osSvaCreateMetaTask = this.osSvaCreateMetaTask;
 
         return task;
     }
