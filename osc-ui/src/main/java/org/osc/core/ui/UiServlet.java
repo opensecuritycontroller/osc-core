@@ -16,17 +16,25 @@
  *******************************************************************************/
 package org.osc.core.ui;
 
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.*;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
+
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.osc.core.broker.service.api.server.ServerTerminationListener;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.view.MainUIProvider;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 import com.vaadin.server.DeploymentConfiguration;
@@ -35,6 +43,7 @@ import com.vaadin.server.VaadinServlet;
 import com.vaadin.server.VaadinServletRequest;
 import com.vaadin.server.VaadinServletService;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.ui.UI;
 
 @Component(name = "ui.servlet", property = {
 
@@ -44,7 +53,7 @@ import com.vaadin.server.VaadinSession;
 		HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED + "=true"
 
 })
-public class UiServlet extends VaadinServlet implements Servlet, ServerTerminationListener {
+public class UiServlet extends VaadinServlet implements Servlet {
 
     /**
      *
@@ -56,6 +65,8 @@ public class UiServlet extends VaadinServlet implements Servlet, ServerTerminati
 
     @Reference
     UserContextApi userContext;
+    
+    private final Set<VaadinSession> sessions = new CopyOnWriteArraySet<>();
 
 
 	/*
@@ -80,13 +91,24 @@ public class UiServlet extends VaadinServlet implements Servlet, ServerTerminati
             throws ServiceException {
         VaadinServletService servletService = super.createServletService(deploymentConfiguration);
         servletService.addSessionInitListener(e -> e.getSession().addUIProvider(this.uiProvider));
+        servletService.addSessionInitListener(e -> sessions.add(e.getSession()));
+        servletService.addSessionDestroyListener(e -> sessions.remove(e.getSession()));
         return servletService;
     }
 
-    @Override
-    public void serverStopping() {
+    @Deactivate
+    void stop() {
         // Terminate Vaadin UI Application
         destroy();
+        
+        for (VaadinSession vaadinSession : sessions) {
+        	vaadinSession.close();
+
+        	// Redirect all UIs to force the close
+        	for (UI ui : vaadinSession.getUIs()) {
+        		ui.access(() -> ui.getPage().setLocation("/"));
+			}
+        }
     }
 
     /**

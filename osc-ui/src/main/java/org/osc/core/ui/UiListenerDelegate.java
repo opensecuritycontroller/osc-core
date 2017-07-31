@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.ui;
 
-import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.*;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT;
+import static org.osgi.service.http.whiteboard.HttpWhiteboardConstants.HTTP_WHITEBOARD_TARGET;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -35,6 +37,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
 import com.vaadin.server.VaadinSession;
+import com.vaadin.ui.UI;
 
 @Component(property = {
         HTTP_WHITEBOARD_CONTEXT_SELECT + "=(" + HTTP_WHITEBOARD_CONTEXT_NAME + "=" + UiServletContext.OSC_UI_NAME + ")",
@@ -80,7 +83,14 @@ public class UiListenerDelegate implements HttpSessionListener, ServerTerminatio
             for (VaadinSession vaadinSession : VaadinSession.getAllSessions(session)) {
                 Object userName = vaadinSession.getAttribute("user");
                 if (loginName == null || loginName.equals(userName)) {
-                    vaadinSession.close();
+                	vaadinSession.close();
+
+                	// Redirect all UIs to force the close
+                	for (UI ui : vaadinSession.getUIs()) {
+                		ui.access(() -> {
+                			ui.getPage().setLocation("/");
+                		});
+					}
                 }
             }
         }
