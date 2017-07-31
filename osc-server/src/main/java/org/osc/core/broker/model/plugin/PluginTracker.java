@@ -79,7 +79,11 @@ public class PluginTracker<T> {
             .put(QUERY_PORT_INFO, Boolean.class).put(SUPPORT_PORT_GROUP, Boolean.class).put(PROP_PLUGIN_NAME, String.class).build();
 
     private final BundleContext context;
+    
+    @SuppressWarnings("unchecked")
     private final Class<T> pluginClassManager = (Class<T>) ApplianceManagerApi.class;
+    
+    @SuppressWarnings("unchecked")
     private final Class<T> pluginClassSdn = (Class<T>) SdnControllerApi.class;
 
     private final PluginTrackerCustomizer<T> customizer;
