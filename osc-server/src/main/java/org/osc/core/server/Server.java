@@ -70,6 +70,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -436,7 +437,7 @@ public class Server implements ServerApi {
         }
     }
 
-    private void addShutdownHook() {
+    private void addShutdownHook() { 
         log.warn(Server.PRODUCT_NAME + " Server: Shutdown Hook...");
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -451,20 +452,7 @@ public class Server implements ServerApi {
         System.out.print(Server.PRODUCT_NAME + ": Server shutdown...");
         log.warn(Server.PRODUCT_NAME + ": Shutdown server...(pid:" + ServerUtil.getCurrentPid() + ")");
 
-        // Shutdown Scheduler
-        stopScheduler();
-
-        // Shutdown Job Engine
-        JobEngine.getEngine().shutdown();
-
-        // gracefully closing all RabbitMQ clients before shutting down server
-        shutdownRabbitMq();
-
-        // Gracefully closing all web socket clients before shutting down server
-        shutdownWebsocket();
-
-        // invalidate all Vaadin sessions
-        this.terminationListeners.forEach(ServerTerminationListener::serverStopping);
+        doStop();
 
         ServerUtil.deletePidFileIfOwned(SERVER_PID_FILE);
 
@@ -480,6 +468,34 @@ public class Server implements ServerApi {
         System.out.println("Shutdown completed");
         Runtime.getRuntime().halt(0);
     }
+
+    @Deactivate
+    void deactivateServer() {
+    	System.out.print(Server.PRODUCT_NAME + ": Server dynamically restarting...");
+        log.warn(Server.PRODUCT_NAME + ": Restarting server component...(pid:" + ServerUtil.getCurrentPid() + ")");
+        doStop();
+    }
+    
+	private void doStop() {
+		// Shutdown Scheduler
+        stopScheduler();
+
+        // Shutdown Job Engine
+        try {
+        	JobEngine.getEngine().shutdown();
+        } catch (Exception e) {
+        	log.warn(Server.PRODUCT_NAME + ": Error shutting down the JobEngine", e);
+        }
+
+        // gracefully closing all RabbitMQ clients before shutting down server
+        shutdownRabbitMq();
+
+        // Gracefully closing all web socket clients before shutting down server
+        shutdownWebsocket();
+
+        // invalidate all Vaadin sessions
+        this.terminationListeners.forEach(ServerTerminationListener::serverStopping);
+	}
 
     public static Integer getApiPort() {
         return Server.apiPort;
@@ -550,8 +566,16 @@ public class Server implements ServerApi {
             // No problem - this means the service was
             // already unregistered (e.g. by bundle stop)
         }
-        this.deploymentSpecRunnerCSO.ungetService(this.rabbitMQRunner.getOsDeploymentSpecNotificationRunner());
-        this.securityGroupRunnerCSO.ungetService(this.rabbitMQRunner.getSecurityGroupRunner());
+        ComponentServiceObjects<OsDeploymentSpecNotificationRunner> cso = this.deploymentSpecRunnerCSO;
+        if(cso != null) {
+        	cso.ungetService(this.rabbitMQRunner.getOsDeploymentSpecNotificationRunner());
+        }
+        
+        ComponentServiceObjects<OsSecurityGroupNotificationRunner> cso2 = this.securityGroupRunnerCSO;
+		if(cso2 != null) {
+			cso2.ungetService(this.rabbitMQRunner.getSecurityGroupRunner());
+		}
+		
         this.rabbitRunnerFactory.ungetService(this.rabbitMQRunner);
         log.info("Shutdown of RabbitMQ succeeded");
         this.rabbitMQRunner = null;
