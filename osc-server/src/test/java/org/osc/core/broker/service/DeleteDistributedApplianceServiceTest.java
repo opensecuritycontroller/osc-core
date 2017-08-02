@@ -31,14 +31,12 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.osc.core.common.job.TaskGuard;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.job.JobEngine;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.server.UserContextApi;
@@ -53,6 +51,9 @@ import org.osc.core.broker.service.tasks.conformance.virtualsystem.VSConformance
 import org.osc.core.broker.service.validator.DeleteDistributedApplianceRequestValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.virtualization.VirtualizationType;
+import org.osc.core.server.Server;
 import org.osc.core.test.util.TaskGraphMatcher;
 import org.osc.core.test.util.TestTransactionControl;
 import org.powermock.api.mockito.PowerMockito;
@@ -109,6 +110,9 @@ public class DeleteDistributedApplianceServiceTest {
 
     @InjectMocks
     private DeleteDistributedApplianceService deleteDistributedApplianceService;
+
+    @Mock
+    private Server mockServerInstance;
 
     private JobEngine jobEngine;
 

@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +32,7 @@ import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.Request;
 import org.osc.core.broker.service.response.Response;
+import org.osc.core.server.Server;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osgi.service.transaction.control.TransactionControl;
 
@@ -58,6 +59,7 @@ public class ServiceDispatcherTest {
 
             {
                 this.userContext = Mockito.mock(UserContextApi.class);
+                this.serverInstance = Mockito.mock(Server.class);
             }
 
             @Override
@@ -87,6 +89,7 @@ public class ServiceDispatcherTest {
 
             {
                 this.userContext = Mockito.mock(UserContextApi.class);
+                this.serverInstance = Mockito.mock(Server.class);
             }
 
             @Override
@@ -128,6 +131,7 @@ public class ServiceDispatcherTest {
 
             {
                 this.userContext = Mockito.mock(UserContextApi.class);
+                this.serverInstance = Mockito.mock(Server.class);
             }
 
             @Override

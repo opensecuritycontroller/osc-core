@@ -16,8 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
 
@@ -41,6 +40,7 @@ import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.UserDtoValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.server.Server;
 import org.osc.core.test.util.TestTransactionControl;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -71,6 +71,9 @@ public class AddUserServiceTest {
 
     @InjectMocks
     private AddUserService service;
+
+    @Mock
+    private Server mockServerInstance;
 
     private AddUserRequest invalidUserRequest;
 

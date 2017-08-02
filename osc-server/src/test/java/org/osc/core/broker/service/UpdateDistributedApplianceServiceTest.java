@@ -39,7 +39,6 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -56,6 +55,8 @@ import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.service.validator.DistributedApplianceDtoValidator;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.common.virtualization.VirtualizationType;
+import org.osc.core.server.Server;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.powermock.api.mockito.PowerMockito;
@@ -101,6 +102,9 @@ public class UpdateDistributedApplianceServiceTest {
 
     @InjectMocks
     private UpdateDistributedApplianceService service;
+
+    @Mock
+    private Server mockServerInstance;
 
     private BaseRequest<DistributedApplianceDto> request;
     private Appliance app;

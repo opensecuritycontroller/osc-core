@@ -38,6 +38,8 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.server.Server;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.transaction.control.ScopedWorkException;
 import org.osgi.service.transaction.control.TransactionControl;
 
@@ -66,6 +68,10 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
     @Reference
     protected TransactionalBroadcastUtil txBroadcastUtil;
 
+    // Package private to enable unit tests
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    Server serverInstance;
+
     private final Queue<ChainedDispatch<O>> chainedDispatches = new LinkedList<>();
 
     // generalized method to dispatch incoming requests to the appropriate
@@ -75,7 +81,7 @@ public abstract class ServiceDispatcher<I extends Request, O extends Response> i
         log.info("Service dispatch " + this.getClass().getSimpleName() + ". User: " + this.userContext.getCurrentUser()
         + ", Request: " + request);
 
-        if (Server.isInMaintenance()) {
+        if (this.serverInstance.isInMaintenance()) {
             log.warn("Incoming request (pid:" + ServerUtil.getCurrentPid() + ") while server is in maintenance mode.");
             throw new VmidcException(Server.PRODUCT_NAME + " server is in maintenance mode.");
         }

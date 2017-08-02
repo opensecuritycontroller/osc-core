@@ -47,11 +47,14 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
     @Reference
     EncryptionApi encrypter;
 
+    @Reference
+    private Server server;
+
     @Override
     public EmptySuccessResponse exec(RestoreRequest request, EntityManager em) throws Exception {
     	File backupFile = request.getBkpFile();
     	String backupFilename = backupFile.getName();
-    	Server.setInMaintenance(true);
+    	this.server.setInMaintenance(true);
     	DBConnectionParameters connectionParams = new DBConnectionParameters();
     	String oldDBPassword = connectionParams.getPassword();
 
@@ -73,7 +76,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
                 // reload truststore from backup
                 updateTruststore(backupData);
     		} catch(Exception e) {
-    			Server.setInMaintenance(false);
+    		    this.server.setInMaintenance(false);
     			throw e;
     		} finally {
     			encryptedBackupFile.delete();
@@ -95,7 +98,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
         } catch (Exception ex) {
         	// restore old DB password
         	connectionParams.updatePassword(oldDBPassword);
-            Server.setInMaintenance(false);
+        	this.server.setInMaintenance(false);
             throw ex;
         }
 
@@ -125,7 +128,7 @@ public class RestoreService extends BackupFileService<RestoreRequest, EmptySucce
         } catch (Exception ex) {
         	// restore old DB password
         	connectionParams.updatePassword(oldDBPassword);
-            Server.setInMaintenance(false);
+        	this.server.setInMaintenance(false);
             if (successRename) {
             	newDBFileTemp.delete();
                 originalDBFile.renameTo(newDBFileTemp);

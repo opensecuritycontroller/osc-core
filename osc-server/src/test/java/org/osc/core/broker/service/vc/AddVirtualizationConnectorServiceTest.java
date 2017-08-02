@@ -16,10 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST;
-import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.OPENSTACK_NOCONTROLLER_REQUEST;
+import static org.osc.core.broker.service.vc.VirtualizationConnectorServiceData.*;
 
 import java.util.ArrayList;
 
@@ -57,6 +56,7 @@ import org.osc.core.broker.service.validator.AddVirtualizationConnectorServiceRe
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
 import org.osc.core.broker.util.db.DBConnectionManager;
+import org.osc.core.server.Server;
 import org.osc.core.test.util.TestTransactionControl;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -95,11 +95,14 @@ public class AddVirtualizationConnectorServiceTest {
     @Mock
     private TransactionalBroadcastUtil txBroadcastUtil;
 
-    @InjectMocks()
+    @InjectMocks
     private AddVirtualizationConnectorService service;
 
     @Mock(answer=Answers.CALLS_REAL_METHODS)
     private TestTransactionControl txControl;
+
+    @Mock
+    private Server mockServerInstance;
 
     private static final String NAME_ALREADY_EXISTS = "Name already exists in the System";
 

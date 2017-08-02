@@ -44,7 +44,7 @@ import-jta:\
 
 # We can't change the quartz API to not reference its internals, and we don't use any of these other
 # packages. This is a custom packaged library for OSC, so it's safe not to provide these packages.
--fixupmessages: "Export org.quartz,  has 3,  private references [org.quartz.spi, org.quartz.utils, org.quartz.impl.matchers]",\
- "Export org.quartz.impl,  has 4,  private references [org.quartz.spi, org.quartz.listeners, org.quartz.core, org.quartz.impl.matchers]"
+-fixupmessages: "Export org.quartz,  has 3,  private references *",\
+ "Export org.quartz.impl,  has 4,  private references *"
     
 #end

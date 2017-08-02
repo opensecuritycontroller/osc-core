@@ -54,9 +54,9 @@ import org.osc.core.broker.util.FileUtil;
 import org.osc.core.broker.util.NetworkUtil;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.broker.util.ServerUtil;
+import org.osc.core.broker.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VersionUtil;
-import org.osc.core.broker.util.ServerUtil.TimeChangeCommand;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.DBConnectionParameters;
 import org.osc.core.broker.util.db.upgrade.ReleaseUpgradeMgr;
@@ -119,7 +119,7 @@ public class Server implements ServerApi {
 
     // static to avoid many trivial references
     private static Integer apiPort = DEFAULT_API_PORT;
-    private static volatile boolean inMaintenance = false;
+    private volatile boolean inMaintenance = false;
 
     private int scheduledSyncInterval = 60; // 60 minutes
     private boolean devMode = false;
@@ -530,7 +530,7 @@ public class Server implements ServerApi {
         Thread restartThread = new Thread("Restart-Server-Thread") {
             @Override
             public void run() {
-                Server.inMaintenance = true;
+                Server.this.inMaintenance = true;
                 try {
                     log.info("Restarting server.");
                     boolean successStarted = startNewServer();
@@ -599,15 +599,15 @@ public class Server implements ServerApi {
 
     @Override
     public boolean isUnderMaintenance() {
-        return Server.inMaintenance;
+        return this.inMaintenance;
     }
 
-    public static boolean isInMaintenance() {
-        return Server.inMaintenance;
+    public boolean isInMaintenance() {
+        return this.inMaintenance;
     }
 
-    public static void setInMaintenance(boolean inMaintenance) {
-        Server.inMaintenance = inMaintenance;
+    public void setInMaintenance(boolean inMaintenance) {
+        this.inMaintenance = inMaintenance;
     }
 
     private boolean startNewServer() {
