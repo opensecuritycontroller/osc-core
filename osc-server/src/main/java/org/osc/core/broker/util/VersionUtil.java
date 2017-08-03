@@ -169,7 +169,12 @@ public class VersionUtil {
         try {
             return getVersion(getManifest("Implementation-Build"));
         } catch (Exception ex) {
-            log.error("Failed to load version information: " + ex, ex);
+            if (ex instanceof IllegalArgumentException) {
+                // for expected exception dont print stack trace
+                log.warn(ex.getMessage());
+            } else {
+                log.error("Failed to load version information: ", ex);
+            }
             Version version = new Version();
             version.setVersionStr(DEBUG_VERSION_STRING);
             return version;
