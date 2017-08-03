@@ -66,13 +66,15 @@ public class UploadApplianceVersionFileService extends ServiceDispatcher<UploadR
     @Override
     public BaseResponse exec(UploadRequest request, EntityManager em) throws Exception {
         String fileName = request.getFileName();
-        Path uploadFolder = Files.createTempDirectory(Paths.get(this.tmpFolderParent), "uploadAppliance");
+        // Create directory if it does not exist
+        Files.createDirectories(Paths.get(this.tmpFolderParent));
+        Path uploadFolder = Files.createTempDirectory(Paths.get(this.tmpFolderParent), null);
 
         try {
             validate(uploadFolder, fileName);
 
             // save the zip file
-            String uploadedFilePath = uploadFolder + fileName;
+            String uploadedFilePath = uploadFolder + File.separator + fileName;
             writeToFile(request.getUploadedInputStream(), uploadedFilePath);
             log.info("Uploaded file " + uploadedFilePath);
 
