@@ -37,7 +37,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 @Entity
 @Table(name = "SECURITY_GROUP_MEMBER", uniqueConstraints = { @UniqueConstraint(columnNames = { "security_group_fk",
         "vm_fk", "network_fk", "address" }) })
-public class SecurityGroupMember extends BaseEntity implements Comparable<SecurityGroupMember> {
+public class SecurityGroupMember extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "security_group_fk", nullable = false,
@@ -137,10 +137,4 @@ public class SecurityGroupMember extends BaseEntity implements Comparable<Securi
             return null;
         }
     }
-
-    @Override
-    public int compareTo(SecurityGroupMember o) {
-        return this.type.compareTo(o.getType());
-    }
-
 }
