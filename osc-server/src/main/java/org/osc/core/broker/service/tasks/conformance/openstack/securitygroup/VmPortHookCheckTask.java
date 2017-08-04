@@ -199,7 +199,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
                         assignedRedirectedDai.getInspectionOsEgressPortId(),
                         assignedRedirectedDai.getInspectionEgressMacAddress());
                 hook = controller.getInspectionHook(new NetworkElementImpl(this.vmPort),
-                        new DefaultInspectionPort(ingressPort, egressPort));
+                        new DefaultInspectionPort(ingressPort, egressPort, null));
             }
 
             // Missing tag indicates missing hook

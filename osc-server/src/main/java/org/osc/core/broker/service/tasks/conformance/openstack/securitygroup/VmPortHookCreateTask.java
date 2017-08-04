@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -94,13 +95,13 @@ public class VmPortHookCreateTask extends TransactionalTask {
                 if (portGroupId != null){
                     PortGroup portGroup = new PortGroup();
                     portGroup.setPortGroupId(portGroupId);
-                    controller.installInspectionHook(portGroup, new DefaultInspectionPort(ingressPort, egressPort),
+                    controller.installInspectionHook(Arrays.asList(portGroup), new DefaultInspectionPort(ingressPort, egressPort, null),
                             this.securityGroupInterface.getTagValue(), encapsulationType,
                             this.securityGroupInterface.getOrder(), FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
                 }
             } else {
-                controller.installInspectionHook(new NetworkElementImpl(this.vmPort),
-                        new DefaultInspectionPort(ingressPort, egressPort),
+                controller.installInspectionHook(Arrays.asList(new NetworkElementImpl(this.vmPort)),
+                        new DefaultInspectionPort(ingressPort, egressPort, null),
                         this.securityGroupInterface.getTagValue(), encapsulationType,
                         this.securityGroupInterface.getOrder(), FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
             }

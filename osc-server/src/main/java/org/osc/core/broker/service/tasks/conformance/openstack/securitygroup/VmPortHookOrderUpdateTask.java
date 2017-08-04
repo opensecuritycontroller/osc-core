@@ -72,8 +72,8 @@ public class VmPortHookOrderUpdateTask extends TransactionalTask {
                     this.dai.getInspectionIngressMacAddress());
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
-
-            controller.setInspectionHookOrder(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort),
+            //Element object in DefaultInspectionPort not used, hence null
+            controller.setInspectionHookOrder(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort, null),
                     this.securityGroupInterface.getOrder());
         } finally {
             controller.close();
