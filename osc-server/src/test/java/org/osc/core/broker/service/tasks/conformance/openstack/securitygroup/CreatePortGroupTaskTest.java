@@ -228,10 +228,7 @@ public class CreatePortGroupTaskTest {
 	}
 
 	private SecurityGroupMember newSGM(OsProtectionEntity protectionEntity, Long sgmId) {
-		// TODO emanoel: Remove this mock once the SGM is no longer kept in a
-		// TreeSet in the SGM.
-		SecurityGroupMember sgm = Mockito.spy(new SecurityGroupMember(protectionEntity));
-		Mockito.doReturn(-1).when(sgm).compareTo(Mockito.any());
+		SecurityGroupMember sgm = new SecurityGroupMember(protectionEntity);		
 		sgm.setId(sgmId);
 
 		return sgm;

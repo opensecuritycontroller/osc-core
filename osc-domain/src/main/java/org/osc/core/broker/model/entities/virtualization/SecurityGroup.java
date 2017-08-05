@@ -18,7 +18,6 @@ package org.osc.core.broker.model.entities.virtualization;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -75,7 +74,7 @@ public class SecurityGroup extends BaseEntity implements LastJobContainer{
 
     @OneToMany(mappedBy = "securityGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @OrderBy("type")
-    private Set<SecurityGroupMember> securityGroupMembers = new TreeSet<>();
+    private Set<SecurityGroupMember> securityGroupMembers = new HashSet<>();
 
     @OneToMany(mappedBy = "securityGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<SecurityGroupInterface> securityGroupInterfaces = new HashSet<SecurityGroupInterface>();
