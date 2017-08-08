@@ -34,12 +34,11 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.common.job.TaskGuard;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 class SecurityGroupCheckMetaTaskTestData {
-    public final static ManagerType POLICY_MAPPING_SUPPORTED_MGR_TYPE = ManagerType.NSM;
-    public final static ManagerType POLICY_MAPPING_NOT_SUPPORTED_MGR_TYPE = ManagerType.SMC;
+    public final static String POLICY_MAPPING_SUPPORTED_MGR_TYPE = "NSM";
+    public final static String POLICY_MAPPING_NOT_SUPPORTED_MGR_TYPE = "SMC";
 
     public static String NO_MC_POLICY_MAPPING_SUPPORTED = "NO_MC_POLICY_MAPPING_SUPPORTED";
     public static String SINGLE_MC_POLICY_MAPPING_SUPPORTED = "SINGLE_MC_POLICY_MAPPING_SUPPORTED";
@@ -122,7 +121,7 @@ class SecurityGroupCheckMetaTaskTestData {
     }
 
     private VirtualSystem createVirtualSystem(String baseName,
-            ManagerType mgrType) {
+            String mgrType) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setName(baseName + "_vc");
         vc.setVirtualizationType(VirtualizationType.OPENSTACK);
@@ -142,7 +141,7 @@ class SecurityGroupCheckMetaTaskTestData {
 
         Appliance app = new Appliance();
         app.setManagerSoftwareVersion("fizz");
-        app.setManagerType(mgrType.getValue());
+        app.setManagerType(mgrType);
         app.setModel(baseName + "_model");
 
         ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);

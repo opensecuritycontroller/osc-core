@@ -35,7 +35,6 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidRequestException;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
-import org.osc.core.common.controller.ControllerType;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 public class VirtualizationConnectorEntityMgr {
@@ -55,7 +54,7 @@ public class VirtualizationConnectorEntityMgr {
         vc.setName(dto.getName());
         vc.setVirtualizationType(dto.getType());
 
-        String controllerType = dto.getControllerType() != null ? dto.getControllerType().getValue() : null;
+        String controllerType = dto.getControllerType() != null ? dto.getControllerType() : null;
         if(controllerType != null) {
             vc.setControllerType(controllerType);
         }
@@ -91,7 +90,7 @@ public class VirtualizationConnectorEntityMgr {
         dto.setName(vc.getName());
         dto.setType(VirtualizationType.valueOf(vc.getVirtualizationType().name()));
 
-        dto.setControllerType(ControllerType.fromText(vc.getControllerType()));
+        dto.setControllerType(vc.getControllerType());
         dto.setControllerIP(vc.getControllerIpAddress());
         dto.setControllerUser(vc.getControllerUsername());
         dto.setControllerPassword(encryption.decryptAESCTR(vc.getControllerPassword()));

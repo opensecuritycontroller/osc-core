@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 import java.util.List;
 
@@ -30,7 +30,6 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.service.api.server.EncryptionApi;
 import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.dto.ApplianceManagerConnectorDto;
-import org.osc.core.common.manager.ManagerType;
 
 public class ApplianceManagerConnectorEntityMgr {
 
@@ -49,7 +48,7 @@ public class ApplianceManagerConnectorEntityMgr {
         // Transform from dto to entity
         mc.setId(dto.getId());
         mc.setName(dto.getName());
-        mc.setManagerType(dto.getManagerType().getValue());
+        mc.setManagerType(dto.getManagerType());
         mc.setServiceType(serviceName);
         mc.setIpAddress(dto.getIpAddress());
         mc.setUsername(dto.getUsername());
@@ -67,7 +66,7 @@ public class ApplianceManagerConnectorEntityMgr {
         // transform from entity to dto
         dto.setId(mc.getId());
         dto.setName(mc.getName());
-        dto.setManagerType(ManagerType.fromText(mc.getManagerType()));
+        dto.setManagerType(mc.getManagerType());
         dto.setIpAddress(mc.getIpAddress());
         dto.setUsername(mc.getUsername());
         dto.setPassword(encryption.decryptAESCTR(mc.getPassword()));
@@ -86,13 +85,13 @@ public class ApplianceManagerConnectorEntityMgr {
         return em.find(ApplianceManagerConnector.class, id);
     }
 
-    public static List<ApplianceManagerConnector> listByManagerType(EntityManager em, ManagerType type) {
+    public static List<ApplianceManagerConnector> listByManagerType(EntityManager em, String type) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<ApplianceManagerConnector> cq = cb.createQuery(ApplianceManagerConnector.class);
         Root<ApplianceManagerConnector> from = cq.from(ApplianceManagerConnector.class);
         cq = cq.select(from).distinct(true)
-                .where(cb.equal(from.get("managerType"), type.getValue()));
+                .where(cb.equal(from.get("managerType"), type));
         return em.createQuery(cq).getResultList();
     }
 

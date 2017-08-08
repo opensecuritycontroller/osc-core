@@ -28,7 +28,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
@@ -45,8 +44,7 @@ public class DistributedApplianceDtoValidatorTest extends DistributedApplianceDt
         super.testInitialize();
 
         ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
-        ManagerType.addType(ManagerType.NSM.getValue());
-        Mockito.when(apiFactoryService.syncsPolicyMapping(ManagerType.NSM)).thenReturn(true);
+        Mockito.when(apiFactoryService.syncsPolicyMapping("NSM")).thenReturn(true);
     }
 
     @Test

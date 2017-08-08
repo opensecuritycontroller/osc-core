@@ -33,7 +33,6 @@ import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.service.dto.ApplianceModelSoftwareVersionDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 public class ApplianceSoftwareVersionEntityMgr {
@@ -179,14 +178,14 @@ public class ApplianceSoftwareVersionEntityMgr {
         return em.createQuery(query).getResultList();
     }
 
-    public static List<ApplianceModelSoftwareVersionDto> findByMcType(EntityManager em, ManagerType mcType) {
+    public static List<ApplianceModelSoftwareVersionDto> findByMcType(EntityManager em, String mcType) {
 
         String hql = "SELECT DISTINCT A.id AS aId, A.model AS aModel, AV.applianceSoftwareVersion AS avSwVersion FROM Appliance A, ApplianceSoftwareVersion AV"
                 + " WHERE A.managerType = :mcType AND AV.appliance.id = A.id"
                 + " ORDER BY aModel ASC, avSwVersion DESC";
 
         TypedQuery<Object[]> query = em.createQuery(hql, Object[].class);
-        query.setParameter("mcType", mcType.toString());
+        query.setParameter("mcType", mcType);
 
         List<Object[]> ls = query.getResultList();
 

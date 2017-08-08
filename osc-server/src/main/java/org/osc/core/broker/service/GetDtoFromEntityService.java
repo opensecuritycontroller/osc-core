@@ -78,7 +78,6 @@ import org.osc.core.broker.service.request.GetDtoFromEntityRequest;
 import org.osc.core.broker.service.response.BaseDtoResponse;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
-import org.osc.core.common.manager.ManagerType;
 
 public class GetDtoFromEntityService<R extends BaseDto> extends
 ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDtoFromEntityServiceApi<R> {
@@ -128,7 +127,7 @@ ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDto
                 ApplianceManagerConnectorDto.sanitizeManagerConnector(dto);
             }
 
-            dto.setPolicyMappingSupported(this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(entity.getManagerType())));
+            dto.setPolicyMappingSupported(this.apiFactoryService.syncsPolicyMapping(entity.getManagerType()));
 
             res.setDto((R) dto);
         } else if (entityName.equals("Appliance")) {

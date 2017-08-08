@@ -50,7 +50,6 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.service.validator.ApplianceManagerConnectorDtoValidator;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
-import org.osc.core.common.manager.ManagerType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -124,7 +123,7 @@ implements AddApplianceManagerConnectorServiceApi {
     private void validate(DryRunRequest<ApplianceManagerConnectorRequest> request,
             OSCEntityManager<ApplianceManagerConnector> emgr) throws Exception {
 
-        ManagerType managerType = request.getDto().getManagerType();
+        String managerType = request.getDto().getManagerType();
         boolean basicAuth = this.apiFactoryService.isBasicAuth(managerType);
         ApplianceManagerConnectorDtoValidator.checkForNullFields(request.getDto(), false, basicAuth);
         ApplianceManagerConnectorDtoValidator.checkFieldLength(request.getDto(), basicAuth);

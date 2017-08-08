@@ -19,13 +19,12 @@ package org.osc.core.broker.service;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.broker.service.request.AgentRegisterServiceRequest;
 import org.osc.core.broker.service.response.AgentDpaInfo;
 import org.osc.core.broker.util.VersionUtil;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 class AgentRegisterServiceTestData {
     static String DAI_TEMPORARY_NAME = "Temporary";
@@ -236,7 +235,7 @@ class AgentRegisterServiceTestData {
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
         mc.setIpAddress("1.1.1.1");
         mc.setPublicKey(new byte[3]);
-        mc.setManagerType(ManagerType.NSM.getValue());
+        mc.setManagerType("NSM");
 
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setVirtualizationType(virtualizationType);

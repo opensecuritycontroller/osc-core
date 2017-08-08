@@ -43,6 +43,7 @@ import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
+import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.NetworkEntityManager;
@@ -55,7 +56,6 @@ import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPartOfAnotherSecurityGroupException;
 import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.service.validator.SecurityGroupMemberItemDtoValidator;
-import org.osc.core.common.controller.ControllerType;
 
 public abstract class BaseSecurityGroupService<I extends Request, O extends Response> extends ServiceDispatcher<I, O> {
 
@@ -79,7 +79,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                     + "  is not found.");
         }
 
-        if (vc.getControllerType().equals(ControllerType.NONE.getValue())) {
+        if (vc.getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)) {
             throw new VmidcBrokerValidationException(
                     "Creation of Security Groups is not allowed in the absence of SDN Controller.");
         }

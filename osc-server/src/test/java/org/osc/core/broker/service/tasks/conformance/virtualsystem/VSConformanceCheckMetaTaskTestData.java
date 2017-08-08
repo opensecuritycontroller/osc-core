@@ -50,7 +50,6 @@ import org.osc.core.broker.service.tasks.conformance.openstack.DeleteImageFromGl
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.SecurityGroupCleanupCheckMetaTask;
 import org.osc.core.common.job.TaskGuard;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 public class VSConformanceCheckMetaTaskTestData {
@@ -103,7 +102,7 @@ public class VSConformanceCheckMetaTaskTestData {
         vcSpy.setId(vcId);
 
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
-        mc.setManagerType(ManagerType.NSM.getValue());
+        mc.setManagerType("NSM");
 
         DistributedAppliance da = new DistributedAppliance(mc);
         da.setId(daId);

@@ -32,7 +32,7 @@ public interface PluginService {
      */
     ApplianceManagerApi createApplianceManagerApi(String managerType) throws Exception;
 
-    boolean usesProviderCreds(String controllerType) throws Exception;
+    Boolean usesProviderCreds(String controllerType) throws Exception;
 
     boolean isKeyAuth(String managerType) throws Exception;
 

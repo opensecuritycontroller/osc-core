@@ -14,9 +14,8 @@ osc-server-bom/root/opt/vmidc/bin/aQute/
 osc-server-bom/root/opt/vmidc/bin/config/
 osc-server-bom/root/opt/vmidc/bin/jar/
 osc-server-bom/root/opt/vmidc/bin/launcher.properties
-osc-server-bom/root/opt/vmidc/bin/mgr_plugins/
+osc-server-bom/root/opt/vmidc/bin/plugins/
 osc-server-bom/root/opt/vmidc/bin/osc-control.jar
-osc-server-bom/root/opt/vmidc/bin/sdn_ctrl_plugins/
 osc-server-bom/root/opt/vmidc/bin/vmidcKeyStore.jks
 osc-server-bom/Sources/jre*.tar.*
 osc-server/src/main/webapp/VAADIN/gwt-unitCache/

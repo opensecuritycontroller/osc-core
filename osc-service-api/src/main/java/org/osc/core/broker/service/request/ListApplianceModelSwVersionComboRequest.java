@@ -16,16 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
-import org.osc.core.common.manager.ManagerType;
-
 public class ListApplianceModelSwVersionComboRequest implements Request {
-    private ManagerType type;
+    private String type;
 
-    public ManagerType getType() {
+    public String getType() {
         return this.type;
     }
 
-    public void setType(ManagerType type) {
+    public void setType(String type) {
         this.type = type;
     }
 }

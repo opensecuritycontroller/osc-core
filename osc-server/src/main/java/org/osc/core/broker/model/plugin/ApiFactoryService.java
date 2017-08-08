@@ -27,8 +27,6 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.api.server.EncryptionException;
-import org.osc.core.common.controller.ControllerType;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osc.sdk.controller.Status;
@@ -50,33 +48,33 @@ import org.osgi.annotation.versioning.ConsumerType;
 public interface ApiFactoryService {
     String PLUGINS_DIRECTORY = "plugins";
 
-    ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception;
+    ApplianceManagerApi createApplianceManagerApi(String managerType) throws Exception;
 
-    Boolean syncsPolicyMapping(ManagerType managerType) throws Exception;
+    Boolean syncsPolicyMapping(String managerType) throws Exception;
 
     Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception;
 
-    Boolean syncsSecurityGroup(ManagerType managerType) throws Exception;
+    Boolean syncsSecurityGroup(String managerType) throws Exception;
 
-    String getServiceName(ManagerType managerType) throws Exception;
+    String getServiceName(String managerType) throws Exception;
 
-    String getNotificationType(ManagerType managerType) throws Exception;
+    String getNotificationType(String managerType) throws Exception;
 
-    Boolean providesDeviceStatus(ManagerType managerType) throws Exception;
+    Boolean providesDeviceStatus(String managerType) throws Exception;
 
     Boolean providesDeviceStatus(VirtualSystem virtualSystem) throws Exception;
 
-    String getAuthenticationType(ManagerType managerType) throws Exception;
+    String getAuthenticationType(String managerType) throws Exception;
 
-    boolean isBasicAuth(ManagerType managerType) throws Exception;
+    boolean isBasicAuth(String managerType) throws Exception;
 
-    boolean isKeyAuth(ManagerType managerType) throws Exception;
+    boolean isKeyAuth(String managerType) throws Exception;
 
-    String getExternalServiceName(ManagerType managerType) throws Exception;
+    String getExternalServiceName(String managerType) throws Exception;
 
     String getExternalServiceName(VirtualSystem virtualSystem) throws Exception;
 
-    String getVendorName(ManagerType managerType) throws Exception;
+    String getVendorName(String managerType) throws Exception;
 
     Boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception;
 
@@ -109,17 +107,17 @@ public interface ApiFactoryService {
      * @return
      * @throws Exception
      */
-    SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception;
+    SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception;
 
     /**
-     * gets specified property from {@code SdnControllerApi} instance for the specified manager type.
+     * gets specified property from {@code SdnControllerApi} instance for the specified controller type.
      *
-     * @param managerType
+     * @param controllerType
      * @param propertyName
      * @return
      * @throws Exception
      */
-    Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception;
+    Object getControllerPluginProperty(String controllerType, String propertyName) throws Exception;
 
     /**
      * Gets the set of currently registered manager types.
@@ -154,8 +152,6 @@ public interface ApiFactoryService {
     Map<String, FlowPortInfo> queryPortInfo(VirtualizationConnector vc, String region,
             HashMap<String, FlowInfo> portsQuery) throws Exception;
 
-    SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception;
-
     ManagerSecurityGroupApi createManagerSecurityGroupApi(VirtualSystem vs) throws Exception;
 
     ManagerPolicyApi createManagerPolicyApi(ApplianceManagerConnector mc) throws Exception;
@@ -184,9 +180,9 @@ public interface ApiFactoryService {
 
     Boolean supportsFailurePolicy(SecurityGroup sg) throws Exception;
 
-    Boolean usesProviderCreds(ControllerType controllerType) throws Exception;
+    Boolean usesProviderCreds(String controllerType) throws Exception;
 
-    Boolean providesTrafficPortInfo(ControllerType controllerType) throws Exception;
+    Boolean providesTrafficPortInfo(String controllerType) throws Exception;
 
     Boolean supportsPortGroup(VirtualSystem vs) throws Exception;
 

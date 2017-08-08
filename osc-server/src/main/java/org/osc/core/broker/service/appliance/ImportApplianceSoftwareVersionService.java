@@ -87,7 +87,7 @@ implements ImportApplianceSoftwareVersionServiceApi {
 
             if (appliance == null) {
                 appliance = new Appliance();
-                appliance.setManagerType(imageMetadata.getManagerType().getValue());
+                appliance.setManagerType(imageMetadata.getManagerType());
                 appliance.setModel(imageMetadata.getModel());
                 appliance.setManagerSoftwareVersion(imageMetadata.getManagerVersion());
 
@@ -95,7 +95,7 @@ implements ImportApplianceSoftwareVersionServiceApi {
 
                 appliance = applianceEntityManager.create(appliance);
             } else {
-                if (!appliance.getManagerType().equals(imageMetadata.getManagerType().getValue())) {
+                if (!appliance.getManagerType().equals(imageMetadata.getManagerType())) {
                     throw new VmidcBrokerValidationException("Invalid manager type for the appliance. Expected: "
                             + appliance.getManagerType().toString() + " Received:"
                             + imageMetadata.getManagerType().toString());
@@ -229,8 +229,7 @@ implements ImportApplianceSoftwareVersionServiceApi {
             this.imageMetadataValidator = new ImageMetadataValidator();
         }
 
-        boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(imageMetadata.getManagerType());
-        this.imageMetadataValidator.validate(imageMetadata, isPolicyMappingSupported);
+        this.imageMetadataValidator.validate(imageMetadata, this.apiFactoryService);
 
         boolean isImageFileMissing = true;
 

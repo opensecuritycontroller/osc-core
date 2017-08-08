@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.mc;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 import java.util.List;
 import java.util.Set;
@@ -208,7 +208,7 @@ implements UpdateApplianceManagerConnectorServiceApi {
         }
 
         // cannot change type once created
-        if (!request.getDto().getManagerType().getValue()
+        if (!request.getDto().getManagerType()
                 .equals(existingMc.getManagerType())) {
 
             throw new VmidcBrokerInvalidRequestException("Cannot change type of Appliance Manager Connector.");

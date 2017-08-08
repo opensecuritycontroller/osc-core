@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VersionUtil.Version;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.common.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.sdk.controller.TagEncapsulationType;
@@ -112,8 +111,8 @@ public class ImageMetadata {
         return this.virtualizationVersion;
     }
 
-    public ManagerType getManagerType() {
-        return ManagerType.fromText(this.managerType);
+    public String getManagerType() {
+        return this.managerType;
     }
 
     public VirtualizationType getVirtualizationType() {

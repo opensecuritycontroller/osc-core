@@ -37,7 +37,6 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.dto.DistributedApplianceDto;
 import org.osc.core.broker.service.dto.VirtualSystemDto;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -65,12 +64,9 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
 
         populateDatabase();
 
-        ManagerType mgrTypePolicyMappingNotSupported = ManagerType.SMC;
-        ManagerType.addType(ManagerType.SMC.getValue());
-
         ApiFactoryService apiFactoryService = Mockito.mock(ApiFactoryService.class);
 
-        Mockito.when(apiFactoryService.syncsPolicyMapping(mgrTypePolicyMappingNotSupported)).thenReturn(false);
+        Mockito.when(apiFactoryService.syncsPolicyMapping("SMC")).thenReturn(false);
     }
 
     private void populateDatabase() {
@@ -93,7 +89,7 @@ public class DistributedApplianceDtoValidatorParameterizedTest extends Distribut
         this.em.persist(this.invalidDomain);
 
         this.mcPolicyMappingNotSupported = new ApplianceManagerConnector();
-        this.mcPolicyMappingNotSupported.setManagerType(ManagerType.SMC.getValue());
+        this.mcPolicyMappingNotSupported.setManagerType("SMC");
         this.mcPolicyMappingNotSupported.setIpAddress("127.0.0.4");
         this.mcPolicyMappingNotSupported.setName("mappingNotSupported");
         this.mcPolicyMappingNotSupported.setServiceType("foobar");

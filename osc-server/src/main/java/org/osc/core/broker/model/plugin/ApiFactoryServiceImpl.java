@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin;
 
-import static java.util.Collections.emptyList;
+import static java.util.Collections.*;
 import static org.osc.sdk.controller.Constants.*;
 import static org.osc.sdk.manager.Constants.*;
 
@@ -55,10 +55,7 @@ import org.osc.core.broker.service.api.server.EncryptionException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.util.ServerUtil;
-import org.osc.core.common.controller.ControllerType;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.server.installer.InstallableManager;
-import org.osc.sdk.controller.Constants;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osc.sdk.controller.Status;
@@ -231,23 +228,19 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     void addApplianceManagerApi(ComponentServiceObjects<ApplianceManagerApi> serviceObjs) {
         addApi(serviceObjs, this.managerRefs);
-        ManagerType.setTypes(getManagerTypes());
     }
 
     void removeApplianceManagerApi(ComponentServiceObjects<ApplianceManagerApi> serviceObjs) {
         removeApi(serviceObjs, this.managerRefs, this.managerApis);
-        ManagerType.setTypes(getManagerTypes());
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     void addSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
         addApi(serviceObjs, this.sdnControllerRefs);
-        ControllerType.setTypes(getControllerTypes());
     }
 
     void removeSdnControllerApi(ComponentServiceObjects<SdnControllerApi> serviceObjs) {
         removeApi(serviceObjs, this.sdnControllerRefs, null);
-        ControllerType.setTypes(getControllerTypes());
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -296,39 +289,33 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     @Override
     public String generateServiceManagerName(VirtualSystem vs) throws Exception {
         return "OSC "
-                + getVendorName(ManagerType
-                        .fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()))
+                + getVendorName(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType())
                 + " " + vs.getDistributedAppliance().getName();
     }
 
     // Manager Types ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ApplianceManagerApi createApplianceManagerApi(ManagerType managerType) throws Exception {
-        return createApplianceManagerApi(managerType.getValue());
-    }
-
-    @Override
-    public ApplianceManagerApi createApplianceManagerApi(String name) throws Exception {
-        ApplianceManagerApi api = this.managerApis.get(name);
+    public ApplianceManagerApi createApplianceManagerApi(String managerType) throws Exception {
+        ApplianceManagerApi api = this.managerApis.get(managerType);
 
         if (api == null) {
             // ApplianceManagerApi is not a prototype service,
             // but the single service instance is use-counted.
             // We save the service object in the managerApis map, to avoid incrementing the count on each call.
-            ComponentServiceObjects<ApplianceManagerApi> serviceObjs = this.managerRefs.get(name);
+            ComponentServiceObjects<ApplianceManagerApi> serviceObjs = this.managerRefs.get(managerType);
             if (serviceObjs == null) {
-                throw new VmidcException(String.format("Manager plugin not found for controller type: %s", name));
+                throw new VmidcException(String.format("Manager plugin not found for controller type: %s", managerType));
             }
             api = serviceObjs.getService();
-            this.managerApis.put(name, api);
+            this.managerApis.put(managerType, api);
         }
 
         return api;
     }
 
-    private Object getPluginProperty(ManagerType managerType, String propertyName) throws Exception {
-        final String name = managerType.getValue();
+    private Object getManagerPluginProperty(String managerType, String propertyName) throws Exception {
+        final String name = managerType;
         if (!this.managerRefs.containsKey(name)) {
             throw new VmidcException("Unsupported Manager type '" + name + "'");
         }
@@ -336,64 +323,64 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     }
 
     @Override
-    public Boolean syncsPolicyMapping(ManagerType managerType) throws Exception {
-        return (Boolean) getPluginProperty(managerType, SYNC_POLICY_MAPPING);
+    public Boolean syncsPolicyMapping(String managerType) throws Exception {
+        return (Boolean) getManagerPluginProperty(managerType, SYNC_POLICY_MAPPING);
     }
 
     @Override
-    public Boolean syncsSecurityGroup(ManagerType managerType) throws Exception {
-        return (Boolean) getPluginProperty(managerType, SYNC_SECURITY_GROUP);
+    public Boolean syncsSecurityGroup(String managerType) throws Exception {
+        return (Boolean) getManagerPluginProperty(managerType, SYNC_SECURITY_GROUP);
     }
 
     @Override
-    public String getServiceName(ManagerType managerType) throws Exception {
-        return (String) getPluginProperty(managerType, SERVICE_NAME);
+    public String getServiceName(String managerType) throws Exception {
+        return (String) getManagerPluginProperty(managerType, SERVICE_NAME);
     }
 
     @Override
-    public String getNotificationType(ManagerType managerType) throws Exception {
-        return (String) getPluginProperty(managerType, NOTIFICATION_TYPE);
+    public String getNotificationType(String managerType) throws Exception {
+        return (String) getManagerPluginProperty(managerType, NOTIFICATION_TYPE);
     }
 
     @Override
-    public Boolean providesDeviceStatus(ManagerType managerType) throws Exception {
-        return (Boolean) getPluginProperty(managerType, PROVIDE_DEVICE_STATUS);
+    public Boolean providesDeviceStatus(String managerType) throws Exception {
+        return (Boolean) getManagerPluginProperty(managerType, PROVIDE_DEVICE_STATUS);
     }
 
     @Override
-    public String getAuthenticationType(ManagerType managerType) throws Exception {
-        return (String) getPluginProperty(managerType, AUTHENTICATION_TYPE);
+    public String getAuthenticationType(String managerType) throws Exception {
+        return (String) getManagerPluginProperty(managerType, AUTHENTICATION_TYPE);
     }
 
     @Override
-    public boolean isBasicAuth(ManagerType mt) throws Exception {
+    public boolean isBasicAuth(String mt) throws Exception {
         return getAuthenticationType(mt).equals(ManagerAuthenticationType.BASIC_AUTH.toString());
     }
 
     @Override
-    public boolean isKeyAuth(ManagerType mt) throws Exception {
-        return getAuthenticationType(mt).equals(ManagerAuthenticationType.KEY_AUTH.toString());
+    public boolean isKeyAuth(String managerType) throws Exception {
+        return getAuthenticationType(managerType).equals(ManagerAuthenticationType.KEY_AUTH.toString());
     }
 
     @Override
-    public String getExternalServiceName(ManagerType managerType) throws Exception {
-        return (String) getPluginProperty(managerType, EXTERNAL_SERVICE_NAME);
+    public String getExternalServiceName(String managerType) throws Exception {
+        return (String) getManagerPluginProperty(managerType, EXTERNAL_SERVICE_NAME);
     }
 
     @Override
-    public String getVendorName(ManagerType managerType) throws Exception {
-        return (String) getPluginProperty(managerType, VENDOR_NAME);
+    public String getVendorName(String managerType) throws Exception {
+        return (String) getManagerPluginProperty(managerType, VENDOR_NAME);
     }
 
     @Override
     public Boolean isPersistedUrlNotifications(ApplianceManagerConnector mc) throws Exception {
-        return getNotificationType(ManagerType.fromText(getDecryptedApplianceManagerConnector(mc).getManagerType()))
+        return getNotificationType(getDecryptedApplianceManagerConnector(mc).getManagerType())
                 .equals(ManagerNotificationSubscriptionType.CALLBACK_URL.toString());
     }
 
     @Override
     public boolean isWebSocketNotifications(ApplianceManagerConnector mc) throws Exception {
-        return getNotificationType(ManagerType.fromText(getDecryptedApplianceManagerConnector(mc).getManagerType()))
+        return getNotificationType(getDecryptedApplianceManagerConnector(mc).getManagerType())
                 .equals(ManagerNotificationSubscriptionType.TRANSIENT_WEB_SOCKET.toString());
     }
 
@@ -439,28 +426,26 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     // Controller Types ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public SdnControllerApi createNetworkControllerApi(ControllerType controllerType) throws Exception {
-        final String name = controllerType.getValue();
-        SdnControllerApi api = this.sdnControllerApis.get(name);
+    public SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception {
+        SdnControllerApi api = this.sdnControllerApis.get(controllerType);
 
         if (api == null) {
-            ComponentServiceObjects<SdnControllerApi> serviceObjs = this.sdnControllerRefs.get(name);
+            ComponentServiceObjects<SdnControllerApi> serviceObjs = this.sdnControllerRefs.get(controllerType);
             if (serviceObjs == null) {
-                throw new VmidcException(String.format("Sdn plugin not found for controller type: %s", name));
+                throw new VmidcException(String.format("Sdn plugin not found for controller type: %s", controllerType));
             }
             api = serviceObjs.getService();
-            this.sdnControllerApis.put(name, api);
+            this.sdnControllerApis.put(controllerType, api);
         }
         return api;
     }
 
     @Override
-    public Object getPluginProperty(ControllerType controllerType, String propertyName) throws Exception {
-        final String name = controllerType.getValue();
-        if (!this.sdnControllerRefs.containsKey(name)) {
-            throw new VmidcException("Unsupported Controller type '" + name + "'");
+    public Object getControllerPluginProperty(String controllerType, String propertyName) throws Exception {
+        if (!this.sdnControllerRefs.containsKey(controllerType)) {
+            throw new VmidcException("Unsupported Controller type '" + controllerType + "'");
         }
-        return this.sdnControllerRefs.get(name).getServiceReference().getProperty(propertyName);
+        return this.sdnControllerRefs.get(controllerType).getServiceReference().getProperty(propertyName);
     }
 
     @Override
@@ -470,9 +455,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     @Override
     public Set<String> getControllerTypes() {
-        Set<String> controllerTypes = new TreeSet<>();
-        controllerTypes.addAll(this.sdnControllerRefs.keySet());
-        return controllerTypes;
+        return new TreeSet<String>(this.sdnControllerRefs.keySet());
     }
 
     @Override
@@ -487,16 +470,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         }
         tracker.open();
         return tracker;
-    }
-
-    @Override
-    public boolean usesProviderCreds(String controllerType) throws Exception {
-        return (boolean) getPluginProperty(ControllerType.fromText(controllerType), Constants.USE_PROVIDER_CREDS);
-    }
-
-    @Override
-    public boolean isKeyAuth(String managerType) throws Exception {
-        return isKeyAuth(ManagerType.fromText(managerType));
     }
 
     @Override
@@ -520,20 +493,19 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     @Override
     public Boolean providesDeviceStatus(VirtualSystem virtualSystem) throws Exception {
-        return providesDeviceStatus(ManagerType
-                .fromText(virtualSystem.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+        return providesDeviceStatus(virtualSystem.getDistributedAppliance().getApplianceManagerConnector().getManagerType());
     }
 
     @Override
     public Boolean syncsPolicyMapping(VirtualSystem vs) throws Exception {
         return syncsPolicyMapping(
-                ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+                vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType());
     }
 
     @Override
     public String getExternalServiceName(VirtualSystem virtualSystem) throws Exception {
         return getExternalServiceName(
-                ManagerType.fromText(virtualSystem.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+                virtualSystem.getDistributedAppliance().getApplianceManagerConnector().getManagerType());
     }
 
     @Override
@@ -542,11 +514,6 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         try (SdnControllerApi networkControllerApi = createNetworkControllerApi(vc.getControllerType())) {
             return networkControllerApi.queryPortInfo(getVirtualizationConnectorElement(vc), region, portsQuery);
         }
-    }
-
-    @Override
-    public SdnControllerApi createNetworkControllerApi(String controllerType) throws Exception {
-        return createNetworkControllerApi(ControllerType.fromText(controllerType));
     }
 
     private VirtualizationConnectorElement getVirtualizationConnectorElement(VirtualizationConnector vc)
@@ -581,7 +548,7 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
     @Override
     public Boolean syncsSecurityGroup(VirtualSystem vs) throws Exception {
         return syncsSecurityGroup(
-                ManagerType.fromText(vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType()));
+                vs.getDistributedAppliance().getApplianceManagerConnector().getManagerType());
     }
 
     @Override
@@ -644,58 +611,58 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
 
     @Override
     public Boolean supportsOffboxRedirection(VirtualSystem vs) throws Exception {
-        return supportsOffboxRedirection(ControllerType.fromText(vs.getVirtualizationConnector().getControllerType()));
+        return supportsOffboxRedirection(vs.getVirtualizationConnector().getControllerType());
     }
 
-    private Boolean supportsOffboxRedirection(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, SUPPORT_OFFBOX_REDIRECTION);
+    private Boolean supportsOffboxRedirection(String controllerType) throws Exception {
+        return (Boolean) getControllerPluginProperty(controllerType, SUPPORT_OFFBOX_REDIRECTION);
     }
 
     @Override
     public Boolean supportsOffboxRedirection(SecurityGroup sg) throws Exception {
-        return supportsOffboxRedirection(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+        return supportsOffboxRedirection(sg.getVirtualizationConnector().getControllerType());
     }
 
     @Override
     public Boolean supportsServiceFunctionChaining(SecurityGroup sg) throws Exception {
-        return supportsServiceFunctionChaining(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+        return supportsServiceFunctionChaining(sg.getVirtualizationConnector().getControllerType());
     }
 
-    private Boolean supportsServiceFunctionChaining(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, SUPPORT_SFC);
+    private Boolean supportsServiceFunctionChaining(String controllerType) throws Exception {
+        return (Boolean) getControllerPluginProperty(controllerType, SUPPORT_SFC);
     }
 
     @Override
     public Boolean supportsFailurePolicy(SecurityGroup sg) throws Exception {
-        return supportsFailurePolicy(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+        return supportsFailurePolicy(sg.getVirtualizationConnector().getControllerType());
     }
 
-    private Boolean supportsFailurePolicy(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, SUPPORT_FAILURE_POLICY);
-    }
-
-    @Override
-    public Boolean usesProviderCreds(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, USE_PROVIDER_CREDS);
+    private Boolean supportsFailurePolicy(String controllerType) throws Exception {
+        return (Boolean) getControllerPluginProperty(controllerType, SUPPORT_FAILURE_POLICY);
     }
 
     @Override
-    public Boolean providesTrafficPortInfo(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, QUERY_PORT_INFO);
+    public Boolean usesProviderCreds(String controllerType) throws Exception {
+        return (Boolean) getControllerPluginProperty(controllerType, USE_PROVIDER_CREDS);
+    }
+
+    @Override
+    public Boolean providesTrafficPortInfo(String controllerType) throws Exception {
+        return (Boolean) getControllerPluginProperty(controllerType, QUERY_PORT_INFO);
     }
 
     @Override
     public Boolean supportsPortGroup(VirtualSystem vs) throws Exception {
-        return supportsPortGroup(ControllerType.fromText(vs.getVirtualizationConnector().getControllerType()));
+        return supportsPortGroup(vs.getVirtualizationConnector().getControllerType());
     }
 
-    private Boolean supportsPortGroup(ControllerType controllerType) throws Exception {
-        return (Boolean) getPluginProperty(controllerType, SUPPORT_PORT_GROUP);
+    private Boolean supportsPortGroup(String controllerType) throws Exception {
+        return (Boolean) getControllerPluginProperty(controllerType, SUPPORT_PORT_GROUP);
     }
 
     @Override
     public Boolean supportsPortGroup(SecurityGroup sg) throws Exception {
-        return supportsPortGroup(ControllerType.fromText(sg.getVirtualizationConnector().getControllerType()));
+        return supportsPortGroup(sg.getVirtualizationConnector().getControllerType());
     }
 
 }
