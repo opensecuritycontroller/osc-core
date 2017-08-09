@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -164,7 +165,7 @@ public class CreatePortGroupHookTaskTest extends BasePortGroupHookTaskTest {
         }
     }
 
-    private class NetworkElementMatcher extends ArgumentMatcher<NetworkElement> {
+    private class NetworkElementMatcher extends ArgumentMatcher<List<NetworkElement>> {
         private SecurityGroup sg;
 
         public NetworkElementMatcher(SecurityGroup sg) {
@@ -172,12 +173,12 @@ public class CreatePortGroupHookTaskTest extends BasePortGroupHookTaskTest {
         }
 
         @Override
-        public boolean matches(Object object) {
-            if (object == null || !(object instanceof NetworkElement)) {
+        public boolean matches(Object objects) {
+            if (objects == null || !(objects instanceof List<?>)) {
                 return false;
             }
 
-            NetworkElement netElement = (NetworkElement) object;
+            NetworkElement netElement = (NetworkElement) ((List<?>)objects).get(0);
 
             return netElement.getElementId().equals(this.sg.getNetworkElementId());
         }

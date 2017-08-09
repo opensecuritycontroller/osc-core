@@ -80,7 +80,7 @@ public class VmPortHookUpdateTask extends TransactionalTask {
             // the other cases as well and provide it here.
             InspectionHookElementImpl inspectionHook =
                     new InspectionHookElementImpl(null, new NetworkElementImpl(this.vmPort),
-                            new DefaultInspectionPort(ingressPort, egressPort),
+                            new DefaultInspectionPort(ingressPort, egressPort, null),
                             this.securityGroupInterface.getTagValue(),
                             TagEncapsulationType.valueOf(this.securityGroupInterface.getVirtualSystem().getEncapsulationType().name()),
                             this.securityGroupInterface.getOrder(),

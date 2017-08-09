@@ -71,7 +71,7 @@ public final class UpdatePortGroupHookTask extends BasePortGroupHookTask {
         try (SdnRedirectionApi redirection = this.apiFactoryService.createNetworkRedirectionApi(getSGI().getVirtualSystem())) {
             InspectionHookElementImpl inspectionHook =
                     new InspectionHookElementImpl(inspectionHookId, getPortGroup(),
-                            new DefaultInspectionPort(getIngressPort(), getEgressPort()),
+                            new DefaultInspectionPort(getIngressPort(), getEgressPort(), null),
                             getSGI().getTagValue(), TagEncapsulationType.valueOf(getSGI().getVirtualSystem().getEncapsulationType().name()),
                             getSGI().getOrder(), FailurePolicyType.valueOf(getSGI().getFailurePolicyType().name()));
 

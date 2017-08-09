@@ -85,8 +85,9 @@ public class DeleteInspectionPortTask extends TransactionalTask {
 
             ingressPort.setParentId(domainId);
             egressPort.setParentId(domainId);
-
-            InspectionPortElement portEl = new DefaultInspectionPort(ingressPort, egressPort);
+            
+            //Element Object in DefaultInspectionPort is not used for now, hence null
+            InspectionPortElement portEl = new DefaultInspectionPort(ingressPort, egressPort, null);
             LOG.info(String.format("Deleting Inspection port(s): '%s' from region '%s' and Server : '%s' ",
                     portEl, this.region, this.dai));
             controller.removeInspectionPort(portEl);

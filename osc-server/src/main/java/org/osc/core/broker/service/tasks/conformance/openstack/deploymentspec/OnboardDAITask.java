@@ -76,13 +76,14 @@ public class OnboardDAITask extends TransactionalTask {
                 ingressPort.setParentId(domainId);
                 egressPort.setParentId(domainId);
                 if (domainId != null){
-                    controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
+                	//Element Object is not used in DefaultInstepctionPort for now, hence null
+                    controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
                 } else {
                     log.warn("DomainId is missing, cannot be null");
                 }
 
             } else {
-                controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
+                controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
             }
 
 
