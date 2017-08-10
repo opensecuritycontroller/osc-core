@@ -86,5 +86,5 @@
 	javax.websocket-api;version='[1.0.0,1.0.1)',\
 	org.glassfish.jersey.media.jersey-media-json-jackson;version='[2.11.0,2.11.1)',\
 	osc-uber-openstack4j;version='[1.0.0,1.0.1)',\
-	sdn-controller-api;version='[1.1.0,1.1.1)',\
-	security-mgr-api;version='[1.0.1,1.0.2)'
+	security-mgr-api;version='[1.0.1,1.0.2)',\
+	sdn-controller-api;version='[2.0.0,2.0.1)'
