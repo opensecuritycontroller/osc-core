@@ -443,7 +443,7 @@
 
 								<copy todir="${basedir}/webapp/SDK">
 									<fileset
-										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/1.1.0-SNAPSHOT">
+										dir="${user.home}/.m2/repository/org/osc/api/sdn-controller-api/2.0.0-SNAPSHOT">
 										<include name="**/*-sources.jar" />
 									</fileset>
 									<fileset

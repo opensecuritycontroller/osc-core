@@ -73,7 +73,7 @@ public class VmPortHookTagUpdateTask extends TransactionalTask {
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
-            controller.setInspectionHookTag(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort),
+            controller.setInspectionHookTag(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort, null),
                     this.securityGroupInterface.getTagValue());
         } finally {
             controller.close();

@@ -74,7 +74,8 @@ public class VmPortHookFailurePolicyUpdateTask extends TransactionalTask {
                     this.dai.getInspectionIngressMacAddress());
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
-            controller.setInspectionHookFailurePolicy(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort),
+            //Element object in DefaultInspectionPort is not used, hence null
+            controller.setInspectionHookFailurePolicy(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort, null),
                     FailurePolicyType.valueOf(this.securityGroupInterface.getFailurePolicyType().name()));
         } finally {
             controller.close();

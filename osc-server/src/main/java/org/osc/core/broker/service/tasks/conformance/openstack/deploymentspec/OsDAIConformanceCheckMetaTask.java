@@ -242,13 +242,14 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                 if (domainId != null) {
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);
-                    inspectionPort = controller.getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
+                    //Element object in DefaultInspectionport is not used at this point, hence null
+                    inspectionPort = controller.getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
                 } else {
                     log.warn("DomainId is missing, cannot be null");
                 }
 
             } else {
-                inspectionPort = controller.getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort));
+                inspectionPort = controller.getInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
             }
             return inspectionPort != null;
         } finally {

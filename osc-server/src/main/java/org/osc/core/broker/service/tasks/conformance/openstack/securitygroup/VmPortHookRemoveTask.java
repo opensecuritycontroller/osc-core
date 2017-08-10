@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.Arrays;
+
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
@@ -98,9 +100,10 @@ public class VmPortHookRemoveTask extends TransactionalTask {
                     String portGroupId = this.sgm.getSecurityGroup().getNetworkElementId();
                     PortGroup portGroup = new PortGroup();
                     portGroup.setPortGroupId(portGroupId);
-                    controller.removeInspectionHook(portGroup, new DefaultInspectionPort(ingressPort, egressPort));
+                    //Element object in DefaultInpectionPort will only be used in case of SFC , hence pass null
+                    controller.removeInspectionHook(Arrays.asList(portGroup), new DefaultInspectionPort(ingressPort, egressPort, null));
                 } else {
-                    controller.removeInspectionHook(new NetworkElementImpl(this.vmPort), new DefaultInspectionPort(ingressPort, egressPort));
+                    controller.removeInspectionHook(Arrays.asList(new NetworkElementImpl(this.vmPort)), new DefaultInspectionPort(ingressPort, egressPort, null));
                 }
             }
             this.vmPort.removeDai(this.dai);

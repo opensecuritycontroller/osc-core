@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
+import java.util.Arrays;
+
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
@@ -67,10 +69,10 @@ public final class CreatePortGroupHookTask extends BasePortGroupHookTask {
     public void executeTransaction(EntityManager em) throws Exception {
         super.executeTransaction(em);
         String inspectionHookId = null;
-
+        //Element object in DefaultInspectionPort is not used , hence null
         try (SdnRedirectionApi redirection = this.apiFactoryService.createNetworkRedirectionApi(getSGI().getVirtualSystem())) {
-            inspectionHookId = redirection.installInspectionHook(getPortGroup(),
-                    new DefaultInspectionPort(getIngressPort(), getEgressPort()),
+            inspectionHookId = redirection.installInspectionHook(Arrays.asList(getPortGroup()),
+                    new DefaultInspectionPort(getIngressPort(), getEgressPort(), null),
                     getSGI().getTagValue(), null,
                     getSGI().getOrder(), null);
         }
