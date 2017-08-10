@@ -297,11 +297,9 @@
 								</goals>
 								<configuration>
 									<tasks>
-										<!-- copy bundled plugins for bundled profile "all". -->
-										<copy tofile="${basedir}/plugins/SmcMgrPlugin.bar"
-											file="${basedir}/../../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" />
-										<copy tofile="${basedir}/plugins/NsmMgrPlugin.bar"
-											file="${basedir}/../../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" />
+										<!-- copy bundled plugins for bundled profile "all". -->										
+										<copy tofile="${basedir}/plugins/NuageSdnControllerPlugin.bar"
+											file="${basedir}/../../osc-nuage-plugin/target/NuageSdnControllerPlugin.bar" />
 										<copy tofile="${basedir}/plugins/SampleMgrPlugin.bar"
 											file="${basedir}/../../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" />
 										<copy tofile="${basedir}/plugins/NscSdnControllerPlugin.bar"
