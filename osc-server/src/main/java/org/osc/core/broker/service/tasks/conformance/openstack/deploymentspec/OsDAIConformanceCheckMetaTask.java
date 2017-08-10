@@ -190,8 +190,9 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
             } else {
                 ApplianceSoftwareVersion currentSoftwareVersion = ds.getVirtualSystem().getApplianceSoftwareVersion();
                 boolean doesSvaVersionMatchVsVersion = false;
+                
                 for (OsImageReference imageRef : ds.getVirtualSystem().getOsImageReference()) {
-                    if (imageRef.getImageRefId().equals(sva.getImage().getId())
+                	if (imageRef.getImageRefId().equals(sva.getImageId())
                             && imageRef.getApplianceVersion().equals(currentSoftwareVersion)) {
                         doesSvaVersionMatchVsVersion = true;
                         break;
