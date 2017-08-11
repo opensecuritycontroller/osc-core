@@ -76,10 +76,15 @@
 	</target>
 		
 	<target name="copyPlugins" if="${all}">
-		<copy file="${basedir}/../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" tofile="Build${fullVersion}/SampleMgrPlugin.bar" />
-		<copy file="${basedir}/../security-mgr-nsm-plugin/target/NsmMgrPlugin.bar" tofile="Build${fullVersion}/NsmMgrPlugin.bar" />
-		<copy file="${basedir}/../security-mgr-smc-plugin/target/SmcMgrPlugin.bar" tofile="Build${fullVersion}/SmcMgrPlugin.bar" />
-		<copy file="${basedir}/../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" tofile="Build${fullVersion}/NscSdnControllerPlugin.bar" />
+		<copy tofile="Build${fullVersion}/SampleMgrPlugin.bar">
+			<fileset dir="${basedir}/../security-mgr-sample-plugin/target/" includes="SampleMgrPlugin*.bar" />
+		</copy>
+		<copy tofile="Build${fullVersion}/NscSdnControllerPlugin.bar">
+			<fileset dir="${basedir}/../sdn-controller-nsc-plugin/target/" includes="NscSdnControllerPlugin*.bar" />
+		</copy>
+        <copy tofile="Build${fullVersion}/NuageSdnControllerPlugin.bar">
+        	<fileset dir="${basedir}/../osc-nuage-plugin/target/" includes="NuageSdnControllerPlugin*.bar" />
+        </copy>
 	</target>
 
 	<target name="checkImagesTocopy">
