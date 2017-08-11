@@ -298,12 +298,19 @@
 								<configuration>
 									<tasks>
 										<!-- copy bundled plugins for bundled profile "all". -->										
-										<copy tofile="${basedir}/plugins/NuageSdnControllerPlugin.bar"
-											file="${basedir}/../../osc-nuage-plugin/target/NuageSdnControllerPlugin.bar" />
-										<copy tofile="${basedir}/plugins/SampleMgrPlugin.bar"
-											file="${basedir}/../../security-mgr-sample-plugin/target/SampleMgrPlugin.bar" />
-										<copy tofile="${basedir}/plugins/NscSdnControllerPlugin.bar"
-											file="${basedir}/../../sdn-controller-nsc-plugin/target/NscSdnControllerPlugin.bar" />
+										<copy tofile="${basedir}/plugins/SampleMgrPlugin.bar">
+											<fileset
+												dir="${basedir}/../../security-mgr-sample-plugin/target/"
+												includes="SampleMgrPlugin*.bar" />
+										</copy>
+										<copy tofile="${basedir}/plugins/NscSdnControllerPlugin.bar">
+											<fileset dir="${basedir}/../../sdn-controller-nsc-plugin/target/"
+												includes="NscSdnControllerPlugin*.bar" />
+										</copy>
+                                        <copy tofile="${basedir}/plugins/NuageSdnControllerPlugin.bar">
+                                            <fileset dir="${basedir}/../../osc-nuage-plugin/target/"
+                                                includes="NuageSdnControllerPlugin*.bar" />
+                                        </copy>										
 									</tasks>
 								</configuration>
 							</execution>
@@ -391,7 +398,7 @@
 						<fileset>
 							<directory>${basedir}</directory>
 							<includes>
-								<include>plugins/**</include>								
+								<include>plugins/**</include>
 								<include>generated/**</include>
 								<include>webapp/**</include>
 							</includes>
