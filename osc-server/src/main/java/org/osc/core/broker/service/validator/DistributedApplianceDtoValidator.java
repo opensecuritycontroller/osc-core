@@ -40,7 +40,6 @@ import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.ValidateUtil;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -154,7 +153,7 @@ public class DistributedApplianceDtoValidator implements DtoValidator<Distribute
             HashMap<String, Object> nullFields = new HashMap<>();
             HashMap<String, Object> notNullFields = new HashMap<>();
 
-            boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()));
+            boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(mc.getManagerType());
 
             if (isPolicyMappingSupported) {
                 if (vc.getVirtualizationType() == VirtualizationType.OPENSTACK) {

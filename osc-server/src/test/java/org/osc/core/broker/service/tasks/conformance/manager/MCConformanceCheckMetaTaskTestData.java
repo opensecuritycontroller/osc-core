@@ -19,20 +19,19 @@ package org.osc.core.broker.service.tasks.conformance.manager;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.osc.core.common.job.TaskGuard;
 import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.osc.core.common.job.TaskGuard;
 
 class MCConformanceCheckMetaTaskTestData {
     public static List<ApplianceManagerConnector> TEST_MANAGER_CONNECTORS = new ArrayList<ApplianceManagerConnector>();
 
-    public static ApplianceManagerConnector POLICY_MAPPING_SUPPORTED_MC = createManagerConnector(1L, ManagerType.NSM);
-    public static ApplianceManagerConnector POLICY_MAPPING_NOT_SUPPORTED_MC = createManagerConnector(2L, ManagerType.SMC);
+    public static ApplianceManagerConnector POLICY_MAPPING_SUPPORTED_MC = createManagerConnector(1L, "NSM");
+    public static ApplianceManagerConnector POLICY_MAPPING_NOT_SUPPORTED_MC = createManagerConnector(2L, "SMC");
     public static byte[] PUBLIC_KEY = new byte[3];
 
     public static TaskGraph createMcPolicyMappingNotSupportedGraph(ApplianceManagerConnector mc) throws Exception {
@@ -59,10 +58,10 @@ class MCConformanceCheckMetaTaskTestData {
         return tg;
     }
 
-    private static ApplianceManagerConnector createManagerConnector(Long mcId, ManagerType managerType) {
+    private static ApplianceManagerConnector createManagerConnector(Long mcId, String managerType) {
         ApplianceManagerConnector mc = new ApplianceManagerConnector();
         mc.setId(mcId);
-        mc.setManagerType(managerType.getValue());
+        mc.setManagerType(managerType);
         TEST_MANAGER_CONNECTORS.add(mc);
         return mc;
     }

@@ -23,8 +23,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.osc.core.common.manager.ManagerType;
-
 import io.swagger.annotations.ApiModelProperty;
 
 // Appliance Manager Connector Data Transfer Object associated with MC Entity
@@ -36,7 +34,7 @@ public class ApplianceManagerConnectorDto extends BaseDto {
     private String name;
 
     @ApiModelProperty(required = true)
-    private ManagerType managerType;
+    private String managerType;
 
     @ApiModelProperty(required = true)
     private String ipAddress;
@@ -73,11 +71,11 @@ public class ApplianceManagerConnectorDto extends BaseDto {
         this.name = name;
     }
 
-    public ManagerType getManagerType() {
+    public String getManagerType() {
         return this.managerType;
     }
 
-    public void setManagerType(ManagerType type) {
+    public void setManagerType(String type) {
         this.managerType = type;
     }
 

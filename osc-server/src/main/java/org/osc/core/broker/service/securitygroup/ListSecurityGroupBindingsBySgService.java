@@ -31,6 +31,7 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
+import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.ActionNotSupportedException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
@@ -38,7 +39,6 @@ import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.response.ListResponse;
 import org.osc.core.broker.service.validator.BaseIdRequestValidator;
-import org.osc.core.common.controller.ControllerType;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.sdk.controller.FailurePolicyType;
 import org.osgi.service.component.annotations.Component;
@@ -132,7 +132,7 @@ implements ListSecurityGroupBindingsBySgServiceApi {
             throw new VmidcBrokerValidationException("Security Group with Id: " + request.getId() + "  is not found.");
         }
 
-        if (sg.getVirtualizationConnector().getControllerType().equals(ControllerType.NONE.getValue())
+        if (sg.getVirtualizationConnector().getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)
                 && sg.getVirtualizationConnector().getVirtualizationType() == VirtualizationType.OPENSTACK) {
             throw new ActionNotSupportedException(
                     "Invalid Action. Controller is not defined for this Virtualization Connector.");

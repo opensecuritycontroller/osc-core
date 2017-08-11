@@ -50,7 +50,6 @@ import org.osc.core.broker.window.CRUDBaseWindow;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.WindowUtil;
 import org.osc.core.broker.window.button.OkCancelButtonModel;
-import org.osc.core.common.manager.ManagerType;
 
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.ui.Button.ClickEvent;
@@ -214,7 +213,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         updateRequest.setDto(new ApplianceManagerConnectorRequest());
         updateRequest.getDto().setId(this.currentMCObject.getBean().getId());
         updateRequest.getDto().setName(this.name.getValue().trim());
-        updateRequest.getDto().setManagerType(ManagerType.fromText(this.type.getValue().trim()));
+        updateRequest.getDto().setManagerType(this.type.getValue().trim());
         updateRequest.getDto().setIpAddress(this.ip.getValue().trim());
         updateRequest.getDto().setUsername(this.user.getValue().trim());
         updateRequest.getDto().setPassword(this.pw.getValue().trim());
@@ -236,7 +235,7 @@ public class UpdateManagerConnectorWindow extends CRUDBaseWindow<OkCancelButtonM
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "name")
         .setValue(this.name.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "managerType")
-        .setValue(ManagerType.fromText(this.type.getValue().trim()));
+        .setValue(this.type.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "ipAddress")
         .setValue(this.ip.getValue().trim());
         this.mcView.getParentContainer().getContainerProperty(updateRequest.getDto().getId(), "username")

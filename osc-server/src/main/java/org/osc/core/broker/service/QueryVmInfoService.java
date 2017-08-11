@@ -16,6 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service;
 
+import java.io.IOException;
+import java.util.Map;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.model.compute.Server;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -35,16 +40,11 @@ import org.osc.core.broker.service.response.QueryVmInfoResponse;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.FlowVmInfo;
 import org.osc.core.broker.service.response.QueryVmInfoResponse.VmInfo;
 import org.osc.core.broker.util.ValidateUtil;
-import org.osc.core.common.controller.ControllerType;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.sdk.controller.FlowInfo;
 import org.osc.sdk.controller.FlowPortInfo;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
-import java.io.IOException;
-import java.util.Map;
 
 @Component
 public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, QueryVmInfoResponse>
@@ -109,7 +109,7 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
             if (request.flow != null && !request.flow.isEmpty()) {
                 try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc));
                      Openstack4JNova nova = new Openstack4JNova(new Endpoint(vc))) {
-                    if (this.apiFactoryService.providesTrafficPortInfo(ControllerType.fromText(vc.getControllerType()))) {
+                    if (this.apiFactoryService.providesTrafficPortInfo(vc.getControllerType())) {
                         // Search using SDN controller
                         Map<String, FlowPortInfo> flowPortInfo = this.apiFactoryService.queryPortInfo(vc, null, request.flow);
 

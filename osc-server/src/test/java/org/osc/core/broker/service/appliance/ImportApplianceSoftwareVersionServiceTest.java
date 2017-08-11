@@ -33,7 +33,6 @@ import javax.persistence.EntityManager;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,7 +61,6 @@ import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VersionUtil.Version;
 import org.osc.core.broker.util.db.DBConnectionManager;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.common.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.test.util.TestTransactionControl;
@@ -156,7 +154,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
         this.imageMetaData.setImageName(OVF_IMAGE_NAME);
         this.imageMetaData.setVirtualizationType(VirtualizationType.OPENSTACK.toString());
         this.imageMetaData.setModel(SOFTWARE_MODEL);
-        this.imageMetaData.setManagerType(ManagerType.NSM.toString());
+        this.imageMetaData.setManagerType("NSM");
         this.imageMetaData.setManagerVersion(MANAGER_VERSION);
         this.imageMetaData.setVirtualizationVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
         this.imageMetaData.setSoftwareVersion(SOFTWARE_VERSION);
@@ -166,8 +164,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
         this.imageMetaData.setMemoryInMb(4);
         this.imageMetaData.setDiskSizeInGb(4);
 
-        ManagerType.addType("NSM");
-
         mockStatic(FileUtils.class, Answers.RETURNS_SMART_NULLS.get());
 
         spy(ServerUtil.class);
@@ -175,13 +171,13 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         // Appliance Mocking
         Appliance mockExistingMatchingAppliance = mock(Appliance.class);
-        when(mockExistingMatchingAppliance.getManagerType()).thenReturn(ManagerType.NSM.getValue());
+        when(mockExistingMatchingAppliance.getManagerType()).thenReturn("NSM");
         when(mockExistingMatchingAppliance.getManagerSoftwareVersion()).thenReturn(MANAGER_VERSION);
         when(mockExistingMatchingAppliance.getId()).thenReturn(APPLIANCE_ID);
 
         ApplianceManagerApi applianceMgrPolicyMappingSupported = Mockito.mock(ApplianceManagerApi.class);
 
-        Mockito.when(this.apiFactoryService.createApplianceManagerApi(ManagerType.NSM))
+        Mockito.when(this.apiFactoryService.createApplianceManagerApi("NSM"))
         .thenReturn(applianceMgrPolicyMappingSupported);
 
         Mockito.when(this.config.upload_path()).thenReturn(TEST_UPLOAD_FOLDER);
@@ -291,7 +287,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
         Appliance app = new Appliance();
         app.setManagerSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
-        app.setManagerType(ManagerType.NSM.getValue());
+        app.setManagerType("NSM");
         app.setModel(SOFTWARE_MODEL);
 
         this.em.persist(app);
@@ -356,17 +352,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
         ServerUtil.isEnoughSpace();
 
         // validate is called
-        Matcher<Boolean> isPolicyMappingSupported = new BaseMatcher<Boolean>() {
-
-            @Override
-            public boolean matches(Object arg0) {
-                return true;
-            }
-
-            @Override
-            public void describeTo(Description arg0) {
-            }
-        };
         verify(this.imageMetaDataValidator).validate(Mockito.argThat(
                 new BaseMatcher<ImageMetadata>() {
 
@@ -384,7 +369,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
                                 gson.toJson(ImportApplianceSoftwareVersionServiceTest.this.imageMetaData));
                     }
 
-                }), Mockito.booleanThat(isPolicyMappingSupported));
+                }), Mockito.any());
 
         // asv ID matches
         assertEquals("Appliance Software Version Id mismatch", id, response.getId());

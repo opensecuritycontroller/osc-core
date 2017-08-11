@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
 
@@ -35,15 +35,14 @@ import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.job.JobRecord;
-import org.osc.core.common.job.JobStatus;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.common.job.JobStatus;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.test.util.TestTransactionControl;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -180,7 +179,7 @@ public class ValidateDbCreate {
         ApplianceManagerConnector applianceMgrCon = new ApplianceManagerConnector();
 
         applianceMgrCon.setName("nsm-1");
-        applianceMgrCon.setManagerType(ManagerType.NSM.getValue());
+        applianceMgrCon.setManagerType("NSM");
         applianceMgrCon.setServiceType("IPS_IDS");
         applianceMgrCon.setUsername("admin");
         applianceMgrCon.setPassword("pass123");
@@ -213,7 +212,7 @@ public class ValidateDbCreate {
     private Appliance addApplianceEntity(EntityManager em) {
         Appliance appliance = new Appliance();
 
-        appliance.setManagerType(ManagerType.NSM.getValue());
+        appliance.setManagerType("NSM");
         appliance.setModel("model-1");
         appliance.setManagerSoftwareVersion("1.2");
 

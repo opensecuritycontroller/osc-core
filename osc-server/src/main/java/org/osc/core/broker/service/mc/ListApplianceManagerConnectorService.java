@@ -32,7 +32,6 @@ import org.osc.core.broker.service.persistence.ApplianceManagerConnectorEntityMg
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.ListResponse;
-import org.osc.core.common.manager.ManagerType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -63,7 +62,7 @@ implements ListApplianceManagerConnectorServiceApi {
                 ApplianceManagerConnectorDto.sanitizeManagerConnector(dto);
             }
 
-            boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()));
+            boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(mc.getManagerType());
 
             dto.setPolicyMappingSupported(isPolicyMappingSupported);
 

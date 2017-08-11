@@ -18,6 +18,7 @@ package org.osc.core.broker.service.appliance;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.image.ImageMetadata;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.VersionUtil.Version;
@@ -27,7 +28,7 @@ public class ImageMetadataValidator {
 
     private static final Logger log = Logger.getLogger(ImageMetadataValidator.class);
 
-    public void validate(ImageMetadata imageMetadata, boolean isPolicyMappingSupported) throws Exception {
+    public void validate(ImageMetadata imageMetadata, ApiFactoryService apiFactoryService) throws Exception {
         ImageMetadata.checkForNullFields(imageMetadata);
 
         Version minIscVersion = imageMetadata.getMinIscVersion();
@@ -42,7 +43,9 @@ public class ImageMetadataValidator {
         }
 
         try {
-            imageMetadata.getManagerType();
+            if(!apiFactoryService.getManagerTypes().contains(imageMetadata.getManagerType())) {
+                throw new IllegalArgumentException();
+            }
             VirtualizationType virtualizationType = imageMetadata.getVirtualizationType();
             imageMetadata.getEncapsulationTypes();
             if (virtualizationType == null) {
@@ -56,6 +59,7 @@ public class ImageMetadataValidator {
                     "Invalid File Format. Invalid Manager Type and/or Virtualization Type and/or Virtualization Version and/or Encapsulation Type.");
         }
 
+        boolean isPolicyMappingSupported = apiFactoryService.syncsPolicyMapping(imageMetadata.getManagerType());
         if (isPolicyMappingSupported && imageMetadata.getVirtualizationType().isOpenstack()
                 && imageMetadata.getEncapsulationTypes().isEmpty()
                 ) {

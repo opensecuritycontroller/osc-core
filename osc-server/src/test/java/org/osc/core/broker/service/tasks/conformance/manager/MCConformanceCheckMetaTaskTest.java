@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.manager;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTaskTestData.*;
 
@@ -35,7 +35,6 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.element.ApplianceManagerConnectorElement;
@@ -71,7 +70,7 @@ public class MCConformanceCheckMetaTaskTest {
         setupApplianceManagerApiFactory(POLICY_MAPPING_SUPPORTED_MC.getManagerType(), true);
         setupApplianceManagerApiFactory(POLICY_MAPPING_NOT_SUPPORTED_MC.getManagerType(), false);
 
-        when(this.apiFactoryServiceMock.syncsSecurityGroup(ManagerType.fromText(POLICY_MAPPING_SUPPORTED_MC.getManagerType()))).thenReturn(true);
+        when(this.apiFactoryServiceMock.syncsSecurityGroup(POLICY_MAPPING_SUPPORTED_MC.getManagerType())).thenReturn(true);
     }
 
     @Test
@@ -100,11 +99,10 @@ public class MCConformanceCheckMetaTaskTest {
     }
 
     private void setupApplianceManagerApiFactory(String mgrType, boolean isPolicyMappingSupported) throws Exception {
-        ManagerType.addType(mgrType);
         ApplianceManagerApi mcApi = mock(ApplianceManagerApi.class);
         when(mcApi.getPublicKey(any(ApplianceManagerConnectorElement.class))).thenReturn(PUBLIC_KEY);
 
-        when(this.apiFactoryServiceMock.syncsPolicyMapping(ManagerType.fromText(mgrType))).thenReturn(isPolicyMappingSupported);
-        when(this.apiFactoryServiceMock.createApplianceManagerApi(ManagerType.fromText(mgrType))).thenReturn(mcApi);
+        when(this.apiFactoryServiceMock.syncsPolicyMapping(mgrType)).thenReturn(isPolicyMappingSupported);
+        when(this.apiFactoryServiceMock.createApplianceManagerApi(mgrType)).thenReturn(mcApi);
     }
 }

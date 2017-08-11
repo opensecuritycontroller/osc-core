@@ -38,7 +38,6 @@ import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
 import org.osc.core.broker.util.PasswordUtil;
 import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.common.job.TaskGuard;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.sdk.manager.api.ApplianceManagerApi;
 import org.osc.sdk.manager.api.ManagerCallbackNotificationApi;
 import org.osc.sdk.manager.element.ManagerNotificationRegistrationElement;
@@ -143,7 +142,7 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
                 this.tg.addTaskGraph(syncPersistedUrlNotification(em, this.mc));
             }
 
-            if (this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(this.mc.getManagerType()))) {
+            if (this.apiFactoryService.syncsPolicyMapping(this.mc.getManagerType())) {
                 Task syncDomains = this.syncDomainMetaTask.create(this.mc);
                 this.tg.addTask(syncDomains);
 
@@ -176,7 +175,7 @@ public class MCConformanceCheckMetaTask extends TransactionalMetaTask {
     private TaskGraph syncPublicKey(EntityManager em) throws Exception {
         TaskGraph tg = new TaskGraph();
 
-        ApplianceManagerApi applianceManagerApi = this.apiFactoryService.createApplianceManagerApi(ManagerType.fromText(this.mc.getManagerType()));
+        ApplianceManagerApi applianceManagerApi = this.apiFactoryService.createApplianceManagerApi(this.mc.getManagerType());
         byte[] bytes = applianceManagerApi.getPublicKey(this.apiFactoryService.getApplianceManagerConnectorElement(this.mc));
 
         if (bytes != null && (this.mc.getPublicKey() == null || !Arrays.equals(this.mc.getPublicKey(), bytes))) {

@@ -16,6 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
+import static java.util.stream.Collectors.*;
+
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockRequest.LockType;
@@ -55,15 +62,8 @@ import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidator
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
-import org.osc.core.common.controller.ControllerType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import javax.persistence.EntityManager;
-import java.util.List;
-import java.util.Set;
-
-import static java.util.stream.Collectors.toSet;
 
 @Component
 public class UpdateVirtualizationConnectorService
@@ -220,8 +220,8 @@ public class UpdateVirtualizationConnectorService
 
         // If controller type is changed, only NONE->new-type is allowed unconditionally.
         // For all other cases (current-type->NONE, current-type->new-type), there should not be any virtual systems using it.
-        if (!existingVc.getControllerType().equals(dto.getControllerType().getValue())
-                && !existingVc.getControllerType().equals(ControllerType.NONE.getValue())
+        if (!existingVc.getControllerType().equals(dto.getControllerType())
+                && !existingVc.getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)
                 && (existingVc.getVirtualSystems().size() > 0 || existingVc.getSecurityGroups().size() > 0)) {
             throw new VmidcBrokerInvalidRequestException(
                     "SDN Controller type cannot be changed if this Virtualization Connector is "

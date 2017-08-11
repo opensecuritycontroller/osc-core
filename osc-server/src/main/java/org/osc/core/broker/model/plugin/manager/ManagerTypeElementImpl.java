@@ -16,22 +16,21 @@
  *******************************************************************************/
 package org.osc.core.broker.model.plugin.manager;
 
-import org.osc.core.common.manager.ManagerType;
 import org.osc.sdk.manager.element.ManagerTypeElement;
 
 public class ManagerTypeElementImpl implements ManagerTypeElement {
-    private ManagerType managerType;
+    private String managerType;
 
-    ManagerTypeElementImpl(ManagerType managerType) {
+    ManagerTypeElementImpl(String managerType) {
         this.managerType = managerType;
     }
 
-    public ManagerType getManagerType() {
+    public String getManagerType() {
         return this.managerType;
     }
 
     @Override
     public String toString() {
-        return this.managerType.toString();
+        return this.managerType;
     }
 }

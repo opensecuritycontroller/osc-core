@@ -29,14 +29,13 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-import org.osc.core.common.manager.ManagerType;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
+import org.osc.core.common.virtualization.VirtualizationType;
 
 /**
  * The base class for the {@link DistributedApplianceDtoValidator} unit tests.
@@ -84,8 +83,7 @@ public class DistributedApplianceDtoValidatorBaseTest {
         this.validator = new DistributedApplianceDtoValidator().create(this.em);
         this.validator.apiFactoryService = apiFactoryService;
 
-        ManagerType.addType(ManagerType.NSM.getValue());
-        Mockito.when(apiFactoryService.syncsPolicyMapping(ManagerType.NSM)).thenReturn(true);
+        Mockito.when(apiFactoryService.syncsPolicyMapping("NSM")).thenReturn(true);
     }
 
     @After
@@ -98,13 +96,13 @@ public class DistributedApplianceDtoValidatorBaseTest {
 
         this.app = new Appliance();
         this.app.setManagerSoftwareVersion("mgrSoftwareVersion");
-        this.app.setManagerType(ManagerType.NSM.getValue());
+        this.app.setManagerType("NSM");
         this.app.setModel("fizzbuzz");
 
         this.em.persist(this.app);
 
         this.amc = new ApplianceManagerConnector();
-        this.amc.setManagerType(ManagerType.NSM.getValue());
+        this.amc.setManagerType("NSM");
         this.amc.setIpAddress("127.0.0.1");
         this.amc.setName(MC_NAME_EXISTING_MC);
         this.amc.setServiceType("foobar");

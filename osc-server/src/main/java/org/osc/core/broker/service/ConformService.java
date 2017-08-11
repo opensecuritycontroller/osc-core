@@ -59,7 +59,6 @@ import org.osc.core.broker.service.tasks.conformance.virtualizationconnector.Che
 import org.osc.core.broker.service.transactions.CompleteJobTransaction;
 import org.osc.core.broker.service.transactions.CompleteJobTransactionInput;
 import org.osc.core.common.job.TaskGuard;
-import org.osc.core.common.manager.ManagerType;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
@@ -183,7 +182,7 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
             tg.appendTask(this.daConformanceCheckMetaTask.create(da), TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             // Sync MC security group interfaces only if the appliance manager supports policy mapping.
-            if (this.apiFactoryService.syncsPolicyMapping(ManagerType.fromText(mc.getManagerType()))) {
+            if (this.apiFactoryService.syncsPolicyMapping(mc.getManagerType())) {
                 tg.appendTask(this.mgrSecurityGroupInterfacesCheckMetaTask.create(da, mcReadUnlocktask),
                         TaskGuard.ALL_PREDECESSORS_COMPLETED);
             }
