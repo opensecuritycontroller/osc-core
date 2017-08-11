@@ -44,10 +44,10 @@ public class UpgradeService extends ServiceDispatcher<UpgradeRequest, EmptySucce
                 + uploadedFile.getCanonicalPath());
 
         try {
-            this.server.setInMaintenance(true);
+            Server.setInMaintenance(true);
             ServerUtil.upgradeServer(uploadedFile);
         } catch (Exception e) {
-            this.server.setInMaintenance(false);
+            Server.setInMaintenance(false);
             throw new VmidcException("Upgrade failed: " + e);
         } finally {
             uploadedFile.delete();

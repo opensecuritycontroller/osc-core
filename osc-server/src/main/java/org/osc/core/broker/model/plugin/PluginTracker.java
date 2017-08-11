@@ -66,7 +66,7 @@ public class PluginTracker<T> {
      */
     public static final String PROP_PLUGIN_NAME = "osc.plugin.name";
 
-    
+
     private static final Map<String, Class<?>> REQUIRED_MANAGER_PLUGIN_PROPERTIES = ImmutableMap
             .<String, Class<?>>builder().put(VENDOR_NAME, String.class).put(SERVICE_NAME, String.class)
             .put(EXTERNAL_SERVICE_NAME, String.class).put(AUTHENTICATION_TYPE, String.class)
@@ -77,11 +77,15 @@ public class PluginTracker<T> {
             .<String, Class<?>>builder().put(SUPPORT_OFFBOX_REDIRECTION, Boolean.class).put(SUPPORT_SFC, Boolean.class)
             .put(SUPPORT_FAILURE_POLICY, Boolean.class).put(USE_PROVIDER_CREDS, Boolean.class)
             .put(QUERY_PORT_INFO, Boolean.class).put(SUPPORT_PORT_GROUP, Boolean.class).put(PROP_PLUGIN_NAME, String.class).build();
-    
+
     private final BundleContext context;
+    
+    @SuppressWarnings("unchecked")
     private final Class<T> pluginClassManager = (Class<T>) ApplianceManagerApi.class;
+    
+    @SuppressWarnings("unchecked")
     private final Class<T> pluginClassSdn = (Class<T>) SdnControllerApi.class;
-       
+
     private final PluginTrackerCustomizer<T> customizer;
     private final InstallableManager installMgr;
 
@@ -103,6 +107,7 @@ public class PluginTracker<T> {
 
         this.installListener = new InstallableListener() {
             @Override
+            @SuppressWarnings("fallthrough")
             public void installableUnitsChanged(Collection<InstallableUnitEvent> events) {
                 for (InstallableUnitEvent event : events) {
                     switch (event.getNewState()) {
@@ -118,13 +123,13 @@ public class PluginTracker<T> {
 
         };
 
-        this.serviceTrackerManager = getServiceTracker(pluginClassManager, REQUIRED_MANAGER_PLUGIN_PROPERTIES);
-        this.serviceTrackerSdn = getServiceTracker(pluginClassSdn, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES); 
-    
+        this.serviceTrackerManager = getServiceTracker(this.pluginClassManager, REQUIRED_MANAGER_PLUGIN_PROPERTIES);
+        this.serviceTrackerSdn = getServiceTracker(this.pluginClassSdn, REQUIRED_SDN_CONTROLLER_PLUGIN_PROPERTIES);
+
     }
 
     private ServiceTracker<T,T> getServiceTracker(Class<T> pluginClass, Map<String, Class<?>> requiredPluginProperties) {
-    	return new ServiceTracker<T,T>(context, pluginClass, null) {
+    	return new ServiceTracker<T,T>(this.context, pluginClass, null) {
             @Override
             public T addingService(ServiceReference<T> reference) {
                 if (!containsRequiredProperties(reference, requiredPluginProperties)) {
@@ -147,6 +152,8 @@ public class PluginTracker<T> {
         };
 
     }
+
+    @SuppressWarnings("fallthrough")
     public void open() {
         // Register listener first, before getting current installable units. We are
         // required to handle duplicates (better than missing some).
