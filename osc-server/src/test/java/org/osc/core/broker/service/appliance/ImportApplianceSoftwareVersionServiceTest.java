@@ -16,13 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.appliance;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.*;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.spy;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,14 +43,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
-//import org.osc.core.broker.model.virtualization.VmwareSoftwareVersion;
 import org.osc.core.broker.service.api.server.UserContextApi;
+import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
+import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.test.InMemDB;
@@ -74,7 +75,6 @@ import com.google.gson.Gson;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServerUtil.class, FileUtils.class, FileUtil.class})
 public class ImportApplianceSoftwareVersionServiceTest {
-
     private static final String TEST_TMP_FOLDER = "testTmpFolder";
     private static final String TEST_UPLOAD_FOLDER = "testUploadFolder";
 
@@ -121,6 +121,9 @@ public class ImportApplianceSoftwareVersionServiceTest {
     @Mock
     private UploadConfig config;
 
+    @Mock
+    private AddApplianceService addApplianceService;
+
     @InjectMocks
     private ImportApplianceSoftwareVersionService service;
 
@@ -147,8 +150,31 @@ public class ImportApplianceSoftwareVersionServiceTest {
         when(this.mockMetaDataFile.getName()).thenReturn(META_JSON_FILE_NAME);
         when(mockPayloadFile.getName()).thenReturn(OVF_IMAGE_NAME);
 
+        when(this.addApplianceService.dispatch(any())).then(new Answer<BaseResponse>() {
+            @Override
+            public BaseResponse answer(InvocationOnMock invocation) throws Throwable {
+                @SuppressWarnings("unchecked")
+                BaseRequest<ApplianceDto> request = invocation.getArgumentAt(0, BaseRequest.class);
+                if (request == null || request.getDto() == null) {
+                    throw new IllegalArgumentException("AddAppliance Service call with null DTO!");
+                }
+
+                ApplianceDto dto = request.getDto();
+
+                Appliance appliance = new Appliance();
+                appliance.setModel(dto.getModel());
+                appliance.setManagerType(dto.getManagerType());
+                appliance.setManagerSoftwareVersion(dto.getManagerVersion());
+
+                appliance = ImportApplianceSoftwareVersionServiceTest.this.em.merge(appliance);
+
+                return new BaseResponse(appliance.getId());
+            }
+        });
+
         PowerMockito.mockStatic(FileUtil.class);
-        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] { this.mockMetaDataFile, mockPayloadFile});
+        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString()))
+        .thenReturn(new File[] { this.mockMetaDataFile, mockPayloadFile });
 
         this.imageMetaData = new ImageMetadata();
         this.imageMetaData.setImageName(OVF_IMAGE_NAME);
@@ -323,7 +349,7 @@ public class ImportApplianceSoftwareVersionServiceTest {
     @Test
     public void testDispatch_ImportApplianceMissingMetaDataFile_ExpectsErrorResponse() throws Exception {
         // Arrange. Make sure input is missing all files
-        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[]{});
+        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] {});
 
         this.exception.expect(VmidcBrokerValidationException.class);
         this.exception.expectMessage("Missing metadata file");
@@ -335,7 +361,8 @@ public class ImportApplianceSoftwareVersionServiceTest {
     @Test
     public void testDispatch_ImportApplianceMissingPayloadFile_ExpectsErrorResponse() throws Exception {
         // Arrange. Make sure input is missing a file
-        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString())).thenReturn(new File[] { this.mockMetaDataFile });
+        PowerMockito.when(FileUtil.getFileListFromDirectory(anyString()))
+        .thenReturn(new File[] { this.mockMetaDataFile });
         Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile, Charset.defaultCharset()))
         .thenReturn(new Gson().toJson(this.imageMetaData));
 

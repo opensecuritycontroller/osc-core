@@ -32,15 +32,18 @@ import org.osc.core.broker.model.entities.appliance.TagEncapsulationType;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.api.AddApplianceServiceApi;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
+import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
 import org.osc.core.broker.service.persistence.ApplianceSoftwareVersionEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.request.ImportFileRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.util.FileUtil;
@@ -58,11 +61,13 @@ import com.google.gson.JsonSyntaxException;
 configurationPolicy=ConfigurationPolicy.REQUIRE)
 public class ImportApplianceSoftwareVersionService extends ServiceDispatcher<ImportFileRequest, BaseResponse>
 implements ImportApplianceSoftwareVersionServiceApi {
-
-    private static final Logger log = Logger.getLogger(ImportApplianceSoftwareVersionService.class);
+    private static final Logger LOG = Logger.getLogger(ImportApplianceSoftwareVersionService.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;
+
+    @Reference
+    private AddApplianceServiceApi addApplianceService;
 
     private ImageMetadataValidator imageMetadataValidator;
 
@@ -80,20 +85,22 @@ implements ImportApplianceSoftwareVersionServiceApi {
         File tmpUploadFolder = new File(request.getUploadPath());
 
         try {
-
             ImageMetadata imageMetadata = validateAndLoad(tmpUploadFolder);
 
             Appliance appliance = ApplianceEntityMgr.findByModel(em, imageMetadata.getModel());
 
             if (appliance == null) {
-                appliance = new Appliance();
-                appliance.setManagerType(imageMetadata.getManagerType());
-                appliance.setModel(imageMetadata.getModel());
-                appliance.setManagerSoftwareVersion(imageMetadata.getManagerVersion());
+                ApplianceDto applianceDto = new ApplianceDto(imageMetadata.getModel(),
+                        imageMetadata.getManagerType(),
+                        imageMetadata.getManagerVersion());
 
+                BaseRequest<ApplianceDto> addApplianceRequest = new BaseRequest<>(applianceDto);
+
+                BaseResponse addApplianceResponse = this.addApplianceService.dispatch(addApplianceRequest);
+
+                // TODO emanoel: Move this to the add appliance software version service when added.
                 OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em, this.txBroadcastUtil);
-
-                appliance = applianceEntityManager.create(appliance);
+                appliance = applianceEntityManager.findByPrimaryKey(addApplianceResponse.getId());
             } else {
                 if (!appliance.getManagerType().equals(imageMetadata.getManagerType())) {
                     throw new VmidcBrokerValidationException("Invalid manager type for the appliance. Expected: "
@@ -197,15 +204,15 @@ implements ImportApplianceSoftwareVersionServiceApi {
                     continue;
                 }
                 FileUtils.copyFileToDirectory(tmpFolderFile, imageFolder, true);
-                log.info("Moving file: " + tmpFolderFile.getName() + " to Images folder: " + imageFolder.getPath());
+                LOG.info("Moving file: " + tmpFolderFile.getName() + " to Images folder: " + imageFolder.getPath());
             }
 
         } finally {
-            log.info("Cleaning temp folder: " + tmpUploadFolder.getPath());
+            LOG.info("Cleaning temp folder: " + tmpUploadFolder.getPath());
             try {
                 FileUtils.deleteDirectory(tmpUploadFolder);
             } catch (Exception e) {
-                log.error("Failed to cleaning temp folder: " + tmpUploadFolder.getPath(), e);
+                LOG.error("Failed to cleaning temp folder: " + tmpUploadFolder.getPath(), e);
                 // Not throwing exception since AddApplianceSoftwareVersionService succeeded
             }
         }
@@ -242,7 +249,7 @@ implements ImportApplianceSoftwareVersionServiceApi {
         }
 
         if (isImageFileMissing) {
-            log.error("Image file: " + imageMetadata.getImageName() + " missing in archive");
+            LOG.error("Image file: " + imageMetadata.getImageName() + " missing in archive");
             throw new VmidcBrokerValidationException("Invalid file format. Image file: " + imageMetadata.getImageName() + " missing in archive.");
         }
 
@@ -274,7 +281,7 @@ implements ImportApplianceSoftwareVersionServiceApi {
             tempImageMetadata = new Gson().fromJson(FileUtils.readFileToString(metaDataFile, Charset.defaultCharset()),
                     ImageMetadata.class);
         } catch (JsonSyntaxException | IOException exception) {
-            log.error("Error reading meta data file", exception);
+            LOG.error("Error reading meta data file", exception);
             throw new VmidcBrokerValidationException(
                     VmidcMessages.getString(VmidcMessages_.UPLOAD_APPLIANCE_INVALID_METAFILE_SYNTAX, exception.getMessage())
                     );

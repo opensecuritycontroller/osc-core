@@ -19,13 +19,44 @@ package org.osc.core.broker.service.validator;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+
+import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.service.dto.ApplianceDto;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
 import org.osc.core.broker.util.ValidateUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-public class ApplianceDtoValidator {
+@Component(service = ApplianceDtoValidator.class)
+public class ApplianceDtoValidator implements DtoValidator<ApplianceDto, Appliance> {
+    @Reference
+    private EntityManager em;
 
-    public static void checkForNullFields(ApplianceDto dto) throws Exception {
+    void setEntityManager(EntityManager em) {
+        this.em = em;
+    }
 
+    @Override
+    public void validateForCreate(ApplianceDto dto) throws Exception {
+        checkForNullFields(dto);
+
+        checkFieldLength(dto);
+
+        Appliance existingAppliance = ApplianceEntityMgr.findByModel(this.em, dto.getModel());
+
+        if (existingAppliance != null) {
+            throw new VmidcBrokerValidationException("Appliance already exists for model: " + dto.getModel());
+        }
+    }
+
+    @Override
+    public Appliance validateForUpdate(ApplianceDto dto) throws Exception {
+        throw new UnsupportedOperationException("Method validate for update not implemented yet");
+    }
+
+    private static void checkForNullFields(ApplianceDto dto) throws Exception {
         // build a map of (field,value) pairs to be checked for null/empty
         // values
         Map<String, Object> map = new HashMap<String, Object>();
@@ -37,8 +68,7 @@ public class ApplianceDtoValidator {
         ValidateUtil.checkForNullFields(map);
     }
 
-    public static void checkFieldLength(ApplianceDto dto) throws Exception {
-
+    private static void checkFieldLength(ApplianceDto dto) throws Exception {
         Map<String, String> map = new HashMap<String, String>();
 
         map.put("Appliance Model", dto.getModel());

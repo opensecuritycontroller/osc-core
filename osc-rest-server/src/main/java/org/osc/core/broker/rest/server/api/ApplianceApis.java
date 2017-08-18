@@ -38,6 +38,7 @@ import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
+import org.osc.core.broker.service.api.AddApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
@@ -96,6 +97,9 @@ public class ApplianceApis {
     UploadApplianceVersionFileServiceApi uploadApplianceVersionFileService;
 
     @Reference
+    AddApplianceServiceApi addApplianceService;
+
+    @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
 
     @Reference
@@ -115,9 +119,24 @@ public class ApplianceApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<ApplianceDto> response = (ListResponse<ApplianceDto>) this.apiUtil
-                .getListResponse(this.listApplianceService, new BaseRequest<BaseDto>(true));
+        .getListResponse(this.listApplianceService, new BaseRequest<BaseDto>(true));
 
         return response.getList();
+    }
+
+    @ApiOperation(value = "Creates a new appliance for a software function model",
+            notes = "Creates a new appliance for a software function model",
+            response = BaseResponse.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @POST
+    public Response createAppliance(@Context HttpHeaders headers,
+            @ApiParam(required = true) ApplianceDto applianceDto) {
+
+        logger.info("Creating an Appliance");
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+
+        return this.apiUtil.getResponseForBaseRequest(this.addApplianceService, new BaseRequest<ApplianceDto>(applianceDto));
     }
 
     @ApiOperation(value = "Retrieves a Software Function Model",
@@ -128,8 +147,8 @@ public class ApplianceApis {
     @Path("/{applianceId}")
     @GET
     public ApplianceDto getAppliance(@Context HttpHeaders headers,
-                                     @ApiParam(value = "Id of the Appliance Model",
-                                             required = true) @PathParam("applianceId") Long applianceId) {
+            @ApiParam(value = "Id of the Appliance Model",
+            required = true) @PathParam("applianceId") Long applianceId) {
 
         logger.info("Getting Appliance " + applianceId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
@@ -148,7 +167,7 @@ public class ApplianceApis {
     @Path("/{applianceId}")
     @DELETE
     public Response deleteAppliance(@Context HttpHeaders headers, @ApiParam(value = "Id of the Appliance Model",
-            required = true) @PathParam("applianceId") Long applianceId) {
+    required = true) @PathParam("applianceId") Long applianceId) {
         logger.info("Deleting Appliance " + applianceId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.deleteApplianceService, new BaseIdRequest(applianceId));
@@ -163,8 +182,8 @@ public class ApplianceApis {
     @Path("/{applianceId}/versions")
     @GET
     public List<ApplianceSoftwareVersionDto> getApplianceSoftwareVersions(@Context HttpHeaders headers,
-                                                                          @ApiParam(value = "Id of the Appliance Model",
-                                                                                  required = true) @PathParam("applianceId") Long applianceId) {
+            @ApiParam(value = "Id of the Appliance Model",
+            required = true) @PathParam("applianceId") Long applianceId) {
 
         logger.info("Listing Appliance Software Versions for appliance " + applianceId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
@@ -187,9 +206,9 @@ public class ApplianceApis {
     @Path("/{applianceId}/versions/{ApplianceSoftwareVersionId}")
     @GET
     public ApplianceSoftwareVersionDto getApplianceSoftwareVersion(@Context HttpHeaders headers,
-                                                                   @ApiParam(value = "Id of the Appliance Model", required = true) @PathParam("applianceId") Long applianceId,
-                                                                   @ApiParam(value = "Id of the Appliance Software Version",
-                                                                           required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
+            @ApiParam(value = "Id of the Appliance Model", required = true) @PathParam("applianceId") Long applianceId,
+            @ApiParam(value = "Id of the Appliance Software Version",
+            required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
 
         logger.info(
                 "getting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
@@ -211,9 +230,9 @@ public class ApplianceApis {
     @Path("/{applianceId}/versions/{ApplianceSoftwareVersionId}")
     @DELETE
     public Response deleteApplianceSoftwareVersion(@Context HttpHeaders headers,
-                                                   @ApiParam(value = "Id of the Appliance Model", required = true) @PathParam("applianceId") Long applianceId,
-                                                   @ApiParam(value = "Id of the Appliance Software Version",
-                                                           required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
+            @ApiParam(value = "Id of the Appliance Model", required = true) @PathParam("applianceId") Long applianceId,
+            @ApiParam(value = "Id of the Appliance Software Version",
+            required = true) @PathParam("ApplianceSoftwareVersionId") Long applianceSoftwareVersionId) {
         logger.info(
                 "Deleting Appliance Software Version " + applianceSoftwareVersionId + " from appliance " + applianceId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
@@ -230,9 +249,9 @@ public class ApplianceApis {
     @POST
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response uploadAsvFile(@Context HttpHeaders headers,
-                                  @ApiParam(value = "The imported Appliance Image file name",
-                                          required = true) @PathParam("fileName") String fileName,
-                                  @ApiParam(required = true) InputStream uploadedInputStream) {
+            @ApiParam(value = "The imported Appliance Image file name",
+            required = true) @PathParam("fileName") String fileName,
+            @ApiParam(required = true) InputStream uploadedInputStream) {
         logger.info("Started uploading file " + fileName);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.uploadApplianceVersionFileService,
