@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -29,7 +31,9 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
+import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
+import org.osc.core.broker.service.dto.VMPortDto;
 
 public class SecurityGroupMemberEntityMgr {
 
@@ -44,6 +48,18 @@ public class SecurityGroupMemberEntityMgr {
             dto.setName(vm.getName());
             dto.setOpenstackId(vm.getOpenstackId());
             dto.setRegion(vm.getRegion());
+
+            Set<VMPortDto> vmPorts = new HashSet<>();
+            for (VMPort p : vm.getPorts()) {
+                VMPortDto vmp = new VMPortDto();
+                vmp.setId(p.getId());
+                vmp.setMacAddress(p.getMacAddresses().get(0));
+                vmp.setIpAddresses(new HashSet<>(p.getPortIPs()));
+                vmPorts.add(vmp);
+            }
+
+            dto.setVmPorts(vmPorts);
+
         } else if (type == SecurityGroupMemberType.NETWORK) {
 
             Network nw = entity.getNetwork();
@@ -73,10 +89,9 @@ public class SecurityGroupMemberEntityMgr {
         Root<SecurityGroupMember> root = query.from(SecurityGroupMember.class);
 
         query = query.select(root).distinct(true)
-            .where(cb.equal(root.get("markedForDeletion"), false),
-                   cb.equal(root.get("securityGroup"), sg))
-            .orderBy(cb.asc(root.get("type")));
-
+                .where(cb.equal(root.get("markedForDeletion"), false),
+                       cb.equal(root.get("securityGroup"), sg))
+                .orderBy(cb.asc(root.get("type")));
 
         return em.createQuery(query).getResultList();
     }

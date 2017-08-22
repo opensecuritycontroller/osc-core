@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -39,12 +42,14 @@ public class SecurityGroupMemberItemDto extends BaseDto {
     private String type;
 
     @ApiModelProperty(required = false,
-            value = " Protect router port to inspect external traffic coming to this subnet")
+                      value = " Protect router port to inspect external traffic coming to this subnet")
     private boolean protectExternal;
 
     @ApiModelProperty(required = false,
-            value = " This field only applies to SGM type 'Subnet' to represent Network UUID this subnet belongs to")
+                      value = " This field only applies to SGM type 'Subnet' to represent Network UUID this subnet belongs to")
     private String parentOpenStackId;
+
+    private Set<VMPortDto> vmPorts = new HashSet<>();
 
     public SecurityGroupMemberItemDto() {
     }
@@ -118,4 +123,38 @@ public class SecurityGroupMemberItemDto extends BaseDto {
         this.parentOpenStackId = parentOpenStackId;
     }
 
+    public Set<VMPortDto> getVmPorts() {
+        return this.vmPorts;
+    }
+
+    public void setVmPorts(Set<VMPortDto> vmPorts) {
+        this.vmPorts = vmPorts;
+    }
+
+    @Override
+    public String toString() {
+
+        StringBuilder retVal = new StringBuilder();
+        retVal.append("SecurityGroupMemberItemDto [id=").append(getId());
+        retVal.append(", name=").append(getId());
+        retVal.append(", region=").append(this.region);
+        retVal.append(", openstackId=").append(this.openstackId);
+        retVal.append(", type=").append(this.type);
+        retVal.append(", protectExternal=").append(this.protectExternal);
+        retVal.append(", parentOpenStackId=").append(this.parentOpenStackId);
+
+        if (this.vmPorts != null && this.vmPorts.size() > 0) {
+            retVal.append(", vmPorts={");
+            for (VMPortDto vmp : this.vmPorts) {
+                if (vmp != null) { // paranoid
+                    retVal.append(vmp.toString()).append(", ");
+                }
+            }
+            retVal.append("}");
+        }
+
+        retVal.append("]");
+
+        return retVal.toString();
+    }
 }
