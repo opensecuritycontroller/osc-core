@@ -133,28 +133,10 @@ public class SecurityGroupMemberItemDto extends BaseDto {
 
     @Override
     public String toString() {
-
-        StringBuilder retVal = new StringBuilder();
-        retVal.append("SecurityGroupMemberItemDto [id=").append(getId());
-        retVal.append(", name=").append(getId());
-        retVal.append(", region=").append(this.region);
-        retVal.append(", openstackId=").append(this.openstackId);
-        retVal.append(", type=").append(this.type);
-        retVal.append(", protectExternal=").append(this.protectExternal);
-        retVal.append(", parentOpenStackId=").append(this.parentOpenStackId);
-
-        if (this.vmPorts != null && this.vmPorts.size() > 0) {
-            retVal.append(", vmPorts={");
-            for (VMPortDto vmp : this.vmPorts) {
-                if (vmp != null) { // paranoid
-                    retVal.append(vmp.toString()).append(", ");
-                }
-            }
-            retVal.append("}");
-        }
-
-        retVal.append("]");
-
-        return retVal.toString();
+        return "SecurityGroupMemberItemDto [name=" + this.name + ", region=" + this.region + ", openstackId=" + this.openstackId
+                + ", type=" + this.type + ", protectExternal=" + this.protectExternal + ", parentOpenStackId=" + this.parentOpenStackId
+                + ", vmPorts=" + this.vmPorts + "]";
     }
+
+
 }

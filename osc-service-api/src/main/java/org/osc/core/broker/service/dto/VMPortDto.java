@@ -29,10 +29,21 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class VMPortDto extends BaseDto {
 
+    @ApiModelProperty(value = "Mac address assigned to this port.")
     private String macAddress;
 
-    @ApiModelProperty(value = "List or object ip addresses aassigned to this port's mac address ")
+    @ApiModelProperty(value = "List or object ip addresses assigned to this port's mac address ")
     private Set<String> ipAddresses = new HashSet<>();
+
+    public VMPortDto() {
+
+    }
+
+    public VMPortDto(Long id, String macAddress, Set<String> ipAddresses) {
+        super(id);
+        this.macAddress = macAddress;
+        this.ipAddresses = ipAddresses;
+    }
 
     public Set<String> getIpAddresses() {
         return this.ipAddresses;

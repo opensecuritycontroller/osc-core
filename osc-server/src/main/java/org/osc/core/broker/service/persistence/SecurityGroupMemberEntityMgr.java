@@ -42,44 +42,22 @@ public class SecurityGroupMemberEntityMgr {
 
         dto.setId(entity.getId());
         dto.setType(type.toString());
-        if (type == SecurityGroupMemberType.VM) {
 
+        if (type == SecurityGroupMemberType.VM) {
             VM vm = entity.getVm();
             dto.setName(vm.getName());
             dto.setOpenstackId(vm.getOpenstackId());
             dto.setRegion(vm.getRegion());
-
-            Set<VMPortDto> vmPorts = new HashSet<>();
-            for (VMPort p : vm.getPorts()) {
-                VMPortDto vmp = new VMPortDto();
-                vmp.setId(p.getId());
-                vmp.setMacAddress(p.getMacAddresses().get(0));
-                vmp.setIpAddresses(new HashSet<>(p.getPortIPs()));
-                vmPorts.add(vmp);
-            }
-
-            dto.setVmPorts(vmPorts);
+            addVmPortInfo(dto, vm.getPorts());
 
         } else if (type == SecurityGroupMemberType.NETWORK) {
+            Network network = entity.getNetwork();
+            dto.setName(network.getName());
+            dto.setOpenstackId(network.getOpenstackId());
+            dto.setRegion(network.getRegion());
 
-            Network nw = entity.getNetwork();
-            dto.setName(nw.getName());
-            dto.setOpenstackId(nw.getOpenstackId());
-            dto.setRegion(nw.getRegion());
-
-            Set<VMPortDto> vmPorts = new HashSet<>();
-            for (VMPort p : nw.getPorts()) {
-                VMPortDto vmp = new VMPortDto();
-                vmp.setId(p.getId());
-                vmp.setMacAddress(p.getMacAddresses().get(0));
-                vmp.setIpAddresses(new HashSet<>(p.getPortIPs()));
-                vmPorts.add(vmp);
-            }
-
-            dto.setVmPorts(vmPorts);
-
+            addVmPortInfo(dto, network.getPorts());
         } else if (type == SecurityGroupMemberType.SUBNET) {
-
             Subnet subnet = entity.getSubnet();
             dto.setName(subnet.getName());
             dto.setOpenstackId(subnet.getOpenstackId());
@@ -87,8 +65,8 @@ public class SecurityGroupMemberEntityMgr {
             dto.setParentOpenStackId(subnet.getNetworkId());
             dto.setProtectExternal(subnet.isProtectExternal());
 
+            addVmPortInfo(dto, subnet.getPorts());
         }
-
     }
 
     public static List<SecurityGroupMember> listActiveSecurityGroupMembersBySecurityGroup(EntityManager em,
@@ -107,4 +85,15 @@ public class SecurityGroupMemberEntityMgr {
         return em.createQuery(query).getResultList();
     }
 
+    private static void addVmPortInfo(SecurityGroupMemberItemDto dto, Set<VMPort> vmPorts) {
+        Set<VMPortDto> vmPortDtos = new HashSet<>();
+        for (VMPort portEntity : vmPorts) {
+            VMPortDto vmPortDto = new VMPortDto(portEntity.getId(),
+                                          portEntity.getMacAddresses().get(0),
+                                          new HashSet<String>(portEntity.getPortIPs()));
+            vmPortDtos.add(vmPortDto);
+        }
+
+        dto.setVmPorts(vmPortDtos);
+    }
 }
