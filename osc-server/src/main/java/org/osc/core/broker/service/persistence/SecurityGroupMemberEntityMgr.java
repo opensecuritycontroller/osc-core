@@ -67,6 +67,17 @@ public class SecurityGroupMemberEntityMgr {
             dto.setOpenstackId(nw.getOpenstackId());
             dto.setRegion(nw.getRegion());
 
+            Set<VMPortDto> vmPorts = new HashSet<>();
+            for (VMPort p : nw.getPorts()) {
+                VMPortDto vmp = new VMPortDto();
+                vmp.setId(p.getId());
+                vmp.setMacAddress(p.getMacAddresses().get(0));
+                vmp.setIpAddresses(new HashSet<>(p.getPortIPs()));
+                vmPorts.add(vmp);
+            }
+
+            dto.setVmPorts(vmPorts);
+
         } else if (type == SecurityGroupMemberType.SUBNET) {
 
             Subnet subnet = entity.getSubnet();
