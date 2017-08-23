@@ -48,7 +48,7 @@ public class SecurityGroupMemberEntityMgr {
             dto.setName(vm.getName());
             dto.setOpenstackId(vm.getOpenstackId());
             dto.setRegion(vm.getRegion());
-            addVmPortInfo(dto, vm.getPorts());
+            addPortInfo(dto, vm.getPorts());
 
         } else if (type == SecurityGroupMemberType.NETWORK) {
             Network network = entity.getNetwork();
@@ -56,7 +56,7 @@ public class SecurityGroupMemberEntityMgr {
             dto.setOpenstackId(network.getOpenstackId());
             dto.setRegion(network.getRegion());
 
-            addVmPortInfo(dto, network.getPorts());
+            addPortInfo(dto, network.getPorts());
         } else if (type == SecurityGroupMemberType.SUBNET) {
             Subnet subnet = entity.getSubnet();
             dto.setName(subnet.getName());
@@ -65,7 +65,7 @@ public class SecurityGroupMemberEntityMgr {
             dto.setParentOpenStackId(subnet.getNetworkId());
             dto.setProtectExternal(subnet.isProtectExternal());
 
-            addVmPortInfo(dto, subnet.getPorts());
+            addPortInfo(dto, subnet.getPorts());
         }
     }
 
@@ -85,16 +85,16 @@ public class SecurityGroupMemberEntityMgr {
         return em.createQuery(query).getResultList();
     }
 
-    private static void addVmPortInfo(SecurityGroupMemberItemDto dto, Set<VMPort> vmPorts) {
-        Set<PortDto> vmPortDtos = new HashSet<>();
+    private static void addPortInfo(SecurityGroupMemberItemDto dto, Set<VMPort> vmPorts) {
+        Set<PortDto> portDtos = new HashSet<>();
         for (VMPort portEntity : vmPorts) {
-            PortDto vmPortDto = new PortDto(portEntity.getId(),
-                                          dto.getOpenstackId(),
+            PortDto portDto = new PortDto(portEntity.getId(),
+                                          portEntity.getOpenstackId(),
                                           portEntity.getMacAddresses().get(0),
                                           portEntity.getPortIPs());
-            vmPortDtos.add(vmPortDto);
+            portDtos.add(portDto);
         }
 
-        dto.setVmPorts(vmPortDtos);
+        dto.setPorts(portDtos);
     }
 }

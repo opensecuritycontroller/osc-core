@@ -59,7 +59,8 @@ public class PortDto extends BaseDto {
 
     @Override
     public String toString() {
-        return "VMPortDto [id=" + getId() + ", macAddress=" + this.macAddress + ", ipAddresses=" + this.ipAddresses + "]";
+        return "PortDto [macAddress=" + this.macAddress + ", openstackId=" + this.openstackId + ", ipAddresses=" + this.ipAddresses
+                + "]";
     }
 
 }
