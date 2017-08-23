@@ -32,8 +32,8 @@ import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
+import org.osc.core.broker.service.dto.PortDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
-import org.osc.core.broker.service.dto.VMPortDto;
 
 public class SecurityGroupMemberEntityMgr {
 
@@ -86,11 +86,12 @@ public class SecurityGroupMemberEntityMgr {
     }
 
     private static void addVmPortInfo(SecurityGroupMemberItemDto dto, Set<VMPort> vmPorts) {
-        Set<VMPortDto> vmPortDtos = new HashSet<>();
+        Set<PortDto> vmPortDtos = new HashSet<>();
         for (VMPort portEntity : vmPorts) {
-            VMPortDto vmPortDto = new VMPortDto(portEntity.getId(),
+            PortDto vmPortDto = new PortDto(portEntity.getId(),
+                                          dto.getOpenstackId(),
                                           portEntity.getMacAddresses().get(0),
-                                          new HashSet<String>(portEntity.getPortIPs()));
+                                          portEntity.getPortIPs());
             vmPortDtos.add(vmPortDto);
         }
 

@@ -49,7 +49,7 @@ public class SecurityGroupMemberItemDto extends BaseDto {
                       value = " This field only applies to SGM type 'Subnet' to represent Network UUID this subnet belongs to")
     private String parentOpenStackId;
 
-    private Set<VMPortDto> vmPorts = new HashSet<>();
+    private Set<PortDto> vmPorts = new HashSet<>();
 
     public SecurityGroupMemberItemDto() {
     }
@@ -123,11 +123,11 @@ public class SecurityGroupMemberItemDto extends BaseDto {
         this.parentOpenStackId = parentOpenStackId;
     }
 
-    public Set<VMPortDto> getVmPorts() {
+    public Set<PortDto> getVmPorts() {
         return this.vmPorts;
     }
 
-    public void setVmPorts(Set<VMPortDto> vmPorts) {
+    public void setVmPorts(Set<PortDto> vmPorts) {
         this.vmPorts = vmPorts;
     }
 

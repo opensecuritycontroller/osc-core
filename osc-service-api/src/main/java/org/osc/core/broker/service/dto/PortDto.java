@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,59 +26,40 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import io.swagger.annotations.ApiModelProperty;
 
-@XmlRootElement(name = "vmPort")
+@XmlRootElement(name = "port")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class VMPortDto extends BaseDto {
+public class PortDto extends BaseDto {
 
     @ApiModelProperty(value = "Mac address assigned to this port.")
     private String macAddress;
 
+    private String openstackId;
+
     @ApiModelProperty(value = "List or object ip addresses assigned to this port's mac address ")
     private Set<String> ipAddresses = new HashSet<>();
 
-    public VMPortDto() {
-
-    }
-
-    public VMPortDto(Long id, String macAddress, Set<String> ipAddresses) {
+    public PortDto(Long id, String openStackId, String macAddress, Collection<String> ipAddresses) {
         super(id);
+        this.openstackId = openStackId;
         this.macAddress = macAddress;
-        this.ipAddresses = ipAddresses;
+        this.ipAddresses = new HashSet<>(ipAddresses);
     }
 
     public Set<String> getIpAddresses() {
         return this.ipAddresses;
     }
 
-    public void setIpAddresses(Set<String> ipAddresses) {
-        this.ipAddresses = ipAddresses;
-    }
-
     public String getMacAddress() {
         return this.macAddress;
     }
 
-    public void setMacAddress(String macAddress) {
-        this.macAddress = macAddress;
+    public String getOpenstackId() {
+        return this.openstackId;
     }
 
     @Override
     public String toString() {
-        StringBuilder retVal = new StringBuilder();
-        retVal.append("VMPortDto [id=").append(getId());
-        retVal.append(", macAddress=").append(this.macAddress);
-
-        if (this.ipAddresses != null) {
-            retVal.append(", ipAddresses={");
-            for (String ip : this.ipAddresses) {
-                retVal.append(ip).append(", ");
-            }
-            retVal.append("}");
-        }
-
-        retVal.append("]");
-
-        return retVal.toString();
+        return "VMPortDto [id=" + getId() + ", macAddress=" + this.macAddress + ", ipAddresses=" + this.ipAddresses + "]";
     }
 
 }
