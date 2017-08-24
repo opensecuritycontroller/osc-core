@@ -16,8 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.dto;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -45,6 +49,10 @@ public class SecurityGroupMemberItemDto extends BaseDto {
     @ApiModelProperty(required = false,
             value = " This field only applies to SGM type 'Subnet' to represent Network UUID this subnet belongs to")
     private String parentOpenStackId;
+
+    @ApiModelProperty(required = false)
+    @XmlElement(name = "port")
+    private Set<PortDto> ports = new HashSet<>();
 
     public SecurityGroupMemberItemDto() {
     }
@@ -116,6 +124,21 @@ public class SecurityGroupMemberItemDto extends BaseDto {
 
     public void setParentOpenStackId(String parentOpenStackId) {
         this.parentOpenStackId = parentOpenStackId;
+    }
+
+    public Set<PortDto> getPorts() {
+        return this.ports;
+    }
+
+    public void setPorts(Set<PortDto> ports) {
+        this.ports = ports;
+    }
+
+    @Override
+    public String toString() {
+        return "SecurityGroupMemberItemDto [name=" + this.name + ", region=" + this.region + ", openstackId=" + this.openstackId
+                + ", type=" + this.type + ", protectExternal=" + this.protectExternal + ", parentOpenStackId=" + this.parentOpenStackId
+                + ", ports=" + this.ports + "]";
     }
 
 }
