@@ -61,6 +61,7 @@ import org.osc.core.broker.view.util.ToolbarButtons;
 import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.view.vc.securitygroup.AddSecurityGroupWindow;
 import org.osc.core.broker.view.vc.securitygroup.BindSecurityGroupWindow;
+import org.osc.core.broker.view.vc.securitygroup.SecurityGroupMembershipInfoWindow;
 import org.osc.core.broker.view.vc.securitygroup.UpdateSecurityGroupWindow;
 import org.osc.core.broker.window.delete.DeleteWindowUtil;
 import org.osc.core.common.virtualization.VirtualizationType;
@@ -73,6 +74,7 @@ import com.vaadin.data.util.BeanContainer;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CustomTable;
 import com.vaadin.ui.CustomTable.ColumnGenerator;
 import com.vaadin.ui.Notification;
@@ -159,7 +161,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                 Arrays.asList(ToolbarButtons.ADD, ToolbarButtons.EDIT, ToolbarButtons.DELETE, ToolbarButtons.CONFORM_VC),
                 "Security Groups",
                 Arrays.asList(ToolbarButtons.ADD_CHILD, ToolbarButtons.EDIT_CHILD, ToolbarButtons.DELETE_CHILD,
-                        ToolbarButtons.BIND_SECURITY_GROUP, ToolbarButtons.CONFORM));
+                        ToolbarButtons.CONFORM, ToolbarButtons.BIND_SECURITY_GROUP, ToolbarButtons.SECURITY_GROUP_MEMBERSHIP));
     }
 
     @Override
@@ -272,6 +274,7 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
         }
     }
 
+    @SuppressWarnings("serial")
     @Override
     public void buttonClicked(ClickEvent event) throws Exception {
         if (event.getButton().getId().equals(ToolbarButtons.ADD.getId())) {
@@ -328,6 +331,19 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
                     log.warn("Cannot bind Security Group: " + securityGroup.getName(), actionNotSupportedException);
                 }
             }
+        }
+
+        if (event.getButton().getId().equals(ToolbarButtons.SECURITY_GROUP_MEMBERSHIP.getId())) {
+            SecurityGroupDto securityGroup = getChildContainer().getItem(getChildItemId()).getBean();
+            SecurityGroupMembershipInfoWindow memberShipWindow = new SecurityGroupMembershipInfoWindow(securityGroup);
+            memberShipWindow.getComponentModel().setCloseClickedListener(new ClickListener() {
+
+                @Override
+                public void buttonClick(ClickEvent event) {
+                    memberShipWindow.close();
+                }
+            });
+            ViewUtil.addWindow(memberShipWindow);
         }
 
         if (event.getButton().getId().equals(ToolbarButtons.CONFORM.getId())) {

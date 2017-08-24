@@ -36,6 +36,7 @@ public enum ToolbarButtons {
     DEPLOYMENTS("Deployments...", "Deployments", "img/drilldown.png"),
     SECURITY_GROUP_INTERFACES("Traffic Policy Mappings ...", "Security_Group_Interfaces", "img/drilldown.png"),
     BIND_SECURITY_GROUP("Bind", "bind"),
+    SECURITY_GROUP_MEMBERSHIP("Membership", "membership"),
     ACKNOWLEDGE_ALERT("Acknowledge", "acknowledge_alert", "img/acknowledge.png"),
     UNACKNOWLEDGE_ALERT("Unacknowledge", "unacknowledge_alert", "img/unacknowledge.png"),
     SHOW_PENDING_ACKNOWLEDGE_ALERTS("Show Pending", "show_pending_alerts", null, "Show Pending Un-Acknowledged Alerts", HorizontalAlignment.RIGHT),
