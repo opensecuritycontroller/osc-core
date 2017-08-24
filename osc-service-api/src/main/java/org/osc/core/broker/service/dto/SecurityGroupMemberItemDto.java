@@ -21,6 +21,7 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -42,13 +43,15 @@ public class SecurityGroupMemberItemDto extends BaseDto {
     private String type;
 
     @ApiModelProperty(required = false,
-                      value = " Protect router port to inspect external traffic coming to this subnet")
+            value = " Protect router port to inspect external traffic coming to this subnet")
     private boolean protectExternal;
 
     @ApiModelProperty(required = false,
-                      value = " This field only applies to SGM type 'Subnet' to represent Network UUID this subnet belongs to")
+            value = " This field only applies to SGM type 'Subnet' to represent Network UUID this subnet belongs to")
     private String parentOpenStackId;
 
+    @ApiModelProperty(required = false)
+    @XmlElement(name = "port")
     private Set<PortDto> ports = new HashSet<>();
 
     public SecurityGroupMemberItemDto() {

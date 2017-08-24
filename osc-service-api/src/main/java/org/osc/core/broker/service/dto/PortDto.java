@@ -22,6 +22,7 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -36,7 +37,13 @@ public class PortDto extends BaseDto {
     private String openstackId;
 
     @ApiModelProperty(value = "List or object ip addresses assigned to this port's mac address ")
+    @XmlElement(name = "ipAddress")
     private Set<String> ipAddresses = new HashSet<>();
+
+    // Without this constructor, the result is not being returned in the xml format
+    // JSON still works.
+    PortDto() {
+    }
 
     public PortDto(Long id, String openStackId, String macAddress, Collection<String> ipAddresses) {
         super(id);

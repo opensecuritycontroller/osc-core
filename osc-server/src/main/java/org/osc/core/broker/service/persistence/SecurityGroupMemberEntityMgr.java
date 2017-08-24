@@ -55,8 +55,8 @@ public class SecurityGroupMemberEntityMgr {
             dto.setName(network.getName());
             dto.setOpenstackId(network.getOpenstackId());
             dto.setRegion(network.getRegion());
-
             addPortInfo(dto, network.getPorts());
+
         } else if (type == SecurityGroupMemberType.SUBNET) {
             Subnet subnet = entity.getSubnet();
             dto.setName(subnet.getName());
@@ -64,8 +64,8 @@ public class SecurityGroupMemberEntityMgr {
             dto.setRegion(subnet.getRegion());
             dto.setParentOpenStackId(subnet.getNetworkId());
             dto.setProtectExternal(subnet.isProtectExternal());
-
             addPortInfo(dto, subnet.getPorts());
+
         }
     }
 
