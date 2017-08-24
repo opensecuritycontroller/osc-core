@@ -19,7 +19,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.osc.core</groupId>
 	<artifactId>osc-root</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>org.osc.core:osc-root</name>
 	<description>OSC Parent Project</description>
@@ -98,8 +98,9 @@
 			<!-- The 'default' profile includes only osc-core projects -->
 			<id>default</id>
 			<modules>
-				<module>osc-tools</module>
+                <module>osc-tools</module>
 				<module>osc-uber-openstack4j</module>
+                <module>osc-uber-kubernetes</module>
 				<module>osc-common</module>
 				<module>osc-domain</module>
 				<module>osc-service-api</module>
@@ -135,6 +136,7 @@
 
 				<module>osc-tools</module>
 				<module>osc-uber-openstack4j</module>
+                <module>osc-uber-kubernetes</module>
 				<module>osc-common</module>
 				<module>osc-domain</module>
 				<module>osc-service-api</module>
@@ -176,24 +178,24 @@
 				<executions>
 					<execution>
 						<id>prodVer</id>
-						<phase>validate</phase>
+                        <phase>validate</phase>
 						<goals>
 							<goal>run</goal>
 						</goals>
 						<configuration>
 							<target>
-								<!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 
+								<!-- Full version examples: 1.0.0-SNAPSHOT-0-HASH, 1.0.0-0-HASH, 1.0.0-1-HASH, etc -->
 									1.0.0-1-HASH, etc -->
 								<exec outputproperty="fullVersion" dir="." executable="sh">
-									<arg value="-c" />
-									<arg value="git describe --long | tr -d v" />
+                                    <arg value="-c" />
+                                    <arg value="git describe --long | tr -d v" />
 								</exec>
 								<!-- Version examples: 1.0.0-SNAPSHOT, 1.0.0, etc -->
 								<exec outputproperty="releaseVersion" dir="." executable="sh">
 									<arg value="-c" />
-									<arg value="git describe --abbrev=0 | tr -d v" />
+                                    <arg value="git describe --abbrev=0 | tr -d v" />
 								</exec>
-								<echo>Full Version: ${fullVersion}</echo>
+                                <echo>Full Version: ${fullVersion}</echo>
 								<echo>Version: ${releaseVersion}</echo>
 							</target>
 							<exportAntProperties>true</exportAntProperties>
@@ -237,7 +239,7 @@
 						<artifactId>checkstyle</artifactId>
 						<version>6.7</version>
 					</dependency>
-					<dependency>
+                    <dependency>
 						<groupId>org.osc.core</groupId>
 						<artifactId>osc-tools</artifactId>
 						<version>${project.version}</version>
@@ -371,7 +373,7 @@
 				<configuration>
 					<configLocation>quality/OSC_checks.xml</configLocation>
 					<suppressionsLocation>quality/checkstyle-suppressions.xml</suppressionsLocation>
-					<headerLocation>quality/java.header</headerLocation>
+					<headerLocation>quality/java.header</headerLocation> 
 					<suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
 					<includeTestSourceDirectory>true</includeTestSourceDirectory>
 					<violationSeverity>info</violationSeverity>

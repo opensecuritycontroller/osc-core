@@ -1,0 +1,25 @@
+#
+# Create bundle to allow openstack4j to be extracted from uber-bundle
+#
+-include target/depend.bnd
+
+-nouses:	true
+Include-Resource:\
+    @${kubernetes-client.dep}, \
+    @${generex.dep}, \
+    @${automaton.dep}, \
+    @${okhttp.dep}, \
+    @${okio.dep}, \
+    @${logging-interceptor.dep}
+
+Import-Package:\
+ !android.util,\
+ *
+
+Export-Package:\
+    io.fabric8.kubernetes.client, \
+    io.fabric8.kubernetes.client.*, \
+        
+-exportcontents:\
+
+# end

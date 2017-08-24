@@ -8,12 +8,12 @@
 -runfw: org.apache.felix.framework;version='[5.4.0,5.4.0]'
 
 -runrequires: \
+	osgi.identity;filter:='(osgi.identity=osc-rest-server)',\
 	osgi.identity;filter:='(osgi.identity=osc-server)',\
 	osgi.identity;filter:='(osgi.identity=osc-common)',\
 	osgi.identity;filter:='(osgi.identity=osc-installer)',\
 	osgi.identity;filter:='(osgi.identity=osc-installer-simple)',\
 	osgi.identity;filter:='(osgi.identity=osc-resolver)',\
-	osgi.identity;filter:='(osgi.identity=osc-rest-server)',\
 	osgi.identity;filter:='(osgi.identity=osc-ui)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.configadmin)',\
 	osgi.identity;filter:='(osgi.identity=org.apache.felix.scr)',\
