@@ -18,7 +18,9 @@ package org.osc.core.broker.service.securitygroup;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
@@ -52,277 +54,284 @@ import org.osc.sdk.controller.FailurePolicyType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+import com.google.common.collect.Sets;
+
 @Component
 public class BindSecurityGroupService extends ServiceDispatcher<BindSecurityGroupRequest, BaseJobResponse>
-        implements BindSecurityGroupServiceApi {
+		implements BindSecurityGroupServiceApi {
 
-    private static final Logger log = Logger.getLogger(BindSecurityGroupService.class);
+	private static final Logger log = Logger.getLogger(BindSecurityGroupService.class);
 
-    @Reference
-    private ConformService conformService;
+	@Reference
+	private ConformService conformService;
 
-    @Reference
-    private ApiFactoryService apiFactoryService;
+	@Reference
+	private ApiFactoryService apiFactoryService;
 
-    private SecurityGroup securityGroup;
+	private SecurityGroup securityGroup;
 
-    @Override
-    public BaseJobResponse exec(BindSecurityGroupRequest request, EntityManager em) throws Exception {
+	@Override
+	public BaseJobResponse exec(BindSecurityGroupRequest request, EntityManager em) throws Exception {
 
-        validateAndLoad(em, request);
-        UnlockObjectMetaTask unlockTask = null;
-        BaseJobResponse response = null;
+		validateAndLoad(em, request);
+		UnlockObjectMetaTask unlockTask = null;
+		BaseJobResponse response = null;
 
-        try {
-            unlockTask = LockUtil.tryLockSecurityGroup(this.securityGroup,
-                    this.securityGroup.getVirtualizationConnector());
+		try {
+			unlockTask = LockUtil.tryLockSecurityGroup(this.securityGroup,
+					this.securityGroup.getVirtualizationConnector());
 
-            // Sorts the services by the order specified.
-            // We want to collapse the ordering, so we will 'reset' the order based on the request.
-            List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
+			// Sorts the services by the order specified.
+			// We want to collapse the ordering, so we will 'reset' the order based on the request.
+			List<VirtualSystemPolicyBindingDto> servicesToBindTo = request.getServicesToBindTo();
 
-            Collections.sort(servicesToBindTo, new VirtualSystemPolicyBindingDtoComparator());
-            long order = 0;
+			Collections.sort(servicesToBindTo, new VirtualSystemPolicyBindingDtoComparator());
+			long order = 0;
 
-            // For all services selected, create or update the security group interfaces
-            for (VirtualSystemPolicyBindingDto serviceToBindTo : servicesToBindTo) {
-                Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
-                VirtualSystem vs = VirtualSystemEntityMgr.findById(em, virtualSystemId);
+			// For all services selected, create or update the security group interfaces
+			for (VirtualSystemPolicyBindingDto serviceToBindTo : servicesToBindTo) {
+				Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
+				VirtualSystem vs = VirtualSystemEntityMgr.findById(em, virtualSystemId);
 
-                if (vs == null) {
-                    throw new VmidcBrokerValidationException(
-                            "Virtual System with Id: " + virtualSystemId + "  is not found.");
-                }
-                if (vs.getMarkedForDeletion()) {
-                    throw new VmidcBrokerValidationException(String.format(
-                            "Cannot bind security group '%s' to service"
-                                    + " '%s' as the service is marked for deletion",
-                                    this.securityGroup.getName(), vs.getDistributedAppliance().getName()));
-                }
+				if (vs == null) {
+					throw new VmidcBrokerValidationException(
+							"Virtual System with Id: " + virtualSystemId + "  is not found.");
+				}
+				if (vs.getMarkedForDeletion()) {
+					throw new VmidcBrokerValidationException(String.format(
+							"Cannot bind security group '%s' to service"
+									+ " '%s' as the service is marked for deletion",
+							this.securityGroup.getName(), vs.getDistributedAppliance().getName()));
+				}
+				boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(vs);
+				if (!this.apiFactoryService.supportsMultiplePolicies(vs) && serviceToBindTo.getPolicies().size() > 1) {
+					throw new VmidcBrokerValidationException(
+							"Security group interface cannot have more than one policy for security manager not supporting multiple policy binding");
+				}
+				if (!isPolicyMappingSupported && !serviceToBindTo.getPolicyIds().isEmpty()) {
+					throw new VmidcBrokerValidationException(
+							"Security manager not supporting policy mapping cannot have one or more policies");
+				}
+				if (isPolicyMappingSupported && serviceToBindTo.getPolicyIds().isEmpty()) {
+					throw new VmidcBrokerValidationException(
+							"Service to bind: " + serviceToBindTo + " must have a policy id.");
+				}
 
-                Policy policy = null;
-                boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(vs);
+				Set<Policy> policies = new HashSet<>();
+				Policy policy = null;
+				for (Long policyId : serviceToBindTo.getPolicyIds()) {
+					policy = PolicyEntityMgr.findById(em, policyId);
 
-                if (serviceToBindTo.getPolicyId() == null) {
-                    if (isPolicyMappingSupported) {
-                        throw new VmidcBrokerValidationException(
-                                "Service to bind: " + serviceToBindTo + " must have a policy id.");
-                    }
-                } else if (!isPolicyMappingSupported) {
-                    throw new VmidcBrokerValidationException(
-                            "Service to bind: " + serviceToBindTo + " is associated with a manager that does not support "
-                                    + "policy mapping and it should not have a policy id.");
-                } else {
-                    policy = PolicyEntityMgr.findById(em, serviceToBindTo.getPolicyId());
+					if (policy == null) {
+						throw new VmidcBrokerValidationException(
+								"Policy with Id: " + serviceToBindTo.getPolicyIds() + "  is not found.");
+					} else {
+						policies.add(policy);
+					}
+				}
 
-                    if (policy == null) {
-                        throw new VmidcBrokerValidationException(
-                                "Policy with Id: " + serviceToBindTo.getPolicyId() + "  is not found.");
-                    }
-                }
+				if (this.apiFactoryService.supportsFailurePolicy(this.securityGroup)) {
+					// If failure policy is supported, failure policy is a required field
+					if (serviceToBindTo.getFailurePolicyType() == null
+							|| serviceToBindTo.getFailurePolicyType() == FailurePolicyType.NA) {
+						throw new VmidcBrokerValidationException("Failure Policy should not have an empty value.");
+					}
+				} else {
+					// If failure policy is not supported, only valid values are null or NA
+					if (serviceToBindTo.getFailurePolicyType() == FailurePolicyType.FAIL_CLOSE
+							|| serviceToBindTo.getFailurePolicyType() == FailurePolicyType.FAIL_OPEN) {
+						throw new VmidcBrokerValidationException("SDN Controller Plugin of type '"
+								+ this.securityGroup.getVirtualizationConnector().getControllerType()
+								+ "' does not support Failure Policy. Only valid values are null or NA");
+					}
+				}
 
-                if (this.apiFactoryService.supportsFailurePolicy(this.securityGroup)){
-                    // If failure policy is supported, failure policy is a required field
-                    if (serviceToBindTo.getFailurePolicyType() == null
-                            || serviceToBindTo.getFailurePolicyType() == FailurePolicyType.NA) {
-                        throw new VmidcBrokerValidationException("Failure Policy should not have an empty value.");
-                    }
-                } else {
-                    // If failure policy is not supported, only valid values are null or NA
-                    if (serviceToBindTo.getFailurePolicyType() == FailurePolicyType.FAIL_CLOSE
-                            || serviceToBindTo.getFailurePolicyType() == FailurePolicyType.FAIL_OPEN) {
-                        throw new VmidcBrokerValidationException("SDN Controller Plugin of type '"
-                                + this.securityGroup.getVirtualizationConnector().getControllerType()
-                                + "' does not support Failure Policy. Only valid values are null or NA");
-                    }
-                }
+				FailurePolicyType failurePolicyType = this.apiFactoryService.supportsFailurePolicy(this.securityGroup)
+						? serviceToBindTo.getFailurePolicyType() : FailurePolicyType.NA;
 
-                FailurePolicyType failurePolicyType =
-                        this.apiFactoryService.supportsFailurePolicy(this.securityGroup) ? serviceToBindTo.getFailurePolicyType() : FailurePolicyType.NA;
+				SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
+						.findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
+				if (sgi == null) {
+					// If the policy is null the tag should also be null
+					Long tag = policy == null ? null : VirtualSystemEntityMgr.generateUniqueTag(em, vs);
+					String tagString = tag == null ? null : SecurityGroupInterface.ISC_TAG_PREFIX + tag;
 
-                        SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
-                                .findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
-                        if (sgi == null) {
-                            // If the policy is null the tag should also be null
-                            Long tag = policy == null ? null : VirtualSystemEntityMgr.generateUniqueTag(em, vs);
-                            String tagString = tag == null ? null : SecurityGroupInterface.ISC_TAG_PREFIX + tag;
+					// Create a new security group interface for this service
+					sgi = new SecurityGroupInterface(vs, policies, tagString,
+							org.osc.core.broker.model.entities.virtualization.FailurePolicyType
+									.valueOf(failurePolicyType.name()),
+							order);
 
-                            // Create a new security group interface for this service
-                            sgi = new SecurityGroupInterface(
-                                    vs,
-                                    policy,
-                                    tagString,
-                                    org.osc.core.broker.model.entities.virtualization.FailurePolicyType.valueOf(
-                                            failurePolicyType.name()),
-                                    order);
+					SecurityGroupInterfaceEntityMgr.toEntity(sgi, this.securityGroup, serviceToBindTo.getName());
 
-                            SecurityGroupInterfaceEntityMgr.toEntity(sgi, this.securityGroup, serviceToBindTo.getName());
+					log.info("Creating security group interface " + sgi.getName());
+					OSCEntityManager.create(em, sgi, this.txBroadcastUtil);
 
-                            log.info("Creating security group interface " + sgi.getName());
-                            OSCEntityManager.create(em, sgi, this.txBroadcastUtil);
+					this.securityGroup.addSecurityGroupInterface(sgi);
+					sgi.setSecurityGroup(this.securityGroup);
+					OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
+				} else {
+					if (hasServiceChanged(sgi, serviceToBindTo, policies, order)) {
+						log.info("Updating Security group interface " + sgi.getName());
+						sgi.setPolicies(policies);
+						sgi.setFailurePolicyType(org.osc.core.broker.model.entities.virtualization.FailurePolicyType
+								.valueOf(failurePolicyType.name()));
+						sgi.setOrder(order);
+					}
+					OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
+				}
 
-                            this.securityGroup.addSecurityGroupInterface(sgi);
-                            sgi.setSecurityGroup(this.securityGroup);
-                            OSCEntityManager.update(em, this.securityGroup, this.txBroadcastUtil);
-                        } else {
-                            if (hasServiceChanged(sgi, serviceToBindTo, policy, order)) {
-                                log.info("Updating Security group interface " + sgi.getName());
-                                sgi.setPolicy(policy);
-                                sgi.setFailurePolicyType(org.osc.core.broker.model.entities.virtualization.FailurePolicyType.valueOf(
-                                        failurePolicyType.name()));
-                                sgi.setOrder(order);
-                            }
-                            OSCEntityManager.update(em, sgi, this.txBroadcastUtil);
-                        }
+				order++;
+			}
 
-                        order++;
-            }
+			// Go through all the security group interfaces and if they are not selected, remove them
+			for (SecurityGroupInterface sgi : this.securityGroup.getSecurityGroupInterfaces()) {
+				boolean isServiceSelected = isServiceSelected(servicesToBindTo, sgi.getVirtualSystem().getId());
+				if (!isServiceSelected || sgi.getMarkedForDeletion()) {
+					log.info("Marking service " + sgi.getName() + " for deletion");
+					OSCEntityManager.markDeleted(em, sgi, this.txBroadcastUtil);
+				}
+			}
 
-            // Go through all the security group interfaces and if they are not selected, remove them
-            for (SecurityGroupInterface sgi : this.securityGroup.getSecurityGroupInterfaces()) {
-                boolean isServiceSelected = isServiceSelected(servicesToBindTo, sgi.getVirtualSystem().getId());
-                if (!isServiceSelected || sgi.getMarkedForDeletion()) {
-                    log.info("Marking service " + sgi.getName() + " for deletion");
-                    OSCEntityManager.markDeleted(em, sgi, this.txBroadcastUtil);
-                }
-            }
+			this.txBroadcastUtil.addMessageToMap(this.securityGroup.getId(),
+					this.securityGroup.getClass().getSimpleName(), EventType.UPDATED);
 
-            this.txBroadcastUtil.addMessageToMap(this.securityGroup.getId(),
-                    this.securityGroup.getClass().getSimpleName(), EventType.UPDATED);
+			Job job = this.conformService.startBindSecurityGroupConformanceJob(em, this.securityGroup, unlockTask);
 
-            Job job = this.conformService.startBindSecurityGroupConformanceJob(em, this.securityGroup, unlockTask);
+			response = new BaseJobResponse(job.getId());
 
-            response = new BaseJobResponse(job.getId());
+		} catch (Exception e) {
+			LockUtil.releaseLocks(unlockTask);
+			throw e;
+		}
 
-        } catch (Exception e) {
-            LockUtil.releaseLocks(unlockTask);
-            throw e;
-        }
+		return response;
+	}
 
-        return response;
-    }
+	private boolean hasServiceChanged(SecurityGroupInterface sgi, VirtualSystemPolicyBindingDto serviceToBindTo,
+			Set<Policy> policies, long order) {
+		boolean policyChanged = validatePoliciesIfEquals(sgi.getPolicies(), policies);
+		return policyChanged || FailurePolicyType.valueOf(sgi.getFailurePolicyType().name()) != serviceToBindTo
+				.getFailurePolicyType() || sgi.getOrder() != order;
+	}
 
-    private boolean hasServiceChanged(SecurityGroupInterface sgi, VirtualSystemPolicyBindingDto serviceToBindTo,
-            Policy policy, long order) {
-        boolean policyChanged = policy != null && (sgi.getPolicy() == null || !sgi.getPolicy().equals(policy));
-        return policyChanged ||
-                FailurePolicyType.valueOf(sgi.getFailurePolicyType().name()) != serviceToBindTo.getFailurePolicyType() ||
-                sgi.getOrder() != order;
-    }
+	private boolean validatePoliciesIfEquals(Set<Policy> policySet, Set<Policy> newPolicySet) {
+		return !Sets.symmetricDifference(policySet, newPolicySet).isEmpty();
+	}
 
-    private boolean isServiceSelected(List<VirtualSystemPolicyBindingDto> servicesToBindTo, Long virtualSystemId) {
-        for (VirtualSystemPolicyBindingDto service : servicesToBindTo) {
-            if (service.getVirtualSystemId().equals(virtualSystemId)) {
-                return true;
-            }
-        }
-        return false;
-    }
+	private boolean isServiceSelected(List<VirtualSystemPolicyBindingDto> servicesToBindTo, Long virtualSystemId) {
+		for (VirtualSystemPolicyBindingDto service : servicesToBindTo) {
+			if (service.getVirtualSystemId().equals(virtualSystemId)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    protected void validateAndLoad(EntityManager em, BindSecurityGroupRequest request) throws Exception {
-        BindSecurityGroupRequestValidator.checkForNullFields(request);
+	protected void validateAndLoad(EntityManager em, BindSecurityGroupRequest request) throws Exception {
+		BindSecurityGroupRequestValidator.checkForNullFields(request);
 
-        this.securityGroup = SecurityGroupEntityMgr.findById(em, request.getSecurityGroupId());
+		this.securityGroup = SecurityGroupEntityMgr.findById(em, request.getSecurityGroupId());
 
-        if (this.securityGroup == null) {
-            throw new VmidcBrokerValidationException(
-                    "Security Group with Id: " + request.getSecurityGroupId() + "  is not found.");
-        }
+		if (this.securityGroup == null) {
+			throw new VmidcBrokerValidationException(
+					"Security Group with Id: " + request.getSecurityGroupId() + "  is not found.");
+		}
 
-        ValidateUtil.checkMarkedForDeletion(this.securityGroup, this.securityGroup.getName());
+		ValidateUtil.checkMarkedForDeletion(this.securityGroup, this.securityGroup.getName());
 
-        List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
-        if (services == null) {
-            services = new ArrayList<VirtualSystemPolicyBindingDto>();
-            request.setServicesToBindTo(services);
-        }
+		List<VirtualSystemPolicyBindingDto> services = request.getServicesToBindTo();
+		if (services == null) {
+			services = new ArrayList<>();
+			request.setServicesToBindTo(services);
+		}
 
-        if (services.size() > 1) {
-            if (!this.apiFactoryService.supportsServiceFunctionChaining(this.securityGroup)){
-                throw new VmidcBrokerValidationException("SDN Controller Plugin of type '"
-                        + this.securityGroup.getVirtualizationConnector().getControllerType()
-                        + "' does not support more then one Service (Service Function Chaining)");
-            }
+		if (services.size() > 1) {
+			if (!this.apiFactoryService.supportsServiceFunctionChaining(this.securityGroup)) {
+				throw new VmidcBrokerValidationException("SDN Controller Plugin of type '"
+						+ this.securityGroup.getVirtualizationConnector().getControllerType()
+						+ "' does not support more then one Service (Service Function Chaining)");
+			}
 
-            for (VirtualSystemPolicyBindingDto serviceBinding : services) {
-                if (serviceBinding.getOrder() == null || serviceBinding.getOrder() < 0) {
-                    throw new VmidcBrokerValidationException(String.format(
-                            "Service '%s' needs to have a valid order specified. '%s' value for order is not valid.",
-                            serviceBinding.getName(), serviceBinding.getOrder()));
-                }
+			for (VirtualSystemPolicyBindingDto serviceBinding : services) {
+				if (serviceBinding.getOrder() == null || serviceBinding.getOrder() < 0) {
+					throw new VmidcBrokerValidationException(String.format(
+							"Service '%s' needs to have a valid order specified. '%s' value for order is not valid.",
+							serviceBinding.getName(), serviceBinding.getOrder()));
+				}
 
-                for (VirtualSystemPolicyBindingDto otherService : services) {
-                    if (!serviceBinding.equals(otherService)
-                            && otherService.getVirtualSystemId().equals(serviceBinding.getVirtualSystemId())) {
-                        throw new VmidcBrokerValidationException(String.format(
-                                "Duplicate Service found. Cannot Bind Security group to the same Service: '%s' twice.",
-                                serviceBinding.getName()));
-                    }
-                }
-            }
+				for (VirtualSystemPolicyBindingDto otherService : services) {
+					if (!serviceBinding.equals(otherService)
+							&& otherService.getVirtualSystemId().equals(serviceBinding.getVirtualSystemId())) {
+						throw new VmidcBrokerValidationException(String.format(
+								"Duplicate Service found. Cannot Bind Security group to the same Service: '%s' twice.",
+								serviceBinding.getName()));
+					}
+				}
+			}
 
-            // Adding elements to the tree set using the order comparator ensures any services with duplicate order
-            // are pruned out of the set.
-            TreeSet<VirtualSystemPolicyBindingDto> serviceOrderSet = new TreeSet<>(
-                    new VirtualSystemPolicyBindingDtoComparator());
-            for (VirtualSystemPolicyBindingDto serviceToBindTo : services) {
-                boolean serviceAdded = serviceOrderSet.add(serviceToBindTo);
-                if (!serviceAdded) {
-                    // We are always expected to find the other service
-                    VirtualSystemPolicyBindingDto otherService = findDuplicateServiceByOrder(services, serviceToBindTo);
-                    Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
-                    VirtualSystem vs = VirtualSystemEntityMgr.findById(em, virtualSystemId);
-                    Long otherVirtualSystemId = otherService.getVirtualSystemId();
-                    VirtualSystem otherVs = VirtualSystemEntityMgr.findById(em, otherVirtualSystemId);
+			// Adding elements to the tree set using the order comparator ensures any services with duplicate order
+			// are pruned out of the set.
+			TreeSet<VirtualSystemPolicyBindingDto> serviceOrderSet = new TreeSet<>(
+					new VirtualSystemPolicyBindingDtoComparator());
+			for (VirtualSystemPolicyBindingDto serviceToBindTo : services) {
+				boolean serviceAdded = serviceOrderSet.add(serviceToBindTo);
+				if (!serviceAdded) {
+					// We are always expected to find the other service
+					VirtualSystemPolicyBindingDto otherService = findDuplicateServiceByOrder(services, serviceToBindTo);
+					Long virtualSystemId = serviceToBindTo.getVirtualSystemId();
+					VirtualSystem vs = VirtualSystemEntityMgr.findById(em, virtualSystemId);
+					Long otherVirtualSystemId = otherService.getVirtualSystemId();
+					VirtualSystem otherVs = VirtualSystemEntityMgr.findById(em, otherVirtualSystemId);
 
-                    if (vs == null || otherVs == null) {
-                        throw new VmidcBrokerValidationException("Virtual System with Id: " + vs == null
-                                ? virtualSystemId.toString() : otherVirtualSystemId.toString() + "  is not found.");
-                    }
+					if (vs == null || otherVs == null) {
+						throw new VmidcBrokerValidationException("Virtual System with Id: " + vs == null
+								? virtualSystemId.toString() : otherVirtualSystemId.toString() + "  is not found.");
+					}
 
-                    SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
-                            .findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
-                    SecurityGroupInterface otherSgi = SecurityGroupInterfaceEntityMgr
-                            .findSecurityGroupInterfacesByVsAndSecurityGroup(em, otherVs, this.securityGroup);
+					SecurityGroupInterface sgi = SecurityGroupInterfaceEntityMgr
+							.findSecurityGroupInterfacesByVsAndSecurityGroup(em, vs, this.securityGroup);
+					SecurityGroupInterface otherSgi = SecurityGroupInterfaceEntityMgr
+							.findSecurityGroupInterfacesByVsAndSecurityGroup(em, otherVs, this.securityGroup);
 
-                    // if either of the SGI's are not marked for deleting, we should fail because of duplicate order
-                    if (!sgi.getMarkedForDeletion() && !otherSgi.getMarkedForDeletion()) {
-                        throw new VmidcBrokerValidationException(
-                                "Service with duplicate order found. Ensure the services have unique order values");
-                    }
+					// if either of the SGI's are not marked for deleting, we should fail because of duplicate order
+					if (!sgi.getMarkedForDeletion() && !otherSgi.getMarkedForDeletion()) {
+						throw new VmidcBrokerValidationException(
+								"Service with duplicate order found. Ensure the services have unique order values");
+					}
 
-                }
-            }
-        }
+				}
+			}
+		}
 
-        Long vcId = request.getVcId();
-        if (vcId != null && !vcId.equals(this.securityGroup.getVirtualizationConnector().getId())) {
-            throw new VmidcBrokerValidationException(
-                    String.format("The Security Group '%s' does not belong to the Parent Object with ID %d",
-                            this.securityGroup.getName(), vcId));
-        }
+		Long vcId = request.getVcId();
+		if (vcId != null && !vcId.equals(this.securityGroup.getVirtualizationConnector().getId())) {
+			throw new VmidcBrokerValidationException(
+					String.format("The Security Group '%s' does not belong to the Parent Object with ID %d",
+							this.securityGroup.getName(), vcId));
+		}
 
-    }
+	}
 
-    /**
-     * Returns the first service in the list which has the same order as the service passed in. Since the list might
-     * contain the service passed in, excludes the service passed in.
-     *
-     * retuns null in case duplicate service is not found
-     *
-     * @param services
-     * @param originalService
-     * @return
-     */
-    private VirtualSystemPolicyBindingDto findDuplicateServiceByOrder(List<VirtualSystemPolicyBindingDto> services,
-            VirtualSystemPolicyBindingDto originalService) {
-        List<VirtualSystemPolicyBindingDto> servicesListWithoutOriginalService = new ArrayList<>(services);
-        servicesListWithoutOriginalService.remove(originalService);
-        for (VirtualSystemPolicyBindingDto otherService : servicesListWithoutOriginalService) {
-            if (otherService.getOrder().equals(originalService.getOrder())) {
-                return otherService;
-            }
-        }
-        return null;
-    }
+	/**
+	 * Returns the first service in the list which has the same order as the service passed in. Since the list might
+	 * contain the service passed in, excludes the service passed in.
+	 *
+	 * retuns null in case duplicate service is not found
+	 *
+	 * @param services
+	 * @param originalService
+	 * @return
+	 */
+	private VirtualSystemPolicyBindingDto findDuplicateServiceByOrder(List<VirtualSystemPolicyBindingDto> services,
+			VirtualSystemPolicyBindingDto originalService) {
+		List<VirtualSystemPolicyBindingDto> servicesListWithoutOriginalService = new ArrayList<>(services);
+		servicesListWithoutOriginalService.remove(originalService);
+		for (VirtualSystemPolicyBindingDto otherService : servicesListWithoutOriginalService) {
+			if (otherService.getOrder().equals(originalService.getOrder())) {
+				return otherService;
+			}
+		}
+		return null;
+	}
 }

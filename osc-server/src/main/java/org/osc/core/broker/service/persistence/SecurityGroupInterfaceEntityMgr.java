@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -28,16 +30,17 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
+import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.sdk.controller.FailurePolicyType;
 
 public class SecurityGroupInterfaceEntityMgr {
 
-    public static void toEntity(SecurityGroupInterface sgi, SecurityGroupInterfaceDto dto, Policy policy,
+    public static void toEntity(SecurityGroupInterface sgi, SecurityGroupInterfaceDto dto, Set<Policy> policies,
             String tagPrefix) {
         sgi.setName(dto.getName());
         sgi.setTag(dto.getTagValue() == null ? null : tagPrefix + dto.getTagValue().toString());
-        sgi.setPolicy(policy);
+        sgi.setPolicies(policies);
     }
 
     public static void toEntity(SecurityGroupInterface sgi, SecurityGroup sg, String serviceName) {
@@ -50,8 +53,13 @@ public class SecurityGroupInterfaceEntityMgr {
         dto.setParentId(sgi.getVirtualSystem().getId());
         dto.setName(sgi.getName());
         dto.setTagValue(sgi.getTagValue());
-        dto.setPolicyId(sgi.getMgrPolicy() != null ? sgi.getMgrPolicy().getId() : null);
-        dto.setPolicyName(sgi.getMgrPolicy() != null ? sgi.getMgrPolicy().getName() : null);
+        Set<PolicyDto> policySet = new HashSet<>();
+		for (Policy policy : sgi.getPolicies()) {
+			PolicyDto policyDto = new PolicyDto();
+			PolicyEntityMgr.fromEntity(policy, policyDto);
+			policySet.add(policyDto);
+		}
+		dto.setPolicies(policySet);
         dto.setIsUserConfigurable(sgi.isUserConfigurable());
         dto.setSecurityGroupId(sgi.getSecurityGroup() != null ? sgi.getSecurityGroup().getId() : null);
         dto.setSecurityGroupName(sgi.getSecurityGroup() != null ? sgi.getSecurityGroup().getName() : null);
@@ -81,17 +89,19 @@ public class SecurityGroupInterfaceEntityMgr {
         }
     }
 
-    public static SecurityGroupInterface findSecurityGroupInterfaceByVsAndTag(EntityManager em, VirtualSystem vs,
-            String tag) {
+    public static SecurityGroupInterface findSecurityGroupInterfaceByVsTagAndPolicy(EntityManager em, VirtualSystem vs,
+            String tag, Long policyId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
         CriteriaQuery<SecurityGroupInterface> query = cb.createQuery(SecurityGroupInterface.class);
 
         Root<SecurityGroupInterface> root = query.from(SecurityGroupInterface.class);
 
+
         query = query.select(root)
                 .where(cb.equal(root.get("tag"), tag),
-                       cb.equal(root.get("virtualSystem"), vs));
+                       cb.equal(root.get("virtualSystem"), vs),
+                       cb.equal(root.join("policies").get("id"), policyId));
 
         List<SecurityGroupInterface> list = em.createQuery(query).setMaxResults(1).getResultList();
 
@@ -110,7 +120,7 @@ public class SecurityGroupInterfaceEntityMgr {
         Root<SecurityGroupInterface> root = query.from(SecurityGroupInterface.class);
 
         query = query.select(root).distinct(true)
-                .where(cb.equal(root.join("policy").get("id"), policyId));
+                .where(cb.equal(root.join("policies").get("id"), policyId));
 
         List<SecurityGroupInterface> list = em.createQuery(query).getResultList();
 

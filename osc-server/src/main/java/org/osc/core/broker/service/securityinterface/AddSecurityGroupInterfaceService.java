@@ -49,14 +49,10 @@ public class AddSecurityGroupInterfaceService
         SecurityGroupInterfaceDto dto = request.getDto();
         VirtualSystem vs = validateAndLoad(em, dto);
 
-        SecurityGroupInterface sgi = new SecurityGroupInterface(
-                vs,
-                null,
-                null,
-                FailurePolicyType.valueOf(dto.getFailurePolicyType().name()),
-                0L);
+        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, null, null,
+                FailurePolicyType.valueOf(dto.getFailurePolicyType().name()), 0L);
 
-        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, PolicyEntityMgr.findById(em, dto.getPolicyId()),
+        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds()),
                 SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Creating SecurityGroupInterface: " + sgi.toString());
@@ -77,20 +73,24 @@ public class AddSecurityGroupInterfaceService
     protected VirtualSystem validateAndLoad(EntityManager em, SecurityGroupInterfaceDto dto) throws Exception {
         VirtualSystem vs = super.validateAndLoad(em, dto);
 
-        if (!dto.isUserConfigurable()) {
-            throw new VmidcBrokerValidationException(
-                    "Invalid request. Only User configured Traffic Policy Mappings can be Created.");
-        }
+		if (!dto.isUserConfigurable()) {
+			throw new VmidcBrokerValidationException(
+					"Invalid request. Only User configured Traffic Policy Mappings can be Created.");
+		} else {
+			if (dto.getPolicies().size() > 1) {
+				throw new VmidcBrokerValidationException(
+						"Invalid request. User configured Traffic Policy Mappings cannot have more than one policy.");
+			}
+		}
 
-        SecurityGroupInterface existingSGI = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(
-                em, vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString());
+		Long policyId = dto.getPolicies().iterator().next().getId();
+        SecurityGroupInterface existingSGI = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsTagAndPolicy(
+                em, vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString(), policyId);
 
         if (existingSGI != null) {
             throw new VmidcBrokerValidationException("A Traffic Policy Mapping: " + existingSGI.getName()
             + " exists for the specified virtual system and tag combination.");
         }
         return vs;
-
     }
-
 }

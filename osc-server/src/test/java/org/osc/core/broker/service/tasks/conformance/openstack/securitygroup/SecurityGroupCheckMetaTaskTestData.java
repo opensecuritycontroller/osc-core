@@ -18,7 +18,9 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.Appliance;
@@ -49,7 +51,7 @@ class SecurityGroupCheckMetaTaskTestData {
     public VirtualSystem MC_POLICY_MAPPING_SUPPORTED_VS_2 = createVirtualSystem(MULTIPLE_MC_POLICY_MAPPING_SUPPORTED, POLICY_MAPPING_SUPPORTED_MGR_TYPE);
     public List<VirtualSystem> MC_POLICY_MAPPING_SUPPORTED_VS_LIST = Arrays.asList(this.MC_POLICY_MAPPING_SUPPORTED_VS, this.MC_POLICY_MAPPING_SUPPORTED_VS_2);
 
-    public List<SecurityGroup> TEST_SECURITY_GROUPS = new ArrayList<SecurityGroup>();
+    public List<SecurityGroup> TEST_SECURITY_GROUPS = new ArrayList<>();
 
 
     public SecurityGroup NO_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(NO_MC_POLICY_MAPPING_SUPPORTED,
@@ -65,8 +67,10 @@ class SecurityGroupCheckMetaTaskTestData {
                 vs.getDomain());
         policy.setName(baseName + "_policy");
         policy.setMgrPolicyId(baseName + "_mgrPolicy");
+        Set<Policy> policySet = new HashSet<>();
+        policySet.add(policy);
 
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policy, baseName + "_tag", FailurePolicyType.NA, 1L);
+        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policySet, baseName + "_tag", FailurePolicyType.NA, 1L);
         sgi.setName(baseName + "_sgi");
 
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
@@ -107,8 +111,10 @@ class SecurityGroupCheckMetaTaskTestData {
                 vs.getDomain());
         policy.setName(baseName + "_policy");
         policy.setMgrPolicyId(baseName + "_mgrPolicy");
+        Set<Policy> policySet = new HashSet<>();
+        policySet.add(policy);
 
-        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policy, baseName + "_tag", FailurePolicyType.NA, 2L);
+        SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policySet, baseName + "_tag", FailurePolicyType.NA, 2L);
         sgi.setName(baseName + "_sgi");
 
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);

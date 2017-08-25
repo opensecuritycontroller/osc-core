@@ -23,6 +23,7 @@ import org.osc.core.broker.model.entities.management.ApplianceManagerConnector;
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
+import org.osc.core.broker.service.dto.PolicyDto;
 import org.osc.core.broker.service.dto.SecurityGroupInterfaceDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.PolicyEntityMgr;
@@ -53,18 +54,21 @@ ServiceDispatcher<I, O> {
             throw new VmidcBrokerValidationException("Security group interfaces cannot be created or updated for appliance manager that does not support policy mapping.");
         }
 
-        Policy policy = PolicyEntityMgr.findById(em, dto.getPolicyId());
+        for(PolicyDto policyDto : dto.getPolicies()){
+            Policy policy = PolicyEntityMgr.findById(em, policyDto.getId());
 
-        if (policy == null) {
-            throw new VmidcBrokerValidationException("Policy with Id: " + dto.getPolicyId() + "  is not found.");
+            if (policy == null) {
+                throw new VmidcBrokerValidationException("Policy with Id: " + policyDto.getMgrPolicyId() + "  is not found.");
+            }
+
+            ApplianceManagerConnector mc = vs.getDistributedAppliance().getApplianceManagerConnector();
+
+            if (!mc.getPolicies().contains(policy)) {
+                throw new VmidcBrokerValidationException("Policy with Name: " + policy.getName()
+                + " is not defined in the manager: " + mc.getName());
+            }
         }
 
-        ApplianceManagerConnector mc = vs.getDistributedAppliance().getApplianceManagerConnector();
-
-        if (!mc.getPolicies().contains(policy)) {
-            throw new VmidcBrokerValidationException("Policy with Name: " + policy.getName()
-            + " is not defined in the manager: " + mc.getName());
-        }
         return vs;
     }
 

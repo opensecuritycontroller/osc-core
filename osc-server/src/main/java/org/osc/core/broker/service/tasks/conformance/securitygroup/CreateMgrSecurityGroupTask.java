@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
@@ -46,12 +47,14 @@ public class CreateMgrSecurityGroupTask extends TransactionalTask {
     private ApiFactoryService apiFactoryService;
 
     private SecurityGroup sg;
+    private SecurityGroupInterface sgi;
     private VirtualSystem vs;
 
-    public CreateMgrSecurityGroupTask create(VirtualSystem vs, SecurityGroup sg) {
+    public CreateMgrSecurityGroupTask create(VirtualSystem vs, SecurityGroup sg, SecurityGroupInterface sgi) {
         CreateMgrSecurityGroupTask task = new CreateMgrSecurityGroupTask();
         task.vs = vs;
         task.sg = sg;
+        task.sgi = sgi;
         task.name = task.getName();
         task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
@@ -66,11 +69,12 @@ public class CreateMgrSecurityGroupTask extends TransactionalTask {
 
         ManagerSecurityGroupApi mgrApi = this.apiFactoryService.createManagerSecurityGroupApi(this.vs);
         try {
-            String iscId = this.sg.getId().toString();
-            String mgrEndpointGroupId = mgrApi.createSecurityGroup(this.sg.getName(), iscId,
+            String sgId = this.sg.getId().toString();
+            String mgrEndpointGroupId = mgrApi.createSecurityGroup(this.sg.getName(), sgId,
                     getSecurityGroupMemberListElement(this.sg));
-            this.sg.setMgrId(mgrEndpointGroupId);
+            this.sgi.setMgrSecurityGroupId(mgrEndpointGroupId);
             OSCEntityManager.update(em, this.sg, this.txBroadcastUtil);
+            OSCEntityManager.update(em, this.sgi, this.txBroadcastUtil);
 
         } finally {
             mgrApi.close();

@@ -262,7 +262,7 @@ public class Schema {
                 "virtual_system_fk bigint not null," +
                 "tag varchar(255)," +
                 "mgr_interface_id varchar(255)," +
-                "policy_fk bigint," +
+                "mgr_security_group_id varchar(255)," +
                 "user_configurable bit not null default 0 ," +
                 "failure_policy_type varchar(255) not null," +
                 "chain_order bigint not null default 0," +
@@ -429,7 +429,6 @@ public class Schema {
                    "updated_timestamp timestamp," +
                    "version bigint," +
                    "name varchar(255) not null," +
-                   "mgr_id varchar(255)," +
                    "last_job_id_fk bigint," +
                    "network_elem_id varchar(255)," +
                    "vc_fk bigint not null," +
@@ -842,6 +841,11 @@ public class Schema {
                     "CONSTRAINT SSL_CERT_ATTR_AMC_FK FOREIGN KEY (SSL_CERTIFICATE_ATTR_ID) REFERENCES SSL_CERTIFICATE_ATTR (ID) ON UPDATE CASCADE ON DELETE CASCADE);",
 
 
+            "create table SECURITY_GROUP_INTERFACE_POLICY (" +
+                    "sgi_fk bigint not null, " +
+                    "policy_fk bigint not null," +
+                    "primary key (sgi_fk, policy_fk));",
+
             "alter table APPLIANCE " +
                 "add constraint UK_AP_MODEL unique (model);",
 
@@ -979,14 +983,6 @@ public class Schema {
                     "add constraint FK_SECURITY_GROUP " +
                     "foreign key (security_group_fk) " +
                     "references SECURITY_GROUP;",
-
-            "alter table SECURITY_GROUP_INTERFACE " +
-                "add constraint UK_SGI_VS_TAG unique (virtual_system_fk, tag);",
-
-            "alter table SECURITY_GROUP_INTERFACE " +
-                "add constraint FK_SGI_POLICY " +
-                "foreign key (policy_fk) " +
-                "references POLICY;",
 
             "alter table TASK " +
                 "add constraint FK_TASK_JOB " +
@@ -1227,6 +1223,16 @@ public class Schema {
 
             "alter table SERVICE_FUNCTION_CHAIN " +
                     "add constraint UK_SFC_NAME unique (name);",
+
+            "alter table SECURITY_GROUP_INTERFACE_POLICY " +
+                    "add constraint FK_SGI_POLICY_SGI " +
+                    "foreign key (sgi_fk) " +
+                    "references SECURITY_GROUP_INTERFACE;",
+
+            "alter table SECURITY_GROUP_INTERFACE_POLICY " +
+                "add constraint FK_SGI_POLICY_POLICY " +
+                "foreign key (policy_fk) " +
+                "references POLICY;",
 
         }; // end of schema array
     // @formatter:on

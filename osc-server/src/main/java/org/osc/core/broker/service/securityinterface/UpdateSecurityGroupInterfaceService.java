@@ -50,7 +50,7 @@ public class UpdateSecurityGroupInterfaceService
         validateAndLoad(em, dto);
 
         SecurityGroupInterface sgi = new SecurityGroupInterface();
-        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, PolicyEntityMgr.findById(em, dto.getPolicyId()),
+        SecurityGroupInterfaceEntityMgr.toEntity(sgi, dto, PolicyEntityMgr.findPoliciesById(em, dto.getPolicyIds()),
                 SecurityGroupInterface.ISC_TAG_PREFIX);
 
         log.info("Updating SecurityGroupInterface: " + sgi.toString());
@@ -73,18 +73,24 @@ public class UpdateSecurityGroupInterfaceService
                     "Traffic Policy Mapping with Id: " + dto.getId() + "  is not found.");
         }
 
-        if (!sgi.isUserConfigurable()) {
-            throw new VmidcBrokerValidationException(
-                    "Invalid request. Only User configured Traffic Policy Mappings can be updated.");
-        }
+		if (!sgi.isUserConfigurable()) {
+			throw new VmidcBrokerValidationException(
+					"Invalid request. Only User configured Traffic Policy Mappings can be updated.");
+		} else {
+			if (dto.getPolicies().size() > 1) {
+				throw new VmidcBrokerValidationException(
+						"Invalid request. User configured Traffic Policy Mappings cannot have more than one policy.");
+			}
+		}
 
         if (!sgi.getVirtualSystem().getId().equals(dto.getParentId())) {
             throw new VmidcBrokerValidationException(
                     "Invalid request. Cannot change the Virtual System a Traffic Policy Mapping is associated with.");
         }
 
-        SecurityGroupInterface existingSGI = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsAndTag(
-                em, vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString());
+        Long policyId = dto.getPolicies().iterator().next().getId();
+        SecurityGroupInterface existingSGI = SecurityGroupInterfaceEntityMgr.findSecurityGroupInterfaceByVsTagAndPolicy(
+                em, vs, SecurityGroupInterface.ISC_TAG_PREFIX + dto.getTagValue().toString(), policyId);
 
         if (existingSGI != null && !existingSGI.equals(sgi)) {
             throw new VmidcBrokerValidationException("A Traffic Policy Mapping: " + existingSGI.getName()

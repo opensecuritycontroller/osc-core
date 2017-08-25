@@ -258,7 +258,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 VirtualSystem vs = sgi.getVirtualSystem();
                 if (this.apiFactoryService.syncsSecurityGroup(vs)) {
                     try (ManagerSecurityGroupApi mgrSgApi = this.apiFactoryService.createManagerSecurityGroupApi(vs)) {
-                        ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(this.sg.getMgrId());
+                        ManagerSecurityGroupElement mepg = mgrSgApi.getSecurityGroupById(sgi.getMgrSecurityGroupId());
                         if (mepg != null) {
                             DeleteMgrSecurityGroupTask mgrSecurityGroupDelTask = this.deleteMgrSecurityGroupTask
                                     .create(vs, mepg);

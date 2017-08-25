@@ -16,21 +16,25 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.securitygroupinterface;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.model.plugin.manager.ManagerPolicyElementImpl;
+import org.osc.core.broker.model.plugin.manager.SecurityGroupInterfaceElementImpl;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.manager.api.ManagerSecurityGroupInterfaceApi;
+import org.osc.sdk.manager.element.ManagerPolicyElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = UpdateMgrSecurityGroupInterfaceTask.class)
 public class UpdateMgrSecurityGroupInterfaceTask extends TransactionalTask {
-    //private static final Logger log = Logger.getLogger(UpdateMgrSecurityGroupInterfaceTask.class);
 
     @Reference
     private ApiFactoryService apiFactoryService;
@@ -50,15 +54,21 @@ public class UpdateMgrSecurityGroupInterfaceTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        this.securityGroupInterface = em.find(SecurityGroupInterface.class,
-                this.securityGroupInterface.getId());
+        this.securityGroupInterface = em.find(SecurityGroupInterface.class, this.securityGroupInterface.getId());
 
         ManagerSecurityGroupInterfaceApi mgrApi = this.apiFactoryService
                 .createManagerSecurityGroupInterfaceApi(this.securityGroupInterface.getVirtualSystem());
         try {
-            mgrApi.updateSecurityGroupInterface(this.securityGroupInterface.getMgrSecurityGroupIntefaceId(),
-                    this.securityGroupInterface.getName(), this.securityGroupInterface.getMgrPolicyId(),
-                    this.securityGroupInterface.getTag());
+			Set<ManagerPolicyElement> managerPolicyElements = new HashSet<>();
+			managerPolicyElements = this.securityGroupInterface.getPolicies().stream()
+					.map(policy -> new ManagerPolicyElementImpl(policy.getMgrPolicyId(), policy.getName(),
+							policy.getDomain().getMgrId()))
+					.collect(Collectors.toSet());
+			SecurityGroupInterfaceElementImpl sgiElem = new SecurityGroupInterfaceElementImpl(
+					this.securityGroupInterface.getMgrSecurityGroupInterfaceId(), this.securityGroupInterface.getName(),
+					this.securityGroupInterface.getMgrSecurityGroupId(), managerPolicyElements,
+					this.securityGroupInterface.getTag());
+            mgrApi.updateSecurityGroupInterface(sgiElem);
         } finally {
             mgrApi.close();
         }

@@ -16,23 +16,48 @@
  *******************************************************************************/
 package org.osc.core.broker.service.persistence;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.management.Policy;
 import org.osc.core.broker.service.dto.PolicyDto;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 
 public class PolicyEntityMgr {
 
-    public static void fromEntity(Policy entity, PolicyDto dto) {
-        dto.setId(entity.getId());
-        dto.setPolicyName(entity.getName());
-        dto.setMgrPolicyId(entity.getMgrPolicyId());
-        dto.setMgrDomainId(entity.getDomain().getId());
-        dto.setMgrDomainName(entity.getDomain().getName());
-    }
+	public static void fromEntity(Policy entity, PolicyDto dto) {
+		dto.setId(entity.getId());
+		dto.setPolicyName(entity.getName());
+		dto.setMgrPolicyId(entity.getMgrPolicyId());
+		dto.setMgrDomainId(entity.getDomain().getId());
+		dto.setMgrDomainName(entity.getDomain().getName());
+	}
 
-    public static Policy findById(EntityManager em, Long id) {
-        return em.find(Policy.class, id);
-    }
+	public static Policy findById(EntityManager em, Long id) {
+		return em.find(Policy.class, id);
+	}
 
+	/**
+	 * Verifies if the request contains valid policies supported by security manager available on the OSC. If request
+	 * contains one or more invalid policies the service fails.
+	 */
+	public static Set<Policy> findPoliciesById(EntityManager em, Set<Long> ids) throws VmidcBrokerValidationException, Exception {
+		Set<Policy> policies = new HashSet<>();
+		Set<String> invalidPolicies = new HashSet<>();
+		for (Long id : ids) {
+			Policy policy = em.find(Policy.class, id);
+			if (policy == null) {
+				invalidPolicies.add(id.toString());
+			} else {
+				policies.add(policy);
+			}
+		}
+		if (invalidPolicies.size() > 0) {
+			throw new VmidcBrokerValidationException(
+					"Invalid Request. Request contains invalid policies: " + String.join(",", invalidPolicies));
+		}
+		return policies;
+	}
 }
