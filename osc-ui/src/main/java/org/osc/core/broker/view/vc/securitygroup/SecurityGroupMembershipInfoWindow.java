@@ -16,12 +16,13 @@
  *******************************************************************************/
 package org.osc.core.broker.view.vc.securitygroup;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Random;
+import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
+import org.osc.core.broker.service.dto.PortDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
+import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
+import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.button.CloseButtonModel;
 
@@ -34,76 +35,67 @@ public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonMo
 
     private static final long serialVersionUID = 1L;
 
-    final String CAPTION = "Member Information";
-
-    private static final Logger log = Logger.getLogger(SecurityGroupMembershipInfoWindow.class);
+    private final String CAPTION = "Member Information";
 
     private final SecurityGroupDto currentSecurityGroup;
+    private ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService;
+    private TreeTable treeTable;
 
-    public SecurityGroupMembershipInfoWindow(SecurityGroupDto sg) {
+    public SecurityGroupMembershipInfoWindow(SecurityGroupDto sg,
+            ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService) throws Exception {
         super(new CloseButtonModel());
         this.currentSecurityGroup = sg;
+        this.listSecurityGroupMembersBySgService = listSecurityGroupMembersBySgService;
         setCaption(sg.getName() + " - " + this.CAPTION);
-        setContent(getContent());
+        setContent(getTreeTable());
     }
 
-    @Override
-    public Component getContent() {
+    public Component getTreeTable() throws Exception {
         VerticalLayout content = new VerticalLayout();
         content.setMargin(new MarginInfo(true, true, false, true));
 
-	    TreeTable sample = new TreeTable();
-        sample.setSizeFull();
+        this.treeTable = new TreeTable();
+        this.treeTable.setPageLength(10);
+        this.treeTable.setSelectable(false);
+        this.treeTable.setSizeFull();
 
-        sample.addContainerProperty("NAME", String.class, "");
-        sample.addContainerProperty("HOURS", Integer.class, 0);
-        sample.addContainerProperty("MODIFIED", Date.class, new Date());
+        this.treeTable.addContainerProperty("name", String.class, "");
+        this.treeTable.addContainerProperty("type", String.class, "");
+        this.treeTable.addContainerProperty("mac", String.class, "");
+        this.treeTable.addContainerProperty("ip", String.class, "");
 
-        populateWithRandomHierarchicalData(sample);
-        content.addComponent(sample);
+        this.treeTable.setColumnHeader("name", "Name");
+        this.treeTable.setColumnHeader("type", "Type");
+        this.treeTable.setColumnHeader("mac", "Mac Address");
+        this.treeTable.setColumnHeader("ip", "IP Address");
+
+        this.treeTable.setColumnWidth("name", 150);
+        this.treeTable.setColumnWidth("type", 50);
+        this.treeTable.setColumnWidth("mac", 100);
+        this.treeTable.setColumnWidth("ip", -1);
+
+        populateData(this.treeTable);
+        content.addComponent(this.treeTable);
         return content;
     }
 
-    @SuppressWarnings("unchecked")
-    private void populateWithRandomHierarchicalData(final TreeTable sample) {
-        final Random random = new Random();
-        int hours = 0;
-        final Object allProjects = sample.addItem(new Object[] {
-                "All Projects", 0, new Date() }, null);
-        for (final int year : Arrays.asList(2010, 2011, 2012, 2013)) {
-            int yearHours = 0;
-            final Object yearId = sample.addItem(new Object[] { "Year " + year,
-                    yearHours, new Date() }, null);
-            sample.setParent(yearId, allProjects);
-            for (int project = 1; project < random.nextInt(4) + 2; project++) {
-                int projectHours = 0;
-                final Object projectId = sample.addItem(
-                        new Object[] { "Customer Project " + project,
-                                projectHours, new Date() }, null);
-                sample.setParent(projectId, yearId);
-                for (final String phase : Arrays.asList("Implementation",
-                        "Planning", "Prototype")) {
-                    final int phaseHours = random.nextInt(50);
-                    final Object phaseId = sample.addItem(new Object[] { phase,
-                            phaseHours, new Date() }, null);
-                    sample.setParent(phaseId, projectId);
-                    sample.setChildrenAllowed(phaseId, false);
-                    sample.setCollapsed(phaseId, false);
-                    projectHours += phaseHours;
-                }
-                yearHours += projectHours;
-                sample.getItem(projectId).getItemProperty("HOURS")
-                        .setValue(projectHours);
-                sample.setCollapsed(projectId, false);
+    private void populateData(final TreeTable treeTable) throws Exception {
+        Set<SecurityGroupMemberItemDto> members = this.listSecurityGroupMembersBySgService
+                .dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getSet();
+
+        for (SecurityGroupMemberItemDto member : members) {
+            Object memberItem = treeTable.addItem(new Object[] { member.getName(), member.getType(), "", "" },
+                    null);
+            treeTable.setCollapsed(memberItem, member.getPorts().isEmpty());
+            treeTable.setChildrenAllowed(memberItem, !member.getPorts().isEmpty());
+
+            for (PortDto port : member.getPorts()) {
+                Object portItem = treeTable.addItem(new Object[] { port.getOpenstackId(), "", port.getMacAddress(),
+                        String.join(", ", port.getIpAddresses()) },null);
+                treeTable.setChildrenAllowed(portItem, false);
+                treeTable.setParent(portItem, memberItem);
             }
-            hours += yearHours;
-            sample.getItem(yearId).getItemProperty("HOURS")
-                    .setValue(yearHours);
-            sample.setCollapsed(yearId, false);
         }
-        sample.getItem(allProjects).getItemProperty("HOURS")
-                .setValue(hours);
-        sample.setCollapsed(allProjects, false);
     }
 
 }

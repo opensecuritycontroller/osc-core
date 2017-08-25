@@ -19,6 +19,9 @@ package org.osc.core.broker.window.button;
 import java.util.Arrays;
 import java.util.List;
 
+import org.osc.core.broker.view.common.VmidcMessages;
+import org.osc.core.broker.view.common.VmidcMessages_;
+
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
@@ -35,10 +38,8 @@ public class CloseButtonModel implements ComponentModel {
     private ClickListener closeClickListner;
 
     public CloseButtonModel() {
-        //TODO: Future. have a constructor which will enable.disable parent window shortcut listener...
-        this.closeButton = new Button("Close");
+        this.closeButton = new Button(VmidcMessages.getString(VmidcMessages_.WINDOW_COMMON_BUTTON_CLOSE));
         this.closeButton.setClickShortcut(KeyCode.ESCAPE, null);
-
     }
 
     public void setCloseClickedListener(ClickListener listener) {

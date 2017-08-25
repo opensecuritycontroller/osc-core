@@ -335,7 +335,8 @@ public class VirtualizationConnectorView extends CRUDBaseView<VirtualizationConn
 
         if (event.getButton().getId().equals(ToolbarButtons.SECURITY_GROUP_MEMBERSHIP.getId())) {
             SecurityGroupDto securityGroup = getChildContainer().getItem(getChildItemId()).getBean();
-            SecurityGroupMembershipInfoWindow memberShipWindow = new SecurityGroupMembershipInfoWindow(securityGroup);
+            SecurityGroupMembershipInfoWindow memberShipWindow = new SecurityGroupMembershipInfoWindow(securityGroup,
+                    this.listSecurityGroupMembersBySgService);
             memberShipWindow.getComponentModel().setCloseClickedListener(new ClickListener() {
 
                 @Override
