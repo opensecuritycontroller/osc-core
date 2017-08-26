@@ -23,19 +23,36 @@ import org.osc.core.broker.service.dto.PortDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.request.BaseIdRequest;
+import org.osc.core.broker.view.common.VmidcMessages;
+import org.osc.core.broker.view.common.VmidcMessages_;
+import org.osc.core.broker.view.util.ViewUtil;
 import org.osc.core.broker.window.VmidcWindow;
 import org.osc.core.broker.window.button.CloseButtonModel;
 
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
 public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonModel> {
 
-    private static final long serialVersionUID = 1L;
+    private static final int OPENSTACK_ID_SHORTENED_LENGTH = 13;
 
-    private final String CAPTION = "Member Information";
+    private static final int NAME_COLUMN_WIDTH = 150;
+    private static final int TYPE_COLUMN_WIDTH = 60;
+    private static final int IP_COLUMN_WIDTH = 150;
+    private static final int MAC_COLUMN_WIDTH = 100;
+
+    private static final int WINDOW_WIDTH = NAME_COLUMN_WIDTH + TYPE_COLUMN_WIDTH + IP_COLUMN_WIDTH + MAC_COLUMN_WIDTH
+            + 150;
+
+    private static final String PROPERTY_ID_MEMBER_NAME = "name";
+    private static final String PROPERTY_ID_MEMBER_TYPE = "type";
+    private static final String PROPERTY_ID_MEMBER_IP = "ip";
+    private static final String PROPERTY_ID_MEMBER_MAC = "mac";
+
+    private static final long serialVersionUID = 1L;
 
     private final SecurityGroupDto currentSecurityGroup;
     private ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService;
@@ -44,9 +61,10 @@ public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonMo
     public SecurityGroupMembershipInfoWindow(SecurityGroupDto sg,
             ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService) throws Exception {
         super(new CloseButtonModel());
+        setWidth(WINDOW_WIDTH, Unit.PIXELS);
         this.currentSecurityGroup = sg;
         this.listSecurityGroupMembersBySgService = listSecurityGroupMembersBySgService;
-        setCaption(sg.getName() + " - " + this.CAPTION);
+        setCaption(sg.getName() + " - " + VmidcMessages.getString(VmidcMessages_.SG_MEMBERSHIP_CAPTION));
         setContent(getTreeTable());
     }
 
@@ -59,20 +77,20 @@ public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonMo
         this.treeTable.setSelectable(false);
         this.treeTable.setSizeFull();
 
-        this.treeTable.addContainerProperty("name", String.class, "");
-        this.treeTable.addContainerProperty("type", String.class, "");
-        this.treeTable.addContainerProperty("mac", String.class, "");
-        this.treeTable.addContainerProperty("ip", String.class, "");
+        this.treeTable.addContainerProperty(PROPERTY_ID_MEMBER_NAME, String.class, "");
+        this.treeTable.addContainerProperty(PROPERTY_ID_MEMBER_TYPE, String.class, "");
+        this.treeTable.addContainerProperty(PROPERTY_ID_MEMBER_IP, String.class, "");
+        this.treeTable.addContainerProperty(PROPERTY_ID_MEMBER_MAC, String.class, "");
 
-        this.treeTable.setColumnHeader("name", "Name");
-        this.treeTable.setColumnHeader("type", "Type");
-        this.treeTable.setColumnHeader("mac", "Mac Address");
-        this.treeTable.setColumnHeader("ip", "IP Address");
+        this.treeTable.setColumnHeader(PROPERTY_ID_MEMBER_NAME, VmidcMessages.getString(VmidcMessages_.NAME));
+        this.treeTable.setColumnHeader(PROPERTY_ID_MEMBER_TYPE, VmidcMessages.getString(VmidcMessages_.OS_MEMBER_TYPE));
+        this.treeTable.setColumnHeader(PROPERTY_ID_MEMBER_MAC, VmidcMessages.getString(VmidcMessages_.GENERAL_MACADDR));
+        this.treeTable.setColumnHeader(PROPERTY_ID_MEMBER_IP, VmidcMessages.getString(VmidcMessages_.GENERAL_IPADDR));
 
-        this.treeTable.setColumnWidth("name", 150);
-        this.treeTable.setColumnWidth("type", 50);
-        this.treeTable.setColumnWidth("mac", 100);
-        this.treeTable.setColumnWidth("ip", -1);
+        this.treeTable.setColumnWidth(PROPERTY_ID_MEMBER_NAME, NAME_COLUMN_WIDTH);
+        this.treeTable.setColumnWidth(PROPERTY_ID_MEMBER_TYPE, TYPE_COLUMN_WIDTH);
+        this.treeTable.setColumnWidth(PROPERTY_ID_MEMBER_MAC, MAC_COLUMN_WIDTH);
+        this.treeTable.setColumnWidth(PROPERTY_ID_MEMBER_IP, IP_COLUMN_WIDTH);
 
         populateData(this.treeTable);
         content.addComponent(this.treeTable);
@@ -83,17 +101,23 @@ public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonMo
         Set<SecurityGroupMemberItemDto> members = this.listSecurityGroupMembersBySgService
                 .dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getSet();
 
-        for (SecurityGroupMemberItemDto member : members) {
-            Object memberItem = treeTable.addItem(new Object[] { member.getName(), member.getType(), "", "" },
-                    null);
-            treeTable.setCollapsed(memberItem, member.getPorts().isEmpty());
-            treeTable.setChildrenAllowed(memberItem, !member.getPorts().isEmpty());
+        if (members.isEmpty()) {
+            ViewUtil.iscNotification(null, VmidcMessages.getString(VmidcMessages_.SG_NO_MEMBERS), Type.WARNING_MESSAGE);
+        } else {
+            for (SecurityGroupMemberItemDto member : members) {
+                Object memberItem = treeTable.addItem(new Object[] { member.getName(), member.getType(), "", "" },
+                        null);
+                treeTable.setCollapsed(memberItem, member.getPorts().isEmpty());
+                treeTable.setChildrenAllowed(memberItem, !member.getPorts().isEmpty());
 
-            for (PortDto port : member.getPorts()) {
-                Object portItem = treeTable.addItem(new Object[] { port.getOpenstackId(), "", port.getMacAddress(),
-                        String.join(", ", port.getIpAddresses()) },null);
-                treeTable.setChildrenAllowed(portItem, false);
-                treeTable.setParent(portItem, memberItem);
+                for (PortDto port : member.getPorts()) {
+                    String ipAddressString = String.join(", ", port.getIpAddresses());
+                    Object portItem = treeTable
+                            .addItem(new Object[] { port.getOpenstackId().substring(0, OPENSTACK_ID_SHORTENED_LENGTH),
+                                    "", ipAddressString, port.getMacAddress() }, null);
+                    treeTable.setChildrenAllowed(portItem, false);
+                    treeTable.setParent(portItem, memberItem);
+                }
             }
         }
     }
