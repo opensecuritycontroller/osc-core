@@ -16,40 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.k8s;
 
-import java.io.Closeable;
-import java.io.IOException;
-
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
-
-import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
-public class KubernetesApi implements Closeable {
-    private VirtualizationConnector vc;
-    private DefaultKubernetesClient k8sclient;
+public class KubernetesApi {
+    private DefaultKubernetesClient client;
 
-    protected KubernetesApi(VirtualizationConnector vc) {
-        this.vc = vc;
-
-        final String URI = "http://" + this.vc.getProviderIpAddress()+ ":8080";
-
-        Config config = new ConfigBuilder().withMasterUrl(URI).build();
-
-        this.k8sclient = null;
-        this.k8sclient = new DefaultKubernetesClient(config);
+    KubernetesApi(DefaultKubernetesClient client) {
+        this.client = client;
     }
 
-    @Override
-    public void close() throws IOException {
-        if (this.k8sclient != null) {
-            this.k8sclient.close();
-        }
-    }
-
-    protected KubernetesClient getKubernetesClient() {
-        return this.k8sclient;
+    KubernetesClient getKubernetesClient() {
+        return this.client;
     }
 }
 

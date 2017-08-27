@@ -25,92 +25,76 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.service.exceptions.VmidcException;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
-
 public class KubernetesPodApiTest {
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
+    @InjectMocks
+    private KubernetesPodApi service;
 
-	@InjectMocks
-	private KubernetesPodApi service;
+    @Mock
+    private KubernetesClient kubernetesClient;
 
-	@Mock
-	private KubernetesClient getKubernetesClient = null;
+    @Before
+    public void testInitialize() throws Exception{
+        MockitoAnnotations.initMocks(this);
+    }
 
-	private VirtualizationConnector vc = new VirtualizationConnector();
+    @Test
+    public void testGetPodsbyLabel_WithNullLabel_ThrowsIllegalArgumentException() throws Exception {
+        // Arrange.
+        this.exception.expect(IllegalArgumentException.class);
 
-	@Before
-	public void setUp() {
-		vc.setProviderIpAddress("ip");
-		this.service = new KubernetesPodApi(vc);
-	}
+        // Act.
+        this.service.getPodsByLabel(null);
+    }
+
+    @Test
+    public void testGetPodsbyLabel_WhenK8ClientConnectionFails_ThrowsVmidcException() throws Exception {
+        // Arrange.
+        this.exception.expect(VmidcException.class);
+
+        // Act.
+        this.service.getPodsByLabel("sample_label");
+    }
+
+    @Test
+    public void testGetPodsbyId_WithNullName_ThrowsIllegalArgumentException() throws Exception {
+        // Arrange.
+        this.exception.expect(IllegalArgumentException.class);
+
+        // Act.
+        this.service.getPodById("1234", null, "sample_namespace");
+    }
+
+    @Test
+    public void testGetPodsbyId_WithNullUid_ThrowsIllegalArgumentException() throws Exception {
+        // Arrange.
+        this.exception.expect(IllegalArgumentException.class);
+
+        // Act.
+        this.service.getPodById(null, "sample_name", "sample_namespace");
+    }
+
+    @Test
+    public void testGetPodsbyId_WithNullNameSpace_ThrowsIllegalArgumentException() throws Exception {
+        // Arrange.
+        this.exception.expect(IllegalArgumentException.class);
+
+        // Act.
+        this.service.getPodById("1234", "sample_name", null);
+    }
 
 
-	@Test
-	public void testgetPodsbyLabel_WithNullLabel_ThrowsIllegalArgumentException() throws Exception {
+    @Test
+    public void testGetPodById_WhenK8ClientConnectionFails_ThrowsVmidcException() throws Exception {
+        // Arrange.
+        //this.exception.expect(VmidcException.class);
 
-		// Arrange.
-		this.exception.expect(IllegalArgumentException.class);
-
-		// Act.
-		this.service.getPodsByLabel(null);
-	}
-
-	@Test
-	public void testgetPodsbyId_WithNullName_ThrowsIllegalArgumentException() throws Exception {
-
-		// Arrange.
-		this.exception.expect(IllegalArgumentException.class);
-
-		// Act.
-		this.service.getPodById("1234", null, "sample_namespace");
-	}
-
-	@Test
-	public void testgetPodsbyId_WithNullUid_ThrowsIllegalArgumentException() throws Exception {
-
-		// Arrange.
-		this.exception.expect(IllegalArgumentException.class);
-
-		// Act.
-		this.service.getPodById(null, "sample_name", "sample_namespace");
-	}
-	
-	@Test
-	public void testgetPodsbyId_WithNullNameSpace_ThrowsIllegalArgumentException() throws Exception {
-
-		// Arrange.
-		this.exception.expect(IllegalArgumentException.class);
-
-		// Act.
-		this.service.getPodById("1234", "sample_name", null);
-	}
-	
-	
-	@Test
-	public void testgetPodById_WhenK8ClientConnectionFails_ThrowsVmidcException() throws Exception {
-
-		// Arrange.
-		//this.exception.expect(VmidcException.class);
-
-		// Act.
-		assertEquals(this.service.getPodById("1234", "sample_name", "sample_label"), null);
-	}
-	
-	@Test
-	public void testgetPodsbyLabel_WhenK8ClientConnectionFails_ThrowsVmidcException() throws Exception {
-
-		// Arrange.
-		this.exception.expect(VmidcException.class);
-
-		// Act.
-		this.service.getPodsByLabel("sample_label");
-	}
-
-	
-
+        // Act.
+        assertEquals(this.service.getPodById("1234", "sample_name", "sample_label"), null);
+    }
 }

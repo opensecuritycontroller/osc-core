@@ -19,7 +19,6 @@ package org.osc.core.broker.rest.client.k8s;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.exceptions.VmidcException;
 
 import io.fabric8.kubernetes.api.model.Pod;
@@ -27,108 +26,94 @@ import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 
 /**
- * This class implements the pod related operations used by other osc-core
- * components.
+ * This class implements the pod related operations used by other osc-core components.
  */
 public class KubernetesPodApi extends KubernetesApi {
-	public KubernetesPodApi(VirtualizationConnector vc) {
-		super(vc);
-	}
+    public KubernetesPodApi(KubernetesClient client) {
+        super(client.getClient());
+    }
 
-	/**
-	 * Returns Pods by name and namespace.
-	 * 
-	 * @param namespace
-	 *            Pods namespace
-	 * @param name
-	 *            Pods name
-	 *            <p>
-	 *            Each string on this set must have the format "key=value" and
-	 *            all the keys must be the same.
-	 * @return return pods that matches mane and namespace, empty string if not
-	 *         found
-	 * @throws KubernetesClientException
-	 *             exception is caught
-	 */
-	private KubernetesPod getPodsByName(String namespace, String name) throws VmidcException {
-		KubernetesPod kPod = null;
+    private KubernetesPod getPodsByName(String namespace, String name) throws VmidcException {
+        KubernetesPod resultPod = null;
 
-		try {
-			Pod pod = this.getKubernetesClient().pods().inNamespace(namespace).withName(name).get();
+        try {
+            Pod pod = getKubernetesClient().pods().inNamespace(namespace).withName(name).get();
 
-			if (pod != null) {
-				kPod = new KubernetesPod(pod.getMetadata().getName(), namespace, pod.getMetadata().getUid(),
-						pod.getSpec().getNodeName());
-			}
+            if (pod != null) {
+                resultPod = new KubernetesPod(pod.getMetadata().getName(), namespace, pod.getMetadata().getUid(),
+                        pod.getSpec().getNodeName());
+            }
 
-		} catch (KubernetesClientException e) {
-			throw new VmidcException("Failed to get Pods");
-		}
+        } catch (KubernetesClientException e) {
+            throw new VmidcException("Failed to get Pods");
+        }
 
-		return kPod;
-	}
+        return resultPod;
+    }
 
-	/**
-	 * Returns all the pods for a give label
-	 * 
-	 * @param label
-	 *            the string label to be used to select the pods
-	 *            <p>
-	 *            string on this must have the format "key=value" and all the
-	 *            keys must be the same.
-	 * @return the list of pods with any of the provided labels, empty list if
-	 *         no pod is found
-	 * @throws VmidcException
-	 *             if a K8s SDK specific exception is caught
-	 */
-	public List<KubernetesPod> getPodsByLabel(String label) throws VmidcException {
-		List<KubernetesPod> kPodList = new ArrayList<KubernetesPod>();
+    /**
+     * Retrieves all the pods labeled with the given string.
+     *
+     * @param label  the string label to be used to select the pods
+     * @return  the list of pods selected with the provided label. Empty list if not pod is found.
+     * @throws VmidcException  if a K8s SDK specific exception is caught
+     */
+    public List<KubernetesPod> getPodsByLabel(String label) throws VmidcException {
+        List<KubernetesPod> resultPodList = new ArrayList<KubernetesPod>();
 
-		if (label == null) {
-			throw new IllegalArgumentException("Label should not be null");
-		}
+        if (label == null) {
+            throw new IllegalArgumentException("Label should not be null");
+        }
 
-		try {
-			PodList pods = this.getKubernetesClient().pods().withLabel(label).list();
-			if (pods != null && !(pods.getItems().isEmpty())) {
-				for (Pod pod : pods.getItems()) {
-					kPodList.add(new KubernetesPod(pod.getMetadata().getName(), pod.getMetadata().getNamespace(),
-							pod.getMetadata().getUid(), pod.getSpec().getNodeName()));
-				}
-			}
-		} catch (KubernetesClientException e) {
-			throw new VmidcException("Failed to get Pods");
-		}
-		return kPodList;
-	}
+        try {
+            PodList pods = getKubernetesClient().pods().withLabel(label).list();
+            if (pods == null || pods.getItems().isEmpty()) {
+                return resultPodList;
+            }
 
-	/**
-	 * Returns the pod with the given uid, namespace and name
-	 * <p>
-	 * The additional parameters namespace and name are needed because K8s APIs
-	 * do not support queries by uid
-	 * 
-	 * @param uid
-	 *            the unique identifier of the pod to be retrieved
-	 * @param namespace
-	 *            the namespace of the pod to be retrieved
-	 * @param name
-	 *            the name of the pod to be retrieved
-	 * @return the pod with the given namespace, name and uid, NULL if no pod is
-	 *         found
-	 * @throws VmidcException
-	 *             if a K8s SDK specific exception is caught
-	 */
-	public KubernetesPod getPodById(String uid, String namespace, String name) throws VmidcException {
-		if (uid == null) {
-			throw new IllegalArgumentException("Uid Should not be null");
-		} else if (name == null) {
-			throw new IllegalArgumentException("Name Should not be null");
-		} else if (namespace == null) {
-			throw new IllegalArgumentException("namespace Should not be null");
-		}
-		KubernetesPod kPod = getPodsByName(namespace, name);
-		return (kPod == null || !kPod.getUid().equals(uid)) ? null : kPod;
-	}
+            for (Pod pod : pods.getItems()) {
+                resultPodList.add(
+                        new KubernetesPod(
+                                pod.getMetadata().getName(),
+                                pod.getMetadata().getNamespace(),
+                                pod.getMetadata().getUid(),
+                                pod.getSpec().getNodeName())
+                        );
+            }
 
+        } catch (KubernetesClientException e) {
+            throw new VmidcException("Failed to get Pods");
+        }
+
+        return resultPodList;
+    }
+
+    /**
+     * Retrieves the pod with the given uid, namespace and name
+     * <p>
+     * The additional parameters namespace and name are needed because K8s APIs
+     * do not support queries by uid
+     *
+     * @param uid  the unique identifier of the pod to be retrieved
+     * @param namespace  the namespace of the pod to be retrieved
+     * @param name  the name of the pod to be retrieved
+     * @return the pod with the given namespace, name and uid. NULL if no pod is found
+     * @throws VmidcException  if a K8s SDK specific exception is caught
+     */
+    public KubernetesPod getPodById(String uid, String namespace, String name) throws VmidcException {
+        if (uid == null) {
+            throw new IllegalArgumentException("Uid should not be null");
+        }
+
+        if (name == null) {
+            throw new IllegalArgumentException("Name should not be null");
+        }
+
+        if (namespace == null) {
+            throw new IllegalArgumentException("Namespace should not be null");
+        }
+
+        KubernetesPod pod = getPodsByName(namespace, name);
+        return (pod == null || !pod.getUid().equals(uid)) ? null : pod;
+    }
 }
