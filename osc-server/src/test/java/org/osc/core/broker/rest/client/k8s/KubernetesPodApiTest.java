@@ -17,30 +17,35 @@
 
 package org.osc.core.broker.rest.client.k8s;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.service.exceptions.VmidcException;
+
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 
 public class KubernetesPodApiTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @InjectMocks
-    private KubernetesPodApi service;
+    @Mock
+    private org.osc.core.broker.rest.client.k8s.KubernetesClient kubernetesClient;
 
     @Mock
-    private KubernetesClient kubernetesClient;
+    private DefaultKubernetesClient fabric8Client;
+
+    private KubernetesPodApi service;
 
     @Before
     public void testInitialize() throws Exception{
         MockitoAnnotations.initMocks(this);
+        Mockito.when(this.kubernetesClient.getClient()).thenReturn(this.fabric8Client);
+        this.service = new KubernetesPodApi(this.kubernetesClient);
     }
 
     @Test
@@ -53,9 +58,10 @@ public class KubernetesPodApiTest {
     }
 
     @Test
-    public void testGetPodsbyLabel_WhenK8ClientConnectionFails_ThrowsVmidcException() throws Exception {
+    public void testGetPodsbyLabel_WhenK8ClientThrowsKubernetesClientException_ThrowsVmidcException() throws Exception {
         // Arrange.
         this.exception.expect(VmidcException.class);
+        Mockito.when(this.fabric8Client.pods()).thenThrow(new KubernetesClientException(""));
 
         // Act.
         this.service.getPodsByLabel("sample_label");
@@ -90,11 +96,12 @@ public class KubernetesPodApiTest {
 
 
     @Test
-    public void testGetPodById_WhenK8ClientConnectionFails_ThrowsVmidcException() throws Exception {
+    public void testGetPodById_WhenK8ClientThrowsKubernetesClientException_ThrowsVmidcException() throws Exception {
         // Arrange.
-        //this.exception.expect(VmidcException.class);
+        this.exception.expect(VmidcException.class);
+        Mockito.when(this.fabric8Client.pods()).thenThrow(new KubernetesClientException(""));
 
         // Act.
-        assertEquals(this.service.getPodById("1234", "sample_name", "sample_label"), null);
+        this.service.getPodById("1234", "sample_name", "sample_label");
     }
 }
