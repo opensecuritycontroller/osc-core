@@ -179,7 +179,7 @@ public class KubernetesPodApiTest {
         mockPodsByName(namespace, name, null);
 
         // Act.
-        KubernetesPod result = this.service.getPodById( UUID.randomUUID().toString(), namespace, name);
+        KubernetesPod result = this.service.getPodById(UUID.randomUUID().toString(), namespace, name);
 
         // Assert.
         assertNull("The result should be null.", result);
