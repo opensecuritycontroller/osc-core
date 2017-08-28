@@ -67,7 +67,7 @@ public class KubernetesPodApi extends KubernetesApi {
 
         try {
             PodList pods = getKubernetesClient().pods().withLabel(label).list();
-            if (pods == null || pods.getItems().isEmpty()) {
+            if (pods == null || pods.getItems() == null || pods.getItems().isEmpty()) {
                 return resultPodList;
             }
 

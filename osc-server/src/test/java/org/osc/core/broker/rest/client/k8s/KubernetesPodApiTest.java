@@ -17,8 +17,7 @@
 
 package org.osc.core.broker.rest.client.k8s;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -34,8 +33,10 @@ import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.service.exceptions.VmidcException;
 
 import io.fabric8.kubernetes.api.model.DoneablePod;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
@@ -119,6 +120,16 @@ public class KubernetesPodApiTest {
     }
 
     @Test
+    public void testGetPodsbyLabel_WhenK8sReturnsSinglePod_ReturnsSinglePod() throws Exception {
+        testGetPodsbyLabel_WhenK8sReturnsPods(1);
+    }
+
+    @Test
+    public void testGetPodsbyLabel_WhenK8sReturnsMultiplePods_ReturnsSinglePod() throws Exception {
+        testGetPodsbyLabel_WhenK8sReturnsPods(3);
+    }
+
+    @Test
     public void testGetPodsbyId_WithNullName_ThrowsIllegalArgumentException() throws Exception {
         // Arrange.
         this.exception.expect(IllegalArgumentException.class);
@@ -157,6 +168,66 @@ public class KubernetesPodApiTest {
 
     private void mockPodsByLabel(String label, List<Pod> result) {
         when(this.operationMock.withLabel(label)).thenReturn(this.filterMock);
-        when(this.filterMock.list()).thenReturn(null);
+        PodList podList = new PodList();
+        podList.setItems(result);
+        when(this.filterMock.list()).thenReturn(podList);
+    }
+
+    private Pod newPod(String uid, String namespace, String name, String node) {
+        Pod pod = new Pod();
+
+        ObjectMeta objMeta = new ObjectMeta();
+        objMeta.setName(name);
+        objMeta.setNamespace(namespace);
+        objMeta.setUid(uid);
+
+        PodSpec spec = new PodSpec();
+        spec.setNodeName(node);
+
+        pod.setMetadata(objMeta);
+        pod.setSpec(spec);
+
+        return pod;
+    }
+
+    private void assertPodFields(Pod expectedPod, KubernetesPod actualPod) {
+        assertEquals("The pod name was different than the expected.", expectedPod.getMetadata().getName(), actualPod.getName());
+        assertEquals("The pod namespace was different than the expected.", expectedPod.getMetadata().getNamespace(), actualPod.getNamespace());
+        assertEquals("The pod uid was different than the expected.", expectedPod.getMetadata().getUid(), actualPod.getUid());
+        assertEquals("The pod node name was different than the expected.", expectedPod.getSpec().getNodeName(), actualPod.getNode());
+    }
+
+    private void assertPodsList(List<Pod> expectedPods, List<KubernetesPod> actualPods) {
+        assertEquals("The size of the pods list was different than expected.", expectedPods.size(), actualPods.size());
+
+        expectedPods.sort((p1, p2) -> p1.getMetadata().getUid().compareTo(p2.getMetadata().getUid()));
+        actualPods.sort((p1, p2) -> p1.getUid().compareTo(p2.getUid()));
+        int index = 0;
+
+        for (Pod expectedPod : expectedPods) {
+            assertPodFields(expectedPod, actualPods.get(index));
+            index++;
+        }
+    }
+
+    private void testGetPodsbyLabel_WhenK8sReturnsPods(int podCount) throws Exception {
+        // Arrange.
+        String label = UUID.randomUUID().toString();
+
+        List<Pod> pods = new ArrayList<>();
+
+        for(int i = 0; i < podCount; i++) {
+            pods.add(newPod(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+        }
+
+        mockPodsByLabel(label, pods);
+
+        // Act.
+        List<KubernetesPod> result = this.service.getPodsByLabel(label);
+
+        // Assert.
+        assertNotNull("The result should not be null.", result);
+        assertPodsList(pods, result);
+
     }
 }
