@@ -29,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.service.exceptions.VmidcException;
 
@@ -43,6 +44,7 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 
 public class KubernetesPodApiTest {
@@ -56,7 +58,10 @@ public class KubernetesPodApiTest {
     private DefaultKubernetesClient fabric8Client;
 
     @Mock
-    MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod,DoneablePod>> operationMock;
+    MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod,DoneablePod>> mixedOperationMock;
+
+    @Mock
+    NonNamespaceOperation<Pod, PodList, DoneablePod, PodResource<Pod,DoneablePod>> nonNamespaceOperationMock;
 
     @Mock
     FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> filterMock;
@@ -69,7 +74,7 @@ public class KubernetesPodApiTest {
         when(this.kubernetesClient.getClient()).thenReturn(this.fabric8Client);
         this.service = new KubernetesPodApi(this.kubernetesClient);
 
-        when(this.fabric8Client.pods()).thenReturn(this.operationMock);
+        when(this.fabric8Client.pods()).thenReturn(this.mixedOperationMock);
     }
 
     @Test
@@ -125,7 +130,7 @@ public class KubernetesPodApiTest {
     }
 
     @Test
-    public void testGetPodsbyLabel_WhenK8sReturnsMultiplePods_ReturnsSinglePod() throws Exception {
+    public void testGetPodsbyLabel_WhenK8sReturnsMultiplePods_ReturnsMultiplePods() throws Exception {
         testGetPodsbyLabel_WhenK8sReturnsPods(3);
     }
 
@@ -166,11 +171,65 @@ public class KubernetesPodApiTest {
         this.service.getPodById("1234", "sample_name", "sample_label");
     }
 
+    @Test
+    public void testGetPodsbyId_WhenK8sReturnsNull_ReturnsNull() throws Exception {
+        // Arrange.
+        String name = UUID.randomUUID().toString();
+        String namespace = UUID.randomUUID().toString();
+        mockPodsByName(namespace, name, null);
+
+        // Act.
+        KubernetesPod result = this.service.getPodById( UUID.randomUUID().toString(), namespace, name);
+
+        // Assert.
+        assertNull("The result should be null.", result);
+    }
+
+    @Test
+    public void testGetPodsbyLabel_WhenK8sReturnsPodWithMismatchingId_ReturnsEmptyList() throws Exception {
+        // Arrange.
+        String name = UUID.randomUUID().toString();
+        String namespace = UUID.randomUUID().toString();
+        mockPodsByName(namespace, name, newPod(UUID.randomUUID().toString(), name, namespace, "node"));
+
+        // Act.
+        KubernetesPod result = this.service.getPodById(UUID.randomUUID().toString(), namespace, name);
+
+        // Assert.
+        assertNull("The result should be null.", result);
+    }
+
+    @Test
+    public void testGetPodsbyLabel_WhenK8sReturnsPodWithMatchingId_ReturnsPod() throws Exception {
+        // Arrange.
+        String name = UUID.randomUUID().toString();
+        String namespace = UUID.randomUUID().toString();
+        String uid = UUID.randomUUID().toString();
+        Pod pod = newPod(uid, namespace, name, UUID.randomUUID().toString());
+        mockPodsByName(namespace, name, pod);
+
+        // Act.
+        KubernetesPod result = this.service.getPodById(uid, namespace, name);
+
+        // Assert.
+        assertNotNull("The result should not be null.", result);
+        assertPodFields(pod, result);
+    }
+
     private void mockPodsByLabel(String label, List<Pod> result) {
-        when(this.operationMock.withLabel(label)).thenReturn(this.filterMock);
+        when(this.mixedOperationMock.withLabel(label)).thenReturn(this.filterMock);
         PodList podList = new PodList();
         podList.setItems(result);
         when(this.filterMock.list()).thenReturn(podList);
+    }
+
+    private void mockPodsByName(String namespace, String name, Pod pod) {
+        when(this.mixedOperationMock.inNamespace(namespace)).thenReturn(this.nonNamespaceOperationMock);
+        @SuppressWarnings("unchecked")
+        PodResource<Pod, DoneablePod> podResource = Mockito.mock(PodResource.class);
+        when(podResource.get()).thenReturn(pod);
+
+        when(this.nonNamespaceOperationMock.withName(name)).thenReturn(podResource);
     }
 
     private Pod newPod(String uid, String namespace, String name, String node) {

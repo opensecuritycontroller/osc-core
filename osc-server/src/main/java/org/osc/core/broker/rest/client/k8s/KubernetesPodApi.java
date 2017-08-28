@@ -40,7 +40,7 @@ public class KubernetesPodApi extends KubernetesApi {
             Pod pod = getKubernetesClient().pods().inNamespace(namespace).withName(name).get();
 
             if (pod != null) {
-                resultPod = new KubernetesPod(pod.getMetadata().getName(), namespace, pod.getMetadata().getUid(),
+                resultPod = new KubernetesPod(pod.getMetadata().getName(), pod.getMetadata().getNamespace(), pod.getMetadata().getUid(),
                         pod.getSpec().getNodeName());
             }
 
