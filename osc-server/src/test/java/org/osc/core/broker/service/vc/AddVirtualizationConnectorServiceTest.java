@@ -65,7 +65,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({X509TrustManagerFactory.class, LockUtil.class })
 public class AddVirtualizationConnectorServiceTest {
-
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -133,9 +132,9 @@ public class AddVirtualizationConnectorServiceTest {
     }
 
     private void populateDatabase() {
-       this.em.getTransaction().begin();
+        this.em.getTransaction().begin();
 
-       this.em.getTransaction().commit();
+        this.em.getTransaction().commit();
     }
 
     @Test
@@ -162,14 +161,14 @@ public class AddVirtualizationConnectorServiceTest {
         // Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
         doThrow(new VmidcBrokerValidationException(NAME_ALREADY_EXISTS)).when(this.validatorMock)
-                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Act.
         this.service.dispatch(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Assert.
         verify(this.validatorMock)
-                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
     }
 
     @Test
@@ -182,14 +181,14 @@ public class AddVirtualizationConnectorServiceTest {
         OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(true);
 
         doThrow(new SslCertificatesExtendedException(exception, new ArrayList<CertificateResolverModel>())).when(this.validatorMock)
-                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Act.
         this.service.dispatch(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Assert.
         verify(this.validatorMock)
-                .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(VirtualizationConnectorServiceData.OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // clean up
         OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(false);
@@ -204,14 +203,14 @@ public class AddVirtualizationConnectorServiceTest {
         OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().setForceAddSSLCertificates(true);
 
         doThrow(new SslCertificatesExtendedException(exception, new ArrayList<>())).doNothing().when(this.validatorMock)
-                .validate(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Act.
         BaseJobResponse response = this.service.dispatch(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
 
         // Assert.
         verify(this.validatorMock, times(2))
-                .validate(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
+        .validate(OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST);
         VirtualizationConnector vc = this.em.createQuery("Select vc from VirtualizationConnector vc where vc.name = '" + OPENSTACK_NAME_ALREADY_EXISTS_NSC_REQUEST.getDto().getName() + "'", VirtualizationConnector.class)
                 .getSingleResult();
         validateResponse(response, vc.getId());

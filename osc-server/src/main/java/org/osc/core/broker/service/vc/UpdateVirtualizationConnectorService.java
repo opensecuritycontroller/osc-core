@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.vc;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.List;
 import java.util.Set;
@@ -67,8 +67,8 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class UpdateVirtualizationConnectorService
-        extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseJobResponse>
-        implements UpdateVirtualizationConnectorServiceApi {
+extends ServiceDispatcher<DryRunRequest<VirtualizationConnectorRequest>, BaseJobResponse>
+implements UpdateVirtualizationConnectorServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateVirtualizationConnectorService.class);
 
@@ -116,8 +116,8 @@ public class UpdateVirtualizationConnectorService
             updateVirtualizationConnector(request, vc);
             SslCertificateAttrEntityMgr sslMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);
             vc.setSslCertificateAttrSet(sslMgr.storeSSLEntries(request.getDto().getSslCertificateAttrSet().stream()
-                            .map(SslCertificateAttrEntityMgr::createEntity)
-                            .collect(toSet()),
+                    .map(SslCertificateAttrEntityMgr::createEntity)
+                    .collect(toSet()),
                     request.getDto().getId(), persistentSslCertificatesSet));
             vcEntityMgr.update(vc);
 
@@ -150,7 +150,7 @@ public class UpdateVirtualizationConnectorService
 
     private DryRunRequest<VirtualizationConnectorRequest> internalSSLCertificatesFetch(
             DryRunRequest<VirtualizationConnectorRequest> request, SslCertificatesExtendedException sslCertificatesException)
-            throws Exception {
+                    throws Exception {
         X509TrustManagerFactory trustManagerFactory = X509TrustManagerFactory.getInstance();
 
         int i = 1;
@@ -164,7 +164,7 @@ public class UpdateVirtualizationConnectorService
     }
 
     void validate(EntityManager em, DryRunRequest<VirtualizationConnectorRequest> request,
-                  VirtualizationConnector existingVc, OSCEntityManager<VirtualizationConnector> emgr) throws Exception {
+            VirtualizationConnector existingVc, OSCEntityManager<VirtualizationConnector> emgr) throws Exception {
 
         // check for null/empty values
         VirtualizationConnectorDto dto = request.getDto();
@@ -231,9 +231,7 @@ public class UpdateVirtualizationConnectorService
         // Transforms the existing vc based on the update request
         updateVirtualizationConnector(request, existingVc);
 
-        if (dto.getType().isOpenstack()) {
-            this.util.checkOpenstackConnection(request, existingVc);
-        }
+        this.util.checkConnection(request, existingVc);
     }
 
     /**
@@ -241,7 +239,7 @@ public class UpdateVirtualizationConnectorService
      * no password specified, it uses the password from the DB.
      */
     private void updateVirtualizationConnector(DryRunRequest<VirtualizationConnectorRequest> request,
-                                               VirtualizationConnector existingVc) throws EncryptionException {
+            VirtualizationConnector existingVc) throws EncryptionException {
         // cache existing DB passwords
         String providerDbPassword = existingVc.getProviderPassword();
         String controllerDbPassword = existingVc.getControllerPassword();

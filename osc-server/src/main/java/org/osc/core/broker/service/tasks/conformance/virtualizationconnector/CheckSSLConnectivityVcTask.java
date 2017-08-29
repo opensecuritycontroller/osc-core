@@ -16,7 +16,7 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.virtualizationconnector;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.Set;
 
@@ -64,9 +64,7 @@ public class CheckSSLConnectivityVcTask extends TransactionalTask {
         this.vc = em.find(VirtualizationConnector.class, this.vc.getId());
         log.debug("Start executing CheckSSLConnectivityVcTask Task. VC: '" + this.vc.getName() + "'");
         DryRunRequest<VirtualizationConnectorDto> request = createRequest(this.vc);
-        if (VirtualizationType.fromText(this.vc.getVirtualizationType().name()).equals(VirtualizationType.OPENSTACK)) {
-            this.virtualizationConnectorUtil.checkOpenstackConnection(request, this.vc);
-        }
+        this.virtualizationConnectorUtil.checkConnection(request, this.vc);
     }
 
     @Override

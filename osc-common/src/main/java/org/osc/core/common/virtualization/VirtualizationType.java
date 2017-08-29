@@ -18,7 +18,7 @@ package org.osc.core.common.virtualization;
 
 
 public enum VirtualizationType {
-    OPENSTACK("OPENSTACK");
+    OPENSTACK("OPENSTACK"), KUBERNETES("KUBERNETES");
 
     private final String text;
 
@@ -40,7 +40,12 @@ public enum VirtualizationType {
     }
 
     public boolean isOpenstack() {
-        return this.equals(VirtualizationType.OPENSTACK);
+        return equals(VirtualizationType.OPENSTACK);
+    }
+
+
+    public boolean isKubernetes() {
+        return equals(VirtualizationType.KUBERNETES);
     }
 
     @Override
