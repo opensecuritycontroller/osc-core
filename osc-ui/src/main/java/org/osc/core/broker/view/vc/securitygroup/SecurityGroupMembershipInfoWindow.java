@@ -18,6 +18,7 @@ package org.osc.core.broker.view.vc.securitygroup;
 
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
 import org.osc.core.broker.service.dto.PortDto;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
@@ -31,17 +32,20 @@ import org.osc.core.broker.window.button.CloseButtonModel;
 
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
 public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonModel> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final int OPENSTACK_ID_SHORTENED_LENGTH = 13;
 
     private static final int NAME_COLUMN_WIDTH = 150;
     private static final int TYPE_COLUMN_WIDTH = 60;
-    private static final int IP_COLUMN_WIDTH = 150;
+    private static final int IP_COLUMN_WIDTH = 155;
     private static final int MAC_COLUMN_WIDTH = 100;
 
     private static final int WINDOW_WIDTH = NAME_COLUMN_WIDTH + TYPE_COLUMN_WIDTH + IP_COLUMN_WIDTH + MAC_COLUMN_WIDTH
@@ -52,7 +56,7 @@ public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonMo
     private static final String PROPERTY_ID_MEMBER_IP = "ip";
     private static final String PROPERTY_ID_MEMBER_MAC = "mac";
 
-    private static final long serialVersionUID = 1L;
+    private static final Logger log = Logger.getLogger(SecurityGroupMembershipInfoWindow.class);
 
     private final SecurityGroupDto currentSecurityGroup;
     private ListSecurityGroupMembersBySgServiceApi listSecurityGroupMembersBySgService;
@@ -92,33 +96,40 @@ public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonMo
         this.treeTable.setColumnWidth(PROPERTY_ID_MEMBER_MAC, MAC_COLUMN_WIDTH);
         this.treeTable.setColumnWidth(PROPERTY_ID_MEMBER_IP, IP_COLUMN_WIDTH);
 
-        populateData(this.treeTable);
+        populateData();
         content.addComponent(this.treeTable);
         return content;
     }
 
-    private void populateData(final TreeTable treeTable) throws Exception {
-        Set<SecurityGroupMemberItemDto> members = this.listSecurityGroupMembersBySgService
-                .dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getSet();
+    private void populateData() {
+        try {
+            Set<SecurityGroupMemberItemDto> members = this.listSecurityGroupMembersBySgService
+                    .dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getSet();
 
-        if (members.isEmpty()) {
-            ViewUtil.iscNotification(null, VmidcMessages.getString(VmidcMessages_.SG_NO_MEMBERS), Type.WARNING_MESSAGE);
-        } else {
-            for (SecurityGroupMemberItemDto member : members) {
-                Object memberItem = treeTable.addItem(new Object[] { member.getName(), member.getType(), "", "" },
-                        null);
-                treeTable.setCollapsed(memberItem, member.getPorts().isEmpty());
-                treeTable.setChildrenAllowed(memberItem, !member.getPorts().isEmpty());
+            if (members.isEmpty()) {
+                ViewUtil.iscNotification(null, VmidcMessages.getString(VmidcMessages_.SG_NO_MEMBERS),
+                        Type.WARNING_MESSAGE);
+            } else {
+                for (SecurityGroupMemberItemDto member : members) {
+                    Object memberItem = this.treeTable
+                            .addItem(new Object[] { member.getName(), member.getType(), "", "" }, null);
+                    this.treeTable.setCollapsed(memberItem, member.getPorts().isEmpty());
+                    this.treeTable.setChildrenAllowed(memberItem, !member.getPorts().isEmpty());
 
-                for (PortDto port : member.getPorts()) {
-                    String ipAddressString = String.join(", ", port.getIpAddresses());
-                    Object portItem = treeTable
-                            .addItem(new Object[] { port.getOpenstackId().substring(0, OPENSTACK_ID_SHORTENED_LENGTH),
-                                    "", ipAddressString, port.getMacAddress() }, null);
-                    treeTable.setChildrenAllowed(portItem, false);
-                    treeTable.setParent(portItem, memberItem);
+                    for (PortDto port : member.getPorts()) {
+                        String ipAddressString = String.join(", ", port.getIpAddresses());
+                        Object portItem = this.treeTable.addItem(
+                                new Object[] { port.getOpenstackId().substring(0, OPENSTACK_ID_SHORTENED_LENGTH), "",
+                                        ipAddressString, port.getMacAddress() },
+                                null);
+                        this.treeTable.setChildrenAllowed(portItem, false);
+                        this.treeTable.setParent(portItem, memberItem);
+                    }
                 }
             }
+        } catch (Exception e) {
+            log.error("Unable to list security group members for SGID: " + this.currentSecurityGroup.getId(), e);
+            ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
         }
     }
 
