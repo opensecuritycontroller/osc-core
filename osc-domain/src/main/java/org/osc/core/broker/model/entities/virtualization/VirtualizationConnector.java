@@ -109,7 +109,7 @@ public class VirtualizationConnector extends BaseEntity implements LastJobContai
     private Set<SslCertificateAttr> sslCertificateAttrSet = new HashSet<>();
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_job_id_fk", foreignKey = @ForeignKey(name = "FK_MC_LAST_JOB"))
+    @JoinColumn(name = "last_job_id_fk", foreignKey = @ForeignKey(name = "FK_VC_LAST_JOB"))
     private JobRecord lastJob;
 
     @Column(name = "admin_project_name")
