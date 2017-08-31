@@ -128,7 +128,7 @@ public class SecurityGroupMembershipInfoWindow extends VmidcWindow<CloseButtonMo
                 }
             }
         } catch (Exception e) {
-            log.error("Unable to list security group members for SGID: " + this.currentSecurityGroup.getId(), e);
+            log.error("Unable to list security group members for SG ID: " + this.currentSecurityGroup.getId(), e);
             ViewUtil.iscNotification(e.getMessage(), Notification.Type.ERROR_MESSAGE);
         }
     }
