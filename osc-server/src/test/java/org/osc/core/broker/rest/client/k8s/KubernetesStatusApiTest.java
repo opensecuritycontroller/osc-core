@@ -131,7 +131,7 @@ public class KubernetesStatusApiTest {
     }
 
     @Test
-    public void testIsServiceReady_WhenComponentStatusConditionFalse_ServiceReady() throws Exception {
+    public void testIsServiceReady_WhenComponentStatusConditionTrue_ServiceReady() throws Exception {
         // Arrange.
         ComponentStatus componentStatus = newComponentStatus("Healthy", "True");
         mockComponentStatus(componentStatus);
