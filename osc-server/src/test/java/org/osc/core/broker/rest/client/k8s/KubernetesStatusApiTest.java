@@ -68,7 +68,7 @@ public class KubernetesStatusApiTest {
 
     @Test
     public void testIsServiceReady_WhenK8sClientThrowsKubernetesClientException_ThrowsVmidcException() throws Exception {
-        // Arrange.
+        // Arrange
         this.exception.expect(VmidcException.class);
         when(this.fabric8Client.componentstatuses()).thenThrow(new KubernetesClientException(""));
 
