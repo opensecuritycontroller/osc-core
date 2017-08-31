@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -152,16 +152,10 @@ public class KubernetesStatusApiTest {
 
     private ComponentStatus newComponentStatus(String conditionType, String conditionStatus) {
         ComponentStatus componentStatus = new ComponentStatus();
-        List<ComponentCondition> conditions = new ArrayList<ComponentCondition>();
+        componentStatus.setConditions(conditionType != null ?
+                Arrays.asList(new ComponentCondition(null, null, conditionStatus, conditionType)) :
+                    new ArrayList<ComponentCondition>());
 
-        if (conditionType != null) {
-            ComponentCondition condition = new ComponentCondition();
-            condition.setType(conditionType);
-            condition.setStatus(conditionStatus);
-            conditions.add(condition);
-        }
-
-        componentStatus.setConditions(conditions);
         return componentStatus;
     }
 }
