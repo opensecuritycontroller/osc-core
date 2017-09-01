@@ -29,6 +29,7 @@ import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -37,6 +38,7 @@ import javax.persistence.UniqueConstraint;
 import org.osc.core.broker.model.entities.BaseEntity;
 import org.osc.core.broker.model.entities.management.Domain;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
+import org.osc.core.broker.model.entities.virtualization.ServiceFunctionChain;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsFlavorReference;
@@ -100,6 +102,9 @@ public class VirtualSystem extends BaseEntity {
     @Column(name = "encapsulation_type")
     @Enumerated(EnumType.STRING)
     private TagEncapsulationType encapsulationType;
+    
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "virtualSystems")
+    private Set<ServiceFunctionChain> sfc = new HashSet<ServiceFunctionChain>();
 
     public VirtualSystem(DistributedAppliance distributedAppliance) {
         super();

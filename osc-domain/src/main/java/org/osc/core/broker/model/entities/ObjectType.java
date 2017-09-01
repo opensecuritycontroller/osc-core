@@ -30,5 +30,6 @@ public enum ObjectType {
         EMAIL,
         NETWORK,
         ARCHIVE,
-        ALERT;
+        ALERT,
+        SERVICE_FUNCTION_CHAIN;
     }
