@@ -51,7 +51,6 @@ public class KubernetesStatusApi extends KubernetesApi {
         boolean result = false;
         try {
             ComponentStatus status = getKubernetesClient().componentstatuses().withName(K8S_CONTROLLER_COMPONENT_NAME).get();
-
             if (status == null) {
                 LOG.warn(String.format("Kubernetes returned a null component for %s.", K8S_CONTROLLER_COMPONENT_NAME));
                 return result;

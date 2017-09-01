@@ -140,6 +140,8 @@ public class VirtualizationConnectorUtil {
             try (KubernetesClient client = new KubernetesClient(vc)) {
                 if (this.k8sStatusApi == null) {
                     this.k8sStatusApi = new KubernetesStatusApi(client);
+                } else {
+                    this.k8sStatusApi.setKubernetesClient(client);
                 }
 
                 if (!this.k8sStatusApi.isServiceReady()) {
@@ -147,6 +149,7 @@ public class VirtualizationConnectorUtil {
                 }
             }
         }
+
         return errorTypeException;
     }
 

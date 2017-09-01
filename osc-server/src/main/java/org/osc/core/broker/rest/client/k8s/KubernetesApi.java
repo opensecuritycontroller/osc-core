@@ -29,5 +29,13 @@ public class KubernetesApi {
     KubernetesClient getKubernetesClient() {
         return this.client;
     }
+
+    public void setKubernetesClient(org.osc.core.broker.rest.client.k8s.KubernetesClient client) {
+        if (client == null || client.getClient() == null) {
+            throw new IllegalArgumentException("The provided client cannot be null.");
+        }
+
+        this.client = client.getClient();
+    }
 }
 
