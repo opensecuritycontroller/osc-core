@@ -29,14 +29,22 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.virtualization.ProtectionEntity;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "LABEL")
-public class Label extends BaseEntity {
-    @Column(name = "value", nullable = false)
+public class Label extends BaseEntity implements ProtectionEntity {
+    public Label() {
+    }
+
+    @Column(name = "value", nullable = false, unique = true)
     private String value;
+
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "POD_LABEL",
@@ -46,4 +54,28 @@ public class Label extends BaseEntity {
 
     @OneToMany(mappedBy = "label", fetch = FetchType.LAZY)
     private Set<SecurityGroupMember> securityGroupMembers = new HashSet<>();
+
+    public Label(String name, String labelValue) {
+        this.name = name;
+        this.value = labelValue;
+    }
+
+    @Override
+    public SecurityGroupMemberType getType() {
+        return SecurityGroupMemberType.LABEL;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+
+    @Override
+    public Set<SecurityGroupMember> getSecurityGroupMembers() {
+        return this.securityGroupMembers;
+    }
 }

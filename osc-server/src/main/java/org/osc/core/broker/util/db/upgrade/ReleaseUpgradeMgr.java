@@ -323,6 +323,7 @@ public class ReleaseUpgradeMgr {
                 "updated_by varchar(255)," +
                 "updated_timestamp timestamp," +
                 "version bigint," +
+                "name varchar(255) not null," +
                 "value varchar(255) not null," +
                 "primary key (id)" +
                 ");");

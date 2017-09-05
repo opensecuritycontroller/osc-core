@@ -69,11 +69,13 @@ public class SecurityGroupMember extends BaseEntity {
     @Column(name = "address")
     private String address;
 
-    public SecurityGroupMember(SecurityGroup securityGroup, OsProtectionEntity entity) {
+    public SecurityGroupMember(SecurityGroup securityGroup, ProtectionEntity entity) {
         this.securityGroup = securityGroup;
         this.type = entity.getType();
         if (this.type == SecurityGroupMemberType.VM) {
             this.vm = (VM) entity;
+        } else if (this.type == SecurityGroupMemberType.LABEL) {
+            this.label = (Label) entity;
         } else if (this.type == SecurityGroupMemberType.NETWORK) {
             this.network = (Network) entity;
         } else if (this.type == SecurityGroupMemberType.SUBNET) {
@@ -127,6 +129,10 @@ public class SecurityGroupMember extends BaseEntity {
         return this.subnet;
     }
 
+    public Label getLabel() {
+        return this.label;
+    }
+
     public String getMemberName() {
         switch (getType()) {
         case VM:
@@ -135,6 +141,8 @@ public class SecurityGroupMember extends BaseEntity {
             return getNetwork().getName();
         case SUBNET:
             return getSubnet().getName();
+        case LABEL:
+            return getLabel().getName();
         case IP:
         case MAC:
             return getAddress();

@@ -43,10 +43,6 @@ public class SecurityGroupDtoValidator {
         Map<String, Object> map = new HashMap<String, Object>();
 
         map.put("Name", dto.getName());
-        map.put("Project Id", dto.getProjectId());
-        map.put("Project Name", dto.getProjectName());
-
-        ValidateUtil.checkForNullFields(map);
     }
 
     public static void checkFieldLength(SecurityGroupDto dto) throws Exception {

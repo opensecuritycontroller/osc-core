@@ -61,7 +61,7 @@ import com.google.common.collect.Multimap;
  */
 
 @Component(scope=ServiceScope.PROTOTYPE,
- service=OsSecurityGroupNotificationRunner.class)
+service=OsSecurityGroupNotificationRunner.class)
 public class OsSecurityGroupNotificationRunner implements BroadcastListener {
 
     @Reference
@@ -90,7 +90,9 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
             this.dbConnectionManager.getTransactionControl().required(() -> {
                 OSCEntityManager<SecurityGroup> sgEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em, this.txBroadcastUtil);
                 for (SecurityGroup sg : sgEmgr.listAll()) {
-                    addListener(sg);
+                    if (sg.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+                        addListener(sg);
+                    }
                 }
                 return null;
             });
@@ -129,11 +131,14 @@ public class OsSecurityGroupNotificationRunner implements BroadcastListener {
                     if (sg == null) {
                         log.error("Processing " + msg.getEventType() + " notification for Security Group ("
                                 + msg.getEntityId() + ") but couldn't find it in the DB");
+                    } else if (sg.getVirtualizationConnector().getVirtualizationType().isKubernetes()) {
+                        return null;
                     } else if (msg.getEventType() == EventType.ADDED) {
                         addListener(sg);
                     } else if (msg.getEventType() == EventType.UPDATED) {
                         updateListeners(sg);
                     }
+
                     return null;
                 });
 

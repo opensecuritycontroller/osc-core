@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 // TODO this service causes circularity. DS references are optional+dynamic as work around.
 @Component(service={AddSecurityGroupService.class, AddSecurityGroupServiceApi.class})
 public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
-        implements AddSecurityGroupServiceApi {
+implements AddSecurityGroupServiceApi {
 
     private static final Logger LOG = Logger.getLogger(AddSecurityGroupService.class);
 
@@ -60,6 +60,9 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
 
         SecurityGroupDto dto = request.getDto();
         List<String> regions = validateAndLoad(em, dto);
+
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
+
         if (dto.isProtectAll()
                 && SecurityGroupEntityMgr.isSecurityGroupExistWithProtectAll(em, dto.getProjectId(),
                         dto.getParentId())) {
@@ -74,9 +77,6 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
         UnlockObjectMetaTask unlockTask = null;
 
         try {
-            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
-            unlockTask = LockUtil.tryLockVC(vc, LockType.READ_LOCK);
-
             SecurityGroup securityGroup = new SecurityGroup(vc, dto.getProjectId(), dto.getProjectName());
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
@@ -85,27 +85,34 @@ public class AddSecurityGroupService extends BaseSecurityGroupService<AddOrUpdat
 
             if (!securityGroup.isProtectAll()) {
                 for (SecurityGroupMemberItemDto securityGroupMemberDto : request.getMembers()) {
-                    validate(securityGroupMemberDto, regions);
+                    if (vc.getVirtualizationType().isOpenstack()) {
+                        validate(securityGroupMemberDto, regions);
+                    }
+
                     addSecurityGroupMember(em, securityGroup, securityGroupMemberDto);
                 }
             }
 
             OSCEntityManager.update(em, securityGroup, this.txBroadcastUtil);
+            // TODO emanoel: remove this condition when the SG sync is implemented for K8s.
+            if (vc.getVirtualizationType().isOpenstack()) {
+                unlockTask = LockUtil.tryLockVC(vc, LockType.READ_LOCK);
 
-            UnlockObjectMetaTask forLambda = unlockTask;
-            chain(() -> {
-                try {
-                    Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+                UnlockObjectMetaTask forLambda = unlockTask;
+                chain(() -> {
+                    try {
+                        Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
-                    return new BaseJobResponse(securityGroup.getId(), job.getId());
-                } catch (Exception e) {
-                    LockUtil.releaseLocks(forLambda);
-                    throw e;
-                }
-            });
+                        return new BaseJobResponse(securityGroup.getId(), job.getId());
+                    } catch (Exception e) {
+                        LockUtil.releaseLocks(forLambda);
+                        throw e;
+                    }
+                });
 
-            // Lock the SG with a write lock and allow it to be unlocked at the end of the job
-            unlockTask.addUnlockTask(LockUtil.tryLockSecurityGroupOnly(securityGroup));
+                // Lock the SG with a write lock and allow it to be unlocked at the end of the job
+                unlockTask.addUnlockTask(LockUtil.tryLockSecurityGroupOnly(securityGroup));
+            }
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
             throw e;
