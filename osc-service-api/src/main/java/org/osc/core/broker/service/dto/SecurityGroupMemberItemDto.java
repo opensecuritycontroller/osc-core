@@ -33,10 +33,10 @@ public class SecurityGroupMemberItemDto extends BaseDto {
     @ApiModelProperty(required = true)
     private String name;
 
-    @ApiModelProperty(required = true)
+    @ApiModelProperty(required = false)
     private String region;
 
-    @ApiModelProperty(required = true)
+    @ApiModelProperty(required = false)
     private String openstackId;
 
     @ApiModelProperty(required = true)
@@ -53,6 +53,10 @@ public class SecurityGroupMemberItemDto extends BaseDto {
     @ApiModelProperty(required = false)
     @XmlElement(name = "port")
     private Set<PortDto> ports = new HashSet<>();
+
+    @ApiModelProperty(required = false,
+            value = "Protects all Kubernetes pods labeled with this value.")
+    private String label;
 
     public SecurityGroupMemberItemDto() {
     }
@@ -77,6 +81,14 @@ public class SecurityGroupMemberItemDto extends BaseDto {
         this.protectExternal = protectExternal;
         this.parentOpenStackId = parentOpenStackId;
     }
+
+    public SecurityGroupMemberItemDto(String name, String type, String label) {
+        super();
+        this.name = name;
+        this.type = type;
+        this.label = label;
+    }
+
 
     public String getName() {
         return this.name;
@@ -108,6 +120,10 @@ public class SecurityGroupMemberItemDto extends BaseDto {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getLabel() {
+        return this.label;
     }
 
     public boolean isProtectExternal() {

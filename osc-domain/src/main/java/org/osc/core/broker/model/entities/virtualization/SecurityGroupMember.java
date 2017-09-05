@@ -28,6 +28,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.osc.core.broker.model.entities.BaseEntity;
+import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsProtectionEntity;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
@@ -60,6 +61,10 @@ public class SecurityGroupMember extends BaseEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "subnet_fk", foreignKey = @ForeignKey(name = "FK_SGM_SUBNET"))
     private Subnet subnet;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "label_fk", foreignKey = @ForeignKey(name = "FK_SGM_LABEL"))
+    private Label label;
 
     @Column(name = "address")
     private String address;

@@ -32,10 +32,10 @@ public class SecurityGroupDto extends BaseDto {
     @ApiModelProperty(required = true)
     private String name;
 
-    @ApiModelProperty(required = true)
+    @ApiModelProperty(required = false)
     private String projectId;
 
-    @ApiModelProperty(required = true)
+    @ApiModelProperty(required = false)
     private String projectName;
 
     @ApiModelProperty(readOnly = true)
