@@ -68,7 +68,9 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     public static final String ATTRIBUTE_KEY_RABBITMQ_USER_PASSWORD = "rabbitMQPassword";
     public static final String ATTRIBUTE_KEY_RABBITMQ_PORT = "rabbitMQPort";
 
-    public static final String OPENSTACK_ICEHOUSE = "Icehouse";
+    private static final String OPENSTACK_ICEHOUSE = "Icehouse";
+    private static final String KUBERNETES_1_6 = "v1.6";
+
 
     /**
      *
@@ -130,7 +132,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
     private final EncryptionApi encrypter;
 
     public BaseVCWindow(PluginService pluginService, ValidationApi validator,
-                        X509TrustManagerApi trustManager, EncryptionApi encrypter) {
+            X509TrustManagerApi trustManager, EncryptionApi encrypter) {
         super();
         this.pluginService = pluginService;
         this.validator = validator;
@@ -178,7 +180,10 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         this.virtualizationType = new ComboBox("Type");
         this.virtualizationType.setTextInputAllowed(false);
         this.virtualizationType.setNullSelectionAllowed(false);
-        this.virtualizationType.addItem(VirtualizationType.OPENSTACK.toString());
+        for (VirtualizationType virtualizationType : VirtualizationType.values()) {
+            this.virtualizationType.addItem(virtualizationType.toString());
+        }
+
         this.virtualizationType.select(VirtualizationType.OPENSTACK.toString());
 
         // adding not null constraint
@@ -303,7 +308,7 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
             }
         });
         this.controllerType.select(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE
-);
+                );
 
         return this.controllerPanel;
     }
@@ -404,8 +409,8 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
                         BaseVCWindow.this.sslCertificateAttrs.addAll(
                                 certificateResolverModels.stream().map(
                                         crm -> new SslCertificateAttrDto(crm.getAlias(), crm.getSha1())).collect(Collectors.toList()
-                                )
-                        );
+                                                )
+                                );
                     }
                 }
 
@@ -459,9 +464,13 @@ public abstract class BaseVCWindow extends CRUDBaseWindow<OkCancelButtonModel> {
         // TODO: Future. Get virtualization version this from user.
         if (this.virtualizationType.getValue().equals(VirtualizationType.OPENSTACK.toString())) {
             request.getDto().setSoftwareVersion(OPENSTACK_ICEHOUSE);
-            request.getDto()
-                    .setControllerType((String) BaseVCWindow.this.controllerType.getValue());
+
+        } else {
+            request.getDto().setSoftwareVersion(KUBERNETES_1_6);
         }
+
+        request.getDto()
+        .setControllerType((String) BaseVCWindow.this.controllerType.getValue());
         return request;
     }
 

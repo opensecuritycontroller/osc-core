@@ -34,22 +34,18 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.rest.client.k8s.KubernetesStatusApi;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4jKeystone;
-//import org.osc.core.broker.model.plugin.sdncontroller.VMwareSdnConnector;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.OsRabbitMQClient;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
 import org.osc.core.broker.service.api.server.EncryptionApi;
-import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.persistence.VirtualizationConnectorEntityMgr;
 import org.osc.core.broker.service.request.DryRunRequest;
 import org.osc.core.broker.service.request.ErrorTypeException;
 import org.osc.core.broker.service.request.ErrorTypeException.ErrorType;
 import org.osc.core.broker.service.request.VirtualizationConnectorRequest;
-import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
 import org.osc.core.broker.util.crypto.SslContextProvider;
 import org.osc.core.broker.util.crypto.X509TrustManagerFactory;
-//import org.osc.sdk.sdn.api.VMwareSdnApi;
-//import org.osc.sdk.sdn.exception.HttpException;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -59,10 +55,9 @@ import com.rabbitmq.client.ShutdownSignalException;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({StaticRegistry.class,
-        VirtualizationConnectorUtil.class, X509TrustManagerFactory.class, SslContextProvider.class})
+    VirtualizationConnectorUtil.class, X509TrustManagerFactory.class, SslContextProvider.class})
 @PowerMockIgnore("javax.net.ssl.*")
 public class VirtualizationConnectorUtilTest {
-
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -74,6 +69,9 @@ public class VirtualizationConnectorUtilTest {
 
     @Mock
     private EncryptionApi encrypter;
+
+    @Mock
+    private KubernetesStatusApi k8sStatusApi;
 
     @Mock
     private SslContextProvider contextProvider;
@@ -99,231 +97,299 @@ public class VirtualizationConnectorUtilTest {
         PowerMockito.whenNew(OsRabbitMQClient.class).withAnyArguments().thenReturn(this.rabbitClient);
     }
 
-	@Test
-	public void testOpenstackConnection_WithSkipDryRunRequest_ReturnsSuccessful() throws Exception {
+    @Test
+    public void testConnection_WithOpenStack_WithSkipDryRunRequest_ReturnsSuccessful() throws Exception {
+        // Arrange.
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
+        request.setSkipAllDryRun(true);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
-		// Arrange.
-		DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST;
-		request.setSkipAllDryRun(true);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
-		DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		//Act
-		this.util.checkOpenstackConnection(spyRequest, vc);
+        // Assert.
+        verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+        verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION);
 
-		// Assert
-		verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-		verify(spyRequest, times(0)).isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION);
+    }
 
-	}
+    @Test
+    public void testConnection_WithOpenStack_WithIgnoreProviderException_WithIgnoreRabbitMqException_WhenSdnControllerStatusSuccess_ReturnsSuccessful() throws Exception {
+        // Arrange.
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
 
-	@Test
-	public void testOpenStackConnection_WithIgnoreProviderException_WithIgnoreRabbitMqException_WhenSdnControllerStatusSuccess_ReturnsSuccessful() throws Exception {
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.PROVIDER_EXCEPTION);
+        errorList.add(ErrorType.RABBITMQ_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
 
-		// Arrange
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        when(this.apiFactoryService.getStatus(vc, null)).thenReturn(null);
 
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		errorList.add(ErrorType.RABBITMQ_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
-		when(this.apiFactoryService.getStatus(vc, null)).thenReturn(null);
-
-		// Act.
-		this.util.checkOpenstackConnection(spyRequest, vc);
-
-		// Assert
+        // Assert.
         this.apiFactoryService.getStatus(vc, null);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-	}
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+    }
 
-	@Test
-	public void testOpenStackConnection_WithIgnoreProviderException_WithIgnoreRabbitMqException_WhenSdnControllerStatusFail_ReturnsErrorTypeException() throws Exception {
+    @Test
+    public void testConnection_WithKubernetes_WithIgnoreProviderException_WhenSdnControllerStatusSuccess_ReturnsSuccessful() throws Exception {
+        // Arrange.
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateK8sVCWithSDN();
 
-		// Arrange
-		this.exception.expect(ErrorTypeException.class);
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.PROVIDER_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
 
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        when(this.apiFactoryService.getStatus(vc, null)).thenReturn(null);
 
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		errorList.add(ErrorType.RABBITMQ_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+    }
+
+    @Test
+    public void testConnection_WithKubernetes_WithIgnoreProviderException_WithIgnoreController_ReturnsSuccessful() throws Exception {
+        // Arrange.
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateK8sVCWithSDN();
+
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.PROVIDER_EXCEPTION);
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
+
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
+
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+    }
+
+    @Test
+    public void testConnection_WithKubernetes_WithIgnoreControllerException_WhenProviderNotReady_ThrowsErrorTypeException() throws Exception {
+        // Arrange.
+        this.exception.expect(ErrorTypeException.class);
+        this.exception.expectMessage("Kubernetes reported service NOT ready.");
+
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateK8sVCWithSDN();
+
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
+
+        when(this.k8sStatusApi.isServiceReady()).thenReturn(false);
+
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
+    }
+
+    @Test
+    public void testConnection_WithKubernetes_WithIgnoreControllerException_WhenProviderReady_ReturnsSuccess() throws Exception {
+        // Arrange.
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateK8sVCWithSDN();
+
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
+
+        when(this.k8sStatusApi.isServiceReady()).thenReturn(true);
+
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
+
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+    }
+
+    @Test
+    public void testConnection_WithOpenStack_WithIgnoreProviderException_WithIgnoreRabbitMqException_WhenSdnControllerStatusFail_ReturnsErrorTypeException() throws Exception {
+        // Arrange.
+        this.exception.expect(ErrorTypeException.class);
+
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
+
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.PROVIDER_EXCEPTION);
+        errorList.add(ErrorType.RABBITMQ_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
+
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
         when(this.apiFactoryService.getStatus(vc, null)).thenThrow(new Exception());
 
-		request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
+        request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
 
-		// Act.
-		this.util.checkOpenstackConnection(spyRequest, vc);
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		// Assert
+        // Assert.
         this.apiFactoryService.getStatus(vc, null);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
 
-	}
+    }
 
-	@Test
-	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListProjectsFail_ReturnsErrorTypeException() throws Exception {
+    @Test
+    public void testConnection_WithOpenStack_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListProjectsFail_ReturnsErrorTypeException() throws Exception {
+        // Arrange.
+        this.exception.expect(ErrorTypeException.class);
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
 
-		// Arrange
-		this.exception.expect(ErrorTypeException.class);
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        errorList.add(ErrorType.RABBITMQ_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
 
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
-		errorList.add(ErrorType.RABBITMQ_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
 
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
-		request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		// Act.
-		this.util.checkOpenstackConnection(spyRequest, vc);
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION);
+    }
 
-		// Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION);
-	}
+    @Test
+    public void testConnection_WithOpenStack_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListProjectsSuccess_ReturnsSuccessful() throws Exception {
+        // Arrange.
+        this.exception.expect(ErrorTypeException.class);
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
 
-	@Test
-	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreRabbitMqException_WhenKeyStoneListProjectsSuccess_ReturnsSuccessful() throws Exception {
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        errorList.add(ErrorType.RABBITMQ_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
 
-		// Arrange
-		this.exception.expect(ErrorTypeException.class);
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        Openstack4jKeystone cloudKeyStone = mock(Openstack4jKeystone.class);
+        when(cloudKeyStone.listProjects()).thenReturn(null);
+        request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
-		errorList.add(ErrorType.RABBITMQ_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
-		Openstack4jKeystone cloudKeyStone = mock(Openstack4jKeystone.class);
-		when(cloudKeyStone.listProjects()).thenReturn(null);
-		request.getDto().getProviderAttributes().putIfAbsent(VirtualizationConnector.ATTRIBUTE_KEY_HTTPS, "true");
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION);
+        verify(cloudKeyStone, times(1)).listProjects();
+    }
 
-		// Act.
-		this.util.checkOpenstackConnection(spyRequest, vc);
+    @Test
+    public void testConnection_WithOpenStack_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionSuccess_ReturnsSuccessful() throws Throwable {
+        // Arrange.
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
 
-		// Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.RABBITMQ_EXCEPTION);
-		verify(cloudKeyStone, times(1)).listProjects();
-	}
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        errorList.add(ErrorType.PROVIDER_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
 
-	@Test
-	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionSuccess_ReturnsSuccessful() throws Throwable {
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        doNothing().when(this.rabbitClient).testConnection();
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
-		// Arrange
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+        verify(this.rabbitClient, times(1)).testConnection();
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
-		doNothing().when(this.rabbitClient).testConnection();
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
+    }
 
-		// Act.
-		this.util.checkOpenstackConnection(spyRequest, vc);
+    @Test
+    public void testConnection_WithOpenStack_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionFail_ThrowsErrorTypeException() throws Throwable {
+        // Arrange.
+        this.exception.expect(ErrorTypeException.class);
 
-		// Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-		verify(this.rabbitClient, times(1)).testConnection();
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
 
-	}
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        errorList.add(ErrorType.PROVIDER_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
 
-	@Test
-	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionFail_ThrowsErrorTypeException() throws Throwable {
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
 
-		// Arrange
-		this.exception.expect(ErrorTypeException.class);
+        doThrow(new Exception()).when(this.rabbitClient).testConnection();
+        when(this.rabbitClient.getServerIP()).thenReturn("www.osctest.com");
+        when(this.rabbitClient.getPort()).thenReturn(80);
 
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+        verify(this.rabbitClient, times(1)).testConnection();
+    }
 
-		doThrow(new Exception()).when(this.rabbitClient).testConnection();
-		when(this.rabbitClient.getServerIP()).thenReturn("www.osctest.com");
-		when(this.rabbitClient.getPort()).thenReturn(80);
+    @Test
+    public void testConnection_WithOpenStack_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionThrowsSignalException_ThrowsErrorTypeException() throws Throwable {
+        // Arrange.
+        this.exception.expect(ErrorTypeException.class);
 
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
 
-		// Act.
-		this.util.checkOpenstackConnection(spyRequest, vc);
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        errorList.add(ErrorType.PROVIDER_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
 
-		// Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-		verify(this.rabbitClient, times(1)).testConnection();
-	}
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
-	@Test
-	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionThrowsSignalException_ThrowsErrorTypeException() throws Throwable {
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		// Arrange
-		this.exception.expect(ErrorTypeException.class);
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+        verify(this.rabbitClient, times(1)).testConnection();
+    }
 
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
+    @Test
+    public void testConnection_WithOpenStack_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionThrowsSignalException_WhenMqClientIsNotConnected_ThrowsErrorTypeException() throws Throwable {
+        // Arrange.
+        this.exception.expect(ErrorTypeException.class);
 
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
-		doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
-
-		// Act.
-		this.util.checkOpenstackConnection(spyRequest, vc);
-
-		// Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-		verify(this.rabbitClient, times(1)).testConnection();
-	}
-
-	@Test
-	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionThrowsSignalException_WhenMqClientIsNotConnected_ThrowsErrorTypeException() throws Throwable {
-
-		// Arrange
-		this.exception.expect(ErrorTypeException.class);
-
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
-
-		request.getDto().setId(20l);
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
+        request.getDto().setId(20l);
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        errorList.add(ErrorType.PROVIDER_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
 
         RabbitMQRunner runner = Mockito.mock(RabbitMQRunner.class);
         this.util.activeRunner = runner;
@@ -332,54 +398,51 @@ public class VirtualizationConnectorUtilTest {
         HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
         when(runner.getVcToRabbitMQClientMap()).thenReturn(map);
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
 
-		doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
+        doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
-		// Act.
-		this.util.checkOpenstackConnection(spyRequest, vc);
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		// Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-		verify(this.rabbitClient, times(1)).testConnection();
-	}
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+        verify(this.rabbitClient, times(1)).testConnection();
+    }
 
-	@Test
-	public void testOpenStackConnection_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionThrowsSignalException_WhenMqClientIsConnected_ReturnsSuccessful() throws Throwable {
+    @Test
+    public void testConnection_WithOpenStack_WithIgnoreControllerException_WithIgnoreProviderException_WhenRabbitClientConnectionThrowsSignalException_WhenMqClientIsConnected_ReturnsSuccessful() throws Throwable {
+        // Arrange.
+        DryRunRequest<VirtualizationConnectorRequest> request = VirtualizationConnectorUtilTestData.generateOpenStackVCWithSDN();
 
-		// Arrange
-		DryRunRequest<VirtualizationConnectorDto> request = VirtualizationConnectorServiceData
-				.getOpenStackRequestwithSDN();
+        RabbitMQRunner runner = Mockito.mock(RabbitMQRunner.class);
+        this.util.activeRunner = runner;
 
-		RabbitMQRunner runner = Mockito.mock(RabbitMQRunner.class);
-		this.util.activeRunner = runner;
-
-		@SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked")
         HashMap<Long, OsRabbitMQClient> map = mock(HashMap.class);
-		when(runner.getVcToRabbitMQClientMap()).thenReturn(map);
-		OsRabbitMQClient mqClient = mock(OsRabbitMQClient.class);
-		doReturn(mqClient).when(map).get(any(Integer.class));
-		doReturn(true).when(mqClient).isConnected();
+        when(runner.getVcToRabbitMQClientMap()).thenReturn(map);
+        OsRabbitMQClient mqClient = mock(OsRabbitMQClient.class);
+        doReturn(mqClient).when(map).get(any(Integer.class));
+        doReturn(true).when(mqClient).isConnected();
 
-		request.getDto().setId(20l);
-		List<ErrorType> errorList = new ArrayList<>();
-		errorList.add(ErrorType.CONTROLLER_EXCEPTION);
-		errorList.add(ErrorType.PROVIDER_EXCEPTION);
-		request.addErrorsToIgnore(errorList);
+        request.getDto().setId(20l);
+        List<ErrorType> errorList = new ArrayList<>();
+        errorList.add(ErrorType.CONTROLLER_EXCEPTION);
+        errorList.add(ErrorType.PROVIDER_EXCEPTION);
+        request.addErrorsToIgnore(errorList);
 
-		VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
-		doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
-		DryRunRequest<VirtualizationConnectorDto> spyRequest = spy(request);
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(request.getDto(), this.encrypter);
+        doThrow(mock(ShutdownSignalException.class)).when(this.rabbitClient).testConnection();
+        DryRunRequest<VirtualizationConnectorRequest> spyRequest = spy(request);
 
-		// Act.
-		this.util.checkOpenstackConnection(spyRequest, vc);
+        // Act.
+        this.util.checkConnection(spyRequest, vc);
 
-		// Assert
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
-		verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
-		verify(this.rabbitClient, times(1)).testConnection();
-	}
-
+        // Assert.
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.CONTROLLER_EXCEPTION);
+        verify(spyRequest, times(1)).isIgnoreErrorsAndCommit(ErrorType.PROVIDER_EXCEPTION);
+        verify(this.rabbitClient, times(1)).testConnection();
+    }
 }

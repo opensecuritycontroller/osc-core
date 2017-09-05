@@ -36,7 +36,7 @@ import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.validator.AddVirtualizationConnectorServiceRequestValidator;
 import org.osc.core.broker.service.validator.DtoValidator;
-import org.osc.core.broker.service.vc.VirtualizationConnectorServiceData;
+import org.osc.core.broker.service.validator.VirtualizationConnectorDtoValidatorTestData;
 import org.osc.core.broker.util.StaticRegistry;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 import org.powermock.api.mockito.PowerMockito;
@@ -46,7 +46,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ StaticRegistry.class})
 public class AddVirtualizationConnectorServiceRequestValidatorTest {
-
     @Mock
     private EntityManager em;
 
@@ -65,6 +64,9 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     @InjectMocks
     private AddVirtualizationConnectorServiceRequestValidator validator;
 
+    private DryRunRequest<VirtualizationConnectorRequest> request =
+            new DryRunRequest<VirtualizationConnectorRequest>((VirtualizationConnectorRequest)VirtualizationConnectorDtoValidatorTestData.generateOpenStackVCWithSDN());
+
     @Before
     public void testInitialize() throws EncryptionException {
         MockitoAnnotations.initMocks(this);
@@ -78,14 +80,14 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     @SuppressWarnings("unchecked")
     public void testValidate_WithValidOpenStackRequest_ReturnsSuccess() throws Exception {
         // Arrange.
-    	doNothing().when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
-        doNothing().when(this.virtualizationConnectorUtil).checkOpenstackConnection(any(DryRunRequest.class), any(VirtualizationConnector.class));
+        doNothing().when(this.dtoValidator).validateForCreate(this.request.getDto());
+        doNothing().when(this.virtualizationConnectorUtil).checkConnection(any(DryRunRequest.class), any(VirtualizationConnector.class));
 
         // Act.
-        this.validator.validate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST);
+        this.validator.validate(this.request);
 
         // Assert.
-        verify(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
+        verify(this.dtoValidator).validateForCreate(this.request.getDto());
     }
 
     @Test
@@ -101,13 +103,13 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
     public void testValidate_WithInvalidOpenStackRequest_ThrowsValidationException() throws Exception {
         // Arrange.
         this.exception.expect(VmidcBrokerValidationException.class);
-        doThrow(VmidcBrokerValidationException.class).when(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
+        doThrow(VmidcBrokerValidationException.class).when(this.dtoValidator).validateForCreate(this.request.getDto());
 
         // Act.
-        this.validator.validate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST);
+        this.validator.validate(this.request);
 
         // Assert.
-        verify(this.dtoValidator).validateForCreate(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST.getDto());
+        verify(this.dtoValidator).validateForCreate(this.request.getDto());
     }
 
     @Test
@@ -116,7 +118,7 @@ public class AddVirtualizationConnectorServiceRequestValidatorTest {
         this.exception.expect(UnsupportedOperationException.class);
 
         // Act.
-        this.validator.validateAndLoad(VirtualizationConnectorServiceData.OPENSTACK_NSC_REQUEST);
+        this.validator.validateAndLoad(this.request);
     }
 
 }

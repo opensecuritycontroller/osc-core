@@ -52,6 +52,11 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
         OSCEntityManager<VirtualizationConnector> emgr = new OSCEntityManager<>(
                 VirtualizationConnector.class, this.em, this.txBroadcastUtil);
 
+        if (dto.getType().isKubernetes() && !dto.isControllerDefined()) {
+            throw new VmidcBrokerValidationException(
+                    "Virtualization connectors for Kubernetes must have a SDN controller.");
+        }
+
         boolean usesProviderCreds = dto.isControllerDefined() && this.apiFactoryService.usesProviderCreds(dto.getControllerType());
         VirtualizationConnectorDtoValidator.checkForNullFields(dto, usesProviderCreds);
         VirtualizationConnectorDtoValidator.checkFieldLength(dto);
@@ -64,7 +69,6 @@ implements DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> {
 
         // check for uniqueness of vc name
         if (emgr.isExisting("name", dto.getName())) {
-
             throw new VmidcBrokerValidationException(
                     "Virtualization Connector Name: " + dto.getName() + " already exists.");
         }

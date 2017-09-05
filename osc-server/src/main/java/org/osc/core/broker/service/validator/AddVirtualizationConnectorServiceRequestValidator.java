@@ -29,7 +29,7 @@ import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.VirtualizationConnectorUtil;
 
 public class AddVirtualizationConnectorServiceRequestValidator
-        implements RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> {
+implements RequestValidator<DryRunRequest<VirtualizationConnectorRequest>, VirtualizationConnector> {
     private EntityManager em;
 
     private DtoValidator<VirtualizationConnectorDto, VirtualizationConnector> dtoValidator;
@@ -60,9 +60,7 @@ public class AddVirtualizationConnectorServiceRequestValidator
 
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.createEntity(dto, StaticRegistry.encryptionApi());
 
-        if (dto.getType().isOpenstack()) {
-            this.virtualizationConnectorUtil.checkOpenstackConnection(request, vc);
-        }
+        this.virtualizationConnectorUtil.checkConnection(request, vc);
     }
 
     @Override
