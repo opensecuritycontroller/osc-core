@@ -24,13 +24,16 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
+import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
+import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.Element;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -77,7 +80,12 @@ public class OnboardDAITask extends TransactionalTask {
                 egressPort.setParentId(domainId);
                 if (domainId != null){
                 	//Element Object is not used in DefaultInstepctionPort for now, hence null
-                    controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
+                    VirtualSystem vs = ds.getVirtualSystem();
+                    DistributedAppliance da = vs.getDistributedAppliance();
+                    String redirectionTargetId = da.getRedirectionTargetId();
+                    Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
+                                                                        null, redirectionTargetId));
+                    ds.setRedirectionTargetId(element.getParentId());
                 } else {
                     log.warn("DomainId is missing, cannot be null");
                 }
@@ -85,8 +93,6 @@ public class OnboardDAITask extends TransactionalTask {
             } else {
                 controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
             }
-
-
         } finally {
             controller.close();
         }

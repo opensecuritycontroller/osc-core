@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
+import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -43,6 +44,7 @@ import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.Element;
 import org.osc.sdk.manager.api.ManagerDeviceApi;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.BootStrapInfoProviderElement;
@@ -167,6 +169,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                     DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
                             createdServer.getEgressInspectionMacAddr());
 
+                    String redirectionTargetId = null;
                     if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                         String domainId = OpenstackUtil.extractDomainId(
                                 ds.getProjectId(),
@@ -175,9 +178,16 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                                 Arrays.asList(ingressPort));
                         ingressPort.setParentId(domainId);
                         egressPort.setParentId(domainId);
+
+                        DistributedAppliance da = vs.getDistributedAppliance();
+                        redirectionTargetId = da.getRedirectionTargetId();
                     }
+
                     //Element object in DefaultInspectionport is not used at this point, hence null
-                    controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
+                    Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
+                                                                        null, redirectionTargetId));
+
+                    ds.setRedirectionTargetId(redirectionTargetId);
             } finally {
                 controller.close();
             }
