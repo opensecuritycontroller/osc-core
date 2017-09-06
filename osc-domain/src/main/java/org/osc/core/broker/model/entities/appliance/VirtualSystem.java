@@ -238,6 +238,18 @@ public class VirtualSystem extends BaseEntity {
         return super.getMarkedForDeletion() || this.distributedAppliance.getMarkedForDeletion();
     }
 
+    public String getRedirectionTargetId() {
+        String retVal = null;
+        for (DeploymentSpec ds : getDeploymentSpecs()) {
+            retVal = ds.getRedirectionTargetId();
+            if (retVal != null) {
+                return retVal;
+            }
+        }
+
+        return retVal;
+    }
+
     /**
      * Given a VS name, tries to get the ID from it. A VS name typically has a ID appended towards the end of it
      * separated by a '-' or a '_'(older versions of ISC uses this).

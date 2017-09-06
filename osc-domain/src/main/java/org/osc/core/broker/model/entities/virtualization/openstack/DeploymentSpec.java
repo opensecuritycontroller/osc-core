@@ -74,6 +74,9 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
     @Column(name = "inspection_network_id")
     private String inspectionNetworkId;
 
+    @Column(name = "redirection_target_id")
+    private String redirectionTargetId;
+
     @Column(name = "floating_pool_name")
     private String floatingIpPoolName;
 
@@ -257,6 +260,14 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
 
     public void setInspectionNetworkId(String inspectionNetworkId) {
         this.inspectionNetworkId = inspectionNetworkId;
+    }
+
+    public String getRedirectionTargetId() {
+        return this.redirectionTargetId;
+    }
+
+    public void setRedirectionTargetId(String redirectionTargetId) {
+        this.redirectionTargetId = redirectionTargetId;
     }
 
     public String getFloatingIpPoolName() {
