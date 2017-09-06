@@ -16,7 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization.k8s;
 
-import java.awt.Label;
 import java.util.HashSet;
 import java.util.Set;
 
