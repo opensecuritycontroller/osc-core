@@ -16,10 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.service.appliance;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VersionUtil;
 import org.osc.core.broker.util.VersionUtil.Version;
 import org.osc.core.common.virtualization.VirtualizationType;
@@ -29,7 +33,7 @@ public class ImageMetadataValidator {
     private static final Logger log = Logger.getLogger(ImageMetadataValidator.class);
 
     public void validate(ImageMetadata imageMetadata, ApiFactoryService apiFactoryService) throws Exception {
-        ImageMetadata.checkForNullFields(imageMetadata);
+        checkForNullFields(imageMetadata);
 
         Version minIscVersion = imageMetadata.getMinIscVersion();
         int compareValue = VersionUtil.getVersion().compareTo(minIscVersion);
@@ -66,6 +70,24 @@ public class ImageMetadataValidator {
             throw new VmidcBrokerValidationException(
                     "Invalid File Format. Encapsulation Types cannot be empty for Openstack Virtualization Type.");
         }
-
     }
+
+    public static void checkForNullFields(ImageMetadata dto) throws Exception {
+        Map<String, Object> notNullFieldsMap = new HashMap<String, Object>();
+        notNullFieldsMap.put("Image Name", dto.getImageName());
+        notNullFieldsMap.put("Software Version", dto.getSoftwareVersion());
+        notNullFieldsMap.put("Manager Version", dto.getManagerVersion());
+        notNullFieldsMap.put("Model", dto.getModel());
+        notNullFieldsMap.put("Metadata Version", dto.getMetaDataVersion());
+        notNullFieldsMap.put("Virtualization Type", dto.getVirtualizationTypeString());
+        notNullFieldsMap.put("Virtualization Version", dto.getVirtualizationVersionString());
+        notNullFieldsMap.put("Manager Type", dto.getManagerTypeString());
+        notNullFieldsMap.put("Minimum OSC Version", dto.getMinIscVersion());
+        notNullFieldsMap.put("Disk Size", dto.getDiskSizeInGb());
+        notNullFieldsMap.put("Memory", dto.getMemoryInMb());
+        notNullFieldsMap.put("Minimum CPU", dto.getMinCpus());
+
+        ValidateUtil.checkForNullFields(notNullFieldsMap);
+    }
+
 }
