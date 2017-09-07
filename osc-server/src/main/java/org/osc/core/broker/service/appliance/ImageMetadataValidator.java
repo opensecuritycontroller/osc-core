@@ -25,7 +25,7 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.broker.util.VersionUtil;
-import org.osc.core.broker.util.VersionUtil.Version;
+import org.osc.core.common.version.Version;
 import org.osc.core.common.virtualization.VirtualizationType;
 
 public class ImageMetadataValidator {

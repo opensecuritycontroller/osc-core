@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.osc.core.broker.service.dto.VersionDto;
+import org.osc.core.common.version.Version;
 import org.osc.core.common.virtualization.OpenstackSoftwareVersion;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.sdk.controller.TagEncapsulationType;
@@ -25,7 +25,7 @@ public class ImageMetadataRequest implements Request{
 
     private String softwareVersion;
     private String imageName;
-    private VersionDto minIscVersion;
+    private Version minIscVersion;
 
     private Integer minCpus;
     private Integer memoryInMb;
@@ -77,7 +77,7 @@ public class ImageMetadataRequest implements Request{
         return this.diskSizeInGb;
     }
 
-    public VersionDto getMinIscVersion() {
+    public Version getMinIscVersion() {
         return this.minIscVersion;
     }
 
@@ -150,7 +150,7 @@ public class ImageMetadataRequest implements Request{
         this.imageName = imageName;
     }
 
-    public void setMinIscVersion(VersionDto minIscVersion) {
+    public void setMinIscVersion(Version minIscVersion) {
         this.minIscVersion = minIscVersion;
     }
 

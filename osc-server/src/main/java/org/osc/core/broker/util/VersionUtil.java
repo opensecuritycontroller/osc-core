@@ -25,6 +25,7 @@ import java.util.Enumeration;
 import java.util.jar.Manifest;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.service.dto.VersionDto;
 import org.osc.core.common.version.Version;
 
 public class VersionUtil {
@@ -44,6 +45,14 @@ public class VersionUtil {
             version.setVersionStr(DEBUG_VERSION_STRING);
             return version;
         }
+    }
+
+    public static Version getVersion(VersionDto dto) {
+        Version version = new Version(dto.getMajor(), dto.getMajor(), dto.getBuild());
+        version.setPatch(dto.getPatch());
+        version.setVersionStr(dto.getVersionStr());
+
+        return version;
     }
 
     public static Version getVersion(Manifest manifest) {

@@ -48,14 +48,12 @@ import org.osc.core.broker.util.ServerUtil;
 import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
-@Component(configurationPid="org.osc.core.broker.upload",
-configurationPolicy=ConfigurationPolicy.REQUIRE)
+@Component
 public class AddApplianceService extends ServiceDispatcher<ImageMetadataRequest, BaseResponse>
 implements AddApplianceServiceApi {
 
