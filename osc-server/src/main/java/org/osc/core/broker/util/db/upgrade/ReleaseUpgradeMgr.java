@@ -248,7 +248,9 @@ public class ReleaseUpgradeMgr {
             case 89:
                 upgrade89to90(stmt);
             case 90:
-                upgrade90to91(stmt);
+            	upgrade90to91(stmt);
+            case 91:
+            	upgrade91to92(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -258,6 +260,20 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+    
+    private static void upgrade91to92(Statement stmt) throws SQLException {
+    	execSql(stmt,
+                "alter table SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM add column vs_order bigint not null;");
+    	
+    	execSql(stmt,
+                "alter table SERVICE_FUNCTION_CHAIN add column vc_fk bigint;");
+    	
+    	execSql(stmt,
+    			"alter table SERVICE_FUNCTION_CHAIN " +
+    			"add constraint FK_SFC_VC " +
+    			"foreign key (vc_fk) " +
+    			"references VIRTUALIZATION_CONNECTOR;");
     }
 
 	private static void upgrade90to91(Statement stmt) throws SQLException {

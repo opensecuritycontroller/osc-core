@@ -16,14 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import org.osc.core.broker.service.request.AddOrUpdateServiceFunctionChainRequest;
+import org.osc.core.broker.service.response.BaseJobResponse;
 
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 92;
+public interface UpdateServiceFunctionChainServiceApi
+		extends ServiceDispatcherApi<AddOrUpdateServiceFunctionChainRequest, BaseJobResponse> {
 
-    Connection getSQLConnection() throws SQLException;
 }

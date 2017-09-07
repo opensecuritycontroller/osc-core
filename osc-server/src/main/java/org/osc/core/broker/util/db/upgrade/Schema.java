@@ -800,6 +800,7 @@ public class Schema {
 		        "updated_by varchar(255)," +
 		        "updated_timestamp timestamp," +
 		        "version bigint," +
+		        "vc_fk bigint not null," +
 		        "name varchar(255) not null," +
 		        "primary key (id)" +
 		        ");",
@@ -813,6 +814,7 @@ public class Schema {
             "create table SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM (" +
                     "sfc_fk bigint not null, " +
                     "virtual_system_fk bigint not null," +
+                    "vs_order bigint not null," +
                     "primary key (sfc_fk, virtual_system_fk));",
 
             "CREATE TABLE SSL_CERTIFICATE_ATTR (" +
@@ -1223,6 +1225,11 @@ public class Schema {
 
             "alter table SERVICE_FUNCTION_CHAIN " +
                     "add constraint UK_SFC_NAME unique (name);",
+                    
+			"alter table SERVICE_FUNCTION_CHAIN " +
+					"add constraint FK_SFC_VC " +
+					"foreign key (vc_fk) " +
+					"references VIRTUALIZATION_CONNECTOR;",
 
             "alter table SECURITY_GROUP_INTERFACE_POLICY " +
                     "add constraint FK_SGI_POLICY_SGI " +

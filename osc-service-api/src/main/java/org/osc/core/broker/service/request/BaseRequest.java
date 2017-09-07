@@ -16,7 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.request;
 
+import javax.xml.bind.annotation.XmlElement;
+
 import org.osc.core.broker.service.dto.BaseDto;
+
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * Default Implementation of a request. Any common information for requests can be added
@@ -28,6 +32,9 @@ import org.osc.core.broker.service.dto.BaseDto;
 public class BaseRequest<T extends BaseDto> implements Request {
 
     private T dto;
+   
+    @ApiModelProperty(readOnly = true)
+    @XmlElement(name = "api")
     private boolean isApi;
 
     public BaseRequest() {

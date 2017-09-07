@@ -16,7 +16,9 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.appliance;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Basic;
@@ -104,7 +106,7 @@ public class VirtualSystem extends BaseEntity {
     private TagEncapsulationType encapsulationType;
     
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "virtualSystems")
-    private Set<ServiceFunctionChain> sfc = new HashSet<ServiceFunctionChain>();
+    private List<ServiceFunctionChain> sfc = new ArrayList<ServiceFunctionChain>();
 
     public VirtualSystem(DistributedAppliance distributedAppliance) {
         super();

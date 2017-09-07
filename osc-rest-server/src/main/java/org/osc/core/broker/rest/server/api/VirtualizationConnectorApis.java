@@ -38,27 +38,35 @@ import org.osc.core.broker.rest.server.OscAuthFilter;
 import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.service.api.AddSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.AddServiceFunctionChainServiceApi;
 import org.osc.core.broker.service.api.AddVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.BindSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.DeleteSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.DeleteServiceFunctionChainServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceFactoryApi;
 import org.osc.core.broker.service.api.ListSecurityGroupBindingsBySgServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupByVcServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupMembersBySgServiceApi;
+import org.osc.core.broker.service.api.ListServiceFunctionChainByVcServiceApi;
 import org.osc.core.broker.service.api.ListVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.SyncSecurityGroupServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupPropertiesServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
+import org.osc.core.broker.service.api.UpdateServiceFunctionChainServiceApi;
 import org.osc.core.broker.service.api.UpdateVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.api.vc.DeleteVirtualizationConnectorServiceApi;
 import org.osc.core.broker.service.dto.SecurityGroupDto;
 import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
+import org.osc.core.broker.service.dto.ServiceFunctionChainDto;
 import org.osc.core.broker.service.dto.VirtualSystemPolicyBindingDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.ErrorCodeDto;
+import org.osc.core.broker.service.exceptions.ExceptionConstants;
+import org.osc.core.broker.service.exceptions.OscBadRequestException;
 import org.osc.core.broker.service.request.AddOrUpdateSecurityGroupRequest;
+import org.osc.core.broker.service.request.AddOrUpdateServiceFunctionChainRequest;
 import org.osc.core.broker.service.request.BaseDeleteRequest;
 import org.osc.core.broker.service.request.BaseIdRequest;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -134,6 +142,18 @@ public class VirtualizationConnectorApis {
 
     @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
+
+    @Reference
+    private AddServiceFunctionChainServiceApi addServiceFunctionChainService;
+
+    @Reference
+    private ListServiceFunctionChainByVcServiceApi listServiceFunctionChainByVcService;
+
+    @Reference
+    DeleteServiceFunctionChainServiceApi  deleteServiceFunctionChainService;
+
+    @Reference
+    UpdateServiceFunctionChainServiceApi  updateServiceFunctionChainService;
 
     @Reference
     private UserContextApi userContext;
@@ -493,4 +513,99 @@ public class VirtualizationConnectorApis {
         return this.apiUtil.getResponseForBaseRequest(this.bindSecurityGroupService, bindRequest);
     }
 
+    // Service Function Chain APIs
+    @ApiOperation(value = "Creates a Service Function Chain",
+            notes = "Creates a Service Fucntion Chain owned by Virtualization Connector provided and kicks off a " + "sync job",
+            response = BaseJobResponse.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/{vcId}/serviceFunctionChain")
+    @POST
+    public Response createServiceFunctionChain(@Context HttpHeaders headers,
+                                        @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                        @ApiParam(required = true) AddOrUpdateServiceFunctionChainRequest sfcAddRequest) {
+        logger.info("Creating Service Function Chain ...");
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        if (sfcAddRequest.getDto() == null) {
+            throw new OscBadRequestException("Dto needs to be specified",
+                    ExceptionConstants.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+        }
+        this.apiUtil.setIdAndParentIdOrThrow(sfcAddRequest.getDto(), null, vcId, "Service Function Chain");
+        return this.apiUtil.getResponseForBaseRequest(this.addServiceFunctionChainService, sfcAddRequest);
+    }
+
+
+    @ApiOperation(value = "Lists Service Function Chains",
+            notes = "Lists Service Function Chains owned by the Virtualization Connector",
+            response = ServiceFunctionChainDto.class,
+            responseContainer = "Set")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/{vcId}/serviceFunctionChain")
+    @GET
+    public List<ServiceFunctionChainDto> getServiceFunctionChainByVirtualiazationConnector(@Context HttpHeaders headers,
+                                                                             @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId) {
+        logger.info("Listing Service Function Chains");
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        @SuppressWarnings("unchecked")
+        ListResponse<ServiceFunctionChainDto> response = (ListResponse<ServiceFunctionChainDto>) this.apiUtil
+                .getListResponse(this.listServiceFunctionChainByVcService, new BaseIdRequest(vcId));
+        return response.getList();
+    }
+
+    @ApiOperation(value = "Retrieves a Service Function Chain",
+            notes = "Retrieves the Service Function Chain owned by Virtualization Connector provided and by the specified Service Function Chain Id",
+            response = ServiceFunctionChainDto.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/{vcId}/serviceFunctionChain/{sfcId}")
+    @GET
+    public ServiceFunctionChainDto getServiceFunctionChain(@Context HttpHeaders headers,
+                                             @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                             @ApiParam(value = "The Service Function Chain Id") @PathParam("sfcId") Long sfcId) {
+        logger.info("getting Service Function Chain " + sfcId);
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
+        getDtoRequest.setEntityId(sfcId);
+        getDtoRequest.setEntityName("ServiceFunctionChain");
+        GetDtoFromEntityServiceApi<ServiceFunctionChainDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(ServiceFunctionChainDto.class);
+        ServiceFunctionChainDto dto = this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+        this.apiUtil.validateParentIdMatches(dto, vcId, "ServiceFunctionChain");
+        return dto;
+    }
+
+    @ApiOperation(value = "Deletes a Service Function Chain",
+            notes = "Delete a Service Function Chain owned by a Virutlaization Connector")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/{vcId}/serviceFunctionChain/{sfcId}")
+    @DELETE
+    public Response deleteServiceFunctionChain(@Context HttpHeaders headers,
+            @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+            @ApiParam(value = "The Service Function Chain Id") @PathParam("sfcId") Long sfcId) {
+        logger.info("Deleting Service Function Chain  " + sfcId);
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        return this.apiUtil.getResponseForBaseRequest(this.deleteServiceFunctionChainService, new BaseIdRequest(sfcId, vcId));
+    }
+
+    @ApiOperation(value = "Update a Service Function Chain",
+            notes = "Update a Service Fucntion Chain owned by Virtualization Connector provided and kicks off a " + "sync job",
+            response = BaseJobResponse.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/{vcId}/serviceFunctionChain/{sfcId}")
+    @PUT
+    public Response updateServiceFunctionChain(@Context HttpHeaders headers,
+                                        @ApiParam(value = "The Virtualization Connector Id") @PathParam("vcId") Long vcId,
+                                        @ApiParam(value = "The Service Function Chain Id") @PathParam("sfcId") Long sfcId,
+                                        @ApiParam(required = true) AddOrUpdateServiceFunctionChainRequest sfcUpdateRequest) {
+        logger.info("Update Service Function Chain ...");
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        if (sfcUpdateRequest.getDto() == null) {
+            throw new OscBadRequestException("Dto needs to be specified",
+                    ExceptionConstants.VMIDC_VALIDATION_EXCEPTION_ERROR_CODE);
+        }
+        this.apiUtil.setIdAndParentIdOrThrow(sfcUpdateRequest.getDto(), sfcId, vcId, "Service Function Chain");
+        return this.apiUtil.getResponseForBaseRequest(this.updateServiceFunctionChainService, sfcUpdateRequest);
+    }
 }

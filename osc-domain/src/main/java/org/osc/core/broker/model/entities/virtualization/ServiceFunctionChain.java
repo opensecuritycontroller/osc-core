@@ -16,15 +16,18 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -36,19 +39,28 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 @Table(name = "SERVICE_FUNCTION_CHAIN", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
 public class ServiceFunctionChain extends BaseEntity {
 
-    @Column(name = "name", nullable = false)
-    private String name;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM", joinColumns = @JoinColumn(name = "sfc_fk", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "virtual_system_fk", referencedColumnName = "id"))
-    private Set<VirtualSystem> virtualSystems = new HashSet<>();
+	@Column(name = "name", nullable = false)
+	private String name;
+	
+	@ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vc_fk", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_SFC_VC"))
+    private VirtualizationConnector virtualizationConnector;
 
-    ServiceFunctionChain() {
-    }
+	@ManyToMany(fetch = FetchType.LAZY)
+	@OrderColumn(name = "vs_order")
+	@JoinTable(name = "SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM", joinColumns = @JoinColumn(name = "sfc_fk", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "virtual_system_fk", referencedColumnName = "id"))
+	private List<VirtualSystem> virtualSystems = new ArrayList<VirtualSystem>();
 
-    public ServiceFunctionChain(String name) {
-        this.name = name;
-    }
+	public ServiceFunctionChain() {
+		
+	}
+	
+	public ServiceFunctionChain(String name, VirtualizationConnector vc) {
+		this.name = name;
+		this.virtualizationConnector = vc;
+	}
 
     public String getName() {
         return this.name;
@@ -57,21 +69,29 @@ public class ServiceFunctionChain extends BaseEntity {
     public void setName(String name) {
         this.name = name;
     }
+    
+	public List<VirtualSystem> getVirtualSystems() {
+		return virtualSystems;
+	}
 
-    public Set<VirtualSystem> getVirtualSystems() {
-        return this.virtualSystems;
-    }
+	public void setVirtualSystems(List<VirtualSystem> virtualSystems) {
+		this.virtualSystems = virtualSystems;
+	}
 
-    public void setVirtualSystems(Set<VirtualSystem> virtualSystems) {
-        this.virtualSystems = virtualSystems;
-    }
+	public void addVirtualSystem(VirtualSystem virtualSystem) {
+		this.virtualSystems.add(virtualSystem);
+	}
 
-    public void addVirtualSystems(VirtualSystem virtualSystem) {
-        this.virtualSystems.add(virtualSystem);
-    }
+	public void removeVirtualSystem(VirtualSystem virtualSystem) {
+		this.virtualSystems.remove(virtualSystem);
+	}
 
-    public void removeSfcVs(VirtualSystem virtualSystem) {
-        this.virtualSystems.remove(virtualSystem);
-    }
+	public VirtualizationConnector getVirtualizationConnector() {
+		return virtualizationConnector;
+	}
+
+	public void setVirtualizationConnector(VirtualizationConnector virtualizationConnector) {
+		this.virtualizationConnector = virtualizationConnector;
+	}
 
 }
