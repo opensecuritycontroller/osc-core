@@ -35,6 +35,7 @@ import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
+import org.osc.core.broker.service.dto.ApplianceDto;
 import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
@@ -64,6 +65,9 @@ implements ImportApplianceSoftwareVersionServiceApi {
     @Reference
     private ApiFactoryService apiFactoryService;
 
+    @Reference
+    private AddApplianceService addApplianceService;
+
     private ImageMetadataValidator imageMetadataValidator;
 
     private String uploadPath;
@@ -79,6 +83,7 @@ implements ImportApplianceSoftwareVersionServiceApi {
 
         File tmpUploadFolder = new File(request.getUploadPath());
 
+
         try {
 
             ImageMetadata imageMetadata = validateAndLoad(tmpUploadFolder);
@@ -86,14 +91,13 @@ implements ImportApplianceSoftwareVersionServiceApi {
             Appliance appliance = ApplianceEntityMgr.findByModel(em, imageMetadata.getModel());
 
             if (appliance == null) {
-                appliance = new Appliance();
-                appliance.setManagerType(imageMetadata.getManagerType());
-                appliance.setModel(imageMetadata.getModel());
-                appliance.setManagerSoftwareVersion(imageMetadata.getManagerVersion());
+                ApplianceDto applianceDto = new ApplianceDto(imageMetadata.getModel(),
+                                                             imageMetadata.getManagerType(),
+                                                             imageMetadata.getManagerVersion());
+                Long id = this.addApplianceService.addAppliance(applianceDto);
 
                 OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em, this.txBroadcastUtil);
-
-                appliance = applianceEntityManager.create(appliance);
+                appliance = applianceEntityManager.findByPrimaryKey(id);
             } else {
                 if (!appliance.getManagerType().equals(imageMetadata.getManagerType())) {
                     throw new VmidcBrokerValidationException("Invalid manager type for the appliance. Expected: "
