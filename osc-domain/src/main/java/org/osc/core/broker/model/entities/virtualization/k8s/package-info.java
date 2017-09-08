@@ -14,16 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 85;
-
-    Connection getSQLConnection() throws SQLException;
-}
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.osc.core.broker.model.entities.virtualization.k8s;
