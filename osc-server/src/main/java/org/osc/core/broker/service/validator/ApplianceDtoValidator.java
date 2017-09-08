@@ -19,10 +19,41 @@ package org.osc.core.broker.service.validator;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osc.core.broker.service.dto.ApplianceDto;
-import org.osc.core.broker.util.ValidateUtil;
+import javax.persistence.EntityManager;
 
-public class ApplianceDtoValidator {
+import org.apache.commons.lang.NotImplementedException;
+import org.osc.core.broker.model.entities.appliance.Appliance;
+import org.osc.core.broker.service.dto.ApplianceDto;
+import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
+import org.osc.core.broker.util.ValidateUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+@Component(service = ApplianceDtoValidator.class)
+public class ApplianceDtoValidator implements DtoValidator<ApplianceDto, Appliance> {
+
+    @Reference
+    private EntityManager em;
+
+    @Override
+    public void validateForCreate(ApplianceDto dto) throws Exception {
+        if (dto == null) {
+            throw new IllegalArgumentException("Cannot create Appliance with null DTO!");
+        }
+
+        Appliance existingAppliance = ApplianceEntityMgr.findByModel(this.em, dto.getModel());
+
+        if (existingAppliance != null) {
+            throw new IllegalArgumentException("Appliance already exists for model: " + dto.getModel());
+        }
+
+        checkForNullFields(dto);
+    }
+
+    @Override
+    public Appliance validateForUpdate(ApplianceDto dto) throws Exception {
+        throw new NotImplementedException("Method validate for update not implemented yet");
+    }
 
     public static void checkForNullFields(ApplianceDto dto) throws Exception {
 
