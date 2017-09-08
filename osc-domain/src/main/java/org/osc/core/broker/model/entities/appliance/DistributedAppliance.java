@@ -143,18 +143,6 @@ public class DistributedAppliance extends BaseEntity implements LastJobContainer
         this.lastJob = lastJob;
     }
 
-    public String getRedirectionTargetId() {
-        String retVal = null;
-        for (VirtualSystem vs : getVirtualSystems()) {
-            retVal = vs.getRedirectionTargetId();
-            if (retVal != null) {
-                return retVal;
-            }
-        }
-
-        return retVal;
-    }
-
     @Override
     public String toString() {
         return "DistributedAppliance [name=" + this.name + ", applianceManagerConnector="

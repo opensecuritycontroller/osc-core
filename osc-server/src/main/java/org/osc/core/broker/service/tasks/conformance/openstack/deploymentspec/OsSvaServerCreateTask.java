@@ -25,7 +25,6 @@ import javax.persistence.EntityManager;
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
-import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
@@ -179,15 +178,14 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                         ingressPort.setParentId(domainId);
                         egressPort.setParentId(domainId);
 
-                        DistributedAppliance da = vs.getDistributedAppliance();
-                        redirectionTargetId = da.getRedirectionTargetId();
+                        redirectionTargetId = ds.getRedirectionTargetId();
                     }
 
                     //Element object in DefaultInspectionport is not used at this point, hence null
                     Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
                                                                         null, redirectionTargetId));
 
-                    ds.setRedirectionTargetId(redirectionTargetId);
+                    ds.setRedirectionTargetId(element.getParentId());
             } finally {
                 controller.close();
             }

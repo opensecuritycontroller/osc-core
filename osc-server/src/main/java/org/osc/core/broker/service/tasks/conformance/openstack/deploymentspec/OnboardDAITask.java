@@ -24,9 +24,7 @@ import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
-import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
-import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -80,9 +78,7 @@ public class OnboardDAITask extends TransactionalTask {
                 egressPort.setParentId(domainId);
                 if (domainId != null){
                 	//Element Object is not used in DefaultInstepctionPort for now, hence null
-                    VirtualSystem vs = ds.getVirtualSystem();
-                    DistributedAppliance da = vs.getDistributedAppliance();
-                    String redirectionTargetId = da.getRedirectionTargetId();
+                    String redirectionTargetId = ds.getRedirectionTargetId();
                     Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
                                                                         null, redirectionTargetId));
                     ds.setRedirectionTargetId(element.getParentId());
