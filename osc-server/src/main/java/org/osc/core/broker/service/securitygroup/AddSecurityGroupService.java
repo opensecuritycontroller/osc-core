@@ -112,6 +112,8 @@ implements AddSecurityGroupServiceApi {
 
                 // Lock the SG with a write lock and allow it to be unlocked at the end of the job
                 unlockTask.addUnlockTask(LockUtil.tryLockSecurityGroupOnly(securityGroup));
+            } else {
+                return new BaseJobResponse(securityGroup.getId(), null);
             }
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
