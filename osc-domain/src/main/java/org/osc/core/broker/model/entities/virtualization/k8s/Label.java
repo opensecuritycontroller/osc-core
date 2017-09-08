@@ -74,6 +74,10 @@ public class Label extends BaseEntity implements ProtectionEntity {
         return this.value;
     }
 
+    public Set<Pod> getPods() {
+        return this.pods;
+    }
+
     @Override
     public Set<SecurityGroupMember> getSecurityGroupMembers() {
         return this.securityGroupMembers;

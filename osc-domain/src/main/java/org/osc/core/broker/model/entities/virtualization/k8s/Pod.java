@@ -49,4 +49,8 @@ public class Pod extends BaseEntity {
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "pods")
     private Set<Label> labels = new HashSet<Label>();
+
+    public Set<PodPort> getPorts() {
+        return this.ports;
+    }
 }
