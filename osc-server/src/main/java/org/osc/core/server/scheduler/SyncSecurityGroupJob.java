@@ -55,6 +55,11 @@ public class SyncSecurityGroupJob implements Job {
             });
 
             for (final SecurityGroup sg : sgs) {
+                // TODO emanoel: remove this condition once SG sync is implemented.
+                if (sg.getVirtualizationConnector().getVirtualizationType().isKubernetes()) {
+                    continue;
+                }
+
                 Thread sgSync = new Thread(new Runnable() {
                     @Override
                     public void run() {

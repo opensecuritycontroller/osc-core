@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
+import static org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType.*;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -69,14 +71,16 @@ public class SecurityGroupMember extends BaseEntity {
     @Column(name = "address")
     private String address;
 
-    public SecurityGroupMember(SecurityGroup securityGroup, OsProtectionEntity entity) {
+    public SecurityGroupMember(SecurityGroup securityGroup, ProtectionEntity entity) {
         this.securityGroup = securityGroup;
         this.type = entity.getType();
-        if (this.type == SecurityGroupMemberType.VM) {
+        if (this.type == VM) {
             this.vm = (VM) entity;
-        } else if (this.type == SecurityGroupMemberType.NETWORK) {
+        } else if (this.type == LABEL) {
+            this.label = (Label) entity;
+        } else if (this.type == NETWORK) {
             this.network = (Network) entity;
-        } else if (this.type == SecurityGroupMemberType.SUBNET) {
+        } else if (this.type == SUBNET) {
             this.subnet = (Subnet) entity;
         } else {
             throw new IllegalArgumentException("Protected Entity can only be a VM, a Network or a Subnet in openstack");
@@ -127,6 +131,10 @@ public class SecurityGroupMember extends BaseEntity {
         return this.subnet;
     }
 
+    public Label getLabel() {
+        return this.label;
+    }
+
     public String getMemberName() {
         switch (getType()) {
         case VM:
@@ -135,6 +143,8 @@ public class SecurityGroupMember extends BaseEntity {
             return getNetwork().getName();
         case SUBNET:
             return getSubnet().getName();
+        case LABEL:
+            return getLabel().getName();
         case IP:
         case MAC:
             return getAddress();

@@ -17,8 +17,10 @@
 package org.osc.core.broker.service.securitygroup;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -26,12 +28,13 @@ import javax.persistence.EntityManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.openstack4j.model.identity.v3.Project;
+import org.osc.core.broker.model.entities.virtualization.ProtectionEntity;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
-import org.osc.core.broker.model.entities.virtualization.openstack.OsProtectionEntity;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
@@ -46,6 +49,7 @@ import org.osc.core.broker.service.dto.SecurityGroupMemberItemDto;
 import org.osc.core.broker.service.dto.VirtualizationConnectorDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerInvalidEntryException;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
+import org.osc.core.broker.service.persistence.LabelEntityMgr;
 import org.osc.core.broker.service.persistence.NetworkEntityManager;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SubnetEntityManager;
@@ -56,6 +60,7 @@ import org.osc.core.broker.service.response.Response;
 import org.osc.core.broker.service.securitygroup.exception.SecurityGroupMemberPartOfAnotherSecurityGroupException;
 import org.osc.core.broker.service.validator.SecurityGroupDtoValidator;
 import org.osc.core.broker.service.validator.SecurityGroupMemberItemDtoValidator;
+import org.osc.core.broker.util.ValidateUtil;
 
 public abstract class BaseSecurityGroupService<I extends Request, O extends Response> extends ServiceDispatcher<I, O> {
 
@@ -72,11 +77,13 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
             throw new VmidcBrokerValidationException("Virtualization Connector Id needs to be specified");
         }
 
+        // TODO emanoel: This validate and load should be an implementation of the interface DtoValidator
+        // and ensure that a VC exists as well as enforcing the OpenStack specific non null fields.
         VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
 
         if (vc == null) {
             throw new VmidcBrokerValidationException("Virtualization Connector with Id: " + dto.getParentId()
-                    + "  is not found.");
+            + "  is not found.");
         }
 
         if (vc.getControllerType().equals(VirtualizationConnectorDto.CONTROLLER_TYPE_NONE)) {
@@ -84,14 +91,23 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                     "Creation of Security Groups is not allowed in the absence of SDN Controller.");
         }
 
-        ArrayList<String> regionsList;
-        try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc))) {
-            Project project = keystone.getProjectById(dto.getProjectId());
-            if (project == null) {
-                throw new VmidcBrokerValidationException("Project: '" + dto.getProjectName() + "' does not exist.");
-            }
-            try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, project.getName()))) {
-                regionsList = new ArrayList<>(novaApi.listRegions());
+        ArrayList<String> regionsList = null;
+
+        if (vc.getVirtualizationType().isOpenstack()) {
+            Map<String, Object> map = new HashMap<String, Object>();
+
+            map.put("Project Id", dto.getProjectId());
+            map.put("Project Name", dto.getProjectName());
+            ValidateUtil.checkForNullFields(map);
+
+            try (Openstack4jKeystone keystone = new Openstack4jKeystone(new Endpoint(vc))) {
+                Project project = keystone.getProjectById(dto.getProjectId());
+                if (project == null) {
+                    throw new VmidcBrokerValidationException("Project: '" + dto.getProjectName() + "' does not exist.");
+                }
+                try (Openstack4JNova novaApi = new Openstack4JNova(new Endpoint(vc, project.getName()))) {
+                    regionsList = new ArrayList<>(novaApi.listRegions());
+                }
             }
         }
 
@@ -102,7 +118,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
      * Validates the member to check for null fields and also check the region specified exists
      */
     protected void validate(SecurityGroupMemberItemDto memberItem, List<String> regions) throws VmidcBrokerInvalidEntryException,
-            VmidcBrokerValidationException {
+    VmidcBrokerValidationException {
         SecurityGroupMemberItemDtoValidator.checkForNullFields(memberItem);
         if (!regions.contains(memberItem.getRegion())) {
             throw new VmidcBrokerValidationException(String.format("Region: '%s' does not exist for member '%s'",
@@ -118,10 +134,10 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
     }
 
     public void addSecurityGroupMember(EntityManager em, SecurityGroup securityGroup,
-                                       SecurityGroupMemberItemDto securityGroupMemberDto) throws VmidcBrokerValidationException {
+            SecurityGroupMemberItemDto securityGroupMemberDto) throws VmidcBrokerValidationException {
         String openstackId = securityGroupMemberDto.getOpenstackId();
         SecurityGroupMemberType type = SecurityGroupMemberType.fromText(securityGroupMemberDto.getType());
-        OsProtectionEntity entity;
+        ProtectionEntity entity;
 
         if (type == SecurityGroupMemberType.VM) {
             entity = VMEntityManager.findByOpenstackId(em, openstackId);
@@ -129,6 +145,8 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
             entity = NetworkEntityManager.findByOpenstackId(em, openstackId);
         } else if (type == SecurityGroupMemberType.SUBNET) {
             entity = SubnetEntityManager.findByOpenstackId(em, openstackId);
+        }  else if (type == SecurityGroupMemberType.LABEL) {
+            entity = LabelEntityMgr.findByValue(em, securityGroupMemberDto.getLabel(), securityGroup.getVirtualizationConnector().getId());
         } else {
             throw new VmidcBrokerValidationException(String.format("Invalid Security Group Member Type ('%s')", type));
         }
@@ -137,7 +155,9 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
             if (type == SecurityGroupMemberType.VM) {
                 entity = new VM(securityGroupMemberDto.getRegion(), openstackId, securityGroupMemberDto.getName());
                 log.info("Creating VM Member: " + securityGroupMemberDto.getName());
-
+            } else if (type == SecurityGroupMemberType.LABEL) {
+                entity = new Label(securityGroupMemberDto.getName(), securityGroupMemberDto.getLabel());
+                log.info("Creating Network Member: " + securityGroupMemberDto.getName());
             } else if (type == SecurityGroupMemberType.NETWORK) {
                 entity = new Network(securityGroupMemberDto.getRegion(), openstackId, securityGroupMemberDto.getName());
                 log.info("Creating Network Member: " + securityGroupMemberDto.getName());
@@ -162,12 +182,12 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
                     SecurityGroup otherSecurityGroup = sgm.getSecurityGroup();
                     if (otherSecurityGroup.equals(securityGroup)) {
                         log.info(type.toString() + ": " + securityGroupMemberDto.getName()
-                                + " already part of security Group: " + securityGroup.getName());
+                        + " already part of security Group: " + securityGroup.getName());
                         // If entity is already a member of this group, but it was marked as deleted, unmark it since its
                         // been added again
                         if (sgm.getMarkedForDeletion()) {
                             log.info(type.toString() + ": " + securityGroupMemberDto.getName()
-                                    + " Marked as deleted, marking undeleted.");
+                            + " Marked as deleted, marking undeleted.");
                             OSCEntityManager.unMarkDeleted(em, sgm, this.txBroadcastUtil);
                         }
                     } else {

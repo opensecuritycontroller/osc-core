@@ -126,6 +126,10 @@ public class SecurityGroupMemberItemDto extends BaseDto {
         return this.label;
     }
 
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
     public boolean isProtectExternal() {
         return this.protectExternal;
     }

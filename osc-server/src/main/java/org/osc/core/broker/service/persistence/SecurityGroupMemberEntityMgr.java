@@ -28,6 +28,7 @@ import javax.persistence.criteria.Root;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
@@ -66,6 +67,12 @@ public class SecurityGroupMemberEntityMgr {
             dto.setProtectExternal(subnet.isProtectExternal());
             addPortInfo(dto, subnet.getPorts());
 
+        } else if (type == SecurityGroupMemberType.LABEL) {
+            Label label = entity.getLabel();
+            dto.setName(label.getName());
+            dto.setLabel(label.getValue());
+            // TODO emanoel: address this once SGs are being sync'd
+            // addPortInfo(dto, label.getPorts());
         }
     }
 
@@ -79,7 +86,7 @@ public class SecurityGroupMemberEntityMgr {
 
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.get("markedForDeletion"), false),
-                       cb.equal(root.get("securityGroup"), sg))
+                        cb.equal(root.get("securityGroup"), sg))
                 .orderBy(cb.asc(root.get("type")));
 
         return em.createQuery(query).getResultList();
@@ -89,9 +96,9 @@ public class SecurityGroupMemberEntityMgr {
         Set<PortDto> portDtos = new HashSet<>();
         for (VMPort portEntity : vmPorts) {
             PortDto portDto = new PortDto(portEntity.getId(),
-                                          portEntity.getOpenstackId(),
-                                          portEntity.getMacAddresses().get(0),
-                                          portEntity.getPortIPs());
+                    portEntity.getOpenstackId(),
+                    portEntity.getMacAddresses().get(0),
+                    portEntity.getPortIPs());
             portDtos.add(portDto);
         }
 

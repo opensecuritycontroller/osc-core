@@ -27,6 +27,8 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.job.Job;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.service.ConformService;
 import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.api.UpdateSecurityGroupServiceApi;
@@ -45,8 +47,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 @Component
 public class UpdateSecurityGroupService
-        extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
-        implements UpdateSecurityGroupServiceApi {
+extends BaseSecurityGroupService<AddOrUpdateSecurityGroupRequest, BaseJobResponse>
+implements UpdateSecurityGroupServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateSecurityGroupService.class);
 
@@ -62,23 +64,26 @@ public class UpdateSecurityGroupService
 
         SecurityGroup securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
         UnlockObjectMetaTask unlockTask = null;
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
 
         try {
-
-            unlockTask = LockUtil.tryLockSecurityGroup(securityGroup,
-                    VirtualizationConnectorEntityMgr.findById(em, dto.getParentId()));
-
+            unlockTask = LockUtil.tryLockSecurityGroup(securityGroup, vc);
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
-
             Set<SecurityGroupMemberItemDto> selectedMembers = request.getMembers();
 
-            Set<String> selectedMemberOsId = new HashSet<>();
+            Set<String> selectedMemberUniqueId = new HashSet<>();
             if (selectedMembers != null) {
                 for (SecurityGroupMemberItemDto securityGroupMemberDto : selectedMembers) {
-                    validate(securityGroupMemberDto, regions);
-                    String openstackId = securityGroupMemberDto.getOpenstackId();
-                    selectedMemberOsId.add(openstackId);
-                    addSecurityGroupMember(em, securityGroup, securityGroupMemberDto);
+
+                    if (vc.getVirtualizationType().isOpenstack()) {
+                        validate(securityGroupMemberDto, regions);
+                    }
+
+                    String externalId =
+                            SecurityGroupMemberType.fromText(securityGroupMemberDto.getType()) == SecurityGroupMemberType.LABEL ?
+                                    securityGroupMemberDto.getLabel() : securityGroupMemberDto.getOpenstackId();
+                                    selectedMemberUniqueId.add(externalId);
+                                    addSecurityGroupMember(em, securityGroup, securityGroupMemberDto);
                 }
             }
 
@@ -86,8 +91,8 @@ public class UpdateSecurityGroupService
             Iterator<SecurityGroupMember> sgMemberEntityIterator = securityGroupMembers.iterator();
             while (sgMemberEntityIterator.hasNext()) {
                 SecurityGroupMember sgMemberEntity = sgMemberEntityIterator.next();
-                String entityOpenstackId = getMemberOpenstackId(sgMemberEntity);
-                boolean isMemberSelected = selectedMemberOsId.contains(entityOpenstackId);
+                String entityUniqueId = getMemberUniqueId(sgMemberEntity);
+                boolean isMemberSelected = selectedMemberUniqueId.contains(entityUniqueId);
                 if (!isMemberSelected) {
                     log.info("Removing Member: " + sgMemberEntity.getMemberName());
                     OSCEntityManager.markDeleted(em, sgMemberEntity, this.txBroadcastUtil);
@@ -97,17 +102,23 @@ public class UpdateSecurityGroupService
             log.info("Updating SecurityGroup: " + securityGroup.toString());
             OSCEntityManager.update(em, securityGroup, this.txBroadcastUtil);
 
-            UnlockObjectMetaTask forLambda = unlockTask;
-            chain(() -> {
-                try {
-                    Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
+            // TODO emanoel: remove this condition once sync is implemented for k8s SGs.
+            if (vc.getVirtualizationType().isOpenstack()) {
+                UnlockObjectMetaTask forLambda = unlockTask;
+                chain(() -> {
+                    try {
+                        Job job = this.conformService.startSecurityGroupConformanceJob(securityGroup, forLambda);
 
-                    return new BaseJobResponse(securityGroup.getId(), job.getId());
-                } catch (Exception e) {
-                    LockUtil.releaseLocks(forLambda);
-                    throw e;
-                }
-            });
+                        return new BaseJobResponse(securityGroup.getId(), job.getId());
+                    } catch (Exception e) {
+                        LockUtil.releaseLocks(forLambda);
+                        throw e;
+                    }
+                });
+            } else {
+                LockUtil.releaseLocks(unlockTask);
+                return new BaseJobResponse(securityGroup.getId(), null);
+            }
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
             throw e;
@@ -150,7 +161,7 @@ public class UpdateSecurityGroupService
         return regions;
     }
 
-    private String getMemberOpenstackId(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+    private String getMemberUniqueId(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
         switch (sgm.getType()) {
         case VM:
             return sgm.getVm().getOpenstackId();
@@ -158,6 +169,8 @@ public class UpdateSecurityGroupService
             return sgm.getNetwork().getOpenstackId();
         case SUBNET:
             return sgm.getSubnet().getOpenstackId();
+        case LABEL:
+            return sgm.getLabel().getValue();
         default:
             throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
         }

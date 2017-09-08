@@ -26,6 +26,8 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
+import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.persistence.SecurityGroupEntityMgr;
@@ -105,6 +107,20 @@ public class ForceDeleteSecurityGroupTask extends TransactionalTask {
 
                 // remove Network from database
                 OSCEntityManager.delete(em, sgm.getSubnet(), this.txBroadcastUtil);
+            }
+
+            if (sgm.getType().equals(SecurityGroupMemberType.LABEL)) {
+                for (Pod pod : sgm.getLabel().getPods()) {
+
+                    for (PodPort port : pod.getPorts()) {
+                        OSCEntityManager.delete(em, port, this.txBroadcastUtil);
+                    }
+
+                    OSCEntityManager.delete(em, pod, this.txBroadcastUtil);
+                }
+
+                // remove Label from database
+                OSCEntityManager.delete(em, sgm.getLabel(), this.txBroadcastUtil);
             }
 
             // remove SGM from database

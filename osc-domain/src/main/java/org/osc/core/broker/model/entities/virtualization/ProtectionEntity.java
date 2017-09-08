@@ -16,31 +16,17 @@
  *******************************************************************************/
 package org.osc.core.broker.model.entities.virtualization;
 
-public enum SecurityGroupMemberType {
-    VM("VM"), NETWORK("NETWORK"), IP("IP"), MAC("MAC"), SUBNET("SUBNET"), LABEL("LABEL");
+import java.util.Set;
 
-    private final String text;
+import org.osc.core.broker.model.entities.IscEntity;
 
-    private SecurityGroupMemberType(final String text) {
-        this.text = text;
-    }
+/**
+ * Documents the contract implemented by protection entities like VM, Network, pods, etc
+ */
+public interface ProtectionEntity extends IscEntity {
+    String getName();
 
-    public static SecurityGroupMemberType fromText(String text) {
-        for (SecurityGroupMemberType type : SecurityGroupMemberType.values()) {
-            if (type.getText().equals(text)) {
-                return type;
-            }
-        }
-        throw new IllegalArgumentException("No enum constant " + SecurityGroupMemberType.class.getCanonicalName()
-                + " Found for " + text);
-    }
+    SecurityGroupMemberType getType();
 
-    private String getText() {
-        return this.text;
-    }
-
-    @Override
-    public String toString() {
-        return this.text;
-    }
+    Set<SecurityGroupMember> getSecurityGroupMembers();
 }
