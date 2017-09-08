@@ -16,7 +16,19 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.persistence.EntityManager;
+
 import org.apache.log4j.Logger;
+import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -45,16 +57,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 
-import javax.persistence.EntityManager;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 @Component(service = DSUpdateOrDeleteMetaTask.class)
 public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
@@ -68,6 +70,9 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
 
     @Reference
     DeleteDSFromDbTask deleteDsFromDb;
+
+    @Reference
+    DSClearPortGroupTask dsClearPortGroupTask;
 
     // optional+dynamic to break circular DS dependency
     // TODO: remove circularity and use mandatory references
@@ -146,9 +151,12 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         if (this.ds.getMarkedForDeletion() || virtualSystem.getMarkedForDeletion()
                 || virtualSystem.getDistributedAppliance().getMarkedForDeletion()) {
             log.info("DS " + this.ds.getName() + " marked for deletion, deleting DS");
+
+            // No need to schedule dsClearPortGroupTask after these, since ds itself will be gone
             for (DistributedApplianceInstance dai : this.ds.getDistributedApplianceInstances()) {
                 this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
             }
+
             if (this.ds.getOsSecurityGroupReference() != null) {
                 this.tg.appendTask(this.deleteOSSecurityGroup.create(this.ds, this.ds.getOsSecurityGroupReference()));
             }
@@ -244,6 +252,11 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         }
 
         Set<DistributedApplianceInstance> existingDais = this.ds.getDistributedApplianceInstances();
+        List<DeleteSvaServerAndDAIMetaTask> deleteSvaDAITasksList = new ArrayList<>();
+
+        // This task will result in regsterInspectionPort call. When we do it for the first DAI,
+        // we need to register the port group id with the DS. Then we can go ahead with other similar tasks.
+        Task firstPortGroupTask = null;
 
         for (DistributedApplianceInstance dai : existingDais) {
             String daiHostName = dai.getHostName();
@@ -253,14 +266,26 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             boolean doesHostNeedSva = removeHost(hostsMissingSvas, daiHostName);
             if (doesHostNeedSva && isDAIHostSelectedInDs) {
                 log.info("Conforming DAI/SVA: " + dai.getName());
-                this.tg.addTask(
-                        this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())));
+
+                // Make sure the first port-group creating task runs before all the others within the same DS.
+                if (firstPortGroupTask == null) {
+                    firstPortGroupTask = this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName()));
+                    this.tg.addTask(firstPortGroupTask);
+                } else {
+                    this.tg.addTask(this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())), firstPortGroupTask);
+                }
+
             } else {
                 // Remove any extra sva/DAI
                 log.info("Removing DAI/SVA: " + dai.getName() + " for host: " + daiHostName);
-                this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
+                DeleteSvaServerAndDAIMetaTask deleteSvaDAITask = this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai);
+                deleteSvaDAITasksList.add(deleteSvaDAITask);
+                this.tg.addTask(deleteSvaDAITask);
             }
         }
+
+        DeleteSvaServerAndDAIMetaTask[] deleteSvaDAITasks = deleteSvaDAITasksList.toArray(new DeleteSvaServerAndDAIMetaTask[]{});
+        this.tg.addTask(this.dsClearPortGroupTask.create(this.ds), deleteSvaDAITasks);
 
         for (String host : hostsMissingSvas) {
             if (isHostSelected(selectedHosts, host)) {
@@ -270,7 +295,14 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     String hostName = hostInfo.getHostName();
                     String availabilityZone = hostInfo.getAvailabilityZone();
 
-                    this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostName, availabilityZone));
+                    // Make sure the first port-group creating task runs before all the others within the same DS.
+                    if (firstPortGroupTask == null) {
+                        firstPortGroupTask = this.osSvaCreateMetaTask.create(this.ds, hostName, availabilityZone);
+                        this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostName, availabilityZone));
+                    } else {
+                        this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostName, availabilityZone), firstPortGroupTask);
+                    }
+
                 } catch (VmidcException vmidcException) {
                     this.tg.addTask(new FailedWithObjectInfoTask(
                             String.format("Create SVA for host '%s' in Region '%s'", host, this.ds.getRegion()),
@@ -337,14 +369,24 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             List<DistributedApplianceInstance> daisInZone = DistributedApplianceInstanceEntityMgr
                     .listByDsIdAndAvailabilityZone(em, this.ds.getId(), az.getZone());
 
+
+            Task firstInspectionPortTask = null;
             // For existing DAI in this zone, conform them
             if (daisInZone != null) {
                 for (DistributedApplianceInstance dai : daisInZone) {
                     if (!hostsMissingSvas.isEmpty()) {
                         hostsMissingSvas.remove(dai.getOsHostName());
                     }
-                    this.tg.addTask(
-                            this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())));
+
+                    // Make sure the first port-group creating task runs before all the others within the same DS.
+                    if (firstInspectionPortTask == null) {
+                        firstInspectionPortTask = this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName()));
+                        this.tg.addTask(firstInspectionPortTask);
+                    } else {
+                        this.tg.addTask(
+                                this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())),
+                                firstInspectionPortTask);
+                    }
                 }
             }
 
@@ -352,10 +394,20 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 // If any hosts are missing the SVA/DAI, create them
                 for (String hostMissingSva : hostsMissingSvas) {
                     log.info("Creating new SVA for host:" + hostMissingSva);
-                    this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostMissingSva, az.getZone()));
+
+                    // Make sure the first port-group creating task runs before all the others within the same DS.
+                    if (firstInspectionPortTask == null) {
+                        firstInspectionPortTask = this.osSvaCreateMetaTask.create(this.ds, hostMissingSva, az.getZone());
+                        this.tg.addTask(firstInspectionPortTask);
+                    } else {
+                        this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostMissingSva, az.getZone()), firstInspectionPortTask);
+                    }
                 }
             }
+
         }
+
+        List<DeleteSvaServerAndDAIMetaTask> deleteSvaDAITasksList = new ArrayList<>();
 
         // If Any unconformed AZ, these are most likely unselected or were never part of this DS. Add any AZ deleted
         // from openstack to this unconformed list
@@ -365,10 +417,16 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     .listByDsIdAndAvailabilityZone(em, this.ds.getId(), unconformedAz);
             if (daisInZone != null) {
                 for (DistributedApplianceInstance dai : daisInZone) {
-                    this.tg.addTask(this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai));
+                    DeleteSvaServerAndDAIMetaTask deleteSvaDaiTask =  this.deleteSvaServerAndDAIMetaTask.create(this.ds.getRegion(), dai);
+                    this.tg.addTask(deleteSvaDaiTask);
+                    deleteSvaDAITasksList.add(deleteSvaDaiTask);
                 }
             }
         }
+
+        DeleteSvaServerAndDAIMetaTask[] deleteSvaDAITasks = deleteSvaDAITasksList.toArray(new DeleteSvaServerAndDAIMetaTask[]{});
+        this.tg.addTask(this.dsClearPortGroupTask.create(this.ds), deleteSvaDAITasks);
+
     }
 
     @Override
