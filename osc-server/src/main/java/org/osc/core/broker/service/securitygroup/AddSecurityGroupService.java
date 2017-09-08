@@ -77,6 +77,8 @@ implements AddSecurityGroupServiceApi {
         UnlockObjectMetaTask unlockTask = null;
 
         try {
+            unlockTask = LockUtil.tryLockVC(vc, LockType.READ_LOCK);
+
             SecurityGroup securityGroup = new SecurityGroup(vc, dto.getProjectId(), dto.getProjectName());
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
 
@@ -96,8 +98,6 @@ implements AddSecurityGroupServiceApi {
             OSCEntityManager.update(em, securityGroup, this.txBroadcastUtil);
             // TODO emanoel: remove this condition when the SG sync is implemented for K8s.
             if (vc.getVirtualizationType().isOpenstack()) {
-                unlockTask = LockUtil.tryLockVC(vc, LockType.READ_LOCK);
-
                 UnlockObjectMetaTask forLambda = unlockTask;
                 chain(() -> {
                     try {
@@ -113,6 +113,7 @@ implements AddSecurityGroupServiceApi {
                 // Lock the SG with a write lock and allow it to be unlocked at the end of the job
                 unlockTask.addUnlockTask(LockUtil.tryLockSecurityGroupOnly(securityGroup));
             } else {
+                LockUtil.releaseLocks(unlockTask);
                 return new BaseJobResponse(securityGroup.getId(), null);
             }
         } catch (Exception e) {

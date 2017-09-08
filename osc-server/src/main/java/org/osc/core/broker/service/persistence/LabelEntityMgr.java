@@ -25,7 +25,7 @@ import javax.persistence.criteria.Root;
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 
 public class LabelEntityMgr {
-    public static Label findByValue(EntityManager em, String labelValue) {
+    public static Label findByValue(EntityManager em, String labelValue, Long vcId) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
@@ -34,7 +34,8 @@ public class LabelEntityMgr {
         Root<Label> root = query.from(Label.class);
 
         query = query.select(root)
-                .where(cb.equal(root.get("value"), labelValue));
+                .where(cb.equal(root.get("value"), labelValue),
+                        cb.equal(root.join("securityGroupMembers").join("securityGroup").join("virtualizationConnector").get("id"), vcId));
 
         try {
             return em.createQuery(query).getSingleResult();

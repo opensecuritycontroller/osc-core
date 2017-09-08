@@ -119,7 +119,7 @@ public class ForceDeleteSecurityGroupTask extends TransactionalTask {
                     OSCEntityManager.delete(em, pod, this.txBroadcastUtil);
                 }
 
-                // remove Network from database
+                // remove Label from database
                 OSCEntityManager.delete(em, sgm.getLabel(), this.txBroadcastUtil);
             }
 

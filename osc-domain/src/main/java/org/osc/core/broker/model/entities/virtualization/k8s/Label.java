@@ -37,13 +37,10 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType
 @Entity
 @Table(name = "LABEL")
 public class Label extends BaseEntity implements ProtectionEntity {
-    public Label() {
-    }
-
-    @Column(name = "value", nullable = false, unique = true)
+    @Column(name = "value", nullable = false)
     private String value;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -58,6 +55,9 @@ public class Label extends BaseEntity implements ProtectionEntity {
     public Label(String name, String labelValue) {
         this.name = name;
         this.value = labelValue;
+    }
+
+    public Label() {
     }
 
     @Override

@@ -146,7 +146,7 @@ public abstract class BaseSecurityGroupService<I extends Request, O extends Resp
         } else if (type == SecurityGroupMemberType.SUBNET) {
             entity = SubnetEntityManager.findByOpenstackId(em, openstackId);
         }  else if (type == SecurityGroupMemberType.LABEL) {
-            entity = LabelEntityMgr.findByValue(em, securityGroupMemberDto.getLabel());
+            entity = LabelEntityMgr.findByValue(em, securityGroupMemberDto.getLabel(), securityGroup.getVirtualizationConnector().getId());
         } else {
             throw new VmidcBrokerValidationException(String.format("Invalid Security Group Member Type ('%s')", type));
         }

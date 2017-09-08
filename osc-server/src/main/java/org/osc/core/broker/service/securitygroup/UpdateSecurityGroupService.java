@@ -64,11 +64,11 @@ implements UpdateSecurityGroupServiceApi {
 
         SecurityGroup securityGroup = SecurityGroupEntityMgr.findById(em, dto.getId());
         UnlockObjectMetaTask unlockTask = null;
+        VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
 
         try {
+            unlockTask = LockUtil.tryLockSecurityGroup(securityGroup, vc);
             SecurityGroupEntityMgr.toEntity(securityGroup, dto);
-            VirtualizationConnector vc = VirtualizationConnectorEntityMgr.findById(em, dto.getParentId());
-
             Set<SecurityGroupMemberItemDto> selectedMembers = request.getMembers();
 
             Set<String> selectedMemberUniqueId = new HashSet<>();
@@ -104,9 +104,6 @@ implements UpdateSecurityGroupServiceApi {
 
             // TODO emanoel: remove this condition once sync is implemented for k8s SGs.
             if (vc.getVirtualizationType().isOpenstack()) {
-                unlockTask = LockUtil.tryLockSecurityGroup(securityGroup,
-                        VirtualizationConnectorEntityMgr.findById(em, dto.getParentId()));
-
                 UnlockObjectMetaTask forLambda = unlockTask;
                 chain(() -> {
                     try {
@@ -118,6 +115,9 @@ implements UpdateSecurityGroupServiceApi {
                         throw e;
                     }
                 });
+            } else {
+                LockUtil.releaseLocks(unlockTask);
+                return new BaseJobResponse(securityGroup.getId(), null);
             }
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
