@@ -185,6 +185,8 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                     Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
                                                                         null, redirectionTargetId));
 
+                    // TODO : at least one plugin will result in element.getParentId being non-null, whether or
+                    //        not supportsPortGroup(). Should we if() around this line?
                     ds.setRedirectionTargetId(element.getParentId());
             } finally {
                 controller.close();
