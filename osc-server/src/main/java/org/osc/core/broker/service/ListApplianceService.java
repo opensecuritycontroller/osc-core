@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Component;
 
 @Component
 public class ListApplianceService extends ServiceDispatcher<BaseRequest<BaseDto>, ListResponse<ApplianceDto>>
-        implements ListApplianceServiceApi {
+implements ListApplianceServiceApi {
 
     @Override
     public ListResponse<ApplianceDto> exec(BaseRequest<BaseDto> request, EntityManager em) {
@@ -47,7 +47,7 @@ public class ListApplianceService extends ServiceDispatcher<BaseRequest<BaseDto>
         // mapping all the appliance objects to appliance dto objects
         for (Appliance a : emgr.listAll("model")) {
 
-            ApplianceDto dto = new ApplianceDto();
+            ApplianceDto dto = new ApplianceDto(null, null, null);
 
             ApplianceEntityMgr.fromEntity(a, dto);
 

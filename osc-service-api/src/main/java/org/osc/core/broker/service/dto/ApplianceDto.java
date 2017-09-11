@@ -29,6 +29,15 @@ public class ApplianceDto extends BaseDto {
     private String managerType;
     private String managerVersion;
 
+    public ApplianceDto() {
+    }
+
+    public ApplianceDto(String model, String managerType, String managerVersion) {
+        this.model = model;
+        this.managerType = managerType;
+        this.managerVersion = managerVersion;
+    }
+
     public String getModel() {
         return this.model;
     }
