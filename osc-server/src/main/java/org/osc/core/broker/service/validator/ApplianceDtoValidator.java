@@ -27,15 +27,19 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.persistence.ApplianceEntityMgr;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 @Component(service = ApplianceDtoValidator.class)
 public class ApplianceDtoValidator implements DtoValidator<ApplianceDto, Appliance> {
-    @Reference
     private EntityManager em;
 
     void setEntityManager(EntityManager em) {
         this.em = em;
+    }
+
+    public ApplianceDtoValidator create(EntityManager em) {
+        ApplianceDtoValidator validator = new ApplianceDtoValidator();
+        validator.em = em;
+        return validator;
     }
 
     @Override

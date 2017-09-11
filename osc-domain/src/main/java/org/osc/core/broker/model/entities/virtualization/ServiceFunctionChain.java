@@ -36,34 +36,37 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 @Table(name = "SERVICE_FUNCTION_CHAIN", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
 public class ServiceFunctionChain extends BaseEntity {
 
-	@Column(name = "name", nullable = false)
-	private String name;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM", joinColumns = @JoinColumn(name = "sfc_fk", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "virtual_system_fk", referencedColumnName = "id"))
-	private Set<VirtualSystem> virtualSystems = new HashSet<>();
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM", joinColumns = @JoinColumn(name = "sfc_fk", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "virtual_system_fk", referencedColumnName = "id"))
+    private Set<VirtualSystem> virtualSystems = new HashSet<>();
 
-	public ServiceFunctionChain(String name) {
-		this.name = name;
-	}
+    public ServiceFunctionChain(String name) {
+        this.name = name;
+    }
 
-	public String getName() {
-		return name;
-	}
+    ServiceFunctionChain() {
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+        return this.name;
+    }
 
-	public Set<VirtualSystem> getVirtualSystems() {
-		return virtualSystems;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setVirtualSystems(Set<VirtualSystem> virtualSystems) {
-		this.virtualSystems = virtualSystems;
-	}
+    public Set<VirtualSystem> getVirtualSystems() {
+        return this.virtualSystems;
+    }
 
-	public void addVirtualSystems(VirtualSystem virtualSystem) {
+    public void setVirtualSystems(Set<VirtualSystem> virtualSystems) {
+        this.virtualSystems = virtualSystems;
+    }
+
+    public void addVirtualSystems(VirtualSystem virtualSystem) {
         this.virtualSystems.add(virtualSystem);
     }
 

@@ -27,17 +27,20 @@ import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.request.BaseRequest;
 import org.osc.core.broker.service.response.BaseResponse;
 import org.osc.core.broker.service.validator.ApplianceDtoValidator;
+import org.osc.core.broker.service.validator.DtoValidator;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = {AddApplianceServiceApi.class})
 public class AddApplianceService extends ServiceDispatcher<BaseRequest<ApplianceDto>, BaseResponse>
 implements AddApplianceServiceApi {
+    DtoValidator<ApplianceDto, Appliance> validator;
+
     @Reference
     private ApiFactoryService apiFactoryService;
 
     @Reference
-    private ApplianceDtoValidator applianceDtoValidator;
+    private ApplianceDtoValidator applianceDtoValidatorFactory;
 
     @Override
     public BaseResponse exec(BaseRequest<ApplianceDto> request, EntityManager em) throws Exception {
@@ -45,12 +48,13 @@ implements AddApplianceServiceApi {
 
         ApplianceDto applianceDto = request.getDto();
 
-        this.applianceDtoValidator.validateForCreate(applianceDto);
+        if (this.validator == null) {
+            this.validator = this.applianceDtoValidatorFactory.create(em);
+        }
 
-        Appliance appliance = new Appliance();
-        appliance.setManagerType(applianceDto.getManagerType());
-        appliance.setModel(applianceDto.getModel());
-        appliance.setManagerSoftwareVersion(applianceDto.getManagerVersion());
+        this.validator.validateForCreate(applianceDto);
+
+        Appliance appliance = new Appliance(applianceDto.getModel(), applianceDto.getManagerType(), applianceDto.getManagerVersion());
 
         OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em, this.txBroadcastUtil);
 

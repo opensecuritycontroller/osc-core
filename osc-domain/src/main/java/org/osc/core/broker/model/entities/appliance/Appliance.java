@@ -50,6 +50,13 @@ public class Appliance extends BaseEntity {
         super();
     }
 
+    public Appliance(String model, String managerType, String managerSoftwareVersion) {
+        super();
+        this.model = model;
+        this.managerType = managerType;
+        this.managerSoftwareVersion = managerSoftwareVersion;
+    }
+
     public void addApplianceSoftwareVersion(ApplianceSoftwareVersion applianceSoftwareVersion) {
         this.applianceSoftwareVersions.add(applianceSoftwareVersion);
         applianceSoftwareVersion.setAppliance(this);

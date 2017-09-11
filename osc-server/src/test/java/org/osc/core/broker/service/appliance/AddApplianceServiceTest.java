@@ -85,6 +85,7 @@ public class AddApplianceServiceTest {
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
 
+        this.service.validator = this.validatorMock;
         when(this.em.getTransaction()).thenReturn(this.tx);
 
         when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
@@ -105,7 +106,7 @@ public class AddApplianceServiceTest {
     @Test
     public void testDispatch_WhenApplianceValidationFails_ThrowsUnhandledException() throws Exception {
         // Arrange.
-        ApplianceDto dto = new ApplianceDto();
+        ApplianceDto dto = new ApplianceDto(null, null, null);
         BaseRequest<ApplianceDto> request = new BaseRequest<>(dto);
 
         doThrow(VmidcBrokerValidationException.class).when(this.validatorMock).validateForCreate(dto);
