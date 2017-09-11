@@ -155,6 +155,7 @@ public class DSUpdateOrDeleteMetaTaskTest {
         this.factoryTask.deleteSvaServerAndDAIMetaTask = new DeleteSvaServerAndDAIMetaTask();
         this.factoryTask.deleteOSSecurityGroup = new DeleteOsSecurityGroupTask();
         this.factoryTask.deleteDsFromDb = new DeleteDSFromDbTask();
+        this.factoryTask.dsClearPortGroupTask = new DSClearPortGroupTask();
 
         DSUpdateOrDeleteMetaTask task = this.factoryTask.create(this.ds, this.novaApiMock);
 

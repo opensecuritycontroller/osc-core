@@ -23,6 +23,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -37,6 +38,7 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova.CreatedServerDetails;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
+import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -161,31 +163,32 @@ public class OsSvaServerCreateTask extends TransactionalTask {
         this.activeRunner.getOsDeploymentSpecNotificationRunner()
                 .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
-            if (vc.isControllerDefined()) {
-                try {
-                    DefaultNetworkPort ingressPort = new DefaultNetworkPort(createdServer.getIngressInspectionPortId(),
-                            createdServer.getIngressInspectionMacAddr());
-                    DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
-                            createdServer.getEgressInspectionMacAddr());
+        if (vc.isControllerDefined()) {
+            try {
+                DefaultNetworkPort ingressPort = new DefaultNetworkPort(createdServer.getIngressInspectionPortId(),
+                        createdServer.getIngressInspectionMacAddr());
+                DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
+                        createdServer.getEgressInspectionMacAddr());
 
-                    String redirectionTargetId = null;
-                    if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
-                        String domainId = OpenstackUtil.extractDomainId(
-                                ds.getProjectId(),
-                                ds.getProjectName(),
-                                ds.getVirtualSystem().getVirtualizationConnector(),
-                                Arrays.asList(ingressPort));
-                        ingressPort.setParentId(domainId);
-                        egressPort.setParentId(domainId);
+                String redirectionTargetId = null;
 
-                        redirectionTargetId = ds.getRedirectionTargetId();
-                    }
+                if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
+                    String domainId = OpenstackUtil.extractDomainId(
+                            ds.getProjectId(),
+                            ds.getProjectName(),
+                            ds.getVirtualSystem().getVirtualizationConnector(),
+                            Arrays.asList(ingressPort));
+                    ingressPort.setParentId(domainId);
+                    egressPort.setParentId(domainId);
 
-                    //Element object in DefaultInspectionport is not used at this point, hence null
-                    Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
-                                                                        null, redirectionTargetId));
+                    redirectionTargetId = ds.getRedirectionTargetId();
+                }
 
-                    // TODO : at least one plugin will result in element.getParentId being non-null, whether or
+                //Element object in DefaultInspectionport is not used at this point, hence null
+                Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
+                        null, redirectionTargetId));
+
+                    // TODO : at least one sdn plugin will result in element.getParentId being non-null, whether or
                     //        not supportsPortGroup(). Should we if() around this line?
                     ds.setRedirectionTargetId(element.getParentId());
             } finally {

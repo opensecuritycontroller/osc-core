@@ -46,4 +46,10 @@ public class DSClearPortGroupTask extends TransactionalTask {
             em.merge(this.ds);
         }
     }
+
+    @Override
+    public String getName() {
+        String name = this.ds.getName();
+        return String.format("Clear port group for Deployment Spec %d %s", this.ds.getId(), name != null ? name : "");
+    }
 }

@@ -67,6 +67,7 @@ public class DeleteInspectionPortTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
 
+        try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
         DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                 this.dai.getInspectionIngressMacAddress());
         DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
@@ -90,7 +91,7 @@ public class DeleteInspectionPortTask extends TransactionalTask {
         LOG.info(String.format("Deleting Inspection port(s): '%s' from region '%s' and Server : '%s' ",
                 portEl, this.region, this.dai));
 
-        try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
+
             controller.removeInspectionPort(portEl);
         }
     }

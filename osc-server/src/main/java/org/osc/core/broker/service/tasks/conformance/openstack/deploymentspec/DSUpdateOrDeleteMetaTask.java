@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
+import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -86,6 +87,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     DeleteSvaServerAndDAIMetaTask deleteSvaServerAndDAIMetaTask;
 
+    private Task firstCreatePGTask;
+
     private DeploymentSpec ds;
     private Endpoint endPoint;
     private TaskGraph tg;
@@ -112,6 +115,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
         this.deleteOSSecurityGroup = this.factory.deleteOSSecurityGroup;
         this.deleteDsFromDb = this.factory.deleteDsFromDb;
+        this.dsClearPortGroupTask = this.factory.dsClearPortGroupTask;
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
@@ -260,8 +264,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             boolean doesHostNeedSva = removeHost(hostsMissingSvas, daiHostName);
             if (doesHostNeedSva && isDAIHostSelectedInDs) {
                 log.info("Conforming DAI/SVA: " + dai.getName());
-                this.tg.addTask(
-                        this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())));
+
+                addConformanceCheckTask(dai, osHostSet);
             } else {
                 // Remove any extra sva/DAI
                 log.info("Removing DAI/SVA: " + dai.getName() + " for host: " + daiHostName);
@@ -276,8 +280,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     HostAzInfo hostInfo = hostAvailabilityZoneMap.getHostAvailibilityZoneInfo(host);
                     String hostName = hostInfo.getHostName();
                     String availabilityZone = hostInfo.getAvailabilityZone();
-
-                    this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostName, availabilityZone));
+                    addConformanceCheckTask(hostName, availabilityZone);
                 } catch (VmidcException vmidcException) {
                     this.tg.addTask(new FailedWithObjectInfoTask(
                             String.format("Create SVA for host '%s' in Region '%s'", host, this.ds.getRegion()),
@@ -286,7 +289,7 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 }
             }
         }
-        
+
         this.tg.appendTask(this.dsClearPortGroupTask.create(this.ds));
     }
 
@@ -352,8 +355,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                     if (!hostsMissingSvas.isEmpty()) {
                         hostsMissingSvas.remove(dai.getOsHostName());
                     }
-                    this.tg.addTask(
-                            this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())));
+
+                    addConformanceCheckTask(dai, osHostSet);
                 }
             }
 
@@ -361,7 +364,8 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 // If any hosts are missing the SVA/DAI, create them
                 for (String hostMissingSva : hostsMissingSvas) {
                     log.info("Creating new SVA for host:" + hostMissingSva);
-                    this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostMissingSva, az.getZone()));
+
+                    addConformanceCheckTask(hostMissingSva, az.getZone());
                 }
             }
         }
@@ -380,6 +384,27 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         }
 
         this.tg.appendTask(this.dsClearPortGroupTask.create(this.ds));
+    }
+
+    private void addConformanceCheckTask(DistributedApplianceInstance dai, Collection<String> osHostSet) {
+        if (this.firstCreatePGTask == null) {
+            this.firstCreatePGTask = this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName()));
+            this.tg.addTask(this.firstCreatePGTask);
+        } else {
+            this.tg.addTask(this.osDAIConformanceCheckMetaTask.create(dai, osHostSet.contains(dai.getOsHostName())),
+                                                                      this.firstCreatePGTask);
+        }
+    }
+
+    private void addConformanceCheckTask(String hostMissingSva, String azName) {
+        // Make sure the first port-group creating task runs before all the others within the same DS.
+        if (this.firstCreatePGTask == null) {
+            this.firstCreatePGTask = this.osSvaCreateMetaTask.create(this.ds, hostMissingSva, azName);
+            this.tg.addTask(this.firstCreatePGTask);
+        } else {
+            this.tg.addTask(this.osSvaCreateMetaTask.create(this.ds, hostMissingSva, azName),
+                                                            this.firstCreatePGTask);
+        }
     }
 
     @Override
