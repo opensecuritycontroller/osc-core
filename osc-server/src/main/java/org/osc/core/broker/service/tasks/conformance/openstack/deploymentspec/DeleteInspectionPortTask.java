@@ -66,33 +66,32 @@ public class DeleteInspectionPortTask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
-
         try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
-        DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
-                this.dai.getInspectionIngressMacAddress());
-        DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
-                this.dai.getInspectionEgressMacAddress());
-        DeploymentSpec ds = this.dai.getDeploymentSpec();
-        String domainId = OpenstackUtil.extractDomainId(
-                ds.getProjectId(),
-                ds.getProjectName(),
-                ds.getVirtualSystem().getVirtualizationConnector(),
-                Arrays.asList(ingressPort));
 
-        if (domainId == null) {
-            throw new VmidcBrokerValidationException(String.format("A domain was not found for the ingress port %s.", ingressPort.getElementId()));
-        }
+            DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
+                    this.dai.getInspectionIngressMacAddress());
+            DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
+                    this.dai.getInspectionEgressMacAddress());
+            DeploymentSpec ds = this.dai.getDeploymentSpec();
+            String domainId = OpenstackUtil.extractDomainId(
+                    ds.getProjectId(),
+                    ds.getProjectName(),
+                    ds.getVirtualSystem().getVirtualizationConnector(),
+                    Arrays.asList(ingressPort));
 
-        ingressPort.setParentId(domainId);
-        egressPort.setParentId(domainId);
+            if (domainId == null) {
+                throw new VmidcBrokerValidationException(String.format("A domain was not found for the ingress port %s.", ingressPort.getElementId()));
+            }
 
-        //Element Object in DefaultInspectionPort is not used for now, hence null
-        InspectionPortElement portEl = new DefaultInspectionPort(ingressPort, egressPort, null);
-        LOG.info(String.format("Deleting Inspection port(s): '%s' from region '%s' and Server : '%s' ",
-                portEl, this.region, this.dai));
-
-
+            ingressPort.setParentId(domainId);
+            egressPort.setParentId(domainId);
+            
+            //Element Object in DefaultInspectionPort is not used for now, hence null
+            InspectionPortElement portEl = new DefaultInspectionPort(ingressPort, egressPort, null);
+            LOG.info(String.format("Deleting Inspection port(s): '%s' from region '%s' and Server : '%s' ",
+                    portEl, this.region, this.dai));
             controller.removeInspectionPort(portEl);
+
         }
     }
 
