@@ -71,9 +71,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
     @Reference
     DeleteDSFromDbTask deleteDsFromDb;
 
-    @Reference
-    DSClearPortGroupTask dsClearPortGroupTask;
-
     // optional+dynamic to break circular DS dependency
     // TODO: remove circularity and use mandatory references
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
@@ -115,7 +112,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
         this.deleteSvaServerAndDAIMetaTask = this.factory.deleteSvaServerAndDAIMetaTask;
         this.deleteOSSecurityGroup = this.factory.deleteOSSecurityGroup;
         this.deleteDsFromDb = this.factory.deleteDsFromDb;
-        this.dsClearPortGroupTask = this.factory.dsClearPortGroupTask;
         this.dbConnectionManager = this.factory.dbConnectionManager;
         this.txBroadcastUtil = this.factory.txBroadcastUtil;
     }
@@ -289,8 +285,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 }
             }
         }
-
-        this.tg.appendTask(this.dsClearPortGroupTask.create(this.ds));
     }
 
     /**
@@ -382,8 +376,6 @@ public class DSUpdateOrDeleteMetaTask extends TransactionalMetaTask {
                 }
             }
         }
-
-        this.tg.appendTask(this.dsClearPortGroupTask.create(this.ds));
     }
 
     private void addConformanceCheckTask(DistributedApplianceInstance dai, Collection<String> osHostSet) {

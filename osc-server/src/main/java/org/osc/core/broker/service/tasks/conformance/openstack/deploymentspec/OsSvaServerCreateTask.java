@@ -93,7 +93,8 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     private String availabilityZone;
     private String hypervisorHostName;
 
-    public OsSvaServerCreateTask create(DistributedApplianceInstance dai, String hypervisorName, String availabilityZone) {
+    public OsSvaServerCreateTask create(DistributedApplianceInstance dai, String hypervisorName,
+            String availabilityZone) {
         OsSvaServerCreateTask task = new OsSvaServerCreateTask();
         task.apiFactoryService = this.apiFactoryService;
         task.activeRunner = this.activeRunner;
@@ -132,30 +133,27 @@ public class OsSvaServerCreateTask extends TransactionalTask {
         // meta_data.json file within openstack. We hardcode and look for content within 0000 file
         String availabilityZone = this.availabilityZone.concat(":").concat(this.hypervisorHostName);
 
-        ApplianceSoftwareVersion applianceSoftwareVersion = this.dai.getVirtualSystem()
-                .getApplianceSoftwareVersion();
+        ApplianceSoftwareVersion applianceSoftwareVersion = this.dai.getVirtualSystem().getApplianceSoftwareVersion();
         CreatedServerDetails createdServer;
 
         // TODO: sjallapx - Hack to workaround issue SimpleDateFormat parse errors due to JCloud on some partner environments.
-        boolean createServerWithNoOSTSecurityGroup = this.dai.getVirtualSystem().getVirtualizationConnector().isControllerDefined()
-                ? this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem()) : false;
+        boolean createServerWithNoOSTSecurityGroup = this.dai.getVirtualSystem().getVirtualizationConnector()
+                .isControllerDefined() ? this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem()) : false;
 
         String sgRefName = createServerWithNoOSTSecurityGroup ? null : sgReference.getSgRefName();
 
         try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
-            createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName,
-                    imageRefId, flavorRef, generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(),
-                    ds.getInspectionNetworkId(), applianceSoftwareVersion.hasAdditionalNicForInspection(),
-                    sgRefName);
+            createdServer = nova.createServer(ds.getRegion(), availabilityZone, applianceName, imageRefId, flavorRef,
+                    generateBootstrapInfo(vs, applianceName), ds.getManagementNetworkId(), ds.getInspectionNetworkId(),
+                    applianceSoftwareVersion.hasAdditionalNicForInspection(), sgRefName);
         }
 
-
         this.dai.updateDaiOpenstackSvaInfo(createdServer.getServerId(),
-                createdServer.getIngressInspectionMacAddr(),
-                createdServer.getIngressInspectionPortId(),
-                createdServer.getEgressInspectionMacAddr(),
-                createdServer.getEgressInspectionPortId()
-        );
+                                           createdServer.getIngressInspectionMacAddr(),
+                                           createdServer.getIngressInspectionPortId(),
+                                           createdServer.getEgressInspectionMacAddr(),
+                                           createdServer.getEgressInspectionPortId());
+
         // Add new server ID to VM notification listener for this DS
 
         this.activeRunner.getOsDeploymentSpecNotificationRunner()
@@ -171,11 +169,11 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                 String redirectionTargetId = null;
 
                 if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
-                    String domainId = OpenstackUtil.extractDomainId(
-                            ds.getProjectId(),
-                            ds.getProjectName(),
-                            ds.getVirtualSystem().getVirtualizationConnector(),
-                            Arrays.asList(ingressPort));
+                    String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(),
+                                                    ds.getProjectName(),
+                                                    ds.getVirtualSystem().getVirtualizationConnector(),
+                                                    Arrays.asList(ingressPort));
+
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);
 
@@ -183,12 +181,10 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                 }
 
                 //Element object in DefaultInspectionport is not used at this point, hence null
-                Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
-                        null, redirectionTargetId));
+                Element element = controller.registerInspectionPort(
+                        new DefaultInspectionPort(ingressPort, egressPort, null, redirectionTargetId));
 
-                    // TODO : at least one sdn plugin will result in element.getParentId being non-null, whether or
-                    //        not supportsPortGroup(). Should we if() around this line?
-                    ds.setRedirectionTargetId(element.getParentId());
+                ds.setRedirectionTargetId(element.getParentId());
             } finally {
                 controller.close();
             }
@@ -218,7 +214,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
     }
 
     private ApplianceBootstrapInformationElement generateBootstrapInfo(final VirtualSystem vs,
-                                                                       final String applianceName) throws Exception {
+            final String applianceName) throws Exception {
 
         ManagerDeviceApi deviceApi = this.apiFactoryService.createManagerDeviceApi(vs);
         Map<String, String> bootstrapProperties = vs.getApplianceSoftwareVersion().getConfigProperties();

@@ -155,7 +155,6 @@ public class DSUpdateOrDeleteMetaTaskTest {
         this.factoryTask.deleteSvaServerAndDAIMetaTask = new DeleteSvaServerAndDAIMetaTask();
         this.factoryTask.deleteOSSecurityGroup = new DeleteOsSecurityGroupTask();
         this.factoryTask.deleteDsFromDb = new DeleteDSFromDbTask();
-        this.factoryTask.dsClearPortGroupTask = new DSClearPortGroupTask();
 
         DSUpdateOrDeleteMetaTask task = this.factoryTask.create(this.ds, this.novaApiMock);
 
@@ -169,7 +168,7 @@ public class DSUpdateOrDeleteMetaTaskTest {
     private AvailabilityZone createAvailableZoneDetails(String azName, List<String> hostNames) {
         AvailabilityZone result = Mockito.mock(AvailabilityZone.class);
         Map<String, Map<String, HostService>> hosts = new HashMap<>();
-        for(String hostName : hostNames) {
+        for (String hostName : hostNames) {
             hosts.put(hostName, null);
         }
 
