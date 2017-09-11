@@ -43,11 +43,11 @@ public class ServiceFunctionChain extends BaseEntity {
     @JoinTable(name = "SERVICE_FUNCTION_CHAIN_VIRTUAL_SYSTEM", joinColumns = @JoinColumn(name = "sfc_fk", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "virtual_system_fk", referencedColumnName = "id"))
     private Set<VirtualSystem> virtualSystems = new HashSet<>();
 
-    public ServiceFunctionChain(String name) {
-        this.name = name;
+    ServiceFunctionChain() {
     }
 
-    ServiceFunctionChain() {
+    public ServiceFunctionChain(String name) {
+        this.name = name;
     }
 
     public String getName() {

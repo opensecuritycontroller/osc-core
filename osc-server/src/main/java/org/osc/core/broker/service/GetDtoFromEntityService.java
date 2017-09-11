@@ -132,7 +132,7 @@ ServiceDispatcher<GetDtoFromEntityRequest, BaseDtoResponse<R>> implements GetDto
             res.setDto((R) dto);
         } else if (entityName.equals("Appliance")) {
             Appliance entity = getEntity(entityId, entityName, Appliance.class, em);
-            ApplianceDto dto = new ApplianceDto(null, null, null);
+            ApplianceDto dto = new ApplianceDto();
             ApplianceEntityMgr.fromEntity(entity, dto);
             res.setDto((R) dto);
         } else if (entityName.equals("ApplianceSoftwareVersion")) {
