@@ -23,7 +23,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
-import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
@@ -38,7 +37,6 @@ import org.osc.core.broker.rest.client.openstack.openstack4j.Endpoint;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova;
 import org.osc.core.broker.rest.client.openstack.openstack4j.Openstack4JNova.CreatedServerDetails;
 import org.osc.core.broker.rest.client.openstack.vmidc.notification.runner.RabbitMQRunner;
-import org.osc.core.broker.service.LockUtil;
 import org.osc.core.broker.service.persistence.DistributedApplianceInstanceEntityMgr;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
