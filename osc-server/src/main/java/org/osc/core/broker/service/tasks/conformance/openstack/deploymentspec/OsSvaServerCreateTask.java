@@ -177,14 +177,14 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);
 
-                    redirectionTargetId = ds.getRedirectionTargetId();
+                    redirectionTargetId = ds.getPortGroupLabel();
                 }
 
                 //Element object in DefaultInspectionport is not used at this point, hence null
                 Element element = controller.registerInspectionPort(
                         new DefaultInspectionPort(ingressPort, egressPort, null, redirectionTargetId));
 
-                ds.setRedirectionTargetId(element.getParentId());
+                ds.setPortGroupLabel(element.getParentId());
             } finally {
                 controller.close();
             }

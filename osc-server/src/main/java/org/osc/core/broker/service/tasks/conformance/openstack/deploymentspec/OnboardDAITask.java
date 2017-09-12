@@ -78,10 +78,10 @@ public class OnboardDAITask extends TransactionalTask {
                 egressPort.setParentId(domainId);
                 if (domainId != null){
                 	//Element Object is not used in DefaultInstepctionPort for now, hence null
-                    String redirectionTargetId = ds.getRedirectionTargetId();
+                    String redirectionTargetId = ds.getPortGroupLabel();
                     Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
                                                                         null, redirectionTargetId));
-                    ds.setRedirectionTargetId(element.getParentId());
+                    ds.setPortGroupLabel(element.getParentId());
                 } else {
                     log.warn("DomainId is missing, cannot be null");
                 }
