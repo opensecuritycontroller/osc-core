@@ -16,14 +16,10 @@
  *******************************************************************************/
 package org.osc.core.broker.service.api;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
+import org.osc.core.broker.service.request.BaseRequest;
+import org.osc.core.broker.service.response.BaseResponse;
 
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 87;
+public interface AddApplianceSoftwareVersionServiceApi extends ServiceDispatcherApi<BaseRequest<ApplianceSoftwareVersionDto>, BaseResponse> {
 
-    Connection getSQLConnection() throws SQLException;
 }

@@ -33,6 +33,7 @@ import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.ServiceDispatcher;
 import org.osc.core.broker.service.api.AddApplianceServiceApi;
+import org.osc.core.broker.service.api.AddApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.ImportApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.common.VmidcMessages;
 import org.osc.core.broker.service.common.VmidcMessages_;
@@ -69,6 +70,9 @@ implements ImportApplianceSoftwareVersionServiceApi {
     @Reference
     private AddApplianceServiceApi addApplianceService;
 
+    @Reference
+    private AddApplianceSoftwareVersionServiceApi addApplianceSoftwareVersionService;
+
     private ImageMetadataValidator imageMetadataValidator;
 
     private String uploadPath;
@@ -88,7 +92,7 @@ implements ImportApplianceSoftwareVersionServiceApi {
             ImageMetadata imageMetadata = validateAndLoad(tmpUploadFolder);
 
             Appliance appliance = ApplianceEntityMgr.findByModel(em, imageMetadata.getModel());
-
+            Long applianceId = null;
             if (appliance == null) {
                 ApplianceDto applianceDto = new ApplianceDto(imageMetadata.getModel(),
                         imageMetadata.getManagerType(),
@@ -97,10 +101,7 @@ implements ImportApplianceSoftwareVersionServiceApi {
                 BaseRequest<ApplianceDto> addApplianceRequest = new BaseRequest<>(applianceDto);
 
                 BaseResponse addApplianceResponse = this.addApplianceService.dispatch(addApplianceRequest);
-
-                // TODO emanoel: Move this to the add appliance software version service when added.
-                OSCEntityManager<Appliance> applianceEntityManager = new OSCEntityManager<Appliance>(Appliance.class, em, this.txBroadcastUtil);
-                appliance = applianceEntityManager.findByPrimaryKey(addApplianceResponse.getId());
+                applianceId = addApplianceResponse.getId();
             } else {
                 if (!appliance.getManagerType().equals(imageMetadata.getManagerType())) {
                     throw new VmidcBrokerValidationException("Invalid manager type for the appliance. Expected: "
@@ -112,6 +113,8 @@ implements ImportApplianceSoftwareVersionServiceApi {
                             + appliance.getManagerSoftwareVersion() + " Received:"
                             + imageMetadata.getManagerVersion());
                 }
+
+                applianceId = appliance.getId();
             }
             VirtualizationType virtualizationType = imageMetadata.getVirtualizationType();
             String virtualizationVersion = "";
@@ -128,23 +131,16 @@ implements ImportApplianceSoftwareVersionServiceApi {
              */
             ApplianceSoftwareVersion av = ApplianceSoftwareVersionEntityMgr.findByApplianceVersionVirtTypeAndVersion(
                     em,
-                    appliance.getId(),
+                    applianceId,
                     softwareVersion,
                     virtualizationType,
                     virtualizationVersion);
 
             boolean isPolicyMappingSupported = this.apiFactoryService.syncsPolicyMapping(imageMetadata.getManagerType());
+            Long asvId = null;
             if (av == null) {
-
-                ApplianceSoftwareVersion asv = ApplianceSoftwareVersionEntityMgr.findByImageUrl(em,
-                        imageMetadata.getImageName());
-                if (asv != null) {
-                    throw new VmidcBrokerValidationException("Image file: " + imageMetadata.getImageName()
-                    + " already exists. Cannot add an image with the same name.");
-                }
-
                 ApplianceSoftwareVersionDto asvDto = new ApplianceSoftwareVersionDto();
-                asvDto.setParentId(appliance.getId());
+                asvDto.setParentId(applianceId);
                 asvDto.setSwVersion(softwareVersion);
                 asvDto.setVirtualizationType(virtualizationType);
                 asvDto.setVirtualizationVersion(virtualizationVersion);
@@ -159,13 +155,10 @@ implements ImportApplianceSoftwareVersionServiceApi {
                 asvDto.getConfigProperties().putAll(imageMetadata.getConfigProperties());
                 asvDto.setAdditionalNicForInspection(imageMetadata.hasAdditionalNicForInspection());
 
-                OSCEntityManager<ApplianceSoftwareVersion> emgr = new OSCEntityManager<ApplianceSoftwareVersion>(
-                        ApplianceSoftwareVersion.class, em, this.txBroadcastUtil);
+                BaseRequest<ApplianceSoftwareVersionDto> addAsvRequest = new BaseRequest<>(asvDto);
 
-                // creating new entry in the db using entity manager object
-                av = ApplianceSoftwareVersionEntityMgr.createEntity(em, asvDto, appliance);
-
-                av = emgr.create(av);
+                BaseResponse addAsvResponse = this.addApplianceSoftwareVersionService.dispatch(addAsvRequest);
+                asvId = addAsvResponse.getId();
             } else {
                 // We allow re-importing of the image to support the use case of backing up database and restore to a new VM
                 if (isImageMissing(av.getImageUrl())) {
@@ -188,13 +181,14 @@ implements ImportApplianceSoftwareVersionServiceApi {
                     av.getConfigProperties().putAll(imageMetadata.getConfigProperties());
 
                     OSCEntityManager.update(em, av, this.txBroadcastUtil);
+                    asvId = av.getId();
                 } else {
                     throw new VmidcBrokerValidationException(
                             "The composite key of Appliance Software Version, Virtualization Type, and Virtualization Software Version already exists.");
                 }
             }
 
-            response.setId(av.getId());
+            response.setId(asvId);
 
             File imageFolder = new File(this.uploadPath);
 

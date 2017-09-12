@@ -48,12 +48,12 @@ public class DistributedApplianceInstance extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "virtual_system_fk", nullable = false,
-            foreignKey = @ForeignKey(name = "FK_DAI_VIRTUAL_SYSTEM"))
+    foreignKey = @ForeignKey(name = "FK_DAI_VIRTUAL_SYSTEM"))
     private VirtualSystem virtualSystem;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "deployment_spec_fk", nullable = true,
-            foreignKey = @ForeignKey(name = "FK_DAI_DEPLOYMENT_SPEC"))
+    foreignKey = @ForeignKey(name = "FK_DAI_DEPLOYMENT_SPEC"))
     private DeploymentSpec deploymentSpec;
 
     @Column(name = "ip_address")
@@ -81,6 +81,13 @@ public class DistributedApplianceInstance extends BaseEntity {
     private String osAvailabilityZone;
     @Column(name = "os_server_id")
     private String osServerId;
+
+    @Column(name = "external_id")
+    private String externalId;
+    @Column(name = "inspection_element_id")
+    private String inspectionElementId;
+    @Column(name = "inspection_element_parent_id")
+    private String inspectionElementParentId;
 
     @Column(name = "inspection_os_ingress_port_id")
     private String inspectionOsIngressPortId;

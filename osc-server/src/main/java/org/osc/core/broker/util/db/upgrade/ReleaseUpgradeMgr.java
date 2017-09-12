@@ -239,6 +239,8 @@ public class ReleaseUpgradeMgr {
                 upgrade84to85(stmt);
             case 85:
                 upgrade85to86(stmt);
+            case 86:
+                upgrade86to87(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -248,6 +250,31 @@ public class ReleaseUpgradeMgr {
             default:
                 log.error("Current DB version is unknown !!!");
         }
+    }
+    
+    private static void upgrade86to87(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table APPLIANCE_SOFTWARE_VERSION add column image_pull_secret_name varchar(255);");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC add column namespace varchar(255);");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC add column external_id varchar(255);");
+
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE add column external_id varchar(255);");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE add column inspection_element_id varchar(255);");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE add column inspection_element_parent_id varchar(255);");
+
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column region varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column project_name varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column project_id varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column management_network_name varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column management_network_id varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column inspection_network_name varchar(255) NULL;");
+        execSql(stmt, "alter table DEPLOYMENT_SPEC "
+                + "alter column inspection_network_id varchar(255) NULL;");
     }
     
     private static void upgrade85to86(Statement stmt) throws SQLException {
@@ -493,13 +520,11 @@ public class ReleaseUpgradeMgr {
                 "VERSION BIGINT," +
                 "SSL_ALIAS VARCHAR(255) NOT NULL," +
                 "SSL_SHA1 VARCHAR(255) NOT NULL);");
-
         execSql(stmt, "CREATE TABLE SSL_CERTIFICATE_ATTR_VIRTUALIZATION_CONNECTOR(" +
                 "VIRTUALIZATION_CONNECTOR_ID BIGINT NOT NULL," +
                 "SSL_CERTIFICATE_ATTR_ID BIGINT NOT NULL," +
                 "CONSTRAINT VC_ID_FK FOREIGN KEY (VIRTUALIZATION_CONNECTOR_ID) REFERENCES VIRTUALIZATION_CONNECTOR (ID) ON UPDATE CASCADE ON DELETE CASCADE," +
                 "CONSTRAINT SSL_CERT_ATTR_VC_FK FOREIGN KEY (SSL_CERTIFICATE_ATTR_ID) REFERENCES SSL_CERTIFICATE_ATTR (ID) ON UPDATE CASCADE ON DELETE CASCADE);");
-
         execSql(stmt, "CREATE TABLE SSL_CERTIFICATE_ATTR_APPL_MAN_CONNECTOR(" +
                 "APPLIANCE_MANAGER_CONNECTOR_ID BIGINT NOT NULL," +
                 "SSL_CERTIFICATE_ATTR_ID BIGINT NOT NULL," +
@@ -542,66 +567,45 @@ public class ReleaseUpgradeMgr {
     private static void upgrade65to66(Statement stmt) throws SQLException {
         if (!existsDepolymentSpecs(stmt) || areAllDeploymentSpecsDynamic(stmt) || areAllDeploymentSpecsStatic(stmt)){
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint FK_DEPLOYMENT_SPEC_VS;");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint UK_VS_TENANT_REGION_DYNAMIC;");
-
             execSql(stmt, "drop table DEPLOYMENT_SPEC_SECURITY_GROUP_INTERFACE;");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop column dynamic;");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC add constraint UK_VS_TENANT_REGION unique (vs_fk, tenant_id, region);");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC add constraint FK_DEPLOYMENT_SPEC_VS foreign key (vs_fk) references VIRTUAL_SYSTEM(id);");
 
         } else {
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint FK_DEPLOYMENT_SPEC_VS;");
-
             execSql(stmt, "alter table HOST drop constraint UK_HOST_ID;");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop constraint UK_VS_TENANT_REGION_DYNAMIC;");
 
             deleteDynamicHost(stmt);
             //change FK from dynamic to static DS for a dual of D/S in a given R/T/VS
             updateDeploymentSpecFK(stmt, "HOST", "ds_host_fk");
-
             updateDeploymentSpecFK(stmt, "DISTRIBUTED_APPLIANCE_INSTANCE", "deployment_spec_fk");
-
             execSql(stmt, "drop table DEPLOYMENT_SPEC_SECURITY_GROUP_INTERFACE;");
-
             deleteDynamicDeploymentSpecs(stmt);
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC drop column dynamic;");
-
             execSql(stmt, "alter table HOST add constraint UK_HOST_ID unique (" +
                     "ds_host_fk, openstack_id);");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC add constraint UK_VS_TENANT_REGION unique (vs_fk, tenant_id, region);");
-
             execSql(stmt, "alter table DEPLOYMENT_SPEC add constraint FK_DEPLOYMENT_SPEC_VS foreign key (vs_fk) references VIRTUAL_SYSTEM(id);");
         }
 
         execSql(stmt, "alter table SECURITY_GROUP_INTERFACE "
                 + "alter column tag varchar(255) NULL;");
-
         execSql(stmt, "alter table  VIRTUAL_SYSTEM "
                 + "alter column domain_fk bigint NULL;");
 
       //support for two interface
         execSql(stmt, "alter table APPLIANCE_SOFTWARE_VERSION ADD COLUMN additional_nic_for_inspection bit not null default 0;");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE alter column inspection_os_port_id RENAME TO "
                 + "inspection_os_ingress_port_id;");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE alter column inspection_mac_address RENAME TO "
                 + "inspection_ingress_mac_address;");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN inspection_os_egress_port_id varchar(255);");
-
         execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE ADD COLUMN inspection_egress_mac_address varchar(255);");
-
         execSql(stmt, "update DISTRIBUTED_APPLIANCE_INSTANCE "
                 + "set inspection_os_egress_port_id = inspection_os_ingress_port_id;");
-
         execSql(stmt, "update DISTRIBUTED_APPLIANCE_INSTANCE "
                 + "set inspection_egress_mac_address = inspection_ingress_mac_address;");
     }
@@ -1056,7 +1060,6 @@ public class ReleaseUpgradeMgr {
         execSql(stmt, "alter table OS_FLAVOR_REFERENCE " +
                 "drop constraint UK_REGION_FLAVOR_ID;"
         );
-
         execSql(stmt, "alter table OS_FLAVOR_REFERENCE " +
                 "add constraint UK_FLAVOR_OSID unique (flavor_ref_id);"
         );
@@ -1095,7 +1098,6 @@ public class ReleaseUpgradeMgr {
                         "primary key (id)" +
                    ");"
         );
-
         stmt.execute(
                 "create table AVAILABILITY_ZONE (" +
                         "id bigint generated by default as identity," +
@@ -1342,12 +1344,10 @@ public class ReleaseUpgradeMgr {
             "alter table HOST " +
                 "ALTER COLUMN host RENAME TO name;"
             );
-
         stmt.execute(
             "alter table HOST_AGGREGATE " +
                 "ADD COLUMN name varchar(255) not null;"
             );
-
         stmt.execute(
             "alter table VIRTUALIZATION_CONNECTOR " +
                 "ADD COLUMN controller_type varchar(255);"

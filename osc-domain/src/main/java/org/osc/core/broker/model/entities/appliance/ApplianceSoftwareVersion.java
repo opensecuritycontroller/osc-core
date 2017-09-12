@@ -65,6 +65,9 @@ public class ApplianceSoftwareVersion extends BaseEntity {
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
+    @Column(name = "image_pull_secret_name")
+    private String imagePullSecretName;
+
     @Column(name = "minimum_cpus")
     private Integer minCpus;
 
@@ -186,27 +189,27 @@ public class ApplianceSoftwareVersion extends BaseEntity {
         this.imageUrl = imageUrl;
     }
 
-    public int getMinCpus() {
+    public Integer getMinCpus() {
         return this.minCpus;
     }
 
-    public void setMinCpus(int minCpus) {
+    public void setMinCpus(Integer minCpus) {
         this.minCpus = minCpus;
     }
 
-    public int getMemoryInMb() {
+    public Integer getMemoryInMb() {
         return this.memoryInMb;
     }
 
-    public void setMemoryInMb(int memoryInMb) {
+    public void setMemoryInMb(Integer memoryInMb) {
         this.memoryInMb = memoryInMb;
     }
 
-    public int getDiskSizeInGb() {
+    public Integer getDiskSizeInGb() {
         return this.diskSizeInGb;
     }
 
-    public void setDiskSizeInGb(int diskSizeInGb) {
+    public void setDiskSizeInGb(Integer diskSizeInGb) {
         this.diskSizeInGb = diskSizeInGb;
     }
 
@@ -216,6 +219,14 @@ public class ApplianceSoftwareVersion extends BaseEntity {
 
     public void setAdditionalNicForInspection(boolean additionalNicForInspection) {
         this.additionalNicForInspection = additionalNicForInspection;
+    }
+
+    public void setImagePullSecretName(String imagePullSecretName) {
+        this.imagePullSecretName = imagePullSecretName;
+    }
+
+    public String getImagePullSecretName() {
+        return this.imagePullSecretName;
     }
 
     public List<TagEncapsulationType> getEncapsulationTypes() {

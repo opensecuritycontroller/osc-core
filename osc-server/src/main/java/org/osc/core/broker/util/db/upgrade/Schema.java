@@ -101,6 +101,7 @@ public class Schema {
                 "disk_in_gb int," +
                 "additional_nic_for_inspection bit not null default 0," +
                 "appliance_fk bigint not null," +
+                "image_pull_secret_name varchar(255)," +
                 "primary key (id)" +
             ");",
 
@@ -173,6 +174,9 @@ public class Schema {
                 "mgmt_gateway_address varchar(255)," +
                 "mgmt_subnet_prefix_length varchar(255)," +
                 "deployment_spec_fk bigint," +
+                "external_id varchar(255)," +
+                "inspection_element_id varchar(255)," +
+                "inspection_element_parent_id varchar(255)," +
                 "primary key (id)" +
             ");",
 
@@ -515,14 +519,16 @@ public class Schema {
                 "updated_timestamp timestamp," +
                 "version bigint," +
                 "name varchar(255) not null," +
-                "region varchar(255) not null," +
-                "project_name varchar(255) not null," +
-                "project_id varchar(255) not null," +
-                "management_network_name varchar(255) not null," +
-                "management_network_id varchar(255) not null," +
-                "inspection_network_name varchar(255) not null," +
-                "inspection_network_id varchar(255) not null," +
+                "region varchar(255)," +
+                "project_name varchar(255)," +
+                "project_id varchar(255)," +
+                "management_network_name varchar(255)," +
+                "management_network_id varchar(255)," +
+                "inspection_network_name varchar(255)," +
+                "inspection_network_id varchar(255)," +
                 "floating_pool_name varchar(255)," +
+                "namespace varchar(255)," +
+                "external_id varchar(255)," + 
                 "last_job_id_fk bigint," +
                 "instance_count bigint not null default 1," +
                 "shared bit not null default 0," +

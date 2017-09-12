@@ -39,7 +39,7 @@ import org.osc.core.broker.model.entities.job.LastJobContainer;
 
 @Entity
 @Table(name = "DEPLOYMENT_SPEC", uniqueConstraints = { @UniqueConstraint(columnNames = { "vs_fk", "project_id",
-        "region" }) })
+"region" }) })
 public class DeploymentSpec extends BaseEntity implements LastJobContainer {
 
     private static final long serialVersionUID = 1L;
@@ -47,25 +47,31 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "region", nullable = false)
+    @Column(name = "region")
     private String region;
 
-    @Column(name = "project_name", nullable = false)
+    @Column(name = "project_name")
     private String projectName;
 
-    @Column(name = "project_id", nullable = false)
+    @Column(name = "project_id")
     private String projectId;
 
-    @Column(name = "management_network_name", nullable = false)
+    @Column(name = "namespace")
+    private String namespace;
+
+    @Column(name = "external_id")
+    private String externalId;
+
+    @Column(name = "management_network_name")
     private String managementNetworkName;
 
-    @Column(name = "management_network_id", nullable = false)
+    @Column(name = "management_network_id")
     private String managementNetworkId;
 
-    @Column(name = "inspection_network_name", nullable = false)
+    @Column(name = "inspection_network_name")
     private String inspectionNetworkName;
 
-    @Column(name = "inspection_network_id", nullable = false)
+    @Column(name = "inspection_network_id")
     private String inspectionNetworkId;
 
     @Column(name = "floating_pool_name")
@@ -83,7 +89,7 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vs_fk", nullable = false,
-            foreignKey = @ForeignKey(name = "FK_DEPLOYMENT_SPEC_VS"))
+    foreignKey = @ForeignKey(name = "FK_DEPLOYMENT_SPEC_VS"))
     private VirtualSystem virtualSystem;
 
     @OneToMany(mappedBy = "deploymentSpec", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -100,7 +106,7 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "os_sg_reference_fk", nullable = true,
-            foreignKey = @ForeignKey(name = "FK_DS_OS_SG_REFERENCE"))
+    foreignKey = @ForeignKey(name = "FK_DS_OS_SG_REFERENCE"))
     private OsSecurityGroupReference osSecurityGroupReference;
 
     public DeploymentSpec(VirtualSystem virtualSystem, String region, String projectId, String managementNetworkId,
