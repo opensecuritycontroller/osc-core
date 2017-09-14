@@ -166,7 +166,8 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                 DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
                         createdServer.getEgressInspectionMacAddr());
 
-                String portGroupId = null;
+                String portGroupId = ds.getPortGroupId();
+                boolean pgAlreadyCreatedByOther = (portGroupId != null);
 
                 if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                     String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(),
@@ -186,7 +187,12 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                 portGroupId = element.getParentId();
                 this.log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
                         portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
-                ds.setPortGroupId(element.getParentId());
+
+                if (!pgAlreadyCreatedByOther) {
+                    ds = em.find(DeploymentSpec.class, ds.getId());
+                    ds.setPortGroupId(portGroupId);
+                    OSCEntityManager.update(em, ds, this.txBroadcastUtil);
+                }
             } finally {
                 controller.close();
             }

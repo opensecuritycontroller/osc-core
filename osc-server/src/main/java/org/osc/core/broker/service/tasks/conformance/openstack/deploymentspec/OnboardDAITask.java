@@ -27,6 +27,7 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
@@ -70,7 +71,8 @@ public class OnboardDAITask extends TransactionalTask {
                     this.dai.getInspectionEgressMacAddress());
 
             DeploymentSpec ds = this.dai.getDeploymentSpec();
-            String portGroupId = null;
+            String portGroupId = ds.getPortGroupId();
+            boolean pgAlreadyCreatedByOther = (portGroupId != null);
 
             if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
 
@@ -97,7 +99,11 @@ public class OnboardDAITask extends TransactionalTask {
             log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
                                         portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
 
-            ds.setPortGroupId(portGroupId);
+            if (!pgAlreadyCreatedByOther) {
+                ds = em.find(DeploymentSpec.class, ds.getId());
+                ds.setPortGroupId(portGroupId);
+                OSCEntityManager.update(em, ds, this.txBroadcastUtil);
+            }
         } finally {
             controller.close();
         }
