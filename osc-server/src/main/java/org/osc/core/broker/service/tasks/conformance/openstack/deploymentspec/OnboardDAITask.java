@@ -94,6 +94,9 @@ public class OnboardDAITask extends TransactionalTask {
                 controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
             }
 
+            log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
+                                        portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
+
             ds.setPortGroupId(portGroupId);
         } finally {
             controller.close();

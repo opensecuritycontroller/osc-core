@@ -183,7 +183,9 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                 //Element object in DefaultInspectionport is not used at this point, hence null
                 Element element = controller.registerInspectionPort(
                         new DefaultInspectionPort(ingressPort, egressPort, null, portGroupId));
-
+                portGroupId = element.getParentId();
+                this.log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
+                        portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
                 ds.setPortGroupId(element.getParentId());
             } finally {
                 controller.close();
