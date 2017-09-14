@@ -39,40 +39,36 @@ public class DeploymentSpecDto extends BaseDto {
     private String name;
 
     @ApiModelProperty(value = "The id of the project on behalf of which the service function instances will be deployed",
-            required = true,
             readOnly = true)
     private String projectId;
 
+    @ApiModelProperty(value = "The virtualization environment namespace for the entities created by this deployment. For instance, a Kubernetes namespace.")
+    private String namespace;
+
     @ApiModelProperty(
             value = "The name of the project on behalf of which the service function instances will be deployed",
-            required = true,
             readOnly = true)
     private String projectName;
 
     @ApiModelProperty(value = "The region to which the service function instances will be deployed",
-            required = true,
             readOnly = true)
     private String region;
 
     @ApiModelProperty(
             value = "The name of the management network which the service function instances will be connected to",
-            required = true,
             readOnly = true)
     private String managementNetworkName;
 
     @ApiModelProperty(value = "The id of management network which the service function instances will be connected to",
-            required = true,
             readOnly = true)
     private String managementNetworkId;
 
     @ApiModelProperty(
             value = "The name of the inspection network which the service function instances will be connected to",
-            required = true,
             readOnly = true)
     private String inspectionNetworkName;
 
     @ApiModelProperty(value = "The id of inspection network which the service function instances will be connected to",
-            required = true,
             readOnly = true)
     private String inspectionNetworkId;
 
@@ -146,6 +142,14 @@ public class DeploymentSpecDto extends BaseDto {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public String getNamespace() {
+        return this.namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     public String getManagementNetworkName() {

@@ -17,6 +17,7 @@
 package org.osc.core.broker.service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -44,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
-        implements AddDeploymentSpecServiceApi {
+implements AddDeploymentSpecServiceApi {
 
     @Reference
     private ConformService conformService;
@@ -60,33 +61,39 @@ public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequ
             DistributedAppliance da = this.vs.getDistributedAppliance();
             unlockTask = LockUtil.tryReadLockDA(da, da.getApplianceManagerConnector());
             unlockTask
-                    .addUnlockTask(LockUtil.tryLockVCObject(this.vs.getVirtualizationConnector(), LockType.READ_LOCK));
+            .addUnlockTask(LockUtil.tryLockVCObject(this.vs.getVirtualizationConnector(), LockType.READ_LOCK));
 
             DeploymentSpec ds = DeploymentSpecEntityMgr.createEntity(request.getDto(), this.vs);
             OSCEntityManager.create(em, ds, this.txBroadcastUtil);
-            ds.setAvailabilityZones(createAvailabilityZones(ds, request.getDto(), em));
-            ds.setHosts(createHosts(ds, request.getDto(), em));
-            ds.setHostAggregates(createHostAggregates(ds, request.getDto(), em));
+            // TODO emanoel: remove condition when DS sync is implemented.
+            if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+                ds.setAvailabilityZones(createAvailabilityZones(ds, request.getDto(), em));
+                ds.setHosts(createHosts(ds, request.getDto(), em));
+                ds.setHostAggregates(createHostAggregates(ds, request.getDto(), em));
 
-            UnlockObjectMetaTask forLambda = unlockTask;
-            chain(() -> {
-                // Lock the deployment spec with a write lock and allow it to be unlocked at the end of the job.
-                try {
-                    BaseJobResponse response = new BaseJobResponse();
+                UnlockObjectMetaTask forLambda = unlockTask;
+                chain(() -> {
+                    // Lock the deployment spec with a write lock and allow it to be unlocked at the end of the job.
+                    try {
+                        BaseJobResponse response = new BaseJobResponse();
 
-                    forLambda.addUnlockTask(LockUtil.tryLockDSOnly(ds));
+                        forLambda.addUnlockTask(LockUtil.tryLockDSOnly(ds));
 
-                    Job job = this.conformService.startDsConformanceJob(em, ds, forLambda);
+                        Job job = this.conformService.startDsConformanceJob(em, ds, forLambda);
 
-                    response.setJobId(job.getId());
+                        response.setJobId(job.getId());
 
-                    return response;
-                } catch (Exception e) {
-                    LockUtil.releaseLocks(forLambda);
-                    throw e;
-                }
-            });
-
+                        return response;
+                    } catch (Exception e) {
+                        LockUtil.releaseLocks(forLambda);
+                        throw e;
+                    }
+                });
+            } else {
+                BaseJobResponse response = new BaseJobResponse();
+                response.setId(ds.getId());
+                LockUtil.releaseLocks(unlockTask);
+            }
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
             throw e;
@@ -101,27 +108,33 @@ public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequ
             haSet.add(createHostAggregate(em, haDto, ds));
         }
         return haSet;
-
     }
 
     @Override
     protected void validate(EntityManager em, DeploymentSpecDto dto) throws Exception {
         super.validate(em, dto);
 
-        if(dto.getInspectionNetworkId().equals(dto.getManagementNetworkId())) {
-            throw new VmidcBrokerValidationException("Invalid Network Selection. Management and Inspection networks"
-                    + " cannot be the same.");
-        }
+        if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            if(dto.getInspectionNetworkId().equals(dto.getManagementNetworkId())) {
+                throw new VmidcBrokerValidationException("Invalid Network Selection. Management and Inspection networks"
+                        + " cannot be the same.");
+            }
 
-        DeploymentSpec existingDs = null;
-        existingDs = DeploymentSpecEntityMgr.findDeploymentSpecByVirtualSystemProjectAndRegion(em, this.vs,
-        				dto.getProjectId(), dto.getRegion());
-        if (existingDs != null) {
-            throw new VmidcBrokerValidationException("A Deployment Specification: " + existingDs.getName()
-                    + " Already exists for the combination of the specified virtual system, project and region. "
-                    + "Cannot add another Deployment Specification for the same combination.");
-        }
+            DeploymentSpec existingDs = null;
+            existingDs = DeploymentSpecEntityMgr.findDeploymentSpecByVirtualSystemProjectAndRegion(em, this.vs,
+                    dto.getProjectId(), dto.getRegion());
+            if (existingDs != null) {
+                throw new VmidcBrokerValidationException("A Deployment Specification: " + existingDs.getName()
+                + " Already exists for the combination of the specified virtual system, project and region. "
+                + "Cannot add another Deployment Specification for the same combination.");
+            }
+        } else if (this.vs.getVirtualizationConnector().getVirtualizationType().isKubernetes()){
+            List<DeploymentSpec> deploymentSpecs = DeploymentSpecEntityMgr.listDeploymentSpecByVirtualSystem(em, this.vs);
 
+            if (deploymentSpecs != null && !deploymentSpecs.isEmpty()) {
+                throw new VmidcBrokerValidationException("A deployment spec for the targed Kubernetes virtual system already exists.");
+            }
+        }
     };
 
     private Set<AvailabilityZone> createAvailabilityZones(DeploymentSpec ds, DeploymentSpecDto dto, EntityManager em) {
@@ -131,7 +144,6 @@ public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequ
             azSet.add(createAvailabilityZone(em, azDto, ds));
         }
         return azSet;
-
     }
 
     private Set<Host> createHosts(DeploymentSpec ds, DeploymentSpecDto dto, EntityManager em) {
@@ -141,6 +153,5 @@ public class AddDeploymentSpecService extends BaseDeploymentSpecService<BaseRequ
             hsSet.add(createHost(em, hsDto, ds));
         }
         return hsSet;
-
     }
 }

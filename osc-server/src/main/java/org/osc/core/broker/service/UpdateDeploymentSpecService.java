@@ -47,8 +47,8 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class UpdateDeploymentSpecService
-        extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
-        implements UpdateDeploymentSpecServiceApi {
+extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
+implements UpdateDeploymentSpecServiceApi {
 
     private static final Logger log = Logger.getLogger(UpdateDeploymentSpecService.class);
 
@@ -110,7 +110,7 @@ public class UpdateDeploymentSpecService
         this.ds = em.find(DeploymentSpec.class, dto.getId());
         if (this.ds == null) {
             throw new VmidcBrokerValidationException("Deployment Specification with Id: " + dto.getId()
-                    + "  is not found.");
+            + "  is not found.");
         }
 
         ValidateUtil.checkMarkedForDeletion(this.ds, this.ds.getName());
@@ -150,7 +150,6 @@ public class UpdateDeploymentSpecService
 
     private Set<HostAggregate> updateHostAggregates(EntityManager em, Set<HostAggregateDto> selectedHaDtoSet,
             DeploymentSpec ds) {
-
         // assuming nothing changed
         Set<HostAggregate> updatedHaSet = new HashSet<>();
         updatedHaSet.addAll(ds.getHostAggregates());
@@ -175,7 +174,6 @@ public class UpdateDeploymentSpecService
         }
 
         return updatedHaSet;
-
     }
 
     private boolean isEqual(HostAggregate hostAggrEntity, HostAggregateDto hostAggrDto) {
@@ -202,7 +200,6 @@ public class UpdateDeploymentSpecService
 
     private Set<AvailabilityZone> updateAvailabilityZones(EntityManager em, Set<AvailabilityZoneDto> selectedAZDtoSet,
             DeploymentSpec ds) {
-
         // assuming nothing changed
         Set<AvailabilityZone> updatedAzSet = new HashSet<>();
         updatedAzSet.addAll(ds.getAvailabilityZones());
@@ -252,7 +249,6 @@ public class UpdateDeploymentSpecService
     }
 
     private Set<Host> updateHosts(EntityManager em, Set<HostDto> selectedHostDtoSet, DeploymentSpec ds) {
-
         // assuming nothing changed
         Set<Host> updatedHostSet = new HashSet<>();
         updatedHostSet.addAll(ds.getHosts());

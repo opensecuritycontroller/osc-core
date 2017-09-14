@@ -167,6 +167,30 @@ public class DistributedApplianceInstance extends BaseEntity {
         this.ipAddress = ipAddress;
     }
 
+    public String getExternalId() {
+        return this.externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
+    public String getInspectionElementId() {
+        return this.inspectionElementId;
+    }
+
+    public void setInspectionElementId(String inspectionElementId) {
+        this.inspectionElementId = inspectionElementId;
+    }
+
+    public String getInspectionElementParentId() {
+        return this.inspectionElementParentId;
+    }
+
+    public void setInspectionElementParentId(String inspectionElementParentId) {
+        this.inspectionElementParentId = inspectionElementParentId;
+    }
+
     public Date getLastStatus() {
         return this.lastStatus;
     }

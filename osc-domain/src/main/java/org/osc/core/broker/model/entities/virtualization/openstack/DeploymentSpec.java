@@ -179,6 +179,14 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
         this.projectName = projectName;
     }
 
+    public String getNamespace() {
+        return this.namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
     public String getManagementNetworkName() {
         return this.managementNetworkName;
     }
