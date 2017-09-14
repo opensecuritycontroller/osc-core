@@ -519,6 +519,7 @@ public class Schema {
                 "updated_timestamp timestamp," +
                 "version bigint," +
                 "name varchar(255) not null," +
+
                 "region varchar(255)," +
                 "project_name varchar(255)," +
                 "project_id varchar(255)," +
@@ -527,6 +528,8 @@ public class Schema {
                 "inspection_network_name varchar(255)," +
                 "inspection_network_id varchar(255)," +
                 "port_group_label varchar(255)," +
+                "port_group_id varchar(255)," +
+
                 "floating_pool_name varchar(255)," +
                 "namespace varchar(255)," +
                 "external_id varchar(255)," +

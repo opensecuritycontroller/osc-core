@@ -74,8 +74,8 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
     @Column(name = "inspection_network_id")
     private String inspectionNetworkId;
 
-    @Column(name = "port_group_label")
-    private String portGroupLabel;
+    @Column(name = "port_group_id")
+    private String portGroupId;
 
     @Column(name = "floating_pool_name")
     private String floatingIpPoolName;
@@ -262,12 +262,12 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
         this.inspectionNetworkId = inspectionNetworkId;
     }
 
-    public String getPortGroupLabel() {
-        return this.portGroupLabel;
+    public String getPortGroupId() {
+        return this.portGroupId;
     }
 
-    public void setPortGroupLabel(String portGroupLabel) {
-        this.portGroupLabel = portGroupLabel;
+    public void setPortGroupId(String portGroupId) {
+        this.portGroupId = portGroupId;
     }
 
     public String getFloatingIpPoolName() {

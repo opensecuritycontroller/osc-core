@@ -166,7 +166,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                 DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
                         createdServer.getEgressInspectionMacAddr());
 
-                String redirectionTargetId = null;
+                String portGroupId = null;
 
                 if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                     String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(),
@@ -177,14 +177,14 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);
 
-                    redirectionTargetId = ds.getPortGroupLabel();
+                    portGroupId = ds.getPortGroupId();
                 }
 
                 //Element object in DefaultInspectionport is not used at this point, hence null
                 Element element = controller.registerInspectionPort(
-                        new DefaultInspectionPort(ingressPort, egressPort, null, redirectionTargetId));
+                        new DefaultInspectionPort(ingressPort, egressPort, null, portGroupId));
 
-                ds.setPortGroupLabel(element.getParentId());
+                ds.setPortGroupId(element.getParentId());
             } finally {
                 controller.close();
             }

@@ -69,8 +69,11 @@ public class OnboardDAITask extends TransactionalTask {
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
+            DeploymentSpec ds = this.dai.getDeploymentSpec();
+            String portGroupId = null;
+
             if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
-                DeploymentSpec ds = this.dai.getDeploymentSpec();
+
                 String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(), ds.getProjectName(),
                         ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<>(
                                 Arrays.asList(ingressPort)));
@@ -78,10 +81,11 @@ public class OnboardDAITask extends TransactionalTask {
                 egressPort.setParentId(domainId);
                 if (domainId != null){
                 	//Element Object is not used in DefaultInstepctionPort for now, hence null
-                    String redirectionTargetId = ds.getPortGroupLabel();
+                    portGroupId = ds.getPortGroupId();
                     Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
-                                                                        null, redirectionTargetId));
-                    ds.setPortGroupLabel(element.getParentId());
+                                                                        null, portGroupId));
+
+                    portGroupId = element.getParentId();
                 } else {
                     log.warn("DomainId is missing, cannot be null");
                 }
@@ -89,6 +93,8 @@ public class OnboardDAITask extends TransactionalTask {
             } else {
                 controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
             }
+
+            ds.setPortGroupId(portGroupId);
         } finally {
             controller.close();
         }

@@ -254,8 +254,9 @@ public class ReleaseUpgradeMgr {
         }
     }
 
+
     private static void upgrade87to88(Statement stmt) throws SQLException {
-        execSql(stmt, "alter table DEPLOYMENT_SPEC add column port_group_label varchar(255) " +
+        execSql(stmt, "alter table DEPLOYMENT_SPEC add column port_group_id varchar(255) " +
                       "after inspection_network_id;");
     }
 
