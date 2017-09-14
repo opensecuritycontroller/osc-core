@@ -54,7 +54,7 @@ public final class KeystoneProvider {
         OSClient.OSClientV3 localOs;
         Config config = Config.newConfig().withSSLContext(endpoint.getSslContext()).withHostnameVerifier((hostname, session) -> true);
         if (connectionsMap.containsKey(endpoint)) {
-            localOs = OSFactory.clientFromToken(connectionsMap.get(endpoint), Facing.ADMIN, config);
+            localOs = OSFactory.clientFromToken(connectionsMap.get(endpoint), Facing.PUBLIC, config);
         } else {
             String endpointURL;
             try {
@@ -68,7 +68,7 @@ public final class KeystoneProvider {
 
             Identifier domainIdentifier = Identifier.byId(endpoint.getDomainId());
 
-            IOSClientBuilder.V3 keystoneV3Builder = OSFactory.builderV3().perspective(Facing.ADMIN)
+            IOSClientBuilder.V3 keystoneV3Builder = OSFactory.builderV3().perspective(Facing.PUBLIC)
                     .endpoint(endpointURL)
                     .credentials(endpoint.getUser(), endpoint.getPassword(), domainIdentifier)
                     .scopeToProject(Identifier.byName(endpoint.getProject()), domainIdentifier)
