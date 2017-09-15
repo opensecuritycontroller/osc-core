@@ -53,6 +53,7 @@ public class DeploymentSpecEntityMgr {
         ds.setProjectName(dto.getProjectName());
         ds.setInstanceCount(dto.getCount());
         ds.setShared(dto.isShared());
+        ds.setNamespace(dto.getNamespace());
     }
 
     public static void fromEntity(DeploymentSpec ds, DeploymentSpecDto dto) {
@@ -68,6 +69,7 @@ public class DeploymentSpecEntityMgr {
         dto.setInspectionNetworkName(ds.getInspectionNetworkName());
         dto.setInspectionNetworkId(ds.getInspectionNetworkId());
         dto.setCount(ds.getInstanceCount());
+        dto.setNamespace(ds.getNamespace());
         if (ds.getLastJob() != null) {
             dto.setLastJobStatus(ds.getLastJob().getStatus().name());
             dto.setLastJobState(ds.getLastJob().getState().name());
@@ -121,8 +123,8 @@ public class DeploymentSpecEntityMgr {
 
         query = query.select(root)
                 .where(cb.equal(root.get("projectId"), projectId),
-                       cb.equal(root.get("region"), region),
-                       cb.equal(root.get("virtualSystem"), vs));
+                        cb.equal(root.get("region"), region),
+                        cb.equal(root.get("virtualSystem"), vs));
 
         try {
             return em.createQuery(query).getSingleResult();
@@ -131,8 +133,8 @@ public class DeploymentSpecEntityMgr {
         }
     }
 
-	public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemProjectAndRegion(EntityManager em,
-			VirtualSystem vs, String projectId, String region) {
+    public static List<DeploymentSpec> findDeploymentSpecsByVirtualSystemProjectAndRegion(EntityManager em,
+            VirtualSystem vs, String projectId, String region) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
@@ -142,11 +144,11 @@ public class DeploymentSpecEntityMgr {
 
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.get("projectId"), projectId),
-                       cb.equal(root.get("region"), region),
-                       cb.equal(root.get("virtualSystem"), vs));
+                        cb.equal(root.get("region"), region),
+                        cb.equal(root.get("virtualSystem"), vs));
 
         return em.createQuery(query).getResultList();
-	}
+    }
 
     public static DeploymentSpec findById(EntityManager em, Long id) {
         return em.find(DeploymentSpec.class, id);

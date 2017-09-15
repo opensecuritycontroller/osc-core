@@ -60,7 +60,7 @@ import com.google.common.collect.Multimap;
  *
  */
 @Component(scope=ServiceScope.PROTOTYPE,
- service=OsDeploymentSpecNotificationRunner.class)
+service=OsDeploymentSpecNotificationRunner.class)
 public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
     @Reference
     private NotificationListenerFactory notificationListenerFactory;
@@ -90,7 +90,9 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                 List<DeploymentSpec> dsList = dsEmgr.listAll();
 
                 for (DeploymentSpec ds : dsList) {
-                    addListener(ds);
+                    if (ds.getVirtualSystem().getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+                        addListener(ds);
+                    }
                 }
                 return null;
             });
@@ -126,7 +128,7 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
                 EntityManager em = this.dbConnectionManager.getTransactionalEntityManager();
                 this.dbConnectionManager.getTransactionControl().required(() -> {
                     DeploymentSpec ds = DeploymentSpecEntityMgr.findById(em, msg.getEntityId());
-                    if (ds != null) {
+                    if (ds != null && ds.getVirtualSystem().getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
                         // if DS is deleted after update notification was sent
                         if (msg.getEventType() == EventType.ADDED) {
                             addListener(ds);

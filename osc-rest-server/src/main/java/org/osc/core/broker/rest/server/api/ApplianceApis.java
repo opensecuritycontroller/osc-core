@@ -39,6 +39,7 @@ import org.osc.core.broker.rest.server.ServerRestConstants;
 import org.osc.core.broker.rest.server.annotations.OscAuth;
 import org.osc.core.broker.rest.server.exception.VmidcRestServerException;
 import org.osc.core.broker.service.api.AddApplianceServiceApi;
+import org.osc.core.broker.service.api.AddApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceServiceApi;
 import org.osc.core.broker.service.api.DeleteApplianceSoftwareVersionServiceApi;
 import org.osc.core.broker.service.api.GetDtoFromEntityServiceApi;
@@ -98,6 +99,9 @@ public class ApplianceApis {
 
     @Reference
     AddApplianceServiceApi addApplianceService;
+
+    @Reference
+    AddApplianceSoftwareVersionServiceApi addApplianceSoftwareVersionService;
 
     @Reference
     private GetDtoFromEntityServiceFactoryApi getDtoFromEntityServiceFactory;
@@ -221,6 +225,23 @@ public class ApplianceApis {
 
         GetDtoFromEntityServiceApi<ApplianceSoftwareVersionDto> getDtoService = this.getDtoFromEntityServiceFactory.getService(ApplianceSoftwareVersionDto.class);
         return this.apiUtil.submitBaseRequestToService(getDtoService, getDtoRequest).getDto();
+    }
+
+    @ApiOperation(value = "Creates a new appliance software version for a software function model",
+            notes = "Creates a new appliance software version for a software function model",
+            response = BaseResponse.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/{applianceId}/versions")
+    @POST
+    public Response createApplianceSoftwareVersion(@Context HttpHeaders headers,
+            @ApiParam(value = "Id of the Appliance Model", required = true) @PathParam("applianceId") Long applianceId, @ApiParam(required = true) ApplianceSoftwareVersionDto asvDto) {
+
+        logger.info("Creating an Appliance Software Version");
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        this.apiUtil.setIdAndParentIdOrThrow(asvDto, null, applianceId, "Appliance Sofftware Version");
+
+        return this.apiUtil.getResponseForBaseRequest(this.addApplianceSoftwareVersionService, new BaseRequest<ApplianceSoftwareVersionDto>(asvDto));
     }
 
     @ApiOperation(value = "Deletes a Security Function Software Version",

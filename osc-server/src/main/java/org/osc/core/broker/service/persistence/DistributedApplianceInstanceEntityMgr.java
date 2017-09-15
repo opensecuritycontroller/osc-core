@@ -70,6 +70,10 @@ public class DistributedApplianceInstanceEntityMgr {
         dto.setMgmtSubnetPrefixLength(dai.getMgmtSubnetPrefixLength());
         dto.setMgmtGateway(dai.getMgmtGateway());
 
+        dto.setExternalId(dai.getExternalId());
+        dto.setInspectionElementId(dai.getInspectionElementId());
+        dto.setInspectionElementParentId(dai.getInspectionElementParentId());
+
         return dto;
     }
 
@@ -244,7 +248,7 @@ public class DistributedApplianceInstanceEntityMgr {
 
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.join("deploymentSpec").get("id"), dsId),
-                       cb.equal(root.get("osAvailabilityZone"), availabilityZone));
+                        cb.equal(root.get("osAvailabilityZone"), availabilityZone));
 
         List<DistributedApplianceInstance> list = em.createQuery(query).getResultList();
 
@@ -266,7 +270,7 @@ public class DistributedApplianceInstanceEntityMgr {
 
         query = query.select(root).distinct(true)
                 .where(cb.equal(root.get("deploymentSpec"), ds),
-                       cb.equal(root.get("osHostName"), hostName));
+                        cb.equal(root.get("osHostName"), hostName));
 
         List<DistributedApplianceInstance> list = em.createQuery(query).getResultList();
 
@@ -322,7 +326,7 @@ public class DistributedApplianceInstanceEntityMgr {
 
         query = query.select(root)
                 .where(cb.equal(root.join("virtualSystem").get("id"), vs.getId()),
-                       cb.equal(root.join("protectedPorts").get("id"), port.getId()));
+                        cb.equal(root.join("protectedPorts").get("id"), port.getId()));
 
         try {
             return em.createQuery(query).getSingleResult();

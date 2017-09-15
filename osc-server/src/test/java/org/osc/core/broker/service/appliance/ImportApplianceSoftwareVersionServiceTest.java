@@ -51,6 +51,7 @@ import org.osc.core.broker.model.image.ImageMetadata;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.api.server.UserContextApi;
 import org.osc.core.broker.service.dto.ApplianceDto;
+import org.osc.core.broker.service.dto.ApplianceSoftwareVersionDto;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.request.BaseRequest;
@@ -90,7 +91,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
     private static final String OVF_IMAGE_NAME = "Foo.ovf";
 
     private static final String SOFTWARE_VERSION = "a_version";
-    private static final String NON_EXISTING_SOFTWARE_VERSION = "invalid_version";
 
     //TODO: Future. Testing. Expected Exception reporting does not work as expected. Makes it harder to debug test failures.
     // test in testDispatch_ImportApplianceMissingPayloadFile_ExpectsErrorResponse
@@ -123,6 +123,9 @@ public class ImportApplianceSoftwareVersionServiceTest {
 
     @Mock
     private AddApplianceService addApplianceService;
+
+    @Mock
+    private AddApplianceSoftwareVersionService addApplianceSoftwareVersionService;
 
     @InjectMocks
     private ImportApplianceSoftwareVersionService service;
@@ -169,6 +172,39 @@ public class ImportApplianceSoftwareVersionServiceTest {
                 appliance = ImportApplianceSoftwareVersionServiceTest.this.em.merge(appliance);
 
                 return new BaseResponse(appliance.getId());
+            }
+        });
+
+        when(this.addApplianceSoftwareVersionService.dispatch(any())).then(new Answer<BaseResponse>() {
+            @Override
+            public BaseResponse answer(InvocationOnMock invocation) throws Throwable {
+                @SuppressWarnings("unchecked")
+                BaseRequest<ApplianceSoftwareVersionDto> request = invocation.getArgumentAt(0, BaseRequest.class);
+                if (request == null || request.getDto() == null) {
+                    throw new IllegalArgumentException("AddApplianceSoftwareVersion Service call with null DTO!");
+                }
+
+                ApplianceSoftwareVersionDto dto = request.getDto();
+
+                Appliance appliance = ImportApplianceSoftwareVersionServiceTest.this.em.find(Appliance.class, dto.getParentId());
+
+                ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(appliance);
+
+                asv.setApplianceSoftwareVersion(dto.getSwVersion());
+                asv.setVirtualizationType(dto.getVirtualizationType());
+                asv.setVirtualizarionSoftwareVersion(dto.getVirtualizationVersion());
+                asv.setImageUrl(dto.getImageUrl());
+
+                asv.setMinCpus(dto.getMinCpus());
+                asv.setMinCpus(dto.getMinCpus());
+                asv.setMemoryInMb(dto.getMemoryInMb());
+                asv.setDiskSizeInGb(dto.getDiskSizeInGb());
+                asv.getImageProperties().clear();
+                asv.getConfigProperties().clear();
+
+                asv = ImportApplianceSoftwareVersionServiceTest.this.em.merge(asv);
+
+                return new BaseResponse(asv.getId());
             }
         });
 
@@ -290,43 +326,6 @@ public class ImportApplianceSoftwareVersionServiceTest {
         // Act.
         this.service.dispatch(new ImportFileRequest(TEST_TMP_FOLDER));
 
-    }
-
-    @Test
-    public void testDispatch_ImportApplianceWithSameURL_ExpectsErrorResponse() throws Exception {
-        // Arrange.
-        createExistingAppliance();
-        this.imageMetaData.setModel(NON_EXISTING_SOFTWARE_MODEL);
-        this.imageMetaData.setSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
-        Mockito.when(FileUtils.readFileToString(this.mockMetaDataFile, Charset.defaultCharset()))
-        .thenReturn(new Gson().toJson(this.imageMetaData));
-
-        this.exception.expect(VmidcBrokerValidationException.class);
-        this.exception.expectMessage(" Cannot add an image with the same name.");
-
-        // Act.
-        this.service.dispatch(new ImportFileRequest(TEST_TMP_FOLDER));
-    }
-
-    private void createExistingAppliance() {
-        this.em.getTransaction().begin();
-
-        Appliance app = new Appliance();
-        app.setManagerSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
-        app.setManagerType("NSM");
-        app.setModel(SOFTWARE_MODEL);
-
-        this.em.persist(app);
-
-        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion(app);
-        asv.setApplianceSoftwareVersion(NON_EXISTING_SOFTWARE_VERSION);
-        asv.setImageUrl(OVF_IMAGE_NAME);
-        asv.setVirtualizarionSoftwareVersion(OpenstackSoftwareVersion.OS_ICEHOUSE.toString());
-        asv.setVirtualizationType(VirtualizationType.OPENSTACK);
-
-        this.em.persist(asv);
-
-        this.em.getTransaction().commit();
     }
 
     @Test

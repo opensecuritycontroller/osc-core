@@ -51,6 +51,9 @@ public class ApplianceSoftwareVersionDto extends BaseDto {
     @ApiModelProperty(required=true)
     private String imageUrl = "";
 
+    @ApiModelProperty(required=false)
+    private String imagePullSecretName = "";
+
     @ApiModelProperty(value="Required for Openstack image. Defines the supported list of Encapsulation Types the "
             + "Service Function Image capable supporting.<br>"
             + "The Encapsulation Type used for Packet Metadata (Policy Tag and Packet Direction).<br>"
@@ -98,6 +101,14 @@ public class ApplianceSoftwareVersionDto extends BaseDto {
         this.swVersion = swVersion;
     }
 
+    public String getImagePullSecretName() {
+        return this.imagePullSecretName;
+    }
+
+    public void setImagePullSecretName(String imagePullSecretName) {
+        this.imagePullSecretName = imagePullSecretName;
+    }
+
     public VirtualizationType getVirtualizationType() {
         return this.virtualizationType;
     }
@@ -130,27 +141,27 @@ public class ApplianceSoftwareVersionDto extends BaseDto {
         this.encapsulationTypes = encapsulationType;
     }
 
-    public int getMinCpus() {
+    public Integer getMinCpus() {
         return this.minCpus;
     }
 
-    public void setMinCpus(int minCpus) {
+    public void setMinCpus(Integer minCpus) {
         this.minCpus = minCpus;
     }
 
-    public int getMemoryInMb() {
+    public Integer getMemoryInMb() {
         return this.memoryInMb;
     }
 
-    public void setMemoryInMb(int memoryInMb) {
+    public void setMemoryInMb(Integer memoryInMb) {
         this.memoryInMb = memoryInMb;
     }
 
-    public int getDiskSizeInGb() {
+    public Integer getDiskSizeInGb() {
         return this.diskSizeInGb;
     }
 
-    public void setDiskSizeInGb(int diskSizeInGb) {
+    public void setDiskSizeInGb(Integer diskSizeInGb) {
         this.diskSizeInGb = diskSizeInGb;
     }
 

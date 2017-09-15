@@ -59,6 +59,15 @@ public class DistributedApplianceInstanceDto extends BaseDto {
     private String virtualConnectorName;
 
     @ApiModelProperty(readOnly = true)
+    private String externalId;
+
+    @ApiModelProperty(readOnly = true)
+    private String inspectionElementId;
+
+    @ApiModelProperty(readOnly = true)
+    private String inspectionElementParentId;
+
+    @ApiModelProperty(readOnly = true)
     private String hostname;
 
     @ApiModelProperty(
@@ -139,6 +148,30 @@ public class DistributedApplianceInstanceDto extends BaseDto {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getExternalId() {
+        return this.externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
+    public String getInspectionElementId() {
+        return this.inspectionElementId;
+    }
+
+    public void setInspectionElementId(String inspectionElementId) {
+        this.inspectionElementId = inspectionElementId;
+    }
+
+    public String getInspectionElementParentId() {
+        return this.inspectionElementParentId;
+    }
+
+    public void setInspectionElementParentId(String inspectionElementParentId) {
+        this.inspectionElementParentId = inspectionElementParentId;
     }
 
     public String getIpAddress() {
