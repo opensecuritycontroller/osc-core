@@ -93,6 +93,7 @@ implements AddDeploymentSpecServiceApi {
                 BaseJobResponse response = new BaseJobResponse();
                 response.setId(ds.getId());
                 LockUtil.releaseLocks(unlockTask);
+                return response;
             }
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);

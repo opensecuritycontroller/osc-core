@@ -70,31 +70,40 @@ implements UpdateDeploymentSpecServiceApi {
 
             // as we do not allow to modify VS and IPPool for a DS we can assume they are the same.
             DeploymentSpecEntityMgr.toEntity(this.ds, request.getDto());
+            if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+                if (!this.ds.getHosts().isEmpty() || !this.ds.getAvailabilityZones().isEmpty()
+                        || !this.ds.getHostAggregates().isEmpty()) {
+                    if (!this.ds.getAvailabilityZones().isEmpty()) {
+                        this.ds.setAvailabilityZones(updateAvailabilityZones(em, request.getDto()
+                                .getAvailabilityZones(), this.ds));
+                    } else if (!this.ds.getHostAggregates().isEmpty()) {
+                        this.ds.setHostAggregates(updateHostAggregates(em, request.getDto().getHostAggregates(),
+                                this.ds));
+                    } else if (!this.ds.getHosts().isEmpty()) {
+                        this.ds.setHosts(updateHosts(em, request.getDto().getHosts(), this.ds));
 
-            if (!this.ds.getHosts().isEmpty() || !this.ds.getAvailabilityZones().isEmpty()
-                    || !this.ds.getHostAggregates().isEmpty()) {
-                if (!this.ds.getAvailabilityZones().isEmpty()) {
-                    this.ds.setAvailabilityZones(updateAvailabilityZones(em, request.getDto()
-                            .getAvailabilityZones(), this.ds));
-                } else if (!this.ds.getHostAggregates().isEmpty()) {
-                    this.ds.setHostAggregates(updateHostAggregates(em, request.getDto().getHostAggregates(),
-                            this.ds));
-                } else if (!this.ds.getHosts().isEmpty()) {
-                    this.ds.setHosts(updateHosts(em, request.getDto().getHosts(), this.ds));
-
+                    }
                 }
             }
             OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
-            UnlockObjectMetaTask forLambda = dsUnlock;
-            chain(() -> {
-                try {
-                    Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
-                    return new BaseJobResponse(this.ds.getId(), job.getId());
-                } catch (Exception e) {
-                    LockUtil.releaseLocks(forLambda);
-                    throw e;
-                }
-            });
+            // TODO emanoel: remove this condition when DS sync is implemented
+            if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+                UnlockObjectMetaTask forLambda = dsUnlock;
+                chain(() -> {
+                    try {
+                        Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
+                        return new BaseJobResponse(this.ds.getId(), job.getId());
+                    } catch (Exception e) {
+                        LockUtil.releaseLocks(forLambda);
+                        throw e;
+                    }
+                });
+            } else {
+                BaseJobResponse response = new BaseJobResponse();
+                response.setId(this.ds.getId());
+                LockUtil.releaseLocks(dsUnlock);
+                return response;
+            }
         } catch (Exception e) {
             LockUtil.releaseLocks(dsUnlock);
             throw e;
