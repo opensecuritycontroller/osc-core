@@ -86,10 +86,8 @@ implements AddDeploymentSpecServiceApi {
                     }
                 });
             } else {
-                BaseJobResponse response = new BaseJobResponse();
-                response.setId(ds.getId());
                 LockUtil.releaseLocks(unlockTask);
-                return response;
+                return new BaseJobResponse(ds.getId(), null);
             }
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
