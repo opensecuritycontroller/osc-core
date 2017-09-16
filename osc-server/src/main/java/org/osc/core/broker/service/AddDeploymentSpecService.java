@@ -75,24 +75,19 @@ implements AddDeploymentSpecServiceApi {
                 chain(() -> {
                     // Lock the deployment spec with a write lock and allow it to be unlocked at the end of the job.
                     try {
-                        BaseJobResponse response = new BaseJobResponse();
-
                         forLambda.addUnlockTask(LockUtil.tryLockDSOnly(ds));
 
                         Job job = this.conformService.startDsConformanceJob(em, ds, forLambda);
 
-                        response.setJobId(job.getId());
-
-                        return response;
+                        return new BaseJobResponse(ds.getId(), job.getId());
                     } catch (Exception e) {
                         LockUtil.releaseLocks(forLambda);
                         throw e;
                     }
                 });
             } else {
-                BaseJobResponse response = new BaseJobResponse();
-                response.setId(ds.getId());
                 LockUtil.releaseLocks(unlockTask);
+                return new BaseJobResponse(ds.getId(), null);
             }
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);

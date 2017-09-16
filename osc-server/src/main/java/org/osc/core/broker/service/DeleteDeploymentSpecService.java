@@ -75,9 +75,8 @@ implements DeleteDeploymentSpecServiceApi {
                 UnlockObjectMetaTask forLambda = dsUnlock;
                 chain(() -> {
                     try {
-                        BaseJobResponse result = new BaseJobResponse();
                         Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
-                        result.setJobId(job.getId());
+                        response.setJobId(job.getId());
                         return response;
                     } catch (Exception e) {
                         LockUtil.releaseLocks(forLambda);
