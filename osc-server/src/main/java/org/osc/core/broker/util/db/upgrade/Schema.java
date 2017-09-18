@@ -527,7 +527,6 @@ public class Schema {
                 "management_network_id varchar(255)," +
                 "inspection_network_name varchar(255)," +
                 "inspection_network_id varchar(255)," +
-                "port_group_label varchar(255)," +
                 "port_group_id varchar(255)," +
 
                 "floating_pool_name varchar(255)," +
