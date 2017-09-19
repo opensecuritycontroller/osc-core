@@ -656,13 +656,27 @@ public class ApiFactoryServiceImpl implements ApiFactoryService, PluginService {
         return supportsPortGroup(vs.getVirtualizationConnector().getControllerType());
     }
 
+    @Override
+    public Boolean supportsPortGroup(SecurityGroup sg) throws Exception {
+        return supportsPortGroup(sg.getVirtualizationConnector().getControllerType());
+    }
+
     private Boolean supportsPortGroup(String controllerType) throws Exception {
         return (Boolean) getControllerPluginProperty(controllerType, SUPPORT_PORT_GROUP);
     }
 
     @Override
-    public Boolean supportsPortGroup(SecurityGroup sg) throws Exception {
-        return supportsPortGroup(sg.getVirtualizationConnector().getControllerType());
+    public Boolean supportsNeutronSFC(VirtualSystem vs) throws Exception {
+        return supportsNeutronSFC(vs.getVirtualizationConnector().getControllerType());
+    }
+
+    @Override
+    public Boolean supportsNeutronSFC(SecurityGroup sg) throws Exception {
+        return supportsNeutronSFC(sg.getVirtualizationConnector().getControllerType());
+    }
+
+    private Boolean supportsNeutronSFC(String controllerType) throws Exception {
+        return (Boolean) getControllerPluginProperty(controllerType, SUPPORT_NEUTRON_SFC);
     }
 
 }

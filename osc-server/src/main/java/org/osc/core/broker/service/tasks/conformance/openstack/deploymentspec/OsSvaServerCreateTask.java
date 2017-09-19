@@ -116,12 +116,8 @@ public class OsSvaServerCreateTask extends TransactionalTask {
 
         VirtualizationConnector vc = vs.getVirtualizationConnector();
         Endpoint endPoint = new Endpoint(vc, ds.getProjectName());
-        SdnRedirectionApi controller = null;
 
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
-        if (vc.isControllerDefined()) {
-            controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
-        }
 
         String applianceName = this.dai.getName();
         String imageRefId = getImageRefIdByRegion(vs, ds.getRegion());
@@ -160,16 +156,32 @@ public class OsSvaServerCreateTask extends TransactionalTask {
                 .addSVAIdToListener(this.dai.getDeploymentSpec().getId(), createdServer.getServerId());
 
         if (vc.isControllerDefined()) {
-            try {
+            try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
                 DefaultNetworkPort ingressPort = new DefaultNetworkPort(createdServer.getIngressInspectionPortId(),
                         createdServer.getIngressInspectionMacAddr());
                 DefaultNetworkPort egressPort = new DefaultNetworkPort(createdServer.getEgressInspectionPortId(),
                         createdServer.getEgressInspectionMacAddr());
 
-                String portGroupId = ds.getPortGroupId();
-                boolean pgAlreadyCreatedByOther = (portGroupId != null);
+                if (this.apiFactoryService.supportsNeutronSFC(this.dai.getVirtualSystem())) {
+                    // In case of neutron SFC, port group id needs to be used when registering and updated in the DS
+                    String portGroupId = ds.getPortGroupId();
+                    boolean pgAlreadyCreatedByOther = (portGroupId != null);
 
-                if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
+                    Element element = controller
+                            .registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null, portGroupId));
+
+                    portGroupId = element.getParentId();
+
+                    this.log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
+                            portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
+
+                    if (!pgAlreadyCreatedByOther) {
+                        ds = em.find(DeploymentSpec.class, ds.getId());
+                        ds.setPortGroupId(portGroupId);
+                        OSCEntityManager.update(em, ds, this.txBroadcastUtil);
+                    }
+
+                } else if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
                     String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(),
                                                     ds.getProjectName(),
                                                     ds.getVirtualSystem().getVirtualizationConnector(),
@@ -177,24 +189,11 @@ public class OsSvaServerCreateTask extends TransactionalTask {
 
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);
-
-                    portGroupId = ds.getPortGroupId();
                 }
 
                 //Element object in DefaultInspectionport is not used at this point, hence null
-                Element element = controller.registerInspectionPort(
-                        new DefaultInspectionPort(ingressPort, egressPort, null, portGroupId));
-                portGroupId = element.getParentId();
-                this.log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
-                        portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
-
-                if (!pgAlreadyCreatedByOther) {
-                    ds = em.find(DeploymentSpec.class, ds.getId());
-                    ds.setPortGroupId(portGroupId);
-                    OSCEntityManager.update(em, ds, this.txBroadcastUtil);
-                }
-            } finally {
-                controller.close();
+                controller.registerInspectionPort(
+                        new DefaultInspectionPort(ingressPort, egressPort, null));
             }
         }
 
