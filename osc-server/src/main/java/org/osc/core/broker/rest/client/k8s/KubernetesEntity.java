@@ -16,23 +16,20 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.k8s;
 
-public class KubernetesPod extends KubernetesEntity {
-    private String namespace;
-    private String node;
+public abstract class KubernetesEntity {
+    private String name;
+    private String uid;
 
-    KubernetesPod(String name, String namespace, String uid, String node) {
-        super(name, uid);
-        this.node = node;
-        this.namespace = namespace;
+    protected KubernetesEntity(String name, String uid) {
+        this.name = name;
+        this.uid = uid;
     }
 
-    public String getNode() {
-        return this.node;
+    public String getName() {
+        return this.name;
     }
 
-    public String getNamespace() {
-        return this.namespace;
+    public String getUid() {
+        return this.uid;
     }
 }
-
-
