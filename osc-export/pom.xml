@@ -316,6 +316,10 @@
                                         <copy tofile="${basedir}/plugins/NuageSdnControllerPlugin.bar">
                                             <fileset dir="${basedir}/../../osc-nuage-plugin/target/"
                                                 includes="NuageSdnControllerPlugin*.bar" />
+                                        </copy>
+                                        <copy tofile="${basedir}/plugins/NeutronSfcSdnControllerPlugin.bar">
+                                            <fileset dir="${basedir}/../../sdn-controller-nsfc-plugin/target/"
+                                                includes="NeutronSfcSdnControllerPlugin*.bar" /> 
                                         </copy>										
 									</tasks>
 								</configuration>

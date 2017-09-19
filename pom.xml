@@ -130,6 +130,7 @@
 				<module>../security-mgr-api</module>
 
                 <module>../sdn-controller-nsc-plugin</module>
+                <module>../sdn-controller-nsfc-plugin</module>
                 <module>../security-mgr-sample-plugin</module>
                 
                 <module>../osc-nuage-plugin</module>
