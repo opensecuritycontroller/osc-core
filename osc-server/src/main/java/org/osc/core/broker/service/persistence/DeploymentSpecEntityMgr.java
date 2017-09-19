@@ -68,6 +68,7 @@ public class DeploymentSpecEntityMgr {
         dto.setManagementNetworkId(ds.getManagementNetworkId());
         dto.setInspectionNetworkName(ds.getInspectionNetworkName());
         dto.setInspectionNetworkId(ds.getInspectionNetworkId());
+        dto.setPortGroupId(ds.getPortGroupId());
         dto.setCount(ds.getInstanceCount());
         dto.setNamespace(ds.getNamespace());
         if (ds.getLastJob() != null) {

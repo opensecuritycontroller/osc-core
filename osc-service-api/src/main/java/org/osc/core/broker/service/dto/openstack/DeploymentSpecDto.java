@@ -72,6 +72,10 @@ public class DeploymentSpecDto extends BaseDto {
             readOnly = true)
     private String inspectionNetworkId;
 
+    @ApiModelProperty(value = "The port group under which all the distributed appliance instances are registered under.",
+            readOnly = true)
+    private String portGroupId;
+
     @ApiModelProperty(
             value = "The floating ip pool from which floating ips will be allocated in case of NAT'ed environments",
             readOnly = true)
@@ -230,6 +234,14 @@ public class DeploymentSpecDto extends BaseDto {
 
     public void setInspectionNetworkId(String inspectionNetworkId) {
         this.inspectionNetworkId = inspectionNetworkId;
+    }
+
+    public String getPortGroupId() {
+        return this.portGroupId;
+    }
+
+    public void setPortGroupId(String portGroupId) {
+        this.portGroupId = portGroupId;
     }
 
     public String getFloatingIpPoolName() {
