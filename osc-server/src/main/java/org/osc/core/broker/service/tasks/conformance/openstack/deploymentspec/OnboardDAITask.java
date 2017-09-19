@@ -63,31 +63,43 @@ public class OnboardDAITask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = em.find(DistributedApplianceInstance.class, this.dai.getId());
-        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);
-        try {
+        try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai)) {
+
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
             DeploymentSpec ds = this.dai.getDeploymentSpec();
-            String portGroupId = ds.getPortGroupId();
-            boolean pgAlreadyCreatedByOther = (portGroupId != null);
 
-            if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
+            if (this.apiFactoryService.supportsNeutronSFC(this.dai.getVirtualSystem())) {
+                String portGroupId = ds.getPortGroupId();
+                boolean pgAlreadyCreatedByOther = (portGroupId != null);
+
+                Element element = controller
+                        .registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null, portGroupId));
+
+                portGroupId = element.getParentId();
+
+                log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
+                        portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
+
+                if (!pgAlreadyCreatedByOther) {
+                    ds = em.find(DeploymentSpec.class, ds.getId());
+                    ds.setPortGroupId(portGroupId);
+                    OSCEntityManager.update(em, ds, this.txBroadcastUtil);
+                }
+
+            } else if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
 
                 String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(), ds.getProjectName(),
-                        ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<>(
-                                Arrays.asList(ingressPort)));
+                        ds.getVirtualSystem().getVirtualizationConnector(),
+                        new ArrayList<>(Arrays.asList(ingressPort)));
                 ingressPort.setParentId(domainId);
                 egressPort.setParentId(domainId);
-                if (domainId != null){
-                	//Element Object is not used in DefaultInstepctionPort for now, hence null
-                    portGroupId = ds.getPortGroupId();
-                    Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
-                                                                        null, portGroupId));
-
-                    portGroupId = element.getParentId();
+                if (domainId != null) {
+                    //Element Object is not used in DefaultInstepctionPort for now, hence null
+                    controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
                 } else {
                     log.warn("DomainId is missing, cannot be null");
                 }
@@ -95,17 +107,6 @@ public class OnboardDAITask extends TransactionalTask {
             } else {
                 controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
             }
-
-            log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
-                                        portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
-
-            if (!pgAlreadyCreatedByOther) {
-                ds = em.find(DeploymentSpec.class, ds.getId());
-                ds.setPortGroupId(portGroupId);
-                OSCEntityManager.update(em, ds, this.txBroadcastUtil);
-            }
-        } finally {
-            controller.close();
         }
     }
 

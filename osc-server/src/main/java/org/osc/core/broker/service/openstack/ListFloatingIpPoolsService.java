@@ -41,7 +41,7 @@ public class ListFloatingIpPoolsService extends ServiceDispatcher<BaseOpenStackR
         VirtualizationConnector vc = emgr.findByPrimaryKey(request.getId()).getVirtualizationConnector();
 
         try (Openstack4JNeutron neutron = new Openstack4JNeutron(new Endpoint(vc, request.getProjectName()))) {
-            List<String> osFloatingIpPoolsList = neutron.getFloatingIpPools(request.getRegion(), request.getProjectId());
+            List<String> osFloatingIpPoolsList = neutron.getFloatingIpPools(request.getRegion());
             return new ListResponse<>(osFloatingIpPoolsList);
         }
     }

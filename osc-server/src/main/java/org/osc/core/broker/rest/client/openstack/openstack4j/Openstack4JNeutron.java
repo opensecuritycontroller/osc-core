@@ -50,7 +50,6 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
 
     private static final String QUERY_PARAM_COMPUTE_DEVICE_OWNER = "compute:";
     private static final String QUERY_PARAM_ROUTER_DEVICE_OWNER = "network:router_interface";
-    private static final String QUERY_PARAM_TENANT_ID = "tenant_id";
     private static final String QUERY_PARAM_EXTERNAL_ROUTER = "router:external";
 
     private static final int OPENSTACK_CONFLICT_STATUS = 409;
@@ -66,7 +65,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     public List<Network> listNetworkByProject(String region, String projectId) {
         getOs().useRegion(region);
         List<? extends Network> list = getOs().networking().network().list().stream()
-                .filter(subnet -> (projectId.equals(subnet.getTenantId()) && !subnet.isShared())
+                .filter(subnet -> projectId.equals(subnet.getTenantId()) && !subnet.isShared()
                         || subnet.isShared()).collect(Collectors.toList());
         return ImmutableList.<Network>builder().addAll(list).build();
     }
@@ -156,7 +155,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     private Port getPortByMacAddress(String region, String macAddress) {
         getOs().useRegion(region);
         List<? extends Port> portList = getOs().networking().port().list(PortListOptions.create().macAddress(macAddress));
-        return (portList == null || portList.isEmpty()) ? null : portList.get(0);
+        return portList == null || portList.isEmpty() ? null : portList.get(0);
     }
 
     public Port getPortById(String region, String portId) {
@@ -258,11 +257,10 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     }
 
     // Floating IP API
-    public List<String> getFloatingIpPools(String region, String projectId) throws Exception {
+    public List<String> getFloatingIpPools(String region) throws Exception {
         getOs().useRegion(region);
 
         Map<String, String> filter = Maps.newHashMap();
-        filter.put(QUERY_PARAM_TENANT_ID, projectId);
         filter.put(QUERY_PARAM_EXTERNAL_ROUTER, Boolean.TRUE.toString());
 
         return getOs().networking().network().list(filter)

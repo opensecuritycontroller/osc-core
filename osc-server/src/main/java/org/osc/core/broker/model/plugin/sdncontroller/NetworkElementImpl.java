@@ -52,4 +52,9 @@ public class NetworkElementImpl implements NetworkElement {
     public void setParentId(String parentId) {
         this.vmPort.setParentId(parentId);
     }
+
+    @Override
+    public String toString() {
+        return "NetworkElementImpl [vmPort=" + this.vmPort + "]";
+    }
 }
