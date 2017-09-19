@@ -85,6 +85,9 @@
         <copy tofile="Build${fullVersion}/NuageSdnControllerPlugin.bar">
         	<fileset dir="${basedir}/../osc-nuage-plugin/target/" includes="NuageSdnControllerPlugin*.bar" />
         </copy>
+        <copy tofile="Build${fullVersion}/NeutronSfcSdnControllerPlugin.bar">
+        	<fileset dir="${basedir}/../sdn-controller-nsfc-plugin/target/" includes="NeutronSfcSdnControllerPlugin*.bar" />
+        </copy>
 	</target>
 
 	<target name="checkImagesTocopy">
