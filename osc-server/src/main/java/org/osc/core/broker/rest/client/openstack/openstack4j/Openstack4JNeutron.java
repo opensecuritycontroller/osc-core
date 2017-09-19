@@ -24,7 +24,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.core.Response;
+
 import org.apache.log4j.Logger;
+import org.openstack4j.api.exceptions.ResponseException;
 import org.openstack4j.api.exceptions.ServerResponseException;
 import org.openstack4j.model.common.ActionResponse;
 import org.openstack4j.model.network.IP;
@@ -53,7 +56,6 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
     private static final String QUERY_PARAM_EXTERNAL_ROUTER = "router:external";
 
     private static final int OPENSTACK_CONFLICT_STATUS = 409;
-    private static final int OPENSTACK_NOT_FOUND_STATUS = 404;
 
     public Openstack4JNeutron(Endpoint endPoint) {
         super(endPoint);
@@ -287,7 +289,8 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
      * A synchronous way to allocate floating ip(within ourselfs). Since this is a static method, we would lock on
      * the class objects which prevents multiple threads from making the floating ip call at the same time.
      */
-    public synchronized NetFloatingIP createFloatingIp(String region, String networkId, String serverId, String portId) {
+    public synchronized NetFloatingIP createFloatingIp(String region, String networkId, String serverId,
+            String portId) {
         getOs().useRegion(region);
 
         NetFloatingIPBuilder builder = new NeutronFloatingIP.FloatingIPConcreteBuilder();
@@ -295,15 +298,14 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         builder.portId(portId);
 
         NetFloatingIP netFloatingIP = null;
-        try {
-            netFloatingIP = getOs().networking().floatingip().create(builder.build());
+        netFloatingIP = getOs().networking().floatingip().create(builder.build());
+        if (netFloatingIP != null) {
             log.info("Allocated Floating ip: " + netFloatingIP.getId() + " To server with Id: " + serverId);
-        } catch (ServerResponseException e) {
-            if (e.getStatusCode().getCode() == OPENSTACK_NOT_FOUND_STATUS) {
-                log.warn("Cannot create floating ip: " + e.getMessage());
-            } else {
-                throw e;
-            }
+        } else {
+            log.warn(String.format("Cannot create floating ip for port %s under network %s", portId, networkId));
+            throw new ResponseException(
+                    String.format("Cannot create floating ip for port %s under network %s", portId, networkId),
+                    500);
         }
         return netFloatingIP;
     }
@@ -313,7 +315,11 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         log.info("Deleting Floating ip with id: " + floatingIpId);
         ActionResponse actionResponse = getOs().networking().floatingip().delete(floatingIpId);
         if (!actionResponse.isSuccess()) {
-            log.warn("Deleting floating ip with id: " + floatingIpId + " failed with message: " + actionResponse.getFault());
+            log.warn("Deleting floating ip with id: " + floatingIpId + " failed with message: "
+                    + actionResponse.getFault());
+            if (actionResponse.getCode() != Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new ResponseException(actionResponse.getFault(), actionResponse.getCode());
+            }
         }
     }
 
