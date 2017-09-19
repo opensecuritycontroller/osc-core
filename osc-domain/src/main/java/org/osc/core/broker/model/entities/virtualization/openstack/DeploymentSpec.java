@@ -74,6 +74,9 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
     @Column(name = "inspection_network_id")
     private String inspectionNetworkId;
 
+    @Column(name = "port_group_id")
+    private String portGroupId;
+
     @Column(name = "floating_pool_name")
     private String floatingIpPoolName;
 
@@ -257,6 +260,14 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
 
     public void setInspectionNetworkId(String inspectionNetworkId) {
         this.inspectionNetworkId = inspectionNetworkId;
+    }
+
+    public String getPortGroupId() {
+        return this.portGroupId;
+    }
+
+    public void setPortGroupId(String portGroupId) {
+        this.portGroupId = portGroupId;
     }
 
     public String getFloatingIpPoolName() {

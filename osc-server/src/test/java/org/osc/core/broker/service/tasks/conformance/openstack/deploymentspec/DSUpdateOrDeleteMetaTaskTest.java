@@ -168,7 +168,7 @@ public class DSUpdateOrDeleteMetaTaskTest {
     private AvailabilityZone createAvailableZoneDetails(String azName, List<String> hostNames) {
         AvailabilityZone result = Mockito.mock(AvailabilityZone.class);
         Map<String, Map<String, HostService>> hosts = new HashMap<>();
-        for(String hostName : hostNames) {
+        for (String hostName : hostNames) {
             hosts.put(hostName, null);
         }
 

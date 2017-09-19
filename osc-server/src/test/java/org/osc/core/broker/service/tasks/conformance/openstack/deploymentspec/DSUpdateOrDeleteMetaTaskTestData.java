@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
@@ -228,7 +229,6 @@ public class DSUpdateOrDeleteMetaTaskTestData {
                 (DistributedApplianceInstance) ds.getDistributedApplianceInstances().toArray()[0]));
 
         expectedGraph.addTask(new OsSvaCreateMetaTask().create(ds, HS_1_1, AZ_1));
-
         return expectedGraph;
     }
 
@@ -236,7 +236,6 @@ public class DSUpdateOrDeleteMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
         expectedGraph.addTask(new DeleteSvaServerAndDAIMetaTask().create(ds.getRegion(),
                 (DistributedApplianceInstance) ds.getDistributedApplianceInstances().toArray()[0]));
-
         return expectedGraph;
     }
 
@@ -248,8 +247,11 @@ public class DSUpdateOrDeleteMetaTaskTestData {
 
     public static TaskGraph createDaiHostNotInAZSelectedGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
-        expectedGraph.addTask(new OsDAIConformanceCheckMetaTask().create((DistributedApplianceInstance) UPDATE_DAI_HOST_NOT_IN_AZ_DAIS.toArray()[0], false));
-        expectedGraph.addTask(new OsSvaCreateMetaTask().create(ds, HS_1_1, ((AvailabilityZone)ds.getAvailabilityZones().toArray()[0]).getZone()));
+        Task conformCheck = new OsDAIConformanceCheckMetaTask().create((DistributedApplianceInstance) UPDATE_DAI_HOST_NOT_IN_AZ_DAIS.toArray()[0], false);
+
+        expectedGraph.addTask(conformCheck);
+        expectedGraph.addTask(new OsSvaCreateMetaTask().create(ds, HS_1_1, ((AvailabilityZone)ds.getAvailabilityZones().toArray()[0]).getZone()), conformCheck);
+
         return expectedGraph;
     }
 

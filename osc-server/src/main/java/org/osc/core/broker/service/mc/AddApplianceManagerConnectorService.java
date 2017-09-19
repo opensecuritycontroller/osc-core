@@ -92,7 +92,7 @@ implements AddApplianceManagerConnectorServiceApi {
         }
 
         String serviceName = this.apiFactoryService.getServiceName(request.getDto().getManagerType());
-        ApplianceManagerConnector mc =ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption, serviceName);
+        ApplianceManagerConnector mc = ApplianceManagerConnectorEntityMgr.createEntity(request.getDto(), this.encryption, serviceName);
         appMgrEntityMgr.create(mc);
 
         SslCertificateAttrEntityMgr certificateAttrEntityMgr = new SslCertificateAttrEntityMgr(em, this.txBroadcastUtil);

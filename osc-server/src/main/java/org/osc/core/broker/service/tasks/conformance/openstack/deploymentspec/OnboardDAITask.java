@@ -27,10 +27,12 @@ import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.DefaultNetworkPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.Element;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -68,8 +70,12 @@ public class OnboardDAITask extends TransactionalTask {
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
 
+            DeploymentSpec ds = this.dai.getDeploymentSpec();
+            String portGroupId = ds.getPortGroupId();
+            boolean pgAlreadyCreatedByOther = (portGroupId != null);
+
             if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())){
-                DeploymentSpec ds = this.dai.getDeploymentSpec();
+
                 String domainId = OpenstackUtil.extractDomainId(ds.getProjectId(), ds.getProjectName(),
                         ds.getVirtualSystem().getVirtualizationConnector(), new ArrayList<>(
                                 Arrays.asList(ingressPort)));
@@ -77,7 +83,11 @@ public class OnboardDAITask extends TransactionalTask {
                 egressPort.setParentId(domainId);
                 if (domainId != null){
                 	//Element Object is not used in DefaultInstepctionPort for now, hence null
-                    controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
+                    portGroupId = ds.getPortGroupId();
+                    Element element = controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort,
+                                                                        null, portGroupId));
+
+                    portGroupId = element.getParentId();
                 } else {
                     log.warn("DomainId is missing, cannot be null");
                 }
@@ -86,7 +96,14 @@ public class OnboardDAITask extends TransactionalTask {
                 controller.registerInspectionPort(new DefaultInspectionPort(ingressPort, egressPort, null));
             }
 
+            log.info(String.format("Setting port_group_id to %s on DAI %s (id %d) for Deployment Spec %s (id: %d)",
+                                        portGroupId, this.dai.getName(), this.dai.getId(), ds.getName(), ds.getId()));
 
+            if (!pgAlreadyCreatedByOther) {
+                ds = em.find(DeploymentSpec.class, ds.getId());
+                ds.setPortGroupId(portGroupId);
+                OSCEntityManager.update(em, ds, this.txBroadcastUtil);
+            }
         } finally {
             controller.close();
         }
