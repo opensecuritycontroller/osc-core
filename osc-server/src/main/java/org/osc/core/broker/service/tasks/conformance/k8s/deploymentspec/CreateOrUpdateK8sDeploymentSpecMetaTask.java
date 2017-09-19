@@ -23,26 +23,93 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
+import org.osc.core.broker.rest.client.k8s.KubernetesClient;
+import org.osc.core.broker.rest.client.k8s.KubernetesDeployment;
+import org.osc.core.broker.rest.client.k8s.KubernetesDeploymentApi;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
- * Conforms the deployment spec for Kubernetes according to its settings. This task assumes a Lock has been placed on the DS by the job
- * containing this task.
+ * Creates or updates a Kubernetes deployment to satisfy the OSC deployment spec settings.
  */
 @Component(service = CreateOrUpdateK8sDeploymentSpecMetaTask.class)
 public class CreateOrUpdateK8sDeploymentSpecMetaTask extends TransactionalMetaTask {
+    @Reference
+    CreateK8sDeploymentTask createK8sDeploymentTask;
+
+    @Reference
+    UpdateK8sDeploymentTask updateK8sDeploymentTask;
+
+    @Reference
+    CheckK8sDeploymentStateTask checkK8sDeploymentStateTask;
+
+    @Reference
+    ConformK8sDeploymentPodsMetaTask conformK8sDeploymentPodsMetaTask;
+
+    private KubernetesDeploymentApi k8sDeploymentApi = null;
+
     private DeploymentSpec ds;
     private TaskGraph tg;
 
-    public CreateOrUpdateK8sDeploymentSpecMetaTask create(DeploymentSpec ds) {
+    CreateOrUpdateK8sDeploymentSpecMetaTask create(DeploymentSpec ds, KubernetesDeploymentApi k8sDeploymentApi) {
         CreateOrUpdateK8sDeploymentSpecMetaTask task = new CreateOrUpdateK8sDeploymentSpecMetaTask();
+        task.createK8sDeploymentTask = this.createK8sDeploymentTask;
+        task.updateK8sDeploymentTask = this.updateK8sDeploymentTask;
+        task.checkK8sDeploymentStateTask = this.checkK8sDeploymentStateTask;
+        task.conformK8sDeploymentPodsMetaTask = this.conformK8sDeploymentPodsMetaTask;
+        task.k8sDeploymentApi = k8sDeploymentApi;
+
         task.ds = ds;
+        task.k8sDeploymentApi = this.k8sDeploymentApi;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
+    }
+
+    public CreateOrUpdateK8sDeploymentSpecMetaTask create(DeploymentSpec ds) {
+        return create(ds, null);
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        this.tg = new TaskGraph();
+        OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
+        this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
+
+        KubernetesDeployment deployment = null;
+
+        if (this.ds.getExternalId() != null) {
+            try (KubernetesClient client = new KubernetesClient(this.ds.getVirtualSystem().getVirtualizationConnector())) {
+                if (this.k8sDeploymentApi == null) {
+                    this.k8sDeploymentApi = new KubernetesDeploymentApi(client);
+                } else {
+                    this.k8sDeploymentApi.setKubernetesClient(client);
+                }
+
+                deployment = this.k8sDeploymentApi.getDeploymentById(
+                        this.ds.getExternalId(),
+                        this.ds.getNamespace(),
+                        CreateK8sDeploymentTask.getK8sName(this.ds));
+            }
+        }
+
+        boolean updateOrDelete = false;
+
+        if (deployment == null) {
+            this.tg.appendTask(this.createK8sDeploymentTask.create(this.ds));
+            updateOrDelete = true;
+        } else if (deployment.getDesiredReplicaCount() != this.ds.getInstanceCount()){
+            this.tg.appendTask(this.updateK8sDeploymentTask.create(this.ds));
+            updateOrDelete = true;
+        }
+
+        if (updateOrDelete) {
+            this.tg.appendTask(this.checkK8sDeploymentStateTask.create(this.ds));
+            this.tg.appendTask(this.conformK8sDeploymentPodsMetaTask.create(this.ds));
+        }
     }
 
     @Override
@@ -59,5 +126,4 @@ public class CreateOrUpdateK8sDeploymentSpecMetaTask extends TransactionalMetaTa
     public Set<LockObjectReference> getObjects() {
         return LockObjectReference.getObjectReferences(this.ds);
     }
-
 }

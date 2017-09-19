@@ -66,7 +66,6 @@ public class ConformK8sDeploymentSpecMetaTask extends TransactionalMetaTask {
         task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
         task.deleteDSFromDbTask = this.deleteDSFromDbTask;
         task.ds = ds;
-        task.name = task.getName();
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 

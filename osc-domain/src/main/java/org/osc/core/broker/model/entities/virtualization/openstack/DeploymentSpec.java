@@ -182,6 +182,14 @@ public class DeploymentSpec extends BaseEntity implements LastJobContainer {
         this.projectName = projectName;
     }
 
+    public String getExternalId() {
+        return this.externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
     public String getNamespace() {
         return this.namespace;
     }

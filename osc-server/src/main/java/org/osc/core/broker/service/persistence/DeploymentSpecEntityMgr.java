@@ -54,6 +54,7 @@ public class DeploymentSpecEntityMgr {
         ds.setInstanceCount(dto.getCount());
         ds.setShared(dto.isShared());
         ds.setNamespace(dto.getNamespace());
+        ds.setExternalId(dto.getExternalId());
     }
 
     public static void fromEntity(DeploymentSpec ds, DeploymentSpecDto dto) {
@@ -70,6 +71,7 @@ public class DeploymentSpecEntityMgr {
         dto.setInspectionNetworkId(ds.getInspectionNetworkId());
         dto.setCount(ds.getInstanceCount());
         dto.setNamespace(ds.getNamespace());
+        dto.setExternalId(ds.getExternalId());
         if (ds.getLastJob() != null) {
             dto.setLastJobStatus(ds.getLastJob().getStatus().name());
             dto.setLastJobState(ds.getLastJob().getState().name());
