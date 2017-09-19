@@ -92,7 +92,7 @@ public class CreateOrUpdateK8sDeploymentSpecMetaTask extends TransactionalMetaTa
                 deployment = this.k8sDeploymentApi.getDeploymentById(
                         this.ds.getExternalId(),
                         this.ds.getNamespace(),
-                        CreateK8sDeploymentTask.getK8sName(this.ds));
+                        K8sUtil.getK8sName(this.ds));
             }
         }
 

@@ -114,7 +114,7 @@ public class CreateK8sDeploymentTaskTest  {
     }
 
     private void mockCreateK8sDeployment(DeploymentSpec ds, String k8sDeploymentId) throws Exception {
-        when(this.k8sDeploymentApi.createDeployment(argThat(new KubernetesDeploymentMatcher(CreateK8sDeploymentTask.getK8sName(ds),
+        when(this.k8sDeploymentApi.createDeployment(argThat(new KubernetesDeploymentMatcher(K8sUtil.getK8sName(ds),
                 ds.getNamespace(),
                 ds.getInstanceCount(),
                 ds.getVirtualSystem().getApplianceSoftwareVersion().getImageUrl(),

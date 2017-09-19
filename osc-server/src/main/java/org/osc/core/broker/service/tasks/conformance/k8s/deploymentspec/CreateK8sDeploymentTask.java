@@ -58,7 +58,7 @@ public class CreateK8sDeploymentTask extends TransactionalTask {
         this.ds = dsEmgr.findByPrimaryKey(this.ds.getId());
 
         KubernetesDeployment k8sDeployment = new KubernetesDeployment(
-                getK8sName(this.ds),
+                K8sUtil.getK8sName(this.ds),
                 this.ds.getNamespace(),
                 null,
                 this.ds.getInstanceCount(),
@@ -90,9 +90,5 @@ public class CreateK8sDeploymentTask extends TransactionalTask {
     @Override
     public Set<LockObjectReference> getObjects() {
         return LockObjectReference.getObjectReferences(this.ds);
-    }
-
-    static String getK8sName(DeploymentSpec ds) {
-        return ds.getName() + "_" + ds.getId();
     }
 }

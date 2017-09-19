@@ -155,6 +155,6 @@ public class CreateOrUpdateK8sDeploymentSpecMetaTaskTest {
                 .getDeploymentById(
                         ds.getExternalId(),
                         ds.getNamespace(),
-                        CreateK8sDeploymentTask.getK8sName(ds))).thenReturn(k8sDeployment);
+                        K8sUtil.getK8sName(ds))).thenReturn(k8sDeployment);
     }
 }
