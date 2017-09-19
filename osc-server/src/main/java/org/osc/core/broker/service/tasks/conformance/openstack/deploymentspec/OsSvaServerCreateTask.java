@@ -189,11 +189,11 @@ public class OsSvaServerCreateTask extends TransactionalTask {
 
                     ingressPort.setParentId(domainId);
                     egressPort.setParentId(domainId);
-                }
 
-                //Element object in DefaultInspectionport is not used at this point, hence null
-                controller.registerInspectionPort(
-                        new DefaultInspectionPort(ingressPort, egressPort, null));
+                  //Element object in DefaultInspectionport is not used at this point, hence null
+                    controller.registerInspectionPort(
+                            new DefaultInspectionPort(ingressPort, egressPort, null));
+                }
             }
         }
 
