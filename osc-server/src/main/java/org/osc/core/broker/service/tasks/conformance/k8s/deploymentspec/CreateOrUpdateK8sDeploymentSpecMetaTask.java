@@ -48,7 +48,7 @@ public class CreateOrUpdateK8sDeploymentSpecMetaTask extends TransactionalMetaTa
     @Reference
     ConformK8sDeploymentPodsMetaTask conformK8sDeploymentPodsMetaTask;
 
-    private KubernetesDeploymentApi k8sDeploymentApi = null;
+    private KubernetesDeploymentApi k8sDeploymentApi;
 
     private DeploymentSpec ds;
     private TaskGraph tg;
