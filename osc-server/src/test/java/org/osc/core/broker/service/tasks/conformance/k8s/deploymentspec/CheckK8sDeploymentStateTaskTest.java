@@ -196,7 +196,7 @@ public class CheckK8sDeploymentStateTaskTest  {
                                     return unavailableK8sDeployment;
                                 }
                             }
-                        });;
+                        });
     }
 
     private DeploymentSpec createDS() {

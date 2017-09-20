@@ -86,24 +86,16 @@ implements UpdateDeploymentSpecServiceApi {
                 }
             }
             OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
-            // TODO emanoel: remove this condition when DS sync is implemented
-            if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
-                UnlockObjectMetaTask forLambda = dsUnlock;
-                chain(() -> {
-                    try {
-                        Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
-                        return new BaseJobResponse(this.ds.getId(), job.getId());
-                    } catch (Exception e) {
-                        LockUtil.releaseLocks(forLambda);
-                        throw e;
-                    }
-                });
-            } else {
-                BaseJobResponse response = new BaseJobResponse();
-                response.setId(this.ds.getId());
-                LockUtil.releaseLocks(dsUnlock);
-                return response;
-            }
+            UnlockObjectMetaTask forLambda = dsUnlock;
+            chain(() -> {
+                try {
+                    Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
+                    return new BaseJobResponse(this.ds.getId(), job.getId());
+                } catch (Exception e) {
+                    LockUtil.releaseLocks(forLambda);
+                    throw e;
+                }
+            });
         } catch (Exception e) {
             LockUtil.releaseLocks(dsUnlock);
             throw e;

@@ -119,7 +119,7 @@ public class DeleteOrcleanK8sDAITaskTest  {
         dai.setInspectionOsIngressPortId(UUID.randomUUID().toString());
         dai.setInspectionOsEgressPortId(UUID.randomUUID().toString());
         dai.setInspectionEgressMacAddress(UUID.randomUUID().toString());
-        dai.setId(id);;
+        dai.setId(id);
 
         when(this.em.find(DistributedApplianceInstance.class, dai.getId())).thenReturn(dai);
 

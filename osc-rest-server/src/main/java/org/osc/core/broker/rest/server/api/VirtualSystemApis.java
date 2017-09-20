@@ -48,6 +48,7 @@ import org.osc.core.broker.service.api.ListDeploymentSpecServiceByVirtualSystemA
 import org.osc.core.broker.service.api.ListDistributedApplianceInstanceByVSServiceApi;
 import org.osc.core.broker.service.api.ListSecurityGroupInterfaceServiceByVirtualSystemApi;
 import org.osc.core.broker.service.api.ListVirtualSystemPolicyServiceApi;
+import org.osc.core.broker.service.api.SyncDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateDeploymentSpecServiceApi;
 import org.osc.core.broker.service.api.UpdateSecurityGroupInterfaceServiceApi;
 import org.osc.core.broker.service.api.server.UserContextApi;
@@ -91,6 +92,9 @@ public class VirtualSystemApis {
 
     @Reference
     private AddDeploymentSpecServiceApi addDeploymentSpecService;
+
+    @Reference
+    private SyncDeploymentSpecServiceApi syncDeploymentSpecService;
 
     @Reference
     private UpdateDeploymentSpecServiceApi updateDeploymentSpecService;
@@ -145,7 +149,7 @@ public class VirtualSystemApis {
 
         @SuppressWarnings("unchecked")
         ListResponse<DistributedApplianceInstanceDto> response = (ListResponse<DistributedApplianceInstanceDto>) this.apiUtil
-                .getListResponse(this.listDistributedApplianceInstanceByVSService, new BaseIdRequest(vsId));
+        .getListResponse(this.listDistributedApplianceInstanceByVSService, new BaseIdRequest(vsId));
         return response.getList();
     }
 
@@ -158,7 +162,7 @@ public class VirtualSystemApis {
     @Path("/{vsId}/policies")
     @GET
     public List<PolicyDto> getPolicies(@Context HttpHeaders headers,
-                                       @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
 
         logger.info("Listing Policies based on given VS id");
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
@@ -179,13 +183,13 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs")
     @GET
     public List<DeploymentSpecDto> getDeploymentSpecsByVirtualSystem(@Context HttpHeaders headers,
-                                                                     @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Listing Deployment Spces");
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
 
         @SuppressWarnings("unchecked")
         ListResponse<DeploymentSpecDto> response = (ListResponse<DeploymentSpecDto>) this.apiUtil
-                .getListResponse(this.listDeploymentSpecServiceByVirtualSystem, new BaseIdRequest(vsId));
+        .getListResponse(this.listDeploymentSpecServiceByVirtualSystem, new BaseIdRequest(vsId));
         return response.getList();
     }
 
@@ -197,8 +201,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs/{dsId}")
     @GET
     public DeploymentSpecDto getDeploymentSpec(@Context HttpHeaders headers,
-                                               @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                               @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("getting Deployment Spec " + dsId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
@@ -220,13 +224,30 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs")
     @POST
     public Response createDeploymentSpec(@Context HttpHeaders headers,
-                                         @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                         @ApiParam(required = true) DeploymentSpecDto dsDto) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(required = true) DeploymentSpecDto dsDto) {
         logger.info("Creating Deployment Spec ...");
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setParentIdOrThrow(dsDto, vsId, "Deployment Specification");
         return this.apiUtil.getResponseForBaseRequest(this.addDeploymentSpecService,
                 new BaseRequest<DeploymentSpecDto>(dsDto));
+    }
+
+    @ApiOperation(value = "Syncs a deployment spec",
+            notes = "Syncs a deployment spec",
+            response = BaseJobResponse.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
+    @Path("/{vsId}/deploymentSpecs/{dsId}/sync")
+    @PUT
+    public Response syncDeploymentSpec(@Context HttpHeaders headers,
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
+        logger.info("Sync deployment spec" + dsId);
+        this.userContext.setUser(OscAuthFilter.getUsername(headers));
+        DeploymentSpecDto dsDto = new DeploymentSpecDto();
+        dsDto.setId(dsId);
+        return this.apiUtil.getResponseForBaseRequest(this.syncDeploymentSpecService, new BaseRequest<DeploymentSpecDto>(dsDto));
     }
 
     @ApiOperation(value = "Updates a Deployment Specification (Openstack Only)",
@@ -237,9 +258,9 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs/{dsId}")
     @PUT
     public Response updateDeploymentSpec(@Context HttpHeaders headers,
-                                         @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                         @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId,
-                                         @ApiParam(required = true) DeploymentSpecDto dsDto) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId,
+            @ApiParam(required = true) DeploymentSpecDto dsDto) {
         logger.info("Updating Deployment Spec " + dsId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdAndParentIdOrThrow(dsDto, dsId, vsId, "Deployment Spec");
@@ -255,8 +276,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs/{dsId}")
     @DELETE
     public Response deleteDeploymentSpec(@Context HttpHeaders headers,
-                                         @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                         @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.deleteDeploymentSpecService,
@@ -271,8 +292,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/deploymentSpecs/{dsId}/force")
     @DELETE
     public Response forceDeleteDeploymentSpec(@Context HttpHeaders headers,
-                                              @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                              @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Deployment Specification Id") @PathParam("dsId") Long dsId) {
         logger.info("Deleting Deployment Spec " + dsId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.deleteDeploymentSpecService,
@@ -294,7 +315,7 @@ public class VirtualSystemApis {
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         @SuppressWarnings("unchecked")
         ListResponse<SecurityGroupInterfaceDto> response = (ListResponse<SecurityGroupInterfaceDto>) this.apiUtil
-                .getListResponse(this.listSecurityGroupInterfaceServiceByVirtualSystem, new BaseIdRequest(vsId));
+        .getListResponse(this.listSecurityGroupInterfaceServiceByVirtualSystem, new BaseIdRequest(vsId));
         return response.getList();
     }
 
@@ -306,8 +327,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/securityGroupInterfaces/{sgiId}")
     @GET
     public SecurityGroupInterfaceDto getSecurityGroupInterface(@Context HttpHeaders headers,
-                                                               @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                                               @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
         logger.info("Getting Security Group Interface " + sgiId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         GetDtoFromEntityRequest getDtoRequest = new GetDtoFromEntityRequest();
@@ -329,8 +350,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/securityGroupInterfaces")
     @POST
     public Response createSecutiryGroupInterface(@Context HttpHeaders headers,
-                                                 @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                                 @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
         logger.info("Creating Security Group Interface ...");
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setParentIdOrThrow(sgiDto, vsId, "Traffic Policy Mapping");
@@ -346,9 +367,9 @@ public class VirtualSystemApis {
     @Path("/{vsId}/securityGroupInterfaces/{sgiId}")
     @PUT
     public Response updateSecurityGroupInterface(@Context HttpHeaders headers,
-                                                 @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                                 @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId,
-                                                 @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId,
+            @ApiParam(required = true) SecurityGroupInterfaceDto sgiDto) {
         logger.info("Updating Security Group Interface " + sgiId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         this.apiUtil.setIdAndParentIdOrThrow(sgiDto, sgiId, vsId, "Traffic Policy Mapping");
@@ -364,8 +385,8 @@ public class VirtualSystemApis {
     @Path("/{vsId}/securityGroupInterfaces/{sgiId}")
     @DELETE
     public Response deleteSecurityGroupInterface(@Context HttpHeaders headers,
-                                                 @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
-                                                 @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId,
+            @ApiParam(value = "The Traffic Policy Mapping Id") @PathParam("sgiId") Long sgiId) {
         logger.info("Deleting Security Group Interface.. " + sgiId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.deleteSecurityGroupInterfaceService,
@@ -375,13 +396,13 @@ public class VirtualSystemApis {
     @ApiOperation(value = "Force Delete a Virtual System",
             notes = "Force Deletes a Virtual System provided.<br/>"
                     + "Warning: Force delete just deletes the entity from OSC, please make sure to clean the related entities outside of OSC.",
-            response = BaseJobResponse.class)
+                    response = BaseJobResponse.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = 400, message = "In case of any error", response = ErrorCodeDto.class) })
     @Path("/{vsId}/force")
     @DELETE
     public Response forceDeleteVirtualSystem(@Context HttpHeaders headers,
-                                             @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
+            @ApiParam(value = "The Virtual System Id") @PathParam("vsId") Long vsId) {
         logger.info("Deleting Virtual System " + vsId);
         this.userContext.setUser(OscAuthFilter.getUsername(headers));
         return this.apiUtil.getResponseForBaseRequest(this.forceDeleteVirtualSystemService,
