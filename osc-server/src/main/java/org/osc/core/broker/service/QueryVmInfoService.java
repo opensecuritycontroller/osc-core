@@ -159,14 +159,20 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
         String region = dai.getDeploymentSpec().getRegion();
         String vmId = neutron.getVmIdByPortId(region, portId);
         if (vmId == null) {
-            throw new VmidcBrokerValidationException("Unable to find Server attached to the port " + portId);
+            throw new VmidcBrokerValidationException(
+                    String.format("Unable to find Server attached to the port: %s", portId));
         }
         Server vm = nova.getServer(region, vmId);
+        if (vm == null) {
+            throw new VmidcBrokerValidationException(
+                    String.format("Unable to find Server with Id: %s in region: %s ", vmId, region));
+        }
         return newVmInfo(vm);
     }
 
     private VmInfo findVmByMacOrIp(EntityManager em, Openstack4JNova nova, Openstack4JNeutron neutron,
-                                   DistributedApplianceInstance dai, String macAddress, String ipAddress) throws IOException {
+            DistributedApplianceInstance dai, String macAddress, String ipAddress)
+            throws IOException, VmidcBrokerValidationException {
         VmInfo vmInfo;
         if (macAddress != null) {
             VM vm = VMPortEntityManager.findByMacAddress(em, macAddress);
@@ -239,10 +245,18 @@ public class QueryVmInfoService extends ServiceDispatcher<QueryVmInfoRequest, Qu
     }
 
     private VmInfo findVmByMacAddress(Openstack4JNova nova, Openstack4JNeutron neutron, DistributedApplianceInstance dai,
-                                      String macAddress) throws IOException {
+                                      String macAddress) throws IOException, VmidcBrokerValidationException {
         String region = dai.getDeploymentSpec().getRegion();
         String vmId = neutron.getVmIdByMacAddress(region, macAddress);
+        if (vmId == null) {
+            throw new VmidcBrokerValidationException(
+                    String.format("Unable to find Server with mac address: %s ", macAddress));
+        }
         Server server = nova.getServer(region, vmId);
+        if (server == null) {
+            throw new VmidcBrokerValidationException(
+                    String.format("Unable to find Server with Id: %s in region: %s ", vmId, region));
+        }
         return newVmInfo(server);
     }
 
