@@ -75,7 +75,7 @@ public class ConformK8sDeploymentPodsMetaTaskTestData {
         TaskGraph expectedGraph = new TaskGraph();
 
         for(DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
-            expectedGraph.addTask(new DeleteOrCleanK8sDAITask().create(ds, dai));
+            expectedGraph.addTask(new DeleteOrCleanK8sDAITask().create(dai));
         }
 
         expectedGraph.appendTask(new ConformK8sInspectionPortMetaTask().create(ds), TaskGuard.ALL_PREDECESSORS_COMPLETED);
@@ -93,7 +93,7 @@ public class ConformK8sDeploymentPodsMetaTaskTestData {
 
         for(DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
             if (!KNOWN_POD_IDS.contains(dai.getExternalId())) {
-                expectedGraph.addTask(new DeleteOrCleanK8sDAITask().create(ds, dai));
+                expectedGraph.addTask(new DeleteOrCleanK8sDAITask().create(dai));
             }
         }
 

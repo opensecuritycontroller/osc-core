@@ -118,7 +118,7 @@ public class ConformK8sDeploymentPodsMetaTask extends TransactionalMetaTask {
         }
 
         for (DistributedApplianceInstance daiForDeletion : daisForDeletion) {
-            this.tg.addTask(this.deleteOrCleanK8sDAITask.create(this.ds, daiForDeletion));
+            this.tg.addTask(this.deleteOrCleanK8sDAITask.create(daiForDeletion));
         }
 
         this.tg.appendTask(this.conformK8sInspectionPortMetaTask.create(this.ds), TaskGuard.ALL_PREDECESSORS_COMPLETED);

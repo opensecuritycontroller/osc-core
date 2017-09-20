@@ -38,7 +38,6 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * This task is responsible for persisting a DAI in the OSC database for a newly found pod VNF.
- *
  */
 @Component(service = CreateOrUpdateK8sDAITask.class)
 public class CreateOrUpdateK8sDAITask extends TransactionalTask {
