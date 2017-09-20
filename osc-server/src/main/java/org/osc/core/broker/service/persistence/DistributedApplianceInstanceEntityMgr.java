@@ -59,7 +59,7 @@ public class DistributedApplianceInstanceEntityMgr {
                 .getApplianceManagerConnector().getName());
         dto.setVirtualConnectorName(dai.getVirtualSystem().getVirtualizationConnector().getName());
 
-        dto.setOsVmId(dai.getOsServerId());
+        dto.setExternalId(dai.getExternalId());
         dto.setOsHostname(dai.getOsHostName());
         dto.setOsInspectionIngressPortId(dai.getInspectionOsIngressPortId());
         dto.setOsInspectionIngressMacAddress(dai.getInspectionIngressMacAddress());

@@ -82,7 +82,7 @@ public class OsSvaCheckFloatingIpTask extends TransactionalMetaTask {
                 Network floatingPoolNetwork = neutron.getNetworkByName(ds.getRegion(), ds.getFloatingIpPoolName());
                 // Floating ip is invalid or has never been assigned to this sva for some reason, try adding it now.
                 NetFloatingIP allocatedFloatingIp = neutron.createFloatingIp(ds.getRegion(),
-                        floatingPoolNetwork.getId(), this.dai.getOsServerId(), this.dai.getMgmtOsPortId());
+                        floatingPoolNetwork.getId(), this.dai.getExternalId(), this.dai.getMgmtOsPortId());
                 this.dai.setIpAddress(allocatedFloatingIp.getFloatingIpAddress());
                 this.dai.setFloatingIpId(allocatedFloatingIp.getId());
                 this.log.info("Dai: " + this.dai + " Ip Address set to: " + allocatedFloatingIp);

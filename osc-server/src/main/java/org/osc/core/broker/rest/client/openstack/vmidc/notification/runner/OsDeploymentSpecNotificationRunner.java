@@ -189,8 +189,8 @@ public class OsDeploymentSpecNotificationRunner implements BroadcastListener {
         ArrayList<String> svaIdList = new ArrayList<>();
         if (!ds.getDistributedApplianceInstances().isEmpty()) {
             for (DistributedApplianceInstance dai : ds.getDistributedApplianceInstances()) {
-                if (!dai.getMarkedForDeletion() && dai.getOsServerId() != null) {
-                    svaIdList.add(dai.getOsServerId().toString());
+                if (!dai.getMarkedForDeletion() && dai.getExternalId() != null) {
+                    svaIdList.add(dai.getExternalId().toString());
                 }
             }
         }

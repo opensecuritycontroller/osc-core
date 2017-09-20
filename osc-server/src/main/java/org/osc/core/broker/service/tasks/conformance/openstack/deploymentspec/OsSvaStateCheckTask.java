@@ -53,10 +53,10 @@ public class OsSvaStateCheckTask extends TransactionalTask {
 
         Endpoint endPoint = new Endpoint(ds);
         try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
-            Server serverDAI = nova.getServer(ds.getRegion(), this.dai.getOsServerId());
+            Server serverDAI = nova.getServer(ds.getRegion(), this.dai.getExternalId());
             // Check is SVA is Shut off
             if (serverDAI.getStatus().equals(Server.Status.SHUTOFF)) {
-                boolean isStarted = nova.startServer(ds.getRegion(), this.dai.getOsServerId());
+                boolean isStarted = nova.startServer(ds.getRegion(), this.dai.getExternalId());
                 this.log.info("SVA found in SHUTOFF state we will try to start it ... Is SVA started successfully: " + isStarted);
             }
         }

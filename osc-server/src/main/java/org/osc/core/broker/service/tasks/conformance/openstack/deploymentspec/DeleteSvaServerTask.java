@@ -70,10 +70,10 @@ public class DeleteSvaServerTask extends TransactionalTask {
         try (Openstack4JNova nova = new Openstack4JNova(osEndPoint);
              Openstack4JNeutron neutron = new Openstack4JNeutron(osEndPoint)) {
             Server sva = null;
-            String serverId = this.dai.getOsServerId();
+            String serverId = this.dai.getExternalId();
 
             if (serverId != null) {
-                sva = nova.getServer(this.region, this.dai.getOsServerId());
+                sva = nova.getServer(this.region, this.dai.getExternalId());
             }
 
             if (sva == null) {

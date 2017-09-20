@@ -243,6 +243,8 @@ public class ReleaseUpgradeMgr {
                 upgrade86to87(stmt);
             case 87:
                 upgrade87to88(stmt);
+            case 88:
+                upgrade88to89(stmt);
             case TARGET_DB_VERSION:
                 if (curDbVer < TARGET_DB_VERSION) {
                     execSql(stmt, "UPDATE RELEASE_INFO SET db_version = " + TARGET_DB_VERSION + " WHERE id = 1;");
@@ -254,7 +256,11 @@ public class ReleaseUpgradeMgr {
         }
     }
 
-
+    private static void upgrade88to89(Statement stmt) throws SQLException {
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE DROP COLUMN IF EXISTS external_id;");
+        execSql(stmt, "alter table DISTRIBUTED_APPLIANCE_INSTANCE alter column os_server_id RENAME TO " + "external_id;");
+    }
+    
     private static void upgrade87to88(Statement stmt) throws SQLException {
         execSql(stmt, "alter table DEPLOYMENT_SPEC add column port_group_id varchar(255) " +
                       "after inspection_network_id;");

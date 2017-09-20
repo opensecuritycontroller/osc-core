@@ -162,7 +162,6 @@ public class Schema {
                 "virtual_system_fk bigint not null," +
                 "os_host_name varchar(255)," +
                 "os_availability_zone_name varchar(255)," +
-                "os_server_id varchar(255)," +
                 "inspection_os_ingress_port_id varchar(255)," +
                 "inspection_ingress_mac_address varchar(255)," +
                 "inspection_os_egress_port_id varchar(255)," +
