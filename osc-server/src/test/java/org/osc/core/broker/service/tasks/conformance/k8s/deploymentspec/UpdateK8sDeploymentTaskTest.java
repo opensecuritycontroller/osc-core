@@ -82,11 +82,11 @@ public class UpdateK8sDeploymentTaskTest  {
         vs.setVirtualizationConnector(vc);
         vs.setId(102L);
 
-        ApplianceSoftwareVersion avs = new ApplianceSoftwareVersion();
-        avs.setImageUrl("ds-image-url");
-        avs.setImagePullSecretName("ds-pull-secret-name");
+        ApplianceSoftwareVersion asv = new ApplianceSoftwareVersion();
+        asv.setImageUrl("ds-image-url");
+        asv.setImagePullSecretName("ds-pull-secret-name");
 
-        vs.setApplianceSoftwareVersion(avs);
+        vs.setApplianceSoftwareVersion(asv);
         DeploymentSpec ds = new DeploymentSpec(vs, null, null, null, null, null);
         ds.setId(101L);
         ds.setName("ds-name");
