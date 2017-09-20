@@ -18,12 +18,7 @@ package org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec;
 
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -52,6 +47,7 @@ import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.broker.util.db.HibernateUtil;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
@@ -121,7 +117,7 @@ public class DeleteInspectionPortTaskTest {
         DistributedApplianceInstance dai = registerNewDAI(1L);
 
         registerDomain(null, dai);
-
+        when(this.apiFactoryServiceMock.supportsPortGroup(dai.getVirtualSystem())).thenReturn(true);
         DeleteInspectionPortTask task = this.factory.create("region", dai);
 
         this.exception.expect(VmidcBrokerValidationException.class);
@@ -204,11 +200,13 @@ public class DeleteInspectionPortTaskTest {
     protected void registerNetworkRedirectionApi(SdnRedirectionApi redirectionApi, DistributedApplianceInstance dai)
             throws Exception {
         when(this.apiFactoryServiceMock.createNetworkRedirectionApi(dai)).thenReturn(redirectionApi);
+        when(this.apiFactoryServiceMock.supportsPortGroup(dai.getVirtualSystem())).thenReturn(true);
     }
 
     private DistributedApplianceInstance registerNewDAI(Long entityId) {
         VirtualizationConnector vc = new VirtualizationConnector();
         vc.setId(entityId);
+        vc.setVirtualizationType(VirtualizationType.OPENSTACK);
 
         VirtualSystem vs = new VirtualSystem(null);
         vs.setId(entityId);

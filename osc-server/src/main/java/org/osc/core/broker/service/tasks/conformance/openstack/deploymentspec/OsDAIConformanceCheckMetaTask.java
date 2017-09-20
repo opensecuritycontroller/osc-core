@@ -66,6 +66,9 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
     DeleteSvaServerTask deleteSvaServerTask;
 
     @Reference
+    DeleteInspectionPortTask deleteInspectionPortTask;
+
+    @Reference
     OsSvaEnsureActiveTask osSvaEnsureActiveTask;
 
     @Reference
@@ -138,6 +141,7 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         task.osSvaCheckFloatingIpTask = this.osSvaCheckFloatingIpTask;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
+        task.deleteInspectionPortTask = this.deleteInspectionPortTask;
 
         return task;
     }
@@ -174,8 +178,11 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
              * that means that all are OS attributes are staled and should be re-discovered
              */
                 if (namedSva != null) {
+                    if(vc.isControllerDefined()) {
+                        this.tg.addTask(this.deleteInspectionPortTask.create(ds.getRegion(), this.dai));
+                    }
                     log.info("Missing SVA found by name, deleting stale SVA to redeploy: " + this.dai.getName());
-                    this.tg.addTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
+                    this.tg.appendTask(this.deleteSvaServerTask.create(ds.getRegion(), this.dai));
                 }
 
                 // Make sure host exists in openstack cluster
@@ -185,12 +192,15 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
                 } else {
                     log.info("Host removed from openstack: " + this.dai.getOsHostName() + "Removing Dai: "
                             + this.dai.getName());
+                    if(vc.isControllerDefined()) {
+                        this.tg.addTask(this.deleteInspectionPortTask.create(ds.getRegion(), this.dai));
+                    }
                     this.tg.appendTask(this.deleteDAIFromDbTask.create(this.dai));
                 }
             } else {
                 ApplianceSoftwareVersion currentSoftwareVersion = ds.getVirtualSystem().getApplianceSoftwareVersion();
                 boolean doesSvaVersionMatchVsVersion = false;
-                
+
                 for (OsImageReference imageRef : ds.getVirtualSystem().getOsImageReference()) {
                 	if (imageRef.getImageRefId().equals(sva.getImageId())
                             && imageRef.getApplianceVersion().equals(currentSoftwareVersion)) {
