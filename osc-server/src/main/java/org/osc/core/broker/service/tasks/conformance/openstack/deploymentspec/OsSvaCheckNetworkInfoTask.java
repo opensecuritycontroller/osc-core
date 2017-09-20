@@ -65,10 +65,9 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
         try (Openstack4JNeutron neutron = new Openstack4JNeutron(endPoint)) {
             Network mgmtNetwork = neutron.getNetworkById(ds.getRegion(), ds.getManagementNetworkId());
 
-            if(mgmtNetwork == null) {
-                throw new IllegalStateException(String.format(
-                        "The network %s does not exist.",
-                        ds.getManagementNetworkId()));
+            if (mgmtNetwork == null) {
+                throw new IllegalStateException(
+                        String.format("The network %s does not exist.", ds.getManagementNetworkId()));
             }
             if (mgmtNetwork.getSubnets() == null || mgmtNetwork.getSubnets().isEmpty()) {
                 throw new IllegalStateException(String.format(
