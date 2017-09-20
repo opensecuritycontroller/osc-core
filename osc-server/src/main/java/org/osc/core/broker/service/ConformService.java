@@ -51,6 +51,7 @@ import org.osc.core.broker.service.tasks.conformance.DAConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.DowngradeLockObjectTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectMetaTask;
 import org.osc.core.broker.service.tasks.conformance.UnlockObjectTask;
+import org.osc.core.broker.service.tasks.conformance.k8s.deploymentspec.ConformK8sDeploymentSpecMetaTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MCConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DSConformanceCheckMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupCheckMetaTask;
@@ -103,6 +104,9 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
 
     @Reference
     private CheckSSLConnectivityVcTask checkSSLConnectivityVcTask;
+
+    @Reference
+    private ConformK8sDeploymentSpecMetaTask conformK8sDeploymentSpecMetaTask;
 
     // optional+dynamic to resolve circular reference
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
@@ -376,7 +380,13 @@ public class ConformService extends ServiceDispatcher<ConformRequest, BaseJobRes
                 dsUnlockTask = LockUtil.tryLockDS(ds, da, da.getApplianceManagerConnector(),
                         ds.getVirtualSystem().getVirtualizationConnector());
             }
-            tg.addTask(this.dsConformanceCheckMetaTask.create(ds, new Endpoint(vc, ds.getProjectName())));
+
+            if (ds.getVirtualSystem().getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+                tg.addTask(this.dsConformanceCheckMetaTask.create(ds, new Endpoint(vc, ds.getProjectName())));
+            } else {
+                tg.addTask(this.conformK8sDeploymentSpecMetaTask.create(ds));
+            }
+
             tg.appendTask(dsUnlockTask, TaskGuard.ALL_PREDECESSORS_COMPLETED);
 
             String jobName = "Syncing Deployment Specification";

@@ -42,6 +42,10 @@ public class DeploymentSpecDto extends BaseDto {
             readOnly = true)
     private String projectId;
 
+    @ApiModelProperty(value = "The external system id corresponding to this deployment spec",
+            readOnly = true)
+    private String externalId;
+
     @ApiModelProperty(value = "The virtualization environment namespace for the entities created by this deployment. For instance, a Kubernetes namespace.")
     private String namespace;
 
@@ -154,6 +158,14 @@ public class DeploymentSpecDto extends BaseDto {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public String getExternalId() {
+        return this.externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 
     public String getManagementNetworkName() {
