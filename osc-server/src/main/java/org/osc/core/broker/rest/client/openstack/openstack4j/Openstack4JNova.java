@@ -16,7 +16,14 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
 import org.openstack4j.api.Builders;
 import org.openstack4j.model.common.ActionResponse;
@@ -33,13 +40,7 @@ import org.openstack4j.model.network.Port;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement.BootstrapFileElement;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.google.common.collect.Maps;
 
 public class Openstack4JNova extends BaseOpenstack4jApi {
 
@@ -116,8 +117,8 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         try {
             ServerCreateBuilder sc = Builders.server().name(svaName).flavor(flavorRef).image(imageRef);
 
-            sc.addNetworkPort(ingressInspectionPort.getId());
             sc.networks(Collections.singletonList(mgmtNetworkUuid));
+            sc.addNetworkPort(ingressInspectionPort.getId());
 
             if (additionalNicForInspection) {
                 sc.addNetworkPort(egressInspectionPort.getId());
