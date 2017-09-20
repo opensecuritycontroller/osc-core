@@ -28,7 +28,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
  * osc-core components.
  */
 public class KubernetesDeploymentApi extends KubernetesApi {
-    private final static String OSC_DEPLOYMENT_LABEL_NAME = "osc-deployment";
+    public final static String OSC_DEPLOYMENT_LABEL_NAME = "osc-deployment";
 
     private static final Logger LOG = Logger.getLogger(KubernetesDeploymentApi.class);
 

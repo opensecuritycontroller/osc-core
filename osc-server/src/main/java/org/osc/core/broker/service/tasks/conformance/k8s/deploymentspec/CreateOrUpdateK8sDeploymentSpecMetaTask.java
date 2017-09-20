@@ -114,7 +114,7 @@ public class CreateOrUpdateK8sDeploymentSpecMetaTask extends TransactionalMetaTa
 
     @Override
     public String getName() {
-        return String.format("Creating or updating the Kubernetes deployment spec %s", this.ds.getName());
+        return String.format("Creating or updating the Kubernetes deployment spec %s and pod %s", this.ds.getName());
     }
 
     @Override
