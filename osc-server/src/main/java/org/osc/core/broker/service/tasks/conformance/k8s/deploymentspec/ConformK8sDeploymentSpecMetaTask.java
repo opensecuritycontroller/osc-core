@@ -17,6 +17,7 @@
 package org.osc.core.broker.service.tasks.conformance.k8s.deploymentspec;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
@@ -26,12 +27,17 @@ import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance
 import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
+import org.osc.core.broker.service.tasks.IgnoreCompare;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.deleteda.DeleteDAIFromDbTask;
 import org.osc.core.broker.service.tasks.conformance.manager.MgrCheckDevicesMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.DeleteDSFromDbTask;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * Conforms the deployment spec for Kubernetes according to its settings.
@@ -46,7 +52,11 @@ public class ConformK8sDeploymentSpecMetaTask extends TransactionalMetaTask {
     @Reference
     CreateOrUpdateK8sDeploymentSpecMetaTask createOrUpdateK8sDeploymentSpecMetaTask;
 
-    @Reference
+    // optional+dynamic to break circular DS dependency
+    // TODO: remove circularity and use mandatory references
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile ComponentServiceObjects<DeleteDAIFromDbTask> deleteDAIFromDbTaskCSO;
+
     DeleteDAIFromDbTask deleteDAIFromDbTask;
 
     @Reference
@@ -58,13 +68,38 @@ public class ConformK8sDeploymentSpecMetaTask extends TransactionalMetaTask {
     private DeploymentSpec ds;
     private TaskGraph tg;
 
+    @IgnoreCompare
+    private AtomicBoolean initDone = new AtomicBoolean();
+
+    @IgnoreCompare
+    private ConformK8sDeploymentSpecMetaTask factory;
+
+    @Override
+    protected void delayedInit() {
+        if (this.factory.initDone.compareAndSet(false, true) && this.factory.deleteDAIFromDbTaskCSO != null) {
+            this.factory.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTaskCSO.getService();
+        }
+
+        this.deleteDAIFromDbTask = this.factory.deleteDAIFromDbTask;
+        this.deleteK8sDeploymentTask = this.factory.deleteK8sDeploymentTask;
+        this.createOrUpdateK8sDeploymentSpecMetaTask = this.factory.createOrUpdateK8sDeploymentSpecMetaTask;
+        this.mgrCheckDevicesMetaTask = this.factory.mgrCheckDevicesMetaTask;
+        this.deleteDSFromDbTask = this.factory.deleteDSFromDbTask;
+
+        this.dbConnectionManager = this.factory.dbConnectionManager;
+        this.txBroadcastUtil = this.factory.txBroadcastUtil;
+    }
+
+    @Deactivate
+    private void deactivate() {
+        if (this.initDone.get()) {
+            this.factory.deleteDAIFromDbTaskCSO.ungetService(this.deleteDAIFromDbTask);
+        }
+    }
+
     public ConformK8sDeploymentSpecMetaTask create(DeploymentSpec ds) {
         ConformK8sDeploymentSpecMetaTask task = new ConformK8sDeploymentSpecMetaTask();
-        task.deleteK8sDeploymentTask = this.deleteK8sDeploymentTask;
-        task.createOrUpdateK8sDeploymentSpecMetaTask = this.createOrUpdateK8sDeploymentSpecMetaTask;
-        task.deleteDAIFromDbTask = this.deleteDAIFromDbTask;
-        task.mgrCheckDevicesMetaTask = this.mgrCheckDevicesMetaTask;
-        task.deleteDSFromDbTask = this.deleteDSFromDbTask;
+        task.factory = this;
         task.ds = ds;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
@@ -74,6 +109,7 @@ public class ConformK8sDeploymentSpecMetaTask extends TransactionalMetaTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        delayedInit();
         this.tg = new TaskGraph();
 
         OSCEntityManager<DeploymentSpec> dsEmgr = new OSCEntityManager<DeploymentSpec>(DeploymentSpec.class, em, this.txBroadcastUtil);
