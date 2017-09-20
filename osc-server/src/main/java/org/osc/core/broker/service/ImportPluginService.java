@@ -51,17 +51,18 @@ public class ImportPluginService extends ServiceDispatcher<ImportFileRequest, Ba
     @Override
     public BaseResponse exec(ImportFileRequest request, EntityManager em) throws Exception {
         BaseResponse response = new BaseResponse();
-
         File tmpUploadFolder = new File(request.getUploadPath());
 
+        try {
 		validate(em, request, tmpUploadFolder);
 
 		File pluginTarget = new File(ApiFactoryService.PLUGINS_DIRECTORY, this.deploymentName);
 
 		FileUtils.copyFile(this.barFile, pluginTarget);
 
-		cleanTmpFolder(tmpUploadFolder);
-
+        } finally {
+            cleanTmpFolder(tmpUploadFolder);
+        }
         return response;
     }
 
