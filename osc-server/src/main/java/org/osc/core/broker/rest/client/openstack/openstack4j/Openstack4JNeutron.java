@@ -362,7 +362,7 @@ public class Openstack4JNeutron extends BaseOpenstack4jApi {
         ActionResponse actionResponse = getOs().networking().floatingip().delete(floatingIpId);
         if (!actionResponse.isSuccess()) {
             String message = String.format("Deleting floating ip with id: %s in region: %s failed with message: %s",
-                    floatingIpId, actionResponse.getFault());
+                    floatingIpId, region, actionResponse.getFault());
             log.warn(message);
             if (actionResponse.getCode() != Response.Status.NOT_FOUND.getStatusCode()) {
                 throw new ResponseException(message, actionResponse.getCode());
