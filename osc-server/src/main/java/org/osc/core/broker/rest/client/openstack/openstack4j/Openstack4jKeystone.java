@@ -16,24 +16,31 @@
  *******************************************************************************/
 package org.osc.core.broker.rest.client.openstack.openstack4j;
 
-import org.openstack4j.model.identity.v3.Project;
-
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.log4j.Logger;
+import org.openstack4j.model.identity.v3.Project;
+
 public class Openstack4jKeystone extends BaseOpenstack4jApi {
+
+    private static final Logger log = Logger.getLogger(Openstack4JNova.class);
 
     public Openstack4jKeystone(Endpoint endPoint) {
         super(endPoint);
     }
 
     public List<? extends Project> listProjects() {
-        List<? extends Project> projectsList = this.getOs().identity().projects().list();
+        List<? extends Project> projectsList = getOs().identity().projects().list();
+        if (CollectionUtils.isEmpty(projectsList)) {
+            log.warn("No projects found!");
+        }
         projectsList.sort(Comparator.comparing(Project::getName));
         return projectsList;
     }
 
     public Project getProjectById(String projectId) {
-        return this.getOs().identity().projects().get(projectId);
+        return getOs().identity().projects().get(projectId);
     }
 }
