@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.openstack4j.api.Builders;
+import org.openstack4j.api.exceptions.ResponseException;
 import org.openstack4j.model.common.ActionResponse;
 import org.openstack4j.model.compute.Action;
 import org.openstack4j.model.compute.Flavor;
@@ -38,7 +39,6 @@ import org.openstack4j.model.compute.ext.AvailabilityZone;
 import org.openstack4j.model.compute.ext.Hypervisor;
 import org.openstack4j.model.identity.v3.Region;
 import org.openstack4j.model.network.Port;
-import org.osc.core.broker.service.exceptions.VmidcRuntimeException;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement;
 import org.osc.sdk.manager.element.ApplianceBootstrapInformationElement.BootstrapFileElement;
 
@@ -221,7 +221,7 @@ public class Openstack4JNova extends BaseOpenstack4jApi {
         if (!actionResponse.isSuccess()) {
             String message = String.format("Deleting flavor Id: %s failed. Error: %s", id, actionResponse.getFault());
             log.warn(message);
-            throw new VmidcRuntimeException(message);
+            throw new ResponseException(message, actionResponse.getCode());
         }
     }
 

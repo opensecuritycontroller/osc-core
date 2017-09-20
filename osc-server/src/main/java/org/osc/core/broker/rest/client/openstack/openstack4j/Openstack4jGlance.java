@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.openstack4j.api.Builders;
+import org.openstack4j.api.exceptions.ResponseException;
 import org.openstack4j.model.common.ActionResponse;
 import org.openstack4j.model.common.Payload;
 import org.openstack4j.model.common.Payloads;
@@ -31,7 +32,6 @@ import org.openstack4j.model.image.v2.DiskFormat;
 import org.openstack4j.model.image.v2.Image;
 import org.openstack4j.model.image.v2.builder.ImageBuilder;
 import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
-import org.osc.core.broker.service.exceptions.VmidcRuntimeException;
 
 
 public class Openstack4jGlance extends BaseOpenstack4jApi {
@@ -71,7 +71,7 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
             String message = String.format("Failed to upload image: %s to region: %s. error: %s", imageName, region,
                     actionResponse.getFault());
             log.warn(message);
-            throw new VmidcRuntimeException(message);
+            throw new ResponseException(message, actionResponse.getCode());
         }
 
         return imageId;
@@ -92,7 +92,7 @@ public class Openstack4jGlance extends BaseOpenstack4jApi {
             String message = String.format("Image Id: %s in region: %s cannot be removed. Error: %s", id, region,
                     actionResponse.getFault());
             log.warn(message);
-            throw new VmidcRuntimeException(message);
+            throw new ResponseException(message, actionResponse.getCode());
         }
         return actionResponse.isSuccess();
     }

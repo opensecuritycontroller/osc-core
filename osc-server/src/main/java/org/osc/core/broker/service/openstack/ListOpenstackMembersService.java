@@ -136,8 +136,12 @@ public class ListOpenstackMembersService
         }
     }
 
-    private String createSubnetNetworkName(Subnet subnet, String region, Openstack4JNeutron neutronApi) {
+    private String createSubnetNetworkName(Subnet subnet, String region, Openstack4JNeutron neutronApi) throws VmidcBrokerValidationException {
         Network subnetNetwork = neutronApi.getNetworkById(region, subnet.getNetworkId());
+        if (subnetNetwork == null) {
+            throw new VmidcBrokerValidationException(
+                    String.format("Unable to find network for the subnet %s.", subnet.getName()));
+        }
         return subnet.getName() + " (" + subnetNetwork.getName() + ")";
     }
 }
