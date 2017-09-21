@@ -16,22 +16,44 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
+import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.k8s.Label;
+import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
+import org.osc.core.broker.rest.client.k8s.KubernetesClient;
+import org.osc.core.broker.rest.client.k8s.KubernetesPod;
+import org.osc.core.broker.rest.client.k8s.KubernetesPodApi;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service = UpdateK8sSecurityGroupMemberLabelMetaTask.class)
 public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMetaTask {
 
     private SecurityGroupMember sgm;
 
+    @Reference
+    LabelPodCreateTask labelPodCreateTask;
+
+    @Reference
+    LabelPodDeleteTask labelPodDeleteTask;
+
+    private TaskGraph tg;
+
+    private KubernetesPodApi k8sPodApi;
+
     @Override
     public TaskGraph getTaskGraph() {
-        // TODO Auto-generated method stub
-        return null;
+        return this.tg;
     }
 
     @Override
@@ -41,14 +63,48 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        // TODO : unimplemented
+
+        this.tg = new TaskGraph();
+        Label label = this.sgm.getLabel();
+
+        List<KubernetesPod> k8sPods = Collections.emptyList();
+        try (KubernetesClient client = new KubernetesClient(this.sgm.getSecurityGroup().getVirtualizationConnector())) {
+            if (this.k8sPodApi == null) {
+                this.k8sPodApi = new KubernetesPodApi(client);
+            } else {
+                this.k8sPodApi.setKubernetesClient(client);
+            }
+            k8sPods = this.k8sPodApi.getPodsByLabel(this.sgm.getLabel().getValue());
+        }
+
+        if (label.getId() != null) {
+            label = em.find(Label.class, label.getId());
+        }
+
+        Set<String> existingPodIdsInOSC = emptyIfNull(label.getPods()).stream().map(Pod::getExternalId)
+                .collect(Collectors.toSet());
+
+        Set<String> existingPodIdsInK8s = emptyIfNull(k8sPods).stream().map(KubernetesPod::getUid)
+                .collect(Collectors.toSet());
+
+        Set<KubernetesPod> k8sPodsToCreate = emptyIfNull(k8sPods).stream()
+                .filter(p -> !existingPodIdsInOSC.contains(p.getUid())).collect(Collectors.toSet());
+
+        Set<Pod> dbPodsToDelete = emptyIfNull(label.getPods()).stream()
+                .filter(p -> !existingPodIdsInK8s.contains(p.getExternalId())).collect(Collectors.toSet());
+
+        k8sPodsToCreate.forEach(p -> this.tg.addTask(this.labelPodCreateTask.create(p)));
+        dbPodsToDelete.forEach(p -> this.tg.addTask(this.labelPodDeleteTask.create(p)));
     }
 
-    UpdateK8sSecurityGroupMemberLabelMetaTask create(SecurityGroupMember sgm) {
+    UpdateK8sSecurityGroupMemberLabelMetaTask create(SecurityGroupMember sgm, KubernetesPodApi k8sPodApi) {
         UpdateK8sSecurityGroupMemberLabelMetaTask task = new UpdateK8sSecurityGroupMemberLabelMetaTask();
         task.sgm = sgm;
+        task.labelPodCreateTask = this.labelPodCreateTask;
+        task.labelPodDeleteTask = this.labelPodDeleteTask;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
+        task.k8sPodApi = this.k8sPodApi;
 
         return task;
     }

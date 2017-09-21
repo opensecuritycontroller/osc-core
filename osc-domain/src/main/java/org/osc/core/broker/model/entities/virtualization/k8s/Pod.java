@@ -50,7 +50,43 @@ public class Pod extends BaseEntity {
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "pods")
     private Set<Label> labels = new HashSet<Label>();
 
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNamespace() {
+        return this.namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public String getNode() {
+        return this.node;
+    }
+
+    public void setNode(String node) {
+        this.node = node;
+    }
+
+    public String getExternalId() {
+        return this.externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
     public Set<PodPort> getPorts() {
         return this.ports;
+    }
+
+    public Set<Label> getLabels() {
+        return this.labels;
     }
 }
