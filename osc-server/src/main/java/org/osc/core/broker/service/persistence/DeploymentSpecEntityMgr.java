@@ -54,7 +54,6 @@ public class DeploymentSpecEntityMgr {
         ds.setInstanceCount(dto.getCount());
         ds.setShared(dto.isShared());
         ds.setNamespace(dto.getNamespace());
-        ds.setExternalId(dto.getExternalId());
     }
 
     public static void fromEntity(DeploymentSpec ds, DeploymentSpecDto dto) {
