@@ -180,7 +180,7 @@ public class DistributedApplianceInstanceEntityMgr {
 
         Root<DistributedApplianceInstance> from = query.from(DistributedApplianceInstance.class);
 
-        query = query.select(from.get("osServerId")).distinct(true).where(
+        query = query.select(from.get("external_id")).distinct(true).where(
                 cb.equal(from.join("virtualSystem").join("virtualizationConnector")
                         .get("id"), vcId));
 
@@ -305,7 +305,7 @@ public class DistributedApplianceInstanceEntityMgr {
         Root<DistributedApplianceInstance> root = query.from(DistributedApplianceInstance.class);
 
         query = query.select(root)
-                .where(cb.equal(root.get("osServerId"), osServerId));
+                .where(cb.equal(root.get("external_id"), osServerId));
 
         List<DistributedApplianceInstance> list = em.createQuery(query).getResultList();
 
