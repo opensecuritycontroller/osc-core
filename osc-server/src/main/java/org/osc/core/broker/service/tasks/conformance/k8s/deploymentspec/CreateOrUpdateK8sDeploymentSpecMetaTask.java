@@ -96,20 +96,14 @@ public class CreateOrUpdateK8sDeploymentSpecMetaTask extends TransactionalMetaTa
             }
         }
 
-        boolean updateOrDelete = false;
-
         if (deployment == null) {
             this.tg.appendTask(this.createK8sDeploymentTask.create(this.ds));
-            updateOrDelete = true;
         } else if (deployment.getDesiredReplicaCount() != this.ds.getInstanceCount()){
             this.tg.appendTask(this.updateK8sDeploymentTask.create(this.ds));
-            updateOrDelete = true;
         }
 
-        if (updateOrDelete) {
-            this.tg.appendTask(this.checkK8sDeploymentStateTask.create(this.ds));
-            this.tg.appendTask(this.conformK8sDeploymentPodsMetaTask.create(this.ds));
-        }
+        this.tg.appendTask(this.checkK8sDeploymentStateTask.create(this.ds));
+        this.tg.appendTask(this.conformK8sDeploymentPodsMetaTask.create(this.ds));
     }
 
     @Override

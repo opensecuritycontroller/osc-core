@@ -74,8 +74,10 @@ public class CreateOrUpdateK8sDeploymentSpecMetaTaskTestData {
         return expectedGraph;
     }
 
-    public static TaskGraph emptyDSGraph() {
+    public static TaskGraph emptyDSGraph(DeploymentSpec ds) {
         TaskGraph expectedGraph = new TaskGraph();
+        expectedGraph.appendTask(new CheckK8sDeploymentStateTask().create(ds));
+        expectedGraph.appendTask(new ConformK8sDeploymentPodsMetaTask().create(ds));
         return expectedGraph;
     }
 

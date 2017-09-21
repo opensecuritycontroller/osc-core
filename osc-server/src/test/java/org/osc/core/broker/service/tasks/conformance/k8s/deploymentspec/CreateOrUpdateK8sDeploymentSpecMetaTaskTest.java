@@ -146,7 +146,7 @@ public class CreateOrUpdateK8sDeploymentSpecMetaTaskTest {
             {CREATE_DS_NO_EXTERNAL_ID, createDSGraph(CREATE_DS_NO_EXTERNAL_ID)},
             {CREATE_DS_NO_K8S_DEPLOYMENT, createDSGraph(CREATE_DS_NO_K8S_DEPLOYMENT)},
             {UPDATE_DS_NEW_INSTANCE_COUNT, updateDSGraph(UPDATE_DS_NEW_INSTANCE_COUNT)},
-            {NOOP_DS_SAME_INSTANCE_COUNT, emptyDSGraph()},
+            {NOOP_DS_SAME_INSTANCE_COUNT, emptyDSGraph(NOOP_DS_SAME_INSTANCE_COUNT)},
         });
     }
 
