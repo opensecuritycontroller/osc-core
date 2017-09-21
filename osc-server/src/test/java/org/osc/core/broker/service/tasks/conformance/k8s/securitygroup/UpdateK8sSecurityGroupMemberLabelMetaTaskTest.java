@@ -16,10 +16,11 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
-import static org.osc.core.broker.service.tasks.conformance.k8s.securitygroup.CheckK8sSecurityGroupLabelMetaTaskTestData.*;
+import static org.osc.core.broker.service.tasks.conformance.k8s.securitygroup.UpdateK8sSecurityGroupMemberLabelMetaTaskTestData.*;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 
@@ -36,83 +37,67 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberDeleteTask;
-import org.osc.core.broker.service.tasks.conformance.securitygroup.MarkSecurityGroupMemberDeleteTask;
+import org.osc.core.broker.model.entities.virtualization.k8s.Label;
+import org.osc.core.broker.rest.client.k8s.KubernetesPod;
+import org.osc.core.broker.rest.client.k8s.KubernetesPodApi;
+import org.osc.core.broker.service.exceptions.VmidcException;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TaskGraphHelper;
 import org.osc.core.test.util.TestTransactionControl;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
-@RunWith(PowerMockRunner.class)
-@PowerMockRunnerDelegate(value = Parameterized.class)
-public class CheckK8sSecurityGroupLabelMetaTaskTest {
+@RunWith(Parameterized.class)
+public class UpdateK8sSecurityGroupMemberLabelMetaTaskTest {
 
-    private EntityManager em;
+    public EntityManager em;
+
+    private SecurityGroupMember sgm;
+    private TaskGraph expectedGraph;
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private TestTransactionControl txControl;
 
     @Mock
-    private DBConnectionManager dbMgr;
+    DBConnectionManager dbMgr;
 
     @Mock
-    private TransactionalBroadcastUtil txBroadcastUtil;
+    TransactionalBroadcastUtil txBroadcastUtil;
 
     @InjectMocks
-    private CheckK8sSecurityGroupLabelMetaTask factoryTask;
+    UpdateK8sSecurityGroupMemberLabelMetaTask factoryTask;
 
-    private TaskGraph expectedGraph;
-    private SecurityGroupMember sgm;
-    private boolean isDelete;
+    @Mock
+    private KubernetesPodApi k8sPodApi;
 
-    public CheckK8sSecurityGroupLabelMetaTaskTest(SecurityGroupMember sgm, boolean isDelete) {
+    public UpdateK8sSecurityGroupMemberLabelMetaTaskTest(SecurityGroupMember sgm, TaskGraph expectedGraph) {
         this.sgm = sgm;
-        this.isDelete = isDelete;
+        this.expectedGraph = expectedGraph;
     }
 
     @Before
-    public void testInitialize() throws Exception {
+    public void testInitialize() throws VmidcException {
         MockitoAnnotations.initMocks(this);
         this.em = InMemDB.getEntityManagerFactory().createEntityManager();
 
         this.txControl.setEntityManager(this.em);
         Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
         Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
+        registerKubernetesPods(this.sgm.getLabel(), MATCHING_PODS);
         persist(this.sgm, this.em);
     }
 
     @After
-    public void testTearDown() {
+    public void testTearDowm() {
         InMemDB.shutdown();
     }
 
     @Test
     public void testExecute_WithVariousSGM_ExpectCorrectTaskGraph() throws Exception {
-
         // Arrange.
-        CheckK8sSecurityGroupLabelMetaTask task =
-                this.factoryTask.create(this.sgm, this.isDelete);
-        UpdateK8sSecurityGroupMemberLabelMetaTask updateK8sSecurityGroupMemberLabelMetaTask =
-                new UpdateK8sSecurityGroupMemberLabelMetaTask();
-        MarkSecurityGroupMemberDeleteTask markSecurityGroupMemberDeleteTask =
-                new MarkSecurityGroupMemberDeleteTask();
-        SecurityGroupMemberDeleteTask securityGroupMemberDeleteTask =
-                new SecurityGroupMemberDeleteTask();
-
-        task.markSecurityGroupMemberDeleteTask = markSecurityGroupMemberDeleteTask;
-        task.securityGroupMemberDeleteTask = securityGroupMemberDeleteTask;
-        task.updateK8sSecurityGroupMemberLabelMetaTask = updateK8sSecurityGroupMemberLabelMetaTask;
-
-        this.expectedGraph = new TaskGraph();
-        if (!this.isDelete) {
-            this.expectedGraph.addTask(updateK8sSecurityGroupMemberLabelMetaTask.create(this.sgm, null));
-        } else {
-            this.expectedGraph.addTask(markSecurityGroupMemberDeleteTask.create(this.sgm));
-            this.expectedGraph.appendTask(securityGroupMemberDeleteTask.create(this.sgm));
-        }
+        UpdateK8sSecurityGroupMemberLabelMetaTask task = this.factoryTask.create(this.sgm, this.k8sPodApi);
+        task.labelPodCreateTask = new LabelPodCreateTask();
+        task.labelPodDeleteTask = new LabelPodDeleteTask();
 
         // Act.
         task.execute();
@@ -124,8 +109,17 @@ public class CheckK8sSecurityGroupLabelMetaTaskTest {
     @Parameters()
     public static Collection<Object[]> getTestData() {
         return Arrays.asList(new Object[][] {
-            { CREATED_SGM, false },
-            { DELETED_SGM, true },
+            { NO_ENTITY_ORPHAN_PODS_SGM, createExpectedGraph(NO_ENTITY_ORPHAN_PODS_SGM) },
+            { ORPHAN_ENTITIES_NO_PODS_SGM, createExpectedGraph(ORPHAN_ENTITIES_NO_PODS_SGM) },
+            { ENTITIES_PODS_MATCHING_SGM, createExpectedGraph(ENTITIES_PODS_MATCHING_SGM) },
+            { SOME_ORPHAN_ENTITIES_SOME_ORPHAN_PODS_SGM, createExpectedGraph(SOME_ORPHAN_ENTITIES_SOME_ORPHAN_PODS_SGM) }
         });
+    }
+
+    private void registerKubernetesPods(Label label, List<KubernetesPod> k8sPods) throws VmidcException {
+        Mockito
+        .when(this.k8sPodApi.getPodsByLabel(label.getValue()))
+        .thenReturn(k8sPods);
+        this.k8sPodApi.getPodsByLabel(label.getValue());
     }
 }

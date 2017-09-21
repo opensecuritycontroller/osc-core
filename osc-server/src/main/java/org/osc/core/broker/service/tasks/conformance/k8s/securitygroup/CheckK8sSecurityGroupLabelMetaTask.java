@@ -58,7 +58,7 @@ public class CheckK8sSecurityGroupLabelMetaTask extends TransactionalMetaTask {
         this.tg = new TaskGraph();
 
         if (!this.isDelete) {
-            this.tg.addTask(this.updateK8sSecurityGroupMemberLabelMetaTask.create(this.sgm));
+            this.tg.addTask(this.updateK8sSecurityGroupMemberLabelMetaTask.create(this.sgm, null));
         } else {
             this.tg.addTask(this.markSecurityGroupMemberDeleteTask.create(this.sgm));
             this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
