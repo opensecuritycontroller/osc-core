@@ -154,13 +154,7 @@ public final class CheckPortGroupHookMetaTask extends TransactionalMetaTask {
         for (SecurityGroupMember sgm : this.sgi.getSecurityGroup().getSecurityGroupMembers()) {
             // If SGM is marked for deletion, previous tasks should have removed the hooks and deleted the member from D.
             if (!sgm.getMarkedForDeletion()) {
-                if (sgm.getType() == SecurityGroupMemberType.VM) {
-                    return sgm.getVm().getPorts().iterator().next();
-                } else if (sgm.getType() == SecurityGroupMemberType.NETWORK) {
-                    return sgm.getNetwork().getPorts().iterator().next();
-                } else if (sgm.getType() == SecurityGroupMemberType.SUBNET) {
-                    return sgm.getSubnet().getPorts().iterator().next();
-                }
+                return sgm.getPorts().iterator().next();
             }
         }
 

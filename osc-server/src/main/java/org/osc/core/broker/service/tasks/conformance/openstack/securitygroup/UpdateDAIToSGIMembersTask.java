@@ -26,7 +26,6 @@ import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -62,13 +61,7 @@ public abstract class UpdateDAIToSGIMembersTask extends TransactionalTask {
         for (SecurityGroupMember sgm : this.sgi.getSecurityGroup().getSecurityGroupMembers()) {
             // If SGM is marked for deletion, previous tasks should have removed the hooks and deleted the member from D.
             if (!sgm.getMarkedForDeletion()) {
-                if (sgm.getType() == SecurityGroupMemberType.VM) {
-                    ports.addAll(sgm.getVm().getPorts());
-                } else if (sgm.getType() == SecurityGroupMemberType.NETWORK) {
-                    ports.addAll(sgm.getNetwork().getPorts());
-                } else if (sgm.getType() == SecurityGroupMemberType.SUBNET) {
-                    ports.addAll(sgm.getSubnet().getPorts());
-                }
+                ports.addAll(sgm.getPorts());
             }
         }
 

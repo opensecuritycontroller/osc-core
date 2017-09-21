@@ -19,14 +19,20 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.TaskGraph;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
+import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache;
 import org.osc.core.broker.rest.client.openstack.discovery.VmDiscoveryCache.VmInfo;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * If sgm is deleted or is marked for deletion, removes all hooks and deletes the sgm
+ * else it updates the member information and updates the hooks. Does not handle deleting of hooks.
+ */
 @Component(service = SecurityGroupMemberVmCheckTask.class)
 public class SecurityGroupMemberVmCheckTask extends TransactionalMetaTask {
 
@@ -37,10 +43,13 @@ public class SecurityGroupMemberVmCheckTask extends TransactionalMetaTask {
     SecurityGroupMemberDeleteTask securityGroupMemberDeleteTask;
 
     @Reference
+    SecurityGroupMemberHookCheckTask securityGroupMemberHookCheckTask;
+
+    @Reference
     SecurityGroupMemberVmUpdateTask securityGroupMemberVmUpdateTask;
 
     @Reference
-    SecurityGroupMemberHookCheckTask securityGroupMemberHookCheckTask;
+    private ApiFactoryService apiFactoryService;
 
     private TaskGraph tg;
     private SecurityGroupMember sgm;
@@ -59,6 +68,7 @@ public class SecurityGroupMemberVmCheckTask extends TransactionalMetaTask {
         task.securityGroupMemberDeleteTask = this.securityGroupMemberDeleteTask;
         task.securityGroupMemberVmUpdateTask = this.securityGroupMemberVmUpdateTask;
         task.securityGroupMemberHookCheckTask = this.securityGroupMemberHookCheckTask;
+        task.apiFactoryService = this.apiFactoryService;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -71,17 +81,21 @@ public class SecurityGroupMemberVmCheckTask extends TransactionalMetaTask {
         this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
         this.vm = this.sgm.getVm();
 
-        boolean isControllerDefined = this.sgm.getSecurityGroup().getVirtualizationConnector().isControllerDefined();
+        SecurityGroup sg = this.sgm.getSecurityGroup();
+
+        // If port grouping is supported, adding/removing hooks is done at the port group level.
+        boolean shouldHandleHooks = sg.getVirtualizationConnector().isControllerDefined()
+                && !this.apiFactoryService.supportsPortGroup(sg);
 
         VmInfo vmInfo = this.vdc.discover(this.vm.getRegion(), this.vm.getOpenstackId());
         if (vmInfo == null || this.sgm.getMarkedForDeletion()) {
-            if (isControllerDefined) {
+            if (shouldHandleHooks) {
                 this.tg.addTask(this.securityGroupMemberAllHooksRemoveTask.create(this.sgm));
             }
             this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
         } else {
             this.tg.addTask(this.securityGroupMemberVmUpdateTask.create(this.sgm, vmInfo));
-            if (isControllerDefined) {
+            if (shouldHandleHooks) {
                 this.tg.appendTask(this.securityGroupMemberHookCheckTask.create(this.sgm, this.vdc));
             }
         }

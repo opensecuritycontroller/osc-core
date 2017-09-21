@@ -16,17 +16,12 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
 
 import org.apache.log4j.Logger;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
-import org.osc.core.broker.model.entities.virtualization.openstack.Network;
-import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
-import org.osc.core.broker.model.entities.virtualization.openstack.VM;
 import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
@@ -66,24 +61,10 @@ public class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
 
-        Set<VMPort> ports = new HashSet<>();
+        Set<VMPort> ports = this.sgm.getPorts();
 
-        if (this.sgm.getType() == SecurityGroupMemberType.VM) {
-            VM vm = this.sgm.getVm();
-            this.log.info(String.format("Removing Inspection Hooks for stale Security Group Member VM '%s'",
-                    vm.getName()));
-            ports = vm.getPorts();
-        } else if (this.sgm.getType() == SecurityGroupMemberType.NETWORK) {
-            Network network = this.sgm.getNetwork();
-            this.log.info(String.format("Removing Inspection Hooks for stale Security Group Member Network '%s'",
-                    network.getName()));
-            ports = network.getPorts();
-        } else if (this.sgm.getType() == SecurityGroupMemberType.SUBNET) {
-            Subnet subnet = this.sgm.getSubnet();
-            this.log.info(String.format("Removing Inspection Hooks for stale Security Group Member Subnet '%s'",
-                    subnet.getName()));
-            ports = subnet.getPorts();
-        }
+        this.log.info(String.format("Removing Inspection Hooks for stale %s Security Group Member '%s'",
+                this.sgm.getType(), this.sgm.getMemberName()));
 
         SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.sgm);
 
@@ -92,9 +73,12 @@ public class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
                 this.log.info("Deleting orphan inspection ports from member '" + this.sgm.getMemberName()
                         + "' And port: '" + port.getElementId() + "'");
 
-                // If port group is not supported also remove the inspection hooks from the controller.
-                if (!this.apiFactoryService.supportsPortGroup(this.sgm.getSecurityGroup())) {
-                controller.removeAllInspectionHooks(new NetworkElementImpl(port));
+                if (this.apiFactoryService.supportsNeutronSFC(this.sgm.getSecurityGroup())) {
+                    // In case of SFC, removing the flow classifier(Inspection hook) is effectively removing all
+                    // inspection hooks for that port.
+                    controller.removeInspectionHook(port.getInspectionHookId());
+                } else {
+                    controller.removeAllInspectionHooks(new NetworkElementImpl(port));
                 }
 
                 port.removeAllDais();

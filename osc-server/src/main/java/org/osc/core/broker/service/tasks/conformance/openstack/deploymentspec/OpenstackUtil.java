@@ -43,7 +43,6 @@ import org.osc.core.broker.model.entities.appliance.VirtualSystem;
 import org.osc.core.broker.model.entities.events.SystemFailureType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
@@ -108,13 +107,7 @@ public class OpenstackUtil {
 
     public static VMPort getAnyProtectedPort(SecurityGroup sg) {
         for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
-            if (sgm.getType() == SecurityGroupMemberType.VM) {
-                return sgm.getVm().getPorts().iterator().next();
-            } else if (sgm.getType() == SecurityGroupMemberType.NETWORK) {
-                return sgm.getNetwork().getPorts().iterator().next();
-            } else if (sgm.getType() == SecurityGroupMemberType.SUBNET) {
-                return sgm.getSubnet().getPorts().iterator().next();
-            }
+            return sgm.getPorts().iterator().next();
         }
 
         return null;
@@ -251,20 +244,7 @@ public class OpenstackUtil {
 
     public static List<NetworkElement> getPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
 
-        Set<VMPort> ports;
-        switch (sgm.getType()) {
-            case VM:
-                ports = sgm.getVm().getPorts();
-                break;
-            case NETWORK:
-                ports = sgm.getNetwork().getPorts();
-                break;
-            case SUBNET:
-                ports = sgm.getSubnet().getPorts();
-                break;
-            default:
-                throw new VmidcBrokerValidationException("Region is not applicable for Members of type '" + sgm.getType() + "'");
-        }
+        Set<VMPort> ports = sgm.getPorts();
 
         return ports.stream()
                 .map(NetworkElementImpl::new)
