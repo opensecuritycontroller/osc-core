@@ -61,7 +61,7 @@ public class SecurityGroupMemberAllHooksRemoveTask extends TransactionalTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.sgm = em.find(SecurityGroupMember.class, this.sgm.getId());
 
-        Set<VMPort> ports = this.sgm.getPorts();
+        Set<VMPort> ports = this.sgm.getVmPorts();
 
         this.log.info(String.format("Removing Inspection Hooks for stale %s Security Group Member '%s'",
                 this.sgm.getType(), this.sgm.getMemberName()));

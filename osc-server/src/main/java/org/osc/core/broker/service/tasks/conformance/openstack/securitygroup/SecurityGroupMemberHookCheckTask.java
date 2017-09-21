@@ -85,7 +85,7 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
 
         this.log.info("Checking Inspection Hooks for Security group Member: " + this.sgm.getMemberName());
 
-        Set<VMPort> ports = this.sgm.getPorts();
+        Set<VMPort> ports = this.sgm.getVmPorts();
 
         boolean supportsNeutronSFC = this.apiFactoryService.supportsNeutronSFC(sg);
         for (VMPort port : ports) {

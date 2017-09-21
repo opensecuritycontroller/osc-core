@@ -319,7 +319,7 @@ public class SecurityGroupUpdateOrDeleteMetaTask extends TransactionalMetaTask {
             // If SGM is marked for deletion, previous tasks should have removed the hooks and deleted the member
             // from DB
             if (!sgm.getMarkedForDeletion()) {
-                Set<VMPort> ports = sgm.getPorts();
+                Set<VMPort> ports = sgm.getVmPorts();
                 for (VMPort port : ports) {
                     DistributedApplianceInstance assignedRedirectedDai = DistributedApplianceInstanceEntityMgr
                             .findByVirtualSystemAndPort(em, vs, port);

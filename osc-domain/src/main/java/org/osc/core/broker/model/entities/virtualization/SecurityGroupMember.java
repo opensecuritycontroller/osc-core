@@ -157,7 +157,7 @@ public class SecurityGroupMember extends BaseEntity {
         }
     }
 
-    public Set<VMPort> getPorts() {
+    public Set<VMPort> getVmPorts() {
         Set<VMPort> ports = new HashSet<>();
         if (this.type == SecurityGroupMemberType.VM) {
             ports = this.vm.getPorts();

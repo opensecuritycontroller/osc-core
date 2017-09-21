@@ -107,7 +107,7 @@ public class OpenstackUtil {
 
     public static VMPort getAnyProtectedPort(SecurityGroup sg) {
         for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
-            return sgm.getPorts().iterator().next();
+            return sgm.getVmPorts().iterator().next();
         }
 
         return null;
@@ -244,7 +244,7 @@ public class OpenstackUtil {
 
     public static List<NetworkElement> getPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
 
-        Set<VMPort> ports = sgm.getPorts();
+        Set<VMPort> ports = sgm.getVmPorts();
 
         return ports.stream()
                 .map(NetworkElementImpl::new)
