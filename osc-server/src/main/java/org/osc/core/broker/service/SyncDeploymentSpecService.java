@@ -34,8 +34,8 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component
 public class SyncDeploymentSpecService
-        extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
-        implements SyncDeploymentSpecServiceApi {
+extends BaseDeploymentSpecService<BaseRequest<DeploymentSpecDto>, BaseJobResponse>
+implements SyncDeploymentSpecServiceApi {
 
     @Reference
     private ConformService conformService;
@@ -44,14 +44,12 @@ public class SyncDeploymentSpecService
 
     @Override
     public BaseJobResponse exec(BaseRequest<DeploymentSpecDto> request, EntityManager em) throws Exception {
-
         BaseJobResponse response = new BaseJobResponse();
 
         UnlockObjectMetaTask unlockTask = null;
         validate(em, request.getDto());
 
         try {
-
             DistributedAppliance da = this.ds.getVirtualSystem().getDistributedAppliance();
             unlockTask = LockUtil.tryReadLockDA(da, da.getApplianceManagerConnector());
             unlockTask.addUnlockTask(LockUtil.tryLockVCObject(this.ds.getVirtualSystem().getVirtualizationConnector(),
@@ -75,7 +73,7 @@ public class SyncDeploymentSpecService
         this.ds = em.find(DeploymentSpec.class, dto.getId());
         if (this.ds == null) {
             throw new VmidcBrokerValidationException("Deployment Specification with Id: " + dto.getId()
-                    + "  is not found.");
+            + "  is not found.");
         }
 
         ValidateUtil.checkMarkedForDeletion(this.ds, this.ds.getName());

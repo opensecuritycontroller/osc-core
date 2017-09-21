@@ -96,7 +96,6 @@ public class UpdateK8sDeploymentTaskTest  {
 
         when(this.em.find(DeploymentSpec.class, ds.getId())).thenReturn(ds);
 
-
         UpdateK8sDeploymentTask task = this.factory.create(ds, this.k8sDeploymentApi);
 
         // Act.
@@ -106,7 +105,7 @@ public class UpdateK8sDeploymentTaskTest  {
         verify(this.k8sDeploymentApi, Mockito.times(1)).updateDeploymentReplicaCount(
                 ds.getExternalId(),
                 ds.getNamespace(),
-                CreateK8sDeploymentTask.getK8sName(ds),
+                K8sUtil.getK8sName(ds),
                 ds.getInstanceCount());
     }
 }

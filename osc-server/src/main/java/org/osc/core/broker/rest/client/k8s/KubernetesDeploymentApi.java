@@ -28,7 +28,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
  * osc-core components.
  */
 public class KubernetesDeploymentApi extends KubernetesApi {
-    private final static String OSC_DEPLOYMENT_LABEL_NAME = "osc-deployment";
+    public final static String OSC_DEPLOYMENT_LABEL_NAME = "osc-deployment";
 
     private static final Logger LOG = Logger.getLogger(KubernetesDeploymentApi.class);
 
@@ -180,7 +180,7 @@ public class KubernetesDeploymentApi extends KubernetesApi {
             return result.getMetadata().getUid();
 
         } catch (KubernetesClientException e) {
-            throw new VmidcException("Failed to create a deployment");
+            throw new VmidcException(String.format("Failed to create a deployment %s", e));
         }
     }
 
@@ -199,6 +199,8 @@ public class KubernetesDeploymentApi extends KubernetesApi {
                         deployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImage(),
                         deployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImagePullPolicy());
                 resultDeployment.setDeploymentResource(deployment);
+                Integer availableReplicas = deployment.getStatus().getAvailableReplicas();
+                resultDeployment.setAvailableReplicaCount(availableReplicas == null ? 0 : availableReplicas.intValue());
             }
 
         } catch (KubernetesClientException e) {

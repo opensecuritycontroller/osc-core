@@ -66,7 +66,7 @@ public class UpdateK8sDeploymentTask extends TransactionalTask {
             this.k8sDeploymentApi.updateDeploymentReplicaCount(
                     this.ds.getExternalId(),
                     this.ds.getNamespace(),
-                    CreateK8sDeploymentTask.getK8sName(this.ds),
+                    K8sUtil.getK8sName(this.ds),
                     this.ds.getInstanceCount());
 
             LOG.info(String.format("Updated the deployment in kubernetes with the K8s id %s.", this.ds.getExternalId()));

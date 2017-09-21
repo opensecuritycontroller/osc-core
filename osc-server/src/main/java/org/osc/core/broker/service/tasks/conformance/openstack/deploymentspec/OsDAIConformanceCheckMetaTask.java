@@ -161,8 +161,8 @@ public class OsDAIConformanceCheckMetaTask extends TransactionalMetaTask {
         try (Openstack4JNova nova = new Openstack4JNova(endPoint)) {
 
             Server sva = null;
-            if (this.dai.getOsServerId() != null) {
-                sva = nova.getServer(ds.getRegion(), this.dai.getOsServerId());
+            if (this.dai.getExternalId() != null) {
+                sva = nova.getServer(ds.getRegion(), this.dai.getExternalId());
             }
 
             // Attempt to lookup SVA by name

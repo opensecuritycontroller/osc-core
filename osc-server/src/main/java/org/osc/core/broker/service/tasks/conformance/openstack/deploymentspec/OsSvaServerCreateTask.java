@@ -197,7 +197,7 @@ public class OsSvaServerCreateTask extends TransactionalTask {
             }
         }
 
-        this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getOsServerId());
+        this.log.info("Dai: " + this.dai + " Server Id set to: " + this.dai.getExternalId());
 
         OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
     }

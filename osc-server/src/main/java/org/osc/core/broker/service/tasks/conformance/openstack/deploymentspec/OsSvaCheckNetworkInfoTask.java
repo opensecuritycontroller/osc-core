@@ -121,7 +121,7 @@ public class OsSvaCheckNetworkInfoTask extends TransactionalMetaTask {
     private Port getMgmtPort(DeploymentSpec ds, Network mgmgNetwork, Subnet mgmtSubnet, DistributedApplianceInstance dai, Openstack4JNeutron neutron) {
         List<Port> ports = neutron.listPortsBySubnet(ds.getRegion(), ds.getProjectId(), mgmgNetwork.getId(), mgmtSubnet.getId(), false);
         for (Port port : ports) {
-            if (port.getDeviceId().equals(dai.getOsServerId())) {
+            if (port.getDeviceId().equals(dai.getExternalId())) {
                 return port;
             }
         }

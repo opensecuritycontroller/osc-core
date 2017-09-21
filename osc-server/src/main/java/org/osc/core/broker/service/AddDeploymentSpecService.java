@@ -65,30 +65,24 @@ implements AddDeploymentSpecServiceApi {
 
             DeploymentSpec ds = DeploymentSpecEntityMgr.createEntity(request.getDto(), this.vs);
             OSCEntityManager.create(em, ds, this.txBroadcastUtil);
-            // TODO emanoel: remove condition when DS sync is implemented.
-            if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
-                ds.setAvailabilityZones(createAvailabilityZones(ds, request.getDto(), em));
-                ds.setHosts(createHosts(ds, request.getDto(), em));
-                ds.setHostAggregates(createHostAggregates(ds, request.getDto(), em));
+            ds.setAvailabilityZones(createAvailabilityZones(ds, request.getDto(), em));
+            ds.setHosts(createHosts(ds, request.getDto(), em));
+            ds.setHostAggregates(createHostAggregates(ds, request.getDto(), em));
 
-                UnlockObjectMetaTask forLambda = unlockTask;
-                chain(() -> {
-                    // Lock the deployment spec with a write lock and allow it to be unlocked at the end of the job.
-                    try {
-                        forLambda.addUnlockTask(LockUtil.tryLockDSOnly(ds));
+            UnlockObjectMetaTask forLambda = unlockTask;
+            chain(() -> {
+                // Lock the deployment spec with a write lock and allow it to be unlocked at the end of the job.
+                try {
+                    forLambda.addUnlockTask(LockUtil.tryLockDSOnly(ds));
 
-                        Job job = this.conformService.startDsConformanceJob(em, ds, forLambda);
+                    Job job = this.conformService.startDsConformanceJob(em, ds, forLambda);
 
-                        return new BaseJobResponse(ds.getId(), job.getId());
-                    } catch (Exception e) {
-                        LockUtil.releaseLocks(forLambda);
-                        throw e;
-                    }
-                });
-            } else {
-                LockUtil.releaseLocks(unlockTask);
-                return new BaseJobResponse(ds.getId(), null);
-            }
+                    return new BaseJobResponse(ds.getId(), job.getId());
+                } catch (Exception e) {
+                    LockUtil.releaseLocks(forLambda);
+                    throw e;
+                }
+            });
         } catch (Exception e) {
             LockUtil.releaseLocks(unlockTask);
             throw e;

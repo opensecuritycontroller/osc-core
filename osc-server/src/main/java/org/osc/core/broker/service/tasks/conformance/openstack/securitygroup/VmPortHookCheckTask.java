@@ -186,7 +186,7 @@ public class VmPortHookCheckTask extends TransactionalMetaTask {
             }
 
             this.vdc.discover(assignedRedirectedDai.getDeploymentSpec().getRegion(),
-                    assignedRedirectedDai.getOsServerId());
+                    assignedRedirectedDai.getExternalId());
 
             this.log.info("Checking Inspection Hook for Security group Member: " + this.sgm.getMemberName());
 

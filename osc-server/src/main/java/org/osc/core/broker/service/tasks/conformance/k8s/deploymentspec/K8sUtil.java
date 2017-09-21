@@ -14,16 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.api;
+package org.osc.core.broker.service.tasks.conformance.k8s.deploymentspec;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 
-public interface DBConnectionManagerApi {
-    /*
-     * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
-     */
-    int TARGET_DB_VERSION = 89;
+class K8sUtil {
 
-    Connection getSQLConnection() throws SQLException;
+    static String getK8sName(DeploymentSpec ds) {
+        return ds.getName() + "-" + ds.getId();
+    }
 }

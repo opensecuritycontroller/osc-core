@@ -46,6 +46,7 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentList;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentStatus;
 import io.fabric8.kubernetes.api.model.extensions.DoneableDeployment;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -383,6 +384,10 @@ public class KubernetesDeploymentApiTest {
         deployment.setMetadata(objMeta);
         deployment.setSpec(spec);
 
+        DeploymentStatus deploymentStatus = new DeploymentStatus();
+        deploymentStatus.setAvailableReplicas(3);
+        deployment.setStatus(deploymentStatus);
+
         return deployment;
     }
 
@@ -391,6 +396,7 @@ public class KubernetesDeploymentApiTest {
         assertEquals("The deployment namespace was different than the expected.", expectedDeployment.getMetadata().getNamespace(), actualDeployment.getNamespace());
         assertEquals("The deployment uid was different than the expected.", expectedDeployment.getMetadata().getUid(), actualDeployment.getUid());
         assertEquals("The deployment replica count was different than the expected.", (int) expectedDeployment.getSpec().getReplicas(), actualDeployment.getDesiredReplicaCount());
+        assertEquals("The deployment available replica count was different than the expected.", (int) expectedDeployment.getStatus().getAvailableReplicas(), actualDeployment.getAvailableReplicaCount());
     }
 
     private enum DeploymentOperation  {

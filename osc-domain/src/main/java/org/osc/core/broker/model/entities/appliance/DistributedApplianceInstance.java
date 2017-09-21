@@ -79,11 +79,9 @@ public class DistributedApplianceInstance extends BaseEntity {
     private String osHostName;
     @Column(name = "os_availability_zone_name")
     private String osAvailabilityZone;
-    @Column(name = "os_server_id")
-    private String osServerId;
-
     @Column(name = "external_id")
     private String externalId;
+
     @Column(name = "inspection_element_id")
     private String inspectionElementId;
     @Column(name = "inspection_element_parent_id")
@@ -165,14 +163,6 @@ public class DistributedApplianceInstance extends BaseEntity {
 
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
-    }
-
-    public String getExternalId() {
-        return this.externalId;
-    }
-
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
     }
 
     public String getInspectionElementId() {
@@ -259,12 +249,12 @@ public class DistributedApplianceInstance extends BaseEntity {
         this.deploymentSpec = deploymentSpec;
     }
 
-    public String getOsServerId() {
-        return this.osServerId;
+    public String getExternalId() {
+        return this.externalId;
     }
 
-    public void setOsServerId(String osServerId) {
-        this.osServerId = osServerId;
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 
     public String getOsAvailabilityZone() {
@@ -391,7 +381,7 @@ public class DistributedApplianceInstance extends BaseEntity {
      * Resets all the discovered attributes for the Appliance instance.
      */
     public void resetAllDiscoveredAttributes() {
-        this.osServerId = null;
+        this.externalId = null;
         this.inspectionIngressMacAddress = null;
         this.inspectionOsIngressPortId = null;
         this.inspectionEgressMacAddress = null;
@@ -403,7 +393,7 @@ public class DistributedApplianceInstance extends BaseEntity {
     public void updateDaiOpenstackSvaInfo(String serverId,
             String ingressMacAddr, String ingressPortId, String egressMacAddr,
             String egressPortId) {
-        this.osServerId = serverId;
+        this.externalId = serverId;
         this.inspectionIngressMacAddress = ingressMacAddr;
         this.inspectionOsIngressPortId = ingressPortId;
         this.inspectionEgressMacAddress = egressMacAddr;

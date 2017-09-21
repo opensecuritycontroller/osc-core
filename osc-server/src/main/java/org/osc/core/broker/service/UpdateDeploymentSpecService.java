@@ -86,24 +86,16 @@ implements UpdateDeploymentSpecServiceApi {
                 }
             }
             OSCEntityManager.update(em, this.ds, this.txBroadcastUtil);
-            // TODO emanoel: remove this condition when DS sync is implemented
-            if (this.vs.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
-                UnlockObjectMetaTask forLambda = dsUnlock;
-                chain(() -> {
-                    try {
-                        Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
-                        return new BaseJobResponse(this.ds.getId(), job.getId());
-                    } catch (Exception e) {
-                        LockUtil.releaseLocks(forLambda);
-                        throw e;
-                    }
-                });
-            } else {
-                BaseJobResponse response = new BaseJobResponse();
-                response.setId(this.ds.getId());
-                LockUtil.releaseLocks(dsUnlock);
-                return response;
-            }
+            UnlockObjectMetaTask forLambda = dsUnlock;
+            chain(() -> {
+                try {
+                    Job job = this.conformService.startDsConformanceJob(em, this.ds, forLambda);
+                    return new BaseJobResponse(this.ds.getId(), job.getId());
+                } catch (Exception e) {
+                    LockUtil.releaseLocks(forLambda);
+                    throw e;
+                }
+            });
         } catch (Exception e) {
             LockUtil.releaseLocks(dsUnlock);
             throw e;
@@ -128,18 +120,21 @@ implements UpdateDeploymentSpecServiceApi {
 
         if (!dto.getParentId().equals(this.ds.getVirtualSystem().getId())) {
             throwInvalidUpdateActionException("Virtual System", this.ds.getName());
-        } else if (!dto.getProjectId().equals(this.ds.getProjectId())) {
-            throwInvalidUpdateActionException("Project", this.ds.getName());
-        } else if (dto.isShared() != this.ds.isShared()) {
-            throwInvalidUpdateActionException("Shared", this.ds.getName());
-        } else if (!dto.getRegion().equals(this.ds.getRegion())) {
-            throwInvalidUpdateActionException("Region", this.ds.getName());
-        } else if (!dto.getManagementNetworkId().equals(this.ds.getManagementNetworkId())) {
-            throwInvalidUpdateActionException("Management Network Id", this.ds.getName());
-        } else if (!dto.getInspectionNetworkId().equals(this.ds.getInspectionNetworkId())) {
-            throwInvalidUpdateActionException("Inspection Network Id", this.ds.getName());
-        } else if (isFloatingIpUpdated(dto)) {
-            throwInvalidUpdateActionException("Floating Ip Pool", this.ds.getName());
+        }
+        if (this.ds.getVirtualSystem().getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            if (!dto.getProjectId().equals(this.ds.getProjectId())) {
+                throwInvalidUpdateActionException("Project", this.ds.getName());
+            } else if (dto.isShared() != this.ds.isShared()) {
+                throwInvalidUpdateActionException("Shared", this.ds.getName());
+            } else if (!dto.getRegion().equals(this.ds.getRegion())) {
+                throwInvalidUpdateActionException("Region", this.ds.getName());
+            } else if (!dto.getManagementNetworkId().equals(this.ds.getManagementNetworkId())) {
+                throwInvalidUpdateActionException("Management Network Id", this.ds.getName());
+            } else if (!dto.getInspectionNetworkId().equals(this.ds.getInspectionNetworkId())) {
+                throwInvalidUpdateActionException("Inspection Network Id", this.ds.getName());
+            } else if (isFloatingIpUpdated(dto)) {
+                throwInvalidUpdateActionException("Floating Ip Pool", this.ds.getName());
+            }
         }
     }
 
