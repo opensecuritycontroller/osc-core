@@ -40,16 +40,22 @@ public class PortDto extends BaseDto {
     @XmlElement(name = "ipAddress")
     private Set<String> ipAddresses = new HashSet<>();
 
+    @ApiModelProperty(value = "Applicable if Port is being protected by Neutron SFC, this value corresponds to a flow"
+            + " classifier")
+    private String inspectionHookId;
+
     // Without this constructor, the result is not being returned in the xml format
     // JSON still works.
     PortDto() {
     }
 
-    public PortDto(Long id, String openStackId, String macAddress, Collection<String> ipAddresses) {
+    public PortDto(Long id, String openStackId, String macAddress, Collection<String> ipAddresses,
+            String inspectionHookId) {
         super(id);
         this.openstackId = openStackId;
         this.macAddress = macAddress;
         this.ipAddresses = new HashSet<>(ipAddresses);
+        this.inspectionHookId = inspectionHookId;
     }
 
     public Set<String> getIpAddresses() {
