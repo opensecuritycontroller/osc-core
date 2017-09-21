@@ -52,5 +52,4 @@ public class DeleteK8sDeploymentTask extends TransactionalTask {
     public Set<LockObjectReference> getObjects() {
         return LockObjectReference.getObjectReferences(this.ds);
     }
-
 }

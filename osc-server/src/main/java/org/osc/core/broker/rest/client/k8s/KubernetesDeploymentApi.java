@@ -180,7 +180,7 @@ public class KubernetesDeploymentApi extends KubernetesApi {
             return result.getMetadata().getUid();
 
         } catch (KubernetesClientException e) {
-            throw new VmidcException("Failed to create a deployment");
+            throw new VmidcException(String.format("Failed to create a deployment %s", e));
         }
     }
 
@@ -199,6 +199,7 @@ public class KubernetesDeploymentApi extends KubernetesApi {
                         deployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImage(),
                         deployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImagePullPolicy());
                 resultDeployment.setDeploymentResource(deployment);
+                resultDeployment.setAvailableReplicaCount(deployment.getStatus().getAvailableReplicas());
             }
 
         } catch (KubernetesClientException e) {

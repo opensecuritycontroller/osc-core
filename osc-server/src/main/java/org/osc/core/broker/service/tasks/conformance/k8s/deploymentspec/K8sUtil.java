@@ -21,6 +21,6 @@ import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpe
 class K8sUtil {
 
     static String getK8sName(DeploymentSpec ds) {
-        return ds.getName() + "_" + ds.getId();
+        return ds.getName() + "-" + ds.getId();
     }
 }
