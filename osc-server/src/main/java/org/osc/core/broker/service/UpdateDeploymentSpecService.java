@@ -120,18 +120,21 @@ implements UpdateDeploymentSpecServiceApi {
 
         if (!dto.getParentId().equals(this.ds.getVirtualSystem().getId())) {
             throwInvalidUpdateActionException("Virtual System", this.ds.getName());
-        } else if (!dto.getProjectId().equals(this.ds.getProjectId())) {
-            throwInvalidUpdateActionException("Project", this.ds.getName());
-        } else if (dto.isShared() != this.ds.isShared()) {
-            throwInvalidUpdateActionException("Shared", this.ds.getName());
-        } else if (!dto.getRegion().equals(this.ds.getRegion())) {
-            throwInvalidUpdateActionException("Region", this.ds.getName());
-        } else if (!dto.getManagementNetworkId().equals(this.ds.getManagementNetworkId())) {
-            throwInvalidUpdateActionException("Management Network Id", this.ds.getName());
-        } else if (!dto.getInspectionNetworkId().equals(this.ds.getInspectionNetworkId())) {
-            throwInvalidUpdateActionException("Inspection Network Id", this.ds.getName());
-        } else if (isFloatingIpUpdated(dto)) {
-            throwInvalidUpdateActionException("Floating Ip Pool", this.ds.getName());
+        }
+        if (this.ds.getVirtualSystem().getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            if (!dto.getProjectId().equals(this.ds.getProjectId())) {
+                throwInvalidUpdateActionException("Project", this.ds.getName());
+            } else if (dto.isShared() != this.ds.isShared()) {
+                throwInvalidUpdateActionException("Shared", this.ds.getName());
+            } else if (!dto.getRegion().equals(this.ds.getRegion())) {
+                throwInvalidUpdateActionException("Region", this.ds.getName());
+            } else if (!dto.getManagementNetworkId().equals(this.ds.getManagementNetworkId())) {
+                throwInvalidUpdateActionException("Management Network Id", this.ds.getName());
+            } else if (!dto.getInspectionNetworkId().equals(this.ds.getInspectionNetworkId())) {
+                throwInvalidUpdateActionException("Inspection Network Id", this.ds.getName());
+            } else if (isFloatingIpUpdated(dto)) {
+                throwInvalidUpdateActionException("Floating Ip Pool", this.ds.getName());
+            }
         }
     }
 

@@ -199,7 +199,8 @@ public class KubernetesDeploymentApi extends KubernetesApi {
                         deployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImage(),
                         deployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImagePullPolicy());
                 resultDeployment.setDeploymentResource(deployment);
-                resultDeployment.setAvailableReplicaCount(deployment.getStatus().getAvailableReplicas());
+                Integer availableReplicas = deployment.getStatus().getAvailableReplicas();
+                resultDeployment.setAvailableReplicaCount(availableReplicas == null ? 0 : availableReplicas.intValue());
             }
 
         } catch (KubernetesClientException e) {

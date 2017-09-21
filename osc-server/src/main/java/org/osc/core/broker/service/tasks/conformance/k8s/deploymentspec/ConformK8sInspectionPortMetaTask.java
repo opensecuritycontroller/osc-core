@@ -38,7 +38,8 @@ public class ConformK8sInspectionPortMetaTask extends TransactionalMetaTask {
     public ConformK8sInspectionPortMetaTask create(DeploymentSpec ds) {
         ConformK8sInspectionPortMetaTask task = new ConformK8sInspectionPortMetaTask();
         task.ds = ds;
-
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
         return task;
     }
 
@@ -49,7 +50,7 @@ public class ConformK8sInspectionPortMetaTask extends TransactionalMetaTask {
 
     @Override
     public String getName() {
-        return String.format("Conforming the K8s pods for the deployment spec '%s'", this.ds.getName());
+        return String.format("Conforming the K8s inspection ports for the deployment spec '%s'", this.ds.getName());
     }
 
     @Override

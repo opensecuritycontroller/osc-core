@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.apache.log4j.Logger;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.openstack.DeploymentSpec;
 import org.osc.core.broker.service.tasks.TransactionalTask;
@@ -28,7 +27,7 @@ import org.osgi.service.component.annotations.Component;
 
 @Component(service = DeleteK8sDeploymentTask.class)
 public class DeleteK8sDeploymentTask extends TransactionalTask {
-    private static final Logger LOG = Logger.getLogger(DeleteK8sDeploymentTask.class);
+    //private static final Logger LOG = Logger.getLogger(DeleteK8sDeploymentTask.class);
 
     private DeploymentSpec ds;
 
