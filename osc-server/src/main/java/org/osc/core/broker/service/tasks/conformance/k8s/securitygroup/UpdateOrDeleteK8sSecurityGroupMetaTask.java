@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
+package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -55,8 +56,9 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
 
     @Override
     public String getName() {
-        return "Updating or deleting the security group "  + this.sg.getName()
-                + "; id: " + this.sg.getId();
+        final boolean isDelete = this.sg.getMarkedForDeletion();
+        return String.format("%s Kubernetes Security Group %s", isDelete ? "Delete" : "Update",
+                this.sg.getName());
     }
 
     @Override

@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
+package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
-import static org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.UpdateOrDeleteK8sSecurityGroupMetaTaskTestData.*;
+import static org.osc.core.broker.service.tasks.conformance.k8s.securitygroup.CheckK8sSecurityGroupLabelMetaTaskTestData.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +35,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.osc.core.broker.job.TaskGraph;
-import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
+import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberDeleteTask;
+import org.osc.core.broker.service.tasks.conformance.securitygroup.MarkSecurityGroupMemberDeleteTask;
 import org.osc.core.broker.service.test.InMemDB;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
@@ -46,43 +48,40 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
-public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
+public class CheckK8sSecurityGroupLabelMetaTaskTest {
 
-    public EntityManager em;
+    private EntityManager em;
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private TestTransactionControl txControl;
 
     @Mock
-    DBConnectionManager dbMgr;
+    private DBConnectionManager dbMgr;
 
     @Mock
-    TransactionalBroadcastUtil txBroadcastUtil;
+    private TransactionalBroadcastUtil txBroadcastUtil;
 
     @InjectMocks
-    UpdateOrDeleteK8sSecurityGroupMetaTask factoryTask;
-
-    private SecurityGroup sg;
+    private CheckK8sSecurityGroupLabelMetaTask factoryTask;
 
     private TaskGraph expectedGraph;
+    private SecurityGroupMember sgm;
+    private boolean isDelete;
 
-    public UpdateOrDeleteK8sSecurityGroupMetaTaskTest(
-                    SecurityGroup sg,
-                    TaskGraph expectedGraph) {
-        this.sg = sg;
-        this.expectedGraph = expectedGraph;
+    public CheckK8sSecurityGroupLabelMetaTaskTest(SecurityGroupMember sgm, boolean isDelete) {
+        this.sgm = sgm;
+        this.isDelete = isDelete;
     }
 
     @Before
     public void testInitialize() throws Exception {
         MockitoAnnotations.initMocks(this);
         this.em = InMemDB.getEntityManagerFactory().createEntityManager();
-        this.txControl.setEntityManager(this.em);
 
+        this.txControl.setEntityManager(this.em);
         Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
         Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
-
-        persistObjects(this.em);
+        persist(this.sgm, this.em);
     }
 
     @After
@@ -91,12 +90,29 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
     }
 
     @Test
-    public void testExecuteTransaction_WithVariousSecurityGroups_ExpectsCorrectTaskGraph() throws Exception {
-        // Arrange.
-        this.factoryTask.checkK8sSecurityGroupLabelMetaTask = new CheckK8sSecurityGroupLabelMetaTask();
-        this.factoryTask.portGroupCheckMetaTask = new PortGroupCheckMetaTask();
+    public void testExecute_WithVariousSGM_ExpectCorrectTaskGraph() throws Exception {
 
-        UpdateOrDeleteK8sSecurityGroupMetaTask task = this.factoryTask.create(this.sg);
+        // Arrange.
+        CheckK8sSecurityGroupLabelMetaTask task =
+                this.factoryTask.create(this.sgm, this.isDelete);
+        UpdateK8sSecurityGroupMemberLabelMetaTask updateK8sSecurityGroupMemberLabelMetaTask =
+                new UpdateK8sSecurityGroupMemberLabelMetaTask();
+        MarkSecurityGroupMemberDeleteTask markSecurityGroupMemberDeleteTask =
+                new MarkSecurityGroupMemberDeleteTask();
+        SecurityGroupMemberDeleteTask securityGroupMemberDeleteTask =
+                new SecurityGroupMemberDeleteTask();
+
+        task.markSecurityGroupMemberDeleteTask = markSecurityGroupMemberDeleteTask;
+        task.securityGroupMemberDeleteTask = securityGroupMemberDeleteTask;
+        task.updateK8sSecurityGroupMemberLabelMetaTask = updateK8sSecurityGroupMemberLabelMetaTask;
+
+        this.expectedGraph = new TaskGraph();
+        if (!this.isDelete) {
+            this.expectedGraph.addTask(updateK8sSecurityGroupMemberLabelMetaTask.create(this.sgm));
+        } else {
+            this.expectedGraph.addTask(markSecurityGroupMemberDeleteTask.create(this.sgm));
+            this.expectedGraph.appendTask(securityGroupMemberDeleteTask.create(this.sgm));
+        }
 
         // Act.
         task.execute();
@@ -108,10 +124,8 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
     @Parameters()
     public static Collection<Object[]> getTestData() {
         return Arrays.asList(new Object[][] {
-            { NO_LABEL_SG, createK8sGraph(NO_LABEL_SG, false) },
-            { SINGLE_LABEL_SG, createK8sGraph(SINGLE_LABEL_SG, false) },
-            { MULTI_LABEL_SG, createK8sGraph(MULTI_LABEL_SG, false) },
-            { SINGLE_LABEL_MARKED_FOR_DELETION_SG, createK8sGraph(SINGLE_LABEL_MARKED_FOR_DELETION_SG, true) }
+            { CREATED_SGM, false },
+            { DELETED_SGM, true },
         });
     }
 }

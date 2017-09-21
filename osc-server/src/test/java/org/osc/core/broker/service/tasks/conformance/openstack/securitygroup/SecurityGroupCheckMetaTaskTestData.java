@@ -35,6 +35,7 @@ import org.osc.core.broker.model.entities.virtualization.FailurePolicyType;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupInterface;
 import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector;
+import org.osc.core.broker.service.tasks.conformance.k8s.securitygroup.UpdateOrDeleteK8sSecurityGroupMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.common.job.TaskGuard;
 import org.osc.core.common.virtualization.VirtualizationType;

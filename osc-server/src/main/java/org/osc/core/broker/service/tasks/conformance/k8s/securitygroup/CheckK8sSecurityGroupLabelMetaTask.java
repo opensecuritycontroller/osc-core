@@ -14,43 +14,67 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
+package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
 import javax.persistence.EntityManager;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.osc.core.broker.job.Task;
 import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.SecurityGroupMemberDeleteTask;
+import org.osc.core.broker.service.tasks.conformance.securitygroup.MarkSecurityGroupMemberDeleteTask;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 @Component(service = CheckK8sSecurityGroupLabelMetaTask.class)
 public class CheckK8sSecurityGroupLabelMetaTask extends TransactionalMetaTask {
 
+    private TaskGraph tg;
     private SecurityGroupMember sgm;
     private boolean isDelete;
 
+    @Reference
+    UpdateK8sSecurityGroupMemberLabelMetaTask updateK8sSecurityGroupMemberLabelMetaTask;
+
+    @Reference
+    MarkSecurityGroupMemberDeleteTask markSecurityGroupMemberDeleteTask;
+
+    @Reference
+    SecurityGroupMemberDeleteTask securityGroupMemberDeleteTask;
+
     @Override
     public TaskGraph getTaskGraph() {
-        // TODO unimplemented
-        throw new NotImplementedException(getClass());
+        return this.tg;
     }
 
     @Override
     public String getName() {
-        return "Check Kubernetes Security Group Label Meta Task -- unimplemented " + this.sgm.getId();
+        return String.format("Conformance: %s Kubernetes Security Group Member Label %s",
+                this.isDelete ? "Delete" : "Check", this.sgm.getLabel().getName());
     }
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-        // TODO Auto-generated method stub
+        this.tg = new TaskGraph();
+
+        if (!this.isDelete) {
+            this.tg.addTask(this.updateK8sSecurityGroupMemberLabelMetaTask.create(this.sgm));
+        } else {
+            this.tg.addTask(this.markSecurityGroupMemberDeleteTask.create(this.sgm));
+            this.tg.appendTask(this.securityGroupMemberDeleteTask.create(this.sgm));
+        }
     }
 
-    public Task create(SecurityGroupMember sgm, boolean isDelete) {
+    public CheckK8sSecurityGroupLabelMetaTask create(SecurityGroupMember sgm, boolean isDelete) {
         CheckK8sSecurityGroupLabelMetaTask task = new CheckK8sSecurityGroupLabelMetaTask();
         task.sgm = sgm;
         task.isDelete = isDelete;
+        task.updateK8sSecurityGroupMemberLabelMetaTask = this.updateK8sSecurityGroupMemberLabelMetaTask;
+        task.markSecurityGroupMemberDeleteTask = this.markSecurityGroupMemberDeleteTask;
+        task.securityGroupMemberDeleteTask = this.securityGroupMemberDeleteTask;
+        task.dbConnectionManager = this.dbConnectionManager;
+        task.txBroadcastUtil = this.txBroadcastUtil;
+
         return task;
     }
 

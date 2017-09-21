@@ -28,6 +28,7 @@ import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.service.persistence.VirtualSystemEntityMgr;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
+import org.osc.core.broker.service.tasks.conformance.k8s.securitygroup.UpdateOrDeleteK8sSecurityGroupMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.common.job.TaskGuard;
@@ -111,5 +112,4 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
     public Set<LockObjectReference> getObjects() {
         return LockObjectReference.getObjectReferences(this.sg);
     }
-
 }
