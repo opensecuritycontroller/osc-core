@@ -382,6 +382,8 @@ public class DistributedApplianceInstance extends BaseEntity {
      */
     public void resetAllDiscoveredAttributes() {
         this.externalId = null;
+        this.mgmtOsPortId = null;
+        this.mgmtMacAddress = null;
         this.inspectionIngressMacAddress = null;
         this.inspectionOsIngressPortId = null;
         this.inspectionEgressMacAddress = null;

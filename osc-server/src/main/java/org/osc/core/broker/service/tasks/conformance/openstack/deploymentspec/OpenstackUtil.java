@@ -91,14 +91,13 @@ public class OpenstackUtil {
 
             Set<String> regions = nova.listRegions();
 
-            outerloop:
             for (String region : regions) {
                 for (NetworkElement elem : protectedPorts) {
                     port = neutron.getPortById(region, elem.getElementId());
                     if (port != null) {
                         domainId = neutron.getNetworkPortRouterDeviceId(projectId, region, port);
                         if (domainId != null) {
-                            break outerloop;
+                            return domainId;
                         }
                     }
                 }
