@@ -14,15 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
+package org.osc.core.broker.service.tasks.conformance.securitygroup;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -35,76 +32,47 @@ import org.osc.core.broker.model.entities.virtualization.VirtualizationConnector
 import org.osc.core.broker.model.entities.virtualization.k8s.Label;
 import org.osc.core.common.virtualization.VirtualizationType;
 
-public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
+public class MarkSecurityGroupMemberDeleteTaskTestData {
 
-    public final static String MGR_TYPE = "SMC";
-    private final static int MANY = 4;
+    public static final SecurityGroupMember NOT_YET_MARKED_FOR_DELETE_SGM = createSGM("NOT_YET_MARKED", false);
+    public static final SecurityGroupMember ALREADY_MARKED_FOR_DELETE_SGM = createSGM("ALREADY_MARKED", true);
 
-    public static SecurityGroup NO_LABEL_SG = createSecurityGroup("NO_LABEL", 0, false);
-    public static SecurityGroup SINGLE_LABEL_SG = createSecurityGroup("SINGLE_LABEL", 1, false);
-    public static SecurityGroup MULTI_LABEL_SG = createSecurityGroup("MULTI_LABEL", MANY, false);
-    public static SecurityGroup SINGLE_LABEL_MARKED_FOR_DELETION_SG = createSecurityGroup("SINGLE_LABEL", 1, true);
+    private static final String MGR_TYPE = "SMC";
 
-    public static TaskGraph createK8sGraph(SecurityGroup sg, boolean isDelete) {
-        TaskGraph expectedGraph = new TaskGraph();
-
-        for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
-            expectedGraph.addTask(new CheckK8sSecurityGroupLabelMetaTask().create(sgm, isDelete));
-        }
-
-        expectedGraph.appendTask(new PortGroupCheckMetaTask().create(sg, isDelete, null));
-
-        return expectedGraph;
-    }
-
-    public static void persistObjects(EntityManager em) {
-        List<SecurityGroup> securityGroups = Arrays.asList(NO_LABEL_SG, SINGLE_LABEL_SG, MULTI_LABEL_SG);
-
-        for (SecurityGroup sg : securityGroups) {
-            if (sg.getId() != null) {
-                continue;
-            }
-
-            Set<VirtualSystem> virtualSystems = sg.getVirtualizationConnector().getVirtualSystems();
-
-            em.getTransaction().begin();
-
-            em.persist(sg.getVirtualizationConnector());
-
-            for (VirtualSystem vs : virtualSystems) {
-                em.persist(vs.getDomain().getApplianceManagerConnector());
-                em.persist(vs.getApplianceSoftwareVersion().getAppliance());
-                em.persist(vs.getApplianceSoftwareVersion());
-                em.persist(vs.getDistributedAppliance());
-                em.persist(vs.getDomain());
-                em.persist(vs);
-            }
-
-            em.persist(sg);
-            for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
-                em.persist(sgm.getLabel());
-                em.persist(sgm);
-            }
-
-            sg.getSecurityGroupMembers();
-            em.getTransaction().commit();
-        }
-    }
-
-    private static SecurityGroup createSecurityGroup(String baseName, int nLabels, boolean isDelete) {
+    private static SecurityGroupMember createSGM(String baseName, boolean isDelete) {
         VirtualSystem vs = createVirtualSystem(baseName, MGR_TYPE);
 
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg");
-        sg.setMarkedForDeletion(isDelete);
 
-        for (int i = 0; i < nLabels; i++) {
-            Label label = new Label("LABEL_NAME" + i + sg.getName(), "LABEL_VALUE" + i + sg.getName());
-            SecurityGroupMember sgm = new SecurityGroupMember(sg, label);
-            sg.addSecurityGroupMember(sgm);
+        SecurityGroupMember sgm = new SecurityGroupMember(sg, new Label("LABEL", "LABEL"));
+        sgm.setMarkedForDeletion(isDelete);
+
+        return sgm;
+    }
+
+    public static void persist(SecurityGroupMember sgm, EntityManager em) {
+        em.getTransaction().begin();
+
+        SecurityGroup sg = sgm.getSecurityGroup();
+        VirtualizationConnector vc = sg.getVirtualizationConnector();
+        Set<VirtualSystem> virtualSystems = vc.getVirtualSystems();
+        em.persist(vc);
+        em.persist(sg);
+
+        for (VirtualSystem vs : virtualSystems) {
+            em.persist(vs.getDomain().getApplianceManagerConnector());
+            em.persist(vs.getApplianceSoftwareVersion().getAppliance());
+            em.persist(vs.getApplianceSoftwareVersion());
+            em.persist(vs.getDistributedAppliance());
+            em.persist(vs.getDomain());
+            em.persist(vs);
         }
 
-        return sg;
+        em.persist(sgm.getLabel());
+        em.persist(sgm);
+
+        em.getTransaction().commit();
     }
 
     private static VirtualSystem createVirtualSystem(String baseName, String mgrType) {
@@ -153,4 +121,5 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
         vc.getVirtualSystems().add(vs);
         return vs;
     }
+
 }
