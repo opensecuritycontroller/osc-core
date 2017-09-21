@@ -31,6 +31,7 @@ import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.securitygroupinterface.MgrSecurityGroupInterfacesCheckMetaTask;
 import org.osc.core.broker.util.ValidateUtil;
 import org.osc.core.common.job.TaskGuard;
+import org.osc.core.common.virtualization.VirtualizationType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -49,6 +50,9 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
     @Reference
     SecurityGroupUpdateOrDeleteMetaTask securityGroupUpdateOrDeleteMetaTask;
 
+    @Reference
+    UpdateOrDeleteK8sSecurityGroupMetaTask updateOrDeleteK8sSecurityGroupMetaTask;
+
     private SecurityGroup sg;
     private TaskGraph tg;
 
@@ -59,6 +63,7 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
         task.apiFactoryService = this.apiFactoryService;
         task.validateSecurityGroupProjectTask = this.validateSecurityGroupProjectTask;
         task.securityGroupUpdateOrDeleteMetaTask = this.securityGroupUpdateOrDeleteMetaTask;
+        task.updateOrDeleteK8sSecurityGroupMetaTask = this.updateOrDeleteK8sSecurityGroupMetaTask;
         task.dbConnectionManager = this.dbConnectionManager;
         task.txBroadcastUtil = this.txBroadcastUtil;
 
@@ -69,9 +74,16 @@ public class SecurityGroupCheckMetaTask extends TransactionalMetaTask {
     public void executeTransaction(EntityManager em) throws Exception {
         this.sg = em.find(SecurityGroup.class, this.sg.getId());
 
+        VirtualizationType virtualizationType = this.sg.getVirtualizationConnector().getVirtualizationType();
+
         this.tg = new TaskGraph();
-        this.tg.addTask(this.validateSecurityGroupProjectTask.create(this.sg));
-        this.tg.appendTask(this.securityGroupUpdateOrDeleteMetaTask.create(this.sg));
+
+        if (virtualizationType == VirtualizationType.OPENSTACK) {
+            this.tg.addTask(this.validateSecurityGroupProjectTask.create(this.sg));
+            this.tg.appendTask(this.securityGroupUpdateOrDeleteMetaTask.create(this.sg));
+        } else if (virtualizationType == VirtualizationType.KUBERNETES) {
+            this.tg.addTask(this.updateOrDeleteK8sSecurityGroupMetaTask.create(this.sg));
+        }
 
         if (!ValidateUtil.isEmpty(this.sg.getSecurityGroupInterfaces())) {
             List<VirtualSystem> referencedVs = VirtualSystemEntityMgr.listReferencedVSBySecurityGroup(em,
