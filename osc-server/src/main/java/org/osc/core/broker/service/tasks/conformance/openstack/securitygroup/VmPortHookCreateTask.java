@@ -37,6 +37,10 @@ import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * This gets called from VmPortHookCheckTask and is tied to a specifc sgi. This should only be called in case of an
+ * sdn controller which does NOT support portgroups and SFC.
+ */
 @Component(service = VmPortHookCreateTask.class)
 public class VmPortHookCreateTask extends TransactionalTask {
 

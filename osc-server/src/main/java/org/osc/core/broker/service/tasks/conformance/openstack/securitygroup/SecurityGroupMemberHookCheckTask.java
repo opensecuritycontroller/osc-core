@@ -94,7 +94,7 @@ public class SecurityGroupMemberHookCheckTask extends TransactionalMetaTask {
                 this.tg.appendTask(this.vmPortAllHooksRemoveTask.create(this.sgm, port));
                 this.tg.appendTask(this.vmPortDeleteFromDbTask.create(this.sgm, port));
             } else if (supportsNeutronSFC) {
-                // Install inspection hook for each port, using sfc id. Dont need to iterate through SGI.
+                // Install/update inspection hook for each port, using sfc id. Dont need to iterate through SGI.
             } else {
                 for (SecurityGroupInterface sgi : sg.getSecurityGroupInterfaces()) {
                     if (!sgi.getMarkedForDeletion()) {
