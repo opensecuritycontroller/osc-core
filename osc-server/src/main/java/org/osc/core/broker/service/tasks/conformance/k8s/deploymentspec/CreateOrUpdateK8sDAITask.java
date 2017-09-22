@@ -106,6 +106,7 @@ public class CreateOrUpdateK8sDAITask extends TransactionalTask {
         // The DAI inspection element parent ID (domain id) is the same as the port element parent id
         dai.setInspectionElementParentId(orphanDai.isPresent() ? orphanDai.get().getInspectionElementParentId() : portElement.getParentId());
         dai.setInspectionOsIngressPortId(portElement.getElementId());
+
         dai.setInspectionIngressMacAddress(portElement.getMacAddresses().get(0));
 
         dai.setInspectionOsEgressPortId(portElement.getElementId());
