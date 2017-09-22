@@ -106,7 +106,7 @@ public class CheckK8sDeploymentStateTask extends TransactionalTask {
 
     @Override
     public String getName() {
-        return String.format("Checking the state of the K8s deployment spec '%s'", this.ds.getName());
+        return String.format("Checking the state of the K8s deployment spec %s", this.ds.getName());
     }
 
     @Override

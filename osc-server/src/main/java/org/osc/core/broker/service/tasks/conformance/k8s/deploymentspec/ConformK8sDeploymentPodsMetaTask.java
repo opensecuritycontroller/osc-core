@@ -44,13 +44,13 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = ConformK8sDeploymentPodsMetaTask.class)
 public class ConformK8sDeploymentPodsMetaTask extends TransactionalMetaTask {
     @Reference
-    DeleteOrCleanK8sDAITask deleteOrCleanK8sDAITask;
+    CleanK8sDAITask deleteOrCleanK8sDAITask;
 
     @Reference
     CreateOrUpdateK8sDAITask createOrUpdateK8sDAITask;
 
     @Reference
-    ConformK8sInspectionPortMetaTask conformK8sInspectionPortMetaTask;
+    ConformK8sDeploymentSpecInspectionPortsMetaTask conformK8sInspectionPortMetaTask;
 
     @Reference
     MgrCheckDevicesMetaTask managerCheckDevicesMetaTask;
@@ -128,7 +128,7 @@ public class ConformK8sDeploymentPodsMetaTask extends TransactionalMetaTask {
 
     @Override
     public String getName() {
-        return String.format("Conforming the K8s pods for the deployment spec '%s'", this.ds.getName());
+        return String.format("Conforming the K8s pods for the deployment spec %s", this.ds.getName());
     }
 
     @Override

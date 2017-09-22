@@ -92,7 +92,8 @@ public class CreateOrUpdateK8sDAITaskTest  {
     public void testExecute_WhenSDNReturnsNetworkElement_NoOrphanDAI_DAICreatedWithoutInspectionElementId() throws Exception {
         // Arrange.
         KubernetesPod k8sPod = createKubernetesPod();
-        NetworkElement podPort = createNetworkElement();
+        DefaultNetworkPort podPort = createNetworkElement();
+        podPort.setParentId(UUID.randomUUID().toString());
         DeploymentSpec ds = createAndRegisterDeploymentSpec(null);
 
         registerNetworkElement(ds, podPort, k8sPod);
@@ -103,7 +104,7 @@ public class CreateOrUpdateK8sDAITaskTest  {
         task.execute();
 
         // Assert.
-        verify(this.em, Mockito.times(1)).persist(Mockito.argThat(new DAIMatcher(podPort, k8sPod, null, null)));
+        verify(this.em, Mockito.times(1)).persist(Mockito.argThat(new DAIMatcher(podPort, k8sPod, null, podPort.getParentId())));
         verify(this.em, Mockito.never()).remove(Mockito.any(DistributedApplianceInstance.class));
     }
 
@@ -216,7 +217,7 @@ public class CreateOrUpdateK8sDAITaskTest  {
         return ds;
     }
 
-    private NetworkElement createNetworkElement() {
+    private DefaultNetworkPort createNetworkElement() {
         DefaultNetworkPort networkPort = new DefaultNetworkPort(UUID.randomUUID().toString(), UUID.randomUUID().toString());
         networkPort.setPortIPs(Arrays.asList(UUID.randomUUID().toString()));
         return networkPort;
