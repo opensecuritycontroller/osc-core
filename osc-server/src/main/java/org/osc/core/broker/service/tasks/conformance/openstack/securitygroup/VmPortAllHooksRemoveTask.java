@@ -72,9 +72,12 @@ public class VmPortAllHooksRemoveTask extends TransactionalTask {
 
         this.port.removeAllDais();
 
-        // If port group is not supported also remove the inspection hooks from the controller.
-        if (!this.apiFactoryService.supportsPortGroup(this.sgm.getSecurityGroup())) {
-            try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.sgm)) {
+        try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.sgm)) {
+            if (this.apiFactoryService.supportsNeutronSFC(this.sgm.getSecurityGroup())) {
+                // In case of SFC, removing the flow classifier(Inspection hook) is effectively removing all
+                // inspection hooks for that port.
+                controller.removeInspectionHook(this.port.getInspectionHookId());
+            } else {
                 controller.removeAllInspectionHooks(new NetworkElementImpl(this.port));
             }
         }

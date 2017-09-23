@@ -50,6 +50,9 @@ public class VMPort extends BaseEntity {
     @Column(name = "mac_address", nullable = false, unique = true)
     private String macAddress;
 
+    @Column(name = "inspection_hook_id", nullable = true)
+    private String inspectionHookId;
+
     @ElementCollection(fetch = FetchType.LAZY)
     @Column(name = "ip_address")
     @CollectionTable(name = "VM_PORT_IP_ADDRESS", joinColumns = @JoinColumn(name = "vm_port_fk"),
@@ -134,6 +137,14 @@ public class VMPort extends BaseEntity {
 
     void setMacAddress(String macAddress) {
         this.macAddress = macAddress;
+    }
+
+    public String getInspectionHookId() {
+        return this.inspectionHookId;
+    }
+
+    public void setInspectionHookId(String inspectionHookId) {
+        this.inspectionHookId = inspectionHookId;
     }
 
     public void setVm(VM vm) {

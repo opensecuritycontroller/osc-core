@@ -69,19 +69,19 @@ public class CreatePortGroupTask extends TransactionalTask {
                     this.securityGroup.getProjectName(), this.securityGroup.getName()));
         }
 
-        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
-                this.securityGroup.getVirtualizationConnector());
-        if (CollectionUtils.isNotEmpty(protectedPorts)) {
-            for (NetworkElement vmPort : protectedPorts) {
-                ((NetworkElementImpl) vmPort).setParentId(domainId);
+        try (SdnRedirectionApi controller = this.apiFactoryService
+                .createNetworkRedirectionApi(this.securityGroup.getVirtualizationConnector())) {
+            if (CollectionUtils.isNotEmpty(protectedPorts)) {
+                for (NetworkElement vmPort : protectedPorts) {
+                    ((NetworkElementImpl) vmPort).setParentId(domainId);
+                }
+                NetworkElement portGp = controller.registerNetworkElement(protectedPorts);
+                if (portGp == null) {
+                    throw new Exception("RegisterNetworkElement failed to return PortGroup");
+                }
+                this.securityGroup.setNetworkElementId(portGp.getElementId());
+                em.merge(this.securityGroup);
             }
-            NetworkElement portGp = controller.registerNetworkElement(protectedPorts);
-            if (portGp == null) {
-                throw new Exception("RegisterNetworkElement failed to return PortGroup");
-            }
-            this.securityGroup.setNetworkElementId(portGp.getElementId());
-            em.merge(this.securityGroup);
-
         }
     }
 

@@ -23,7 +23,7 @@ public interface DBConnectionManagerApi {
     /*
      * TARGET_DB_VERSION will be manually changed to the real target db version to which we will upgrade
      */
-    int TARGET_DB_VERSION = 89;
+    int TARGET_DB_VERSION = 90;
 
     Connection getSQLConnection() throws SQLException;
 }

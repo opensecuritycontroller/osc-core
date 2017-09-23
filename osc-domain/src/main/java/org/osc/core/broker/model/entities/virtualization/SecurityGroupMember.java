@@ -18,6 +18,9 @@ package org.osc.core.broker.model.entities.virtualization;
 
 import static org.osc.core.broker.model.entities.virtualization.SecurityGroupMemberType.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -35,6 +38,7 @@ import org.osc.core.broker.model.entities.virtualization.openstack.Network;
 import org.osc.core.broker.model.entities.virtualization.openstack.OsProtectionEntity;
 import org.osc.core.broker.model.entities.virtualization.openstack.Subnet;
 import org.osc.core.broker.model.entities.virtualization.openstack.VM;
+import org.osc.core.broker.model.entities.virtualization.openstack.VMPort;
 
 @SuppressWarnings("serial")
 @Entity
@@ -151,5 +155,19 @@ public class SecurityGroupMember extends BaseEntity {
         default:
             return null;
         }
+    }
+
+    public Set<VMPort> getVmPorts() {
+        Set<VMPort> ports = new HashSet<>();
+        if (this.type == SecurityGroupMemberType.VM) {
+            ports = this.vm.getPorts();
+        } else if (this.type == SecurityGroupMemberType.NETWORK) {
+            ports = this.network.getPorts();
+        } else if (this.type == SecurityGroupMemberType.SUBNET) {
+            ports = this.subnet.getPorts();
+        } else {
+            throw new IllegalArgumentException("VMPorts are only applicable to VM, Network and Subnet types!");
+        }
+        return ports;
     }
 }

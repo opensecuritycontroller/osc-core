@@ -65,6 +65,7 @@ public class UpdatePortGroupTask  extends TransactionalTask{
             protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
         }
 
+        // ??? how do we know all protected ports are within same domain?
         String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
                 this.securityGroup.getVirtualizationConnector(), protectedPorts);
         if (domainId == null){
@@ -75,16 +76,17 @@ public class UpdatePortGroupTask  extends TransactionalTask{
         for (NetworkElement elem : protectedPorts) {
             ((NetworkElementImpl) elem).setParentId(domainId);
         }
-        SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(
-                this.securityGroup.getVirtualizationConnector());
-        NetworkElement portGrp = controller.updateNetworkElement(this.portGroup, protectedPorts);
-        if (portGrp == null) {
-            throw new Exception(String.format("Failed to update Port Group : '%s'", this.portGroup.getElementId()));
-        }
-        if (!portGrp.getElementId().equals(this.portGroup.getElementId())) {
-            //portGroup was deleted outside OSC, recreated portGroup above
-            this.securityGroup.setNetworkElementId(portGrp.getElementId());
-            em.merge(this.securityGroup);
+        try (SdnRedirectionApi controller = this.apiFactoryService
+                .createNetworkRedirectionApi(this.securityGroup.getVirtualizationConnector())) {
+            NetworkElement portGrp = controller.updateNetworkElement(this.portGroup, protectedPorts);
+            if (portGrp == null) {
+                throw new Exception(String.format("Failed to update Port Group : '%s'", this.portGroup.getElementId()));
+            }
+            if (!portGrp.getElementId().equals(this.portGroup.getElementId())) {
+                //portGroup was deleted outside OSC, recreated portGroup above
+                this.securityGroup.setNetworkElementId(portGrp.getElementId());
+                em.merge(this.securityGroup);
+            }
         }
     }
 

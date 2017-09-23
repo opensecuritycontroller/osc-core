@@ -667,6 +667,7 @@ public class Schema {
                 "os_network_id varchar(255) not null," +
                 "os_port_id varchar(255) not null," +
                 "mac_address varchar(255) not null," +
+                "inspection_hook_id varchar(255)," +
                 "vm_fk bigint," +
                 "network_fk bigint," +
                 "subnet_fk bigint," +

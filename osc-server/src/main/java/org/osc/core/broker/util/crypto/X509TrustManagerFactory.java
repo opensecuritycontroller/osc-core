@@ -251,7 +251,9 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     public void addEntry(X509Certificate certificate, String newAlias) throws Exception {
         if (fingerprintNotExist(getSha1Fingerprint(certificate))) {
             this.keyStore.setCertificateEntry(newAlias, certificate);
-            this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), getTruststorePassword());
+            try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
+                this.keyStore.store(outputStream, getTruststorePassword());
+            }
             reloadTrustManager();
             notifyTruststoreChanged();
         } else {
@@ -285,7 +287,9 @@ public final class X509TrustManagerFactory implements X509TrustManager, X509Trus
     public void removeEntry(String alias) throws Exception {
         reloadTrustManager();
         this.keyStore.deleteEntry(alias);
-        this.keyStore.store(new FileOutputStream(TRUSTSTORE_FILE), getTruststorePassword());
+        try (FileOutputStream outputStream = new FileOutputStream(TRUSTSTORE_FILE)) {
+            this.keyStore.store(outputStream, getTruststorePassword());
+        }
         notifyTruststoreChanged();
 
     }
