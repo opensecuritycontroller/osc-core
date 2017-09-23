@@ -23,7 +23,10 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.sdk.controller.DefaultInspectionPort;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -49,6 +52,16 @@ public class DeleteK8sDAIInspectionPortTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        OSCEntityManager<DistributedApplianceInstance> daiEmgr = new OSCEntityManager<DistributedApplianceInstance>(DistributedApplianceInstance.class, em, this.txBroadcastUtil);
+        this.dai = daiEmgr.findByPrimaryKey(this.dai.getId());
+
+        try (SdnRedirectionApi redirection = this.apiFactoryService.createNetworkRedirectionApi(this.dai.getVirtualSystem())) {
+            DefaultInspectionPort inspectionPort = new DefaultInspectionPort(null, null, this.dai.getInspectionElementId(), this.dai.getInspectionElementParentId());
+            redirection.removeInspectionPort(inspectionPort);
+        }
+
+        // After removing the inspection port from the SDN controller we can now delete this orphan DAI
+        OSCEntityManager.delete(em, this.dai, this.txBroadcastUtil);
     }
 
     @Override
