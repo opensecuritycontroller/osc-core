@@ -120,12 +120,32 @@ public class BindSecurityGroupWindow extends CRUDBaseWindow<OkCancelButtonModel>
 
 				bindRequest.setSecurityGroupId(this.currentSecurityGroup.getId());
 
+				List<VirtualSystemPolicyBindingDto> allBindings = this.listSecurityGroupBindingsBySgService
+						.dispatch(new BaseIdRequest(this.currentSecurityGroup.getId())).getList();
+
+
 				for (Long selectedVsId : getSelectedServicesId()) {
+					VirtualSystemPolicyBindingDto previousBinding = null;
+					for (VirtualSystemPolicyBindingDto binding : allBindings) {
+						if (binding.getVirtualSystemId().equals(selectedVsId)) {
+							previousBinding = binding;
+							break;
+						}
+					}
 					Item selectedService = this.serviceTable.getItem(selectedVsId);
-					Object selectedPolicy = ((ComboBox) selectedService.getItemProperty(PROPERTY_ID_POLICY).getValue())
-							.getValue();
+
 					// TODO Larkins: Fix UI to receive the set of policies from the User
-					Set<Long> policyIdSet = selectedPolicy == null ? null : new HashSet<>(Arrays.asList(((PolicyDto) selectedPolicy).getId()));
+					// Do not update the policy binding from the UI.
+					// Policy mapping for manager supporting multiple policies is not supported through UI.
+					Set<Long> policyIdSet = null;
+					if (previousBinding.isMultiplePoliciesSupported()) {
+						policyIdSet = previousBinding.getPolicyIds();
+					} else {
+						Object selectedPolicy = ((ComboBox) selectedService.getItemProperty(PROPERTY_ID_POLICY)
+								.getValue()).getValue();
+						policyIdSet = selectedPolicy == null ? null
+								: new HashSet<>(Arrays.asList(((PolicyDto) selectedPolicy).getId()));
+					}
 					String serviceName = (String) selectedService.getItemProperty(PROPERTY_ID_DA).getValue();
 					ComboBox failurePolicyComboBox = (ComboBox) selectedService
 							.getItemProperty(PROPERTY_ID_FAILURE_POLICY).getValue();
