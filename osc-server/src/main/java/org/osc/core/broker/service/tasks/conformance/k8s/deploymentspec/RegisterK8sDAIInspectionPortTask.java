@@ -23,7 +23,12 @@ import javax.persistence.EntityManager;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.appliance.DistributedApplianceInstance;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalTask;
+import org.osc.sdk.controller.DefaultInspectionPort;
+import org.osc.sdk.controller.DefaultNetworkPort;
+import org.osc.sdk.controller.api.SdnRedirectionApi;
+import org.osc.sdk.controller.element.Element;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -51,6 +56,28 @@ public class RegisterK8sDAIInspectionPortTask extends TransactionalTask {
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
+        OSCEntityManager<DistributedApplianceInstance> daiEmgr = new OSCEntityManager<DistributedApplianceInstance>(DistributedApplianceInstance.class, em, this.txBroadcastUtil);
+        this.dai = daiEmgr.findByPrimaryKey(this.dai.getId());
+
+        Element inspectionPortElement = null;
+
+        try (SdnRedirectionApi redirection = this.apiFactoryService.createNetworkRedirectionApi(this.dai.getVirtualSystem())) {
+            DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
+                    this.dai.getInspectionIngressMacAddress());
+            DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
+                    this.dai.getInspectionEgressMacAddress());
+
+            DefaultInspectionPort inspectionPort = new DefaultInspectionPort(ingressPort, egressPort, this.dai.getInspectionElementId(), this.dai.getInspectionElementParentId());
+
+            // This should create or update an existing inspection port
+            // If the this.dai.getInspectionElementId() is null no ID is provided to the SDN controller which
+            // means a new one should be created, else the targeted one should be updated with the provided network ports
+            inspectionPortElement = redirection.registerInspectionPort(inspectionPort);
+        }
+
+        this.dai.setInspectionElementId(inspectionPortElement.getElementId());
+        // After removing the inspection port from the SDN controller we can now delete this orphan DAI
+        OSCEntityManager.update(em, this.dai, this.txBroadcastUtil);
     }
 
     @Override

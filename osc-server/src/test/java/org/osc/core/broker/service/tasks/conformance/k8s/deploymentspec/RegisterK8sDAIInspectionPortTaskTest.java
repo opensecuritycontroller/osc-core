@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,10 +40,11 @@ import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.test.util.TestTransactionControl;
+import org.osc.sdk.controller.DefaultInspectionPort;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.InspectionPortElement;
 
-public class DeleteK8sDAIInspectionPortTaskTest  {
+public class RegisterK8sDAIInspectionPortTaskTest  {
     @Mock
     protected EntityManager em;
 
@@ -65,7 +67,7 @@ public class DeleteK8sDAIInspectionPortTaskTest  {
     public SdnRedirectionApi redirectionApi;
 
     @InjectMocks
-    DeleteK8sDAIInspectionPortTask factory;
+    RegisterK8sDAIInspectionPortTask factory;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -85,38 +87,48 @@ public class DeleteK8sDAIInspectionPortTaskTest  {
     public void testExecute_WhenSDNThrowsException_ThrowsUnhandledException() throws Exception {
         // Arrange.
         DistributedApplianceInstance dai = createAndRegisterDAI();
-        DeleteK8sDAIInspectionPortTask task = this.factory.create(dai);
+        RegisterK8sDAIInspectionPortTask task = this.factory.create(dai);
 
-        doThrow(new IllegalStateException())
-        .when(this.redirectionApi)
-        .removeInspectionPort(argThat(new InspectionPortElementMatcher(dai.getInspectionElementId(), dai.getInspectionElementParentId())));
-
-        when(this.apiFactoryServiceMock.createNetworkRedirectionApi(dai.getVirtualSystem())).thenReturn(this.redirectionApi);
-
+        mockRegisterInspectionPortNetworkElement(dai, new IllegalStateException());
         this.exception.expect(IllegalStateException.class);
 
         // Act.
         task.execute();
 
         // Assert.
-        verify(this.em, never()).remove(any(DistributedApplianceInstance.class));
+        verify(this.em, never()).merge(any(DistributedApplianceInstance.class));
     }
 
     @Test
-    public void testExecute_WhenInspectionPortIsRemoved_DAIIsDeleted() throws Exception {
+    public void testExecute_WhenInspectionPortIsRegistered_DAIIsUpdated() throws Exception {
         // Arrange.
         DistributedApplianceInstance dai = createAndRegisterDAI();
-        DeleteK8sDAIInspectionPortTask task = this.factory.create(dai);
-        when(this.apiFactoryServiceMock.createNetworkRedirectionApi(dai.getVirtualSystem())).thenReturn(this.redirectionApi);
+        RegisterK8sDAIInspectionPortTask task = this.factory.create(dai);
+
+        String inspectionPortId = mockRegisterInspectionPortNetworkElement(dai);
 
         // Act.
         task.execute();
 
         // Assert.
-        verify(this.redirectionApi, times(1))
-        .removeInspectionPort(argThat(new InspectionPortElementMatcher(dai.getInspectionElementId(), dai.getInspectionElementParentId())));
+        Assert.assertEquals("The inspection element id was different than expected.", inspectionPortId, dai.getInspectionElementId());
+        verify(this.em, times(1)).merge(dai);
+    }
 
-        verify(this.em, times(1)).remove(dai);
+    private String mockRegisterInspectionPortNetworkElement(DistributedApplianceInstance dai) throws Exception {
+        String inspectionPortId = UUID.randomUUID().toString();
+
+        DefaultInspectionPort defaultInspPort = new DefaultInspectionPort(null, null, inspectionPortId, null);
+
+        when(this.redirectionApi.registerInspectionPort(argThat(new InspectionPortElementMatcher(dai)))).thenReturn(defaultInspPort);
+        when(this.apiFactoryServiceMock.createNetworkRedirectionApi(dai.getVirtualSystem())).thenReturn(this.redirectionApi);
+
+        return inspectionPortId;
+    }
+
+    private void mockRegisterInspectionPortNetworkElement(DistributedApplianceInstance dai, Exception throwException) throws Exception {
+        when(this.redirectionApi.registerInspectionPort(argThat(new InspectionPortElementMatcher(dai)))).thenThrow(throwException);
+        when(this.apiFactoryServiceMock.createNetworkRedirectionApi(dai.getVirtualSystem())).thenReturn(this.redirectionApi);
     }
 
     private DistributedApplianceInstance createAndRegisterDAI() {
@@ -124,19 +136,18 @@ public class DeleteK8sDAIInspectionPortTaskTest  {
         dai.setInspectionElementId(UUID.randomUUID().toString());
         dai.setInspectionElementParentId(UUID.randomUUID().toString());
         dai.setId(101L);
-
+        dai.setInspectionOsIngressPortId(UUID.randomUUID().toString());
+        dai.setInspectionOsEgressPortId(UUID.randomUUID().toString());
         when(this.em.find(DistributedApplianceInstance.class, dai.getId())).thenReturn(dai);
 
         return dai;
     }
 
     private class InspectionPortElementMatcher extends ArgumentMatcher<InspectionPortElement> {
-        String inspElementId;
-        String inspElementParentId;
+        DistributedApplianceInstance dai;
 
-        public InspectionPortElementMatcher(String inspElementId, String inspElementParentId) {
-            this.inspElementId = inspElementId;
-            this.inspElementParentId = inspElementParentId;
+        public InspectionPortElementMatcher(DistributedApplianceInstance dai) {
+            this.dai = dai;
         }
 
         @Override
@@ -146,10 +157,10 @@ public class DeleteK8sDAIInspectionPortTaskTest  {
             }
 
             InspectionPortElement inspPortElement = (InspectionPortElement) object;
-            return inspPortElement.getEgressPort() == null &&
-                    inspPortElement.getIngressPort() == null &&
-                    inspPortElement.getElementId().equals(this.inspElementId) &&
-                    inspPortElement.getParentId().equals(this.inspElementParentId);
+            return inspPortElement.getEgressPort().getElementId().equals(this.dai.getInspectionOsEgressPortId()) &&
+                    inspPortElement.getIngressPort().getElementId().equals(this.dai.getInspectionOsIngressPortId()) &&
+                    inspPortElement.getElementId().equals(this.dai.getInspectionElementId()) &&
+                    inspPortElement.getParentId().equals(this.dai.getInspectionElementParentId());
         }
     }
 }
