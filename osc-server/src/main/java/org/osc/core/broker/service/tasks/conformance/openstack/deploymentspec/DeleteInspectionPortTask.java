@@ -36,9 +36,6 @@ import org.osc.sdk.controller.element.InspectionPortElement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-/**
- * This Task is invoked only if SDN Controller supports Port Group
- */
 @Component(service = DeleteInspectionPortTask.class)
 public class DeleteInspectionPortTask extends TransactionalTask {
 
@@ -49,7 +46,6 @@ public class DeleteInspectionPortTask extends TransactionalTask {
 
     private DistributedApplianceInstance dai;
     private String region;
-
 
     public DeleteInspectionPortTask create(String region, DistributedApplianceInstance dai) {
         DeleteInspectionPortTask task = new DeleteInspectionPortTask();
@@ -66,32 +62,36 @@ public class DeleteInspectionPortTask extends TransactionalTask {
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.dai = DistributedApplianceInstanceEntityMgr.findById(em, this.dai.getId());
-        try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
 
+        try (SdnRedirectionApi controller = this.apiFactoryService.createNetworkRedirectionApi(this.dai);) {
             DefaultNetworkPort ingressPort = new DefaultNetworkPort(this.dai.getInspectionOsIngressPortId(),
                     this.dai.getInspectionIngressMacAddress());
             DefaultNetworkPort egressPort = new DefaultNetworkPort(this.dai.getInspectionOsEgressPortId(),
                     this.dai.getInspectionEgressMacAddress());
             DeploymentSpec ds = this.dai.getDeploymentSpec();
-            String domainId = OpenstackUtil.extractDomainId(
-                    ds.getProjectId(),
-                    ds.getProjectName(),
-                    ds.getVirtualSystem().getVirtualizationConnector(),
-                    Arrays.asList(ingressPort));
+            String portGroupId = ds.getPortGroupId();
 
-            if (domainId == null) {
-                throw new VmidcBrokerValidationException(String.format("A domain was not found for the ingress port %s.", ingressPort.getElementId()));
+            if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
+                String domainId = OpenstackUtil.extractDomainId(
+                        ds.getProjectId(),
+                        ds.getProjectName(),
+                        ds.getVirtualSystem().getVirtualizationConnector(),
+                        Arrays.asList(ingressPort));
+
+                if (domainId == null) {
+                    throw new VmidcBrokerValidationException(String
+                            .format("A domain was not found for the ingress port %s.", ingressPort.getElementId()));
+                }
+
+                ingressPort.setParentId(domainId);
+                egressPort.setParentId(domainId);
             }
 
-            ingressPort.setParentId(domainId);
-            egressPort.setParentId(domainId);
-            
             //Element Object in DefaultInspectionPort is not used for now, hence null
-            InspectionPortElement portEl = new DefaultInspectionPort(ingressPort, egressPort, null);
-            LOG.info(String.format("Deleting Inspection port(s): '%s' from region '%s' and Server : '%s' ",
-                    portEl, this.region, this.dai));
+            InspectionPortElement portEl = new DefaultInspectionPort(ingressPort, egressPort, null, portGroupId);
+            LOG.info(String.format("Deleting Inspection port(s): '%s' from region '%s' and Server : '%s' ", portEl,
+                    this.region, this.dai));
             controller.removeInspectionPort(portEl);
-
         }
     }
 
@@ -104,5 +104,4 @@ public class DeleteInspectionPortTask extends TransactionalTask {
     public Set<LockObjectReference> getObjects() {
         return LockObjectReference.getObjectReferences(this.dai);
     }
-
 }
