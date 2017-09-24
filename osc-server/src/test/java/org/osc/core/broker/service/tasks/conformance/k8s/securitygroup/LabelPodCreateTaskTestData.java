@@ -18,16 +18,11 @@ package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
 import static org.osc.core.broker.rest.client.k8s.KubernetesDeploymentApi.OSC_DEPLOYMENT_LABEL_NAME;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
-import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.model.entities.appliance.Appliance;
 import org.osc.core.broker.model.entities.appliance.ApplianceSoftwareVersion;
 import org.osc.core.broker.model.entities.appliance.DistributedAppliance;
@@ -42,45 +37,46 @@ import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
 import org.osc.core.broker.rest.client.k8s.KubernetesPod;
 import org.osc.core.common.virtualization.VirtualizationType;
 
-public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
+public class LabelPodCreateTaskTestData {
 
-    private static final String MGR_TYPE = "NSM";
+    public static final KubernetesPod NEW_UNKNOWN_POD_NO_OTHER_LABEL = createKubernetesPod();
+    public static final KubernetesPod NEW_UNKNOWN_POD_WITH_OTHER_UNPROTECTED_LABEL = createKubernetesPod();
+    public static final KubernetesPod NEW_KNOWN_POD_WITH_OTHER_UNPROTECTED_LABEL = createKubernetesPod();
+    public static final KubernetesPod NEW_KNOWN_POD_WITH_OTHER_PROTECTED_LABEL = createKubernetesPod();
 
-    private static List<String> KNOWN_POD_IDS = Arrays.asList(UUID.randomUUID().toString(),
-            UUID.randomUUID().toString());
+    // Not possible: if the other label is protected under a security group, we know about the pod
+    //  public static final KubernetesPod NEW_UNKNOWN_POD_WITH_OTHER_PROTECTED_LABEL = createKubernetesPod();
 
-    public static List<KubernetesPod> MATCHING_PODS = Arrays.asList(createKubernetesPod(KNOWN_POD_IDS.get(0)),
-            createKubernetesPod(KNOWN_POD_IDS.get(1)));
+    public static final Label OTHER_LABEL_WITH_KNOWN_POD_ENTITY
+        = createOtherLabelWithPodEntity(NEW_KNOWN_POD_WITH_OTHER_UNPROTECTED_LABEL.getUid());
+    public static final SecurityGroupMember OTHEL_LABEL_SGM = createSGMProtectingPod(NEW_KNOWN_POD_WITH_OTHER_PROTECTED_LABEL);
 
-    public static SecurityGroupMember NO_ENTITY_ORPHAN_PODS_SGM = createSGM("NO_ENTITY_ORPHAN_PODS");
+    public static final String OTHER_UNKNOWN_LABEL_VALUE = OSC_DEPLOYMENT_LABEL_NAME  + "=OTHER_LABEL_value";
 
-    public static SecurityGroupMember ORPHAN_ENTITIES_NO_PODS_SGM = createDSWithDAIs("ORPHAN_ENTITIES_NO_PODS", 3,
-            false);
+    public static Label createLabelUnderTest() {
+        return new Label(UUID.randomUUID().toString(), OSC_DEPLOYMENT_LABEL_NAME  + (UUID.randomUUID().toString()));
+    }
+    private static SecurityGroupMember createSGMProtectingPod(KubernetesPod kubernetesPod) {
+        String baseName = "OTHER_";
+        SecurityGroupMember sgm = createSGM(baseName);
+        addPodToLabel(sgm.getLabel(), baseName, kubernetesPod.getUid());
+        return sgm;
+    }
 
-    public static SecurityGroupMember SOME_ORPHAN_ENTITIES_SOME_ORPHAN_PODS_SGM = createDSWithDAIs(
-            "SOME_ORPHAN_DAIS_SOME_ORPHAN_PODS", 2, true);
+    private static Label createOtherLabelWithPodEntity(String externalId) {
+        String baseName = "OTHER_";
+        Label label = new Label(baseName + "_LABEL_name", OSC_DEPLOYMENT_LABEL_NAME  + "=" + baseName + "_LABEL_value");
+        addPodToLabel(label, baseName, externalId);
+        return label;
+    }
 
-    public static SecurityGroupMember ENTITIES_PODS_MATCHING_SGM = createDSWithDAIs("DAIS_PODS_MATCHING", 0, true);
-
-    public static TaskGraph createExpectedGraph(SecurityGroupMember sgm) {
-        TaskGraph expectedGraph = new TaskGraph();
-
-        Label label = sgm.getLabel();
-
-        Collection<String> podIdsInDB = label.getPods().stream().map(Pod::getExternalId).collect(Collectors.toList());
-        for (KubernetesPod kp : MATCHING_PODS) {
-            if (!podIdsInDB.contains(kp.getUid())) {
-                expectedGraph.addTask(new LabelPodCreateTask().create(kp, label, null));
-            }
+    public static void persist(Label label, EntityManager em) {
+        em.getTransaction().begin();
+        for (Pod pod : label.getPods()) {
+            em.persist(pod);
         }
-
-        for (Pod p : label.getPods()) {
-            if (!KNOWN_POD_IDS.contains(p.getExternalId())) {
-                expectedGraph.addTask(new LabelPodDeleteTask().create(p));
-            }
-        }
-
-        return expectedGraph;
+        em.persist(label);
+        em.getTransaction().commit();
     }
 
     public static void persist(SecurityGroupMember sgm, EntityManager em) {
@@ -130,30 +126,13 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
     }
 
     private static SecurityGroupMember createSGM(String baseName) {
-        VirtualSystem vs = createVirtualSystem(baseName, MGR_TYPE);
+        VirtualSystem vs = createVirtualSystem(baseName, "NSM");
 
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg ");
 
         SecurityGroupMember sgm = new SecurityGroupMember(sg, new Label("LABEL_name" + UUID.randomUUID(),
                 OSC_DEPLOYMENT_LABEL_NAME + "=LABEL_value" + UUID.randomUUID()));
-
-        return sgm;
-    }
-
-    private static SecurityGroupMember createDSWithDAIs(String baseName, int countOrphanDais,
-            boolean includeMatchingDais) {
-
-        SecurityGroupMember sgm = createSGM(baseName);
-        for (; countOrphanDais > 0; countOrphanDais--) {
-            addPodToLabel(sgm.getLabel(), baseName, null);
-        }
-
-        if (includeMatchingDais) {
-            for (String KNOWN_POD_ID : KNOWN_POD_IDS) {
-                addPodToLabel(sgm.getLabel(), baseName, KNOWN_POD_ID);
-            }
-        }
 
         return sgm;
     }
