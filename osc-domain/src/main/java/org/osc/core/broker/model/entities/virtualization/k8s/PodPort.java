@@ -87,4 +87,8 @@ public class PodPort extends BaseEntity {
     public void setPod(Pod pod) {
         this.pod = pod;
     }
+
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
+    }
 }

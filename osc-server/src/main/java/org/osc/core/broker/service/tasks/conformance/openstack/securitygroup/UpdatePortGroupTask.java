@@ -19,13 +19,17 @@ package org.osc.core.broker.service.tasks.conformance.openstack.securitygroup;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.model.entities.virtualization.k8s.PodPort;
 import org.osc.core.broker.model.plugin.ApiFactoryService;
 import org.osc.core.broker.model.plugin.sdncontroller.NetworkElementImpl;
+import org.osc.core.broker.model.plugin.sdncontroller.PodNetworkElementImpl;
+import org.osc.core.broker.service.exceptions.VmidcBrokerValidationException;
 import org.osc.core.broker.service.tasks.TransactionalTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.OpenstackUtil;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.element.PortGroup;
@@ -60,21 +64,26 @@ public class UpdatePortGroupTask  extends TransactionalTask{
 
         Set<SecurityGroupMember> members = this.securityGroup.getSecurityGroupMembers();
         List<NetworkElement> protectedPorts = new ArrayList<>();
+        if (this.securityGroup.getVirtualizationConnector().getVirtualizationType().isOpenstack()) {
+            for (SecurityGroupMember sgm : members) {
+                protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
+            }
 
-        for (SecurityGroupMember sgm : members) {
-            protectedPorts.addAll(OpenstackUtil.getPorts(sgm));
-        }
-
-        // ??? how do we know all protected ports are within same domain?
-        String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
-                this.securityGroup.getVirtualizationConnector(), protectedPorts);
-        if (domainId == null){
-            throw new Exception(String.format("Failed to retrieve domainId for given project: '%s' and Security Group: '%s",
-                    this.securityGroup.getProjectName(), this.securityGroup.getName()));
-        }
-        this.portGroup.setParentId(domainId);
-        for (NetworkElement elem : protectedPorts) {
-            ((NetworkElementImpl) elem).setParentId(domainId);
+            // ??? how do we know all protected ports are within same domain?
+            String domainId = OpenstackUtil.extractDomainId(this.securityGroup.getProjectId(), this.securityGroup.getProjectName(),
+                    this.securityGroup.getVirtualizationConnector(), protectedPorts);
+            if (domainId == null){
+                throw new Exception(String.format("Failed to retrieve domainId for given project: '%s' and Security Group: '%s",
+                        this.securityGroup.getProjectName(), this.securityGroup.getName()));
+            }
+            this.portGroup.setParentId(domainId);
+            for (NetworkElement elem : protectedPorts) {
+                ((NetworkElementImpl) elem).setParentId(domainId);
+            }
+        } else {
+            for (SecurityGroupMember sgm : members) {
+                protectedPorts.addAll(getPodPorts(sgm));
+            }
         }
         try (SdnRedirectionApi controller = this.apiFactoryService
                 .createNetworkRedirectionApi(this.securityGroup.getVirtualizationConnector())) {
@@ -93,6 +102,13 @@ public class UpdatePortGroupTask  extends TransactionalTask{
     @Override
     public String getName() {
         return String.format("Update Port Group for security group: %s ", this.securityGroup.getName());
+    }
+
+    private static List<NetworkElement> getPodPorts(SecurityGroupMember sgm) throws VmidcBrokerValidationException {
+        Set<PodPort> ports = sgm.getPodPorts();
+        return ports.stream()
+                .map(PodNetworkElementImpl::new)
+                .collect(Collectors.toList());
     }
 }
 
