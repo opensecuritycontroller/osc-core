@@ -61,13 +61,22 @@ class SecurityGroupCheckMetaTaskTestData {
     public List<SecurityGroup> TEST_SECURITY_GROUPS = new ArrayList<>();
 
     public SecurityGroup NO_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(NO_MC_POLICY_MAPPING_SUPPORTED,
-                this.MC_POLICY_MAPPING_NOT_SUPPORTED_VS);
+            this.MC_POLICY_MAPPING_NOT_SUPPORTED_VS);
     public SecurityGroup SINGLE_MC_POLICY_MAPPING_SUPPORTED_SG = createSecurityGroup(SINGLE_MC_POLICY_MAPPING_SUPPORTED,
-                this.MC_POLICY_MAPPING_SUPPORTED_VS);
+            this.MC_POLICY_MAPPING_SUPPORTED_VS);
     public SecurityGroup NO_MC_POLICY_MAPPING_SUPPORTED_K8S_SG = createSecurityGroup(NO_MC_POLICY_MAPPING_SUPPORTED_K8S,
-                this.MC_POLICY_MAPPING_NOT_SUPPORTED_K8S_VS);
+            this.MC_POLICY_MAPPING_NOT_SUPPORTED_K8S_VS);
+    {
+        VirtualSystem vs = this.MC_POLICY_MAPPING_SUPPORTED_VS_2;
+        String baseName = MULTIPLE_MC_POLICY_MAPPING_SUPPORTED + "2";
+        Policy policy = new Policy(
+                vs.getDistributedAppliance().getApplianceManagerConnector(),
+                vs.getDomain());
+        policy.setName(baseName + "_policy");
+        policy.setMgrPolicyId(baseName + "_mgrPolicy");
         Set<Policy> policySet = new HashSet<>();
         policySet.add(policy);
+
         SecurityGroupInterface sgi = new SecurityGroupInterface(vs, policySet, baseName + "_tag", FailurePolicyType.NA, 1L);
         sgi.setName(baseName + "_sgi");
 
