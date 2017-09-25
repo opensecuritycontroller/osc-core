@@ -117,9 +117,9 @@ public class DeleteSvaServerAndDAIMetaTask extends TransactionalMetaTask {
         if (this.dai.getProtectedPorts() != null && !this.dai.getProtectedPorts().isEmpty()) {
             throw new VmidcBrokerValidationException("Server is being actively used to protect other servers");
         }
-        if (this.apiFactoryService.supportsPortGroup(this.dai.getVirtualSystem())) {
-            this.tg.appendTask(this.deleteInspectionPort.create(this.region, this.dai));
-        }
+
+        this.tg.appendTask(this.deleteInspectionPort.create(this.region, this.dai));
+
         this.tg.addTask(this.deleteSvaServer.create(this.region, this.dai));
         if (this.dai.getFloatingIpId() != null) {
             this.tg.appendTask(this.osSvadeleteFloatingIp.create(this.dai));
