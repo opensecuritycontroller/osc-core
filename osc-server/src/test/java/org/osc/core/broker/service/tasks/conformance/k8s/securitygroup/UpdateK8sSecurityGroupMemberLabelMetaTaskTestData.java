@@ -76,7 +76,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
 
         for (Pod p : label.getPods()) {
             if (!KNOWN_POD_IDS.contains(p.getExternalId())) {
-                expectedGraph.addTask(new LabelPodDeleteTask().create(p));
+                expectedGraph.addTask(new DeleteK8sLabelPodTask().create(p, label));
             }
         }
 

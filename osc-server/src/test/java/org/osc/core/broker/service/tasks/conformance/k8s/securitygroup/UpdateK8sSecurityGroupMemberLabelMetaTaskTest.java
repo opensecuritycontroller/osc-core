@@ -97,7 +97,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTest {
         // Arrange.
         UpdateK8sSecurityGroupMemberLabelMetaTask task = this.factoryTask.create(this.sgm, this.k8sPodApi);
         task.labelPodCreateTask = new CreateK8sLabelPodTask();
-        task.labelPodDeleteTask = new LabelPodDeleteTask();
+        task.labelPodDeleteTask = new DeleteK8sLabelPodTask();
 
         // Act.
         task.execute();
