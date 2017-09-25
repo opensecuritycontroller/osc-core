@@ -70,7 +70,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
         Collection<String> podIdsInDB = label.getPods().stream().map(Pod::getExternalId).collect(Collectors.toList());
         for (KubernetesPod kp : MATCHING_PODS) {
             if (!podIdsInDB.contains(kp.getUid())) {
-                expectedGraph.addTask(new LabelPodCreateTask().create(kp, label, null));
+                expectedGraph.addTask(new CreateK8sLabelPodTask().create(kp, label));
             }
         }
 
@@ -118,10 +118,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
     }
 
     private static void addPodToLabel(Label label, String baseName, String externalId) {
-        Pod pod = new Pod();
-        pod.setName(baseName + "_pod");
-        pod.setNamespace(baseName + "_namespace");
-        pod.setExternalId(externalId == null ? UUID.randomUUID().toString() : externalId);
+        Pod pod = new Pod(baseName + "_pod", baseName + "_namespace", UUID.randomUUID().toString(), externalId == null ? UUID.randomUUID().toString() : externalId);
         pod.getLabels().add(label);
     }
 

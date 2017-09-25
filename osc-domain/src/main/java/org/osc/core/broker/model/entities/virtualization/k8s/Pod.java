@@ -32,6 +32,16 @@ import org.osc.core.broker.model.entities.BaseEntity;
 @Entity
 @Table(name = "POD")
 public class Pod extends BaseEntity {
+    public Pod(String name, String namespace, String node, String externalId) {
+        this.name = name;
+        this.namespace = namespace;
+        this.node = node;
+        this.externalId = externalId;
+    }
+
+    Pod() {
+    }
+
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -54,32 +64,16 @@ public class Pod extends BaseEntity {
         return this.name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getNamespace() {
         return this.namespace;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
     }
 
     public String getNode() {
         return this.node;
     }
 
-    public void setNode(String node) {
-        this.node = node;
-    }
-
     public String getExternalId() {
         return this.externalId;
-    }
-
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
     }
 
     public Set<PodPort> getPorts() {

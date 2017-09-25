@@ -96,7 +96,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTest {
     public void testExecute_WithVariousSGM_ExpectCorrectTaskGraph() throws Exception {
         // Arrange.
         UpdateK8sSecurityGroupMemberLabelMetaTask task = this.factoryTask.create(this.sgm, this.k8sPodApi);
-        task.labelPodCreateTask = new LabelPodCreateTask();
+        task.labelPodCreateTask = new CreateK8sLabelPodTask();
         task.labelPodDeleteTask = new LabelPodDeleteTask();
 
         // Act.

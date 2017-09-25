@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
-import static org.osc.core.broker.rest.client.k8s.KubernetesDeploymentApi.OSC_DEPLOYMENT_LABEL_NAME;
-
 import java.util.Set;
 import java.util.UUID;
 
@@ -37,51 +35,36 @@ import org.osc.core.broker.model.entities.virtualization.k8s.Pod;
 import org.osc.core.broker.rest.client.k8s.KubernetesPod;
 import org.osc.core.common.virtualization.VirtualizationType;
 
-public class LabelPodCreateTaskTestData {
+public class CreateK8sLabelPodTaskTestData {
+    public static boolean DB_POPULATED = false;
+    private static final String ALREADY_PROTECTED_POD_ID = UUID.randomUUID().toString();
 
-    public static final KubernetesPod NEW_UNKNOWN_POD_NO_OTHER_LABEL = createKubernetesPod();
-    public static final KubernetesPod NEW_UNKNOWN_POD_WITH_OTHER_UNPROTECTED_LABEL = createKubernetesPod();
-    public static final KubernetesPod NEW_KNOWN_POD_WITH_OTHER_UNPROTECTED_LABEL = createKubernetesPod();
-    public static final KubernetesPod NEW_KNOWN_POD_WITH_OTHER_PROTECTED_LABEL = createKubernetesPod();
+    public static final KubernetesPod ALREADY_PROTECTED_K8S_POD = createKubernetesPod(ALREADY_PROTECTED_POD_ID);
+    public static final KubernetesPod NETWORK_ELEMENT_NOT_FOUND_K8S_POD = createKubernetesPod();
+    public static final KubernetesPod VALID_K8S_POD = createKubernetesPod();
 
-    // Not possible: if the other label is protected under a security group, we know about the pod
-    //  public static final KubernetesPod NEW_UNKNOWN_POD_WITH_OTHER_PROTECTED_LABEL = createKubernetesPod();
-
-    public static final Label OTHER_LABEL_WITH_KNOWN_POD_ENTITY
-        = createOtherLabelWithPodEntity(NEW_KNOWN_POD_WITH_OTHER_UNPROTECTED_LABEL.getUid());
-    public static final SecurityGroupMember OTHEL_LABEL_SGM = createSGMProtectingPod(NEW_KNOWN_POD_WITH_OTHER_PROTECTED_LABEL);
-
-    public static final String OTHER_UNKNOWN_LABEL_VALUE = OSC_DEPLOYMENT_LABEL_NAME  + "=OTHER_LABEL_value";
-
-    public static Label createLabelUnderTest() {
-        return new Label(UUID.randomUUID().toString(), OSC_DEPLOYMENT_LABEL_NAME  + (UUID.randomUUID().toString()));
-    }
-    private static SecurityGroupMember createSGMProtectingPod(KubernetesPod kubernetesPod) {
-        String baseName = "OTHER_";
-        SecurityGroupMember sgm = createSGM(baseName);
-        addPodToLabel(sgm.getLabel(), baseName, kubernetesPod.getUid());
-        return sgm;
-    }
-
-    private static Label createOtherLabelWithPodEntity(String externalId) {
-        String baseName = "OTHER_";
-        Label label = new Label(baseName + "_LABEL_name", OSC_DEPLOYMENT_LABEL_NAME  + "=" + baseName + "_LABEL_value");
-        addPodToLabel(label, baseName, externalId);
-        return label;
-    }
+    public static final Label EXISTING_PROTECTED_POD_SGM_LABEL = createSGMWithPod("EXISTING_PROTECTED_POD_SGM_LABEL");
+    public static final Label VALID_POD_SGM_LABEL = createSGM("VALID_POD_SGM");
+    public static final Label ALREADY_PROTECTED_POD_SGM_LABEL = createSGM("ALREADY_PROTECTED_POD_SGM_LABEL");
+    public static final Label NETWORK_ELEMENT_NOT_FOUND_POD_SGM_LABEL = createSGM("NETWORK_ELEMENT_NOT_FOUND_POD_SGM_LABEL");
 
     public static void persist(Label label, EntityManager em) {
-        em.getTransaction().begin();
         for (Pod pod : label.getPods()) {
             em.persist(pod);
         }
         em.persist(label);
-        em.getTransaction().commit();
+        persist(label.getSecurityGroupMembers().iterator().next(), em);
+
     }
 
-    public static void persist(SecurityGroupMember sgm, EntityManager em) {
-        em.getTransaction().begin();
+    public static void cleanUp(Label label) {
+        for (Pod pod : label.getPods()) {
+            pod.setId(null);
+        }
+        label.setId(null);
+    }
 
+    private static void persist(SecurityGroupMember sgm, EntityManager em) {
         SecurityGroup sg = sgm.getSecurityGroup();
         VirtualizationConnector vc = sg.getVirtualizationConnector();
         Set<VirtualSystem> virtualSystems = vc.getVirtualSystems();
@@ -103,8 +86,6 @@ public class LabelPodCreateTaskTestData {
 
         em.persist(sgm.getLabel());
         em.persist(sgm);
-
-        em.getTransaction().commit();
     }
 
     private static KubernetesPod createKubernetesPod() {
@@ -112,29 +93,31 @@ public class LabelPodCreateTaskTestData {
     }
 
     private static KubernetesPod createKubernetesPod(String podId) {
-        KubernetesPod k8sPod = new KubernetesPod("name", "namespace",
-                podId == null ? UUID.randomUUID().toString() : podId, "node");
+        KubernetesPod k8sPod = new KubernetesPod(UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                podId == null ? UUID.randomUUID().toString() : podId, UUID.randomUUID().toString());
         return k8sPod;
     }
 
-    private static void addPodToLabel(Label label, String baseName, String externalId) {
-        Pod pod = new Pod();
-        pod.setName(baseName + "_pod");
-        pod.setNamespace(baseName + "_namespace");
-        pod.setExternalId(externalId == null ? UUID.randomUUID().toString() : externalId);
-        pod.getLabels().add(label);
-    }
-
-    private static SecurityGroupMember createSGM(String baseName) {
+    private static Label createSGM(String baseName) {
         VirtualSystem vs = createVirtualSystem(baseName, "NSM");
 
         SecurityGroup sg = new SecurityGroup(vs.getVirtualizationConnector(), null, null);
         sg.setName(baseName + "_sg ");
 
-        SecurityGroupMember sgm = new SecurityGroupMember(sg, new Label("LABEL_name" + UUID.randomUUID(),
-                OSC_DEPLOYMENT_LABEL_NAME + "=LABEL_value" + UUID.randomUUID()));
+        Label label = new Label(UUID.randomUUID().toString(),UUID.randomUUID().toString());
 
-        return sgm;
+        SecurityGroupMember sgm = new SecurityGroupMember(sg, label);
+        label.getSecurityGroupMembers().add(sgm);
+
+        return label;
+    }
+
+    private static Label createSGMWithPod(String baseName) {
+        Label newLabel = createSGM(baseName);
+        Pod existingPod = new Pod(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), ALREADY_PROTECTED_POD_ID);
+        newLabel.getPods().add(existingPod);
+        existingPod.getLabels().add(newLabel);
+        return newLabel;
     }
 
     private static VirtualSystem createVirtualSystem(String baseName, String mgrType) {

@@ -41,7 +41,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
     private SecurityGroupMember sgm;
 
     @Reference
-    LabelPodCreateTask labelPodCreateTask;
+    CreateK8sLabelPodTask labelPodCreateTask;
 
     @Reference
     LabelPodDeleteTask labelPodDeleteTask;
@@ -88,7 +88,7 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
         Set<Pod> dbPodsToDelete = emptyIfNull(label.getPods()).stream()
                 .filter(p -> !existingPodIdsInK8s.contains(p.getExternalId())).collect(Collectors.toSet());
 
-        k8sPodsToCreate.forEach(p -> this.tg.addTask(this.labelPodCreateTask.create(p, this.sgm.getLabel(), this.k8sPodApi)));
+        k8sPodsToCreate.forEach(p -> this.tg.addTask(this.labelPodCreateTask.create(p, this.sgm.getLabel())));
         dbPodsToDelete.forEach(p -> this.tg.addTask(this.labelPodDeleteTask.create(p)));
     }
 
