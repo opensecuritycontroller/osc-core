@@ -16,8 +16,6 @@
  *******************************************************************************/
 package org.osc.core.broker.service.tasks.conformance.k8s.securitygroup;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -75,38 +73,40 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTestData {
         return expectedGraph;
     }
 
-    public static void persistObjects(EntityManager em) {
-        List<SecurityGroup> securityGroups = Arrays.asList(NO_LABEL_SG, SINGLE_LABEL_SG, MULTI_LABEL_SG);
+    public static void persistObjects(EntityManager em, SecurityGroup sg) {
+        Set<VirtualSystem> virtualSystems = sg.getVirtualizationConnector().getVirtualSystems();
 
-        for (SecurityGroup sg : securityGroups) {
-            if (sg.getId() != null) {
-                continue;
-            }
+        em.getTransaction().begin();
 
-            Set<VirtualSystem> virtualSystems = sg.getVirtualizationConnector().getVirtualSystems();
+        em.persist(sg.getVirtualizationConnector());
 
-            em.getTransaction().begin();
-
-            em.persist(sg.getVirtualizationConnector());
-
-            for (VirtualSystem vs : virtualSystems) {
-                em.persist(vs.getDomain().getApplianceManagerConnector());
-                em.persist(vs.getApplianceSoftwareVersion().getAppliance());
-                em.persist(vs.getApplianceSoftwareVersion());
-                em.persist(vs.getDistributedAppliance());
-                em.persist(vs.getDomain());
-                em.persist(vs);
-            }
-
-            em.persist(sg);
-            for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
-                em.persist(sgm.getLabel());
-                em.persist(sgm);
-            }
-
-            sg.getSecurityGroupMembers();
-            em.getTransaction().commit();
+        for (VirtualSystem vs : virtualSystems) {
+            em.persist(vs.getDomain().getApplianceManagerConnector());
+            em.persist(vs.getApplianceSoftwareVersion().getAppliance());
+            em.persist(vs.getApplianceSoftwareVersion());
+            em.persist(vs.getDistributedAppliance());
+            em.persist(vs.getDomain());
+            em.persist(vs);
         }
+
+        em.persist(sg);
+        for (SecurityGroupMember sgm : sg.getSecurityGroupMembers()) {
+            if (!sgm.getPodPorts().isEmpty()) {
+                for (Pod pod : sgm.getLabel().getPods()) {
+                    for (PodPort podPort : pod.getPorts()) {
+                        em.persist(podPort);
+                    }
+
+                    em.persist(pod);
+                }
+            }
+
+            em.persist(sgm.getLabel());
+            em.persist(sgm);
+        }
+
+        sg.getSecurityGroupMembers();
+        em.getTransaction().commit();
     }
 
     private static SecurityGroup createSecurityGroup(String baseName, int nLabels, boolean isDelete) {

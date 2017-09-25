@@ -48,7 +48,6 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(value = Parameterized.class)
 public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
-
     public EntityManager em;
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
@@ -83,7 +82,7 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
         Mockito.when(this.dbMgr.getTransactionalEntityManager()).thenReturn(this.em);
         Mockito.when(this.dbMgr.getTransactionControl()).thenReturn(this.txControl);
 
-        persistObjects(this.em);
+        populateDatabase();
     }
 
     @After
@@ -115,5 +114,9 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTaskTest {
             { SINGLE_LABEL_MARKED_FOR_DELETION_SG, createK8sGraph(SINGLE_LABEL_MARKED_FOR_DELETION_SG, true) },
             { POPULATED_WITH_POD_SG, checkPortGroupK8sGraph(POPULATED_WITH_POD_SG, false) }
         });
+    }
+
+    private void populateDatabase() {
+        persistObjects(this.em, this.sg);
     }
 }

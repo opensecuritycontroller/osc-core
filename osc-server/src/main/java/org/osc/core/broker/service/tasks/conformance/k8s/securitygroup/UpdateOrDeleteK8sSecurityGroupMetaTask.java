@@ -25,6 +25,7 @@ import org.osc.core.broker.job.TaskGraph;
 import org.osc.core.broker.job.lock.LockObjectReference;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroup;
 import org.osc.core.broker.model.entities.virtualization.SecurityGroupMember;
+import org.osc.core.broker.service.persistence.OSCEntityManager;
 import org.osc.core.broker.service.tasks.TransactionalMetaTask;
 import org.osc.core.broker.service.tasks.conformance.openstack.securitygroup.PortGroupCheckMetaTask;
 import org.osgi.service.component.annotations.Component;
@@ -70,8 +71,10 @@ public class UpdateOrDeleteK8sSecurityGroupMetaTask extends TransactionalMetaTas
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
         this.tg = new TaskGraph();
+        OSCEntityManager<SecurityGroup> dsEmgr = new OSCEntityManager<SecurityGroup>(SecurityGroup.class, em, this.txBroadcastUtil);
+        this.sg = dsEmgr.findByPrimaryKey(this.sg.getId());
 
-        final boolean isDelete = this.sg.getMarkedForDeletion();
+        final boolean isDelete = this.sg.getMarkedForDeletion() == null ? false : this.sg.getMarkedForDeletion();
 
         String domainId = null;
 
