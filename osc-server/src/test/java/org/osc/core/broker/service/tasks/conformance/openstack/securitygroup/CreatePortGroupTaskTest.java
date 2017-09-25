@@ -53,7 +53,6 @@ import org.osc.core.broker.service.tasks.conformance.openstack.deploymentspec.Op
 import org.osc.core.broker.util.TransactionalBroadcastUtil;
 import org.osc.core.broker.util.db.DBConnectionManager;
 import org.osc.core.common.virtualization.VirtualizationType;
-import org.osc.core.common.virtualization.VirtualizationType;
 import org.osc.core.test.util.TestTransactionControl;
 import org.osc.sdk.controller.api.SdnRedirectionApi;
 import org.osc.sdk.controller.element.NetworkElement;
@@ -64,7 +63,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ OpenstackUtil.class })
 public class CreatePortGroupTaskTest {
-
     @Mock
     protected EntityManager em;
     @Mock

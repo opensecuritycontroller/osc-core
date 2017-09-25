@@ -102,6 +102,11 @@ public class CreateK8sLabelPodTask extends TransactionalTask{
 
         OSCEntityManager.create(em, podPort, this.txBroadcastUtil);
         OSCEntityManager.create(em, newPod, this.txBroadcastUtil);
+
+        this.label.getPods().add(newPod);
+
+        OSCEntityManager.update(em, this.label, this.txBroadcastUtil);
+
         LOG.info(String.format("Created pod entity for %s", this.k8sPod.getName()));
     }
 
