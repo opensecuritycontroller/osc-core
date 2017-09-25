@@ -84,10 +84,12 @@ public class SecurityGroupMemberDeleteTask extends TransactionalTask {
             if (label.getSecurityGroupMembers().size() == 1) {
                 this.log.info("No other references to Label found. Deleting Label " + label.getValue());
                 for (Pod pod : label.getPods()) {
-                    for (PodPort podPort : pod.getPorts()) {
-                        OSCEntityManager.delete(em, podPort, this.txBroadcastUtil);
+                    if (pod.getLabels().size() == 1) {
+                        for (PodPort podPort : pod.getPorts()) {
+                            OSCEntityManager.delete(em, podPort, this.txBroadcastUtil);
+                        }
+                        OSCEntityManager.delete(em, pod, this.txBroadcastUtil);
                     }
-                    OSCEntityManager.delete(em, pod, this.txBroadcastUtil);
                 }
                 OSCEntityManager.delete(em, label, this.txBroadcastUtil);
             } else {
