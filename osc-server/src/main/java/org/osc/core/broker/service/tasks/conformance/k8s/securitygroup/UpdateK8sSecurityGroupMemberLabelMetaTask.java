@@ -38,7 +38,6 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(service = UpdateK8sSecurityGroupMemberLabelMetaTask.class)
 public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMetaTask {
-
     private SecurityGroupMember sgm;
 
     @Reference
@@ -63,9 +62,9 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
 
     @Override
     public void executeTransaction(EntityManager em) throws Exception {
-
         this.tg = new TaskGraph();
         Label label = this.sgm.getLabel();
+        label = em.find(Label.class, label.getId());
 
         List<KubernetesPod> k8sPods = Collections.emptyList();
         try (KubernetesClient client = new KubernetesClient(this.sgm.getSecurityGroup().getVirtualizationConnector())) {
@@ -75,10 +74,6 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTask extends TransactionalMeta
                 this.k8sPodApi.setKubernetesClient(client);
             }
             k8sPods = this.k8sPodApi.getPodsByLabel(this.sgm.getLabel().getValue());
-        }
-
-        if (label.getId() != null) {
-            label = em.find(Label.class, label.getId());
         }
 
         Set<String> existingPodIdsInOSC = emptyIfNull(label.getPods()).stream().map(Pod::getExternalId)

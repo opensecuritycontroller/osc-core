@@ -54,13 +54,13 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
 
     public static SecurityGroupMember NO_ENTITY_ORPHAN_PODS_SGM = createSGM("NO_ENTITY_ORPHAN_PODS");
 
-    public static SecurityGroupMember ORPHAN_ENTITIES_NO_PODS_SGM = createDSWithDAIs("ORPHAN_ENTITIES_NO_PODS", 3,
+    public static SecurityGroupMember ORPHAN_ENTITIES_NO_PODS_SGM = createSGMWithMembers("ORPHAN_ENTITIES_NO_PODS", 3,
             false);
 
-    public static SecurityGroupMember SOME_ORPHAN_ENTITIES_SOME_ORPHAN_PODS_SGM = createDSWithDAIs(
+    public static SecurityGroupMember SOME_ORPHAN_ENTITIES_SOME_ORPHAN_PODS_SGM = createSGMWithMembers(
             "SOME_ORPHAN_DAIS_SOME_ORPHAN_PODS", 2, true);
 
-    public static SecurityGroupMember ENTITIES_PODS_MATCHING_SGM = createDSWithDAIs("DAIS_PODS_MATCHING", 0, true);
+    public static SecurityGroupMember ENTITIES_PODS_MATCHING_SGM = createSGMWithMembers("DAIS_PODS_MATCHING", 0, true);
 
     public static TaskGraph createExpectedGraph(SecurityGroupMember sgm) {
         TaskGraph expectedGraph = new TaskGraph();
@@ -111,10 +111,6 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
         em.getTransaction().commit();
     }
 
-    private static KubernetesPod createKubernetesPod() {
-        return createKubernetesPod(null);
-    }
-
     private static KubernetesPod createKubernetesPod(String podId) {
         KubernetesPod k8sPod = new KubernetesPod("name", "namespace",
                 podId == null ? UUID.randomUUID().toString() : podId, "node");
@@ -141,15 +137,15 @@ public class UpdateK8sSecurityGroupMemberLabelMetaTaskTestData {
         return sgm;
     }
 
-    private static SecurityGroupMember createDSWithDAIs(String baseName, int countOrphanDais,
-            boolean includeMatchingDais) {
+    private static SecurityGroupMember createSGMWithMembers(String baseName, int countOrphanPods,
+            boolean includeMatchingPods) {
 
         SecurityGroupMember sgm = createSGM(baseName);
-        for (; countOrphanDais > 0; countOrphanDais--) {
+        for (; countOrphanPods > 0; countOrphanPods--) {
             addPodToLabel(sgm.getLabel(), baseName, null);
         }
 
-        if (includeMatchingDais) {
+        if (includeMatchingPods) {
             for (String KNOWN_POD_ID : KNOWN_POD_IDS) {
                 addPodToLabel(sgm.getLabel(), baseName, KNOWN_POD_ID);
             }
